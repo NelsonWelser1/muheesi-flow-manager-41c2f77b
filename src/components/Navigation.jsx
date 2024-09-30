@@ -9,13 +9,19 @@ const Navigation = () => {
         <Link to="/" className="text-xl font-bold">Muheesi GKK SCWMS</Link>
         <div className="space-x-4">
           <Button asChild variant="ghost">
+            <Link to="/dashboard">Dashboard</Link>
+          </Button>
+          <Button asChild variant="ghost">
             <Link to="/companies">Companies</Link>
           </Button>
           <Button asChild variant="ghost">
             <Link to="/inventory">Inventory</Link>
           </Button>
           <Button asChild variant="ghost">
-            <Link to="/sales">Sales & Accounts</Link>
+            <Link to="/sales">Sales</Link>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link to="/accounts">Accounts</Link>
           </Button>
         </div>
       </div>
