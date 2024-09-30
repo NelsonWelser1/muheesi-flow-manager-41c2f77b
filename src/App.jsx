@@ -2,7 +2,11 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { navItems } from "./nav-items";
+import Navigation from "./components/Navigation";
+import Index from "./pages/Index";
+import Companies from "./pages/Companies";
+import Inventory from "./pages/Inventory";
+import Sales from "./pages/Sales";
 
 const queryClient = new QueryClient();
 
@@ -11,10 +15,12 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <BrowserRouter>
+        <Navigation />
         <Routes>
-          {navItems.map(({ to, page }) => (
-            <Route key={to} path={to} element={page} />
-          ))}
+          <Route path="/" element={<Index />} />
+          <Route path="/companies" element={<Companies />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/sales" element={<Sales />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
