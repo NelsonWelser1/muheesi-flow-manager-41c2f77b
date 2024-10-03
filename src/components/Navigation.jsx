@@ -7,7 +7,7 @@ const Navigation = () => {
     'text-[#4285F4]', // Google Blue
     'text-[#34A853]', // Google Green
     'text-[#FBBC05]', // Google Yellow
-    'text-[#EA4335]', // Google Red
+    'text-black',     // Black for Feedback
   ];
 
   const navItems = [
@@ -27,7 +27,7 @@ const Navigation = () => {
               key={item.to}
               asChild
               variant="ghost"
-              className={`bg-white hover:bg-gray-100 ${googleColors[index]} font-bold py-2 px-4 rounded transition-all duration-300 transform hover:scale-105 animate-vibrate`}
+              className={`bg-white hover:bg-gray-100 ${googleColors[index]} font-bold py-2 px-4 rounded transition-all duration-300 transform hover:scale-105`}
             >
               <Link to={item.to}>{item.label}</Link>
             </Button>
