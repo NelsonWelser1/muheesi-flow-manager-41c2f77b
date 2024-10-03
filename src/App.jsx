@@ -5,9 +5,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
+import ManageInventory from "./pages/ManageInventory";
 import ManageCompanies from "./pages/ManageCompanies";
 import Feedback from "./pages/Feedback";
-import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -20,9 +20,9 @@ const App = () => (
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/manage-inventory" element={<ManageInventory />} />
           <Route path="/manage-companies" element={<ManageCompanies />} />
           <Route path="/feedback" element={<Feedback />} />
-          <Route path="/contact" element={<Contact />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
