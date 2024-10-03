@@ -6,12 +6,18 @@ const companies = [
   {
     name: 'Grand Berna Dairies',
     description: 'Dairy Products',
-    features: ['Fresh Milk', 'Yogurt', 'Cheese', 'Ice Cream'],
+    features: ['Fresh Milk', 'Yogurt', 'Cheese', 'Meat'],
   },
   {
     name: 'KAJON Coffee Limited',
     description: 'Coffee Products',
-    features: ['Roasted Beans', 'Ground Coffee', 'Instant Coffee', 'Coffee Machines'],
+    features: [
+      'Robusta Coffee: FAQ (Fair Average Quality)',
+      'Robusta Coffee: Screen 18, 15, and 12',
+      'Arabica Coffee: Bugisu AA, A, PB, and B',
+      'Arabica Coffee: DRUGAR (Dried Uganda Arabica)',
+      'Arabica Coffee: Parchment Arabica',
+    ],
   },
   {
     name: 'Kyalima Farmers Limited',
