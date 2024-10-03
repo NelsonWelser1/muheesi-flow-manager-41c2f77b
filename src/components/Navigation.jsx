@@ -17,6 +17,9 @@ const Navigation = () => {
           <Button asChild variant="ghost">
             <Link to="/feedback">Feedback</Link>
           </Button>
+          <Button asChild variant="ghost">
+            <Link to="/contact">Contact</Link>
+          </Button>
         </div>
       </div>
     </nav>
