@@ -5,10 +5,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
-import Companies from "./pages/Companies";
-import Inventory from "./pages/Inventory";
-import Sales from "./pages/Sales";
-import Accounts from "./pages/Accounts";
+import ManageCompanies from "./pages/ManageCompanies";
+import Feedback from "./pages/Feedback";
 
 const queryClient = new QueryClient();
 
@@ -21,10 +19,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/companies" element={<Companies />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/sales" element={<Sales />} />
-          <Route path="/accounts" element={<Accounts />} />
+          <Route path="/manage-companies" element={<ManageCompanies />} />
+          <Route path="/feedback" element={<Feedback />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

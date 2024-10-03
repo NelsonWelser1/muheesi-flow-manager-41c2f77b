@@ -12,16 +12,10 @@ const Navigation = () => {
             <Link to="/dashboard">Dashboard</Link>
           </Button>
           <Button asChild variant="ghost">
-            <Link to="/companies">Companies</Link>
+            <Link to="/manage-companies">Manage Companies</Link>
           </Button>
           <Button asChild variant="ghost">
-            <Link to="/inventory">Inventory</Link>
-          </Button>
-          <Button asChild variant="ghost">
-            <Link to="/sales">Sales</Link>
-          </Button>
-          <Button asChild variant="ghost">
-            <Link to="/accounts">Accounts</Link>
+            <Link to="/feedback">Feedback</Link>
           </Button>
         </div>
       </div>
