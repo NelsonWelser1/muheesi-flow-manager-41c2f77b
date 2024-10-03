@@ -14,6 +14,7 @@ const companies = [
     features: [
       'Robusta Coffee: FAQ (Fair Average Quality)',
       'Robusta Coffee: Screen 18, 15, and 12',
+      'Robusta Coffee: Organic Robusta',
       'Arabica Coffee: Bugisu AA, A, PB, and B',
       'Arabica Coffee: DRUGAR (Dried Uganda Arabica)',
       'Arabica Coffee: Parchment Arabica',
