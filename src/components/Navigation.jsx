@@ -6,7 +6,7 @@ const Navigation = () => {
   return (
     <nav className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold">Muheesi GKK SCWMS</Link>
+        <Link to="/" className="text-xl font-bold">Muheesi GKK Int.System</Link>
         <div className="space-x-4">
           <Button asChild variant="ghost">
             <Link to="/dashboard">Dashboard</Link>
