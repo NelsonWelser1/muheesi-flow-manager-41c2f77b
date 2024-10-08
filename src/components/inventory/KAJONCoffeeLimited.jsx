@@ -1,87 +1,136 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 const KAJONCoffeeLimited = () => {
+  const [currentStock, setCurrentStock] = useState(null);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Here you would typically send the data to your backend
+    // For now, we'll just set some dummy data
+    setCurrentStock({
+      location: e.target.location.value,
+      coffeeType: e.target.coffeeType.value,
+      quantity: e.target.quantity.value,
+      unit: e.target.unit.value,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Coffee Management</CardTitle>
+          <CardTitle>KAJON Coffee Limited Stock Update</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="coffee-type">Coffee Type</Label>
-            <Select>
-              <SelectTrigger id="coffee-type">
-                <SelectValue placeholder="Select coffee type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="arabica">Arabica</SelectItem>
-                <SelectItem value="robusta">Robusta</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="storage-details">Storage Details</Label>
-            <Input id="storage-details" placeholder="Enter storage details" />
-          </div>
-          <div>
-            <Label htmlFor="quality-check">Quality Check</Label>
-            <Input id="quality-check" placeholder="Enter quality check results" />
-          </div>
-          <div>
-            <Label htmlFor="moisture-levels">Moisture Levels</Label>
-            <Input id="moisture-levels" type="number" placeholder="Enter moisture levels (%)" />
-          </div>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="manager">Store/Warehouse Manager</Label>
+              <Input id="manager" placeholder="Enter manager name" required />
+            </div>
+            <div>
+              <Label htmlFor="location">Stock Location</Label>
+              <Input id="location" placeholder="Enter store/warehouse location" required />
+            </div>
+            <div>
+              <Label htmlFor="moneyDeposited">Money Deposited</Label>
+              <Input id="moneyDeposited" type="number" placeholder="Enter amount deposited" required />
+            </div>
+            <div>
+              <Label htmlFor="coffeeType">Coffee Type</Label>
+              <Select id="coffeeType" required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select coffee type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="robusta-faq">Robusta Coffee: FAQ (Fair Average Quality)</SelectItem>
+                  <SelectItem value="robusta-screen18">Robusta Coffee: Screen 18</SelectItem>
+                  <SelectItem value="robusta-screen15">Robusta Coffee: Screen 15</SelectItem>
+                  <SelectItem value="robusta-screen12">Robusta Coffee: Screen 12</SelectItem>
+                  <SelectItem value="robusta-organic">Robusta Coffee: Organic Robusta</SelectItem>
+                  <SelectItem value="arabica-bugisuaa">Arabica Coffee: Bugisu AA</SelectItem>
+                  <SelectItem value="arabica-bugisua">Arabica Coffee: Bugisu A</SelectItem>
+                  <SelectItem value="arabica-bugisupb">Arabica Coffee: Bugisu PB</SelectItem>
+                  <SelectItem value="arabica-bugisub">Arabica Coffee: Bugisu B</SelectItem>
+                  <SelectItem value="arabica-drugar">Arabica Coffee: DRUGAR (Dried Uganda Arabica)</SelectItem>
+                  <SelectItem value="arabica-parchment">Arabica Coffee: Parchment Arabica</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="quantity">Quantity</Label>
+              <Input id="quantity" type="number" placeholder="Enter quantity" required />
+            </div>
+            <div>
+              <Label htmlFor="unit">Unit of Measurement</Label>
+              <Select id="unit" required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kg">Kilograms (Kg)</SelectItem>
+                  <SelectItem value="bag50">Bags of 50kg</SelectItem>
+                  <SelectItem value="bag10">Bags of 10kg</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="packaging">Packaging Material</Label>
+              <Select id="packaging" required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select packaging" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="jute">Jute bag</SelectItem>
+                  <SelectItem value="plastic">Plastic sack</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="flow">Stock Flow</Label>
+              <Select id="flow" required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select stock flow" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="inflow">Inflow</SelectItem>
+                  <SelectItem value="outflow">Outflow</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="source">Source/Destination</Label>
+              <Input id="source" placeholder="Enter source (for inflow) or destination (for outflow)" required />
+            </div>
+            <div>
+              <Label htmlFor="entrant">Data Entrant Name</Label>
+              <Input id="entrant" placeholder="Enter your name" required />
+            </div>
+            <div>
+              <Label htmlFor="passcode">Passcode</Label>
+              <Input id="passcode" type="password" placeholder="Enter your passcode" required />
+            </div>
+            <Button type="submit">Submit</Button>
+          </form>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Warehouse Operations (Kazo Coffee Store)</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="product-storage">Product Storage Data</Label>
-            <Input id="product-storage" placeholder="Enter product storage details" />
-          </div>
-          <div>
-            <Label htmlFor="warehouse-quality-checks">Quality Checks</Label>
-            <Input id="warehouse-quality-checks" placeholder="Enter quality check results" />
-          </div>
-          <div>
-            <Label htmlFor="procurement-costs">Procurement Costs</Label>
-            <Input id="procurement-costs" type="number" placeholder="Enter procurement costs" />
-          </div>
-          <div>
-            <Label htmlFor="logistics-costs">Logistics Costs</Label>
-            <Input id="logistics-costs" type="number" placeholder="Enter logistics costs" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Outbound Logistics</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="shipment-details">Product Shipment Details</Label>
-            <Input id="shipment-details" placeholder="Enter shipment details" />
-          </div>
-          <div>
-            <Label htmlFor="outbound-product-quality">Product Quality</Label>
-            <Input id="outbound-product-quality" placeholder="Enter product quality" />
-          </div>
-          <div>
-            <Label htmlFor="outbound-tracking">Outbound Shipment Tracking</Label>
-            <Input id="outbound-tracking" placeholder="Enter tracking information" />
-          </div>
-        </CardContent>
-      </Card>
+      {currentStock && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Current Stock Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Location: {currentStock.location}</p>
+            <p>Coffee Type: {currentStock.coffeeType}</p>
+            <p>Quantity: {currentStock.quantity} {currentStock.unit}</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
