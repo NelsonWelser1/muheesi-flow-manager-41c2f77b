@@ -4,15 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 
 const GrandBernaDairies = () => {
   const [currentStock, setCurrentStock] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically send the data to your backend
-    // For now, we'll just set some dummy data
     setCurrentStock({
       location: e.target.location.value,
       product: e.target.product.value,
@@ -95,15 +92,17 @@ const GrandBernaDairies = () => {
             </div>
             <div>
               <Label htmlFor="source">Source/Destination</Label>
-              <Input id="source" placeholder="Enter source (for inflow) or destination (for outflow)" required />
-            </div>
-            <div>
-              <Label htmlFor="tools">Tools and Machinery</Label>
-              <Textarea id="tools" placeholder="List any tools or machinery" />
-            </div>
-            <div>
-              <Label htmlFor="repairs">Repair Requisitions</Label>
-              <Textarea id="repairs" placeholder="Enter any repair requisitions" />
+              <Select id="source" required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select source/destination" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="farm">Farm</SelectItem>
+                  <SelectItem value="supplier">Supplier</SelectItem>
+                  <SelectItem value="customer">Customer</SelectItem>
+                  <SelectItem value="distributor">Distributor</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="entrant">Data Entrant Name</Label>

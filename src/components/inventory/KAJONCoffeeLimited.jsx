@@ -10,8 +10,6 @@ const KAJONCoffeeLimited = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically send the data to your backend
-    // For now, we'll just set some dummy data
     setCurrentStock({
       location: e.target.location.value,
       coffeeType: e.target.coffeeType.value,
@@ -37,8 +35,8 @@ const KAJONCoffeeLimited = () => {
               <Input id="location" placeholder="Enter store/warehouse location" required />
             </div>
             <div>
-              <Label htmlFor="moneyDeposited">Money Deposited</Label>
-              <Input id="moneyDeposited" type="number" placeholder="Enter amount deposited" required />
+              <Label>Money Deposited</Label>
+              <p className="text-sm text-gray-500">This information will be filled by the managing director.</p>
             </div>
             <div>
               <Label htmlFor="coffeeType">Coffee Type</Label>
@@ -104,7 +102,17 @@ const KAJONCoffeeLimited = () => {
             </div>
             <div>
               <Label htmlFor="source">Source/Destination</Label>
-              <Input id="source" placeholder="Enter source (for inflow) or destination (for outflow)" required />
+              <Select id="source" required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select source/destination" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="farm">Farm</SelectItem>
+                  <SelectItem value="supplier">Supplier</SelectItem>
+                  <SelectItem value="customer">Customer</SelectItem>
+                  <SelectItem value="exporter">Exporter</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="entrant">Data Entrant Name</Label>
