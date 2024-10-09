@@ -1,6 +1,16 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { useQuery } from '@tanstack/react-query';
+
+const fetchCompanyStocks = async () => {
+  // This should be replaced with an actual API call
+  return {
+    'Grand Berna Dairies': { 'Fresh Milk': '1000L', 'Yogurt': '500kg', 'Cheese': '200kg', 'Meat': '300kg' },
+    'KAJON Coffee Limited': { 'Robusta Coffee: FAQ': '2000kg', 'Arabica Coffee: Bugisu AA': '1500kg' },
+    'Kyalima Farmers Limited': { 'Fresh Produce': '5000kg', 'Grains': '10000kg', 'Livestock': '50 heads' }
+  };
+};
 
 const companies = [
   {
@@ -28,6 +38,11 @@ const companies = [
 ];
 
 const CompanyShowcase = () => {
+  const { data: stocks, isLoading, error } = useQuery({
+    queryKey: ['companyStocks'],
+    queryFn: fetchCompanyStocks,
+  });
+
   return (
     <div className="bg-gray-100 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -57,6 +72,23 @@ const CompanyShowcase = () => {
                     </li>
                   ))}
                 </ul>
+              </div>
+              <div className="pt-6 pb-8 px-6">
+                <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase">Current Stock</h3>
+                {isLoading ? (
+                  <p>Loading stock information...</p>
+                ) : error ? (
+                  <p>Error loading stock information</p>
+                ) : (
+                  <ul className="mt-6 space-y-4">
+                    {Object.entries(stocks[company.name] || {}).map(([product, stock]) => (
+                      <li key={product} className="flex justify-between">
+                        <span className="text-base text-gray-500">{product}</span>
+                        <span className="text-base font-medium text-gray-900">{stock}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
           ))}

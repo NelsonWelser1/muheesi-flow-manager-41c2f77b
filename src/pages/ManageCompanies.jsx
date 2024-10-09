@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import ManageCompanyStocks from '../components/ManageCompanyStocks';
 
 const companies = [
   {
@@ -33,7 +34,7 @@ const ManageCompanies = () => {
       <h1 className="text-3xl font-bold mb-6">Manage Companies</h1>
       <p className="mb-8">Welcome, company managers and directors. Here you can manage and view details of the companies in the Muheesi GKK Int.System.</p>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {companies.map((company) => (
           <div key={company.name} className="bg-white rounded-lg shadow-lg divide-y divide-gray-200">
             <div className="p-6">
@@ -54,6 +55,11 @@ const ManageCompanies = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold mb-4">General Manager Dashboard</h2>
+        <ManageCompanyStocks />
       </div>
     </div>
   );
