@@ -7,9 +7,18 @@ import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 const companies = [
-  'Grand Berna Dairies',
-  'KAJON Coffee Limited',
-  'Kyalima Farmers Limited'
+  {
+    name: 'Grand Berna Dairies',
+    products: ['Fresh Milk', 'Yogurt', 'Cheese', 'Meat'],
+  },
+  {
+    name: 'KAJON Coffee Limited',
+    products: ['Robusta Coffee: FAQ', 'Arabica Coffee: Bugisu AA'],
+  },
+  {
+    name: 'Kyalima Farmers Limited',
+    products: ['Fresh Produce', 'Grains', 'Livestock'],
+  },
 ];
 
 const ManageCompanyStocks = () => {
@@ -37,29 +46,43 @@ const ManageCompanyStocks = () => {
     updateStockMutation.mutate({ company: selectedCompany, product, stock });
   };
 
+  const selectedCompanyProducts = companies.find(c => c.name === selectedCompany)?.products || [];
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Manage Company Stocks</CardTitle>
+        <CardTitle>Manage Company Projected Stocks (On the public page)</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="company">Company</Label>
-            <Select id="company" value={selectedCompany} onValueChange={setSelectedCompany} required>
+            <Select id="company" value={selectedCompany} onValueChange={(value) => {
+              setSelectedCompany(value);
+              setProduct('');
+            }} required>
               <SelectTrigger>
                 <SelectValue placeholder="Select company" />
               </SelectTrigger>
               <SelectContent>
                 {companies.map((company) => (
-                  <SelectItem key={company} value={company}>{company}</SelectItem>
+                  <SelectItem key={company.name} value={company.name}>{company.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div>
             <Label htmlFor="product">Product</Label>
-            <Input id="product" value={product} onChange={(e) => setProduct(e.target.value)} placeholder="Enter product name" required />
+            <Select id="product" value={product} onValueChange={setProduct} required disabled={!selectedCompany}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select product" />
+              </SelectTrigger>
+              <SelectContent>
+                {selectedCompanyProducts.map((prod) => (
+                  <SelectItem key={prod} value={prod}>{prod}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label htmlFor="stock">Current Stock</Label>

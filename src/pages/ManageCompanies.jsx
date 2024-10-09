@@ -2,6 +2,7 @@ import React from 'react';
 import { Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import ManageCompanyStocks from '../components/ManageCompanyStocks';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const companies = [
   {
@@ -59,7 +60,45 @@ const ManageCompanies = () => {
 
       <div className="mt-12">
         <h2 className="text-2xl font-bold mb-4">General Manager Dashboard</h2>
-        <ManageCompanyStocks />
+        <Accordion type="single" collapsible>
+          <AccordionItem value="manage-stocks">
+            <AccordionTrigger>Manage Company Projected Stocks</AccordionTrigger>
+            <AccordionContent>
+              <ManageCompanyStocks />
+            </AccordionContent>
+          </AccordionItem>
+          {/* Add more accordion items for other General Manager tasks */}
+        </Accordion>
+      </div>
+
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold mb-4">CEO Dashboard</h2>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="ceo-updates">
+            <AccordionTrigger>Updates</AccordionTrigger>
+            <AccordionContent>
+              {/* Add CEO updates content here */}
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="ceo-requisitions">
+            <AccordionTrigger>Requisitions</AccordionTrigger>
+            <AccordionContent>
+              {/* Add CEO requisitions content here */}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold mb-4">HR Manager Dashboard</h2>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="hr-employee-details">
+            <AccordionTrigger>Employee Details</AccordionTrigger>
+            <AccordionContent>
+              {/* Add HR employee details content here */}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </div>
   );

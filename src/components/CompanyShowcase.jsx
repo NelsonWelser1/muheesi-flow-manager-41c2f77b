@@ -23,17 +23,13 @@ const companies = [
     description: 'Coffee Products',
     features: [
       'Robusta Coffee: FAQ (Fair Average Quality)',
-      'Robusta Coffee: Screen 18, 15, and 12',
-      'Robusta Coffee: Organic Robusta',
-      'Arabica Coffee: Bugisu AA, A, PB, and B',
-      'Arabica Coffee: DRUGAR (Dried Uganda Arabica)',
-      'Arabica Coffee: Parchment Arabica',
+      'Arabica Coffee: Bugisu AA',
     ],
   },
   {
     name: 'Kyalima Farmers Limited',
     description: 'Agricultural Products',
-    features: ['Fresh Produce', 'Grains', 'Livestock', 'Farm Equipment'],
+    features: ['Fresh Produce', 'Grains', 'Livestock'],
   },
 ];
 
@@ -63,28 +59,22 @@ const CompanyShowcase = () => {
                 <Button className="mt-8 w-full">Learn More</Button>
               </div>
               <div className="pt-6 pb-8 px-6">
-                <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase">Key Products</h3>
-                <ul className="mt-6 space-y-4">
-                  {company.features.map((feature) => (
-                    <li key={feature} className="flex space-x-3">
-                      <Check className="flex-shrink-0 h-5 w-5 text-green-500" aria-hidden="true" />
-                      <span className="text-base text-gray-500">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="pt-6 pb-8 px-6">
-                <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase">Current Stock</h3>
+                <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase">Key Products & Current Stock</h3>
                 {isLoading ? (
                   <p>Loading stock information...</p>
                 ) : error ? (
                   <p>Error loading stock information</p>
                 ) : (
                   <ul className="mt-6 space-y-4">
-                    {Object.entries(stocks[company.name] || {}).map(([product, stock]) => (
-                      <li key={product} className="flex justify-between">
-                        <span className="text-base text-gray-500">{product}</span>
-                        <span className="text-base font-medium text-gray-900">{stock}</span>
+                    {company.features.map((feature) => (
+                      <li key={feature} className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <Check className="flex-shrink-0 h-5 w-5 text-green-500 mr-2" aria-hidden="true" />
+                          <span className="text-base text-gray-500">{feature}</span>
+                        </div>
+                        <span className="text-base font-medium text-gray-900">
+                          {stocks[company.name]?.[feature] || 'N/A'}
+                        </span>
                       </li>
                     ))}
                   </ul>
