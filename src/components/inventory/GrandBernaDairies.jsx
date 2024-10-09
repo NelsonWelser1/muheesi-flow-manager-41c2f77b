@@ -27,10 +27,6 @@ const GrandBernaDairies = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="manager">Factory/Cold Room Manager</Label>
-              <Input id="manager" placeholder="Enter manager name" required />
-            </div>
-            <div>
               <Label htmlFor="location">Stock Location</Label>
               <Select id="location" required>
                 <SelectTrigger>
