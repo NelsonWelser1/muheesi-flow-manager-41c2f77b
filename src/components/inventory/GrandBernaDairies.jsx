@@ -8,22 +8,52 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const GrandBernaDairies = () => {
   const [currentStock, setCurrentStock] = useState(null);
+  const [productCategory, setProductCategory] = useState('');
 
   const handleSubmit = (e, locationType) => {
     e.preventDefault();
     setCurrentStock({
       locationType,
-      product: e.target.product.value,
+      productCategory: e.target.productCategory.value,
+      productDetails: e.target.productDetails.value,
       quantity: e.target.quantity.value,
       unit: e.target.unit.value,
     });
   };
 
+  const productCategories = {
+    'Cheese': ['Mozzarella', 'Cheddar', 'Paneer', 'Gouda'],
+    'Yogurt': ['Plain Smooth yogurt', 'Vanilla smooth yogurt', 'Strawberry smooth Yogurt', 'Fruit smooth yogurt'],
+    'Whole Milk': ['Milk Powder', 'Liquid Milk', 'Flavored Milk'],
+  };
+
   const StockForm = ({ locationType }) => (
     <form onSubmit={(e) => handleSubmit(e, locationType)} className="space-y-4">
       <div>
-        <Label htmlFor="product">Product Category</Label>
-        <Input id="product" placeholder="Enter product category" required />
+        <Label htmlFor="productCategory">Product Category</Label>
+        <Select id="productCategory" value={productCategory} onValueChange={setProductCategory} required>
+          <SelectTrigger>
+            <SelectValue placeholder="Select product category" />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.keys(productCategories).map(category => (
+              <SelectItem key={category} value={category}>{category}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="productDetails">Product Category Details</Label>
+        <Select id="productDetails" required>
+          <SelectTrigger>
+            <SelectValue placeholder="Select product details" />
+          </SelectTrigger>
+          <SelectContent>
+            {productCategories[productCategory]?.map(detail => (
+              <SelectItem key={detail} value={detail}>{detail}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div>
         <Label htmlFor="quantity">Quantity</Label>
@@ -160,7 +190,8 @@ const GrandBernaDairies = () => {
           </CardHeader>
           <CardContent>
             <p>Location Type: {currentStock.locationType}</p>
-            <p>Product: {currentStock.product}</p>
+            <p>Product Category: {currentStock.productCategory}</p>
+            <p>Product Details: {currentStock.productDetails}</p>
             <p>Quantity: {currentStock.quantity} {currentStock.unit}</p>
           </CardContent>
         </Card>

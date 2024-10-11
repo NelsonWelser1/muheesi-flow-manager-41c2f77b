@@ -21,7 +21,7 @@ const DwanilloBullFattening = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Dwanillo Bull Fattening & Milk Cows Stock Update</CardTitle>
+        <CardTitle>Dwanillo Bull Fattening & Milk Cows Livestock Update</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -37,8 +37,10 @@ const DwanilloBullFattening = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="bulls">Bulls</SelectItem>
+                <SelectItem value="heifers">Heifers</SelectItem>
+                <SelectItem value="mothers">Mothers</SelectItem>
+                <SelectItem value="calves">Calves</SelectItem>
                 <SelectItem value="milk">Milk</SelectItem>
-                <SelectItem value="feed">Feed</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -53,9 +55,8 @@ const DwanilloBullFattening = () => {
                 <SelectValue placeholder="Select unit" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="head">Head (for bulls)</SelectItem>
+                <SelectItem value="head">Head (for livestock)</SelectItem>
                 <SelectItem value="liters">Liters (for milk)</SelectItem>
-                <SelectItem value="kg">Kilograms (for feed)</SelectItem>
               </SelectContent>
             </Select>
           </div>
