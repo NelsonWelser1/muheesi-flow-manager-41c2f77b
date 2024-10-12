@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,11 +8,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useMutation } from '@tanstack/react-query';
 
 const OffloadMilkForm = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
+  const [isProcessingPlant, setIsProcessingPlant] = useState(false);
 
   const submitMutation = useMutation({
     mutationFn: async (data) => {
-      // This should be replaced with an actual API call
       console.log('Submitting data:', data);
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { success: true };
@@ -22,6 +22,12 @@ const OffloadMilkForm = () => {
   const onSubmit = (data) => {
     submitMutation.mutate(data);
   };
+
+  const destination = watch('destination');
+
+  React.useEffect(() => {
+    setIsProcessingPlant(destination === 'processingPlant');
+  }, [destination]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -43,10 +49,46 @@ const OffloadMilkForm = () => {
         <Input id="clientDetails" {...register('clientDetails')} />
       </div>
 
-      <div>
-        <Label htmlFor="shippingDetails">Shipping/Logistics Details</Label>
-        <Input id="shippingDetails" {...register('shippingDetails')} />
-      </div>
+      {!isProcessingPlant && (
+        <>
+          <div>
+            <Label htmlFor="shippingDetails">Shipping/Logistics Details</Label>
+            <Input id="shippingDetails" {...register('shippingDetails')} />
+          </div>
+
+          <div>
+            <Label htmlFor="tankerInfo">Milk Tanker Number and Driver Name</Label>
+            <Input id="tankerInfo" {...register('tankerInfo')} />
+          </div>
+
+          <div>
+            <Label htmlFor="cleaningStatus">Milk Tanker Cleaning Status</Label>
+            <Select onValueChange={(value) => register('cleaningStatus').onChange({ target: { value } })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select cleaning status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cleaned">Cleaned</SelectItem>
+                <SelectItem value="notCleaned">Not Cleaned</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="generalCheckup">Milk Tanker General Checkup</Label>
+            <Select onValueChange={(value) => register('generalCheckup').onChange({ target: { value } })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select general checkup status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="notCompleted">Not Completed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      )}
 
       <div>
         <Label htmlFor="quantityDispatched">Quantity Dispatched (Liters)</Label>
@@ -56,33 +98,6 @@ const OffloadMilkForm = () => {
       <div>
         <Label htmlFor="dispatchDate">Dispatch Date</Label>
         <Input id="dispatchDate" type="datetime-local" {...register('dispatchDate', { required: true })} />
-      </div>
-
-      <div>
-        <Label htmlFor="cleaningStatus">Milk Tanker Cleaning Status</Label>
-        <Select onValueChange={(value) => register('cleaningStatus').onChange({ target: { value } })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select cleaning status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="cleaned">Cleaned</SelectItem>
-            <SelectItem value="notCleaned">Not Cleaned</SelectItem>
-            <SelectItem value="scheduled">Scheduled</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="generalCheckup">Milk Tanker General Checkup</Label>
-        <Select onValueChange={(value) => register('generalCheckup').onChange({ target: { value } })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select general checkup status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="notCompleted">Not Completed</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div>
@@ -105,18 +120,13 @@ const OffloadMilkForm = () => {
       </div>
 
       <div>
-        <Label htmlFor="quantity">Quantity (Liters)</Label>
-        <Input id="quantity" type="number" {...register('quantity', { required: true, min: 0 })} />
+        <Label htmlFor="entrantName">Entrant Name</Label>
+        <Input id="entrantName" {...register('entrantName', { required: true })} />
       </div>
 
       <div>
-        <Label htmlFor="dataEntrantName">Data Entrant Name</Label>
-        <Input id="dataEntrantName" {...register('dataEntrantName', { required: true })} />
-      </div>
-
-      <div>
-        <Label htmlFor="pin">PIN (Personal Identification Number)</Label>
-        <Input id="pin" type="password" {...register('pin', { required: true })} />
+        <Label htmlFor="entrantPIN">Entrant PIN (Personal Identification Number)</Label>
+        <Input id="entrantPIN" type="password" {...register('entrantPIN', { required: true })} />
       </div>
 
       <div className="flex items-center space-x-2">
@@ -130,6 +140,10 @@ const OffloadMilkForm = () => {
 
       {submitMutation.isSuccess && <p className="text-green-500">Form submitted successfully!</p>}
       {submitMutation.isError && <p className="text-red-500">An error occurred. Please try again.</p>}
+
+      <Button type="button" onClick={() => console.log('Print daily report')}>
+        Print Daily Report
+      </Button>
     </form>
   );
 };

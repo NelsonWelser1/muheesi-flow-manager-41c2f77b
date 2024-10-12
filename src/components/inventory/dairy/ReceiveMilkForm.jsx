@@ -13,7 +13,6 @@ const ReceiveMilkForm = () => {
 
   const submitMutation = useMutation({
     mutationFn: async (data) => {
-      // This should be replaced with an actual API call
       console.log('Submitting data:', data);
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { success: true };
@@ -25,8 +24,7 @@ const ReceiveMilkForm = () => {
   };
 
   const handleSourceChange = (value) => {
-    // This should be replaced with an actual API call to get the address
-    setSourceAddress('123 Farm Road, Farmville');
+    setSourceAddress(value === 'kyalimaFarm' ? 'Kyalima Farm, Plot 123, Farmville' : '');
   };
 
   return (
@@ -55,21 +53,22 @@ const ReceiveMilkForm = () => {
       </div>
 
       <div>
-        <Label htmlFor="sourceLocation">Source Location</Label>
+        <Label htmlFor="source">Source</Label>
         <Select onValueChange={handleSourceChange}>
           <SelectTrigger>
-            <SelectValue placeholder="Select source location" />
+            <SelectValue placeholder="Select source" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="farm1">Farm 1</SelectItem>
-            <SelectItem value="farm2">Farm 2</SelectItem>
-            <SelectItem value="collectionCenter1">Collection Center 1</SelectItem>
+            <SelectItem value="kyalimaFarm">Kyalima Farm</SelectItem>
+            <SelectItem value="anotherFarm">Another Farm</SelectItem>
+            <SelectItem value="supplier">Supplier</SelectItem>
+            <SelectItem value="collectionCenter">Collection Center</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div>
-        <Label htmlFor="sourceAddress">Source Address</Label>
+        <Label htmlFor="sourceAddress">Source Location/Address</Label>
         <Input id="sourceAddress" value={sourceAddress} onChange={(e) => setSourceAddress(e.target.value)} />
       </div>
 
@@ -79,8 +78,9 @@ const ReceiveMilkForm = () => {
       </div>
 
       <div>
-        <Label htmlFor="quantity">Quantity Received (Liters)</Label>
+        <Label htmlFor="quantity">Quantity Received</Label>
         <Input id="quantity" type="number" {...register('quantity', { required: true, min: 0 })} />
+        <span className="ml-2">liters</span>
       </div>
 
       <div>
@@ -137,6 +137,9 @@ const ReceiveMilkForm = () => {
             <SelectItem value="cooler1">Cooler 1</SelectItem>
             <SelectItem value="cooler2">Cooler 2</SelectItem>
             <SelectItem value="cooler3">Cooler 3</SelectItem>
+            <SelectItem value="cooler4">Cooler 4</SelectItem>
+            <SelectItem value="cooler5">Cooler 5</SelectItem>
+            <SelectItem value="cooler6">Cooler 6</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -166,6 +169,16 @@ const ReceiveMilkForm = () => {
             <SelectItem value="notCompleted">Not Completed</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="entrantName">Entrant Name</Label>
+        <Input id="entrantName" {...register('entrantName', { required: true })} />
+      </div>
+
+      <div>
+        <Label htmlFor="entrantPIN">Entrant PIN (Personal Identification Number)</Label>
+        <Input id="entrantPIN" type="password" {...register('entrantPIN', { required: true })} />
       </div>
 
       <div className="flex items-center space-x-2">
