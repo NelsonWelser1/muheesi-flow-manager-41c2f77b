@@ -1,162 +1,11 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import DairyCoolers from './dairy/DairyCoolers';
+import FactoryStock from './dairy/FactoryStock';
+import ColdRoomStock from './dairy/ColdRoomStock';
 
 const GrandBernaDairies = () => {
-  const [currentStock, setCurrentStock] = useState(null);
-  const [productCategory, setProductCategory] = useState('');
-
-  const handleSubmit = (e, locationType) => {
-    e.preventDefault();
-    setCurrentStock({
-      locationType,
-      productCategory: e.target.productCategory.value,
-      productDetails: e.target.productDetails.value,
-      quantity: e.target.quantity.value,
-      unit: e.target.unit.value,
-    });
-  };
-
-  const productCategories = {
-    'Cheese': ['Mozzarella', 'Cheddar', 'Paneer', 'Gouda'],
-    'Yogurt': ['Plain Smooth yogurt', 'Vanilla smooth yogurt', 'Strawberry smooth Yogurt', 'Fruit smooth yogurt'],
-    'Whole Milk': ['Milk Powder', 'Liquid Milk', 'Flavored Milk'],
-  };
-
-  const StockForm = ({ locationType }) => (
-    <form onSubmit={(e) => handleSubmit(e, locationType)} className="space-y-4">
-      <div>
-        <Label htmlFor="productCategory">Product Category</Label>
-        <Select id="productCategory" value={productCategory} onValueChange={setProductCategory} required>
-          <SelectTrigger>
-            <SelectValue placeholder="Select product category" />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.keys(productCategories).map(category => (
-              <SelectItem key={category} value={category}>{category}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label htmlFor="productDetails">Product Category Details</Label>
-        <Select id="productDetails" required>
-          <SelectTrigger>
-            <SelectValue placeholder="Select product details" />
-          </SelectTrigger>
-          <SelectContent>
-            {productCategories[productCategory]?.map(detail => (
-              <SelectItem key={detail} value={detail}>{detail}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label htmlFor="quantity">Quantity</Label>
-        <Input id="quantity" type="number" placeholder="Enter quantity" required />
-      </div>
-      <div>
-        <Label htmlFor="unit">Unit of Measurement</Label>
-        <Select id="unit" required>
-          <SelectTrigger>
-            <SelectValue placeholder="Select unit" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="kg">Kilograms (Kg)</SelectItem>
-            <SelectItem value="l">Liters (L)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label htmlFor="flow">Stock Flow</Label>
-        <Select id="flow" required>
-          <SelectTrigger>
-            <SelectValue placeholder="Select stock flow" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="inflow">Inflow</SelectItem>
-            <SelectItem value="outflow">Outflow</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      {locationType === 'dairyCoolers' && (
-        <div>
-          <Label htmlFor="source">Source</Label>
-          <Select id="source" required>
-            <SelectTrigger>
-              <SelectValue placeholder="Select source" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="farm">Farm</SelectItem>
-              <SelectItem value="supplier">Supplier</SelectItem>
-              <SelectItem value="distributor">Distributor</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-      {locationType === 'factory' && (
-        <div>
-          <Label htmlFor="source">Source</Label>
-          <Select id="source" required>
-            <SelectTrigger>
-              <SelectValue placeholder="Select source" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="coolers">Coolers</SelectItem>
-              <SelectItem value="farm">Farm</SelectItem>
-              <SelectItem value="supplier">Supplier</SelectItem>
-              <SelectItem value="distributor">Distributor</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-      {locationType === 'coldRoom' && (
-        <>
-          <div>
-            <Label htmlFor="source">Source</Label>
-            <Select id="source" required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select source" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="factory">Factory Only</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="destination">Destination</Label>
-            <Select id="destination" required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select destination" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="distributor">Distributor</SelectItem>
-                <SelectItem value="client">Client</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="destinationDetails">Indicate Distributor/Client Details</Label>
-            <Input id="destinationDetails" placeholder="Enter details" required />
-          </div>
-        </>
-      )}
-      <div>
-        <Label htmlFor="entrant">Data Entrant Name</Label>
-        <Input id="entrant" placeholder="Enter your name" required />
-      </div>
-      <div>
-        <Label htmlFor="pin">PIN (Personal Identification Number)</Label>
-        <Input id="pin" type="password" placeholder="Enter your PIN" required />
-      </div>
-      <Button type="submit">Submit</Button>
-    </form>
-  );
-
   return (
     <div className="space-y-6">
       <Card>
@@ -171,31 +20,17 @@ const GrandBernaDairies = () => {
               <TabsTrigger value="coldRoom">Cold Room</TabsTrigger>
             </TabsList>
             <TabsContent value="dairyCoolers">
-              <StockForm locationType="dairyCoolers" />
+              <DairyCoolers />
             </TabsContent>
             <TabsContent value="factory">
-              <StockForm locationType="factory" />
+              <FactoryStock />
             </TabsContent>
             <TabsContent value="coldRoom">
-              <StockForm locationType="coldRoom" />
+              <ColdRoomStock />
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
-
-      {currentStock && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Stock Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Location Type: {currentStock.locationType}</p>
-            <p>Product Category: {currentStock.productCategory}</p>
-            <p>Product Details: {currentStock.productDetails}</p>
-            <p>Quantity: {currentStock.quantity} {currentStock.unit}</p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
