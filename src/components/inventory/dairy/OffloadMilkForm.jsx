@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +25,7 @@ const OffloadMilkForm = () => {
 
   const destination = watch('destination');
 
-  React.useEffect(() => {
+  useEffect(() => {
     setIsProcessingPlant(destination === 'processingPlant');
   }, [destination]);
 
