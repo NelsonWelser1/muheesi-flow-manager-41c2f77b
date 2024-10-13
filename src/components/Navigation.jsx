@@ -11,7 +11,7 @@ const Navigation = () => {
           <Button asChild className="bg-white text-black font-bold">
             <Link to="/dashboard">Dashboard</Link>
           </Button>
-          <Button asChild className="bg-white text-black font-bold bg-gradient-to-r from-black via-yellow to-red bg-[length:3px_3px] bg-repeat-x">
+          <Button asChild className="bg-white text-black font-bold">
             <Link to="/manage-inventory">Manage Inventory</Link>
           </Button>
           <Button asChild className="bg-white text-black font-bold">

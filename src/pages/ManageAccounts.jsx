@@ -127,8 +127,10 @@ const ManageAccounts = () => {
   };
 
   const handleRemoveAccount = (index) => {
-    const newAccounts = accounts.filter((_, i) => i !== index);
-    setAccounts(newAccounts);
+    if (accounts[index].title !== "System Administrator (SysAdmin)") {
+      const newAccounts = accounts.filter((_, i) => i !== index);
+      setAccounts(newAccounts);
+    }
   };
 
   const handleAddResponsibility = (accountIndex, newResponsibility) => {
@@ -163,7 +165,9 @@ const ManageAccounts = () => {
                 <Input placeholder="New responsibility" id={`new-resp-${index}`} />
                 <Button onClick={() => handleAddResponsibility(index, document.getElementById(`new-resp-${index}`).value)}>Add Responsibility</Button>
               </div>
-              <Button onClick={() => handleRemoveAccount(index)} variant="destructive">Remove Account</Button>
+              {account.title !== "System Administrator (SysAdmin)" && (
+                <Button onClick={() => handleRemoveAccount(index)} variant="destructive">Remove Account</Button>
+              )}
             </AccordionContent>
           </AccordionItem>
         ))}
