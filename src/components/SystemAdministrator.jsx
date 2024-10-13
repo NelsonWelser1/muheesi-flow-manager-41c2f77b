@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import ManageAccounts from './ManageAccounts';
 
 const SystemAdministrator = () => {
   const [systemHealth, setSystemHealth] = useState({});
@@ -153,6 +154,13 @@ const SystemAdministrator = () => {
             <Button onClick={() => sendSystemAlerts('critical', 'Disk space running low')}>
               Send Test Alert
             </Button>
+          </AccordionContent>
+        </AccordionItem>
+        
+        <AccordionItem value="manage-accounts">
+          <AccordionTrigger>Manage Accounts</AccordionTrigger>
+          <AccordionContent>
+            <ManageAccounts />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

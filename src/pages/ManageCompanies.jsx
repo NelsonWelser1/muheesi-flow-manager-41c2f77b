@@ -1,6 +1,5 @@
 import React from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import ManageAccounts from '../components/ManageAccounts';
 import SystemAdministrator from '../components/SystemAdministrator';
 
 const ManageCompanies = () => {
@@ -13,12 +12,6 @@ const ManageCompanies = () => {
           <AccordionTrigger>System Administrator (SysAdmin)</AccordionTrigger>
           <AccordionContent>
             <SystemAdministrator />
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="manage-accounts">
-          <AccordionTrigger>Manage Accounts</AccordionTrigger>
-          <AccordionContent>
-            <ManageAccounts />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

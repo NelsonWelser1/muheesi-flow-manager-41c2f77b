@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import FarmSupervisorForm from './FarmSupervisorForm';
 
 const initialAccounts = [
   {
@@ -120,9 +121,28 @@ const initialAccounts = [
 
 const ManageAccounts = () => {
   const [accounts, setAccounts] = useState(initialAccounts);
+  const [newAccountTitle, setNewAccountTitle] = useState('');
+  const [newResponsibilities, setNewResponsibilities] = useState(['']);
 
-  const handleAddAccount = (newAccount) => {
+  const handleAddAccount = (e) => {
+    e.preventDefault();
+    const newAccount = {
+      title: newAccountTitle,
+      responsibilities: newResponsibilities.filter(r => r.trim() !== '')
+    };
     setAccounts([...accounts, newAccount]);
+    setNewAccountTitle('');
+    setNewResponsibilities(['']);
+  };
+
+  const handleAddResponsibilityField = () => {
+    setNewResponsibilities([...newResponsibilities, '']);
+  };
+
+  const handleResponsibilityChange = (index, value) => {
+    const updatedResponsibilities = [...newResponsibilities];
+    updatedResponsibilities[index] = value;
+    setNewResponsibilities(updatedResponsibilities);
   };
 
   const handleRemoveAccount = (index) => {
@@ -151,20 +171,26 @@ const ManageAccounts = () => {
           <AccordionItem value={`item-${index}`} key={index}>
             <AccordionTrigger>{account.title}</AccordionTrigger>
             <AccordionContent>
-              <ul className="list-disc pl-5 mb-4">
-                {account.responsibilities.map((responsibility, respIndex) => (
-                  <li key={respIndex} className="flex justify-between items-center">
-                    {responsibility}
-                    <Button onClick={() => handleRemoveResponsibility(index, respIndex)} variant="destructive" size="sm">Remove</Button>
-                  </li>
-                ))}
-              </ul>
-              <div className="flex gap-2 mb-4">
-                <Input placeholder="New responsibility" id={`new-resp-${index}`} />
-                <Button onClick={() => handleAddResponsibility(index, document.getElementById(`new-resp-${index}`).value)}>Add Responsibility</Button>
-              </div>
-              {account.title !== "System Administrator (SysAdmin)" && (
-                <Button onClick={() => handleRemoveAccount(index)} variant="destructive">Remove Account</Button>
+              {account.title === "Farm Supervisor" ? (
+                <FarmSupervisorForm />
+              ) : (
+                <>
+                  <ul className="list-disc pl-5 mb-4">
+                    {account.responsibilities.map((responsibility, respIndex) => (
+                      <li key={respIndex} className="flex justify-between items-center">
+                        {responsibility}
+                        <Button onClick={() => handleRemoveResponsibility(index, respIndex)} variant="destructive" size="sm">Remove</Button>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex gap-2 mb-4">
+                    <Input placeholder="New responsibility" id={`new-resp-${index}`} />
+                    <Button onClick={() => handleAddResponsibility(index, document.getElementById(`new-resp-${index}`).value)}>Add Responsibility</Button>
+                  </div>
+                  {account.title !== "System Administrator (SysAdmin)" && (
+                    <Button onClick={() => handleRemoveAccount(index)} variant="destructive">Remove Account</Button>
+                  )}
+                </>
               )}
             </AccordionContent>
           </AccordionItem>
@@ -172,23 +198,29 @@ const ManageAccounts = () => {
       </Accordion>
       <div className="mt-4">
         <h3 className="text-lg font-semibold mb-2">Add New Account</h3>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          handleAddAccount({
-            title: e.target.accountTitle.value,
-            responsibilities: [e.target.initialResponsibility.value]
-          });
-          e.target.reset();
-        }}>
+        <form onSubmit={handleAddAccount}>
           <div className="mb-2">
             <Label htmlFor="accountTitle">Account Title</Label>
-            <Input id="accountTitle" name="accountTitle" required />
+            <Input
+              id="accountTitle"
+              value={newAccountTitle}
+              onChange={(e) => setNewAccountTitle(e.target.value)}
+              required
+            />
           </div>
-          <div className="mb-2">
-            <Label htmlFor="initialResponsibility">Initial Responsibility</Label>
-            <Input id="initialResponsibility" name="initialResponsibility" required />
-          </div>
-          <Button type="submit">Add Account</Button>
+          {newResponsibilities.map((responsibility, index) => (
+            <div key={index} className="mb-2">
+              <Label htmlFor={`responsibility-${index}`}>Responsibility {index + 1}</Label>
+              <Input
+                id={`responsibility-${index}`}
+                value={responsibility}
+                onChange={(e) => handleResponsibilityChange(index, e.target.value)}
+                required
+              />
+            </div>
+          ))}
+          <Button type="button" onClick={handleAddResponsibilityField}>Add Another Responsibility</Button>
+          <Button type="submit" className="ml-2">Add Account</Button>
         </form>
       </div>
     </div>
