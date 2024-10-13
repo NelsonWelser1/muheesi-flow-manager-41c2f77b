@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 const userAccounts = [
   {
@@ -118,6 +120,50 @@ const userAccounts = [
   }
 ];
 
+const FarmSupervisorForm = () => {
+  const [formData, setFormData] = useState({});
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Form submitted:', formData);
+    // Here you would typically send the data to a server
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="responsibility">Responsibility</Label>
+        <Select name="responsibility" onChange={handleInputChange} required>
+          <option value="">Select a responsibility</option>
+          <option value="farm_registration">Farm and Farmer Registration</option>
+          <option value="monitoring_practices">Monitoring Coffee Farming Practices</option>
+          <option value="data_collection">Data Collection and Reporting</option>
+          <option value="logistics">Logistics Coordination</option>
+          <option value="quality_control">Quality Control</option>
+          <option value="scheduling">Scheduling and Forecasting</option>
+          <option value="inventory">Inventory Tracking</option>
+          <option value="communication">Communication and Feedback</option>
+          <option value="health_safety">Health, Safety, and Compliance</option>
+          <option value="technology">Technology Use and Training</option>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="action">Action</Label>
+        <Input name="action" onChange={handleInputChange} required />
+      </div>
+      <div>
+        <Label htmlFor="notes">Notes</Label>
+        <Textarea name="notes" onChange={handleInputChange} />
+      </div>
+      <Button type="submit">Submit</Button>
+    </form>
+  );
+};
+
 const ManageCompanies = () => {
   const [userName, setUserName] = useState('');
   const [userPIN, setUserPIN] = useState('');
@@ -135,28 +181,30 @@ const ManageCompanies = () => {
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Manage Companies</h1>
       
-      <form onSubmit={handleLogin} className="mb-8">
-        <div className="mb-4">
-          <Label htmlFor="userName">User Name</Label>
-          <Input
-            id="userName"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <Label htmlFor="userPIN">User PIN</Label>
-          <Input
-            id="userPIN"
-            type="password"
-            value={userPIN}
-            onChange={(e) => setUserPIN(e.target.value)}
-            required
-          />
-        </div>
-        <Button type="submit">Login</Button>
-      </form>
+      {!userRole && (
+        <form onSubmit={handleLogin} className="mb-8">
+          <div className="mb-4">
+            <Label htmlFor="userName">User Name</Label>
+            <Input
+              id="userName"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <Label htmlFor="userPIN">User PIN</Label>
+            <Input
+              id="userPIN"
+              type="password"
+              value={userPIN}
+              onChange={(e) => setUserPIN(e.target.value)}
+              required
+            />
+          </div>
+          <Button type="submit">Login</Button>
+        </form>
+      )}
 
       {userRole && (
         <div className="mb-8">
@@ -166,11 +214,15 @@ const ManageCompanies = () => {
               <AccordionItem value={`item-${index}`} key={index}>
                 <AccordionTrigger>{account.title}</AccordionTrigger>
                 <AccordionContent>
-                  <ul className="list-disc pl-5">
-                    {account.responsibilities.map((responsibility, idx) => (
-                      <li key={idx}>{responsibility}</li>
-                    ))}
-                  </ul>
+                  {account.title === "Farm Supervisors" ? (
+                    <FarmSupervisorForm />
+                  ) : (
+                    <ul className="list-disc pl-5">
+                      {account.responsibilities.map((responsibility, idx) => (
+                        <li key={idx}>{responsibility}</li>
+                      ))}
+                    </ul>
+                  )}
                 </AccordionContent>
               </AccordionItem>
             ))}

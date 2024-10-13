@@ -8,16 +8,16 @@ const Navigation = () => {
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold font-futuristic">Muheesi GKK Integrated System</Link>
         <div className="space-x-4">
-          <Button asChild>
+          <Button asChild className="bg-white text-black font-bold">
             <Link to="/dashboard">Dashboard</Link>
           </Button>
-          <Button asChild>
+          <Button asChild className="bg-white text-black font-bold">
             <Link to="/manage-inventory">Manage Inventory</Link>
           </Button>
-          <Button asChild>
+          <Button asChild className="bg-white text-black font-bold">
             <Link to="/manage-companies">Manage Companies</Link>
           </Button>
-          <Button asChild>
+          <Button asChild className="bg-white text-black font-bold">
             <Link to="/feedback">Feedback</Link>
           </Button>
         </div>
