@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import ManageAccounts from '../pages/ManageAccounts';
 
 const SystemAdministrator = () => {
   const [systemHealth, setSystemHealth] = useState({});
@@ -65,9 +64,7 @@ const SystemAdministrator = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">System Administrator Dashboard</h1>
-      
+    <div>
       <Accordion type="single" collapsible>
         <AccordionItem value="system-health">
           <AccordionTrigger>System Health</AccordionTrigger>
@@ -104,13 +101,6 @@ const SystemAdministrator = () => {
             <Button onClick={manageDatabaseOperations}>Backup Database</Button>
             <Button onClick={manageDatabaseOperations}>Restore Database</Button>
             <Button onClick={manageDatabaseOperations}>Optimize Database</Button>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="user-permissions">
-          <AccordionTrigger>User Permissions Management</AccordionTrigger>
-          <AccordionContent>
-            <ManageAccounts />
           </AccordionContent>
         </AccordionItem>
 
