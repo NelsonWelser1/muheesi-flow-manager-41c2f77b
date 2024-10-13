@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useMutation } from '@tanstack/react-query';
 
 const OffloadMilkForm = () => {
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm();
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
   const [isProcessingPlant, setIsProcessingPlant] = useState(false);
 
   const submitMutation = useMutation({
@@ -29,25 +29,11 @@ const OffloadMilkForm = () => {
     setIsProcessingPlant(destination === 'processingPlant');
   }, [destination]);
 
-  // Auto-fill function
-  const handleDestinationChange = (value) => {
-    if (value === 'processingPlant') {
-      setValue('clientDetails', 'Processing Plant A, 123 Factory Road');
-    } else if (value === 'client') {
-      setValue('clientDetails', '');
-      setValue('shippingDetails', 'Standard Shipping, 1-2 days');
-      setValue('tankerInfo', 'Tanker 001, John Doe');
-    }
-  };
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <Label htmlFor="destination">Destination</Label>
-        <Select onValueChange={(value) => {
-          register('destination').onChange({ target: { value } });
-          handleDestinationChange(value);
-        }}>
+        <Select onValueChange={(value) => register('destination').onChange({ target: { value } })}>
           <SelectTrigger>
             <SelectValue placeholder="Select destination" />
           </SelectTrigger>
@@ -158,7 +144,6 @@ const OffloadMilkForm = () => {
       <Button type="button" onClick={() => console.log('Print daily report')}>
         Print Daily Report
       </Button>
-
     </form>
   );
 };
