@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AccountList from './accounts/AccountList';
 import AddAccountForm from './accounts/AddAccountForm';
 import CompanyAccounts from './accounts/CompanyAccounts';
+import AccountsChart from './accounts/AccountsChart';
 
 const initialAccounts = [
   {
@@ -103,6 +104,7 @@ const ManageAccounts = () => {
         setCompanyAccounts={setCompanyAccounts}
         onAddEmployee={handleAddCompanyEmployee}
       />
+      <AccountsChart companyAccounts={companyAccounts} />
     </div>
   );
 };
