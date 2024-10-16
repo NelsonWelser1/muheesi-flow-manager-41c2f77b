@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AccountList from './accounts/AccountList';
 import AddAccountForm from './accounts/AddAccountForm';
 import CompanyAccounts from './accounts/CompanyAccounts';
+import AccountsChart from './accounts/AccountsChart';
 
 const initialAccounts = [
   {
@@ -34,17 +35,63 @@ const initialAccounts = [
   }
 ];
 
-const companyAccounts = [
-  { name: "Grand Berna Limited", employees: [] },
-  { name: "KAJON Coffee Limited", employees: [] },
-  { name: "Kyalima Farmers Limited", employees: [] }
+const initialCompanyAccounts = [
+  {
+    name: "Grand Berna Limited",
+    employees: [
+      { title: "Operations Manager", responsibilities: [] },
+      { title: "Procurement Manager", responsibilities: [] },
+      { title: "Warehouse Supervisor", responsibilities: [] },
+      { title: "Farm Manager", responsibilities: [] },
+      { title: "Logistics Manager", responsibilities: [] },
+      { title: "Inventory Manager", responsibilities: [] },
+      { title: "Sales & Export Manager", responsibilities: [] },
+      { title: "Compliance & Quality Control Officer", responsibilities: [] },
+      { title: "Finance Manager", responsibilities: [] }
+    ]
+  },
+  {
+    name: "KAJON Coffee Limited",
+    employees: [
+      { title: "Operations Manager", responsibilities: [] },
+      { title: "Procurement Manager", responsibilities: [] },
+      { title: "Warehouse Supervisor", responsibilities: [] },
+      { title: "Farm Manager", responsibilities: [] },
+      { title: "Logistics Manager", responsibilities: [] },
+      { title: "Inventory Manager", responsibilities: [] },
+      { title: "Sales & Export Manager", responsibilities: [] },
+      { title: "Compliance & Quality Control Officer", responsibilities: [] },
+      { title: "Finance Manager", responsibilities: [] }
+    ]
+  },
+  {
+    name: "Kyalima Farmers Limited",
+    employees: [
+      { title: "Operations Manager", responsibilities: [] },
+      { title: "Procurement Manager", responsibilities: [] },
+      { title: "Warehouse Supervisor", responsibilities: [] },
+      { title: "Farm Manager", responsibilities: [] },
+      { title: "Logistics Manager", responsibilities: [] },
+      { title: "Inventory Manager", responsibilities: [] },
+      { title: "Sales & Export Manager", responsibilities: [] },
+      { title: "Compliance & Quality Control Officer", responsibilities: [] },
+      { title: "Finance Manager", responsibilities: [] }
+    ]
+  }
 ];
 
 const ManageAccounts = () => {
   const [accounts, setAccounts] = useState(initialAccounts);
+  const [companyAccounts, setCompanyAccounts] = useState(initialCompanyAccounts);
 
   const handleAddAccount = (newAccount) => {
     setAccounts([...accounts, newAccount]);
+  };
+
+  const handleAddCompanyEmployee = (companyIndex, newEmployee) => {
+    const updatedCompanyAccounts = [...companyAccounts];
+    updatedCompanyAccounts[companyIndex].employees.push(newEmployee);
+    setCompanyAccounts(updatedCompanyAccounts);
   };
 
   return (
@@ -52,7 +99,12 @@ const ManageAccounts = () => {
       <h1 className="text-3xl font-bold mb-6">Manage Accounts</h1>
       <AccountList accounts={accounts} setAccounts={setAccounts} />
       <AddAccountForm onAddAccount={handleAddAccount} />
-      <CompanyAccounts companyAccounts={companyAccounts} />
+      <CompanyAccounts 
+        companyAccounts={companyAccounts} 
+        setCompanyAccounts={setCompanyAccounts}
+        onAddEmployee={handleAddCompanyEmployee}
+      />
+      <AccountsChart companyAccounts={companyAccounts} />
     </div>
   );
 };
