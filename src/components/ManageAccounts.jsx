@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import SystemAdministrator from './accounts/SystemAdministrator';
-import SystemAdministratorEmployeeInterface from './accounts/SystemAdministratorEmployeeInterface';
 import OperationsManager from './accounts/OperationsManager';
 import ProcurementManager from './accounts/ProcurementManager';
 import WarehouseSupervisor from './accounts/WarehouseSupervisor';
@@ -15,7 +14,6 @@ import FinanceManager from './accounts/FinanceManager';
 
 const accounts = [
   { title: "System Administrator (SysAdmin)", Component: SystemAdministrator },
-  { title: "System Administrator (SysAdmin) Employee Interface", Component: SystemAdministratorEmployeeInterface },
   { title: "Operations Manager", Component: OperationsManager },
   { title: "Procurement Manager", Component: ProcurementManager },
   { title: "Warehouse Supervisor", Component: WarehouseSupervisor },
