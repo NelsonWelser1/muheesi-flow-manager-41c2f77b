@@ -1,110 +1,47 @@
 import React, { useState } from 'react';
-import AccountList from './accounts/AccountList';
-import AddAccountForm from './accounts/AddAccountForm';
-import CompanyAccounts from './accounts/CompanyAccounts';
-import AccountsChart from './accounts/AccountsChart';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import SystemAdministrator from './accounts/SystemAdministrator';
+import SystemAdministratorEmployeeInterface from './accounts/SystemAdministratorEmployeeInterface';
+import OperationsManager from './accounts/OperationsManager';
+import ProcurementManager from './accounts/ProcurementManager';
+import WarehouseSupervisor from './accounts/WarehouseSupervisor';
+import FarmManager from './accounts/FarmManager';
+import FarmSupervisor from './accounts/FarmSupervisor';
+import LogisticsManager from './accounts/LogisticsManager';
+import InventoryManager from './accounts/InventoryManager';
+import SalesExportManager from './accounts/SalesExportManager';
+import ComplianceQualityControl from './accounts/ComplianceQualityControl';
+import FinanceManager from './accounts/FinanceManager';
 
-const initialAccounts = [
-  {
-    title: "System Administrator (SysAdmin)",
-    responsibilities: [
-      "Overall system management and oversight.",
-      "Configure system settings, database management, and user permissions.",
-      "Ensure data backups, security protocols, and system integrity.",
-      "Resolve any technical issues with the system and provide IT support.",
-      "Maintain and update the system infrastructure, including software upgrades."
-    ]
-  },
-  {
-    title: "Chief Executive Account CEO H.E. Rtd. Maj. Gen. Muheesi Geoffrey Baraba",
-    responsibilities: [
-      "Overall company management and strategic decision-making.",
-      "Review and approve high-level reports and financial statements.",
-      "Set company goals and objectives.",
-      "Represent the company in major business dealings and partnerships."
-    ]
-  },
-  {
-    title: "General Manager",
-    responsibilities: [
-      "Oversee day-to-day operations of the company.",
-      "Implement strategies set by the CEO.",
-      "Manage department heads and ensure smooth interdepartmental coordination.",
-      "Report directly to the CEO on company performance and challenges."
-    ]
-  }
-];
-
-const initialCompanyAccounts = [
-  {
-    name: "Grand Berna Limited",
-    employees: [
-      { title: "Operations Manager", responsibilities: [] },
-      { title: "Procurement Manager", responsibilities: [] },
-      { title: "Warehouse Supervisor", responsibilities: [] },
-      { title: "Farm Manager", responsibilities: [] },
-      { title: "Logistics Manager", responsibilities: [] },
-      { title: "Inventory Manager", responsibilities: [] },
-      { title: "Sales & Export Manager", responsibilities: [] },
-      { title: "Compliance & Quality Control Officer", responsibilities: [] },
-      { title: "Finance Manager", responsibilities: [] }
-    ]
-  },
-  {
-    name: "KAJON Coffee Limited",
-    employees: [
-      { title: "Operations Manager", responsibilities: [] },
-      { title: "Procurement Manager", responsibilities: [] },
-      { title: "Warehouse Supervisor", responsibilities: [] },
-      { title: "Farm Manager", responsibilities: [] },
-      { title: "Logistics Manager", responsibilities: [] },
-      { title: "Inventory Manager", responsibilities: [] },
-      { title: "Sales & Export Manager", responsibilities: [] },
-      { title: "Compliance & Quality Control Officer", responsibilities: [] },
-      { title: "Finance Manager", responsibilities: [] }
-    ]
-  },
-  {
-    name: "Kyalima Farmers Limited",
-    employees: [
-      { title: "Operations Manager", responsibilities: [] },
-      { title: "Procurement Manager", responsibilities: [] },
-      { title: "Warehouse Supervisor", responsibilities: [] },
-      { title: "Farm Manager", responsibilities: [] },
-      { title: "Logistics Manager", responsibilities: [] },
-      { title: "Inventory Manager", responsibilities: [] },
-      { title: "Sales & Export Manager", responsibilities: [] },
-      { title: "Compliance & Quality Control Officer", responsibilities: [] },
-      { title: "Finance Manager", responsibilities: [] }
-    ]
-  }
+const accounts = [
+  { title: "System Administrator (SysAdmin)", Component: SystemAdministrator },
+  { title: "System Administrator (SysAdmin) Employee Interface", Component: SystemAdministratorEmployeeInterface },
+  { title: "Operations Manager", Component: OperationsManager },
+  { title: "Procurement Manager", Component: ProcurementManager },
+  { title: "Warehouse Supervisor", Component: WarehouseSupervisor },
+  { title: "Farm Manager", Component: FarmManager },
+  { title: "Farm Supervisor", Component: FarmSupervisor },
+  { title: "Logistics Manager", Component: LogisticsManager },
+  { title: "Inventory Manager", Component: InventoryManager },
+  { title: "Sales & Export Manager", Component: SalesExportManager },
+  { title: "Compliance & Quality Control Officer", Component: ComplianceQualityControl },
+  { title: "Finance Manager", Component: FinanceManager }
 ];
 
 const ManageAccounts = () => {
-  const [accounts, setAccounts] = useState(initialAccounts);
-  const [companyAccounts, setCompanyAccounts] = useState(initialCompanyAccounts);
-
-  const handleAddAccount = (newAccount) => {
-    setAccounts([...accounts, newAccount]);
-  };
-
-  const handleAddCompanyEmployee = (companyIndex, newEmployee) => {
-    const updatedCompanyAccounts = [...companyAccounts];
-    updatedCompanyAccounts[companyIndex].employees.push(newEmployee);
-    setCompanyAccounts(updatedCompanyAccounts);
-  };
-
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Manage Accounts</h1>
-      <AccountList accounts={accounts} setAccounts={setAccounts} />
-      <AddAccountForm onAddAccount={handleAddAccount} />
-      <CompanyAccounts 
-        companyAccounts={companyAccounts} 
-        setCompanyAccounts={setCompanyAccounts}
-        onAddEmployee={handleAddCompanyEmployee}
-      />
-      <AccountsChart companyAccounts={companyAccounts} />
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold">Manage Accounts</h2>
+      <Accordion type="single" collapsible className="w-full">
+        {accounts.map((account, index) => (
+          <AccordionItem value={`item-${index}`} key={index}>
+            <AccordionTrigger>{account.title}</AccordionTrigger>
+            <AccordionContent>
+              <account.Component />
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
     </div>
   );
 };
