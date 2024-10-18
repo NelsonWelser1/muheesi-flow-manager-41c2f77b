@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import KAJONCoffeeDetails from './KAJONCoffeeDetails';
 
 const fetchCompanyStocks = async () => {
   // This should be replaced with an actual API call
@@ -59,6 +60,7 @@ const companies = [
 ];
 
 const CompanyShowcase = () => {
+  const [selectedCompany, setSelectedCompany] = useState(null);
   const { data: stocks, isLoading, error } = useQuery({
     queryKey: ['companyStocks'],
     queryFn: fetchCompanyStocks,
@@ -81,7 +83,7 @@ const CompanyShowcase = () => {
               <div className="p-6">
                 <h2 className="text-2xl leading-6 font-semibold text-gray-900">{company.name}</h2>
                 <p className="mt-4 text-lg text-gray-500">{company.description}</p>
-                <Button className="mt-8 w-full">Learn More</Button>
+                <Button className="mt-8 w-full" onClick={() => setSelectedCompany(company.name)}>Learn More</Button>
               </div>
               <div className="pt-6 pb-8 px-6">
                 <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase mb-4">Key Products</h3>
@@ -128,6 +130,9 @@ const CompanyShowcase = () => {
           ))}
         </div>
       </div>
+      {selectedCompany === 'KAJON Coffee Limited' && (
+        <KAJONCoffeeDetails onClose={() => setSelectedCompany(null)} />
+      )}
     </div>
   );
 };
