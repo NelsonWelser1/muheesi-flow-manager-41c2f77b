@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { useToast } from "@/components/ui/use-toast";
+import { Share2 } from 'lucide-react';
 
 const data = [
   { name: 'Nov 2023', price: 2500 },
@@ -17,59 +18,108 @@ const data = [
 
 const KAJONCoffeeDetails = ({ onClose }) => {
   const { toast } = useToast();
+  const contentRef = useRef(null);
 
-  const printAsPDF = () => {
-    const input = document.getElementById('coffee-analysis');
-    html2canvas(input).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF();
-      pdf.addImage(imgData, 'PNG', 0, 0);
-      pdf.save("KAJON_Coffee_Analysis.pdf");
-    });
+  const captureContent = () => {
+    return html2canvas(contentRef.current);
+  };
+
+  const printAsPDF = async () => {
+    const canvas = await captureContent();
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save("KAJON_Coffee_Analysis.pdf");
     toast({
       title: "PDF Generated",
       description: "The analysis has been saved as a PDF.",
     });
   };
 
-  const saveAsJPEG = () => {
-    const input = document.getElementById('coffee-analysis');
-    html2canvas(input).then((canvas) => {
-      const link = document.createElement('a');
-      link.download = 'KAJON_Coffee_Analysis.jpg';
-      link.href = canvas.toDataURL('image/jpeg');
-      link.click();
-    });
+  const saveAsJPEG = async () => {
+    const canvas = await captureContent();
+    const link = document.createElement('a');
+    link.download = 'KAJON_Coffee_Analysis.jpg';
+    link.href = canvas.toDataURL('image/jpeg');
+    link.click();
     toast({
       title: "JPEG Saved",
       description: "The analysis has been saved as a JPEG image.",
     });
   };
 
-  const shareOnSocial = () => {
+  const shareContent = async () => {
+    const canvas = await captureContent();
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+    const file = new File([blob], 'KAJON_Coffee_Analysis.jpg', { type: 'image/jpeg' });
+
     if (navigator.share) {
-      navigator.share({
-        title: 'KAJON Coffee Market Analysis',
-        text: 'Check out this coffee market analysis from KAJON Coffee Limited!',
-        url: window.location.href,
-      })
-      .then(() => toast({
-        title: "Shared Successfully",
-        description: "The analysis has been shared.",
-      }))
-      .catch((error) => console.log('Error sharing', error));
+      try {
+        await navigator.share({
+          title: 'KAJON Coffee Market Analysis',
+          text: 'Check out this coffee market analysis from KAJON Coffee Limited!',
+          files: [file],
+        });
+        toast({
+          title: "Shared Successfully",
+          description: "The analysis has been shared.",
+        });
+      } catch (error) {
+        console.error('Error sharing', error);
+        fallbackShare();
+      }
     } else {
-      toast({
-        title: "Sharing Unavailable",
-        description: "Your browser doesn't support sharing.",
-        variant: "destructive",
-      });
+      fallbackShare();
     }
   };
 
+  const fallbackShare = () => {
+    const shareUrl = encodeURIComponent(window.location.href);
+    const shareText = encodeURIComponent('Check out this coffee market analysis from KAJON Coffee Limited!');
+    const shareOptions = [
+      { name: 'WhatsApp', url: `https://wa.me/?text=${shareText}%20${shareUrl}` },
+      { name: 'Facebook', url: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}` },
+      { name: 'Twitter', url: `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}` },
+      { name: 'LinkedIn', url: `https://www.linkedin.com/shareArticle?mini=true&url=${shareUrl}&title=${shareText}` },
+      { name: 'Email', url: `mailto:?subject=KAJON Coffee Market Analysis&body=${shareText}%20${shareUrl}` },
+    ];
+    
+    const shareLinks = shareOptions.map(option => 
+      `<a href="${option.url}" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">${option.name}</a>`
+    ).join('');
+
+    const shareMenu = document.createElement('div');
+    shareMenu.innerHTML = `
+      <div class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+          ${shareLinks}
+        </div>
+      </div>
+    `;
+    shareMenu.style.position = 'fixed';
+    shareMenu.style.top = '50%';
+    shareMenu.style.left = '50%';
+    shareMenu.style.transform = 'translate(-50%, -50%)';
+    shareMenu.style.zIndex = '1000';
+
+    document.body.appendChild(shareMenu);
+
+    const closeMenu = (e) => {
+      if (!shareMenu.contains(e.target)) {
+        document.body.removeChild(shareMenu);
+        document.removeEventListener('click', closeMenu);
+      }
+    };
+
+    setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto" id="coffee-analysis">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto" ref={contentRef}>
         <CardHeader>
           <CardTitle>KAJON Coffee Limited Market Analysis</CardTitle>
           <Button onClick={onClose} variant="outline" className="absolute top-2 right-2">
@@ -133,7 +183,7 @@ const KAJONCoffeeDetails = ({ onClose }) => {
           <div className="mt-6 flex justify-end space-x-4">
             <Button onClick={printAsPDF}>Print as PDF</Button>
             <Button onClick={saveAsJPEG}>Save as JPEG</Button>
-            <Button onClick={shareOnSocial}>Share</Button>
+            <Button onClick={shareContent}><Share2 className="mr-2" />Share</Button>
           </div>
         </CardContent>
       </Card>
