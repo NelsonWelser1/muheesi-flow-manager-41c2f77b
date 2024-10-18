@@ -84,12 +84,33 @@ const KAJONCoffeeDetails = ({ onClose }) => {
           <div className="h-[300px] mb-6">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff" />
-                <XAxis dataKey="name" stroke="#ffffff" />
-                <YAxis stroke="#ffffff" />
-                <Tooltip contentStyle={{ backgroundColor: '#1e1e1e', border: 'none' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#333" 
+                  tick={{ fill: '#333' }} 
+                  tickLine={{ stroke: '#333' }}
+                />
+                <YAxis 
+                  stroke="#333" 
+                  tick={{ fill: '#333' }} 
+                  tickLine={{ stroke: '#333' }}
+                  tickFormatter={(value) => `$${value}`}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
+                  labelStyle={{ color: '#333' }}
+                  itemStyle={{ color: '#333' }}
+                />
                 <Legend />
-                <Line type="monotone" dataKey="price" stroke="#ff4136" strokeWidth={2} dot={{ fill: '#ffffff' }} activeDot={{ r: 8 }} />
+                <Line 
+                  type="monotone" 
+                  dataKey="price" 
+                  stroke="#ff4136" 
+                  strokeWidth={2} 
+                  dot={{ fill: '#ff4136', stroke: '#ff4136', strokeWidth: 2 }} 
+                  activeDot={{ r: 8 }} 
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
