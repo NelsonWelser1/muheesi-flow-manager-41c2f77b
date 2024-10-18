@@ -1,10 +1,7 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import html2pdf from 'html2pdf.js';
-import { Printer, Image, Share2 } from 'lucide-react';
-import { toast } from 'sonner';
 
 const data = [
   { name: 'Nov 2023', price: 2500 },
@@ -16,61 +13,16 @@ const data = [
 ];
 
 const KAJONCoffeeDetails = ({ onClose }) => {
-  const contentRef = useRef(null);
-
-  const handlePrintPDF = () => {
-    const element = contentRef.current;
-    html2pdf().from(element).save('KAJON_Coffee_Market_Analysis.pdf');
-    toast.success('PDF generated successfully!');
-  };
-
-  const handleSaveImage = () => {
-    html2pdf().from(contentRef.current).outputImg('png').then((img) => {
-      const link = document.createElement('a');
-      link.href = img.src;
-      link.download = 'KAJON_Coffee_Market_Analysis.png';
-      link.click();
-      toast.success('Image saved successfully!');
-    });
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'KAJON Coffee Market Analysis',
-        text: 'Check out this coffee market analysis!',
-        url: window.location.href,
-      }).then(() => {
-        toast.success('Shared successfully!');
-      }).catch((error) => {
-        toast.error('Error sharing: ' + error);
-      });
-    } else {
-      toast.error('Sharing is not supported on this device');
-    }
-  };
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
-      <Card className="w-full max-w-4xl">
-        <CardHeader className="flex flex-row items-center justify-between">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <CardHeader>
           <CardTitle>KAJON Coffee Limited Market Analysis</CardTitle>
-          <div className="flex space-x-2">
-            <Button onClick={handlePrintPDF} variant="outline" size="icon">
-              <Printer className="h-4 w-4" />
-            </Button>
-            <Button onClick={handleSaveImage} variant="outline" size="icon">
-              <Image className="h-4 w-4" />
-            </Button>
-            <Button onClick={handleShare} variant="outline" size="icon">
-              <Share2 className="h-4 w-4" />
-            </Button>
-            <Button onClick={onClose} variant="outline" size="icon">
-              X
-            </Button>
-          </div>
+          <Button onClick={onClose} variant="outline" className="absolute top-2 right-2">
+            Close
+          </Button>
         </CardHeader>
-        <CardContent ref={contentRef}>
+        <CardContent>
           <div className="mb-6">
             <h3 className="text-2xl font-bold mb-2">Current Price: 4,924.00 USD</h3>
             <p className="text-red-500">-34.00 (-0.69%)</p>
