@@ -7,17 +7,6 @@ const fromSupabase = async (query) => {
     return data;
 };
 
-/*
-### KAJON Coffee Limited
-
-| name       | type                     | format | required |
-|------------|--------------------------|--------|----------|
-| id         | int8                     | number | true     |
-| created_at | timestamp with time zone | string | true     |
-
-Note: This table doesn't have any foreign key relationships.
-*/
-
 export const useKAJONCoffeeLimited = (id) => useQuery({
     queryKey: ['KAJONCoffeeLimited', id],
     queryFn: () => fromSupabase(supabase.from('KAJON Coffee Limited').select('*').eq('id', id).single()),

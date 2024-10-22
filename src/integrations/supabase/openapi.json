@@ -1,631 +1,163 @@
 {
-  "swagger": "2.0",
+  "openapi": "3.0.0",
   "info": {
-    "description": "",
-    "title": "standard public schema",
-    "version": "12.2.3 (519615d)"
+    "title": "Supabase API",
+    "version": "1.0.0"
   },
-  "host": "rokfgilklxejwqxipuhw.supabase.co:443",
-  "basePath": "/",
-  "schemes": [
-    "https"
-  ],
-  "consumes": [
-    "application/json",
-    "application/vnd.pgrst.object+json;nulls=stripped",
-    "application/vnd.pgrst.object+json",
-    "text/csv"
-  ],
-  "produces": [
-    "application/json",
-    "application/vnd.pgrst.object+json;nulls=stripped",
-    "application/vnd.pgrst.object+json",
-    "text/csv"
-  ],
   "paths": {
-    "/": {
+    "/rest/v1/Grand Berna Dairies": {
       "get": {
-        "produces": [
-          "application/openapi+json",
-          "application/json"
-        ],
+        "summary": "List Grand Berna Dairies",
         "responses": {
           "200": {
-            "description": "OK"
-          }
-        },
-        "summary": "OpenAPI description (this document)",
-        "tags": [
-          "Introspection"
-        ]
-      }
-    },
-    "/Grand Berna Dairies": {
-      "get": {
-        "parameters": [
-          {
-            "$ref": "#/parameters/rowFilter.Grand Berna Dairies.id"
-          },
-          {
-            "$ref": "#/parameters/rowFilter.Grand Berna Dairies.created_at"
-          },
-          {
-            "$ref": "#/parameters/select"
-          },
-          {
-            "$ref": "#/parameters/order"
-          },
-          {
-            "$ref": "#/parameters/range"
-          },
-          {
-            "$ref": "#/parameters/rangeUnit"
-          },
-          {
-            "$ref": "#/parameters/offset"
-          },
-          {
-            "$ref": "#/parameters/limit"
-          },
-          {
-            "$ref": "#/parameters/preferCount"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "items": {
-                "$ref": "#/definitions/Grand Berna Dairies"
-              },
-              "type": "array"
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GrandBernaDairy"
+                  }
+                }
+              }
             }
-          },
-          "206": {
-            "description": "Partial Content"
           }
-        },
-        "summary": "Dairy Sector",
-        "tags": [
-          "Grand Berna Dairies"
-        ]
+        }
       },
       "post": {
-        "parameters": [
-          {
-            "$ref": "#/parameters/body.Grand Berna Dairies"
-          },
-          {
-            "$ref": "#/parameters/select"
-          },
-          {
-            "$ref": "#/parameters/preferPost"
+        "summary": "Create Grand Berna Dairy",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrandBernaDairy"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "201": {
             "description": "Created"
           }
-        },
-        "summary": "Dairy Sector",
-        "tags": [
-          "Grand Berna Dairies"
-        ]
-      },
-      "delete": {
-        "parameters": [
-          {
-            "$ref": "#/parameters/rowFilter.Grand Berna Dairies.id"
-          },
-          {
-            "$ref": "#/parameters/rowFilter.Grand Berna Dairies.created_at"
-          },
-          {
-            "$ref": "#/parameters/preferReturn"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          }
-        },
-        "summary": "Dairy Sector",
-        "tags": [
-          "Grand Berna Dairies"
-        ]
-      },
-      "patch": {
-        "parameters": [
-          {
-            "$ref": "#/parameters/rowFilter.Grand Berna Dairies.id"
-          },
-          {
-            "$ref": "#/parameters/rowFilter.Grand Berna Dairies.created_at"
-          },
-          {
-            "$ref": "#/parameters/body.Grand Berna Dairies"
-          },
-          {
-            "$ref": "#/parameters/preferReturn"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          }
-        },
-        "summary": "Dairy Sector",
-        "tags": [
-          "Grand Berna Dairies"
-        ]
+        }
       }
     },
-    "/KAJON Coffee Limited": {
+    "/rest/v1/KAJON Coffee Limited": {
       "get": {
-        "parameters": [
-          {
-            "$ref": "#/parameters/rowFilter.KAJON Coffee Limited.id"
-          },
-          {
-            "$ref": "#/parameters/rowFilter.KAJON Coffee Limited.created_at"
-          },
-          {
-            "$ref": "#/parameters/select"
-          },
-          {
-            "$ref": "#/parameters/order"
-          },
-          {
-            "$ref": "#/parameters/range"
-          },
-          {
-            "$ref": "#/parameters/rangeUnit"
-          },
-          {
-            "$ref": "#/parameters/offset"
-          },
-          {
-            "$ref": "#/parameters/limit"
-          },
-          {
-            "$ref": "#/parameters/preferCount"
-          }
-        ],
+        "summary": "List KAJON Coffee Limited",
         "responses": {
           "200": {
-            "description": "OK",
-            "schema": {
-              "items": {
-                "$ref": "#/definitions/KAJON Coffee Limited"
-              },
-              "type": "array"
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KAJONCoffeeLimited"
+                  }
+                }
+              }
             }
-          },
-          "206": {
-            "description": "Partial Content"
           }
-        },
-        "summary": "Coffee Sector",
-        "tags": [
-          "KAJON Coffee Limited"
-        ]
+        }
       },
       "post": {
-        "parameters": [
-          {
-            "$ref": "#/parameters/body.KAJON Coffee Limited"
-          },
-          {
-            "$ref": "#/parameters/select"
-          },
-          {
-            "$ref": "#/parameters/preferPost"
+        "summary": "Create KAJON Coffee Limited",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KAJONCoffeeLimited"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "201": {
             "description": "Created"
           }
-        },
-        "summary": "Coffee Sector",
-        "tags": [
-          "KAJON Coffee Limited"
-        ]
-      },
-      "delete": {
-        "parameters": [
-          {
-            "$ref": "#/parameters/rowFilter.KAJON Coffee Limited.id"
-          },
-          {
-            "$ref": "#/parameters/rowFilter.KAJON Coffee Limited.created_at"
-          },
-          {
-            "$ref": "#/parameters/preferReturn"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          }
-        },
-        "summary": "Coffee Sector",
-        "tags": [
-          "KAJON Coffee Limited"
-        ]
-      },
-      "patch": {
-        "parameters": [
-          {
-            "$ref": "#/parameters/rowFilter.KAJON Coffee Limited.id"
-          },
-          {
-            "$ref": "#/parameters/rowFilter.KAJON Coffee Limited.created_at"
-          },
-          {
-            "$ref": "#/parameters/body.KAJON Coffee Limited"
-          },
-          {
-            "$ref": "#/parameters/preferReturn"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          }
-        },
-        "summary": "Coffee Sector",
-        "tags": [
-          "KAJON Coffee Limited"
-        ]
+        }
       }
     },
-    "/Kyalima Farmers Limited": {
+    "/rest/v1/Kyalima Farmers Limited": {
       "get": {
-        "parameters": [
-          {
-            "$ref": "#/parameters/rowFilter.Kyalima Farmers Limited.id"
-          },
-          {
-            "$ref": "#/parameters/rowFilter.Kyalima Farmers Limited.created_at"
-          },
-          {
-            "$ref": "#/parameters/select"
-          },
-          {
-            "$ref": "#/parameters/order"
-          },
-          {
-            "$ref": "#/parameters/range"
-          },
-          {
-            "$ref": "#/parameters/rangeUnit"
-          },
-          {
-            "$ref": "#/parameters/offset"
-          },
-          {
-            "$ref": "#/parameters/limit"
-          },
-          {
-            "$ref": "#/parameters/preferCount"
-          }
-        ],
+        "summary": "List Kyalima Farmers Limited",
         "responses": {
           "200": {
-            "description": "OK",
-            "schema": {
-              "items": {
-                "$ref": "#/definitions/Kyalima Farmers Limited"
-              },
-              "type": "array"
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KyalimaFarmersLimited"
+                  }
+                }
+              }
             }
-          },
-          "206": {
-            "description": "Partial Content"
           }
-        },
-        "summary": "Farmers Sector",
-        "tags": [
-          "Kyalima Farmers Limited"
-        ]
+        }
       },
       "post": {
-        "parameters": [
-          {
-            "$ref": "#/parameters/body.Kyalima Farmers Limited"
-          },
-          {
-            "$ref": "#/parameters/select"
-          },
-          {
-            "$ref": "#/parameters/preferPost"
+        "summary": "Create Kyalima Farmers Limited",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KyalimaFarmersLimited"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "201": {
             "description": "Created"
           }
-        },
-        "summary": "Farmers Sector",
-        "tags": [
-          "Kyalima Farmers Limited"
-        ]
-      },
-      "delete": {
-        "parameters": [
-          {
-            "$ref": "#/parameters/rowFilter.Kyalima Farmers Limited.id"
-          },
-          {
-            "$ref": "#/parameters/rowFilter.Kyalima Farmers Limited.created_at"
-          },
-          {
-            "$ref": "#/parameters/preferReturn"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          }
-        },
-        "summary": "Farmers Sector",
-        "tags": [
-          "Kyalima Farmers Limited"
-        ]
-      },
-      "patch": {
-        "parameters": [
-          {
-            "$ref": "#/parameters/rowFilter.Kyalima Farmers Limited.id"
-          },
-          {
-            "$ref": "#/parameters/rowFilter.Kyalima Farmers Limited.created_at"
-          },
-          {
-            "$ref": "#/parameters/body.Kyalima Farmers Limited"
-          },
-          {
-            "$ref": "#/parameters/preferReturn"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          }
-        },
-        "summary": "Farmers Sector",
-        "tags": [
-          "Kyalima Farmers Limited"
-        ]
+        }
       }
     }
   },
-  "definitions": {
-    "Grand Berna Dairies": {
-      "description": "Dairy Sector",
-      "required": [
-        "id",
-        "created_at"
-      ],
-      "properties": {
-        "id": {
-          "description": "Note:\nThis is a Primary Key.<pk/>",
-          "format": "bigint",
-          "type": "integer"
-        },
-        "created_at": {
-          "default": "now()",
-          "format": "timestamp with time zone",
-          "type": "string"
+  "components": {
+    "schemas": {
+      "GrandBernaDairy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
-      "type": "object"
-    },
-    "KAJON Coffee Limited": {
-      "description": "Coffee Sector",
-      "required": [
-        "id",
-        "created_at"
-      ],
-      "properties": {
-        "id": {
-          "description": "Note:\nThis is a Primary Key.<pk/>",
-          "format": "bigint",
-          "type": "integer"
-        },
-        "created_at": {
-          "default": "now()",
-          "format": "timestamp with time zone",
-          "type": "string"
+      "KAJONCoffeeLimited": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
-      "type": "object"
-    },
-    "Kyalima Farmers Limited": {
-      "description": "Farmers Sector",
-      "required": [
-        "id",
-        "created_at"
-      ],
-      "properties": {
-        "id": {
-          "description": "Note:\nThis is a Primary Key.<pk/>",
-          "format": "bigint",
-          "type": "integer"
-        },
-        "created_at": {
-          "default": "now()",
-          "format": "timestamp with time zone",
-          "type": "string"
+      "KyalimaFarmersLimited": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
-      },
-      "type": "object"
+      }
     }
-  },
-  "parameters": {
-    "preferParams": {
-      "name": "Prefer",
-      "description": "Preference",
-      "required": false,
-      "enum": [
-        "params=single-object"
-      ],
-      "in": "header",
-      "type": "string"
-    },
-    "preferReturn": {
-      "name": "Prefer",
-      "description": "Preference",
-      "required": false,
-      "enum": [
-        "return=representation",
-        "return=minimal",
-        "return=none"
-      ],
-      "in": "header",
-      "type": "string"
-    },
-    "preferCount": {
-      "name": "Prefer",
-      "description": "Preference",
-      "required": false,
-      "enum": [
-        "count=none"
-      ],
-      "in": "header",
-      "type": "string"
-    },
-    "preferPost": {
-      "name": "Prefer",
-      "description": "Preference",
-      "required": false,
-      "enum": [
-        "return=representation",
-        "return=minimal",
-        "return=none",
-        "resolution=ignore-duplicates",
-        "resolution=merge-duplicates"
-      ],
-      "in": "header",
-      "type": "string"
-    },
-    "select": {
-      "name": "select",
-      "description": "Filtering Columns",
-      "required": false,
-      "in": "query",
-      "type": "string"
-    },
-    "on_conflict": {
-      "name": "on_conflict",
-      "description": "On Conflict",
-      "required": false,
-      "in": "query",
-      "type": "string"
-    },
-    "order": {
-      "name": "order",
-      "description": "Ordering",
-      "required": false,
-      "in": "query",
-      "type": "string"
-    },
-    "range": {
-      "name": "Range",
-      "description": "Limiting and Pagination",
-      "required": false,
-      "in": "header",
-      "type": "string"
-    },
-    "rangeUnit": {
-      "name": "Range-Unit",
-      "description": "Limiting and Pagination",
-      "required": false,
-      "default": "items",
-      "in": "header",
-      "type": "string"
-    },
-    "offset": {
-      "name": "offset",
-      "description": "Limiting and Pagination",
-      "required": false,
-      "in": "query",
-      "type": "string"
-    },
-    "limit": {
-      "name": "limit",
-      "description": "Limiting and Pagination",
-      "required": false,
-      "in": "query",
-      "type": "string"
-    },
-    "body.Grand Berna Dairies": {
-      "name": "Grand Berna Dairies",
-      "description": "Grand Berna Dairies",
-      "required": false,
-      "in": "body",
-      "schema": {
-        "$ref": "#/definitions/Grand Berna Dairies"
-      }
-    },
-    "rowFilter.Grand Berna Dairies.id": {
-      "name": "id",
-      "required": false,
-      "in": "query",
-      "type": "string"
-    },
-    "rowFilter.Grand Berna Dairies.created_at": {
-      "name": "created_at",
-      "required": false,
-      "in": "query",
-      "type": "string"
-    },
-    "body.KAJON Coffee Limited": {
-      "name": "KAJON Coffee Limited",
-      "description": "KAJON Coffee Limited",
-      "required": false,
-      "in": "body",
-      "schema": {
-        "$ref": "#/definitions/KAJON Coffee Limited"
-      }
-    },
-    "rowFilter.KAJON Coffee Limited.id": {
-      "name": "id",
-      "required": false,
-      "in": "query",
-      "type": "string"
-    },
-    "rowFilter.KAJON Coffee Limited.created_at": {
-      "name": "created_at",
-      "required": false,
-      "in": "query",
-      "type": "string"
-    },
-    "body.Kyalima Farmers Limited": {
-      "name": "Kyalima Farmers Limited",
-      "description": "Kyalima Farmers Limited",
-      "required": false,
-      "in": "body",
-      "schema": {
-        "$ref": "#/definitions/Kyalima Farmers Limited"
-      }
-    },
-    "rowFilter.Kyalima Farmers Limited.id": {
-      "name": "id",
-      "required": false,
-      "in": "query",
-      "type": "string"
-    },
-    "rowFilter.Kyalima Farmers Limited.created_at": {
-      "name": "created_at",
-      "required": false,
-      "in": "query",
-      "type": "string"
-    }
-  },
-  "externalDocs": {
-    "description": "PostgREST Documentation",
-    "url": "https://postgrest.org/en/v12/references/api.html"
   }
 }

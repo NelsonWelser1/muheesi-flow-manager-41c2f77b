@@ -7,17 +7,6 @@ const fromSupabase = async (query) => {
     return data;
 };
 
-/*
-### Kyalima Farmers Limited
-
-| name       | type                     | format | required |
-|------------|--------------------------|--------|----------|
-| id         | int8                     | number | true     |
-| created_at | timestamp with time zone | string | true     |
-
-Note: This table doesn't have any foreign key relationships.
-*/
-
 export const useKyalimaFarmersLimited = (id) => useQuery({
     queryKey: ['KyalimaFarmersLimited', id],
     queryFn: () => fromSupabase(supabase.from('Kyalima Farmers Limited').select('*').eq('id', id).single()),
