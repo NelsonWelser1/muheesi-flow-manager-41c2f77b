@@ -1,15 +1,22 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useGrandBernaDairies, useKAJONCoffeeLimiteds, useKyalimaFarmersLimiteds } from '@/integrations/supabase';
+import { useFactoryOperations, useColdRoomManagement, useDairySalesRecords } from '@/integrations/supabase/hooks/useGrandBernaDairies';
+import { Progress } from "@/components/ui/progress";
 
 const CompanyDashboard = () => {
-  const { data: grandBernaData, isLoading: isLoadingGrandBerna } = useGrandBernaDairies();
-  const { data: kajonData, isLoading: isLoadingKajon } = useKAJONCoffeeLimiteds();
-  const { data: kyalimaData, isLoading: isLoadingKyalima } = useKyalimaFarmersLimiteds();
+  const { data: factoryData, isLoading: isLoadingFactory } = useFactoryOperations();
+  const { data: coldRoomData, isLoading: isLoadingColdRoom } = useColdRoomManagement();
+  const { data: salesData, isLoading: isLoadingSales } = useDairySalesRecords();
 
-  if (isLoadingGrandBerna || isLoadingKajon || isLoadingKyalima) {
+  if (isLoadingFactory || isLoadingColdRoom || isLoadingSales) {
     return <div>Loading...</div>;
   }
+
+  const calculateTotalRevenue = (data) => {
+    return data?.reduce((acc, record) => acc + (record.revenue || 0), 0) || 0;
+  };
+
+  const totalRevenue = calculateTotalRevenue(salesData);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -18,28 +25,24 @@ const CompanyDashboard = () => {
           <CardTitle>Grand Berna Dairies</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Total entries: {grandBernaData?.length || 0}</p>
-          {/* Add more specific data display here */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-medium">Factory Operations</h3>
+              <p>Total Products: {factoryData?.length || 0}</p>
+              <Progress value={factoryData?.length ? (factoryData.length / 100) * 100 : 0} className="mt-2" />
+            </div>
+            <div>
+              <h3 className="font-medium">Cold Room Status</h3>
+              <p>Active Storage Units: {coldRoomData?.length || 0}</p>
+            </div>
+            <div>
+              <h3 className="font-medium">Sales Overview</h3>
+              <p>Total Revenue: ${totalRevenue.toFixed(2)}</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>KAJON Coffee Limited</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>Total entries: {kajonData?.length || 0}</p>
-          {/* Add more specific data display here */}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Kyalima Farmers Limited</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>Total entries: {kyalimaData?.length || 0}</p>
-          {/* Add more specific data display here */}
-        </CardContent>
-      </Card>
+      {/* Add similar cards for KAJON Coffee and Kyalima Farmers */}
     </div>
   );
 };
