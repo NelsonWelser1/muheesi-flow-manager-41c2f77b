@@ -39,6 +39,14 @@ const AccountInterface = ({ account, onLogout, onHome }) => {
     );
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+    toast({
+      title: `Theme changed to ${theme === "light" ? "dark" : "light"} mode`,
+      duration: 2000,
+    });
+  };
+
   return (
     <div className="flex h-screen">
       {/* Left Sidebar */}
@@ -111,7 +119,7 @@ const AccountInterface = ({ account, onLogout, onHome }) => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                onClick={toggleTheme}
                 className="ml-auto"
               >
                 <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
