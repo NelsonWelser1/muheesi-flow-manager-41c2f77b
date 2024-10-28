@@ -7,13 +7,14 @@ import { Clock, Home, LogOut, HelpCircle, Moon, Sun } from 'lucide-react';
 import { useTimer } from '@/hooks/useTimer';
 import { useToast } from "@/components/ui/use-toast";
 import TechnicalSupportForm from './TechnicalSupportForm';
+import SystemAdministratorActions from './SystemAdministratorActions';
 
 const AccountInterface = ({ account, onLogout, onHome }) => {
   const { theme, setTheme } = useTheme();
   const sessionTime = useTimer();
   const [activeResponsibility, setActiveResponsibility] = useState(null);
   const { toast } = useToast();
-  const isAdmin = account.title === "System Administrator";
+  const isAdmin = account.title === "System Administrator (SysAdmin)";
 
   const handleAction = (responsibility) => {
     setActiveResponsibility(responsibility);
@@ -21,6 +22,21 @@ const AccountInterface = ({ account, onLogout, onHome }) => {
       title: `${responsibility} Selected`,
       description: "Loading related actions...",
     });
+  };
+
+  const renderActionContent = () => {
+    if (account.title === "System Administrator (SysAdmin)" && activeResponsibility) {
+      return <SystemAdministratorActions responsibility={activeResponsibility} />;
+    }
+    
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold mb-4">{activeResponsibility} Actions</h3>
+          {/* Implement specific actions based on the selected responsibility */}
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -104,14 +120,7 @@ const AccountInterface = ({ account, onLogout, onHome }) => {
             </div>
 
             <TabsContent value="actions" className="p-4">
-              {activeResponsibility ? (
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold mb-4">{activeResponsibility} Actions</h3>
-                    {/* Implement specific actions based on the selected responsibility */}
-                  </CardContent>
-                </Card>
-              ) : (
+              {activeResponsibility ? renderActionContent() : (
                 <p>Select a responsibility to view available actions</p>
               )}
             </TabsContent>

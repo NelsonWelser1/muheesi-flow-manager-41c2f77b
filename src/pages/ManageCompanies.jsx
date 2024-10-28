@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const accounts = [
   {
-    title: "System Administrator",
+    title: "System Administrator (SysAdmin)",
     responsibilities: [
       "System Health",
       "System Settings",
@@ -22,16 +22,138 @@ const accounts = [
     ]
   },
   {
+    title: "Chief Executive Account CEO H.E. Rtd. Maj. Gen. Muheesi Geoffrey Baraba",
+    responsibilities: [
+      "Overall company management and strategic decision-making",
+      "Review and approve high-level reports and financial statements",
+      "Set company goals and objectives",
+      "Represent the company in major business dealings and partnerships"
+    ]
+  },
+  {
+    title: "General Manager",
+    responsibilities: [
+      "Oversee day-to-day operations of the company",
+      "Implement strategies set by the CEO",
+      "Manage department heads and ensure smooth interdepartmental coordination",
+      "Report directly to the CEO on company performance and challenges"
+    ]
+  },
+  {
     title: "Operations Manager",
     responsibilities: [
       "Review Reports",
       "Monitor Inventory",
       "Manage Operations",
       "Process Approvals",
-      "Resource Allocation"
+      "Resource Allocation",
+      "Coordinate with Farm and Warehouse Teams",
+      "Quality Control Oversight"
     ]
   },
-  // ... Add other accounts here
+  {
+    title: "Procurement Manager",
+    responsibilities: [
+      "Manage Product Purchasing",
+      "Supplier Relations",
+      "Cost Management",
+      "Inventory Control",
+      "Purchase Documentation",
+      "Budget Alignment"
+    ]
+  },
+  {
+    title: "Warehouse Supervisor",
+    responsibilities: [
+      "Daily Warehouse Operations",
+      "Stock Movement Tracking",
+      "Inventory Accuracy",
+      "Storage Management",
+      "Stock Synchronization",
+      "Capacity Management"
+    ]
+  },
+  {
+    title: "Farm Manager",
+    responsibilities: [
+      "Farm Operations Oversight",
+      "Performance Monitoring",
+      "Farm Data Management",
+      "Activity Monitoring",
+      "Seasonal Planning",
+      "Resource Management"
+    ]
+  },
+  {
+    title: "Farm Supervisors",
+    responsibilities: [
+      "Farm and Farmer Registration",
+      "Coffee Farming Practices",
+      "Data Collection",
+      "Logistics Coordination",
+      "Quality Control",
+      "Scheduling",
+      "Inventory Tracking",
+      "Communication",
+      "Health and Safety",
+      "Technology Training"
+    ]
+  },
+  {
+    title: "Logistics Manager",
+    responsibilities: [
+      "Transport Planning",
+      "Route Optimization",
+      "Vehicle Management",
+      "Cost Tracking",
+      "Partner Relations",
+      "Delivery Scheduling"
+    ]
+  },
+  {
+    title: "Inventory Manager",
+    responsibilities: [
+      "Stock Control",
+      "Inventory Tracking",
+      "Quality Monitoring",
+      "Storage Management",
+      "Report Generation",
+      "Stock Forecasting"
+    ]
+  },
+  {
+    title: "Sales & Export Manager",
+    responsibilities: [
+      "Sales Management",
+      "Export Documentation",
+      "Client Relations",
+      "Order Processing",
+      "Payment Tracking",
+      "Market Analysis"
+    ]
+  },
+  {
+    title: "Compliance & Quality Control Officer",
+    responsibilities: [
+      "Quality Standards",
+      "Regulatory Compliance",
+      "Audit Management",
+      "Certification Management",
+      "Quality Documentation",
+      "Training Coordination"
+    ]
+  },
+  {
+    title: "Finance Manager",
+    responsibilities: [
+      "Financial Transactions",
+      "Payment Processing",
+      "Budget Management",
+      "Financial Reporting",
+      "Cost Analysis",
+      "Revenue Tracking"
+    ]
+  }
 ];
 
 const ManageCompanies = () => {
