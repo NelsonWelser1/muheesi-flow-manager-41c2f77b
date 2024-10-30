@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import AccountForm from '../components/AccountForm';
+import { Search } from 'lucide-react';
+import AccountCard from '@/components/accounts/AccountCard';
 
 const initialAccounts = [
   {
-    title: "System Administrator (SysAdmin)",
+    title: "System Administrator",
+    status: "Active",
+    email: "admin@muheesi.com",
+    company: "All Companies",
     responsibilities: [
-      "Overall system management and oversight.",
-      "Configure system settings, database management, and user permissions.",
-      "Ensure data backups, security protocols, and system integrity.",
-      "Resolve any technical issues with the system and provide IT support.",
-      "Maintain and update the system infrastructure, including software upgrades."
+      "System management and oversight",
+      "User account management",
+      "Security protocols",
+      "System maintenance"
     ]
   },
   {
@@ -121,58 +123,71 @@ const initialAccounts = [
 
 const ManageAccounts = () => {
   const [accounts, setAccounts] = useState(initialAccounts);
+  const [expandedAccounts, setExpandedAccounts] = useState(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState('all');
 
-  const handleAddAccount = (newAccount) => {
-    setAccounts([...accounts, newAccount]);
+  const toggleExpand = (accountTitle) => {
+    setExpandedAccounts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(accountTitle)) {
+        newSet.delete(accountTitle);
+      } else {
+        newSet.add(accountTitle);
+      }
+      return newSet;
+    });
   };
 
-  const handleRemoveAccount = (index) => {
-    if (accounts[index].title !== "System Administrator (SysAdmin)") {
-      const newAccounts = accounts.filter((_, i) => i !== index);
-      setAccounts(newAccounts);
-    }
-  };
-
-  const handleAddResponsibility = (accountIndex, newResponsibility) => {
-    const newAccounts = [...accounts];
-    newAccounts[accountIndex].responsibilities.push(newResponsibility);
-    setAccounts(newAccounts);
-  };
-
-  const handleRemoveResponsibility = (accountIndex, respIndex) => {
-    const newAccounts = [...accounts];
-    newAccounts[accountIndex].responsibilities = newAccounts[accountIndex].responsibilities.filter((_, i) => i !== respIndex);
-    setAccounts(newAccounts);
-  };
+  const filteredAccounts = accounts.filter(account => {
+    const matchesSearch = account.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         account.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCompany = selectedCompany === 'all' || 
+                          account.company.toLowerCase().includes(selectedCompany.toLowerCase());
+    return matchesSearch && matchesCompany;
+  });
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Manage Accounts</h1>
-      <Accordion type="single" collapsible className="w-full mb-8">
-        {accounts.map((account, index) => (
-          <AccordionItem value={`item-${index}`} key={index}>
-            <AccordionTrigger>{account.title}</AccordionTrigger>
-            <AccordionContent>
-              <ul className="list-disc pl-5 mb-4">
-                {account.responsibilities.map((responsibility, respIndex) => (
-                  <li key={respIndex} className="flex justify-between items-center">
-                    {responsibility}
-                    <Button onClick={() => handleRemoveResponsibility(index, respIndex)} variant="destructive" size="sm">Remove</Button>
-                  </li>
+    <div className="container mx-auto p-4 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Manage Accounts</h1>
+      </div>
+
+      <div className="space-y-4">
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search accounts..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <Tabs defaultValue="all" onValueChange={setSelectedCompany}>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="all">All Companies</TabsTrigger>
+            <TabsTrigger value="grand berna">Grand Berna</TabsTrigger>
+            <TabsTrigger value="kajon">KAJON Coffee</TabsTrigger>
+            <TabsTrigger value="kyalima">Kyalima Farmers</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-4">
+            <ScrollArea className="h-[600px]">
+              <div className="space-y-4">
+                {filteredAccounts.map((account) => (
+                  <AccountCard
+                    key={account.title}
+                    account={account}
+                    isExpanded={expandedAccounts.has(account.title)}
+                    onToggleExpand={() => toggleExpand(account.title)}
+                  />
                 ))}
-              </ul>
-              <div className="flex gap-2 mb-4">
-                <Input placeholder="New responsibility" id={`new-resp-${index}`} />
-                <Button onClick={() => handleAddResponsibility(index, document.getElementById(`new-resp-${index}`).value)}>Add Responsibility</Button>
               </div>
-              {account.title !== "System Administrator (SysAdmin)" && (
-                <Button onClick={() => handleRemoveAccount(index)} variant="destructive">Remove Account</Button>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-      <AccountForm onAddAccount={handleAddAccount} />
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
