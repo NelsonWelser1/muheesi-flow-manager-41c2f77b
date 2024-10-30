@@ -3,9 +3,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import AccountListItem from '@/components/accounts/AccountListItem';
 import AccountFilters from '@/components/accounts/AccountFilters';
+import CompanySelector from '@/components/accounts/CompanySelector';
 
 const initialAccounts = [
   {
@@ -170,7 +171,8 @@ const ManageAccounts = () => {
   const [accounts] = useState(initialAccounts);
   const [expandedAccounts, setExpandedAccounts] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCompany, setSelectedCompany] = useState('all');
+  const [selectedCompany, setSelectedCompany] = useState('');
+  const [showCompanySelector, setShowCompanySelector] = useState(true);
 
   const toggleExpand = (accountTitle) => {
     setExpandedAccounts(prev => {
@@ -184,24 +186,52 @@ const ManageAccounts = () => {
     });
   };
 
+  const handleCompanySelect = (companyId) => {
+    setSelectedCompany(companyId);
+    setShowCompanySelector(false);
+  };
+
   const filteredAccounts = accounts.filter(account => {
     const matchesSearch = 
       account.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       account.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCompany = 
-      selectedCompany === 'all' || 
-      account.company === selectedCompany;
+      !selectedCompany || 
+      account.company.toLowerCase().includes(selectedCompany.toLowerCase());
     return matchesSearch && matchesCompany;
   });
+
+  if (showCompanySelector) {
+    return (
+      <div className="container mx-auto p-4 space-y-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">System Administrator - Account Management</h1>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Select The Company to Manage</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CompanySelector onCompanySelect={handleCompanySelect} />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">System Administrator - Account Management</h1>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
-          Add New Account
-        </Button>
+        <div className="space-x-4">
+          <Button variant="outline" onClick={() => setShowCompanySelector(true)}>
+            Change Company
+          </Button>
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Account
+          </Button>
+        </div>
       </div>
 
       <Card>
