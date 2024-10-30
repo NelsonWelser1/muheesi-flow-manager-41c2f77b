@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Search } from 'lucide-react';
-import AccountCard from '@/components/accounts/AccountCard';
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus, Trash2 } from 'lucide-react';
+import AccountListItem from '@/components/accounts/AccountListItem';
+import AccountFilters from '@/components/accounts/AccountFilters';
 
 const initialAccounts = [
   {
@@ -165,7 +167,7 @@ const initialAccounts = [
 ];
 
 const ManageAccounts = () => {
-  const [accounts, setAccounts] = useState(initialAccounts);
+  const [accounts] = useState(initialAccounts);
   const [expandedAccounts, setExpandedAccounts] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('all');
@@ -183,10 +185,12 @@ const ManageAccounts = () => {
   };
 
   const filteredAccounts = accounts.filter(account => {
-    const matchesSearch = account.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         account.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCompany = selectedCompany === 'all' || 
-                          account.company.toLowerCase().includes(selectedCompany.toLowerCase());
+    const matchesSearch = 
+      account.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      account.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCompany = 
+      selectedCompany === 'all' || 
+      account.company === selectedCompany;
     return matchesSearch && matchesCompany;
   });
 
@@ -194,43 +198,40 @@ const ManageAccounts = () => {
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">System Administrator - Account Management</h1>
+        <Button>
+          <Plus className="w-4 h-4 mr-2" />
+          Add New Account
+        </Button>
       </div>
 
-      <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search accounts by title, email, or company..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <Tabs defaultValue="all" onValueChange={setSelectedCompany}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all">All Companies</TabsTrigger>
-            <TabsTrigger value="grand berna">Grand Berna</TabsTrigger>
-            <TabsTrigger value="kajon">KAJON Coffee</TabsTrigger>
-            <TabsTrigger value="kyalima">Kyalima Farmers</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="all" className="mt-4">
-            <ScrollArea className="h-[600px]">
+      <Card>
+        <CardHeader>
+          <CardTitle>Account Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="all" className="w-full">
+            <AccountFilters 
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              selectedCompany={selectedCompany}
+              onCompanyChange={setSelectedCompany}
+            />
+            
+            <ScrollArea className="h-[600px] mt-4">
               <div className="space-y-4">
                 {filteredAccounts.map((account) => (
-                  <AccountCard
+                  <AccountListItem
                     key={account.title}
                     account={account}
                     isExpanded={expandedAccounts.has(account.title)}
-                    onToggleExpand={() => toggleExpand(account.title)}
+                    onToggle={() => toggleExpand(account.title)}
                   />
                 ))}
               </div>
             </ScrollArea>
-          </TabsContent>
-        </Tabs>
-      </div>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
