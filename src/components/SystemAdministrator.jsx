@@ -3,130 +3,243 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ManageAccounts from './ManageAccounts';
+import { Building2, Coffee, Wheat } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const SystemAdministrator = () => {
-  const [systemHealth, setSystemHealth] = useState({});
-  const [backupSchedule, setBackupSchedule] = useState({});
-  const [securityAlerts, setSecurityAlerts] = useState([]);
-  const [selectedAction, setSelectedAction] = useState(null);
+  const navigate = useNavigate();
+  const [selectedCompany, setSelectedCompany] = useState(null);
 
-  const manageSystemHealth = () => {
-    // Simulating system health check
-    setSystemHealth({
-      uptime: '99.9%',
-      cpuUsage: '45%',
-      memoryUsage: '60%',
-    });
-  };
+  const companies = [
+    {
+      id: 'grand-berna',
+      name: 'Grand Berna Dairies',
+      icon: Building2,
+      description: 'Dairy Products and Processing',
+      responsibilities: [
+        "Manage dairy production",
+        "Quality control",
+        "Supply chain oversight",
+        "Inventory management"
+      ]
+    },
+    {
+      id: 'kajon',
+      name: 'KAJON Coffee Limited',
+      icon: Coffee,
+      description: 'Coffee Production and Export',
+      responsibilities: [
+        "Coffee processing oversight",
+        "Export management",
+        "Quality assurance",
+        "International trade compliance"
+      ]
+    },
+    {
+      id: 'kyalima',
+      name: 'Kyalima Farmers Limited',
+      icon: Wheat,
+      description: 'Agricultural Products and Farming',
+      responsibilities: [
+        "Farm operations management",
+        "Crop planning",
+        "Resource allocation",
+        "Agricultural compliance"
+      ]
+    }
+  ];
 
-  const configureSystemSettings = (settings) => {
-    console.log('System settings updated:', settings);
-    // Implement actual system settings update logic here
-  };
-
-  const manageDatabaseOperations = () => {
-    console.log('Database operations initiated');
-    // Implement database operations logic here
-  };
-
-  const scheduleDataBackups = () => {
-    setBackupSchedule({
-      frequency: 'Daily',
-      time: '02:00 AM',
-      retention: '30 days',
-    });
-  };
-
-  const enforceSecurityProtocols = () => {
-    setSecurityAlerts([
-      { type: 'warning', message: 'Weak password detected for user john@example.com' },
-      { type: 'critical', message: 'Multiple failed login attempts from IP 192.168.1.100' },
-    ]);
-  };
-
-  const resolveTechnicalIssues = (ticketId) => {
-    console.log(`Resolving ticket ${ticketId}`);
-    // Implement ticket resolution logic here
-  };
-
-  const updateSystemSoftware = () => {
-    console.log('Initiating system software update');
-    // Implement software update logic here
-  };
-
-  const generateAuditLogs = () => {
-    console.log('Generating audit logs');
-    // Implement audit log generation logic here
-  };
-
-  const sendSystemAlerts = (alertType, message) => {
-    console.log(`Sending ${alertType} alert: ${message}`);
-    // Implement alert sending logic here
+  const handleCompanySelect = (companyId) => {
+    setSelectedCompany(companyId);
+    navigate(`/manage-accounts/${companyId}`);
   };
 
   return (
     <div>
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="actions">Actions</TabsTrigger>
-          <TabsTrigger value="permissions">Permissions</TabsTrigger>
-        </TabsList>
+      <Accordion type="single" collapsible>
+        <AccordionItem value="manage-accounts">
+          <AccordionTrigger>Manage Accounts</AccordionTrigger>
+          <AccordionContent>
+            <Tabs defaultValue="actions">
+              <TabsList className="mb-4">
+                <TabsTrigger value="actions">Actions</TabsTrigger>
+                <TabsTrigger value="permissions">Permissions</TabsTrigger>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+              </TabsList>
 
-        <TabsContent value="overview">
-          <div className="grid grid-cols-2 gap-4">
-            {['Manage System Health', 'Configure System Settings', 'Manage Database', 'Schedule Backups', 'Security Protocols', 'Technical Support', 'Software Updates', 'Audit Logs', 'System Alerts', 'Manage Accounts'].map((action, idx) => (
-              <Button
-                key={idx}
-                variant="outline"
-                className="h-24 flex flex-col items-center justify-center text-center"
-                onClick={() => setSelectedAction(action)}
-              >
-                {action}
-              </Button>
-            ))}
-          </div>
-        </TabsContent>
+              <TabsContent value="actions">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Company Management</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-[400px]">
+                        <div className="grid grid-cols-1 gap-4">
+                          {companies.map((company) => {
+                            const Icon = company.icon;
+                            return (
+                              <Card 
+                                key={company.id}
+                                className="hover:shadow-lg transition-shadow cursor-pointer"
+                                onClick={() => handleCompanySelect(company.id)}
+                              >
+                                <CardContent className="flex items-center gap-4 p-4">
+                                  <Icon className="h-8 w-8" />
+                                  <div className="flex-1">
+                                    <h3 className="font-semibold">{company.name}</h3>
+                                    <p className="text-sm text-muted-foreground">{company.description}</p>
+                                  </div>
+                                  <Button variant="outline" size="sm">
+                                    Manage
+                                  </Button>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Quick Actions</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <Button className="w-full" variant="outline">Add New Company</Button>
+                        <Button className="w-full" variant="outline">Manage User Roles</Button>
+                        <Button className="w-full" variant="outline">View Access Logs</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
 
-        <TabsContent value="actions">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Primary Responsibilities:</h3>
-            <ul className="list-disc pl-5">
-              <li>Overall system management and oversight</li>
-              <li>Configure system settings, database management, and user permissions</li>
-              <li>Ensure data backups, security protocols, and system integrity</li>
-              <li>Resolve any technical issues with the system and provide IT support</li>
-              <li>Maintain and update the system infrastructure, including software upgrades</li>
-              <li>Monitor system health and performance metrics</li>
-              <li>Implement security measures and access controls</li>
-              <li>Manage user accounts and permissions</li>
-              <li>Coordinate with technical support teams</li>
-              <li>Oversee system maintenance and updates</li>
-            </ul>
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-4">System Management Tools</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <Button onClick={() => manageSystemHealth()}>Check System Health</Button>
-                <Button onClick={() => manageDatabaseOperations()}>Database Operations</Button>
-                <Button onClick={() => scheduleDataBackups()}>Schedule Backups</Button>
-                <Button onClick={() => enforceSecurityProtocols()}>Security Check</Button>
-              </div>
-            </div>
-          </div>
-        </TabsContent>
+              <TabsContent value="permissions">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Access Control</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <p className="text-muted-foreground">Manage user permissions and access controls for all companies.</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <Button variant="outline">Modify Permissions</Button>
+                        <Button variant="outline">View Access Logs</Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-        <TabsContent value="permissions">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Access Control</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline">Modify Permissions</Button>
-              <Button variant="outline">View Access Logs</Button>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+              <TabsContent value="overview">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Company Overview</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {companies.map((company) => (
+                        <Card key={company.id}>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              {React.createElement(company.icon, { className: "h-5 w-5" })}
+                              {company.name}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground mb-4">{company.description}</p>
+                            <h4 className="font-semibold mb-2">Key Responsibilities:</h4>
+                            <ul className="list-disc pl-5 text-sm space-y-1">
+                              {company.responsibilities.map((resp, idx) => (
+                                <li key={idx} className="text-muted-foreground">{resp}</li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="system-health">
+          <AccordionTrigger>System Health</AccordionTrigger>
+          <AccordionContent>
+            <Button onClick={() => console.log("Managing system health...")}>Check System Health</Button>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="system-settings">
+          <AccordionTrigger>System Settings</AccordionTrigger>
+          <AccordionContent>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              console.log('System settings updated:', {
+                emailServer: e.target.emailServer.value,
+                storageLimit: e.target.storageLimit.value,
+              });
+            }}>
+              <Label htmlFor="emailServer">Email Server</Label>
+              <Input id="emailServer" name="emailServer" />
+              <Label htmlFor="storageLimit">Storage Limit (GB)</Label>
+              <Input id="storageLimit" name="storageLimit" type="number" />
+              <Button type="submit">Update Settings</Button>
+            </form>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="database-operations">
+          <AccordionTrigger>Database Operations</AccordionTrigger>
+          <AccordionContent>
+            <Button onClick={() => console.log('Database operations initiated')}>Backup Database</Button>
+            <Button onClick={() => console.log('Database operations initiated')}>Restore Database</Button>
+            <Button onClick={() => console.log('Database operations initiated')}>Optimize Database</Button>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="data-backups">
+          <AccordionTrigger>Data Backups</AccordionTrigger>
+          <AccordionContent>
+            <Button onClick={() => console.log('Scheduling backups...')}>Schedule Backups</Button>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="security-protocols">
+          <AccordionTrigger>Security Protocols</AccordionTrigger>
+          <AccordionContent>
+            <Button onClick={() => console.log('Checking security...')}>Check Security</Button>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="technical-issues">
+          <AccordionTrigger>Technical Issues</AccordionTrigger>
+          <AccordionContent>
+            <Button onClick={() => console.log(`Resolving ticket TICKET-001`)}>Resolve Ticket TICKET-001</Button>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="software-updates">
+          <AccordionTrigger>Software Updates</AccordionTrigger>
+          <AccordionContent>
+            <Button onClick={() => console.log('Checking for updates...')}>Check for Updates</Button>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="audit-logs">
+          <AccordionTrigger>Audit Logs</AccordionTrigger>
+          <AccordionContent>
+            <Button onClick={() => console.log('Generating audit logs...')}>Generate Audit Logs</Button>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 };

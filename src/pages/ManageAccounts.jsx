@@ -1,178 +1,267 @@
 import React, { useState } from 'react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import AccountForm from '../components/AccountForm';
+import { Plus } from 'lucide-react';
+import AccountListItem from '@/components/accounts/AccountListItem';
+import AccountFilters from '@/components/accounts/AccountFilters';
+import CompanySelector from '@/components/accounts/CompanySelector';
 
 const initialAccounts = [
   {
     title: "System Administrator (SysAdmin)",
+    status: "Active",
+    email: "sysadmin@muheesi.com",
+    company: "All Companies",
     responsibilities: [
-      "Overall system management and oversight.",
-      "Configure system settings, database management, and user permissions.",
-      "Ensure data backups, security protocols, and system integrity.",
-      "Resolve any technical issues with the system and provide IT support.",
-      "Maintain and update the system infrastructure, including software upgrades."
+      "Overall system management and oversight",
+      "User account management",
+      "Security protocols implementation",
+      "System maintenance and updates",
+      "Database management and backups"
     ]
   },
   {
-    title: "Operations Manager (Farm & Warehouse Manager)",
+    title: "Chief Executive Officer (CEO)",
+    status: "Active",
+    email: "ceo@muheesi.com",
+    company: "All Companies",
     responsibilities: [
-      "Oversee both farm and warehouse operations across all modules.",
-      "Review reports from farm managers and warehouse clerks.",
-      "Monitor farm and warehouse inventory, stock movements, and transportation schedules.",
-      "Manage procurement and logistics flow between farms, warehouses, and market destinations.",
-      "Handle high-level decision-making related to farm and warehouse activities."
+      "Strategic leadership and decision making",
+      "Company vision and mission oversight",
+      "Executive team management",
+      "Corporate governance",
+      "Stakeholder relations management"
     ]
   },
   {
-    title: "Procurement Manager",
+    title: "Operations Manager",
+    status: "Active",
+    email: "operations@muheesi.com",
+    company: "All Companies",
     responsibilities: [
-      "Manage and track the purchasing of products (e.g., coffee, maize, cheese) from suppliers or farmers.",
-      "Ensure proper procurement documentation (purchase orders, contracts) is completed.",
-      "Review real-time data on procurement costs and ensure budget alignment.",
-      "Oversee inventory inflow and balance stock levels to match demand.",
-      "Approve and track all procurement-related transactions."
+      "Daily operations oversight",
+      "Resource allocation and management",
+      "Process optimization",
+      "Team coordination",
+      "Performance monitoring and reporting"
     ]
   },
   {
-    title: "Warehouse Supervisor",
+    title: "Farm Supervisor",
+    status: "Active",
+    email: "farm@muheesi.com",
+    company: "All Companies",
     responsibilities: [
-      "Manage day-to-day operations within the warehouse.",
-      "Track the movement of stock in and out of the warehouse.",
-      "Ensure accuracy of inventory data, maintaining proper records of product types, owners, and stock levels.",
-      "Ensure synchronization of stock data with the main system.",
-      "Handle warehouse storage settings, including capacity, product storage fees, and geo-location."
+      "Farm operations management",
+      "Crop planning and monitoring",
+      "Worker supervision",
+      "Quality control",
+      "Production reporting"
     ]
   },
   {
-    title: "Farm Manager",
+    title: "Warehouse Manager",
+    status: "Active",
+    email: "warehouse@muheesi.com",
+    company: "All Companies",
     responsibilities: [
-      "Oversee farm operations and provide visibility on farm performance.",
-      "Manage the registration and updating of farm and farmer data within the system.",
-      "Monitor farm activities, harvest estimations, and farming practices.",
-      "Sync farm data from the field using mobile devices.",
-      "Report on seasonal activities and handle any issues that arise with farm operations."
+      "Inventory management",
+      "Storage optimization",
+      "Stock control",
+      "Warehouse staff supervision",
+      "Logistics coordination"
     ]
   },
   {
-    title: "Farm Supervisors",
+    title: "Coffee Store Manager",
+    status: "Active",
+    email: "coffeestore@muheesi.com",
+    company: "KAJON Coffee Limited",
     responsibilities: [
-      "Farm and Farmer Registration",
-      "Monitoring Coffee Farming Practices",
-      "Data Collection and Reporting",
-      "Logistics Coordination",
-      "Quality Control",
-      "Scheduling and Forecasting",
-      "Inventory Tracking",
-      "Communication and Feedback",
-      "Health, Safety, and Compliance",
-      "Technology Use and Training"
+      "Store operations management",
+      "Sales oversight",
+      "Customer service management",
+      "Inventory control",
+      "Staff supervision"
     ]
   },
   {
     title: "Logistics Manager",
+    status: "Active",
+    email: "logistics@muheesi.com",
+    company: "All Companies",
     responsibilities: [
-      "Plan and manage logistics, including transportation of products from farms to warehouses and then to market destinations.",
-      "Schedule transport and manage relationships with drivers, loaders, and external logistics partners (rental vans, sea-lines).",
-      "Track vehicle usage, transportation costs, and efficiency.",
-      "Ensure that logistics processes align with warehouse and farm activities to avoid delays."
+      "Transportation planning",
+      "Route optimization",
+      "Delivery scheduling",
+      "Fleet management",
+      "Supply chain coordination"
     ]
   },
   {
     title: "Inventory Manager",
+    status: "Active",
+    email: "inventory@muheesi.com",
+    company: "All Companies",
     responsibilities: [
-      "Oversee the inventory control system to ensure all stocks are accurately recorded.",
-      "Track inventory turnover rates, stock levels, and storage conditions.",
-      "Ensure the quality and quantity of stored products meet required standards.",
-      "Generate inventory reports and projections based on current data."
-    ]
-  },
-  {
-    title: "Sales & Export Manager",
-    responsibilities: [
-      "Handle local and international sales, ensuring smooth customer transactions.",
-      "Manage export-related documentation (e.g., customs clearances, certificates, and licenses).",
-      "Track client orders, invoicing, and payment processing.",
-      "Maintain client communication and follow up on after-sales services.",
-      "Generate sales reports and handle client feedback."
-    ]
-  },
-  {
-    title: "Compliance & Quality Control Officer",
-    responsibilities: [
-      "Ensure all products meet quality standards (e.g., moisture, protein levels for coffee; milk quality for cheese).",
-      "Conduct regular audits to ensure regulatory compliance for both farm and warehouse activities.",
-      "Monitor and document product quality at various stages (farm, warehouse, processing, and export).",
-      "Ensure proper certification for local and international sales."
+      "Stock level monitoring",
+      "Inventory tracking",
+      "Supply chain management",
+      "Stock reporting",
+      "Warehouse coordination"
     ]
   },
   {
     title: "Finance Manager",
+    status: "Active",
+    email: "finance@muheesi.com",
+    company: "All Companies",
     responsibilities: [
-      "Oversee all financial transactions within the system, including procurement costs, payments to farmers, and logistics expenses.",
-      "Manage salaries for farm and warehouse staff, ensuring timely payments.",
-      "Handle client invoicing and payment processing for both local and export sales.",
-      "Generate financial reports on profits, expenses, and budget allocations."
+      "Financial planning",
+      "Budget management",
+      "Financial reporting",
+      "Cash flow monitoring",
+      "Audit preparation"
+    ]
+  },
+  {
+    title: "Sales and Marketing Manager",
+    status: "Active",
+    email: "sales@muheesi.com",
+    company: "All Companies",
+    responsibilities: [
+      "Sales strategy development",
+      "Marketing campaign management",
+      "Client relationship management",
+      "Market analysis",
+      "Sales team leadership"
+    ]
+  },
+  {
+    title: "Coffee Quality Analyst",
+    status: "Active",
+    email: "quality@muheesi.com",
+    company: "KAJON Coffee Limited",
+    responsibilities: [
+      "Coffee quality assessment",
+      "Quality control procedures",
+      "Sample analysis",
+      "Quality reporting",
+      "Standards compliance"
+    ]
+  },
+  {
+    title: "General Data Clerk",
+    status: "Active",
+    email: "clerk@muheesi.com",
+    company: "All Companies",
+    responsibilities: [
+      "Data entry and management",
+      "Record keeping",
+      "Document filing",
+      "Basic reporting",
+      "Administrative support"
     ]
   }
 ];
 
 const ManageAccounts = () => {
-  const [accounts, setAccounts] = useState(initialAccounts);
+  const [accounts] = useState(initialAccounts);
+  const [expandedAccounts, setExpandedAccounts] = useState(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState('');
+  const [showCompanySelector, setShowCompanySelector] = useState(true);
 
-  const handleAddAccount = (newAccount) => {
-    setAccounts([...accounts, newAccount]);
+  const toggleExpand = (accountTitle) => {
+    setExpandedAccounts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(accountTitle)) {
+        newSet.delete(accountTitle);
+      } else {
+        newSet.add(accountTitle);
+      }
+      return newSet;
+    });
   };
 
-  const handleRemoveAccount = (index) => {
-    if (accounts[index].title !== "System Administrator (SysAdmin)") {
-      const newAccounts = accounts.filter((_, i) => i !== index);
-      setAccounts(newAccounts);
-    }
+  const handleCompanySelect = (companyId) => {
+    setSelectedCompany(companyId);
+    setShowCompanySelector(false);
   };
 
-  const handleAddResponsibility = (accountIndex, newResponsibility) => {
-    const newAccounts = [...accounts];
-    newAccounts[accountIndex].responsibilities.push(newResponsibility);
-    setAccounts(newAccounts);
-  };
+  const filteredAccounts = accounts.filter(account => {
+    const matchesSearch = 
+      account.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      account.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCompany = 
+      !selectedCompany || 
+      account.company.toLowerCase().includes(selectedCompany.toLowerCase());
+    return matchesSearch && matchesCompany;
+  });
 
-  const handleRemoveResponsibility = (accountIndex, respIndex) => {
-    const newAccounts = [...accounts];
-    newAccounts[accountIndex].responsibilities = newAccounts[accountIndex].responsibilities.filter((_, i) => i !== respIndex);
-    setAccounts(newAccounts);
-  };
+  if (showCompanySelector) {
+    return (
+      <div className="container mx-auto p-4 space-y-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">System Administrator - Account Management</h1>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Select The Company to Manage</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CompanySelector onCompanySelect={handleCompanySelect} />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Manage Accounts</h1>
-      <Accordion type="single" collapsible className="w-full mb-8">
-        {accounts.map((account, index) => (
-          <AccordionItem value={`item-${index}`} key={index}>
-            <AccordionTrigger>{account.title}</AccordionTrigger>
-            <AccordionContent>
-              <ul className="list-disc pl-5 mb-4">
-                {account.responsibilities.map((responsibility, respIndex) => (
-                  <li key={respIndex} className="flex justify-between items-center">
-                    {responsibility}
-                    <Button onClick={() => handleRemoveResponsibility(index, respIndex)} variant="destructive" size="sm">Remove</Button>
-                  </li>
+    <div className="container mx-auto p-4 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">System Administrator - Account Management</h1>
+        <div className="space-x-4">
+          <Button variant="outline" onClick={() => setShowCompanySelector(true)}>
+            Change Company
+          </Button>
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Account
+          </Button>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Account Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="all" className="w-full">
+            <AccountFilters 
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              selectedCompany={selectedCompany}
+              onCompanyChange={setSelectedCompany}
+            />
+            
+            <ScrollArea className="h-[600px] mt-4">
+              <div className="space-y-4">
+                {filteredAccounts.map((account) => (
+                  <AccountListItem
+                    key={account.title}
+                    account={account}
+                    isExpanded={expandedAccounts.has(account.title)}
+                    onToggle={() => toggleExpand(account.title)}
+                  />
                 ))}
-              </ul>
-              <div className="flex gap-2 mb-4">
-                <Input placeholder="New responsibility" id={`new-resp-${index}`} />
-                <Button onClick={() => handleAddResponsibility(index, document.getElementById(`new-resp-${index}`).value)}>Add Responsibility</Button>
               </div>
-              {account.title !== "System Administrator (SysAdmin)" && (
-                <Button onClick={() => handleRemoveAccount(index)} variant="destructive">Remove Account</Button>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-      <AccountForm onAddAccount={handleAddAccount} />
+            </ScrollArea>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
