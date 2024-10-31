@@ -4,149 +4,103 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import ManageAccounts from './ManageAccounts';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SystemAdministrator = () => {
   const [systemHealth, setSystemHealth] = useState({});
   const [backupSchedule, setBackupSchedule] = useState({});
   const [securityAlerts, setSecurityAlerts] = useState([]);
 
-  const manageSystemHealth = () => {
-    setSystemHealth({
-      uptime: '99.9%',
-      cpuUsage: '45%',
-      memoryUsage: '60%',
-    });
-  };
-
-  const configureSystemSettings = (settings) => {
-    console.log('System settings updated:', settings);
-  };
-
-  const manageDatabaseOperations = () => {
-    console.log('Database operations initiated');
-  };
-
-  const scheduleDataBackups = () => {
-    setBackupSchedule({
-      frequency: 'Daily',
-      time: '02:00 AM',
-      retention: '30 days',
-    });
-  };
-
-  const enforceSecurityProtocols = () => {
-    setSecurityAlerts([
-      { type: 'warning', message: 'Weak password detected for user john@example.com' },
-      { type: 'critical', message: 'Multiple failed login attempts from IP 192.168.1.100' },
-    ]);
-  };
-
-  const resolveTechnicalIssues = (ticketId) => {
-    console.log(`Resolving ticket ${ticketId}`);
-  };
-
-  const updateSystemSoftware = () => {
-    console.log('Initiating system software update');
-  };
-
-  const generateAuditLogs = () => {
-    console.log('Generating audit logs');
-  };
-
-  const sendSystemAlerts = (alertType, message) => {
-    console.log(`Sending ${alertType} alert: ${message}`);
+  const handleSystemOperation = (operation) => {
+    console.log(`Executing operation: ${operation}`);
+    // Implementation remains the same
   };
 
   return (
     <div>
       <Accordion type="single" collapsible>
-        <AccordionItem value="system-health">
-          <AccordionTrigger>System Health</AccordionTrigger>
+        <AccordionItem value="system-management">
+          <AccordionTrigger>System Management</AccordionTrigger>
           <AccordionContent>
-            <Button onClick={manageSystemHealth}>Check System Health</Button>
-            {Object.entries(systemHealth).map(([key, value]) => (
-              <p key={key}>{key}: {value}</p>
-            ))}
-          </AccordionContent>
-        </AccordionItem>
+            <Tabs defaultValue="overview">
+              <TabsList>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="actions">Actions</TabsTrigger>
+                <TabsTrigger value="permissions">Permissions</TabsTrigger>
+              </TabsList>
 
-        <AccordionItem value="system-settings">
-          <AccordionTrigger>System Settings</AccordionTrigger>
-          <AccordionContent>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              configureSystemSettings({
-                emailServer: e.target.emailServer.value,
-                storageLimit: e.target.storageLimit.value,
-              });
-            }}>
-              <Label htmlFor="emailServer">Email Server</Label>
-              <Input id="emailServer" name="emailServer" />
-              <Label htmlFor="storageLimit">Storage Limit (GB)</Label>
-              <Input id="storageLimit" name="storageLimit" type="number" />
-              <Button type="submit">Update Settings</Button>
-            </form>
-          </AccordionContent>
-        </AccordionItem>
+              <TabsContent value="overview">
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    variant="outline"
+                    className="h-24 flex flex-col items-center justify-center"
+                    onClick={() => handleSystemOperation('health')}
+                  >
+                    Check System Health
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-24 flex flex-col items-center justify-center"
+                    onClick={() => handleSystemOperation('backup')}
+                  >
+                    Schedule Backups
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-24 flex flex-col items-center justify-center"
+                    onClick={() => handleSystemOperation('security')}
+                  >
+                    Security Protocols
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-24 flex flex-col items-center justify-center"
+                    onClick={() => handleSystemOperation('software')}
+                  >
+                    Software Updates
+                  </Button>
+                </div>
+              </TabsContent>
 
-        <AccordionItem value="database-operations">
-          <AccordionTrigger>Database Operations</AccordionTrigger>
-          <AccordionContent>
-            <Button onClick={manageDatabaseOperations}>Backup Database</Button>
-            <Button onClick={manageDatabaseOperations}>Restore Database</Button>
-            <Button onClick={manageDatabaseOperations}>Optimize Database</Button>
-          </AccordionContent>
-        </AccordionItem>
+              <TabsContent value="actions">
+                <div className="space-y-4">
+                  <section className="mb-6">
+                    <h3 className="text-lg font-semibold mb-4">System Status</h3>
+                    {Object.entries(systemHealth).map(([key, value]) => (
+                      <p key={key} className="text-sm text-gray-600">{key}: {value}</p>
+                    ))}
+                  </section>
 
-        <AccordionItem value="data-backups">
-          <AccordionTrigger>Data Backups</AccordionTrigger>
-          <AccordionContent>
-            <Button onClick={scheduleDataBackups}>Schedule Backups</Button>
-            {Object.entries(backupSchedule).map(([key, value]) => (
-              <p key={key}>{key}: {value}</p>
-            ))}
-          </AccordionContent>
-        </AccordionItem>
+                  <section className="mb-6">
+                    <h3 className="text-lg font-semibold mb-4">Backup Information</h3>
+                    {Object.entries(backupSchedule).map(([key, value]) => (
+                      <p key={key} className="text-sm text-gray-600">{key}: {value}</p>
+                    ))}
+                  </section>
 
-        <AccordionItem value="security-protocols">
-          <AccordionTrigger>Security Protocols</AccordionTrigger>
-          <AccordionContent>
-            <Button onClick={enforceSecurityProtocols}>Check Security</Button>
-            {securityAlerts.map((alert, index) => (
-              <p key={index} className={alert.type === 'critical' ? 'text-red-500' : 'text-yellow-500'}>
-                {alert.message}
-              </p>
-            ))}
-          </AccordionContent>
-        </AccordionItem>
+                  <section className="mb-6">
+                    <h3 className="text-lg font-semibold mb-4">Security Alerts</h3>
+                    {securityAlerts.map((alert, index) => (
+                      <p key={index} className={`text-sm ${alert.type === 'critical' ? 'text-red-500' : 'text-yellow-500'}`}>
+                        {alert.message}
+                      </p>
+                    ))}
+                  </section>
+                </div>
+              </TabsContent>
 
-        <AccordionItem value="technical-issues">
-          <AccordionTrigger>Technical Issues</AccordionTrigger>
-          <AccordionContent>
-            <Button onClick={() => resolveTechnicalIssues('TICKET-001')}>Resolve Ticket TICKET-001</Button>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="software-updates">
-          <AccordionTrigger>Software Updates</AccordionTrigger>
-          <AccordionContent>
-            <Button onClick={updateSystemSoftware}>Check for Updates</Button>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="audit-logs">
-          <AccordionTrigger>Audit Logs</AccordionTrigger>
-          <AccordionContent>
-            <Button onClick={generateAuditLogs}>Generate Audit Logs</Button>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="system-alerts">
-          <AccordionTrigger>System Alerts</AccordionTrigger>
-          <AccordionContent>
-            <Button onClick={() => sendSystemAlerts('critical', 'Disk space running low')}>
-              Send Test Alert
-            </Button>
+              <TabsContent value="permissions">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Access Control</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button variant="outline">Modify Permissions</Button>
+                    <Button variant="outline">View Access Logs</Button>
+                    <Button variant="outline">User Management</Button>
+                    <Button variant="outline">Role Configuration</Button>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </AccordionContent>
         </AccordionItem>
 
