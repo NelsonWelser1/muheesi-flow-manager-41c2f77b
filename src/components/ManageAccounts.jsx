@@ -6,157 +6,92 @@ import AccountsChart from './accounts/AccountsChart';
 
 const initialAccounts = [
   {
-    title: "System Administrator",
-    status: "Active",
-    email: "admin@muheesi.com",
-    company: "All Companies",
+    title: "System Administrator (SysAdmin)",
     responsibilities: [
-      "System management and oversight",
-      "User account management",
-      "Security protocols",
-      "System maintenance"
+      "Overall system management and oversight.",
+      "Configure system settings, database management, and user permissions.",
+      "Ensure data backups, security protocols, and system integrity.",
+      "Resolve any technical issues with the system and provide IT support.",
+      "Maintain and update the system infrastructure, including software upgrades."
     ]
   },
   {
-    title: "Chief Executive Officer (CEO)",
-    status: "Active",
-    email: "ceo@muheesi.com",
-    company: "All Companies",
+    title: "Chief Executive Account CEO H.E. Rtd. Maj. Gen. Muheesi Geoffrey Baraba",
     responsibilities: [
-      "Strategic planning",
-      "Executive decisions",
-      "Company oversight",
-      "Stakeholder management"
+      "Overall company management and strategic decision-making.",
+      "Review and approve high-level reports and financial statements.",
+      "Set company goals and objectives.",
+      "Represent the company in major business dealings and partnerships."
     ]
   },
   {
-    title: "Operations Manager",
-    status: "Active",
-    email: "operations@muheesi.com",
-    company: "All Companies",
+    title: "General Manager",
     responsibilities: [
-      "Daily operations",
-      "Team management",
-      "Process optimization",
-      "Performance monitoring"
+      "Oversee day-to-day operations of the company.",
+      "Implement strategies set by the CEO.",
+      "Manage department heads and ensure smooth interdepartmental coordination.",
+      "Report directly to the CEO on company performance and challenges."
+    ]
+  }
+];
+
+const initialCompanyAccounts = [
+  {
+    name: "Grand Berna Limited",
+    employees: [
+      { title: "Operations Manager", responsibilities: [] },
+      { title: "Procurement Manager", responsibilities: [] },
+      { title: "Warehouse Supervisor", responsibilities: [] },
+      { title: "Farm Manager", responsibilities: [] },
+      { title: "Logistics Manager", responsibilities: [] },
+      { title: "Inventory Manager", responsibilities: [] },
+      { title: "Sales & Export Manager", responsibilities: [] },
+      { title: "Compliance & Quality Control Officer", responsibilities: [] },
+      { title: "Finance Manager", responsibilities: [] }
     ]
   },
   {
-    title: "Farm Supervisor",
-    status: "Active",
-    email: "farm@muheesi.com",
-    company: "All Companies",
-    responsibilities: [
-      "Farm oversight",
-      "Crop management",
-      "Worker supervision",
-      "Production reporting"
+    name: "KAJON Coffee Limited",
+    employees: [
+      { title: "Operations Manager", responsibilities: [] },
+      { title: "Procurement Manager", responsibilities: [] },
+      { title: "Warehouse Supervisor", responsibilities: [] },
+      { title: "Farm Manager", responsibilities: [] },
+      { title: "Logistics Manager", responsibilities: [] },
+      { title: "Inventory Manager", responsibilities: [] },
+      { title: "Sales & Export Manager", responsibilities: [] },
+      { title: "Compliance & Quality Control Officer", responsibilities: [] },
+      { title: "Finance Manager", responsibilities: [] }
     ]
   },
   {
-    title: "Warehouse Manager",
-    status: "Active",
-    email: "warehouse@muheesi.com",
-    company: "All Companies",
-    responsibilities: [
-      "Inventory control",
-      "Storage management",
-      "Logistics coordination",
-      "Stock reporting"
-    ]
-  },
-  {
-    title: "Coffee Store Manager",
-    status: "Active",
-    email: "coffeestore@muheesi.com",
-    company: "KAJON Coffee Limited",
-    responsibilities: [
-      "Store operations",
-      "Sales management",
-      "Customer service",
-      "Inventory management"
-    ]
-  },
-  {
-    title: "Logistics Manager",
-    status: "Active",
-    email: "logistics@muheesi.com",
-    company: "All Companies",
-    responsibilities: [
-      "Transport coordination",
-      "Route optimization",
-      "Delivery scheduling",
-      "Fleet management"
-    ]
-  },
-  {
-    title: "Inventory Manager",
-    status: "Active",
-    email: "inventory@muheesi.com",
-    company: "All Companies",
-    responsibilities: [
-      "Stock management",
-      "Inventory tracking",
-      "Supply chain optimization",
-      "Stock reporting"
-    ]
-  },
-  {
-    title: "Finance Manager",
-    status: "Active",
-    email: "finance@muheesi.com",
-    company: "All Companies",
-    responsibilities: [
-      "Financial planning",
-      "Budget management",
-      "Account reconciliation",
-      "Financial reporting"
-    ]
-  },
-  {
-    title: "Sales and Marketing Manager",
-    status: "Active",
-    email: "sales@muheesi.com",
-    company: "All Companies",
-    responsibilities: [
-      "Sales strategy",
-      "Marketing campaigns",
-      "Client relationships",
-      "Market analysis"
-    ]
-  },
-  {
-    title: "Coffee Quality Analyst",
-    status: "Active",
-    email: "quality@kajon.com",
-    company: "KAJON Coffee Limited",
-    responsibilities: [
-      "Quality control",
-      "Coffee grading",
-      "Sample analysis",
-      "Quality reporting"
-    ]
-  },
-  {
-    title: "General Data Clerk",
-    status: "Active",
-    email: "clerk@muheesi.com",
-    company: "All Companies",
-    responsibilities: [
-      "Data entry",
-      "Record keeping",
-      "Document management",
-      "Basic reporting"
+    name: "Kyalima Farmers Limited",
+    employees: [
+      { title: "Operations Manager", responsibilities: [] },
+      { title: "Procurement Manager", responsibilities: [] },
+      { title: "Warehouse Supervisor", responsibilities: [] },
+      { title: "Farm Manager", responsibilities: [] },
+      { title: "Logistics Manager", responsibilities: [] },
+      { title: "Inventory Manager", responsibilities: [] },
+      { title: "Sales & Export Manager", responsibilities: [] },
+      { title: "Compliance & Quality Control Officer", responsibilities: [] },
+      { title: "Finance Manager", responsibilities: [] }
     ]
   }
 ];
 
 const ManageAccounts = () => {
   const [accounts, setAccounts] = useState(initialAccounts);
-  const [companyAccounts, setCompanyAccounts] = useState([]);
+  const [companyAccounts, setCompanyAccounts] = useState(initialCompanyAccounts);
 
   const handleAddAccount = (newAccount) => {
     setAccounts([...accounts, newAccount]);
+  };
+
+  const handleAddCompanyEmployee = (companyIndex, newEmployee) => {
+    const updatedCompanyAccounts = [...companyAccounts];
+    updatedCompanyAccounts[companyIndex].employees.push(newEmployee);
+    setCompanyAccounts(updatedCompanyAccounts);
   };
 
   return (
@@ -164,6 +99,11 @@ const ManageAccounts = () => {
       <h1 className="text-3xl font-bold mb-6">Manage Accounts</h1>
       <AccountList accounts={accounts} setAccounts={setAccounts} />
       <AddAccountForm onAddAccount={handleAddAccount} />
+      <CompanyAccounts 
+        companyAccounts={companyAccounts} 
+        setCompanyAccounts={setCompanyAccounts}
+        onAddEmployee={handleAddCompanyEmployee}
+      />
       <AccountsChart companyAccounts={companyAccounts} />
     </div>
   );
