@@ -6,45 +6,71 @@ import MakeReports from '../components/inventory/MakeReports';
 import ManageFarms from '../components/inventory/ManageFarms';
 import ManageAssociations from '../components/inventory/ManageAssociations';
 import MakeRequisitions from '../components/inventory/MakeRequisitions';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+const companies = [
+  {
+    name: "Grand Berna Dairies",
+    description: "Dairy Products Management",
+    component: "grand-berna"
+  },
+  {
+    name: "KAJON Coffee Limited",
+    description: "Coffee Products Management",
+    component: "kajon-coffee"
+  },
+  {
+    name: "Kyalima Farmers Limited",
+    description: "Agricultural Products Management",
+    component: "kyalima-farmers"
+  }
+];
 
 const ManageInventory = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Manage Inventory</h1>
-      <Card>
-        <CardContent className="p-6">
-          <Tabs defaultValue="update-stock" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 gap-4">
-              <TabsTrigger value="update-stock">Update Stock</TabsTrigger>
-              <TabsTrigger value="view-stock">View Current Stock</TabsTrigger>
-              <TabsTrigger value="reports">Make Reports</TabsTrigger>
-              <TabsTrigger value="farms">Manage Farms</TabsTrigger>
-              <TabsTrigger value="associations">Manage Associations</TabsTrigger>
-              <TabsTrigger value="requisitions">Make Requisitions</TabsTrigger>
-            </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {companies.map((company) => (
+          <Card key={company.name} className="w-full">
+            <CardHeader>
+              <CardTitle>{company.name}</CardTitle>
+              <p className="text-sm text-muted-foreground">{company.description}</p>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="update-stock" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3 gap-1">
+                  <TabsTrigger value="update-stock">Update Stock</TabsTrigger>
+                  <TabsTrigger value="view-stock">View Stock</TabsTrigger>
+                  <TabsTrigger value="reports">Reports</TabsTrigger>
+                  <TabsTrigger value="farms">Farms</TabsTrigger>
+                  <TabsTrigger value="associations">Associations</TabsTrigger>
+                  <TabsTrigger value="requisitions">Requisitions</TabsTrigger>
+                </TabsList>
 
-            <TabsContent value="update-stock" className="mt-6">
-              <UpdateStock />
-            </TabsContent>
-            <TabsContent value="view-stock" className="mt-6">
-              <ViewCurrentStock />
-            </TabsContent>
-            <TabsContent value="reports" className="mt-6">
-              <MakeReports />
-            </TabsContent>
-            <TabsContent value="farms" className="mt-6">
-              <ManageFarms />
-            </TabsContent>
-            <TabsContent value="associations" className="mt-6">
-              <ManageAssociations />
-            </TabsContent>
-            <TabsContent value="requisitions" className="mt-6">
-              <MakeRequisitions />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+                <TabsContent value="update-stock">
+                  <UpdateStock defaultTab={company.component} />
+                </TabsContent>
+                <TabsContent value="view-stock">
+                  <ViewCurrentStock company={company.name} />
+                </TabsContent>
+                <TabsContent value="reports">
+                  <MakeReports company={company.name} />
+                </TabsContent>
+                <TabsContent value="farms">
+                  <ManageFarms company={company.name} />
+                </TabsContent>
+                <TabsContent value="associations">
+                  <ManageAssociations company={company.name} />
+                </TabsContent>
+                <TabsContent value="requisitions">
+                  <MakeRequisitions company={company.name} />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
