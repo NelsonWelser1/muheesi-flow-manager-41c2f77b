@@ -156,12 +156,21 @@ const StockUpdateForm = ({
         <Label htmlFor="humidity">Coffee Bean Humidity (%)</Label>
         <Input id="humidity" type="number" step="0.1" min="0" max="100" required />
       </div>
-      <div>
-        <Label htmlFor="buyingPrice">Buying Price</Label>
-        <div className="flex gap-2">
-          <Input id="buyingPrice" type="number" min="0" required className="flex-1" />
+      
+      {/* Updated Buying Price field with larger size */}
+      <div className="py-4 bg-muted/30 px-4 rounded-lg">
+        <Label htmlFor="buyingPrice" className="text-lg font-semibold">Buying Price</Label>
+        <div className="flex gap-2 mt-2">
+          <Input 
+            id="buyingPrice" 
+            type="number" 
+            min="0" 
+            required 
+            className="flex-1 h-14 text-lg" 
+            placeholder="Enter amount"
+          />
           <Select defaultValue="UGX" className="w-[100px]">
-            <SelectTrigger>
+            <SelectTrigger className="h-14">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -171,12 +180,21 @@ const StockUpdateForm = ({
           </Select>
         </div>
       </div>
-      <div>
-        <Label>Quantity with Unit</Label>
-        <div className="flex gap-2">
-          <Input id="quantity" type="number" min="0" required className="flex-1" />
+
+      {/* Updated Quantity with Unit field with larger size */}
+      <div className="py-4 bg-muted/30 px-4 rounded-lg">
+        <Label className="text-lg font-semibold">Quantity with Unit</Label>
+        <div className="flex gap-2 mt-2">
+          <Input 
+            id="quantity" 
+            type="number" 
+            min="0" 
+            required 
+            className="flex-1 h-14 text-lg" 
+            placeholder="Enter quantity"
+          />
           <Select id="unit" required className="w-[120px]">
-            <SelectTrigger>
+            <SelectTrigger className="h-14">
               <SelectValue placeholder="Unit" />
             </SelectTrigger>
             <SelectContent>
@@ -187,6 +205,7 @@ const StockUpdateForm = ({
           </Select>
         </div>
       </div>
+
       <div>
         <Label htmlFor="action">Stock Update Action</Label>
         <Select id="action" required>
