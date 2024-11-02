@@ -1,12 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import LocationField from './form-fields/LocationField';
-import CoffeeTypeField from './form-fields/CoffeeTypeField';
-import PriceField from './form-fields/PriceField';
-import QuantityField from './form-fields/QuantityField';
 
 const WAREHOUSE_LOCATIONS = [
   "Kampala Store",
@@ -37,14 +33,15 @@ const COFFEE_GRADES = {
 
 const StockUpdateForm = ({ 
   currentUser, 
+  onSubmit, 
   verificationStep, 
   pin, 
   onPinChange, 
   onBack 
 }) => {
-  const [selectedCoffeeType, setSelectedCoffeeType] = useState('');
-  const [newLocation, setNewLocation] = useState('');
-  const [showNewLocation, setShowNewLocation] = useState(false);
+  const [selectedCoffeeType, setSelectedCoffeeType] = React.useState('');
+  const [newLocation, setNewLocation] = React.useState('');
+  const [showNewLocation, setShowNewLocation] = React.useState(false);
 
   if (verificationStep) {
     return (
@@ -73,33 +70,141 @@ const StockUpdateForm = ({
         <Label htmlFor="manager">Store/Warehouse Manager</Label>
         <Input id="manager" value={currentUser.name} disabled />
       </div>
-
-      <LocationField 
-        showNewLocation={showNewLocation}
-        setShowNewLocation={setShowNewLocation}
-        newLocation={newLocation}
-        setNewLocation={setNewLocation}
-        WAREHOUSE_LOCATIONS={WAREHOUSE_LOCATIONS}
-      />
-
-      <CoffeeTypeField 
-        selectedCoffeeType={selectedCoffeeType}
-        setSelectedCoffeeType={setSelectedCoffeeType}
-      />
-
+      <div>
+        <Label htmlFor="location">Stock Location</Label>
+        {showNewLocation ? (
+          <div className="space-y-2">
+            <Input 
+              id="location" 
+              value={newLocation}
+              onChange={(e) => setNewLocation(e.target.value)}
+              placeholder="Enter new location"
+              required 
+            />
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowNewLocation(false)}
+            >
+              Select from existing
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Select id="location" required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select location" />
+              </SelectTrigger>
+              <SelectContent>
+                {WAREHOUSE_LOCATIONS.map((location) => (
+                  <SelectItem key={location} value={location}>{location}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowNewLocation(true)}
+            >
+              Add new location
+            </Button>
+          </div>
+        )}
+      </div>
+      <div>
+        <Label htmlFor="coffeeType">Coffee Type</Label>
+        <Select 
+          id="coffeeType" 
+          required
+          onValueChange={setSelectedCoffeeType}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select coffee type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="robusta">Robusta Coffee</SelectItem>
+            <SelectItem value="arabica">Arabica Coffee</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <div>
         <Label htmlFor="source">Source of Coffee</Label>
         <Input id="source" placeholder="Enter farm or location name" required />
       </div>
-
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <Label htmlFor="beanSizeNumber">Coffee Bean Screen Size</Label>
+          <Input id="beanSizeNumber" type="number" placeholder="e.g., 18" required />
+        </div>
+        <div className="flex-1">
+          <Label htmlFor="beanSizeGrade">Bean Grade</Label>
+          <Select id="beanSizeGrade" required>
+            <SelectTrigger>
+              <SelectValue placeholder="Select grade" />
+            </SelectTrigger>
+            <SelectContent>
+              {selectedCoffeeType && COFFEE_GRADES[selectedCoffeeType].map((grade) => (
+                <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       <div>
         <Label htmlFor="humidity">Coffee Bean Humidity (%)</Label>
         <Input id="humidity" type="number" step="0.1" min="0" max="100" required />
       </div>
-
-      <PriceField />
       
-      <QuantityField />
+      {/* Updated Buying Price field with larger size */}
+      <div className="py-4 bg-muted/30 px-4 rounded-lg">
+        <Label htmlFor="buyingPrice" className="text-lg font-semibold">Buying Price</Label>
+        <div className="flex gap-2 mt-2">
+          <Input 
+            id="buyingPrice" 
+            type="number" 
+            min="0" 
+            required 
+            className="flex-1 h-14 text-lg" 
+            placeholder="Enter amount"
+          />
+          <Select defaultValue="UGX" className="w-[100px]">
+            <SelectTrigger className="h-14">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="UGX">UGX</SelectItem>
+              <SelectItem value="USD">USD</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Updated Quantity with Unit field with larger size */}
+      <div className="py-4 bg-muted/30 px-4 rounded-lg">
+        <Label className="text-lg font-semibold">Quantity with Unit</Label>
+        <div className="flex gap-2 mt-2">
+          <Input 
+            id="quantity" 
+            type="number" 
+            min="0" 
+            required 
+            className="flex-1 h-14 text-lg" 
+            placeholder="Enter quantity"
+          />
+          <Select id="unit" required className="w-[120px]">
+            <SelectTrigger className="h-14">
+              <SelectValue placeholder="Unit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="kgs">Kgs</SelectItem>
+              <SelectItem value="tons">Tons</SelectItem>
+              <SelectItem value="bags">Bags</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       <div>
         <Label htmlFor="action">Stock Update Action</Label>
