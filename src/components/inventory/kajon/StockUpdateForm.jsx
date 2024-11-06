@@ -12,7 +12,8 @@ const StockUpdateForm = ({
   verificationStep, 
   pin, 
   onPinChange, 
-  onBack 
+  onBack,
+  actionType 
 }) => {
   const [selectedCoffeeType, setSelectedCoffeeType] = React.useState('');
   const [newLocation, setNewLocation] = React.useState('');
@@ -51,6 +52,7 @@ const StockUpdateForm = ({
         setShowNewLocation={setShowNewLocation}
         newLocation={newLocation}
         setNewLocation={setNewLocation}
+        actionType={actionType}
       />
       
       <CoffeeTypeField 
@@ -69,19 +71,6 @@ const StockUpdateForm = ({
       </div>
       
       <PriceQuantityFields />
-      
-      <div>
-        <Label htmlFor="action">Stock Update Action</Label>
-        <Select id="action" required>
-          <SelectTrigger>
-            <SelectValue placeholder="Select action" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="add">Add Stock</SelectItem>
-            <SelectItem value="remove">Remove Stock</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
     </>
   );
 };
