@@ -1,22 +1,30 @@
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import LocationField from './form-fields/LocationField';
 import CoffeeTypeField from './form-fields/CoffeeTypeField';
 import PriceQuantityFields from './form-fields/PriceQuantityFields';
 
 const StockUpdateForm = ({ 
-  currentUser, 
+  action,
+  onSubmit,
+  onBack,
   verificationStep, 
   pin, 
-  onPinChange, 
-  onBack 
+  onPinChange 
 }) => {
-  const [selectedCoffeeType, setSelectedCoffeeType] = React.useState('');
-  const [newLocation, setNewLocation] = React.useState('');
-  const [showNewLocation, setShowNewLocation] = React.useState(false);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const formData = {
+      coffeeType: e.target.coffeeType.value,
+      source: e.target.source.value,
+      humidity: e.target.humidity.value,
+      buyingPrice: e.target.buyingPrice.value,
+      quantity: e.target.quantity.value,
+      unit: e.target.unit.value,
+    };
+    onSubmit(formData);
+  };
 
   if (verificationStep) {
     return (
@@ -40,23 +48,8 @@ const StockUpdateForm = ({
   }
 
   return (
-    <>
-      <div>
-        <Label htmlFor="manager">Store/Warehouse Manager</Label>
-        <Input id="manager" value={currentUser.name} disabled />
-      </div>
-      
-      <LocationField 
-        showNewLocation={showNewLocation}
-        setShowNewLocation={setShowNewLocation}
-        newLocation={newLocation}
-        setNewLocation={setNewLocation}
-      />
-      
-      <CoffeeTypeField 
-        selectedCoffeeType={selectedCoffeeType}
-        setSelectedCoffeeType={setSelectedCoffeeType}
-      />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <CoffeeTypeField />
       
       <div>
         <Label htmlFor="source">Source of Coffee</Label>
@@ -70,19 +63,15 @@ const StockUpdateForm = ({
       
       <PriceQuantityFields />
       
-      <div>
-        <Label htmlFor="action">Stock Update Action</Label>
-        <Select id="action" required>
-          <SelectTrigger>
-            <SelectValue placeholder="Select action" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="add">Add Stock</SelectItem>
-            <SelectItem value="remove">Remove Stock</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex gap-2">
+        <Button type="submit">
+          Continue to Verification
+        </Button>
+        <Button type="button" variant="outline" onClick={onBack}>
+          Back
+        </Button>
       </div>
-    </>
+    </form>
   );
 };
 
