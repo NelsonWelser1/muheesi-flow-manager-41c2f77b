@@ -7,48 +7,57 @@ const fromSupabase = async (query) => {
     return data;
 };
 
-export const useFreshecoInventory = () => useQuery({
-    queryKey: ['freshecoInventory'],
-    queryFn: () => fromSupabase(supabase.from('fresheco_inventory').select('*')),
+/*
+### Fresheco Farming Limited
+
+| name       | type                     | format    | required |
+|------------|--------------------------|-----------|----------|
+| id         | integer                  | bigint    | true     |
+| created_at | timestamp with time zone | timestamp | true     |
+| tittle     | string                  | text      | false    |
+| content    | string                  | text      | false    |
+| color      | string                  | text      | false    |
+
+Description: Fresh and Dry export based business
+*/
+
+export const useFreshecoFarming = (id) => useQuery({
+    queryKey: ['freshecoFarming', id],
+    queryFn: () => fromSupabase(supabase.from('Fresheco Farming Limited').select('*').eq('id', id).single()),
 });
 
-export const useFreshecoExports = () => useQuery({
-    queryKey: ['freshecoExports'],
-    queryFn: () => fromSupabase(supabase.from('fresheco_exports').select('*')),
+export const useFreshecoFarmings = () => useQuery({
+    queryKey: ['freshecoFarming'],
+    queryFn: () => fromSupabase(supabase.from('Fresheco Farming Limited').select('*')),
 });
 
-export const useFreshecoQualityControl = () => useQuery({
-    queryKey: ['freshecoQualityControl'],
-    queryFn: () => fromSupabase(supabase.from('fresheco_quality_control').select('*')),
-});
-
-// Mutations
-export const useAddFreshecoInventory = () => {
+export const useAddFreshecoFarming = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (newInventory) => fromSupabase(supabase.from('fresheco_inventory').insert([newInventory])),
+        mutationFn: (newFarming) => fromSupabase(supabase.from('Fresheco Farming Limited').insert([newFarming])),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['freshecoInventory'] });
+            queryClient.invalidateQueries({ queryKey: ['freshecoFarming'] });
         },
     });
 };
 
-export const useAddFreshecoExport = () => {
+export const useUpdateFreshecoFarming = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (newExport) => fromSupabase(supabase.from('fresheco_exports').insert([newExport])),
+        mutationFn: ({ id, ...updateData }) => 
+            fromSupabase(supabase.from('Fresheco Farming Limited').update(updateData).eq('id', id)),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['freshecoExports'] });
+            queryClient.invalidateQueries({ queryKey: ['freshecoFarming'] });
         },
     });
 };
 
-export const useAddQualityControl = () => {
+export const useDeleteFreshecoFarming = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (newQC) => fromSupabase(supabase.from('fresheco_quality_control').insert([newQC])),
+        mutationFn: (id) => fromSupabase(supabase.from('Fresheco Farming Limited').delete().eq('id', id)),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['freshecoQualityControl'] });
+            queryClient.invalidateQueries({ queryKey: ['freshecoFarming'] });
         },
     });
 };

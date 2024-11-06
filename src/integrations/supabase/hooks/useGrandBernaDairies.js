@@ -7,41 +7,54 @@ const fromSupabase = async (query) => {
     return data;
 };
 
-export const useFactoryOperations = () => useQuery({
-    queryKey: ['factoryOperations'],
-    queryFn: () => fromSupabase(supabase.from('factory_operations').select('*')),
+/*
+### Grand Berna Dairies
+
+| name       | type                     | format    | required |
+|------------|--------------------------|-----------|----------|
+| id         | integer                  | bigint    | true     |
+| created_at | timestamp with time zone | timestamp | true     |
+
+Description: Dairy Sector
+*/
+
+export const useGrandBernaDairy = (id) => useQuery({
+    queryKey: ['grandBernaDairies', id],
+    queryFn: () => fromSupabase(supabase.from('Grand Berna Dairies').select('*').eq('id', id).single()),
 });
 
-export const useColdRoomManagement = () => useQuery({
-    queryKey: ['coldRoomManagement'],
-    queryFn: () => fromSupabase(supabase.from('cold_room_management').select('*')),
+export const useGrandBernaDairies = () => useQuery({
+    queryKey: ['grandBernaDairies'],
+    queryFn: () => fromSupabase(supabase.from('Grand Berna Dairies').select('*')),
 });
 
-export const useDairySalesRecords = () => useQuery({
-    queryKey: ['dairySalesRecords'],
-    queryFn: () => fromSupabase(supabase.from('dairy_sales_records').select('*')),
-});
-
-// Mutations for Factory Operations
-export const useAddFactoryOperation = () => {
+export const useAddGrandBernaDairy = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (newOperation) => 
-            fromSupabase(supabase.from('factory_operations').insert([newOperation])),
+        mutationFn: (newDairy) => fromSupabase(supabase.from('Grand Berna Dairies').insert([newDairy])),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['factoryOperations'] });
+            queryClient.invalidateQueries({ queryKey: ['grandBernaDairies'] });
         },
     });
 };
 
-// Mutations for Cold Room Management
-export const useAddColdRoomRecord = () => {
+export const useUpdateGrandBernaDairy = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (newRecord) => 
-            fromSupabase(supabase.from('cold_room_management').insert([newRecord])),
+        mutationFn: ({ id, ...updateData }) => 
+            fromSupabase(supabase.from('Grand Berna Dairies').update(updateData).eq('id', id)),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['coldRoomManagement'] });
+            queryClient.invalidateQueries({ queryKey: ['grandBernaDairies'] });
+        },
+    });
+};
+
+export const useDeleteGrandBernaDairy = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id) => fromSupabase(supabase.from('Grand Berna Dairies').delete().eq('id', id)),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['grandBernaDairies'] });
         },
     });
 };

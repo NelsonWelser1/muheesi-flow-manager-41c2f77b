@@ -7,33 +7,54 @@ const fromSupabase = async (query) => {
     return data;
 };
 
-export const useCoffeeInventory = () => useQuery({
-    queryKey: ['coffeeInventory'],
-    queryFn: () => fromSupabase(supabase.from('coffee_inventory').select('*')),
+/*
+### KAJON Coffee Limited
+
+| name       | type                     | format    | required |
+|------------|--------------------------|-----------|----------|
+| id         | integer                  | bigint    | true     |
+| created_at | timestamp with time zone | timestamp | true     |
+
+Description: Coffee Business
+*/
+
+export const useKAJONCoffee = (id) => useQuery({
+    queryKey: ['kajonCoffee', id],
+    queryFn: () => fromSupabase(supabase.from('KAJON Coffee Limited').select('*').eq('id', id).single()),
 });
 
-export const useKazoCoffeeStore = () => useQuery({
-    queryKey: ['kazoCoffeeStore'],
-    queryFn: () => fromSupabase(supabase.from('kazo_coffee_store').select('*')),
+export const useKAJONCoffees = () => useQuery({
+    queryKey: ['kajonCoffee'],
+    queryFn: () => fromSupabase(supabase.from('KAJON Coffee Limited').select('*')),
 });
 
-export const useOutboundShipments = () => useQuery({
-    queryKey: ['outboundShipments'],
-    queryFn: () => fromSupabase(supabase.from('outbound_coffee_shipments').select('*')),
-});
-
-export const useCoffeeSalesRecords = () => useQuery({
-    queryKey: ['coffeeSalesRecords'],
-    queryFn: () => fromSupabase(supabase.from('coffee_sales_records').select('*')),
-});
-
-// Mutations
-export const useAddCoffeeInventory = () => {
+export const useAddKAJONCoffee = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (newInventory) => fromSupabase(supabase.from('coffee_inventory').insert([newInventory])),
+        mutationFn: (newCoffee) => fromSupabase(supabase.from('KAJON Coffee Limited').insert([newCoffee])),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['coffeeInventory'] });
+            queryClient.invalidateQueries({ queryKey: ['kajonCoffee'] });
+        },
+    });
+};
+
+export const useUpdateKAJONCoffee = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, ...updateData }) => 
+            fromSupabase(supabase.from('KAJON Coffee Limited').update(updateData).eq('id', id)),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['kajonCoffee'] });
+        },
+    });
+};
+
+export const useDeleteKAJONCoffee = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id) => fromSupabase(supabase.from('KAJON Coffee Limited').delete().eq('id', id)),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['kajonCoffee'] });
         },
     });
 };

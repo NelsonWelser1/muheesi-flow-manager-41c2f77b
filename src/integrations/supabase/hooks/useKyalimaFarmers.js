@@ -7,28 +7,54 @@ const fromSupabase = async (query) => {
     return data;
 };
 
-export const useRiceImports = () => useQuery({
-    queryKey: ['riceImports'],
-    queryFn: () => fromSupabase(supabase.from('tz2ug_rice_imports').select('*')),
+/*
+### Kyalima Farmers Limited
+
+| name       | type                     | format    | required |
+|------------|--------------------------|-----------|----------|
+| id         | integer                  | bigint    | true     |
+| created_at | timestamp with time zone | timestamp | true     |
+
+Description: Hold Assets, Buy Businesses, Partnerships, Seek Capital, run business, etc
+*/
+
+export const useKyalimaFarmer = (id) => useQuery({
+    queryKey: ['kyalimaFarmers', id],
+    queryFn: () => fromSupabase(supabase.from('Kyalima Farmers Limited').select('*').eq('id', id).single()),
 });
 
-export const useCoffeeFarm = () => useQuery({
-    queryKey: ['coffeeFarm'],
-    queryFn: () => fromSupabase(supabase.from('coffee_farm_kyiboga').select('*')),
+export const useKyalimaFarmers = () => useQuery({
+    queryKey: ['kyalimaFarmers'],
+    queryFn: () => fromSupabase(supabase.from('Kyalima Farmers Limited').select('*')),
 });
 
-export const useBullFattening = () => useQuery({
-    queryKey: ['bullFattening'],
-    queryFn: () => fromSupabase(supabase.from('bull_fattening_program').select('*')),
-});
-
-// Mutations
-export const useAddRiceImport = () => {
+export const useAddKyalimaFarmer = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (newImport) => fromSupabase(supabase.from('tz2ug_rice_imports').insert([newImport])),
+        mutationFn: (newFarmer) => fromSupabase(supabase.from('Kyalima Farmers Limited').insert([newFarmer])),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['riceImports'] });
+            queryClient.invalidateQueries({ queryKey: ['kyalimaFarmers'] });
+        },
+    });
+};
+
+export const useUpdateKyalimaFarmer = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, ...updateData }) => 
+            fromSupabase(supabase.from('Kyalima Farmers Limited').update(updateData).eq('id', id)),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['kyalimaFarmers'] });
+        },
+    });
+};
+
+export const useDeleteKyalimaFarmer = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id) => fromSupabase(supabase.from('Kyalima Farmers Limited').delete().eq('id', id)),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['kyalimaFarmers'] });
         },
     });
 };
