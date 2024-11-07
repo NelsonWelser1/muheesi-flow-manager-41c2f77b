@@ -7,17 +7,6 @@ const fromSupabase = async (query) => {
     return data;
 };
 
-/*
-### Kyalima Farmers Limited
-
-| name       | type                     | format    | required |
-|------------|--------------------------|-----------|----------|
-| id         | integer                  | bigint    | true     |
-| created_at | timestamp with time zone | timestamp | true     |
-
-Description: Hold Assets, Buy Businesses, Partnerships, Seek Capital, run business, etc
-*/
-
 export const useKyalimaFarmer = (id) => useQuery({
     queryKey: ['kyalimaFarmers', id],
     queryFn: () => fromSupabase(supabase.from('Kyalima Farmers Limited').select('*').eq('id', id).single()),
@@ -26,6 +15,16 @@ export const useKyalimaFarmer = (id) => useQuery({
 export const useKyalimaFarmers = () => useQuery({
     queryKey: ['kyalimaFarmers'],
     queryFn: () => fromSupabase(supabase.from('Kyalima Farmers Limited').select('*')),
+});
+
+export const useRiceImports = () => useQuery({
+    queryKey: ['riceImports'],
+    queryFn: () => fromSupabase(supabase.from('rice_imports').select('*')),
+});
+
+export const useBullFattening = () => useQuery({
+    queryKey: ['bullFattening'],
+    queryFn: () => fromSupabase(supabase.from('bull_fattening_program').select('*')),
 });
 
 export const useAddKyalimaFarmer = () => {
