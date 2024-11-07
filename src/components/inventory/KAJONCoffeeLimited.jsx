@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +12,7 @@ import { useAddKAJONCoffeeLimited } from '@/integrations/supabase/hooks/useKAJON
 const KAJONCoffeeLimited = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [selectedInterface, setSelectedInterface] = useState(null);
   const [currentStock, setCurrentStock] = useState(null);
   const [selectedAction, setSelectedAction] = useState(null);
   const [verificationStep, setVerificationStep] = useState(false);
@@ -85,88 +85,103 @@ const KAJONCoffeeLimited = () => {
   };
 
   const handleBack = () => {
+    setSelectedInterface(null);
     setSelectedAction(null);
     setVerificationStep(false);
     setPin('');
   };
 
+  if (!selectedInterface) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>KAJON Coffee Limited</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start text-left h-auto py-4"
+              onClick={() => setSelectedInterface('kajon')}
+            >
+              Update KAJON Coffee Limited Stock
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start text-left h-auto py-4"
+              onClick={() => setSelectedInterface('kazo')}
+            >
+              Update Kazo Coffee Development Project Stock
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="stock" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="stock">Stock Management</TabsTrigger>
-          <TabsTrigger value="kazo-project">Kazo Coffee Project</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="stock">
-          <Card>
-            <CardHeader>
-              <CardTitle>KAJON Coffee Limited Stock Update</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!selectedAction ? (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold mb-4">Stock Update Action</h3>
-                  <div className="grid gap-4">
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start text-left h-auto py-4"
-                      onClick={() => setSelectedAction('add')}
-                    >
-                      Add Stock to Location
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start text-left h-auto py-4"
-                      onClick={() => setSelectedAction('transfer')}
-                    >
-                      Send Stock to another Warehouse/Store
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start text-left h-auto py-4"
-                      onClick={() => setSelectedAction('remove')}
-                    >
-                      Record Loss (Remove Stock)
-                    </Button>
-                  </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>
+            {selectedInterface === 'kajon' ? 'KAJON Coffee Limited Stock Update' : 'Kazo Coffee Development Project'}
+          </CardTitle>
+          <Button variant="ghost" onClick={handleBack} className="h-8 w-8 p-0">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {selectedInterface === 'kajon' ? (
+            !selectedAction ? (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold mb-4">Stock Update Action</h3>
+                <div className="grid gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start text-left h-auto py-4"
+                    onClick={() => setSelectedAction('add')}
+                  >
+                    Add Stock to Location
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start text-left h-auto py-4"
+                    onClick={() => setSelectedAction('transfer')}
+                  >
+                    Send Stock to another Warehouse/Store
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start text-left h-auto py-4"
+                    onClick={() => setSelectedAction('remove')}
+                  >
+                    Record Loss (Remove Stock)
+                  </Button>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">
-                      {selectedAction === 'add' && 'Add Stock to Location'}
-                      {selectedAction === 'transfer' && 'Send Stock to another Warehouse/Store'}
-                      {selectedAction === 'remove' && 'Record Loss (Remove Stock)'}
-                    </h3>
-                    <Button variant="ghost" onClick={handleBack} className="h-8 w-8 p-0">
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <StockUpdateForm
-                      currentUser={currentUser}
-                      verificationStep={verificationStep}
-                      pin={pin}
-                      onPinChange={setPin}
-                      onBack={() => setVerificationStep(false)}
-                      actionType={selectedAction}
-                    />
-                    <Button type="submit" className="w-full">
-                      {verificationStep ? 'Verify and Submit' : 'Continue to Verification'}
-                    </Button>
-                  </form>
-                  <StockSummary stock={currentStock} />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="kazo-project">
-          <KazoCoffeeProject />
-        </TabsContent>
-      </Tabs>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <StockUpdateForm
+                    currentUser={currentUser}
+                    verificationStep={verificationStep}
+                    pin={pin}
+                    onPinChange={setPin}
+                    onBack={() => setVerificationStep(false)}
+                    actionType={selectedAction}
+                  />
+                  <Button type="submit" className="w-full">
+                    {verificationStep ? 'Verify and Submit' : 'Continue to Verification'}
+                  </Button>
+                </form>
+                <StockSummary stock={currentStock} />
+              </div>
+            )
+          ) : (
+            <KazoCoffeeProject />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
