@@ -37,6 +37,16 @@ export const useAddFreshecoInventory = () => {
     });
 };
 
+export const useAddFreshecoExport = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (newExport) => fromSupabase(supabase.from('fresheco_exports').insert([newExport])),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['freshecoExports'] });
+        },
+    });
+};
+
 export const useAddFreshecoFarming = () => {
     const queryClient = useQueryClient();
     return useMutation({
