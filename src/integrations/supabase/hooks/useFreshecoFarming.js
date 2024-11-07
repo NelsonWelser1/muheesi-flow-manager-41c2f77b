@@ -7,20 +7,6 @@ const fromSupabase = async (query) => {
     return data;
 };
 
-/*
-### Fresheco Farming Limited
-
-| name       | type                     | format    | required |
-|------------|--------------------------|-----------|----------|
-| id         | integer                  | bigint    | true     |
-| created_at | timestamp with time zone | timestamp | true     |
-| tittle     | string                  | text      | false    |
-| content    | string                  | text      | false    |
-| color      | string                  | text      | false    |
-
-Description: Fresh and Dry export based business
-*/
-
 export const useFreshecoFarming = (id) => useQuery({
     queryKey: ['freshecoFarming', id],
     queryFn: () => fromSupabase(supabase.from('Fresheco Farming Limited').select('*').eq('id', id).single()),
@@ -29,6 +15,16 @@ export const useFreshecoFarming = (id) => useQuery({
 export const useFreshecoFarmings = () => useQuery({
     queryKey: ['freshecoFarming'],
     queryFn: () => fromSupabase(supabase.from('Fresheco Farming Limited').select('*')),
+});
+
+export const useFreshecoInventory = () => useQuery({
+    queryKey: ['freshecoInventory'],
+    queryFn: () => fromSupabase(supabase.from('fresheco_inventory').select('*')),
+});
+
+export const useFreshecoExports = () => useQuery({
+    queryKey: ['freshecoExports'],
+    queryFn: () => fromSupabase(supabase.from('fresheco_exports').select('*')),
 });
 
 export const useAddFreshecoFarming = () => {
