@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,23 +9,46 @@ import { MapPin, Users, Coffee, Warehouse, Database } from 'lucide-react';
 
 const KazoCoffeeProject = () => {
   const { toast } = useToast();
+  const [selectedCoffeeType, setSelectedCoffeeType] = useState('');
 
   const subCounties = [
-    'Buremba', 'Burunga', 'Engari', 'Kanoni', 
-    'Kazo', 'Nkungu', 'Rwemikoma', 'Kenshunga'
+    'Kazo Town council', 'Buremba Town council', 'Kazo Sub county',
+    'Buremba Sub county', 'Kanoni Sub county', 'Engari Sub county',
+    'Kyampangara Sub county', 'Nkungu Sub county', 'Rwemikoma Sub county',
+    'Burunga Sub county', 'Migina Sub county'
   ];
 
-  const facilities = {
-    'Kanoni': ['Coffee Wet Processing Facility at Katungi Farm'],
-    'Buremba': ['Coffee Nursery Bed'],
-    'Kazo': ['Kazo Shop - Farm Implements', 'Kazo Shop - Women\'s Clothes']
+  const coffeeStores = {
+    'Kanoni Sub county': ['Mbogo Store', 'Rwakahaya Store'],
+    'Engari Sub county': ['Kaichumu store', 'Kyengando store'],
+    'Migina Sub county': ['Migina store'],
+    'Nkungu Sub county': ['Kagarama store'],
+    'Kyampangara Sub county': ['Kyampangara Store']
+  };
+
+  const coffeeGrades = {
+    'robusta': [
+      'Robusta Coffee: FAQ',
+      'Robusta Coffee: Screen 18',
+      'Robusta Coffee: Screen 15',
+      'Robusta Coffee: Screen 12',
+      'Robusta Coffee: Organic Robusta'
+    ],
+    'arabica': [
+      'Arabica Coffee: Bugisu AA',
+      'Arabica Coffee: Bugisu A',
+      'Arabica Coffee: Bugisu PB',
+      'Arabica Coffee: Bugisu B',
+      'Arabica Coffee: DRUGAR',
+      'Arabica Coffee: Parchment Arabica'
+    ]
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     toast({
       title: "Data Submitted",
-      description: "Project information has been updated successfully",
+      description: "Store management information has been updated successfully",
     });
   };
 
@@ -34,7 +57,7 @@ const KazoCoffeeProject = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Coffee className="h-6 w-6" />
-          Kazo Coffee Development Project
+          Store Management
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -43,7 +66,7 @@ const KazoCoffeeProject = () => {
             {/* Location Selection */}
             <div className="space-y-4">
               <div>
-                <Label htmlFor="subCounty">Sub-County</Label>
+                <Label htmlFor="subCounty">Kazo Sub-County</Label>
                 <Select>
                   <SelectTrigger>
                     <SelectValue placeholder="Select sub-county" />
@@ -67,6 +90,11 @@ const KazoCoffeeProject = () => {
               </div>
 
               <div>
+                <Label htmlFor="outGrowerName">Out-Grower Name</Label>
+                <Input id="outGrowerName" placeholder="Enter out-grower name" />
+              </div>
+
+              <div>
                 <Label htmlFor="outGrowers">Number of Out-Growers</Label>
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
@@ -82,7 +110,7 @@ const KazoCoffeeProject = () => {
                 <div className="mt-2 space-y-2">
                   <div className="flex items-center gap-2 text-sm">
                     <Warehouse className="h-4 w-4" />
-                    <span>6 Coffee Stores</span>
+                    <span>7 Coffee Stores</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Database className="h-4 w-4" />
@@ -98,10 +126,12 @@ const KazoCoffeeProject = () => {
                     <SelectValue placeholder="Select store" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Array.from({ length: 6 }, (_, i) => (
-                      <SelectItem key={i + 1} value={`store-${i + 1}`}>
-                        Coffee Store {i + 1}
-                      </SelectItem>
+                    {Object.entries(coffeeStores).map(([district, stores]) => (
+                      stores.map(store => (
+                        <SelectItem key={store} value={store}>
+                          {store} ({district})
+                        </SelectItem>
+                      ))
                     ))}
                   </SelectContent>
                 </Select>
@@ -118,15 +148,27 @@ const KazoCoffeeProject = () => {
                 <Input id="moisture" type="number" step="0.1" />
               </div>
               <div>
+                <Label htmlFor="coffeeType">Coffee Type</Label>
+                <Select onValueChange={setSelectedCoffeeType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select coffee type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="robusta">Robusta Coffee</SelectItem>
+                    <SelectItem value="arabica">Arabica Coffee</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label htmlFor="quality">Quality Grade</Label>
                 <Select>
                   <SelectTrigger>
                     <SelectValue placeholder="Select grade" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="A">Grade A</SelectItem>
-                    <SelectItem value="B">Grade B</SelectItem>
-                    <SelectItem value="C">Grade C</SelectItem>
+                    {selectedCoffeeType && coffeeGrades[selectedCoffeeType].map(grade => (
+                      <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -137,7 +179,7 @@ const KazoCoffeeProject = () => {
             </div>
           </div>
 
-          <Button type="submit" className="w-full">Submit Project Update</Button>
+          <Button type="submit" className="w-full">Submit Store Update</Button>
         </form>
       </CardContent>
     </Card>
