@@ -3,12 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Users } from 'lucide-react';
 
 const FarmManagement = () => {
-  const { toast } = useToast();
-
   const subCounties = [
     'Kazo Town council', 'Buremba Town council', 'Kazo Sub county',
     'Buremba Sub county', 'Kanoni Sub county', 'Engari Sub county',
@@ -16,16 +13,8 @@ const FarmManagement = () => {
     'Burunga Sub county', 'Migina Sub county'
   ];
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    toast({
-      title: "Data Submitted",
-      description: "Farm management information has been updated successfully",
-    });
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div>
