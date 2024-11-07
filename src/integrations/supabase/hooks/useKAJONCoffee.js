@@ -28,6 +28,16 @@ export const useKAJONCoffees = () => useQuery({
     queryFn: () => fromSupabase(supabase.from('KAJON Coffee Limited').select('*')),
 });
 
+export const useCoffeeInventory = () => useQuery({
+    queryKey: ['coffeeInventory'],
+    queryFn: () => fromSupabase(supabase.from('coffee_inventory').select('*')),
+});
+
+export const useCoffeeSalesRecords = () => useQuery({
+    queryKey: ['coffeeSales'],
+    queryFn: () => fromSupabase(supabase.from('coffee_sales_records').select('*')),
+});
+
 export const useAddKAJONCoffee = () => {
     const queryClient = useQueryClient();
     return useMutation({
