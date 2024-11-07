@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { MapPin, Warehouse, Database } from 'lucide-react';
+import { MapPin, Warehouse, Database, Users } from 'lucide-react';
 
 const KazoCoffeeProject = () => {
   const { toast } = useToast();
@@ -65,37 +65,50 @@ const KazoCoffeeProject = () => {
 
         <div className="space-y-4">
           <div>
-            <Label>Available Facilities</Label>
-            <div className="mt-2 space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Warehouse className="h-4 w-4" />
-                <span>7 Coffee Stores</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Database className="h-4 w-4" />
-                <span>2 Data Centers (Managed by Anatory and Eliab)</span>
-              </div>
-            </div>
+            <Label htmlFor="outGrowerName">Out-Grower Name</Label>
+            <Input id="outGrowerName" placeholder="Enter out-grower name" />
           </div>
 
           <div>
-            <Label htmlFor="store">Coffee Store Assignment</Label>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Select store" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(coffeeStores).map(([district, stores]) => (
-                  stores.map(store => (
-                    <SelectItem key={store} value={store}>
-                      {store} ({district})
-                    </SelectItem>
-                  ))
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="outGrowers">Number of Out-Growers</Label>
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              <Input id="outGrowers" type="number" placeholder="Enter number of out-growers" />
+            </div>
           </div>
         </div>
+      </div>
+
+      <div>
+        <Label>Available Facilities</Label>
+        <div className="mt-2 space-y-2">
+          <div className="flex items-center gap-2 text-sm">
+            <Warehouse className="h-4 w-4" />
+            <span>7 Coffee Stores</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <Database className="h-4 w-4" />
+            <span>2 Data Centers (Managed by Anatory and Eliab)</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="store">Coffee Store Assignment</Label>
+        <Select>
+          <SelectTrigger>
+            <SelectValue placeholder="Select store" />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(coffeeStores).map(([district, stores]) => (
+              stores.map(store => (
+                <SelectItem key={store} value={store}>
+                  {store} ({district})
+                </SelectItem>
+              ))
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Button type="submit" className="w-full">Submit Store Update</Button>
