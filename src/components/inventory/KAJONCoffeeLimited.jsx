@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -78,7 +78,7 @@ const KAJONCoffeeLimited = () => {
                 className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
                 onClick={() => setSelectedInterface('kajon')}
               >
-                Update KAJON Coffee Limited Stock
+                Update Stock
               </Button>
               <Button 
                 variant="outline" 
