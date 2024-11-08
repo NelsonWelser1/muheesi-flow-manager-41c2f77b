@@ -3,11 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload } from 'lucide-react';
+import { ArrowLeft, Home, LogOut, Clock } from 'lucide-react';
 import StockUpdateForm from './kajon/StockUpdateForm';
 import StockSummary from './kajon/StockSummary';
 import KazoCoffeeProject from './kajon/KazoCoffeeProject';
-import { useAddKAJONCoffeeLimited } from '@/integrations/supabase/hooks/useKAJONCoffeeLimited';
+import { format } from 'date-fns';
 
 const KAJONCoffeeLimited = () => {
   const { toast } = useToast();
@@ -17,119 +17,111 @@ const KAJONCoffeeLimited = () => {
   const [selectedAction, setSelectedAction] = useState(null);
   const [verificationStep, setVerificationStep] = useState(false);
   const [pin, setPin] = useState('');
-  const [logo, setLogo] = useState(null);
-  const fileInputRef = useRef(null);
-  const addStockMutation = useAddKAJONCoffeeLimited();
+
+  const handleBack = () => {
+    navigate(-1);
+  };
 
   const currentUser = {
     name: "Nelson Welser",
-    authorizedLocations: ["Kampala Store", "Mbarara Warehouse", "Kakyinga Factory"]
+    role: "Inventory Manager"
   };
-
-  const handleLogoUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setLogo(e.target.result);
-        toast({
-          title: "Logo Updated",
-          description: "Company logo has been successfully updated",
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleBack = () => {
-    setSelectedInterface(null);
-    setSelectedAction(null);
-    setVerificationStep(false);
-    setPin('');
-  };
-
-  if (!selectedInterface) {
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between mb-4">
-            <CardTitle>KAJON Coffee Limited</CardTitle>
-            <div className="relative">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleLogoUpload}
-                accept="image/*"
-                className="hidden"
-              />
-              <div 
-                className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {logo ? (
-                  <img src={logo} alt="Company Logo" className="w-full h-full object-contain rounded-lg" />
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <Upload className="w-8 h-8 text-gray-400" />
-                    <span className="text-xs text-gray-500 mt-1">Upload Logo</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
-              onClick={() => setSelectedInterface('kajon')}
-            >
-              Update KAJON Coffee Limited Stock
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
-              onClick={() => setSelectedInterface('kazo')}
-            >
-              Update Kazo Coffee Development Project Stock
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle>
-            {selectedInterface === 'kajon' ? 'Stock Update' : 'Kazo Coffee Development Project'}
-          </CardTitle>
-          <Button variant="ghost" onClick={handleBack} className="h-8 w-8 p-0">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {selectedInterface === 'kajon' ? (
-            !selectedAction ? (
-              <StockUpdateForm
-                currentUser={currentUser}
-                verificationStep={verificationStep}
-                pin={pin}
-                onPinChange={setPin}
-                onBack={() => setVerificationStep(false)}
-                actionType={selectedAction}
-              />
-            ) : (
-              <StockSummary stock={currentStock} />
-            )
-          ) : (
-            <KazoCoffeeProject />
-          )}
-        </CardContent>
-      </Card>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="border-b">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" onClick={handleBack} className="p-0">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Companies
+              </Button>
+              <h1 className="text-2xl font-bold">KAJON Coffee Limited</h1>
+            </div>
+            <div className="flex items-center space-x-6">
+              <div className="text-right">
+                <div className="font-semibold">{currentUser.name}</div>
+                <div className="text-sm text-muted-foreground">{currentUser.role}</div>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <Clock className="inline-block mr-2" />
+                {format(new Date(), 'MMM d, yyyy, h:mm:ss a')}
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.href = 'https://lov-p-343a8d2e-efae-497c-8ac5-1f04f7962234.fly.dev/'}
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Home
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/logout')}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Log Out
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
+                onClick={() => setSelectedInterface('kajon')}
+              >
+                Update KAJON Coffee Limited Stock
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
+                onClick={() => setSelectedInterface('kazo')}
+              >
+                Update Kazo Coffee Development Project Stock
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {selectedInterface && (
+          <Card className="mt-6">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle>
+                {selectedInterface === 'kajon' ? 'Stock Update' : 'Kazo Coffee Development Project'}
+              </CardTitle>
+              <Button variant="ghost" onClick={() => setSelectedInterface(null)} className="h-8 w-8 p-0">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {selectedInterface === 'kajon' ? (
+                !selectedAction ? (
+                  <StockUpdateForm
+                    currentUser={currentUser}
+                    verificationStep={verificationStep}
+                    pin={pin}
+                    onPinChange={setPin}
+                    onBack={() => setVerificationStep(false)}
+                    actionType={selectedAction}
+                  />
+                ) : (
+                  <StockSummary stock={currentStock} />
+                )
+              ) : (
+                <KazoCoffeeProject />
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
