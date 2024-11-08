@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Upload } from 'lucide-react';
 import StockUpdateForm from './kajon/StockUpdateForm';
 import StockSummary from './kajon/StockSummary';
 import KazoCoffeeProject from './kajon/KazoCoffeeProject';
@@ -17,70 +17,27 @@ const KAJONCoffeeLimited = () => {
   const [selectedAction, setSelectedAction] = useState(null);
   const [verificationStep, setVerificationStep] = useState(false);
   const [pin, setPin] = useState('');
+  const [logo, setLogo] = useState(null);
+  const fileInputRef = useRef(null);
   const addStockMutation = useAddKAJONCoffeeLimited();
 
   const currentUser = {
-    name: "John Doe",
+    name: "Nelson Welser",
     authorizedLocations: ["Kampala Store", "Mbarara Warehouse", "Kakyinga Factory"]
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!verificationStep) {
-      setVerificationStep(true);
-      return;
-    }
-
-    if (pin === '1234') {
-      const formData = {
-        manager: currentUser.name,
-        location: e.target.location.value,
-        coffeeType: e.target.coffeeType.value,
-        source: e.target.source.value,
-        beanSize: `${e.target.beanSizeNumber.value}${e.target.beanSizeGrade.value}`,
-        humidity: e.target.humidity.value,
-        buyingPrice: e.target.buyingPrice.value,
-        quantity: e.target.quantity.value,
-        unit: e.target.unit.value,
-        timestamp: new Date().toISOString(),
-        action: selectedAction
-      };
-
-      try {
-        await addStockMutation.mutateAsync(formData);
-        setCurrentStock(formData);
+  const handleLogoUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogo(e.target.result);
         toast({
-          title: "Stock Updated Successfully",
-          description: `${selectedAction}: ${formData.quantity} ${formData.unit} of ${formData.coffeeType}`,
+          title: "Logo Updated",
+          description: "Company logo has been successfully updated",
         });
-        setVerificationStep(false);
-        setPin('');
-        setSelectedAction(null);
-        
-        setTimeout(() => {
-          navigate('/view-stock');
-        }, 2000);
-      } catch (error) {
-        if (!navigator.onLine) {
-          toast({
-            title: "Network Error",
-            description: "Update pending network connection. Will complete automatically when reconnected.",
-            variant: "warning",
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-      }
-    } else {
-      toast({
-        title: "Verification Failed",
-        description: "Invalid PIN provided",
-        variant: "destructive",
-      });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -95,20 +52,44 @@ const KAJONCoffeeLimited = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>KAJON Coffee Limited</CardTitle>
+          <div className="flex items-center justify-between mb-4">
+            <CardTitle>KAJON Coffee Limited</CardTitle>
+            <div className="relative">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleLogoUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <div 
+                className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {logo ? (
+                  <img src={logo} alt="Company Logo" className="w-full h-full object-contain rounded-lg" />
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <Upload className="w-8 h-8 text-gray-400" />
+                    <span className="text-xs text-gray-500 mt-1">Upload Logo</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <Button 
               variant="outline" 
-              className="w-full justify-start text-left h-auto py-4"
+              className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
               onClick={() => setSelectedInterface('kajon')}
             >
               Update KAJON Coffee Limited Stock
             </Button>
             <Button 
               variant="outline" 
-              className="w-full justify-start text-left h-auto py-4"
+              className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
               onClick={() => setSelectedInterface('kazo')}
             >
               Update Kazo Coffee Development Project Stock
@@ -124,7 +105,7 @@ const KAJONCoffeeLimited = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle>
-            {selectedInterface === 'kajon' ? 'KAJON Coffee Limited Stock Update' : 'Kazo Coffee Development Project'}
+            {selectedInterface === 'kajon' ? 'Stock Update' : 'Kazo Coffee Development Project'}
           </CardTitle>
           <Button variant="ghost" onClick={handleBack} className="h-8 w-8 p-0">
             <ArrowLeft className="h-4 w-4" />
@@ -133,49 +114,16 @@ const KAJONCoffeeLimited = () => {
         <CardContent>
           {selectedInterface === 'kajon' ? (
             !selectedAction ? (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold mb-4">Stock Update Action</h3>
-                <div className="grid gap-4">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start text-left h-auto py-4"
-                    onClick={() => setSelectedAction('add')}
-                  >
-                    Add Stock to Location
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start text-left h-auto py-4"
-                    onClick={() => setSelectedAction('transfer')}
-                  >
-                    Send Stock to another Warehouse/Store
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start text-left h-auto py-4"
-                    onClick={() => setSelectedAction('remove')}
-                  >
-                    Record Loss (Remove Stock)
-                  </Button>
-                </div>
-              </div>
+              <StockUpdateForm
+                currentUser={currentUser}
+                verificationStep={verificationStep}
+                pin={pin}
+                onPinChange={setPin}
+                onBack={() => setVerificationStep(false)}
+                actionType={selectedAction}
+              />
             ) : (
-              <div className="space-y-4">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <StockUpdateForm
-                    currentUser={currentUser}
-                    verificationStep={verificationStep}
-                    pin={pin}
-                    onPinChange={setPin}
-                    onBack={() => setVerificationStep(false)}
-                    actionType={selectedAction}
-                  />
-                  <Button type="submit" className="w-full">
-                    {verificationStep ? 'Verify and Submit' : 'Continue to Verification'}
-                  </Button>
-                </form>
-                <StockSummary stock={currentStock} />
-              </div>
+              <StockSummary stock={currentStock} />
             )
           ) : (
             <KazoCoffeeProject />
