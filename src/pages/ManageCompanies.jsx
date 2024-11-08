@@ -6,7 +6,7 @@ import SystemAdministrator from '../components/SystemAdministrator';
 
 const ManageCompanies = () => {
   const currentUser = {
-    name: "John Doe",
+    name: "Welser",
     role: "System Administrator (SysAdmin)",
     primaryActions: [
       "System Health",
