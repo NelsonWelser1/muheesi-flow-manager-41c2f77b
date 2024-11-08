@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Upload, Home, LogOut, Clock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Upload } from 'lucide-react';
 import StockUpdateForm from './kajon/StockUpdateForm';
 import StockSummary from './kajon/StockSummary';
 import KazoCoffeeProject from './kajon/KazoCoffeeProject';
@@ -11,6 +11,7 @@ import { useAddKAJONCoffeeLimited } from '@/integrations/supabase/hooks/useKAJON
 
 const KAJONCoffeeLimited = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [selectedInterface, setSelectedInterface] = useState(null);
   const [currentStock, setCurrentStock] = useState(null);
   const [selectedAction, setSelectedAction] = useState(null);
@@ -22,7 +23,6 @@ const KAJONCoffeeLimited = () => {
 
   const currentUser = {
     name: "Nelson Welser",
-    role: "Inventory Manager",
     authorizedLocations: ["Kampala Store", "Mbarara Warehouse", "Kakyinga Factory"]
   };
 
@@ -48,97 +48,88 @@ const KAJONCoffeeLimited = () => {
     setPin('');
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="bg-gray-900 text-white p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link to="/" className="text-2xl font-futuristic">
-            Muheesi GKK Integrated System
-          </Link>
-          <div className="flex space-x-4">
-            <Button variant="outline" className="text-white">Dashboard</Button>
-            <Button variant="outline" className="text-white">Manage Inventory</Button>
-            <Button variant="outline" className="text-white">Manage Companies</Button>
-            <Button variant="outline" className="text-white">Feedback</Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={handleBack} className="flex items-center">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Companies
-            </Button>
-            <h1 className="text-2xl font-bold">KAJON Coffee Limited</h1>
-          </div>
-          <div className="flex items-center space-x-6">
-            <div className="text-right">
-              <div className="font-semibold">{currentUser.name}</div>
-              <div className="text-sm text-gray-600">{currentUser.role}</div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4" />
-              <span>{new Date().toLocaleString()}</span>
-            </div>
-            <div className="flex space-x-2">
-              <Button variant="outline" asChild>
-                <Link to="/home">
-                  <Home className="h-4 w-4 mr-2" />
-                  Home
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/logout">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Log Out
-                </Link>
-              </Button>
+  if (!selectedInterface) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between mb-4">
+            <CardTitle>KAJON Coffee Limited</CardTitle>
+            <div className="relative">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleLogoUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <div 
+                className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {logo ? (
+                  <img src={logo} alt="Company Logo" className="w-full h-full object-contain rounded-lg" />
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <Upload className="w-8 h-8 text-gray-400" />
+                    <span className="text-xs text-gray-500 mt-1">Upload Logo</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-
-        <Card className="mb-6">
-          <CardContent className="p-6 space-y-4">
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
             <Button 
               variant="outline" 
-              className="w-full justify-start text-left h-auto py-4 text-lg"
+              className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
               onClick={() => setSelectedInterface('kajon')}
             >
               Update KAJON Coffee Limited Stock
             </Button>
             <Button 
               variant="outline" 
-              className="w-full justify-start text-left h-auto py-4 text-lg"
+              className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
               onClick={() => setSelectedInterface('kazo')}
             >
               Update Kazo Coffee Development Project Stock
             </Button>
-          </CardContent>
-        </Card>
-
-        {selectedInterface && (
-          <div className="space-y-6">
-            {selectedInterface === 'kajon' ? (
-              !selectedAction ? (
-                <StockUpdateForm
-                  currentUser={currentUser}
-                  verificationStep={verificationStep}
-                  pin={pin}
-                  onPinChange={setPin}
-                  onBack={() => setVerificationStep(false)}
-                  actionType={selectedAction}
-                />
-              ) : (
-                <StockSummary stock={currentStock} />
-              )
-            ) : (
-              <KazoCoffeeProject />
-            )}
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>
+            {selectedInterface === 'kajon' ? 'Stock Update' : 'Kazo Coffee Development Project'}
+          </CardTitle>
+          <Button variant="ghost" onClick={handleBack} className="h-8 w-8 p-0">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {selectedInterface === 'kajon' ? (
+            !selectedAction ? (
+              <StockUpdateForm
+                currentUser={currentUser}
+                verificationStep={verificationStep}
+                pin={pin}
+                onPinChange={setPin}
+                onBack={() => setVerificationStep(false)}
+                actionType={selectedAction}
+              />
+            ) : (
+              <StockSummary stock={currentStock} />
+            )
+          ) : (
+            <KazoCoffeeProject />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
