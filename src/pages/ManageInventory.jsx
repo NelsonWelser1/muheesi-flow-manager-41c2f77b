@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UpdateStock from '../components/inventory/UpdateStock';
-import ViewCurrentStock from '../components/inventory/ViewCurrentStock';
-import MakeReports from '../components/inventory/MakeReports';
-import ManageFarms from '../components/inventory/ManageFarms';
-import ManageAssociations from '../components/inventory/ManageAssociations';
-import MakeRequisitions from '../components/inventory/MakeRequisitions';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Home, LogOut, Clock } from "lucide-react";
@@ -33,7 +27,7 @@ const companies = [
 const ManageInventory = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const navigate = useNavigate();
-  const currentUser = { name: "John Doe", role: "Inventory Manager" }; // Replace with actual user data
+  const currentUser = { name: "John Doe", role: "Inventory Manager" };
 
   const handleCompanyClick = (company) => {
     setSelectedCompany(company);
@@ -76,35 +70,7 @@ const ManageInventory = () => {
 
         <Card className="w-full">
           <CardContent className="p-6">
-            <Tabs defaultValue="update-stock" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 gap-4">
-                <TabsTrigger value="update-stock">Update Stock</TabsTrigger>
-                <TabsTrigger value="view-stock">View Stock</TabsTrigger>
-                <TabsTrigger value="reports">Reports</TabsTrigger>
-                <TabsTrigger value="farms">Farms</TabsTrigger>
-                <TabsTrigger value="associations">Associations</TabsTrigger>
-                <TabsTrigger value="requisitions">Requisitions</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="update-stock">
-                <UpdateStock defaultTab={selectedCompany.component} />
-              </TabsContent>
-              <TabsContent value="view-stock">
-                <ViewCurrentStock company={selectedCompany.name} />
-              </TabsContent>
-              <TabsContent value="reports">
-                <MakeReports company={selectedCompany.name} />
-              </TabsContent>
-              <TabsContent value="farms">
-                <ManageFarms company={selectedCompany.name} />
-              </TabsContent>
-              <TabsContent value="associations">
-                <ManageAssociations company={selectedCompany.name} />
-              </TabsContent>
-              <TabsContent value="requisitions">
-                <MakeRequisitions company={selectedCompany.name} />
-              </TabsContent>
-            </Tabs>
+            <UpdateStock defaultTab={selectedCompany.component} />
           </CardContent>
         </Card>
       </div>

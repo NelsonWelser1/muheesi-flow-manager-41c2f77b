@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import StockUpdateForm from './kajon/StockUpdateForm';
@@ -31,26 +31,21 @@ const KAJONCoffeeLimited = () => {
   if (!selectedInterface) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>KAJON Coffee Limited</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
-              onClick={() => setSelectedInterface('kajon')}
-            >
-              Update KAJON Coffee Limited Stock
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
-              onClick={() => setSelectedInterface('kazo')}
-            >
-              Update Kazo Coffee Development Project Stock
-            </Button>
-          </div>
+        <CardContent className="space-y-4 pt-6">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
+            onClick={() => setSelectedInterface('kajon')}
+          >
+            Update KAJON Coffee Limited Stock
+          </Button>
+          <Button 
+            variant="outline" 
+            className="w-full justify-start text-left h-auto py-4 text-lg font-semibold"
+            onClick={() => setSelectedInterface('kazo')}
+          >
+            Update Kazo Coffee Development Project Stock
+          </Button>
         </CardContent>
       </Card>
     );
@@ -59,12 +54,7 @@ const KAJONCoffeeLimited = () => {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>
-            {selectedInterface === 'kajon' ? 'Stock Update' : 'Kazo Coffee Development Project'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {selectedInterface === 'kajon' ? (
             !selectedAction ? (
               <StockUpdateForm
