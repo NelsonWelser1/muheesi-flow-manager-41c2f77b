@@ -64,6 +64,24 @@ const KAJONCoffeeLimited = () => {
                 onPinChange={setPin}
                 onBack={() => setVerificationStep(false)}
                 actionType={selectedAction}
+                onSubmit={(data) => {
+                  addStockMutation.mutate(data, {
+                    onSuccess: () => {
+                      toast({
+                        title: "Stock Updated",
+                        description: "The stock has been successfully updated.",
+                      });
+                      handleBack();
+                    },
+                    onError: (error) => {
+                      toast({
+                        title: "Error",
+                        description: "Failed to update stock. Please try again.",
+                        variant: "destructive",
+                      });
+                    },
+                  });
+                }}
               />
             ) : (
               <StockSummary stock={currentStock} />
