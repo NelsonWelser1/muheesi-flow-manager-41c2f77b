@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft } from "lucide-react";
 import StockUpdateForm from './kajon/StockUpdateForm';
 import StockSummary from './kajon/StockSummary';
 import ViewCurrentStock from './ViewCurrentStock';
@@ -59,25 +60,26 @@ const KAJONCoffeeLimited = () => {
 
   return (
     <div className="space-y-6">
-      <Button 
-        variant="outline" 
-        onClick={handleBack}
-        className="mb-4"
-      >
-        Back
-      </Button>
-      
       <Card>
         <CardContent className="pt-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">
+              {selectedInterface === 'kajon' ? 'KAJON Coffee Limited' : 'Kazo Coffee Development Project'}
+            </h2>
+            <Button variant="ghost" onClick={handleBack} className="p-2">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </div>
+
           {selectedInterface === 'kajon' ? (
             <Tabs defaultValue="update-stock" className="w-full">
-              <TabsList className="w-full justify-start">
-                <TabsTrigger value="update-stock">Update Stock</TabsTrigger>
-                <TabsTrigger value="view-stock">View Stock</TabsTrigger>
-                <TabsTrigger value="reports">Reports</TabsTrigger>
-                <TabsTrigger value="farms">Farms</TabsTrigger>
-                <TabsTrigger value="associations">Associations</TabsTrigger>
-                <TabsTrigger value="requisitions">Requisitions</TabsTrigger>
+              <TabsList className="w-full justify-start overflow-x-auto flex-nowrap md:flex-wrap">
+                <TabsTrigger value="update-stock" className="whitespace-nowrap">Update Stock</TabsTrigger>
+                <TabsTrigger value="view-stock" className="whitespace-nowrap">View Stock</TabsTrigger>
+                <TabsTrigger value="reports" className="whitespace-nowrap">Reports</TabsTrigger>
+                <TabsTrigger value="farms" className="whitespace-nowrap">Farms</TabsTrigger>
+                <TabsTrigger value="associations" className="whitespace-nowrap">Associations</TabsTrigger>
+                <TabsTrigger value="requisitions" className="whitespace-nowrap">Requisitions</TabsTrigger>
               </TabsList>
 
               <TabsContent value="update-stock">

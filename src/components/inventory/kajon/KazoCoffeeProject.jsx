@@ -1,35 +1,48 @@
-import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StoreManagement from './StoreManagement';
 import FarmManagement from './FarmManagement';
+import ViewCurrentStock from '../ViewCurrentStock';
+import MakeReports from '../MakeReports';
+import ManageAssociations from '../ManageAssociations';
+import MakeRequisitions from '../MakeRequisitions';
 
 const KazoCoffeeProject = () => {
-  const [selectedPage, setSelectedPage] = useState('store');
-
   return (
-    <div className="space-y-4">
-      <div className="flex space-x-4 mb-6">
-        <Button 
-          variant={selectedPage === 'store' ? 'default' : 'outline'}
-          onClick={() => setSelectedPage('store')}
-        >
-          Store Management
-        </Button>
-        <Button 
-          variant={selectedPage === 'farm' ? 'default' : 'outline'}
-          onClick={() => setSelectedPage('farm')}
-        >
-          Farm Management
-        </Button>
-      </div>
+    <Tabs defaultValue="update-stock" className="w-full">
+      <TabsList className="w-full justify-start overflow-x-auto flex-nowrap md:flex-wrap">
+        <TabsTrigger value="update-stock" className="whitespace-nowrap">Update Stock</TabsTrigger>
+        <TabsTrigger value="view-stock" className="whitespace-nowrap">View Stock</TabsTrigger>
+        <TabsTrigger value="reports" className="whitespace-nowrap">Reports</TabsTrigger>
+        <TabsTrigger value="farms" className="whitespace-nowrap">Farms</TabsTrigger>
+        <TabsTrigger value="associations" className="whitespace-nowrap">Associations</TabsTrigger>
+        <TabsTrigger value="requisitions" className="whitespace-nowrap">Requisitions</TabsTrigger>
+      </TabsList>
 
-      <Card>
-        <CardContent className="pt-6">
-          {selectedPage === 'store' ? <StoreManagement /> : <FarmManagement />}
-        </CardContent>
-      </Card>
-    </div>
+      <TabsContent value="update-stock">
+        <StoreManagement />
+      </TabsContent>
+
+      <TabsContent value="view-stock">
+        <ViewCurrentStock />
+      </TabsContent>
+
+      <TabsContent value="reports">
+        <MakeReports />
+      </TabsContent>
+
+      <TabsContent value="farms">
+        <FarmManagement />
+      </TabsContent>
+
+      <TabsContent value="associations">
+        <ManageAssociations />
+      </TabsContent>
+
+      <TabsContent value="requisitions">
+        <MakeRequisitions />
+      </TabsContent>
+    </Tabs>
   );
 };
 
