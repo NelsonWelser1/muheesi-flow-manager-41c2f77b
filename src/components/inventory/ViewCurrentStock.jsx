@@ -10,7 +10,7 @@ import {
   useFreshecoInventory 
 } from '@/integrations/supabase/hooks/useInventoryData';
 
-const ViewCurrentStock = () => {
+const ViewCurrentStock = ({ location }) => {
   const [filter, setFilter] = useState('category');
   const [selectedValue, setSelectedValue] = useState('');
   const { toast } = useToast();
@@ -22,12 +22,13 @@ const ViewCurrentStock = () => {
 
   const isLoading = isDairyLoading || isCoffeeLoading || isFarmLoading || isFreshecoLoading;
 
+  // Filter stock by location if provided
   const allStock = [
     ...(dairyStock || []),
     ...(coffeeStock || []),
     ...(farmStock || []),
     ...(freshecoStock || [])
-  ];
+  ].filter(item => !location || item.location === location);
 
   const categories = ['Dairy', 'Coffee', 'Grains', 'Fresh Produce'];
   const types = {
@@ -50,7 +51,7 @@ const ViewCurrentStock = () => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold mb-4">View Current Stock</h2>
+      <h2 className="text-2xl font-bold mb-4">Current Stock {location ? `in ${location}` : ''}</h2>
       <div className="flex flex-wrap gap-4">
         <Select value={filter} onValueChange={setFilter}>
           <SelectTrigger className="w-[180px]">
@@ -59,7 +60,7 @@ const ViewCurrentStock = () => {
           <SelectContent>
             <SelectItem value="category">Category</SelectItem>
             <SelectItem value="type">Product Type</SelectItem>
-            <SelectItem value="location">Location</SelectItem>
+            {!location && <SelectItem value="location">Location</SelectItem>}
           </SelectContent>
         </Select>
         <Select value={selectedValue} onValueChange={setSelectedValue}>
@@ -73,8 +74,8 @@ const ViewCurrentStock = () => {
             {filter === 'type' && selectedValue && types[selectedValue]?.map(type => (
               <SelectItem key={type} value={type}>{type}</SelectItem>
             ))}
-            {filter === 'location' && locations.map(location => (
-              <SelectItem key={location} value={location}>{location}</SelectItem>
+            {filter === 'location' && locations.map(loc => (
+              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
             ))}
           </SelectContent>
         </Select>
