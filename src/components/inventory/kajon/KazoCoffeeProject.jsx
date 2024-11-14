@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import ViewCurrentStock from '../ViewCurrentStock';
 import MakeReports from '../MakeReports';
 import ManageFarms from '../ManageFarms';
@@ -68,7 +69,7 @@ const KazoCoffeeProject = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <StoreManagement selectedStore={selectedStore} />
+              {selectedStore && <StoreManagement selectedStore={selectedStore} />}
             </div>
           )}
         </div>
