@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,9 +7,28 @@ import { Warehouse, Database } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAddKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
 
+const COFFEE_GRADES = {
+  arabica: [
+    'Arabica Coffee: Bugisu AA',
+    'Arabica Coffee: Bugisu A',
+    'Arabica Coffee: Bugisu PB',
+    'Arabica Coffee: Bugisu B',
+    'Arabica Coffee: DRUGAR',
+    'Arabica Coffee: Parchment Arabica'
+  ],
+  robusta: [
+    'Robusta Coffee: FAQ',
+    'Robusta Coffee: Screen 18',
+    'Robusta Coffee: Screen 15',
+    'Robusta Coffee: Screen 12',
+    'Robusta Coffee: Organic Robusta'
+  ]
+};
+
 const StoreManagement = ({ selectedStore }) => {
   const { toast } = useToast();
   const addCoffeeMutation = useAddKAJONCoffee();
+  const [selectedCoffeeType, setSelectedCoffeeType] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,7 +82,12 @@ const StoreManagement = ({ selectedStore }) => {
             
             <div>
               <Label>Coffee Type</Label>
-              <Select name="coffeeType">
+              <Select 
+                name="coffeeType" 
+                onValueChange={(value) => {
+                  setSelectedCoffeeType(value);
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select coffee type" />
                 </SelectTrigger>
@@ -76,17 +100,14 @@ const StoreManagement = ({ selectedStore }) => {
 
             <div>
               <Label>Quality Grade</Label>
-              <Select name="qualityGrade">
+              <Select name="qualityGrade" disabled={!selectedCoffeeType}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select quality grade" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bugisu_aa">Bugisu AA</SelectItem>
-                  <SelectItem value="bugisu_a">Bugisu A</SelectItem>
-                  <SelectItem value="bugisu_pb">Bugisu PB</SelectItem>
-                  <SelectItem value="bugisu_b">Bugisu B</SelectItem>
-                  <SelectItem value="drugar">DRUGAR</SelectItem>
-                  <SelectItem value="parchment">Parchment Arabica</SelectItem>
+                  {selectedCoffeeType && COFFEE_GRADES[selectedCoffeeType].map((grade) => (
+                    <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
