@@ -144,7 +144,7 @@ const StockUpdateForm = ({ currentUser }) => {
       </div>
 
       <Button type="submit" className="w-full bg-navy-900">
-        Submit Store Update
+        Submit Stock Update
       </Button>
     </form>
   );

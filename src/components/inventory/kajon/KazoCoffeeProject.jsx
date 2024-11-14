@@ -1,29 +1,24 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ViewCurrentStock from '../ViewCurrentStock';
 import MakeReports from '../MakeReports';
 import ManageFarms from '../ManageFarms';
 import ManageAssociations from '../ManageAssociations';
 import MakeRequisitions from '../MakeRequisitions';
 import StoreManagement from './StoreManagement';
-import FarmManagement from './FarmManagement';
 
 const KazoCoffeeProject = () => {
   const [activeTab, setActiveTab] = useState('store');
+  const [selectedStore, setSelectedStore] = useState('');
 
-  const subCounties = [
-    'Kazo Town council', 'Buremba Town council', 'Kazo Sub county',
-    'Buremba Sub county', 'Kanoni Sub county', 'Engari Sub county',
-    'Kyampangara Sub county', 'Nkungu Sub county', 'Rwemikoma Sub county',
-    'Burunga Sub county', 'Migina Sub county'
-  ];
-
-  const coffeeTypes = ['Arabica', 'Robusta'];
-  
-  const qualityGrades = {
-    Arabica: ['Bugisu AA', 'Bugisu A', 'Bugisu PB', 'Bugisu B', 'DRUGAR', 'Parchment Arabica'],
-    Robusta: ['FAQ', 'Screen 18', 'Screen 15', 'Screen 12', 'Organic Robusta']
+  const stores = {
+    'Kanoni Sub County': ['Mbogo store', 'Rwakahaya store'],
+    'Engari Sub County': ['Kaichumu store', 'Kyengando store'],
+    'Migina Sub County': ['Migina Store'],
+    'Nkungu Sub County': ['Kagarama Store'],
+    'Kyampangara Sub County': ['Kyampangara Store']
   };
 
   return (
@@ -50,11 +45,31 @@ const KazoCoffeeProject = () => {
           </div>
 
           {activeTab === 'store' && (
-            <StoreManagement 
-              subCounties={subCounties}
-              coffeeTypes={coffeeTypes}
-              qualityGrades={qualityGrades}
-            />
+            <div className="space-y-4">
+              <div>
+                <Label>Select Store Location</Label>
+                <Select value={selectedStore} onValueChange={setSelectedStore}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select store" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(stores).map(([subCounty, storeList]) => (
+                      <React.Fragment key={subCounty}>
+                        <SelectItem value={subCounty} disabled className="font-bold">
+                          {subCounty}
+                        </SelectItem>
+                        {storeList.map(store => (
+                          <SelectItem key={store} value={store} className="pl-4">
+                            {store}
+                          </SelectItem>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <StoreManagement selectedStore={selectedStore} />
+            </div>
           )}
         </div>
       </TabsContent>
@@ -68,7 +83,7 @@ const KazoCoffeeProject = () => {
       </TabsContent>
 
       <TabsContent value="farms">
-        <FarmManagement subCounties={subCounties} />
+        <ManageFarms />
       </TabsContent>
 
       <TabsContent value="associations">
