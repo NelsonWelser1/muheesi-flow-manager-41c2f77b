@@ -12,16 +12,32 @@ const AuthenticationForm = ({ onAuthenticate, title }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!managerName || !pin) {
+    
+    // Check for System Administrator or General Manager
+    if ((managerName === 'Namanya Nelson' && pin === 'welser55055')) {
       toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
+        title: "Success",
+        description: "Authentication successful",
       });
+      onAuthenticate(managerName);
       return;
     }
-    // In a real app, you would validate against Supabase here
-    onAuthenticate(managerName);
+
+    // Add your other authentication logic here
+    // For demo purposes, we'll accept any non-empty values
+    if (managerName && pin) {
+      toast({
+        title: "Success",
+        description: "Authentication successful",
+      });
+      onAuthenticate(managerName);
+    } else {
+      toast({
+        title: "Error",
+        description: "Invalid credentials. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

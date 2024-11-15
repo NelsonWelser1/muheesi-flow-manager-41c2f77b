@@ -55,6 +55,15 @@ const StockUpdateForm = () => {
     });
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Add your form submission logic here
+    toast({
+      title: "Success",
+      description: "Stock updated successfully",
+    });
+  };
+
   if (!selectedLocation) {
     return (
       <div className="space-y-4">
@@ -85,113 +94,98 @@ const StockUpdateForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <div>
-            <Label>Store/Warehouse Manager</Label>
-            <Input name="manager" value={managerName} readOnly />
-          </div>
+        <div>
+          <Label>Warehouse Manager</Label>
+          <Input name="manager" value={managerName} readOnly />
+        </div>
 
+        <div>
+          <Label>Stock Location</Label>
+          <Input name="location" value={selectedLocation} readOnly />
+        </div>
+
+        <div>
+          <Label>Coffee Type</Label>
+          <Select 
+            name="coffeeType" 
+            onValueChange={setSelectedCoffeeType}
+            required
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select coffee type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="arabica">Arabica Coffee</SelectItem>
+              <SelectItem value="robusta">Robusta Coffee</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Quality Grade</Label>
+          <Select name="qualityGrade" disabled={!selectedCoffeeType} required>
+            <SelectTrigger>
+              <SelectValue placeholder="Select grade" />
+            </SelectTrigger>
+            <SelectContent>
+              {selectedCoffeeType && COFFEE_GRADES[selectedCoffeeType].map((grade) => (
+                <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Source of Coffee (Origin)</Label>
+          <Input name="source" placeholder="Enter farm or location name" required />
+        </div>
+
+        <div>
+          <Label>Coffee Bean Humidity (%)</Label>
+          <Input name="humidity" type="number" step="0.1" placeholder="Enter moisture content" required />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label>Stock Location</Label>
-            <Select name="location" value={selectedLocation} required>
+            <Label>Buying Price</Label>
+            <Input name="buyingPrice" type="number" placeholder="Enter price" required />
+          </div>
+          <div>
+            <Label>Currency</Label>
+            <Select name="currency" defaultValue="UGX">
               <SelectTrigger>
-                <SelectValue placeholder="Select location" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {WAREHOUSE_LOCATIONS.map(location => (
-                  <SelectItem key={location} value={location}>{location}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Coffee Type</Label>
-            <Select 
-              name="coffeeType" 
-              onValueChange={setSelectedCoffeeType}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select coffee type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="arabica">Arabica Coffee</SelectItem>
-                <SelectItem value="robusta">Robusta Coffee</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Bean Grade</Label>
-            <Select name="qualityGrade" disabled={!selectedCoffeeType} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select grade" />
-              </SelectTrigger>
-              <SelectContent>
-                {selectedCoffeeType && COFFEE_GRADES[selectedCoffeeType].map((grade) => (
-                  <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                ))}
+                <SelectItem value="UGX">UGX</SelectItem>
+                <SelectItem value="USD">USD</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label>Source of Coffee (Origin)</Label>
-            <Input name="source" placeholder="Enter farm or location name" required />
+            <Label>Quantity</Label>
+            <Input name="quantity" type="number" placeholder="Enter quantity" required />
           </div>
-
           <div>
-            <Label>Coffee Bean Humidity (%)</Label>
-            <Input name="humidity" type="number" step="0.1" placeholder="Enter moisture content" required />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Buying Price</Label>
-              <Input name="buyingPrice" type="number" placeholder="Enter price" required />
-            </div>
-            <div>
-              <Label>Currency</Label>
-              <Select name="currency" defaultValue="UGX">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="UGX">UGX</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Quantity</Label>
-              <Input name="quantity" type="number" placeholder="Enter quantity" required />
-            </div>
-            <div>
-              <Label>Unit</Label>
-              <Select name="unit" defaultValue="kg">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="kg">Kg</SelectItem>
-                  <SelectItem value="tons">Tons</SelectItem>
-                  <SelectItem value="bags">Bags</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Label>Unit</Label>
+            <Select name="unit" defaultValue="kg">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="kg">Kg</SelectItem>
+                <SelectItem value="tons">Tons</SelectItem>
+                <SelectItem value="bags">Bags</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
 
-      <Button type="submit" className="w-full bg-navy-900">
-        Update Stock
-      </Button>
+      <Button type="submit" className="w-full">Update Stock</Button>
     </form>
   );
 };
