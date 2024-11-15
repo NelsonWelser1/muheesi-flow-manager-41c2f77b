@@ -12,7 +12,7 @@ import ManageFarms from './ManageFarms';
 import ManageAssociations from './ManageAssociations';
 import MakeRequisitions from './MakeRequisitions';
 import KazoCoffeeProject from './kajon/KazoCoffeeProject';
-import { useAddKAJONCoffeeLimited } from '@/integrations/supabase/hooks/useKAJONCoffeeLimited';
+import StockOperations from './stock-operations/StockOperations'; // Added import for stock operations
 
 const KAJONCoffeeLimited = () => {
   const { toast } = useToast();
@@ -21,8 +21,8 @@ const KAJONCoffeeLimited = () => {
   const [selectedAction, setSelectedAction] = useState(null);
   const [verificationStep, setVerificationStep] = useState(false);
   const [pin, setPin] = useState('');
-  const addStockMutation = useAddKAJONCoffeeLimited();
-
+  
+  // Dummy user data
   const currentUser = {
     name: "Nelson Welser",
     authorizedLocations: ["Kampala Store", "Mbarara Warehouse", "Kakyinga Factory"]
@@ -83,36 +83,7 @@ const KAJONCoffeeLimited = () => {
               </TabsList>
 
               <TabsContent value="update-stock">
-                {!selectedAction ? (
-                  <StockUpdateForm
-                    currentUser={currentUser}
-                    verificationStep={verificationStep}
-                    pin={pin}
-                    onPinChange={setPin}
-                    onBack={() => setVerificationStep(false)}
-                    actionType={selectedAction}
-                    onSubmit={(data) => {
-                      addStockMutation.mutate(data, {
-                        onSuccess: () => {
-                          toast({
-                            title: "Stock Updated",
-                            description: "The stock has been successfully updated.",
-                          });
-                          handleBack();
-                        },
-                        onError: (error) => {
-                          toast({
-                            title: "Error",
-                            description: "Failed to update stock. Please try again.",
-                            variant: "destructive",
-                          });
-                        },
-                      });
-                    }}
-                  />
-                ) : (
-                  <StockSummary stock={currentStock} />
-                )}
+                <StockOperations isKazo={false} />
               </TabsContent>
 
               <TabsContent value="view-stock">
