@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Warehouse, Database } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAddKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
+import AuthenticationForm from './AuthenticationForm';
 
 const COFFEE_GRADES = {
   arabica: [
@@ -29,32 +30,26 @@ const StoreManagement = ({ selectedStore }) => {
   const { toast } = useToast();
   const addCoffeeMutation = useAddKAJONCoffee();
   const [selectedCoffeeType, setSelectedCoffeeType] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [managerName, setManagerName] = useState('');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    
-    try {
-      await addCoffeeMutation.mutateAsync({
-        store: selectedStore,
-        moistureContent: formData.get('moistureContent'),
-        coffeeType: formData.get('coffeeType'),
-        qualityGrade: formData.get('qualityGrade'),
-        quantity: formData.get('quantity'),
-      });
-
-      toast({
-        title: "Success",
-        description: "Store data updated successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update store data",
-        variant: "destructive",
-      });
-    }
+  const handleAuthentication = (name) => {
+    setManagerName(name);
+    setIsAuthenticated(true);
+    toast({
+      title: "Success",
+      description: "Authentication successful",
+    });
   };
+
+  if (!isAuthenticated) {
+    return (
+      <AuthenticationForm 
+        onAuthenticate={handleAuthentication}
+        title="Store Manager Name"
+      />
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

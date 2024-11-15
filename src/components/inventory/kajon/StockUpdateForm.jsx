@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useAddKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
+import AuthenticationForm from './AuthenticationForm';
 
 const COFFEE_GRADES = {
   arabica: [
@@ -33,39 +34,53 @@ const WAREHOUSE_LOCATIONS = [
   "Kazo Coffee"
 ];
 
-const StockUpdateForm = ({ currentUser }) => {
+const StockUpdateForm = () => {
   const { toast } = useToast();
   const addCoffeeInventory = useAddKAJONCoffee();
   const [selectedCoffeeType, setSelectedCoffeeType] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [managerName, setManagerName] = useState('');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await addCoffeeInventory.mutateAsync({
-        manager: currentUser?.name || '',
-        location: e.target.location.value,
-        coffee_type: e.target.coffeeType.value,
-        grade: e.target.qualityGrade.value,
-        source: e.target.source.value,
-        humidity: parseFloat(e.target.humidity.value),
-        buying_price: parseFloat(e.target.buyingPrice.value),
-        currency: e.target.currency.value,
-        quantity: parseFloat(e.target.quantity.value),
-        unit: e.target.unit.value,
-      });
-      
-      toast({
-        title: "Success",
-        description: "Stock updated successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update stock",
-        variant: "destructive",
-      });
-    }
+  const handleLocationSelect = (location) => {
+    setSelectedLocation(location);
   };
+
+  const handleAuthentication = (name) => {
+    setManagerName(name);
+    setIsAuthenticated(true);
+    toast({
+      title: "Success",
+      description: "Authentication successful",
+    });
+  };
+
+  if (!selectedLocation) {
+    return (
+      <div className="space-y-4">
+        <Label>Select Store Location</Label>
+        <Select onValueChange={handleLocationSelect}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select location" />
+          </SelectTrigger>
+          <SelectContent>
+            {WAREHOUSE_LOCATIONS.map(location => (
+              <SelectItem key={location} value={location}>{location}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <AuthenticationForm 
+        onAuthenticate={handleAuthentication}
+        title="Warehouse Manager Name"
+      />
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -73,12 +88,12 @@ const StockUpdateForm = ({ currentUser }) => {
         <div className="space-y-4">
           <div>
             <Label>Store/Warehouse Manager</Label>
-            <Input name="manager" value={currentUser?.name} readOnly />
+            <Input name="manager" value={managerName} readOnly />
           </div>
 
           <div>
             <Label>Stock Location</Label>
-            <Select name="location" required>
+            <Select name="location" value={selectedLocation} required>
               <SelectTrigger>
                 <SelectValue placeholder="Select location" />
               </SelectTrigger>
