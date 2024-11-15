@@ -12,7 +12,7 @@ import ManageFarms from './ManageFarms';
 import ManageAssociations from './ManageAssociations';
 import MakeRequisitions from './MakeRequisitions';
 import KazoCoffeeProject from './kajon/KazoCoffeeProject';
-import StockOperations from './stock-operations/StockOperations'; // Added import for stock operations
+import StockOperations from './stock-operations/StockOperations';
 
 const KAJONCoffeeLimited = () => {
   const { toast } = useToast();
