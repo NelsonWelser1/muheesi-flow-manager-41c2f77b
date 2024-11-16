@@ -1,37 +1,35 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AutoFillProvider } from "./contexts/AutoFillContext";
 import Navigation from "./components/Navigation";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
-import Inventory from "./pages/Inventory";
-import Companies from "./pages/Companies";
+import ManageInventory from "./pages/ManageInventory";
+import ManageCompanies from "./pages/ManageCompanies";
 import Feedback from "./pages/Feedback";
-import { Toaster } from "@/components/ui/toaster";
 
-function App() {
-  return (
-    <Router>
-      <div className="min-h-screen bg-background relative">
-        {/* Global Watermark */}
-        <div 
-          className="fixed inset-0 pointer-events-none opacity-5 bg-center bg-no-repeat bg-contain"
-          style={{ 
-            backgroundImage: 'url("__ MUHEESI KKGF-4-company logoes - png2.png")',
-            zIndex: -1 
-          }}
-        />
-        
-        <Navigation />
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/manage-inventory" element={<Inventory />} />
-          <Route path="/manage-companies" element={<Companies />} />
-          <Route path="/feedback" element={<Feedback />} />
-        </Routes>
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AutoFillProvider>
+      <TooltipProvider>
         <Toaster />
-      </div>
-    </Router>
-  );
-}
+        <BrowserRouter>
+          <Navigation />
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/manage-inventory" element={<ManageInventory />} />
+            <Route path="/manage-companies" element={<ManageCompanies />} />
+            <Route path="/feedback" element={<Feedback />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AutoFillProvider>
+  </QueryClientProvider>
+);
 
 export default App;
