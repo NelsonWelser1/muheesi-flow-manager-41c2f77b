@@ -20,14 +20,28 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="bg-gray-800 text-white p-4">
+    <nav className="bg-gray-800 text-white p-4 relative">
+      {/* Watermark */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-5 bg-center bg-no-repeat bg-contain"
+        style={{ 
+          backgroundImage: 'url("__ MUHEESI KKGF-4-company logoes - png2.png")',
+          zIndex: -1 
+        }}
+      />
+      
       <div className="container mx-auto flex justify-between items-center">
-        <a 
-          href="https://lov-p-343a8d2e-efae-497c-8ac5-1f04f7962234.fly.dev/" 
-          className="text-2xl font-bold font-futuristic"
-        >
-          Muheesi GKK Integrated System
-        </a>
+        <Link to="/" className="flex items-center">
+          <img 
+            src="__ MUHEESI KKG-Tri-company logoes - png.png"
+            alt="Muheesi GKK Logo"
+            className="h-12 w-auto mr-3"
+          />
+          <span className="text-2xl font-bold font-futuristic">
+            Muheesi GKK Integrated System
+          </span>
+        </Link>
+        
         <div className="hidden md:flex space-x-4">
           {navItems.map((item) => (
             <Button key={item.to} asChild className="bg-white text-black font-bold">
