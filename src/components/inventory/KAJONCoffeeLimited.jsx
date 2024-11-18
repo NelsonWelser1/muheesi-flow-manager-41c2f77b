@@ -13,6 +13,9 @@ import ManageAssociations from './ManageAssociations';
 import MakeRequisitions from './MakeRequisitions';
 import KazoCoffeeProject from './kajon/KazoCoffeeProject';
 import StockOperations from './stock-operations/StockOperations';
+import CoffeeExportDashboard from './kajon/export-business/CoffeeExportDashboard';
+
+// ... keep existing code (imports and initial state)
 
 const KAJONCoffeeLimited = () => {
   const { toast } = useToast();
@@ -72,40 +75,43 @@ const KAJONCoffeeLimited = () => {
           </div>
 
           {selectedInterface === 'kajon' ? (
-            <Tabs defaultValue="update-stock" className="w-full">
-              <TabsList className="w-full justify-start overflow-x-auto flex-nowrap md:flex-wrap">
-                <TabsTrigger value="update-stock" className="whitespace-nowrap">Update Stock</TabsTrigger>
-                <TabsTrigger value="view-stock" className="whitespace-nowrap">View Stock</TabsTrigger>
-                <TabsTrigger value="reports" className="whitespace-nowrap">Reports</TabsTrigger>
-                <TabsTrigger value="farms" className="whitespace-nowrap">Farms</TabsTrigger>
-                <TabsTrigger value="associations" className="whitespace-nowrap">Associations</TabsTrigger>
-                <TabsTrigger value="requisitions" className="whitespace-nowrap">Requisitions</TabsTrigger>
-              </TabsList>
+            <>
+              <Tabs defaultValue="update-stock" className="w-full">
+                <TabsList className="w-full justify-start overflow-x-auto flex-nowrap md:flex-wrap">
+                  <TabsTrigger value="update-stock" className="whitespace-nowrap">Update Stock</TabsTrigger>
+                  <TabsTrigger value="view-stock" className="whitespace-nowrap">View Stock</TabsTrigger>
+                  <TabsTrigger value="reports" className="whitespace-nowrap">Reports</TabsTrigger>
+                  <TabsTrigger value="farms" className="whitespace-nowrap">Farms</TabsTrigger>
+                  <TabsTrigger value="associations" className="whitespace-nowrap">Associations</TabsTrigger>
+                  <TabsTrigger value="requisitions" className="whitespace-nowrap">Requisitions</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="update-stock">
-                <StockOperations isKazo={false} />
-              </TabsContent>
+                <TabsContent value="update-stock">
+                  <StockOperations isKazo={false} />
+                </TabsContent>
 
-              <TabsContent value="view-stock">
-                <ViewCurrentStock />
-              </TabsContent>
+                <TabsContent value="view-stock">
+                  <ViewCurrentStock />
+                </TabsContent>
 
-              <TabsContent value="reports">
-                <MakeReports />
-              </TabsContent>
+                <TabsContent value="reports">
+                  <MakeReports />
+                </TabsContent>
 
-              <TabsContent value="farms">
-                <ManageFarms />
-              </TabsContent>
+                <TabsContent value="farms">
+                  <ManageFarms />
+                </TabsContent>
 
-              <TabsContent value="associations">
-                <ManageAssociations />
-              </TabsContent>
+                <TabsContent value="associations">
+                  <ManageAssociations />
+                </TabsContent>
 
-              <TabsContent value="requisitions">
-                <MakeRequisitions />
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="requisitions">
+                  <MakeRequisitions />
+                </TabsContent>
+              </Tabs>
+              <CoffeeExportDashboard />
+            </>
           ) : (
             <KazoCoffeeProject />
           )}
