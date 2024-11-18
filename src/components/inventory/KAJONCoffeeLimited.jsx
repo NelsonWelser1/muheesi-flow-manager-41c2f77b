@@ -64,7 +64,7 @@ const KAJONCoffeeLimited = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">KAJON Coffee Limited</h2>
+              <h2 className="text-2xl font-bold">KAJON Coffee Limited Management System</h2>
               <Button variant="ghost" onClick={handleBack} className="p-2">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -84,7 +84,7 @@ const KAJONCoffeeLimited = () => {
                 onClick={() => setSelectedSystem('export-management')}
               >
                 <Globe className="h-8 w-8" />
-                <span className="text-lg font-semibold">Export Management System</span>
+                <span className="text-lg font-semibold">KAJON Coffee Export Management</span>
               </Button>
             </div>
           </CardContent>
@@ -102,7 +102,7 @@ const KAJONCoffeeLimited = () => {
               {selectedInterface === 'kajon' ? 
                 selectedSystem === 'coffee-management' ? 
                   'Coffee Management System' : 
-                  'Export Management System' 
+                  'KAJON Coffee Export Management' 
                 : 'Kazo Coffee Development Project'}
             </h2>
             <Button variant="ghost" onClick={handleBack} className="p-2">
