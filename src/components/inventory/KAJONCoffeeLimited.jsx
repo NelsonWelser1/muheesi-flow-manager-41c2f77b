@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Coffee, Globe } from "lucide-react";
 import StockUpdateForm from './kajon/StockUpdateForm';
 import StockSummary from './kajon/StockSummary';
 import ViewCurrentStock from './ViewCurrentStock';
@@ -15,8 +15,6 @@ import KazoCoffeeProject from './kajon/KazoCoffeeProject';
 import StockOperations from './stock-operations/StockOperations';
 import CoffeeExportDashboard from './kajon/export-business/CoffeeExportDashboard';
 
-// ... keep existing code (imports and initial state)
-
 const KAJONCoffeeLimited = () => {
   const { toast } = useToast();
   const [selectedInterface, setSelectedInterface] = useState(null);
@@ -24,18 +22,17 @@ const KAJONCoffeeLimited = () => {
   const [selectedAction, setSelectedAction] = useState(null);
   const [verificationStep, setVerificationStep] = useState(false);
   const [pin, setPin] = useState('');
+  const [selectedSystem, setSelectedSystem] = useState(null);
   
-  // Dummy user data
-  const currentUser = {
-    name: "Nelson Welser",
-    authorizedLocations: ["Kampala Store", "Mbarara Warehouse", "Kakyinga Factory"]
-  };
-
   const handleBack = () => {
-    setSelectedInterface(null);
-    setSelectedAction(null);
-    setVerificationStep(false);
-    setPin('');
+    if (selectedSystem) {
+      setSelectedSystem(null);
+    } else {
+      setSelectedInterface(null);
+      setSelectedAction(null);
+      setVerificationStep(false);
+      setPin('');
+    }
   };
 
   if (!selectedInterface) {
@@ -61,13 +58,52 @@ const KAJONCoffeeLimited = () => {
     );
   }
 
+  if (selectedInterface === 'kajon' && !selectedSystem) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">KAJON Coffee Limited</h2>
+              <Button variant="ghost" onClick={handleBack} className="p-2">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button
+                variant="outline"
+                className="h-32 flex flex-col items-center justify-center space-y-2"
+                onClick={() => setSelectedSystem('coffee-management')}
+              >
+                <Coffee className="h-8 w-8" />
+                <span className="text-lg font-semibold">Coffee Management System</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-32 flex flex-col items-center justify-center space-y-2"
+                onClick={() => setSelectedSystem('export-management')}
+              >
+                <Globe className="h-8 w-8" />
+                <span className="text-lg font-semibold">Export Management System</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card>
         <CardContent className="pt-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">
-              {selectedInterface === 'kajon' ? 'KAJON Coffee Limited' : 'Kazo Coffee Development Project'}
+              {selectedInterface === 'kajon' ? 
+                selectedSystem === 'coffee-management' ? 
+                  'Coffee Management System' : 
+                  'Export Management System' 
+                : 'Kazo Coffee Development Project'}
             </h2>
             <Button variant="ghost" onClick={handleBack} className="p-2">
               <ArrowLeft className="h-5 w-5" />
@@ -75,7 +111,7 @@ const KAJONCoffeeLimited = () => {
           </div>
 
           {selectedInterface === 'kajon' ? (
-            <>
+            selectedSystem === 'coffee-management' ? (
               <Tabs defaultValue="update-stock" className="w-full">
                 <TabsList className="w-full justify-start overflow-x-auto flex-nowrap md:flex-wrap">
                   <TabsTrigger value="update-stock" className="whitespace-nowrap">Update Stock</TabsTrigger>
@@ -110,8 +146,9 @@ const KAJONCoffeeLimited = () => {
                   <MakeRequisitions />
                 </TabsContent>
               </Tabs>
+            ) : (
               <CoffeeExportDashboard />
-            </>
+            )
           ) : (
             <KazoCoffeeProject />
           )}
