@@ -22,12 +22,12 @@ const Navigation = () => {
   return (
     <nav className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
-        <a 
-          href="https://lov-p-343a8d2e-efae-497c-8ac5-1f04f7962234.fly.dev/" 
+        <Link 
+          to="/" 
           className="text-2xl font-bold font-futuristic"
         >
           Muheesi GKK Integrated System
-        </a>
+        </Link>
         <div className="hidden md:flex space-x-4">
           {navItems.map((item) => (
             <Button key={item.to} asChild className="bg-white text-black font-bold">
