@@ -3,47 +3,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
-import { 
-  useDairyInventory, 
-  useCoffeeInventory, 
-  useFarmInventory, 
-  useFreshecoInventory 
-} from '@/integrations/supabase/hooks/useInventoryData';
+import { useCoffeeInventory } from '@/integrations/supabase/hooks/useInventoryData';
 
-const ViewCurrentStock = ({ location }) => {
+const ViewCurrentStock = ({ isKazo }) => {
   const [filter, setFilter] = useState('category');
   const [selectedValue, setSelectedValue] = useState('');
   const { toast } = useToast();
+  const { data: coffeeStock, isLoading } = useCoffeeInventory();
 
-  const { data: dairyStock, isLoading: isDairyLoading } = useDairyInventory();
-  const { data: coffeeStock, isLoading: isCoffeeLoading } = useCoffeeInventory();
-  const { data: farmStock, isLoading: isFarmLoading } = useFarmInventory();
-  const { data: freshecoStock, isLoading: isFreshecoLoading } = useFreshecoInventory();
-
-  const isLoading = isDairyLoading || isCoffeeLoading || isFarmLoading || isFreshecoLoading;
-
-  // Filter stock by location if provided
-  const allStock = [
-    ...(dairyStock || []),
-    ...(coffeeStock || []),
-    ...(farmStock || []),
-    ...(freshecoStock || [])
-  ].filter(item => !location || item.location === location);
-
-  const categories = ['Dairy', 'Coffee', 'Grains', 'Fresh Produce'];
-  const types = {
-    'Coffee': ['Robusta', 'Arabica'],
-    'Dairy': ['Fresh Milk', 'Yogurt', 'Cheese'],
-    'Grains': ['Rice', 'Maize'],
-    'Fresh Produce': ['Vegetables', 'Fruits']
-  };
-  const locations = ['Warehouse A', 'Warehouse B', 'Cold Storage'];
-
-  const filteredItems = allStock.filter(item => 
-    filter === 'category' ? item.category === selectedValue :
-    filter === 'type' ? item.type === selectedValue :
-    item.location === selectedValue
-  );
+  // Filter stock based on company context
+  const filteredStock = coffeeStock?.filter(item => {
+    if (isKazo) {
+      return item.project === 'Kazo Coffee Development Project';
+    }
+    return item.company === 'KAJON Coffee Limited';
+  });
 
   if (isLoading) {
     return <div>Loading stock data...</div>;
@@ -51,45 +25,20 @@ const ViewCurrentStock = ({ location }) => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold mb-4">Current Stock {location ? `in ${location}` : ''}</h2>
-      <div className="flex flex-wrap gap-4">
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="category">Category</SelectItem>
-            <SelectItem value="type">Product Type</SelectItem>
-            {!location && <SelectItem value="location">Location</SelectItem>}
-          </SelectContent>
-        </Select>
-        <Select value={selectedValue} onValueChange={setSelectedValue}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder={`Select ${filter}`} />
-          </SelectTrigger>
-          <SelectContent>
-            {filter === 'category' && categories.map(category => (
-              <SelectItem key={category} value={category}>{category}</SelectItem>
-            ))}
-            {filter === 'type' && selectedValue && types[selectedValue]?.map(type => (
-              <SelectItem key={type} value={type}>{type}</SelectItem>
-            ))}
-            {filter === 'location' && locations.map(loc => (
-              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <h2 className="text-2xl font-bold mb-4">
+        Current Stock for {isKazo ? 'Kazo Coffee Development Project' : 'KAJON Coffee Limited'}
+      </h2>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredItems.map(item => (
+        {filteredStock?.map(item => (
           <Card key={item.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="text-lg">{item.name}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p className="text-sm text-gray-600">Category: {item.category}</p>
                 <p className="text-sm text-gray-600">Type: {item.type}</p>
+                <p className="text-sm text-gray-600">Grade: {item.grade}</p>
                 <p className="text-sm text-gray-600">Location: {item.location}</p>
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
