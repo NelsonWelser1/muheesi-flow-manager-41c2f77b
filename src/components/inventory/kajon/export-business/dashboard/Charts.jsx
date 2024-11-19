@@ -1,19 +1,23 @@
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
-} from 'recharts';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Charts = ({ data }) => {
+  const mockData = {
+    sourcing: [
+      { month: 'Jan', arabica: 4000, robusta: 2400 },
+      { month: 'Feb', arabica: 3000, robusta: 1398 },
+      { month: 'Mar', arabica: 2000, robusta: 9800 },
+      { month: 'Apr', arabica: 2780, robusta: 3908 },
+    ],
+    financial: [
+      { month: 'Jan', revenue: 4000, expenses: 2400 },
+      { month: 'Feb', revenue: 3000, expenses: 1398 },
+      { month: 'Mar', revenue: 2000, expenses: 9800 },
+      { month: 'Apr', revenue: 2780, expenses: 3908 },
+    ]
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card>
@@ -22,7 +26,7 @@ const Charts = ({ data }) => {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data?.sourcing}>
+            <LineChart data={data?.sourcing || mockData.sourcing}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
@@ -41,7 +45,7 @@ const Charts = ({ data }) => {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data?.financial}>
+            <BarChart data={data?.financial || mockData.financial}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />

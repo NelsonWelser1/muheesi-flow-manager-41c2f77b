@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Menu } from 'lucide-react';
@@ -10,8 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Navigation = () => {
-  const [isOpen, setIsOpen] = useState(false);
-
   const navItems = [
     { to: "/dashboard", label: "Dashboard" },
     { to: "/manage-inventory", label: "Manage Inventory" },
