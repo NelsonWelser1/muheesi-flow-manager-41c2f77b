@@ -1,145 +1,216 @@
-import React from 'react';
-import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { useAddQuotation } from '@/integrations/supabase/hooks/useQuotations';
+import Barcode from 'react-barcode';
+import { supabase } from '@/integrations/supabase';
 
 const QuotationForm = () => {
-  const { register, handleSubmit, setValue } = useForm();
   const { toast } = useToast();
-  const addQuotation = useAddQuotation();
+  const [formData, setFormData] = useState({
+    quoteNumber: '',
+    customerName: '',
+    coffeeGrade: '',
+    quantity: '',
+    unitPrice: '',
+    totalAmount: '',
+    terms: '',
+    validity: '',
+    deliveryTerms: '',
+    paymentTerms: '',
+  });
 
-  const calculateProfitability = (data) => {
-    // Calculate total revenue based on screen grades and prices
-    const totalRevenue = (
-      (data.screen_18_percent * 4.5) + 
-      (data.screen_15_percent * 4.0) + 
-      (data.screen_12_percent * 3.5)
-    ) * data.num_containers * 19200; // 19.2MT per container
-
-    // Calculate total costs
-    const totalCosts = 
-      parseFloat(data.transport_cost) + 
-      parseFloat(data.ocean_freight) + 
-      parseFloat(data.port_charges);
-
-    return {
-      total_revenue: totalRevenue,
-      total_costs: totalCosts,
-      net_profit: totalRevenue - totalCosts
-    };
+  const generateQuoteNumber = () => {
+    const timestamp = new Date().getTime();
+    const random = Math.floor(Math.random() * 1000);
+    return `QT-${timestamp}-${random}`;
   };
 
-  const onSubmit = async (data) => {
-    console.log('Form data:', data);
-    const profitability = calculateProfitability(data);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+      ...(name === 'quantity' || name === 'unitPrice' ? {
+        totalAmount: calculateTotal(
+          name === 'quantity' ? value : prev.quantity,
+          name === 'unitPrice' ? value : prev.unitPrice
+        )
+      } : {})
+    }));
+  };
+
+  const calculateTotal = (quantity, price) => {
+    const total = parseFloat(quantity) * parseFloat(price);
+    return isNaN(total) ? '' : total.toFixed(2);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     
     try {
-      await addQuotation.mutateAsync({
-        ...data,
-        ...profitability,
-        sourcing_costs: JSON.stringify({
-          screen_18: data.screen_18_cost,
-          screen_15: data.screen_15_cost,
-          screen_12: data.screen_12_cost,
-        }),
-      });
+      const quoteNumber = generateQuoteNumber();
+      const { data, error } = await supabase
+        .from('quotations')
+        .insert([
+          {
+            ...formData,
+            quoteNumber,
+            created_at: new Date().toISOString(),
+          }
+        ]);
+
+      if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Quotation has been created successfully.",
+        description: "Quotation created successfully",
+      });
+
+      // Reset form
+      setFormData({
+        quoteNumber: '',
+        customerName: '',
+        coffeeGrade: '',
+        quantity: '',
+        unitPrice: '',
+        totalAmount: '',
+        terms: '',
+        validity: '',
+        deliveryTerms: '',
+        paymentTerms: '',
       });
     } catch (error) {
-      console.error('Error creating quotation:', error);
       toast({
         title: "Error",
-        description: "Failed to create quotation. Please try again.",
+        description: "Failed to create quotation",
         variant: "destructive",
       });
+      console.error('Error creating quotation:', error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label>Destination</Label>
-          <Select onValueChange={(value) => setValue('destination', value)}>
+          <Label>Customer Name</Label>
+          <Input
+            name="customerName"
+            value={formData.customerName}
+            onChange={handleInputChange}
+            placeholder="Enter customer name"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Coffee Grade</Label>
+          <Select
+            name="coffeeGrade"
+            value={formData.coffeeGrade}
+            onValueChange={(value) => handleInputChange({ target: { name: 'coffeeGrade', value } })}
+          >
             <SelectTrigger>
-              <SelectValue placeholder="Select destination" />
+              <SelectValue placeholder="Select grade" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="tianjin">Tianjin</SelectItem>
-              <SelectItem value="mersin">Mersin</SelectItem>
+              <SelectItem value="screen18">Screen 18</SelectItem>
+              <SelectItem value="screen15">Screen 15</SelectItem>
+              <SelectItem value="screen12">Screen 12</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label>Incoterm</Label>
-          <Select onValueChange={(value) => setValue('incoterm', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select incoterm" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="fot">FOT Kampala</SelectItem>
-              <SelectItem value="fob">FOB Mombasa</SelectItem>
-              <SelectItem value="cif">CIF Tianjin</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label>Quantity (MT)</Label>
+          <Input
+            type="number"
+            name="quantity"
+            value={formData.quantity}
+            onChange={handleInputChange}
+            placeholder="Enter quantity"
+            required
+          />
         </div>
 
         <div className="space-y-2">
-          <Label>Number of Containers</Label>
-          <Input type="number" {...register('num_containers')} />
+          <Label>Unit Price (USD/MT)</Label>
+          <Input
+            type="number"
+            name="unitPrice"
+            value={formData.unitPrice}
+            onChange={handleInputChange}
+            placeholder="Enter unit price"
+            required
+          />
         </div>
 
         <div className="space-y-2">
-          <Label>Screen 18 (%)</Label>
-          <Input type="number" step="0.1" {...register('screen_18_percent')} />
+          <Label>Total Amount (USD)</Label>
+          <Input
+            type="text"
+            name="totalAmount"
+            value={formData.totalAmount}
+            readOnly
+            className="bg-gray-50"
+          />
         </div>
 
         <div className="space-y-2">
-          <Label>Screen 15 (%)</Label>
-          <Input type="number" step="0.1" {...register('screen_15_percent')} />
+          <Label>Validity</Label>
+          <Input
+            type="date"
+            name="validity"
+            value={formData.validity}
+            onChange={handleInputChange}
+            required
+          />
         </div>
 
         <div className="space-y-2">
-          <Label>Screen 12 (%)</Label>
-          <Input type="number" step="0.1" {...register('screen_12_percent')} />
+          <Label>Delivery Terms</Label>
+          <Input
+            name="deliveryTerms"
+            value={formData.deliveryTerms}
+            onChange={handleInputChange}
+            placeholder="Enter delivery terms"
+            required
+          />
         </div>
 
         <div className="space-y-2">
-          <Label>Transport Cost (USD)</Label>
-          <Input type="number" step="0.01" {...register('transport_cost')} />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Ocean Freight (USD)</Label>
-          <Input type="number" step="0.01" {...register('ocean_freight')} />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Port Charges (USD)</Label>
-          <Input type="number" step="0.01" {...register('port_charges')} />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Notes</Label>
-          <Input {...register('notes')} />
+          <Label>Payment Terms</Label>
+          <Input
+            name="paymentTerms"
+            value={formData.paymentTerms}
+            onChange={handleInputChange}
+            placeholder="Enter payment terms"
+            required
+          />
         </div>
       </div>
 
-      <Button 
-        type="submit" 
-        className="w-full"
-        disabled={addQuotation.isPending}
-      >
-        {addQuotation.isPending ? "Creating..." : "Generate Quotation"}
-      </Button>
+      <div className="space-y-2">
+        <Label>Additional Terms & Conditions</Label>
+        <Input
+          name="terms"
+          value={formData.terms}
+          onChange={handleInputChange}
+          placeholder="Enter additional terms"
+        />
+      </div>
+
+      {formData.quoteNumber && (
+        <div className="flex justify-center p-4 bg-gray-50 rounded-lg">
+          <Barcode value={formData.quoteNumber} />
+        </div>
+      )}
+
+      <Button type="submit" className="w-full">Create Quotation</Button>
     </form>
   );
 };
