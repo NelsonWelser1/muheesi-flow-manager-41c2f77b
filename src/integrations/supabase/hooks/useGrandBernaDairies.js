@@ -7,6 +7,11 @@ const fromSupabase = async (query) => {
     return data;
 };
 
+export const useGrandBernaDairy = () => useQuery({
+    queryKey: ['grand_berna_dairy'],
+    queryFn: () => fromSupabase(supabase.from('grand_berna_dairy').select('*')),
+});
+
 export const useFactoryOperations = () => useQuery({
     queryKey: ['factory_operations'],
     queryFn: () => fromSupabase(supabase.from('factory_operations').select('*')),
