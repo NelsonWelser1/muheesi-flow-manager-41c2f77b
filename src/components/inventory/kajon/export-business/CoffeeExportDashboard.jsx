@@ -6,7 +6,7 @@ import Charts from './dashboard/Charts';
 import QuoteManagement from './quotations/QuoteManagement';
 import ProformaInvoice from './quotations/ProformaInvoice';
 import OrderManagement from './OrderManagement';
-import LPOManagement from './LPOManagement';
+import LPOManagement from './modules/LPOManagement';
 import DeliveryManagement from './DeliveryManagement';
 import InvoiceManagement from './modules/InvoiceManagement';
 
