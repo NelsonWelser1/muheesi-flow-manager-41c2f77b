@@ -3,25 +3,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import MetricsCards from './dashboard/MetricsCards';
 import Charts from './dashboard/Charts';
-import QuotationForm from './quotations/QuotationForm';
-import QuotationsList from './quotations/QuotationsList';
-import SourcingProcurement from './SourcingProcurement';
-import HullingGrading from './HullingGrading';
-import LogisticsShipping from './LogisticsShipping';
-import FinancialManagement from './FinancialManagement';
-import OrderManagement from './OrderManagement';
+import QuoteManagement from './modules/QuoteManagement';
+import ProformaInvoice from './modules/ProformaInvoice';
+import OrderManagement from './modules/OrderManagement';
+import LPOManagement from './modules/LPOManagement';
+import DeliveryManagement from './modules/DeliveryManagement';
+import InvoiceManagement from './modules/InvoiceManagement';
 
 const CoffeeExportDashboard = () => {
   return (
     <Tabs defaultValue="dashboard" className="w-full">
       <TabsList className="w-full justify-start overflow-x-auto">
         <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-        <TabsTrigger value="quotations">Quotations</TabsTrigger>
-        <TabsTrigger value="sourcing">Sourcing & Procurement</TabsTrigger>
-        <TabsTrigger value="hulling">Hulling & Grading</TabsTrigger>
-        <TabsTrigger value="logistics">Logistics & Shipping</TabsTrigger>
-        <TabsTrigger value="financial">Financial Management</TabsTrigger>
-        <TabsTrigger value="orders">Order Management</TabsTrigger>
+        <TabsTrigger value="quotes">Quotes</TabsTrigger>
+        <TabsTrigger value="proforma">Proforma Invoices</TabsTrigger>
+        <TabsTrigger value="orders">Orders</TabsTrigger>
+        <TabsTrigger value="lpo">LPO</TabsTrigger>
+        <TabsTrigger value="delivery">Delivery Notes</TabsTrigger>
+        <TabsTrigger value="invoices">Invoices</TabsTrigger>
       </TabsList>
 
       <TabsContent value="dashboard">
@@ -31,35 +30,28 @@ const CoffeeExportDashboard = () => {
         </div>
       </TabsContent>
 
-      <TabsContent value="quotations">
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="pt-6">
-              <QuotationForm />
-            </CardContent>
-          </Card>
-          <QuotationsList />
-        </div>
+      <TabsContent value="quotes">
+        <QuoteManagement />
       </TabsContent>
 
-      <TabsContent value="sourcing">
-        <SourcingProcurement />
-      </TabsContent>
-
-      <TabsContent value="hulling">
-        <HullingGrading />
-      </TabsContent>
-
-      <TabsContent value="logistics">
-        <LogisticsShipping />
-      </TabsContent>
-
-      <TabsContent value="financial">
-        <FinancialManagement />
+      <TabsContent value="proforma">
+        <ProformaInvoice />
       </TabsContent>
 
       <TabsContent value="orders">
         <OrderManagement />
+      </TabsContent>
+
+      <TabsContent value="lpo">
+        <LPOManagement />
+      </TabsContent>
+
+      <TabsContent value="delivery">
+        <DeliveryManagement />
+      </TabsContent>
+
+      <TabsContent value="invoices">
+        <InvoiceManagement />
       </TabsContent>
     </Tabs>
   );
