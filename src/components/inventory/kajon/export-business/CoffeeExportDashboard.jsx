@@ -7,7 +7,7 @@ import QuoteManagement from './quotations/QuoteManagement';
 import ProformaInvoice from './quotations/ProformaInvoice';
 import OrderManagement from './OrderManagement';
 import LPOManagement from './modules/LPOManagement';
-import DeliveryManagement from './DeliveryManagement';
+import DeliveryManagement from './modules/DeliveryManagement';
 import InvoiceManagement from './modules/InvoiceManagement';
 
 const CoffeeExportDashboard = () => {
