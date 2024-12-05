@@ -3,12 +3,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import MetricsCards from './dashboard/MetricsCards';
 import Charts from './dashboard/Charts';
-import QuoteManagement from './modules/QuoteManagement';
-import ProformaInvoice from './modules/ProformaInvoice';
-import OrderManagement from './modules/OrderManagement';
-import LPOManagement from './modules/LPOManagement';
-import DeliveryManagement from './modules/DeliveryManagement';
-import InvoiceManagement from './modules/InvoiceManagement';
+import QuoteManagement from './QuoteManagement';
+import ProformaInvoice from './ProformaInvoice';
+import OrderManagement from './OrderManagement';
+import LPOManagement from './LPOManagement';
+import DeliveryManagement from './DeliveryManagement';
+import InvoiceManagement from './InvoiceManagement';
 
 const CoffeeExportDashboard = () => {
   return (
