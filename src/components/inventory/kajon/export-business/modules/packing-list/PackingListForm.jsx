@@ -4,21 +4,21 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import CompanyDetails from './form-sections/CompanyDetails';
-import TransportDetails from './form-sections/TransportDetails';
-import ImporterDetails from './form-sections/ImporterDetails';
-import ShipmentDetails from './form-sections/ShipmentDetails';
-import ProductTable from './form-sections/ProductTable';
+import CompanyDetails from '../../quotations/form-sections/CompanyDetails';
+import TransportDetails from '../../quotations/form-sections/TransportDetails';
+import ImporterDetails from '../../quotations/form-sections/ImporterDetails';
+import ShipmentDetails from '../../quotations/form-sections/ShipmentDetails';
+import ProductTable from '../../quotations/form-sections/ProductTable';
 
-const QuotationForm = () => {
+const PackingListForm = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     // Invoice details
-    exportNumber: '34567',
-    exportDate: '03 Jul 2024',
-    billNumber: 'NED12345678',
-    reference: '34567',
-    buyerReference: 'NL788',
+    packingListNumber: '',
+    packingDate: '',
+    billNumber: '',
+    reference: '',
+    buyerReference: '',
     
     // Company details
     companyName: '',
@@ -47,27 +47,18 @@ const QuotationForm = () => {
     dispatchMethod: 'sea',
     shipmentType: 'FCL',
     originCountry: 'Uganda',
-    destinationCountry: 'The Netherlands',
+    destinationCountry: '',
   });
 
   const [products, setProducts] = useState([
     {
-      code: 'A-Robu',
-      description: 'Robusta Nganda, fair average quality',
-      quantity: '15',
-      packages: '15 Jute Bags (60 kg) x 8',
-      netWeight: '900',
-      grossWeight: '950',
-      measure: '12'
-    },
-    {
-      code: 'B-Robu',
-      description: 'Robusta Erecta, fair average quality',
-      quantity: '30',
-      packages: '30 jute bags (60 kg) x 8',
-      netWeight: '800',
-      grossWeight: '1850',
-      measure: '15'
+      code: '',
+      description: '',
+      quantity: '',
+      packages: '',
+      netWeight: '',
+      grossWeight: '',
+      measure: ''
     }
   ]);
 
@@ -89,30 +80,29 @@ const QuotationForm = () => {
     setProducts(updatedProducts);
   };
 
+  const calculateTotals = () => {
+    const netWeightTotal = products.reduce((sum, product) => sum + Number(product.netWeight), 0);
+    const grossWeightTotal = products.reduce((sum, product) => sum + Number(product.grossWeight), 0);
+    const measureTotal = products.reduce((sum, product) => sum + Number(product.measure), 0);
+    return { netWeightTotal, grossWeightTotal, measureTotal };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       // Add your form submission logic here
       toast({
         title: "Success",
-        description: "Quotation created successfully",
+        description: "Packing list created successfully",
       });
     } catch (error) {
-      console.error('Error creating quotation:', error);
+      console.error('Error creating packing list:', error);
       toast({
         title: "Error",
-        description: "Failed to create quotation",
+        description: "Failed to create packing list",
         variant: "destructive",
       });
     }
-  };
-
-  // Calculate totals
-  const calculateTotals = () => {
-    const netWeightTotal = products.reduce((sum, product) => sum + Number(product.netWeight), 0);
-    const grossWeightTotal = products.reduce((sum, product) => sum + Number(product.grossWeight), 0);
-    const measureTotal = products.reduce((sum, product) => sum + Number(product.measure), 0);
-    return { netWeightTotal, grossWeightTotal, measureTotal };
   };
 
   const totals = calculateTotals();
@@ -125,17 +115,17 @@ const QuotationForm = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Export invoice number & date</Label>
+                  <Label>Packing List Number & Date</Label>
                   <div className="flex gap-2">
                     <Input
-                      name="exportNumber"
-                      value={formData.exportNumber}
+                      name="packingListNumber"
+                      value={formData.packingListNumber}
                       onChange={handleInputChange}
                       className="w-1/2"
                     />
                     <Input
-                      name="exportDate"
-                      value={formData.exportDate}
+                      name="packingDate"
+                      value={formData.packingDate}
                       onChange={handleInputChange}
                       className="w-1/2"
                     />
@@ -200,11 +190,11 @@ const QuotationForm = () => {
             </div>
           </div>
 
-          <Button type="submit" className="w-full mt-4">Create Quotation</Button>
+          <Button type="submit" className="w-full mt-4">Create Packing List</Button>
         </CardContent>
       </Card>
     </form>
   );
 };
 
-export default QuotationForm;
+export default PackingListForm;

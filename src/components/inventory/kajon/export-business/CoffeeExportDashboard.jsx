@@ -9,6 +9,7 @@ import OrderManagement from './OrderManagement';
 import LPOManagement from './modules/LPOManagement';
 import DeliveryManagement from './modules/DeliveryManagement';
 import InvoiceManagement from './modules/InvoiceManagement';
+import PackingList from './modules/PackingList';
 
 const CoffeeExportDashboard = () => {
   return (
@@ -21,6 +22,7 @@ const CoffeeExportDashboard = () => {
         <TabsTrigger value="lpo">LPO</TabsTrigger>
         <TabsTrigger value="delivery">Delivery Notes</TabsTrigger>
         <TabsTrigger value="invoices">Invoices</TabsTrigger>
+        <TabsTrigger value="packing">Packing List</TabsTrigger>
       </TabsList>
 
       <TabsContent value="dashboard">
@@ -52,6 +54,10 @@ const CoffeeExportDashboard = () => {
 
       <TabsContent value="invoices">
         <InvoiceManagement />
+      </TabsContent>
+
+      <TabsContent value="packing">
+        <PackingList />
       </TabsContent>
     </Tabs>
   );
