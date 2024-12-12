@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Edit, MoreHorizontal } from "lucide-react";
 
 const OrdersTable = ({ orders }) => {
+  console.log('Rendering OrdersTable with orders:', orders);
+  
   return (
     <Table>
       <TableHeader>
@@ -24,7 +26,7 @@ const OrdersTable = ({ orders }) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {orders.map((order) => (
+        {orders && orders.map((order) => (
           <TableRow key={order.id}>
             <TableCell>
               <input type="checkbox" className="rounded border-gray-300" />
@@ -47,8 +49,12 @@ const OrdersTable = ({ orders }) => {
             </TableCell>
             <TableCell>
               <div className="flex space-x-2">
-                <Button variant="ghost" size="sm"><Edit className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="sm"><MoreHorizontal className="h-4 w-4" /></Button>
+                <Button variant="ghost" size="sm">
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
               </div>
             </TableCell>
           </TableRow>
