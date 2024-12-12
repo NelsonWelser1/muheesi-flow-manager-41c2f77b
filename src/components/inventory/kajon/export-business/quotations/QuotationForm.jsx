@@ -4,46 +4,41 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCreateQuote } from '@/integrations/supabase/hooks/useQuotes';
 import CompanyDetails from './form-sections/CompanyDetails';
 import TransportDetails from './form-sections/TransportDetails';
 import ImporterDetails from './form-sections/ImporterDetails';
 import ShipmentDetails from './form-sections/ShipmentDetails';
 import ProductTable from './form-sections/ProductTable';
+import TotalsSummary from './form-sections/TotalsSummary';
 
 const QuotationForm = () => {
   const { toast } = useToast();
+  const createQuote = useCreateQuote();
+  
   const [formData, setFormData] = useState({
-    // Invoice details
     exportNumber: '34567',
     exportDate: '03 Jul 2024',
     billNumber: 'NED12345678',
     reference: '34567',
     buyerReference: 'NL788',
-    
-    // Company details
     companyName: '',
     address: '',
     country: '',
     phone: '',
     contactPerson: '',
     taxId: '',
-    
-    // Transport details
     transportCompany: '',
     transportAddress: '',
     transportLocation: '',
     transportCountry: '',
     transportPhone: '',
     transportContact: '',
-    
-    // Importer details
     importerName: '',
     importerAddress: '',
     importerLocation: '',
     importerPhone: '',
     importerContact: '',
-    
-    // Shipment details
     dispatchMethod: 'sea',
     shipmentType: 'FCL',
     originCountry: 'Uganda',
@@ -59,15 +54,6 @@ const QuotationForm = () => {
       netWeight: '900',
       grossWeight: '950',
       measure: '12'
-    },
-    {
-      code: 'B-Robu',
-      description: 'Robusta Erecta, fair average quality',
-      quantity: '30',
-      packages: '30 jute bags (60 kg) x 8',
-      netWeight: '800',
-      grossWeight: '1850',
-      measure: '15'
     }
   ]);
 
@@ -92,7 +78,33 @@ const QuotationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Add your form submission logic here
+      const quoteData = {
+        quote: {
+          quote_number: formData.exportNumber,
+          customer_name: formData.importerName,
+          customer_email: '',
+          customer_address: formData.importerAddress,
+          coffee_grade: products[0].description,
+          quantity: products.reduce((total, p) => total + Number(p.quantity), 0),
+          unit_price: 0, // Add unit price field if needed
+          total_amount: 0, // Calculate total amount
+          terms: '',
+          validity: new Date(formData.exportDate),
+          delivery_terms: formData.shipmentType,
+          payment_terms: '',
+          status: 'pending'
+        },
+        items: products.map(p => ({
+          product_code: p.code,
+          description: p.description,
+          quantity: Number(p.quantity),
+          unit_price: 0, // Add unit price field if needed
+          total_price: 0 // Calculate total price
+        }))
+      };
+
+      await createQuote.mutateAsync(quoteData);
+      
       toast({
         title: "Success",
         description: "Quotation created successfully",
@@ -106,16 +118,6 @@ const QuotationForm = () => {
       });
     }
   };
-
-  // Calculate totals
-  const calculateTotals = () => {
-    const netWeightTotal = products.reduce((sum, product) => sum + Number(product.netWeight), 0);
-    const grossWeightTotal = products.reduce((sum, product) => sum + Number(product.grossWeight), 0);
-    const measureTotal = products.reduce((sum, product) => sum + Number(product.measure), 0);
-    return { netWeightTotal, grossWeightTotal, measureTotal };
-  };
-
-  const totals = calculateTotals();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -185,22 +187,15 @@ const QuotationForm = () => {
             <ProductTable products={products} handleProductChange={handleProductChange} />
           </div>
 
-          <div className="border-t pt-4 space-y-2">
-            <div className="flex justify-between">
-              <span className="font-semibold">Total Net Weight:</span>
-              <span>{totals.netWeightTotal} KG</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-semibold">Total Gross Weight:</span>
-              <span>{totals.grossWeightTotal} KG</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-semibold">Total Measure:</span>
-              <span>{totals.measureTotal} M²</span>
-            </div>
-          </div>
+          <TotalsSummary products={products} />
 
-          <Button type="submit" className="w-full mt-4">Create Quotation</Button>
+          <Button 
+            type="submit" 
+            className="w-full mt-4"
+            disabled={createQuote.isPending}
+          >
+            {createQuote.isPending ? 'Creating...' : 'Create Quotation'}
+          </Button>
         </CardContent>
       </Card>
     </form>
