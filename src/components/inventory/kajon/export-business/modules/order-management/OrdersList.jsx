@@ -5,6 +5,7 @@ import { Search, SlidersHorizontal, MoreHorizontal, Calendar, Edit, Plus } from 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import OrderMetrics from './OrderMetrics';
+import OrdersTable from './OrdersTable';
 
 const OrdersList = ({ orders, onCreateOrder }) => {
   return (
