@@ -1,6 +1,5 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 import MetricsCards from './dashboard/MetricsCards';
 import Charts from './dashboard/Charts';
 import QuoteManagement from './quotations/QuoteManagement';
@@ -12,6 +11,8 @@ import InvoiceManagement from './modules/InvoiceManagement';
 import PackingList from './modules/PackingList';
 
 const CoffeeExportDashboard = () => {
+  console.log('Rendering CoffeeExportDashboard');
+  
   return (
     <Tabs defaultValue="dashboard" className="w-full">
       <TabsList className="w-full justify-start overflow-x-auto">
@@ -25,11 +26,9 @@ const CoffeeExportDashboard = () => {
         <TabsTrigger value="packing">Packing List</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="dashboard">
-        <div className="space-y-4">
-          <MetricsCards />
-          <Charts />
-        </div>
+      <TabsContent value="dashboard" className="space-y-4">
+        <MetricsCards />
+        <Charts />
       </TabsContent>
 
       <TabsContent value="quotes">

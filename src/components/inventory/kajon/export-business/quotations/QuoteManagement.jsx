@@ -4,6 +4,8 @@ import QuotationForm from './QuotationForm';
 import QuotationsList from './QuotationsList';
 
 const QuoteManagement = () => {
+  console.log('Rendering QuoteManagement');
+  
   return (
     <div className="space-y-6">
       <Card>
