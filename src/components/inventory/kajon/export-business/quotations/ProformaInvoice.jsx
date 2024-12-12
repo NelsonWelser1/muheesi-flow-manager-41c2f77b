@@ -1,14 +1,14 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useQuotations } from '@/integrations/supabase/hooks/useQuotations';
+import { useQuotes } from '@/integrations/supabase/hooks/useQuotes';
 import ProformaInvoiceTemplate from './ProformaInvoiceTemplate';
 
 const ProformaInvoice = () => {
-  const { data: quotations, isLoading } = useQuotations();
+  const { data: quotes, isLoading } = useQuotes();
   const [selectedQuote, setSelectedQuote] = React.useState(null);
 
-  console.log('Rendering ProformaInvoice component', { quotations, isLoading });
+  console.log('Rendering ProformaInvoice component', { quotes, isLoading });
 
   const handleGenerateProforma = (quote) => {
     console.log('Generating proforma for quote:', quote);
@@ -24,7 +24,7 @@ const ProformaInvoice = () => {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-center h-32">
-            <p className="text-muted-foreground">Loading quotations...</p>
+            <p className="text-muted-foreground">Loading quotes...</p>
           </div>
         </CardContent>
       </Card>
@@ -39,14 +39,17 @@ const ProformaInvoice = () => {
             <CardTitle>Generate Proforma Invoice</CardTitle>
           </CardHeader>
           <CardContent>
-            {quotations && quotations.length > 0 ? (
+            {quotes && quotes.length > 0 ? (
               <div className="space-y-4">
-                {quotations.map((quote) => (
+                {quotes.map((quote) => (
                   <div key={quote.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
-                      <h3 className="font-semibold">Quote #{quote.id.slice(0, 8)}</h3>
+                      <h3 className="font-semibold">Quote #{quote.quote_number}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Total Amount: ${quote.total_revenue}
+                        Customer: {quote.customer_name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Amount: ${quote.total_amount}
                       </p>
                     </div>
                     <Button onClick={() => handleGenerateProforma(quote)}>
@@ -57,7 +60,7 @@ const ProformaInvoice = () => {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No quotations available to generate proforma invoices.</p>
+                <p className="text-muted-foreground">No quotes available to generate proforma invoices.</p>
               </div>
             )}
           </CardContent>
