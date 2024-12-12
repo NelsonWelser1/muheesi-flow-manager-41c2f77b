@@ -21,17 +21,27 @@ CREATE TABLE IF NOT EXISTS public.quotes (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create quote_items table for line items
+-- Drop quote_items table if it exists to avoid conflicts
+DROP TABLE IF EXISTS public.quote_items;
+
+-- Create quote_items table with proper foreign key constraint
 CREATE TABLE IF NOT EXISTS public.quote_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    quote_id UUID REFERENCES quotes(id) ON DELETE CASCADE,
+    quote_id UUID NOT NULL REFERENCES quotes(id) ON DELETE CASCADE,
     product_code TEXT NOT NULL,
     description TEXT NOT NULL,
     quantity NUMERIC NOT NULL,
     unit_price NUMERIC NOT NULL,
     total_price NUMERIC NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_quote
+        FOREIGN KEY(quote_id) 
+        REFERENCES quotes(id)
+        ON DELETE CASCADE
 );
+
+-- Create index on quote_id for better performance
+CREATE INDEX idx_quote_items_quote_id ON quote_items(quote_id);
 
 -- Enable RLS
 ALTER TABLE public.quotes ENABLE ROW LEVEL SECURITY;
