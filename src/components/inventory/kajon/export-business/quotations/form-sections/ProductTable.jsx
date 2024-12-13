@@ -1,7 +1,7 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -24,6 +24,8 @@ const COFFEE_PRODUCTS = {
 };
 
 const ProductTable = ({ products, handleProductChange }) => {
+  console.log('Rendering ProductTable with products:', products);
+
   const addNewProduct = () => {
     handleProductChange(products.length, {
       target: {
@@ -85,15 +87,16 @@ const ProductTable = ({ products, handleProductChange }) => {
                       <SelectValue placeholder="Select product code" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="" disabled>Select a product</SelectItem>
                       <SelectItem value="custom">Custom Product</SelectItem>
-                      <SelectItem value="divider" disabled>── Arabica Coffee ──</SelectItem>
+                      <SelectSeparator className="my-2" />
+                      <div className="px-2 py-1.5 text-sm font-semibold">Arabica Coffee</div>
                       {COFFEE_PRODUCTS.arabica.map((product) => (
                         <SelectItem key={product.code} value={product.code}>
                           {product.code}
                         </SelectItem>
                       ))}
-                      <SelectItem value="divider" disabled>── Robusta Coffee ──</SelectItem>
+                      <SelectSeparator className="my-2" />
+                      <div className="px-2 py-1.5 text-sm font-semibold">Robusta Coffee</div>
                       {COFFEE_PRODUCTS.robusta.map((product) => (
                         <SelectItem key={product.code} value={product.code}>
                           {product.code}
