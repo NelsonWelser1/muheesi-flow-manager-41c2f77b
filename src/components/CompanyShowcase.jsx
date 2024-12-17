@@ -70,12 +70,9 @@ const CompanyShowcase = () => {
     <div className="bg-gray-100 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Our Partner Companies
+          <h2 className="text-2xl font-medium italic text-gray-900">
+            Gourmet conglomerate
           </h2>
-          <p className="mt-2 text-lg text-gray-600">
-            Integrated supply chain and warehouse management
-          </p>
         </div>
         <div className="mt-8 space-y-4 sm:mt-10 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6 lg:max-w-4xl lg:mx-auto xl:max-w-none xl:mx-0 xl:grid-cols-3">
           {companies.map((company) => (
@@ -85,6 +82,7 @@ const CompanyShowcase = () => {
                 <p className="mt-4 text-lg text-gray-500">{company.description}</p>
                 <Button className="mt-4 w-full bg-blue-600 hover:bg-blue-700">Make an Order</Button>
                 <Button className="mt-2 w-full" onClick={() => setSelectedCompany(company.name)}>Learn More</Button>
+                <Button variant="outline" className="mt-2 w-full">Contact Us</Button>
               </div>
               <div className="pt-6 pb-8 px-6">
                 <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase mb-4">Key Products</h3>
