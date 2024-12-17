@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import KAJONCoffeeDetails from './KAJONCoffeeDetails';
+import OrderForm from './orders/OrderForm';
 
 const fetchCompanyStocks = async () => {
   // This should be replaced with an actual API call
@@ -80,7 +81,7 @@ const CompanyShowcase = () => {
               <div className="p-6">
                 <h2 className="text-2xl leading-6 font-semibold text-gray-900">{company.name}</h2>
                 <p className="mt-4 text-lg text-gray-500">{company.description}</p>
-                <Button className="mt-4 w-full bg-blue-600 hover:bg-blue-700">Make an Order</Button>
+                <OrderForm company={company.name} />
                 <Button className="mt-2 w-full" onClick={() => setSelectedCompany(company.name)}>Learn More</Button>
                 <Button variant="outline" className="mt-2 w-full">Contact Us</Button>
               </div>
