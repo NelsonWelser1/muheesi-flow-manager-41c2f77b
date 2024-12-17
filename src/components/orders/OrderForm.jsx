@@ -1,44 +1,74 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const COMPANY_DETAILS = {
+  'Grand Berna Dairies': {
+    addressLine1: 'Dwanilo, kyiboga district',
+    addressLine2: '',
+    cityStateZip: 'Kamapala, Uganda, 256',
+    email: 'grandbernadairies.sales@gmail.com',
+    contact: '+256 776 670680 / +256 757 757517 / +256 787 121022'
+  },
+  'KAJON Coffee Limited': {
+    addressLine1: 'Kanoni, Kazo District, Uganda',
+    addressLine2: '6th floor, Arie Towers, Mackinnon Road, Nakasero',
+    cityStateZip: 'Kampala, Uganda, 256',
+    email: 'kajoncoffeelimited@gmail.com',
+    contact: '+256 776 670680 / +256 757 757517'
+  },
+  'Kyalima Farmers Limited': {
+    addressLine1: 'Dwanilo, kyiboga district',
+    addressLine2: '',
+    cityStateZip: 'Kamapala, Uganda, 256',
+    email: 'kyalimafarmersdirectors@gmail.com',
+    contact: '+256 776 670680 / +256 757 757517'
+  }
+};
+
+const PRODUCT_PRICES = {
+  'Screen 18': { USD: 4.69, UGX: 17200 },
+  'Screen 15': { USD: 4.63, UGX: 17000 },
+  'Arabica AA': { USD: 5.86, UGX: 21500 },
+  'DRUGAR': { USD: 4.63, UGX: 17000 }
+};
+
+const EXCHANGE_RATE = 3668.12; // USD to UGX rate as of Dec 10
 
 const OrderForm = ({ company }) => {
-  const getCompanySpecificItems = () => {
-    switch (company) {
-      case 'Grand Berna Dairies':
-        return [
-          { code: 'FM-001', description: 'Fresh Milk (1L)', qty: 0, price: 2.50 },
-          { code: 'YG-001', description: 'Natural Yogurt (500g)', qty: 0, price: 3.00 },
-          { code: 'CH-001', description: 'Cheddar Cheese (250g)', qty: 0, price: 4.50 },
-          { code: 'MT-001', description: 'Premium Beef (1kg)', qty: 0, price: 15.00 },
-        ];
-      case 'KAJON Coffee Limited':
-        return [
-          { code: 'RC-018', description: 'Robusta Coffee Screen 18 (60kg)', qty: 0, price: 180.00 },
-          { code: 'RC-015', description: 'Robusta Coffee Screen 15 (60kg)', qty: 0, price: 165.00 },
-          { code: 'AC-BGA', description: 'Arabica Coffee Bugisu AA (60kg)', qty: 0, price: 210.00 },
-          { code: 'AC-BGR', description: 'Arabica Coffee DRUGAR (60kg)', qty: 0, price: 195.00 },
-        ];
-      case 'Kyalima Farmers Limited':
-        return [
-          { code: 'RC-001', description: 'Premium Rice (50kg)', qty: 0, price: 45.00 },
-          { code: 'MZ-001', description: 'Quality Maize (100kg)', qty: 0, price: 35.00 },
-          { code: 'SS-001', description: 'White Sesame Seeds (25kg)', qty: 0, price: 60.00 },
-          { code: 'SB-001', description: 'Soybean Grade A (100kg)', qty: 0, price: 85.00 },
-        ];
-      default:
-        return [];
-    }
+  const [currency, setCurrency] = useState('USD');
+  const [quantity, setQuantity] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState('');
+  const [subtotal, setSubtotal] = useState(0);
+  const [taxRate, setTaxRate] = useState(0);
+  const [shipping, setShipping] = useState(0);
+
+  const companyDetails = COMPANY_DETAILS[company];
+
+  const calculateTotal = () => {
+    if (!selectedProduct || !quantity) return 0;
+    const price = PRODUCT_PRICES[selectedProduct][currency];
+    const total = price * parseFloat(quantity);
+    const tax = (total * taxRate) / 100;
+    return total + tax + shipping;
   };
+
+  useEffect(() => {
+    if (selectedProduct && quantity) {
+      const price = PRODUCT_PRICES[selectedProduct][currency];
+      setSubtotal(price * parseFloat(quantity));
+    }
+  }, [selectedProduct, quantity, currency]);
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="w-full bg-blue-600 hover:bg-blue-700">Make an Order</Button>
+        <Button className="w-full bg-blue-600 hover:bg-blue-700">Purchase Order</Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
@@ -52,10 +82,14 @@ const OrderForm = ({ company }) => {
             <div className="bg-blue-100 p-4 rounded">
               <h3 className="font-bold mb-2">VENDOR</h3>
               <div className="space-y-2">
-                <Input placeholder="Company Name" defaultValue={company} readOnly />
-                <Input placeholder="Address Line 1" />
-                <Input placeholder="City, State, ZIP" />
-                <Input placeholder="Email" type="email" />
+                <Input value={company} readOnly />
+                <Input value={companyDetails.addressLine1} readOnly />
+                {companyDetails.addressLine2 && (
+                  <Input value={companyDetails.addressLine2} readOnly />
+                )}
+                <Input value={companyDetails.cityStateZip} readOnly />
+                <Input value={companyDetails.email} type="email" readOnly />
+                <Input value={companyDetails.contact} readOnly />
               </div>
             </div>
           </div>
@@ -74,33 +108,64 @@ const OrderForm = ({ company }) => {
         </div>
 
         <div className="mt-6">
+          <div className="mb-4">
+            <Select value={currency} onValueChange={setCurrency}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Currency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="USD">USD</SelectItem>
+                <SelectItem value="UGX">UGX</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ITEM #</TableHead>
+                <TableHead>PRODUCT</TableHead>
                 <TableHead>DESCRIPTION</TableHead>
-                <TableHead>QTY</TableHead>
-                <TableHead>UNIT PRICE</TableHead>
+                <TableHead>QTY (Tons)</TableHead>
+                <TableHead>UNIT PRICE ({currency})</TableHead>
                 <TableHead>TOTAL</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {getCompanySpecificItems().map((item) => (
-                <TableRow key={item.code}>
-                  <TableCell>{item.code}</TableCell>
-                  <TableCell>{item.description}</TableCell>
-                  <TableCell>
-                    <Input 
-                      type="number" 
-                      min="0" 
-                      defaultValue="0"
-                      className="w-20"
-                    />
-                  </TableCell>
-                  <TableCell>${item.price.toFixed(2)}</TableCell>
-                  <TableCell>$0.00</TableCell>
-                </TableRow>
-              ))}
+              <TableRow>
+                <TableCell>
+                  <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Product" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(PRODUCT_PRICES).map(product => (
+                        <SelectItem key={product} value={product}>
+                          {product}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>{selectedProduct}</TableCell>
+                <TableCell>
+                  <Input 
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    className="w-full"
+                  />
+                </TableCell>
+                <TableCell>
+                  {selectedProduct ? PRODUCT_PRICES[selectedProduct][currency].toLocaleString() : '-'}
+                </TableCell>
+                <TableCell>
+                  {(selectedProduct && quantity) 
+                    ? (PRODUCT_PRICES[selectedProduct][currency] * parseFloat(quantity)).toLocaleString() 
+                    : '-'}
+                </TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </div>
@@ -114,23 +179,37 @@ const OrderForm = ({ company }) => {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Subtotal:</span>
-              <span>$0.00</span>
+              <span>{currency} {subtotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span>Tax Rate:</span>
-              <span>0.00%</span>
+              <Input 
+                type="number" 
+                min="0" 
+                max="100" 
+                value={taxRate}
+                onChange={(e) => setTaxRate(parseFloat(e.target.value))}
+                className="w-24"
+              />
+              <span>%</span>
             </div>
             <div className="flex justify-between">
               <span>Tax:</span>
-              <span>$0.00</span>
+              <span>{currency} {((subtotal * taxRate) / 100).toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span>Shipping:</span>
-              <span>$0.00</span>
+              <Input 
+                type="number"
+                min="0"
+                value={shipping}
+                onChange={(e) => setShipping(parseFloat(e.target.value))}
+                className="w-24"
+              />
             </div>
             <div className="flex justify-between font-bold">
               <span>TOTAL:</span>
-              <span>$0.00</span>
+              <span>{currency} {calculateTotal().toLocaleString()}</span>
             </div>
           </div>
         </div>
