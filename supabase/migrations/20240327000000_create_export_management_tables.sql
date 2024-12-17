@@ -13,6 +13,18 @@ CREATE TABLE proforma_invoices (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Orders table
+CREATE TABLE orders (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    proforma_id UUID REFERENCES proforma_invoices(id),
+    customer_name TEXT NOT NULL,
+    order_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    total_amount DECIMAL NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- LPOs table
 CREATE TABLE lpos (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -51,6 +63,11 @@ CREATE TABLE invoices (
 -- Create updated_at triggers for all new tables
 CREATE TRIGGER update_proforma_invoices_updated_at
     BEFORE UPDATE ON proforma_invoices
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_orders_updated_at
+    BEFORE UPDATE ON orders
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
