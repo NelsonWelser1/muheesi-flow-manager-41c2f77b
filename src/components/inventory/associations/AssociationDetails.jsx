@@ -23,7 +23,7 @@ const AssociationDetails = ({ isKazo, selectedAssociation }) => {
 
             <div>
               <Label>Association Type</Label>
-              <Select>
+              <Select defaultValue="farmers">
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -47,7 +47,7 @@ const AssociationDetails = ({ isKazo, selectedAssociation }) => {
 
             <div>
               <Label>Coffee Types</Label>
-              <Select>
+              <Select defaultValue="arabica">
                 <SelectTrigger>
                   <SelectValue placeholder="Select coffee types" />
                 </SelectTrigger>

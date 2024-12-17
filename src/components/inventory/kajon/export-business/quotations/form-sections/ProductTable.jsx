@@ -63,7 +63,7 @@ const ProductTable = ({ products, handleProductChange }) => {
               <TableRow key={index}>
                 <TableCell>
                   <Select
-                    value={product.code}
+                    value={product.code || "select-product"}  // Provide default value
                     onValueChange={(value) => {
                       const selectedProduct = [...COFFEE_PRODUCTS.arabica, ...COFFEE_PRODUCTS.robusta]
                         .find(p => p.code === value);
@@ -87,6 +87,7 @@ const ProductTable = ({ products, handleProductChange }) => {
                       <SelectValue placeholder="Select product code" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="select-product">Select a product</SelectItem>
                       <SelectItem value="custom">Custom Product</SelectItem>
                       <SelectSeparator className="my-2" />
                       <div className="px-2 py-1.5 text-sm font-semibold">Arabica Coffee</div>
@@ -108,7 +109,7 @@ const ProductTable = ({ products, handleProductChange }) => {
                 <TableCell>
                   <Input
                     name="description"
-                    value={product.description}
+                    value={product.description || ''}
                     onChange={(e) => handleProductChange(index, e)}
                     placeholder="Product description"
                   />
@@ -117,7 +118,7 @@ const ProductTable = ({ products, handleProductChange }) => {
                   <Input
                     name="quantity"
                     type="number"
-                    value={product.quantity}
+                    value={product.quantity || ''}
                     onChange={(e) => handleProductChange(index, e)}
                     placeholder="0"
                   />
@@ -125,7 +126,7 @@ const ProductTable = ({ products, handleProductChange }) => {
                 <TableCell>
                   <Input
                     name="packages"
-                    value={product.packages}
+                    value={product.packages || ''}
                     onChange={(e) => handleProductChange(index, e)}
                     placeholder="15 Jute Bags (60 kg) x 8"
                   />
@@ -134,7 +135,7 @@ const ProductTable = ({ products, handleProductChange }) => {
                   <Input
                     name="netWeight"
                     type="number"
-                    value={product.netWeight}
+                    value={product.netWeight || ''}
                     onChange={(e) => handleProductChange(index, e)}
                     placeholder="0"
                   />
@@ -143,7 +144,7 @@ const ProductTable = ({ products, handleProductChange }) => {
                   <Input
                     name="grossWeight"
                     type="number"
-                    value={product.grossWeight}
+                    value={product.grossWeight || ''}
                     onChange={(e) => handleProductChange(index, e)}
                     placeholder="0"
                   />
@@ -152,7 +153,7 @@ const ProductTable = ({ products, handleProductChange }) => {
                   <Input
                     name="measure"
                     type="number"
-                    value={product.measure}
+                    value={product.measure || ''}
                     onChange={(e) => handleProductChange(index, e)}
                     placeholder="0"
                   />

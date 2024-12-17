@@ -7,7 +7,7 @@ import { useCoffeeInventory } from '@/integrations/supabase/hooks/useInventoryDa
 
 const ViewCurrentStock = ({ isKazo }) => {
   const [filter, setFilter] = useState('category');
-  const [selectedValue, setSelectedValue] = useState('');
+  const [selectedValue, setSelectedValue] = useState('all');  // Changed from empty string
   const { toast } = useToast();
   const { data: coffeeStock, isLoading } = useCoffeeInventory();
 
