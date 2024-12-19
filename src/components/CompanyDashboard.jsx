@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFactoryOperations, useColdRoomManagement, useDairySalesRecords } from '@/integrations/supabase/hooks/useGrandBernaDairies';
 import { useCoffeeInventory, useCoffeeSalesRecords } from '@/integrations/supabase/hooks/useKAJONCoffee';
 import { useRiceImports, useBullFattening } from '@/integrations/supabase/hooks/useKyalimaFarmers';
-import { useFreshecoInventory, useFreshecoExports } from '@/integrations/supabase/hooks/useFreshecoFarming';
 import { Progress } from "@/components/ui/progress";
 
 const CompanyDashboard = () => {
@@ -20,13 +19,9 @@ const CompanyDashboard = () => {
   const { data: riceImports, isLoading: isLoadingRice } = useRiceImports();
   const { data: bullProgram, isLoading: isLoadingBull } = useBullFattening();
 
-  // Fresheco Farming
-  const { data: freshecoInventory, isLoading: isLoadingFresheco } = useFreshecoInventory();
-  const { data: freshecoExports, isLoading: isLoadingExports } = useFreshecoExports();
-
   if (isLoadingFactory || isLoadingColdRoom || isLoadingDairySales || 
       isLoadingCoffee || isLoadingCoffeeSales || isLoadingRice || 
-      isLoadingBull || isLoadingFresheco || isLoadingExports) {
+      isLoadingBull) {
     return <div>Loading...</div>;
   }
 
@@ -35,7 +30,7 @@ const CompanyDashboard = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <Card>
         <CardHeader>
           <CardTitle>Grand Berna Dairies</CardTitle>
@@ -91,25 +86,6 @@ const CompanyDashboard = () => {
             <div>
               <h3 className="font-medium">Bull Fattening Program</h3>
               <p>Active Programs: {bullProgram?.length || 0}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Fresheco Farming Limited</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium">Current Inventory</h3>
-              <p>Total Products: {freshecoInventory?.length || 0}</p>
-              <Progress value={freshecoInventory?.length ? (freshecoInventory.length / 100) * 100 : 0} className="mt-2" />
-            </div>
-            <div>
-              <h3 className="font-medium">Exports</h3>
-              <p>Total Exports: {freshecoExports?.length || 0}</p>
             </div>
           </div>
         </CardContent>

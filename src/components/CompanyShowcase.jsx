@@ -75,31 +75,36 @@ const CompanyShowcase = () => {
   });
 
   return (
-    <div className="bg-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-medium italic text-gray-900">
+    <div className="bg-gray-100 py-4 sm:py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <div className="text-center mb-4 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-medium italic text-gray-900">
             Gourmet conglomerate
           </h2>
         </div>
-        <div className="mt-8 space-y-4 sm:mt-10 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6 lg:max-w-4xl lg:mx-auto xl:max-w-none xl:mx-0 xl:grid-cols-3">
+        <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {companies.map((company) => (
             <div key={company.name} className="bg-white rounded-lg shadow-lg divide-y divide-gray-200">
-              <div className="p-6">
-                <h2 className="text-2xl leading-6 font-semibold text-gray-900">{company.name}</h2>
-                <p className="mt-4 text-lg text-gray-500">{company.description}</p>
+              <div className="p-4 sm:p-6">
+                <h2 className="text-xl sm:text-2xl leading-6 font-semibold text-gray-900">{company.name}</h2>
+                <p className="mt-4 text-base sm:text-lg text-gray-500">{company.description}</p>
                 <OrderForm company={company.name} />
-                <Button className="mt-2 w-full" onClick={() => setSelectedCompany(company.name)}>Learn More</Button>
+                <Button 
+                  className="mt-2 w-full text-sm sm:text-base" 
+                  onClick={() => setSelectedCompany(company.name)}
+                >
+                  Learn More
+                </Button>
                 <ContactLinks email={company.email} phones={company.phones} />
               </div>
-              <div className="pt-6 pb-8 px-6">
+              <div className="p-4 sm:p-6">
                 <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase mb-4">Key Products</h3>
-                <ul className="space-y-4">
+                <ul className="space-y-2 sm:space-y-4">
                   {company.features.map((feature) => (
                     <li key={typeof feature === 'string' ? feature : feature.name} className="flex items-center">
-                      <Check className="flex-shrink-0 h-5 w-5 text-green-500 mr-2" aria-hidden="true" />
+                      <Check className="flex-shrink-0 h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-2" aria-hidden="true" />
                       {typeof feature === 'string' ? (
-                        <span className="text-base text-gray-500">{feature}</span>
+                        <span className="text-sm sm:text-base text-gray-500">{feature}</span>
                       ) : (
                         <Select>
                           <SelectTrigger className="w-full">
@@ -116,18 +121,18 @@ const CompanyShowcase = () => {
                   ))}
                 </ul>
               </div>
-              <div className="pt-6 pb-8 px-6">
+              <div className="p-4 sm:p-6">
                 <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase mb-4">Current Stock</h3>
                 {isLoading ? (
-                  <p>Loading stock information...</p>
+                  <p className="text-sm">Loading stock information...</p>
                 ) : error ? (
-                  <p>Error loading stock information</p>
+                  <p className="text-sm text-red-500">Error loading stock information</p>
                 ) : (
                   <ul className="space-y-2">
                     {Object.entries(stocks[company.name] || {}).map(([product, stock]) => (
-                      <li key={product} className="flex justify-between">
-                        <span className="text-sm text-gray-500">{product}</span>
-                        <span className="text-sm font-medium text-gray-900">{stock}</span>
+                      <li key={product} className="flex justify-between text-sm sm:text-base">
+                        <span className="text-gray-500">{product}</span>
+                        <span className="font-medium text-gray-900">{stock}</span>
                       </li>
                     ))}
                   </ul>
