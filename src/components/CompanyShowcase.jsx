@@ -42,7 +42,7 @@ const companies = [
   {
     name: 'Grand Berna Dairies',
     description: 'Dairy Products',
-    features: ['Fresh Milk', 'Yogurt', 'Cheese', 'Meat'],
+    features: ['Fresh Milk', 'Processed Milk', 'Cheese', 'Yogurt', 'Meat (Beef, Goat, Pork, Poultry)', 'Eggs'],
     email: 'grandbernadairies.sales@gmail.com',
     phones: ['+256 776 670680', '+256 757 757517', '+256 787 121022']
   },

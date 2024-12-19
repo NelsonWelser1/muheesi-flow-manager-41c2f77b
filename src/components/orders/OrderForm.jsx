@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import ShipToSection from './form-sections/ShipToSection';
+import ProductTable from './form-sections/ProductTable';
 
 const COMPANY_DETAILS = {
   'Grand Berna Dairies': {
@@ -31,42 +31,25 @@ const COMPANY_DETAILS = {
   }
 };
 
-const PRODUCT_PRICES = {
-  'Screen 18': { USD: 4.69, UGX: 17200 },
-  'Screen 15': { USD: 4.63, UGX: 17000 },
-  'Arabica AA': { USD: 5.86, UGX: 21500 },
-  'DRUGAR': { USD: 4.63, UGX: 17000 }
-};
-
-const EXCHANGE_RATE = 3668.12; // USD to UGX rate as of Dec 10
-
 const OrderForm = ({ company }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [currency, setCurrency] = useState('USD');
-  const [quantity, setQuantity] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState('');
-  const [subtotal, setSubtotal] = useState(0);
-  const [taxRate, setTaxRate] = useState(0);
-  const [shipping, setShipping] = useState(0);
-
+  const [products, setProducts] = useState([{ product: '', quantity: '', price: 0 }]);
+  
   const companyDetails = COMPANY_DETAILS[company];
 
   const calculateTotal = () => {
-    if (!selectedProduct || !quantity) return 0;
-    const price = PRODUCT_PRICES[selectedProduct][currency];
-    const total = price * parseFloat(quantity);
-    const tax = (total * taxRate) / 100;
-    return total + tax + shipping;
+    return products.reduce((total, item) => {
+      if (item.product && item.quantity) {
+        // Convert tons to kg (1 ton = 1000 kg) and multiply by price per kg
+        return total + (item.price * (parseFloat(item.quantity) * 1000));
+      }
+      return total;
+    }, 0);
   };
 
-  useEffect(() => {
-    if (selectedProduct && quantity) {
-      const price = PRODUCT_PRICES[selectedProduct][currency];
-      setSubtotal(price * parseFloat(quantity));
-    }
-  }, [selectedProduct, quantity, currency]);
-
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className="w-full bg-blue-600 hover:bg-blue-700">Purchase Order</Button>
       </DialogTrigger>
@@ -77,7 +60,7 @@ const OrderForm = ({ company }) => {
           </DialogTitle>
         </DialogHeader>
         
-        <div className="grid grid-cols-2 gap-6 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
           <div className="space-y-4">
             <div className="bg-blue-100 p-4 rounded">
               <h3 className="font-bold mb-2">VENDOR</h3>
@@ -94,17 +77,7 @@ const OrderForm = ({ company }) => {
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="bg-blue-100 p-4 rounded">
-              <h3 className="font-bold mb-2">SHIP TO</h3>
-              <div className="space-y-2">
-                <Input placeholder="Name" />
-                <Input placeholder="Address Line 1" />
-                <Input placeholder="City, State, ZIP" />
-                <Input placeholder="Email" type="email" />
-              </div>
-            </div>
-          </div>
+          <ShipToSection />
         </div>
 
         <div className="mt-6">
@@ -120,93 +93,21 @@ const OrderForm = ({ company }) => {
             </Select>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>PRODUCT</TableHead>
-                <TableHead>DESCRIPTION</TableHead>
-                <TableHead>QTY (Tons)</TableHead>
-                <TableHead>UNIT PRICE ({currency})</TableHead>
-                <TableHead>TOTAL</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>
-                  <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Product" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.keys(PRODUCT_PRICES).map(product => (
-                        <SelectItem key={product} value={product}>
-                          {product}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell>{selectedProduct}</TableCell>
-                <TableCell>
-                  <Input 
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="w-full"
-                  />
-                </TableCell>
-                <TableCell>
-                  {selectedProduct ? PRODUCT_PRICES[selectedProduct][currency].toLocaleString() : '-'}
-                </TableCell>
-                <TableCell>
-                  {(selectedProduct && quantity) 
-                    ? (PRODUCT_PRICES[selectedProduct][currency] * parseFloat(quantity)).toLocaleString() 
-                    : '-'}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+          <ProductTable 
+            company={company}
+            currency={currency}
+            products={products}
+            onProductsChange={setProducts}
+          />
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-6">
           <div>
-            <Label>Special Instructions</Label>
+            <label className="block mb-2">Special Instructions</label>
             <Textarea placeholder="Enter any special instructions or notes" />
           </div>
           
           <div className="space-y-2">
-            <div className="flex justify-between">
-              <span>Subtotal:</span>
-              <span>{currency} {subtotal.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Tax Rate:</span>
-              <Input 
-                type="number" 
-                min="0" 
-                max="100" 
-                value={taxRate}
-                onChange={(e) => setTaxRate(parseFloat(e.target.value))}
-                className="w-24"
-              />
-              <span>%</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Tax:</span>
-              <span>{currency} {((subtotal * taxRate) / 100).toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Shipping:</span>
-              <Input 
-                type="number"
-                min="0"
-                value={shipping}
-                onChange={(e) => setShipping(parseFloat(e.target.value))}
-                className="w-24"
-              />
-            </div>
             <div className="flex justify-between font-bold">
               <span>TOTAL:</span>
               <span>{currency} {calculateTotal().toLocaleString()}</span>
@@ -215,7 +116,7 @@ const OrderForm = ({ company }) => {
         </div>
 
         <div className="mt-6 flex justify-end space-x-4">
-          <Button variant="outline">Cancel</Button>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
           <Button>Submit Order</Button>
         </div>
       </DialogContent>
