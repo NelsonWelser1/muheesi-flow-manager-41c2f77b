@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import KAJONCoffeeDetails from './KAJONCoffeeDetails';
 import OrderForm from './orders/OrderForm';
+import ContactLinks from './ContactLinks';
 
 const fetchCompanyStocks = async () => {
   // This should be replaced with an actual API call
@@ -42,6 +43,8 @@ const companies = [
     name: 'Grand Berna Dairies',
     description: 'Dairy Products',
     features: ['Fresh Milk', 'Yogurt', 'Cheese', 'Meat'],
+    email: 'grandbernadairies.sales@gmail.com',
+    phones: ['+256 776 670680', '+256 757 757517', '+256 787 121022']
   },
   {
     name: 'KAJON Coffee Limited',
@@ -49,6 +52,8 @@ const companies = [
     features: [
       { name: 'Coffee Types', options: ['Robusta', 'Arabica'] },
     ],
+    email: 'kajoncoffeelimited@gmail.com',
+    phones: ['+256 776 670680', '+256 757 757517']
   },
   {
     name: 'Kyalima Farmers Limited',
@@ -57,6 +62,8 @@ const companies = [
       { name: 'Grains', options: ['Rice', 'Maize', 'Hulled white sesame', 'Soybean', 'Cocoa'] },
       { name: 'Livestock', options: ['Bulls', 'Heifers', 'Mothers', 'Calves'] },
     ],
+    email: 'kyalimafarmersdirectors@gmail.com',
+    phones: ['+256 776 670680', '+256 757 757517']
   },
 ];
 
@@ -83,7 +90,7 @@ const CompanyShowcase = () => {
                 <p className="mt-4 text-lg text-gray-500">{company.description}</p>
                 <OrderForm company={company.name} />
                 <Button className="mt-2 w-full" onClick={() => setSelectedCompany(company.name)}>Learn More</Button>
-                <Button variant="outline" className="mt-2 w-full">Contact Us</Button>
+                <ContactLinks email={company.email} phones={company.phones} />
               </div>
               <div className="pt-6 pb-8 px-6">
                 <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase mb-4">Key Products</h3>
