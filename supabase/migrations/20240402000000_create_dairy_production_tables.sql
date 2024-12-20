@@ -30,9 +30,22 @@ CREATE TABLE IF NOT EXISTS raw_materials_inventory (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Quality control checks table
+CREATE TABLE IF NOT EXISTS quality_control_checks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    batch_id UUID REFERENCES production_batches(id),
+    parameter TEXT NOT NULL,
+    expected_value TEXT NOT NULL,
+    actual_value TEXT NOT NULL,
+    passed BOOLEAN NOT NULL,
+    checked_by TEXT NOT NULL,
+    checked_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE production_batches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE raw_materials_inventory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quality_control_checks ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for authenticated users
 CREATE POLICY "Allow read access for authenticated users"
@@ -45,26 +58,42 @@ CREATE POLICY "Allow read access for authenticated users"
     TO authenticated
     USING (true);
 
+CREATE POLICY "Allow read access for authenticated users"
+    ON quality_control_checks FOR SELECT
+    TO authenticated
+    USING (true);
+
 -- Create policies for managers and operators
-CREATE POLICY "Allow all access for managers"
+CREATE POLICY "Allow all access for managers and operators"
     ON production_batches FOR ALL
     TO authenticated
     USING (
         EXISTS (
-            SELECT 1 FROM user_roles
-            WHERE user_id = auth.uid()
-            AND role_name IN ('manager', 'operator')
+            SELECT 1 FROM system_users
+            WHERE id = auth.uid()
+            AND role IN ('manager', 'operator')
         )
     );
 
-CREATE POLICY "Allow all access for managers"
+CREATE POLICY "Allow all access for managers and operators"
     ON raw_materials_inventory FOR ALL
     TO authenticated
     USING (
         EXISTS (
-            SELECT 1 FROM user_roles
-            WHERE user_id = auth.uid()
-            AND role_name IN ('manager', 'operator')
+            SELECT 1 FROM system_users
+            WHERE id = auth.uid()
+            AND role IN ('manager', 'operator')
+        )
+    );
+
+CREATE POLICY "Allow all access for managers and operators"
+    ON quality_control_checks FOR ALL
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM system_users
+            WHERE id = auth.uid()
+            AND role IN ('manager', 'operator')
         )
     );
 
