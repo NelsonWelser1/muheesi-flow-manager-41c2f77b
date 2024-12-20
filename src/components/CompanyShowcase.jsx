@@ -8,7 +8,6 @@ import OrderForm from './orders/OrderForm';
 import ContactLinks from './ContactLinks';
 
 const fetchCompanyStocks = async () => {
-  // This should be replaced with an actual API call
   return {
     'Grand Berna Dairies': { 'Fresh Milk': '1000L', 'Yogurt': '500kg', 'Cheese': '200kg', 'Meat': '300kg' },
     'KAJON Coffee Limited': { 
@@ -77,11 +76,6 @@ const CompanyShowcase = () => {
   return (
     <div className="bg-gray-100 py-4 sm:py-8">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="text-center mb-4 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-medium italic text-gray-900">
-            Gourmet conglomerate
-          </h2>
-        </div>
         <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {companies.map((company) => (
             <div key={company.name} className="bg-white rounded-lg shadow-lg divide-y divide-gray-200">
@@ -93,7 +87,7 @@ const CompanyShowcase = () => {
                   className="mt-2 w-full text-sm sm:text-base" 
                   onClick={() => setSelectedCompany(company.name)}
                 >
-                  Learn More
+                  About Us
                 </Button>
                 <ContactLinks email={company.email} phones={company.phones} />
               </div>

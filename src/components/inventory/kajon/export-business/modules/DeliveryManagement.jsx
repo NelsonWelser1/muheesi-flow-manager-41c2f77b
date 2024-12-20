@@ -1,34 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import DeliveryNoteForm from './delivery-note/DeliveryNoteForm';
+import DeliveryNoteList from './delivery-note/DeliveryNoteList';
 
 const DeliveryManagement = () => {
+  const [view, setView] = useState('list');
+  
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Create Delivery Note</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4">
-            <div className="space-y-2">
-              <Label>Order Reference</Label>
-              <Input placeholder="Select order" />
-            </div>
-            <div className="space-y-2">
-              <Label>Delivery Date</Label>
-              <Input type="date" />
-            </div>
-            <div className="space-y-2">
-              <Label>Items to Ship</Label>
-              <Input placeholder="Add items" />
-            </div>
-            <Button className="w-full">Generate Delivery Note</Button>
-          </form>
-        </CardContent>
-      </Card>
+      {view === 'list' ? (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Delivery Notes</h2>
+            <Button onClick={() => setView('form')}>Create New Delivery Note</Button>
+          </div>
+          <DeliveryNoteList />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Create Delivery Note</h2>
+            <Button variant="outline" onClick={() => setView('list')}>Back to List</Button>
+          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <DeliveryNoteForm onBack={() => setView('list')} />
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

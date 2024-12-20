@@ -28,7 +28,7 @@ const Navigation = () => {
         </Link>
         <div className="hidden md:flex space-x-4">
           {navItems.map((item) => (
-            <Button key={item.to} asChild className="bg-white text-black font-bold">
+            <Button key={item.to} asChild className="bg-[#9b87f5] hover:bg-[#9b87f5] text-white font-bold">
               <Link to={item.to}>{item.label}</Link>
             </Button>
           ))}
