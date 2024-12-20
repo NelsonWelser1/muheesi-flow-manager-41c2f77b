@@ -7,7 +7,25 @@ const fromSupabase = async (query) => {
     return data;
 };
 
-// Milk Cooler Queries
+// Factory Operations
+export const useFactoryOperations = () => useQuery({
+    queryKey: ['factoryOperations'],
+    queryFn: () => fromSupabase(supabase.from('production_data').select('*')),
+});
+
+// Cold Room Management
+export const useColdRoomManagement = () => useQuery({
+    queryKey: ['coldRoomManagement'],
+    queryFn: () => fromSupabase(supabase.from('cold_room_inventory').select('*')),
+});
+
+// Dairy Sales Records
+export const useDairySalesRecords = () => useQuery({
+    queryKey: ['dairySales'],
+    queryFn: () => fromSupabase(supabase.from('dairy_sales_records').select('*')),
+});
+
+// Additional hooks from the previous implementation
 export const useMilkCoolerData = () => useQuery({
     queryKey: ['milk_cooler_data'],
     queryFn: () => fromSupabase(supabase.from('milk_cooler_data').select('*')),
@@ -18,7 +36,6 @@ export const useMilkCoolerAlerts = () => useQuery({
     queryFn: () => fromSupabase(supabase.from('milk_cooler_alerts').select('*')),
 });
 
-// Factory Queries
 export const useProductionData = () => useQuery({
     queryKey: ['production_data'],
     queryFn: () => fromSupabase(supabase.from('production_data').select('*')),
@@ -29,7 +46,6 @@ export const useRawMaterialsInventory = () => useQuery({
     queryFn: () => fromSupabase(supabase.from('raw_materials_inventory').select('*')),
 });
 
-// Cold Room Queries
 export const useColdRoomInventory = () => useQuery({
     queryKey: ['cold_room_inventory'],
     queryFn: () => fromSupabase(supabase.from('cold_room_inventory').select('*')),
@@ -40,7 +56,6 @@ export const useColdRoomEnvironmentLogs = () => useQuery({
     queryFn: () => fromSupabase(supabase.from('cold_room_environment_logs').select('*')),
 });
 
-// Slaughterhouse Queries
 export const useAnimalProcessingData = () => useQuery({
     queryKey: ['animal_processing_data'],
     queryFn: () => fromSupabase(supabase.from('animal_processing_data').select('*')),
@@ -51,7 +66,6 @@ export const useProductInventory = () => useQuery({
     queryFn: () => fromSupabase(supabase.from('product_inventory').select('*')),
 });
 
-// Mutations
 export const useAddMilkCoolerData = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -61,5 +75,3 @@ export const useAddMilkCoolerData = () => {
         },
     });
 };
-
-// Add more mutations as needed for other tables
