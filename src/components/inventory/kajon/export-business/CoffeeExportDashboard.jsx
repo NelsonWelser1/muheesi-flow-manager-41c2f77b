@@ -5,7 +5,6 @@ import Charts from './dashboard/Charts';
 import QuoteManagement from './quotations/QuoteManagement';
 import ProformaInvoice from './quotations/ProformaInvoice';
 import OrderManagement from './OrderManagement';
-import LPOManagement from './modules/LPOManagement';
 import DeliveryManagement from './modules/DeliveryManagement';
 import InvoiceManagement from './modules/InvoiceManagement';
 import PackingList from './modules/PackingList';
@@ -20,7 +19,6 @@ const CoffeeExportDashboard = () => {
         <TabsTrigger value="quotes">Quotes</TabsTrigger>
         <TabsTrigger value="proforma">Proforma Invoices</TabsTrigger>
         <TabsTrigger value="orders">Orders</TabsTrigger>
-        <TabsTrigger value="lpo">LPO</TabsTrigger>
         <TabsTrigger value="delivery">Delivery Notes</TabsTrigger>
         <TabsTrigger value="invoices">Invoices</TabsTrigger>
         <TabsTrigger value="packing">Packing List</TabsTrigger>
@@ -41,10 +39,6 @@ const CoffeeExportDashboard = () => {
 
       <TabsContent value="orders">
         <OrderManagement />
-      </TabsContent>
-
-      <TabsContent value="lpo">
-        <LPOManagement />
       </TabsContent>
 
       <TabsContent value="delivery">

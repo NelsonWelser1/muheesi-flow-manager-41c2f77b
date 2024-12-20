@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import QuotationForm from './QuotationForm';
 import QuotationsList from './QuotationsList';
 import { useToast } from "@/components/ui/use-toast";
@@ -10,6 +11,7 @@ const QuoteManagement = () => {
   const { data: quotes, isLoading } = useQuotes();
   const createQuote = useCreateQuote();
   const deleteQuote = useDeleteQuote();
+  const [view, setView] = useState('list');
 
   console.log('Rendering QuoteManagement', { quotes, isLoading });
 
@@ -20,6 +22,7 @@ const QuoteManagement = () => {
         title: "Success",
         description: "Quote created successfully",
       });
+      setView('list');
     } catch (error) {
       console.error('Error creating quote:', error);
       toast({
@@ -49,19 +52,31 @@ const QuoteManagement = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Create New Quote</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <QuotationForm onSubmit={handleCreateQuote} />
-        </CardContent>
-      </Card>
-      <QuotationsList 
-        quotes={quotes} 
-        isLoading={isLoading} 
-        onDelete={handleDeleteQuote}
-      />
+      {view === 'list' ? (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Quotations</h2>
+            <Button onClick={() => setView('form')}>Create New Quote</Button>
+          </div>
+          <QuotationsList 
+            quotes={quotes} 
+            isLoading={isLoading} 
+            onDelete={handleDeleteQuote}
+          />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Create New Quote</h2>
+            <Button variant="outline" onClick={() => setView('list')}>Back to List</Button>
+          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <QuotationForm onSubmit={handleCreateQuote} />
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
