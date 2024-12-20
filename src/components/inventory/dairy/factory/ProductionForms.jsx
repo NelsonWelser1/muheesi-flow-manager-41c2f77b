@@ -6,7 +6,7 @@ import ProcessedMilkForm from './forms/ProcessedMilkForm';
 
 const ProductionForms = () => {
   return (
-    <Tabs defaultValue="cheese" className="w-full">
+    <Tabs defaultValue="cheese" className="space-y-4">
       <TabsList>
         <TabsTrigger value="cheese">Cheese Production</TabsTrigger>
         <TabsTrigger value="yogurt">Yogurt Production</TabsTrigger>

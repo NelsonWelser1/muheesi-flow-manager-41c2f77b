@@ -1,42 +1,52 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { format } from 'date-fns';
 
-const ProductionSchedule = ({ data, isLoading }) => {
-  if (isLoading) {
-    return <div>Loading production schedule...</div>;
-  }
+const ProductionSchedule = ({ batches }) => {
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'passed': return 'bg-green-500';
+      case 'failed': return 'bg-red-500';
+      default: return 'bg-yellow-500';
+    }
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Production Schedule</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Batch Number</TableHead>
-              <TableHead>Product Type</TableHead>
-              <TableHead>Raw Material Used</TableHead>
-              <TableHead>Quality Status</TableHead>
-              <TableHead>Timestamp</TableHead>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Batch Number</TableHead>
+            <TableHead>Product Type</TableHead>
+            <TableHead>Start Time</TableHead>
+            <TableHead>End Time</TableHead>
+            <TableHead>Raw Milk Used</TableHead>
+            <TableHead>Yield</TableHead>
+            <TableHead>Quality Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {batches?.map((batch) => (
+            <TableRow key={batch.id}>
+              <TableCell>{batch.batch_number}</TableCell>
+              <TableCell className="capitalize">{batch.product_type}</TableCell>
+              <TableCell>{format(new Date(batch.start_time), 'PPp')}</TableCell>
+              <TableCell>
+                {batch.end_time ? format(new Date(batch.end_time), 'PPp') : 'In Progress'}
+              </TableCell>
+              <TableCell>{batch.raw_milk_used} L</TableCell>
+              <TableCell>{batch.actual_yield || '-'} L</TableCell>
+              <TableCell>
+                <Badge className={getStatusColor(batch.quality_status)}>
+                  {batch.quality_status}
+                </Badge>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data?.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.batch_number}</TableCell>
-                <TableCell>{item.product_type}</TableCell>
-                <TableCell>{item.raw_material_used} liters</TableCell>
-                <TableCell>{item.quality_status}</TableCell>
-                <TableCell>{new Date(item.timestamp).toLocaleString()}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 
