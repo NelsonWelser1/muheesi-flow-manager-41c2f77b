@@ -1,5 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Clock } from "lucide-react";
 import QuoteManagement from '../../kajon/export-business/quotations/QuoteManagement';
 import ProformaInvoice from '../../kajon/export-business/quotations/ProformaInvoice';
 import OrderManagement from '../../kajon/export-business/OrderManagement';
@@ -9,42 +12,75 @@ import PackingList from '../../kajon/export-business/modules/PackingList';
 
 const FactoryManagerDashboard = () => {
   console.log('Rendering GrandBerna FactoryManagerDashboard');
+  const navigate = useNavigate();
+  const [currentTime, setCurrentTime] = React.useState(new Date().toLocaleTimeString());
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
   
   return (
-    <Tabs defaultValue="quotes" className="w-full">
-      <TabsList className="w-full justify-start overflow-x-auto">
-        <TabsTrigger value="quotes">Quotes</TabsTrigger>
-        <TabsTrigger value="proforma">Proforma Invoices</TabsTrigger>
-        <TabsTrigger value="orders">Orders</TabsTrigger>
-        <TabsTrigger value="delivery">Delivery Notes</TabsTrigger>
-        <TabsTrigger value="invoices">Invoices</TabsTrigger>
-        <TabsTrigger value="packing">Packing List</TabsTrigger>
-      </TabsList>
+    <div className="p-4 space-y-6">
+      <div className="flex justify-between items-center mb-6">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/manage-inventory/grand-berna-sales')}
+          className="mb-4"
+        >
+          ← Back to Dashboard
+        </Button>
+        <div className="text-right">
+          <div className="flex items-center justify-end gap-2 text-sm text-gray-600">
+            <Clock className="h-4 w-4" />
+            <span>{currentTime}</span>
+          </div>
+          <p className="font-semibold">Jane Smith</p>
+          <p className="text-sm text-gray-600">Factory Manager</p>
+        </div>
+      </div>
 
-      <TabsContent value="quotes">
-        <QuoteManagement />
-      </TabsContent>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Grand Berna Dairies - Factory Manager Dashboard</h1>
+      </div>
 
-      <TabsContent value="proforma">
-        <ProformaInvoice />
-      </TabsContent>
+      <Tabs defaultValue="quotes" className="w-full">
+        <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsTrigger value="quotes">Quotes</TabsTrigger>
+          <TabsTrigger value="proforma">Proforma Invoices</TabsTrigger>
+          <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="delivery">Delivery Notes</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+          <TabsTrigger value="packing">Packing List</TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="orders">
-        <OrderManagement />
-      </TabsContent>
+        <TabsContent value="quotes">
+          <QuoteManagement />
+        </TabsContent>
 
-      <TabsContent value="delivery">
-        <DeliveryManagement />
-      </TabsContent>
+        <TabsContent value="proforma">
+          <ProformaInvoice />
+        </TabsContent>
 
-      <TabsContent value="invoices">
-        <InvoiceManagement />
-      </TabsContent>
+        <TabsContent value="orders">
+          <OrderManagement />
+        </TabsContent>
 
-      <TabsContent value="packing">
-        <PackingList />
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="delivery">
+          <DeliveryManagement />
+        </TabsContent>
+
+        <TabsContent value="invoices">
+          <InvoiceManagement />
+        </TabsContent>
+
+        <TabsContent value="packing">
+          <PackingList />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
