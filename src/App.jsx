@@ -9,6 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import ManageInventory from "./pages/ManageInventory";
 import ManageCompanies from "./pages/ManageCompanies";
 import Feedback from "./pages/Feedback";
+import ExportManagementDashboard from "./components/inventory/kajon/export-business/ExportManagementDashboard";
+import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-business/CoffeeExportManagerDashboard";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,8 @@ const App = () => (
             <Route path="/manage-inventory" element={<ManageInventory />} />
             <Route path="/manage-companies" element={<ManageCompanies />} />
             <Route path="/feedback" element={<Feedback />} />
+            <Route path="/manage-inventory/kajon-export" element={<ExportManagementDashboard />} />
+            <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
