@@ -8,12 +8,12 @@ const ExportManagementDashboard = () => {
   const roles = [
     {
       title: "Sales Manager",
-      description: "Manage quotes, orders, invoices, and shipping documents",
+      description: "Manage quotes, orders, invoices, and shipping documents for dairy products",
       path: "sales-manager"
     },
     {
       title: "Factory Manager",
-      description: "Manage production, quality control, and inventory",
+      description: "Manage production, quality control, and inventory for dairy products",
       path: "factory-manager"
     }
   ];

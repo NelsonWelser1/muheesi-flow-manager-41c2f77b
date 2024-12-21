@@ -1,12 +1,13 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from 'react-router-dom';
 import DairyCoolers from './dairy/DairyCoolers';
 import DairyFactoryDashboard from './dairy/DairyFactoryDashboard';
 import ColdRoomStock from './dairy/ColdRoomStock';
 import SlaughterhouseStock from './dairy/SlaughterhouseStock';
 
 const GrandBernaDairies = () => {
+  const navigate = useNavigate();
   const [selectedSection, setSelectedSection] = React.useState(null);
 
   const sections = [
@@ -29,6 +30,11 @@ const GrandBernaDairies = () => {
       title: "Slaughterhouse",
       description: "Manage slaughterhouse operations",
       component: <SlaughterhouseStock />
+    },
+    {
+      title: "Grand Berna Dairies Sales",
+      description: "Manage sales operations and export management",
+      onClick: () => navigate('/manage-inventory/grand-berna-sales')
     }
   ];
 
@@ -54,7 +60,7 @@ const GrandBernaDairies = () => {
           <Card 
             key={section.title}
             className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => setSelectedSection(section)}
+            onClick={() => section.onClick ? section.onClick() : setSelectedSection(section)}
           >
             <CardHeader>
               <CardTitle>{section.title}</CardTitle>
