@@ -11,8 +11,8 @@ const DairyCoolers = () => {
   const navigate = useNavigate();
   
   return (
-    <div className="space-y-6">
-      <Card className="w-full border-2 border-gray-200">
+    <div className="max-w-[1200px] mx-auto space-y-6">
+      <Card className="border border-gray-200 shadow-sm">
         <CardHeader className="border-b border-gray-200">
           <div className="flex justify-between items-center">
             <CardTitle className="text-2xl font-bold">Dairy Coolers Management</CardTitle>
@@ -27,7 +27,7 @@ const DairyCoolers = () => {
         </CardHeader>
         <CardContent className="p-6">
           <Tabs defaultValue="receive" className="w-full">
-            <TabsList className="w-full justify-start mb-6 bg-gray-100 p-1 rounded-lg">
+            <TabsList className="w-full justify-start mb-6 bg-gray-100 p-1 rounded-lg border border-gray-200">
               <TabsTrigger 
                 value="receive" 
                 className="data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"

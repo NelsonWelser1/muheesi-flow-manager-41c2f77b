@@ -40,32 +40,36 @@ const GrandBernaDairies = () => {
 
   if (selectedSection) {
     return (
-      <div className="space-y-4">
+      <div className="max-w-[1200px] mx-auto p-4 space-y-4">
         <button
           onClick={() => setSelectedSection(null)}
           className="mb-4 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900"
         >
           ← Back to Sections
         </button>
-        {selectedSection.component}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardContent className="p-6">
+            {selectedSection.component}
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Grand Berna Dairies Management</h1>
+    <div className="max-w-[1200px] mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6 border-b pb-4">Grand Berna Dairies Management</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {sections.map((section) => (
           <Card 
             key={section.title}
-            className="cursor-pointer hover:shadow-lg transition-shadow"
+            className="cursor-pointer hover:shadow-lg transition-shadow border border-gray-200"
             onClick={() => section.onClick ? section.onClick() : setSelectedSection(section)}
           >
-            <CardHeader>
+            <CardHeader className="border-b border-gray-200">
               <CardTitle>{section.title}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <p className="text-gray-600">{section.description}</p>
             </CardContent>
           </Card>

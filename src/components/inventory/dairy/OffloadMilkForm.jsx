@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -7,12 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const OffloadMilkForm = () => {
   return (
-    <form className="space-y-6">
+    <form className="space-y-6 max-w-[800px] mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
+        <div className="space-y-2 border-b pb-4 md:border-b-0 md:border-r md:pr-4">
           <Label htmlFor="destination">Destination</Label>
           <Select>
-            <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200">
+            <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200 border-gray-200">
               <SelectValue placeholder="Select destination" />
             </SelectTrigger>
             <SelectContent>
@@ -29,16 +28,16 @@ const OffloadMilkForm = () => {
             id="quantity" 
             type="number" 
             placeholder="Enter quantity"
-            className="focus:ring-2 focus:ring-blue-200"
+            className="focus:ring-2 focus:ring-blue-200 border-gray-200"
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 border-t pt-4 md:border-t-0 md:pt-0">
           <Label htmlFor="tanker">Tanker Number</Label>
           <Input 
             id="tanker" 
             placeholder="Enter tanker number"
-            className="focus:ring-2 focus:ring-blue-200"
+            className="focus:ring-2 focus:ring-blue-200 border-gray-200"
           />
         </div>
 
@@ -47,17 +46,17 @@ const OffloadMilkForm = () => {
           <Input 
             id="driver" 
             placeholder="Enter driver name"
-            className="focus:ring-2 focus:ring-blue-200"
+            className="focus:ring-2 focus:ring-blue-200 border-gray-200"
           />
         </div>
       </div>
 
       <div className="border-t pt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
+          <div className="space-y-2 border-b pb-4 md:border-b-0 md:border-r md:pr-4">
             <Label htmlFor="cleaningStatus">Tanker Cleaning Status</Label>
             <Select>
-              <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200">
+              <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200 border-gray-200">
                 <SelectValue placeholder="Select cleaning status" />
               </SelectTrigger>
               <SelectContent>
@@ -75,7 +74,7 @@ const OffloadMilkForm = () => {
               type="number" 
               step="0.1"
               placeholder="Enter temperature"
-              className="focus:ring-2 focus:ring-blue-200"
+              className="focus:ring-2 focus:ring-blue-200 border-gray-200"
             />
           </div>
         </div>
@@ -87,12 +86,12 @@ const OffloadMilkForm = () => {
           <Input 
             id="notes" 
             placeholder="Enter any additional notes"
-            className="focus:ring-2 focus:ring-blue-200"
+            className="focus:ring-2 focus:ring-blue-200 border-gray-200"
           />
         </div>
       </div>
 
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-end pt-4 border-t">
         <Button type="submit" className="w-full md:w-auto">
           Record Milk Dispatch
         </Button>

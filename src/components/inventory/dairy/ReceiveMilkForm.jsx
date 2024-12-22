@@ -7,12 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const ReceiveMilkForm = () => {
   return (
-    <form className="space-y-6">
+    <form className="space-y-6 max-w-[800px] mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
+        <div className="space-y-2 border-b pb-4 md:border-b-0 md:border-r md:pr-4">
           <Label htmlFor="source">Source Location</Label>
           <Select>
-            <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200">
+            <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200 border-gray-200">
               <SelectValue placeholder="Select source location" />
             </SelectTrigger>
             <SelectContent>
@@ -29,25 +29,25 @@ const ReceiveMilkForm = () => {
             id="quantity" 
             type="number" 
             placeholder="Enter quantity"
-            className="focus:ring-2 focus:ring-blue-200"
+            className="focus:ring-2 focus:ring-blue-200 border-gray-200"
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 border-t pt-4 md:border-t-0 md:pt-0">
           <Label htmlFor="temperature">Temperature (°C)</Label>
           <Input 
             id="temperature" 
             type="number" 
             step="0.1"
             placeholder="Enter temperature"
-            className="focus:ring-2 focus:ring-blue-200"
+            className="focus:ring-2 focus:ring-blue-200 border-gray-200"
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="quality">Quality Grade</Label>
           <Select>
-            <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200">
+            <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200 border-gray-200">
               <SelectValue placeholder="Select quality grade" />
             </SelectTrigger>
             <SelectContent>
@@ -65,12 +65,12 @@ const ReceiveMilkForm = () => {
           <Input 
             id="notes" 
             placeholder="Enter any additional notes"
-            className="focus:ring-2 focus:ring-blue-200"
+            className="focus:ring-2 focus:ring-blue-200 border-gray-200"
           />
         </div>
       </div>
 
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-end pt-4 border-t">
         <Button type="submit" className="w-full md:w-auto">
           Record Milk Receipt
         </Button>
