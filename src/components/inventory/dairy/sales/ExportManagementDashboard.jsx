@@ -22,11 +22,15 @@ const ExportManagementDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="border border-gray-200 shadow-sm">
         <CardContent className="pt-6">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
             <h2 className="text-2xl font-bold">Grand Berna Dairies Sales Management</h2>
-            <Button variant="ghost" onClick={() => navigate('/manage-inventory')} className="p-2">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/manage-inventory')} 
+              className="p-2 hover:bg-gray-100"
+            >
               <ArrowLeft className="h-5 w-5 mr-2" />
               Back to Inventory
             </Button>
@@ -35,13 +39,13 @@ const ExportManagementDashboard = () => {
             {roles.map((role) => (
               <Card 
                 key={role.title}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                className="cursor-pointer hover:shadow-lg transition-shadow border border-gray-200"
                 onClick={() => navigate(role.path)}
               >
-                <CardHeader>
+                <CardHeader className="border-b border-gray-200">
                   <CardTitle>{role.title}</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-4">
                   <p className="text-gray-600">{role.description}</p>
                 </CardContent>
               </Card>
