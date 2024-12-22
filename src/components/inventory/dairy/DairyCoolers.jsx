@@ -1,30 +1,59 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import ReceiveMilkForm from './ReceiveMilkForm';
 import OffloadMilkForm from './OffloadMilkForm';
 
 const DairyCoolers = () => {
+  const navigate = useNavigate();
+  
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Dairy Coolers Management</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="receive" className="w-full">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="receive">Receive Milk</TabsTrigger>
-            <TabsTrigger value="offload">Offload Milk</TabsTrigger>
-          </TabsList>
-          <TabsContent value="receive">
-            <ReceiveMilkForm />
-          </TabsContent>
-          <TabsContent value="offload">
-            <OffloadMilkForm />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Card className="w-full border-2 border-gray-200">
+        <CardHeader className="border-b border-gray-200">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl font-bold">Dairy Coolers Management</CardTitle>
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate(-1)}
+              className="p-2"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6">
+          <Tabs defaultValue="receive" className="w-full">
+            <TabsList className="w-full justify-start mb-6 bg-gray-100 p-1 rounded-lg">
+              <TabsTrigger 
+                value="receive" 
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+              >
+                Receive Milk
+              </TabsTrigger>
+              <TabsTrigger 
+                value="offload"
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+              >
+                Offload Milk
+              </TabsTrigger>
+            </TabsList>
+            
+            <div className="border rounded-lg p-6 bg-white shadow-sm">
+              <TabsContent value="receive" className="mt-0">
+                <ReceiveMilkForm />
+              </TabsContent>
+              <TabsContent value="offload" className="mt-0">
+                <OffloadMilkForm />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
