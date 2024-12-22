@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Coffee, Globe } from 'lucide-react';
+import { ArrowLeft, Coffee, Globe, Factory } from 'lucide-react';
 import StockOperations from './stock-operations/StockOperations';
 import ViewCurrentStock from './ViewCurrentStock';
 import MakeReports from './MakeReports';
@@ -12,6 +12,7 @@ import ManageAssociations from './ManageAssociations';
 import MakeRequisitions from './MakeRequisitions';
 import KazoCoffeeProject from './kajon/KazoCoffeeProject';
 import CoffeeExportDashboard from './kajon/export-business/CoffeeExportDashboard';
+import HullingGrading from './kajon/export-business/HullingGrading';
 
 const KAJONCoffeeLimited = () => {
   const { toast } = useToast();
@@ -60,7 +61,7 @@ const KAJONCoffeeLimited = () => {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
                 variant="outline"
                 className="h-32 flex flex-col items-center justify-center space-y-2"
@@ -76,6 +77,14 @@ const KAJONCoffeeLimited = () => {
               >
                 <Globe className="h-8 w-8" />
                 <span className="text-lg font-semibold">KAJON Coffee Export Management</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-32 flex flex-col items-center justify-center space-y-2"
+                onClick={() => setSelectedSystem('factory-management')}
+              >
+                <Factory className="h-8 w-8" />
+                <span className="text-lg font-semibold">Factory Manager</span>
               </Button>
             </div>
           </CardContent>
@@ -93,7 +102,9 @@ const KAJONCoffeeLimited = () => {
               {selectedInterface === 'kajon' ? 
                 selectedSystem === 'coffee-management' ? 
                   'KAJON Coffee Limited Management' : 
-                  'KAJON Coffee Export Management' 
+                  selectedSystem === 'export-management' ?
+                    'KAJON Coffee Export Management' :
+                    'KAJON Coffee Factory Management'
                 : 'Kazo Coffee Development Project'}
             </h2>
             <Button variant="ghost" onClick={handleBack} className="p-2">
@@ -137,8 +148,10 @@ const KAJONCoffeeLimited = () => {
                   <MakeRequisitions />
                 </TabsContent>
               </Tabs>
-            ) : (
+            ) : selectedSystem === 'export-management' ? (
               <CoffeeExportDashboard />
+            ) : (
+              <HullingGrading />
             )
           ) : (
             <KazoCoffeeProject />
