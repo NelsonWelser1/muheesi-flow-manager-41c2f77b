@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useFactoryOperations, useColdRoomManagement, useDairySalesRecords } from '@/integrations/supabase/hooks/useGrandBernaDairies';
+import { useFactoryOperations, useColdRoomManagement } from '@/integrations/supabase/hooks/useGrandBernaDairies';
 import { useCoffeeInventory, useCoffeeSalesRecords } from '@/integrations/supabase/hooks/useKAJONCoffee';
 import { useRiceImports, useBullFattening } from '@/integrations/supabase/hooks/useKyalimaFarmers';
 import { Progress } from "@/components/ui/progress";
@@ -9,7 +9,6 @@ const CompanyDashboard = () => {
   // Grand Berna Dairies
   const { data: factoryData, isLoading: isLoadingFactory } = useFactoryOperations();
   const { data: coldRoomData, isLoading: isLoadingColdRoom } = useColdRoomManagement();
-  const { data: dairySalesData, isLoading: isLoadingDairySales } = useDairySalesRecords();
 
   // KAJON Coffee
   const { data: coffeeInventory, isLoading: isLoadingCoffee } = useCoffeeInventory();
@@ -19,15 +18,10 @@ const CompanyDashboard = () => {
   const { data: riceImports, isLoading: isLoadingRice } = useRiceImports();
   const { data: bullProgram, isLoading: isLoadingBull } = useBullFattening();
 
-  if (isLoadingFactory || isLoadingColdRoom || isLoadingDairySales || 
-      isLoadingCoffee || isLoadingCoffeeSales || isLoadingRice || 
-      isLoadingBull) {
+  if (isLoadingFactory || isLoadingColdRoom || isLoadingCoffee || 
+      isLoadingCoffeeSales || isLoadingRice || isLoadingBull) {
     return <div>Loading...</div>;
   }
-
-  const calculateTotalRevenue = (data) => {
-    return data?.reduce((acc, record) => acc + (record.revenue || 0), 0) || 0;
-  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -45,10 +39,6 @@ const CompanyDashboard = () => {
             <div>
               <h3 className="font-medium">Cold Room Status</h3>
               <p>Active Storage Units: {coldRoomData?.length || 0}</p>
-            </div>
-            <div>
-              <h3 className="font-medium">Sales Overview</h3>
-              <p>Total Revenue: ${calculateTotalRevenue(dairySalesData).toFixed(2)}</p>
             </div>
           </div>
         </CardContent>

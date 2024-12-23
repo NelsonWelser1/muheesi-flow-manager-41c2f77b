@@ -92,11 +92,3 @@ export const useColdRoomManagement = () => useQuery({
     supabase.from('cold_room_inventory').select('*')
   ),
 });
-
-// Dairy Sales Records
-export const useDairySalesRecords = () => useQuery({
-  queryKey: ['dairySalesRecords'],
-  queryFn: () => handleSupabaseResponse(
-    supabase.from('dairy_sales').select('*')
-  ),
-});
