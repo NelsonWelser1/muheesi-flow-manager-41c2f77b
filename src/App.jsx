@@ -11,9 +11,6 @@ import ManageCompanies from "./pages/ManageCompanies";
 import Feedback from "./pages/Feedback";
 import ExportManagementDashboard from "./components/inventory/kajon/export-business/ExportManagementDashboard";
 import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-business/CoffeeExportManagerDashboard";
-import GrandBernaExportManagementDashboard from "./components/inventory/dairy/sales/ExportManagementDashboard";
-import GrandBernaSalesManagerDashboard from "./components/inventory/dairy/sales/SalesManagerDashboard";
-import GrandBernaFactoryManagerDashboard from "./components/inventory/dairy/sales/FactoryManagerDashboard";
 
 const queryClient = new QueryClient();
 
@@ -32,9 +29,6 @@ const App = () => (
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/manage-inventory/kajon-export" element={<ExportManagementDashboard />} />
             <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
-            <Route path="/manage-inventory/grand-berna-sales" element={<GrandBernaExportManagementDashboard />} />
-            <Route path="/manage-inventory/grand-berna-sales/sales-manager" element={<GrandBernaSalesManagerDashboard />} />
-            <Route path="/manage-inventory/grand-berna-sales/factory-manager" element={<GrandBernaFactoryManagerDashboard />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
