@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserCrown, Settings, Shield, AlertOctagon, UserGear, Warehouse, Users, Tractor } from 'lucide-react';
+import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor } from 'lucide-react';
 
 const OrganizationalChart = () => {
   return (
@@ -7,11 +7,11 @@ const OrganizationalChart = () => {
       {/* Strategic/Executive Management */}
       <div className="bg-blue-50 p-6 rounded-lg">
         <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800">
-          <UserCrown className="mr-2" /> Strategic/Executive Management
+          <User className="mr-2" /> Strategic/Executive Management
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="flex items-center p-3 bg-white rounded-lg shadow">
-            <UserCrown className="h-6 w-6 mr-2 text-blue-600" />
+            <User className="h-6 w-6 mr-2 text-blue-600" />
             <span>CEO - H.E Maj. Gen. Geoffrey Muheesi</span>
           </div>
           <div className="flex items-center p-3 bg-white rounded-lg shadow">
@@ -32,7 +32,7 @@ const OrganizationalChart = () => {
       {/* Tactical/Departmental Management */}
       <div className="bg-green-50 p-6 rounded-lg">
         <h2 className="text-xl font-bold mb-4 flex items-center text-green-800">
-          <UserGear className="mr-2" /> Tactical/Departmental Management
+          <Users className="mr-2" /> Tactical/Departmental Management
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
@@ -49,7 +49,7 @@ const OrganizationalChart = () => {
             'Product Development Manager'
           ].map((role, index) => (
             <div key={index} className="flex items-center p-3 bg-white rounded-lg shadow">
-              <UserGear className="h-6 w-6 mr-2 text-green-600" />
+              <Users className="h-6 w-6 mr-2 text-green-600" />
               <span>{role}</span>
             </div>
           ))}
