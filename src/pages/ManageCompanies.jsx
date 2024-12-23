@@ -3,9 +3,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import OrganizationalChart from '../components/organization/OrganizationalChart';
-import RoleDescriptions from '../components/organization/RoleDescriptions';
+import SystemAccounts from '../components/organization/SystemAccounts';
 
 const ManageCompanies = () => {
   const navigate = useNavigate();
@@ -32,10 +31,10 @@ const ManageCompanies = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Role Descriptions</CardTitle>
+            <CardTitle>System Accounts</CardTitle>
           </CardHeader>
           <CardContent>
-            <RoleDescriptions />
+            <SystemAccounts />
           </CardContent>
         </Card>
       </div>
