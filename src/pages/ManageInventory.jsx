@@ -21,6 +21,14 @@ const companies = [
     name: "Kyalima Farmers Limited",
     description: "Assets and Cooperations, Agri-Business.",
     component: "kyalima-farmers"
+  },
+  {
+    name: "Kashari Mixed Farm",
+    description: "Integrated farm in Mbarara managing dairy products, livestock, banana plantation, and scholarship programs. Managed by Asiimwe Daniel.",
+    component: "kashari-mixed-farm",
+    contact: "+256 782 222993",
+    manager: "Asiimwe Daniel",
+    location: "Mbarara"
   }
 ];
 
@@ -30,7 +38,11 @@ const ManageInventory = () => {
   const currentUser = { name: "John Doe", role: "Inventory Manager" };
 
   const handleCompanyClick = (company) => {
-    setSelectedCompany(company);
+    if (company.component === 'kashari-mixed-farm') {
+      navigate('/manage-inventory/kashari-farm');
+    } else {
+      setSelectedCompany(company);
+    }
   };
 
   const handleBackToCompanies = () => {
@@ -92,7 +104,7 @@ const ManageInventory = () => {
           </Button>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         {companies.map((company) => (
           <Card 
             key={company.name} 
@@ -102,6 +114,13 @@ const ManageInventory = () => {
             <CardHeader>
               <CardTitle>{company.name}</CardTitle>
               <p className="text-sm text-muted-foreground mt-2">{company.description}</p>
+              {company.manager && (
+                <div className="mt-2 text-sm">
+                  <p><strong>Manager:</strong> {company.manager}</p>
+                  <p><strong>Contact:</strong> {company.contact}</p>
+                  <p><strong>Location:</strong> {company.location}</p>
+                </div>
+              )}
             </CardHeader>
           </Card>
         ))}
