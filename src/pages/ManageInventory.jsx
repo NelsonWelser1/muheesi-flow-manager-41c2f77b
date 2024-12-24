@@ -24,11 +24,22 @@ const companies = [
   },
   {
     name: "Kashari Mixed Farm",
-    description: "Integrated farm in Mbarara managing dairy products, livestock, banana plantation, and scholarship programs. Managed by Asiimwe Daniel.",
+    description: "Integrated farm in Mbarara managing dairy products, livestock, banana plantation, and scholarship programs.",
     component: "kashari-mixed-farm",
     contact: "+256 782 222993",
     manager: "Asiimwe Daniel",
     location: "Mbarara"
+  },
+  {
+    name: "Bukomero Dairy Farm",
+    description: "Specialized dairy farm focusing on milk production, livestock management, silage making, and comprehensive financial tracking.",
+    component: "bukomero-dairy",
+    manager: "Manager Boaz",
+    financials: {
+      milkSales: "UGX 3,140,000",
+      livestockSales: "UGX 67,900,000",
+      expenses: "UGX 2,000,000"
+    }
   }
 ];
 
@@ -40,6 +51,8 @@ const ManageInventory = () => {
   const handleCompanyClick = (company) => {
     if (company.component === 'kashari-mixed-farm') {
       navigate('/manage-inventory/kashari-farm');
+    } else if (company.component === 'bukomero-dairy') {
+      navigate('/manage-inventory/bukomero-dairy');
     } else {
       setSelectedCompany(company);
     }
@@ -104,7 +117,7 @@ const ManageInventory = () => {
           </Button>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="flex flex-col space-y-4">
         {companies.map((company) => (
           <Card 
             key={company.name} 
@@ -112,13 +125,22 @@ const ManageInventory = () => {
             onClick={() => handleCompanyClick(company)}
           >
             <CardHeader>
-              <CardTitle>{company.name}</CardTitle>
+              <CardTitle className="flex justify-between items-start">
+                <span>{company.name}</span>
+                {company.financials && (
+                  <div className="text-sm text-muted-foreground">
+                    <p>Milk Sales: {company.financials.milkSales}</p>
+                    <p>Livestock Sales: {company.financials.livestockSales}</p>
+                    <p>Expenses: {company.financials.expenses}</p>
+                  </div>
+                )}
+              </CardTitle>
               <p className="text-sm text-muted-foreground mt-2">{company.description}</p>
-              {company.manager && (
+              {(company.manager || company.contact || company.location) && (
                 <div className="mt-2 text-sm">
-                  <p><strong>Manager:</strong> {company.manager}</p>
-                  <p><strong>Contact:</strong> {company.contact}</p>
-                  <p><strong>Location:</strong> {company.location}</p>
+                  {company.manager && <p><strong>Manager:</strong> {company.manager}</p>}
+                  {company.contact && <p><strong>Contact:</strong> {company.contact}</p>}
+                  {company.location && <p><strong>Location:</strong> {company.location}</p>}
                 </div>
               )}
             </CardHeader>

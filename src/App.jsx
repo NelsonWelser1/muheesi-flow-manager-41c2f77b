@@ -12,6 +12,7 @@ import Feedback from "./pages/Feedback";
 import ExportManagementDashboard from "./components/inventory/kajon/export-business/ExportManagementDashboard";
 import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-business/CoffeeExportManagerDashboard";
 import KashariFarmDashboard from "./components/inventory/kashari/KashariFarmDashboard";
+import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDairyDashboard";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/manage-inventory/kajon-export" element={<ExportManagementDashboard />} />
             <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
             <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
+            <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
