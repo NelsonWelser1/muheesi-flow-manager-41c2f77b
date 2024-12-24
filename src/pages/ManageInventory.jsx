@@ -35,6 +35,8 @@ const companies = [
     description: "Specialized dairy farm focusing on milk production, livestock management, silage making, and comprehensive financial tracking.",
     component: "bukomero-dairy",
     manager: "Manager Boaz",
+    contact: "+256 772 674060",
+    location: "Bukomero, Kyiboga District",
     financials: {
       milkSales: "UGX 3,140,000",
       livestockSales: "UGX 67,900,000",
@@ -127,13 +129,6 @@ const ManageInventory = () => {
             <CardHeader>
               <CardTitle className="flex justify-between items-start">
                 <span>{company.name}</span>
-                {company.financials && (
-                  <div className="text-sm text-muted-foreground">
-                    <p>Milk Sales: {company.financials.milkSales}</p>
-                    <p>Livestock Sales: {company.financials.livestockSales}</p>
-                    <p>Expenses: {company.financials.expenses}</p>
-                  </div>
-                )}
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-2">{company.description}</p>
               {(company.manager || company.contact || company.location) && (
