@@ -5,6 +5,11 @@ import { useCoffeeInventory, useCoffeeSalesRecords } from '@/integrations/supaba
 import { useRiceImports, useBullFattening } from '@/integrations/supabase/hooks/useKyalimaFarmers';
 import { Progress } from "@/components/ui/progress";
 
+const calculateTotalRevenue = (salesData) => {
+  if (!salesData || !Array.isArray(salesData)) return 0;
+  return salesData.reduce((total, sale) => total + (sale.revenue || 0), 0);
+};
+
 const CompanyDashboard = () => {
   // Grand Berna Dairies
   const { data: factoryData, isLoading: isLoadingFactory } = useFactoryOperations();
