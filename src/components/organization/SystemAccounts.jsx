@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import AuthenticationForm from '../inventory/kajon/AuthenticationForm';
 import { useToast } from "@/components/ui/use-toast";
-import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor } from 'lucide-react';
+import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor, UserPlus, UserCog } from 'lucide-react';
 
 const SystemAccounts = () => {
   const { toast } = useToast();
@@ -21,9 +20,19 @@ const SystemAccounts = () => {
   const roles = {
     strategic: [
       {
+        title: "Board of Directors",
+        description: "Oversees corporate governance and strategic direction of the organization.",
+        icon: <UserPlus className="h-6 w-6 text-blue-600" />
+      },
+      {
         title: "Chief Executive Officer (CEO)",
         description: "H.E Maj. Gen. Geoffrey Muheesi leads the organization, setting strategic direction and overseeing all operations.",
         icon: <User className="h-6 w-6 text-blue-600" />
+      },
+      {
+        title: "CEO's Personal Assistant",
+        description: "PA. Nelson Namanya - Manages CEO's schedule, communications, and administrative tasks.",
+        icon: <UserCog className="h-6 w-6 text-blue-600" />
       },
       {
         title: "System Administrator (SysAdmin)",

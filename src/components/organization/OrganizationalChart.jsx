@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor } from 'lucide-react';
+import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor, UserPlus, UserCog } from 'lucide-react';
 
 const OrganizationalChart = () => {
   return (
@@ -9,10 +9,18 @@ const OrganizationalChart = () => {
         <h2 className="text-xl font-bold mb-4 flex items-center text-blue-800">
           <User className="mr-2" /> Strategic/Executive Management
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="flex items-center p-3 bg-white rounded-lg shadow">
+            <UserPlus className="h-6 w-6 mr-2 text-blue-600" />
+            <span>Board of Directors</span>
+          </div>
           <div className="flex items-center p-3 bg-white rounded-lg shadow">
             <User className="h-6 w-6 mr-2 text-blue-600" />
             <span>CEO - H.E Maj. Gen. Geoffrey Muheesi</span>
+          </div>
+          <div className="flex items-center p-3 bg-white rounded-lg shadow">
+            <UserCog className="h-6 w-6 mr-2 text-blue-600" />
+            <span>CEO's Personal Assistant - PA. Nelson Namanya</span>
           </div>
           <div className="flex items-center p-3 bg-white rounded-lg shadow">
             <Settings className="h-6 w-6 mr-2 text-blue-600" />
