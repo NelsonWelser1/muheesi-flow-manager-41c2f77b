@@ -5,13 +5,15 @@ import FactoryStock from './dairy/FactoryStock';
 import ColdRoomStock from './dairy/ColdRoomStock';
 import SlaughterhouseStock from './dairy/SlaughterhouseStock';
 import SalesMarketing from './dairy/SalesMarketing';
-import { Milk, Factory, Snowflake, Beef, TrendingUp } from "lucide-react";
+import CheeseFactoryDashboard from './dairy/cheese-factory/CheeseFactoryDashboard';
+import { Milk, Factory, Snowflake, Beef, TrendingUp, Cheese } from "lucide-react";
 
 const GrandBernaDairies = () => {
   const [selectedSection, setSelectedSection] = useState(null);
 
   const sections = [
     { id: 'coolers', title: 'Dairy Coolers', icon: Milk, component: DairyCoolers },
+    { id: 'cheese', title: 'Cheese Factory Operations', icon: Cheese, component: CheeseFactoryDashboard },
     { id: 'factory', title: 'Factory Stock', icon: Factory, component: FactoryStock },
     { id: 'coldroom', title: 'Cold Room', icon: Snowflake, component: ColdRoomStock },
     { id: 'slaughterhouse', title: 'Slaughterhouse', icon: Beef, component: SlaughterhouseStock },
