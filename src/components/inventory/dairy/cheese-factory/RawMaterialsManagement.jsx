@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Droplet, Beaker, AlertTriangle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const mockData = {
   milkInventory: [
@@ -25,7 +26,34 @@ const mockData = {
   ]
 };
 
+// Add historical data for time-based analysis
+const historicalMilkData = {
+  daily: [
+    { date: '2024-04-01', type: 'Cow', quantity: 1000, protein: 3.5, fat: 4.0 },
+    { date: '2024-04-02', type: 'Cow', quantity: 1050, protein: 3.6, fat: 4.1 },
+    { date: '2024-04-03', type: 'Cow', quantity: 980, protein: 3.4, fat: 3.9 },
+  ],
+  monthly: [
+    { date: '2024-03', type: 'Cow', quantity: 30000, protein: 3.5, fat: 4.0 },
+    { date: '2024-02', type: 'Cow', quantity: 28000, protein: 3.4, fat: 3.9 },
+    { date: '2024-01', type: 'Cow', quantity: 31000, protein: 3.6, fat: 4.1 },
+  ],
+  yearly: [
+    { date: '2024', type: 'Cow', quantity: 360000, protein: 3.5, fat: 4.0 },
+    { date: '2023', type: 'Cow', quantity: 350000, protein: 3.4, fat: 3.9 },
+    { date: '2022', type: 'Cow', quantity: 340000, protein: 3.6, fat: 4.1 },
+  ],
+};
+
 const RawMaterialsManagement = () => {
+  const [timeRange, setTimeRange] = useState('daily');
+  const [selectedData, setSelectedData] = useState(historicalMilkData.daily);
+
+  const handleTimeRangeChange = (value) => {
+    setTimeRange(value);
+    setSelectedData(historicalMilkData[value]);
+  };
+
   return (
     <div className="space-y-6">
       {/* Overview Cards */}
@@ -81,15 +109,25 @@ const RawMaterialsManagement = () => {
 
         <TabsContent value="milk">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Milk Quality Parameters</CardTitle>
+              <Select value={timeRange} onValueChange={handleTimeRangeChange}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select time range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="yearly">Yearly</SelectItem>
+                </SelectContent>
+              </Select>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={mockData.milkInventory}>
+                  <BarChart data={selectedData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="type" />
+                    <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
                     <Bar dataKey="protein" fill="#8884d8" name="Protein %" />
@@ -101,6 +139,7 @@ const RawMaterialsManagement = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
+                      <th className="text-left py-2">Date</th>
                       <th className="text-left py-2">Type</th>
                       <th className="text-left py-2">Quantity (L)</th>
                       <th className="text-left py-2">Protein %</th>
@@ -108,8 +147,9 @@ const RawMaterialsManagement = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {mockData.milkInventory.map((item, index) => (
+                    {selectedData.map((item, index) => (
                       <tr key={index} className="border-b">
+                        <td className="py-2">{item.date}</td>
                         <td className="py-2">{item.type}</td>
                         <td className="py-2">{item.quantity}</td>
                         <td className="py-2">{item.protein}</td>
