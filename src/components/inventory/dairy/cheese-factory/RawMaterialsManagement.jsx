@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Droplet, Beaker, AlertTriangle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useDairyCoolerData } from '@/hooks/useDairyCoolerData';
 
 const mockData = {
   milkInventory: [
@@ -26,32 +27,58 @@ const mockData = {
   ]
 };
 
-// Add historical data for time-based analysis
+// Enhanced historical data structure to include all milk types
 const historicalMilkData = {
   daily: [
     { date: '2024-04-01', type: 'Cow', quantity: 1000, protein: 3.5, fat: 4.0 },
-    { date: '2024-04-02', type: 'Cow', quantity: 1050, protein: 3.6, fat: 4.1 },
-    { date: '2024-04-03', type: 'Cow', quantity: 980, protein: 3.4, fat: 3.9 },
+    { date: '2024-04-01', type: 'Goat', quantity: 500, protein: 3.2, fat: 3.8 },
+    { date: '2024-04-01', type: 'Sheep', quantity: 300, protein: 5.5, fat: 6.0 },
+    // Add more daily entries...
   ],
   monthly: [
     { date: '2024-03', type: 'Cow', quantity: 30000, protein: 3.5, fat: 4.0 },
-    { date: '2024-02', type: 'Cow', quantity: 28000, protein: 3.4, fat: 3.9 },
-    { date: '2024-01', type: 'Cow', quantity: 31000, protein: 3.6, fat: 4.1 },
+    { date: '2024-03', type: 'Goat', quantity: 15000, protein: 3.2, fat: 3.8 },
+    { date: '2024-03', type: 'Sheep', quantity: 9000, protein: 5.5, fat: 6.0 },
+    // Add more monthly entries...
   ],
   yearly: [
     { date: '2024', type: 'Cow', quantity: 360000, protein: 3.5, fat: 4.0 },
-    { date: '2023', type: 'Cow', quantity: 350000, protein: 3.4, fat: 3.9 },
-    { date: '2022', type: 'Cow', quantity: 340000, protein: 3.6, fat: 4.1 },
+    { date: '2024', type: 'Goat', quantity: 180000, protein: 3.2, fat: 3.8 },
+    { date: '2024', type: 'Sheep', quantity: 108000, protein: 5.5, fat: 6.0 },
+    // Add more yearly entries...
   ],
 };
 
 const RawMaterialsManagement = () => {
   const [timeRange, setTimeRange] = useState('daily');
-  const [selectedData, setSelectedData] = useState(historicalMilkData.daily);
+  const [selectedMilkType, setSelectedMilkType] = useState('all');
+  const [filteredData, setFilteredData] = useState([]);
+  const { data: coolerData, isLoading } = useDairyCoolerData();
+
+  useEffect(() => {
+    // Filter data based on selected time range and milk type
+    let data = historicalMilkData[timeRange];
+    
+    // If we have cooler data, merge it with historical data
+    if (coolerData) {
+      console.log('Merging cooler data:', coolerData);
+      // Merge logic here - this would combine the historical data with new entries
+      data = [...data, ...coolerData];
+    }
+
+    if (selectedMilkType !== 'all') {
+      data = data.filter(item => item.type === selectedMilkType);
+    }
+    
+    setFilteredData(data);
+  }, [timeRange, selectedMilkType, coolerData]);
 
   const handleTimeRangeChange = (value) => {
     setTimeRange(value);
-    setSelectedData(historicalMilkData[value]);
+  };
+
+  const handleMilkTypeChange = (value) => {
+    setSelectedMilkType(value);
   };
 
   return (
@@ -109,23 +136,36 @@ const RawMaterialsManagement = () => {
 
         <TabsContent value="milk">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
               <CardTitle>Milk Quality Parameters</CardTitle>
-              <Select value={timeRange} onValueChange={handleTimeRangeChange}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select time range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="yearly">Yearly</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-4">
+                <Select value={selectedMilkType} onValueChange={handleMilkTypeChange}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select milk type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="Cow">Cow Milk</SelectItem>
+                    <SelectItem value="Goat">Goat Milk</SelectItem>
+                    <SelectItem value="Sheep">Sheep Milk</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={timeRange} onValueChange={handleTimeRangeChange}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select time range" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="yearly">Yearly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={selectedData}>
+                  <BarChart data={filteredData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
@@ -147,7 +187,7 @@ const RawMaterialsManagement = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedData.map((item, index) => (
+                    {filteredData.map((item, index) => (
                       <tr key={index} className="border-b">
                         <td className="py-2">{item.date}</td>
                         <td className="py-2">{item.type}</td>
