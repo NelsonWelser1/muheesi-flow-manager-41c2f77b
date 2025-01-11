@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Droplet, Beaker, AlertTriangle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDairyCoolerData } from '@/hooks/useDairyCoolerData';
 import InventoryDashboard from './dashboard/InventoryDashboard';
+import ItemManagementPanel from './item-management/ItemManagementPanel';
 
 const mockData = {
   milkInventory: [
@@ -158,14 +158,7 @@ const RawMaterialsManagement = () => {
         </TabsContent>
 
         <TabsContent value="management">
-          <Card>
-            <CardHeader>
-              <CardTitle>Item Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Item management interface coming soon...</p>
-            </CardContent>
-          </Card>
+          <ItemManagementPanel />
         </TabsContent>
       </Tabs>
     </div>
