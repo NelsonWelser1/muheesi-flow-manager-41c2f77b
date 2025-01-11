@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Droplet, Beaker, AlertTriangle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDairyCoolerData } from '@/hooks/useDairyCoolerData';
+import InventoryDashboard from './dashboard/InventoryDashboard';
 
 const mockData = {
   milkInventory: [
@@ -27,25 +28,21 @@ const mockData = {
   ]
 };
 
-// Enhanced historical data structure to include all milk types
 const historicalMilkData = {
   daily: [
     { date: '2024-04-01', type: 'Cow', quantity: 1000, protein: 3.5, fat: 4.0 },
     { date: '2024-04-01', type: 'Goat', quantity: 500, protein: 3.2, fat: 3.8 },
     { date: '2024-04-01', type: 'Sheep', quantity: 300, protein: 5.5, fat: 6.0 },
-    // Add more daily entries...
   ],
   monthly: [
     { date: '2024-03', type: 'Cow', quantity: 30000, protein: 3.5, fat: 4.0 },
     { date: '2024-03', type: 'Goat', quantity: 15000, protein: 3.2, fat: 3.8 },
     { date: '2024-03', type: 'Sheep', quantity: 9000, protein: 5.5, fat: 6.0 },
-    // Add more monthly entries...
   ],
   yearly: [
     { date: '2024', type: 'Cow', quantity: 360000, protein: 3.5, fat: 4.0 },
     { date: '2024', type: 'Goat', quantity: 180000, protein: 3.2, fat: 3.8 },
     { date: '2024', type: 'Sheep', quantity: 108000, protein: 5.5, fat: 6.0 },
-    // Add more yearly entries...
   ],
 };
 
@@ -56,13 +53,10 @@ const RawMaterialsManagement = () => {
   const { data: coolerData, isLoading } = useDairyCoolerData();
 
   useEffect(() => {
-    // Filter data based on selected time range and milk type
     let data = historicalMilkData[timeRange];
     
-    // If we have cooler data, merge it with historical data
     if (coolerData) {
       console.log('Merging cooler data:', coolerData);
-      // Merge logic here - this would combine the historical data with new entries
       data = [...data, ...coolerData];
     }
 
@@ -83,55 +77,11 @@ const RawMaterialsManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Milk Storage</CardTitle>
-            <Droplet className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,800 L</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cultures</CardTitle>
-            <Beaker className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">80 units</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Additives</CardTitle>
-            <Beaker className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">650 kg</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Low Stock Alerts</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">3 items</div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Tabs defaultValue="milk" className="space-y-4">
         <TabsList>
           <TabsTrigger value="milk">Milk Inventory</TabsTrigger>
-          <TabsTrigger value="cultures">Starter Cultures</TabsTrigger>
-          <TabsTrigger value="rennet">Rennet</TabsTrigger>
-          <TabsTrigger value="additives">Additives</TabsTrigger>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="management">Item Management</TabsTrigger>
         </TabsList>
 
         <TabsContent value="milk">
@@ -203,84 +153,17 @@ const RawMaterialsManagement = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="cultures">
-          <Card>
-            <CardHeader>
-              <CardTitle>Starter Cultures Inventory</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Type</th>
-                    <th className="text-left py-2">Quantity</th>
-                    <th className="text-left py-2">Expiry Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockData.starterCultures.map((item, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="py-2">{item.type}</td>
-                      <td className="py-2">{item.quantity}</td>
-                      <td className="py-2">{item.expiryDate}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
+        <TabsContent value="dashboard">
+          <InventoryDashboard />
         </TabsContent>
 
-        <TabsContent value="rennet">
+        <TabsContent value="management">
           <Card>
             <CardHeader>
-              <CardTitle>Rennet Inventory</CardTitle>
+              <CardTitle>Item Management</CardTitle>
             </CardHeader>
             <CardContent>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Type</th>
-                    <th className="text-left py-2">Form</th>
-                    <th className="text-left py-2">Quantity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockData.rennet.map((item, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="py-2">{item.type}</td>
-                      <td className="py-2">{item.form}</td>
-                      <td className="py-2">{item.quantity}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="additives">
-          <Card>
-            <CardHeader>
-              <CardTitle>Additives Inventory</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Name</th>
-                    <th className="text-left py-2">Quantity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockData.additives.map((item, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="py-2">{item.name}</td>
-                      <td className="py-2">{item.quantity}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <p>Item management interface coming soon...</p>
             </CardContent>
           </Card>
         </TabsContent>
