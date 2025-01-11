@@ -6,20 +6,36 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Search, Trash2, Save } from "lucide-react";
+import { Plus, Search, Trash2 } from "lucide-react";
 
 const sections = [
-  "Milk Reception",
-  "Processing",
-  "Heating",
-  "Packaging",
-  "Lab",
-  "Office"
+  "Milk Reception and Initial Processing",
+  "Processing Section",
+  "Heating and Cooking",
+  "Moulding and Pressing Section",
+  "Packaging Section",
+  "Storage and Refrigeration",
+  "Lab and Quality Control",
+  "Additives and Ingredients",
+  "Office and Administration",
+  "Others (General and Safety)"
+];
+
+const initialItems = [
+  // Milk Reception and Initial Processing
+  { id: 1, itemName: "Milk Cans", section: "Milk Reception and Initial Processing", quantity: 10, unitCost: 50000, totalCost: 500000, lastUpdated: new Date().toISOString() },
+  { id: 2, itemName: "Aluminium Buckets", section: "Milk Reception and Initial Processing", quantity: 15, unitCost: 30000, totalCost: 450000, lastUpdated: new Date().toISOString() },
+  { id: 3, itemName: "Sieving Cloths", section: "Milk Reception and Initial Processing", quantity: 20, unitCost: 5000, totalCost: 100000, lastUpdated: new Date().toISOString() },
+  
+  // Processing Section
+  { id: 4, itemName: "Processing Vats (Big)", section: "Processing Section", quantity: 5, unitCost: 200000, totalCost: 1000000, lastUpdated: new Date().toISOString() },
+  { id: 5, itemName: "Processing Vats (Small)", section: "Processing Section", quantity: 8, unitCost: 150000, totalCost: 1200000, lastUpdated: new Date().toISOString() },
+  // ... Add all other items following the same pattern
 ];
 
 const ItemManagementPanel = () => {
   const { toast } = useToast();
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(initialItems);
   const [searchTerm, setSearchTerm] = useState('');
   const [newItem, setNewItem] = useState({
     itemName: '',
