@@ -5,7 +5,7 @@ export const useDairyCoolerData = () => {
   return useQuery({
     queryKey: ['dairyCoolerData'],
     queryFn: async () => {
-      console.log('Fetching dairy cooler data');
+      console.log('Fetching dairy cooler data using Supabase client');
       const { data, error } = await supabase
         .from('dairy_cooler_records')
         .select('*')
@@ -16,6 +16,7 @@ export const useDairyCoolerData = () => {
         throw error;
       }
 
+      console.log('Successfully fetched dairy cooler data:', data);
       return data;
     },
   });
