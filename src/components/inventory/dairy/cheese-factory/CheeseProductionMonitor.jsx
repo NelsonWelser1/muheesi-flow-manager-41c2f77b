@@ -16,7 +16,10 @@ const CheeseProductionMonitor = () => {
       console.log('Fetching cheese production data');
       const { data, error } = await supabase
         .from('cheese_production')
-        .select('*')
+        .select(`
+          *,
+          production_line:production_line_id(*)
+        `)
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -37,7 +40,7 @@ const CheeseProductionMonitor = () => {
     staleTime: 30000,
   });
 
-  const { data: productionStats, error: statsError } = useQuery({
+  const { data: productionStats } = useQuery({
     queryKey: ['cheeseProductionStats'],
     queryFn: async () => {
       console.log('Fetching production stats');
@@ -64,7 +67,7 @@ const CheeseProductionMonitor = () => {
     staleTime: 30000,
   });
 
-  if (error || statsError) {
+  if (error) {
     return (
       <div className="p-4 text-red-500">
         <AlertCircle className="w-6 h-6 mb-2" />
@@ -77,6 +80,12 @@ const CheeseProductionMonitor = () => {
     return <div>Loading production data...</div>;
   }
 
+  const activeBatches = productionData?.filter(batch => batch.status === 'active') || [];
+  const totalProduction = productionData?.reduce((acc, curr) => acc + (curr.yield_amount || 0), 0) || 0;
+  const averageQuality = Math.round(
+    productionData?.reduce((acc, curr) => acc + (curr.quality_score || 0), 0) / (productionData?.length || 1)
+  ) || 0;
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -86,7 +95,7 @@ const CheeseProductionMonitor = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {productionData?.filter(batch => batch.status === 'active').length || 0}
+              {activeBatches.length}
             </div>
           </CardContent>
         </Card>
@@ -97,7 +106,7 @@ const CheeseProductionMonitor = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {productionData?.reduce((acc, curr) => acc + (curr.yield_amount || 0), 0)} kg
+              {totalProduction} kg
             </div>
           </CardContent>
         </Card>
@@ -108,7 +117,7 @@ const CheeseProductionMonitor = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {Math.round(productionData?.reduce((acc, curr) => acc + (curr.quality_score || 0), 0) / (productionData?.length || 1))}%
+              {averageQuality}%
             </div>
           </CardContent>
         </Card>
@@ -121,7 +130,7 @@ const CheeseProductionMonitor = () => {
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <RechartsLineChart data={productionStats}>
+              <RechartsLineChart data={productionStats || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
@@ -138,34 +147,38 @@ const CheeseProductionMonitor = () => {
           <CardTitle>Active Production Batches</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div>Loading production data...</div>
-          ) : (
-            <div className="space-y-4">
-              {productionData?.map((batch) => (
-                <div key={batch.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-semibold">Batch #{batch.batch_number}</h3>
-                    <Badge>{batch.status}</Badge>
+          <div className="space-y-4">
+            {activeBatches.map((batch) => (
+              <div key={batch.id} className="border rounded-lg p-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold">Batch #{batch.batch_number}</h3>
+                  <Badge>{batch.status}</Badge>
+                </div>
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  <div className="flex items-center gap-2">
+                    <Thermometer className="h-4 w-4" />
+                    <span>{batch.temperature}°C</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 mt-4">
-                    <div className="flex items-center gap-2">
-                      <Thermometer className="h-4 w-4" />
-                      <span>{batch.temperature}°C</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Timer className="h-4 w-4" />
-                      <span>{batch.duration} hrs</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4" />
-                      <span>{batch.ph_level} pH</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Timer className="h-4 w-4" />
+                    <span>{batch.duration} hrs</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{batch.ph_level} pH</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+                {batch.production_line && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    Line: {batch.production_line.name} | Manager: {batch.production_line.manager}
+                  </div>
+                )}
+              </div>
+            ))}
+            {activeBatches.length === 0 && (
+              <p className="text-center text-gray-500">No active batches at the moment</p>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
