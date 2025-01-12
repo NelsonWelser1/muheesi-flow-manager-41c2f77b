@@ -1,79 +1,96 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, Clock, Calendar } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Users, UserCheck, Clock, AlertCircle } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-const mockAttendanceData = [
-  { department: 'Production', present: 25, total: 30 },
-  { department: 'Packaging', present: 15, total: 18 },
-  { department: 'Quality', present: 8, total: 10 },
-  { department: 'Logistics', present: 12, total: 15 },
+const mockShiftData = [
+  { id: 1, name: "John Doe", role: "Production Manager", shift: "Morning", status: "Active" },
+  { id: 2, name: "Jane Smith", role: "Quality Control", shift: "Morning", status: "Active" },
+  { id: 3, name: "Mike Johnson", role: "Operator", shift: "Afternoon", status: "Upcoming" },
+  { id: 4, name: "Sarah Wilson", role: "Packaging", shift: "Night", status: "Upcoming" },
 ];
 
 const PersonnelDashboard = () => {
-  console.log('Rendering PersonnelDashboard');
-  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">73</div>
+            <div className="text-2xl font-bold">42</div>
+            <p className="text-xs text-muted-foreground">Active employees</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Present Today</CardTitle>
+            <CardTitle className="text-sm font-medium">On Shift</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">60</div>
+            <div className="text-2xl font-bold">15</div>
+            <p className="text-xs text-muted-foreground">Morning shift</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Shifts Active</CardTitle>
+            <CardTitle className="text-sm font-medium">Hours Worked</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2/3</div>
+            <div className="text-2xl font-bold">168h</div>
+            <p className="text-xs text-muted-foreground">This week</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Leave Requests</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5</div>
+            <div className="text-2xl font-bold">3</div>
+            <p className="text-xs text-muted-foreground">Due this week</p>
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Department Attendance</CardTitle>
+          <CardTitle>Current Shift Schedule</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mockAttendanceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="department" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="present" fill="#8884d8" name="Present" />
-                <Bar dataKey="total" fill="#82ca9d" name="Total" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Shift</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {mockShiftData.map((employee) => (
+                <TableRow key={employee.id}>
+                  <TableCell>{employee.name}</TableCell>
+                  <TableCell>{employee.role}</TableCell>
+                  <TableCell>{employee.shift}</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      employee.status === 'Active' ? 'bg-green-100 text-green-800' : 
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {employee.status}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
