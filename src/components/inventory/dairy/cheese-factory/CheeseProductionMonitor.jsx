@@ -5,9 +5,12 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { Thermometer, Timer, AlertCircle, LineChart } from 'lucide-react';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useToast } from "@/components/ui/use-toast";
 
 const CheeseProductionMonitor = () => {
-  const { data: productionData, isLoading } = useQuery({
+  const { toast } = useToast();
+
+  const { data: productionData, isLoading, error } = useQuery({
     queryKey: ['cheeseProduction'],
     queryFn: async () => {
       console.log('Fetching cheese production data');
@@ -19,27 +22,60 @@ const CheeseProductionMonitor = () => {
 
       if (error) {
         console.error('Error fetching cheese production data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch production data. Please try again later.",
+          variant: "destructive",
+        });
         throw error;
       }
 
       console.log('Cheese production data:', data);
       return data;
     },
+    retry: 2,
+    staleTime: 30000,
   });
 
-  const { data: productionStats } = useQuery({
+  const { data: productionStats, error: statsError } = useQuery({
     queryKey: ['cheeseProductionStats'],
     queryFn: async () => {
+      console.log('Fetching production stats');
       const { data, error } = await supabase
         .from('cheese_production_stats')
         .select('*')
         .order('date', { ascending: true })
         .limit(7);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching production stats:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch production statistics. Please try again later.",
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      console.log('Production stats:', data);
       return data;
     },
+    retry: 2,
+    staleTime: 30000,
   });
+
+  if (error || statsError) {
+    return (
+      <div className="p-4 text-red-500">
+        <AlertCircle className="w-6 h-6 mb-2" />
+        <p>Error loading data. Please try again later.</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return <div>Loading production data...</div>;
+  }
 
   return (
     <div className="space-y-6">
