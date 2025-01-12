@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
-import { Tool, Calendar, AlertTriangle } from 'lucide-react';
+import { Wrench, Calendar, AlertTriangle } from 'lucide-react';
 
 const MaintenanceTracker = () => {
   const { data: maintenanceData, isLoading } = useQuery({
@@ -39,7 +39,7 @@ const MaintenanceTracker = () => {
               <div key={item.id} className="border rounded-lg p-4">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <Tool className="h-5 w-5" />
+                    <Wrench className="h-5 w-5" />
                     <h3 className="font-semibold">{item.equipment_name}</h3>
                   </div>
                   <Badge 
