@@ -1,10 +1,12 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ProductionSchedule from './factory/ProductionSchedule';
 import InventoryStatus from './factory/InventoryStatus';
 import QualityControl from './factory/QualityControl';
 import ProductionForms from './factory/ProductionForms';
+import LogisticsDashboard from './logistics/LogisticsDashboard';
+import PersonnelDashboard from './personnel/PersonnelDashboard';
+import ReportsDashboard from './reports/ReportsDashboard';
 import { useFactoryOperations } from '@/integrations/supabase/hooks/useGrandBernaDairies';
 
 const DairyFactoryDashboard = () => {
@@ -50,6 +52,9 @@ const DairyFactoryDashboard = () => {
           <TabsTrigger value="inventory">Inventory Status</TabsTrigger>
           <TabsTrigger value="quality">Quality Control</TabsTrigger>
           <TabsTrigger value="production">Production Forms</TabsTrigger>
+          <TabsTrigger value="logistics">Logistics</TabsTrigger>
+          <TabsTrigger value="personnel">Personnel</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="schedule">
@@ -66,6 +71,18 @@ const DairyFactoryDashboard = () => {
 
         <TabsContent value="production">
           <ProductionForms />
+        </TabsContent>
+
+        <TabsContent value="logistics">
+          <LogisticsDashboard />
+        </TabsContent>
+
+        <TabsContent value="personnel">
+          <PersonnelDashboard />
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <ReportsDashboard />
         </TabsContent>
       </Tabs>
     </div>
