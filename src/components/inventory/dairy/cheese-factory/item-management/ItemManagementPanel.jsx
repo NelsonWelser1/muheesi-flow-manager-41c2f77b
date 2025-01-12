@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Search } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import AddItemForm from './components/AddItemForm';
+import InventoryTable from './components/InventoryTable';
+import SearchBar from './components/SearchBar';
 
 const sections = [
   "Milk Reception and Initial Processing",
@@ -187,152 +183,25 @@ const ItemManagementPanel = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add New Item</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="itemName">Item Name *</Label>
-              <Input
-                id="itemName"
-                value={newItem.itemName}
-                onChange={(e) => setNewItem({ ...newItem, itemName: e.target.value })}
-                placeholder="e.g., Milk Cans"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="section">Section *</Label>
-              <Select
-                value={newItem.section}
-                onValueChange={(value) => setNewItem({ ...newItem, section: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select section" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sections.map((section) => (
-                    <SelectItem key={section} value={section}>
-                      {section}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity *</Label>
-              <Input
-                id="quantity"
-                type="number"
-                value={newItem.quantity}
-                onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
-                placeholder="Enter quantity"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="unitCost">Unit Cost *</Label>
-              <Input
-                id="unitCost"
-                type="number"
-                value={newItem.unitCost}
-                onChange={(e) => setNewItem({ ...newItem, unitCost: e.target.value })}
-                placeholder="Enter unit cost"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="supplierDetails">Supplier Details</Label>
-              <Input
-                id="supplierDetails"
-                value={newItem.supplierDetails}
-                onChange={(e) => setNewItem({ ...newItem, supplierDetails: e.target.value })}
-                placeholder="Enter supplier details"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Input
-                id="notes"
-                value={newItem.notes}
-                onChange={(e) => setNewItem({ ...newItem, notes: e.target.value })}
-                placeholder="Add notes"
-              />
-            </div>
-          </div>
-          <Button className="mt-4" onClick={handleAddItem}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Item
-          </Button>
-        </CardContent>
-      </Card>
+      <AddItemForm
+        sections={sections}
+        newItem={newItem}
+        setNewItem={setNewItem}
+        handleAddItem={handleAddItem}
+      />
 
       <Card>
         <CardHeader>
           <CardTitle>Inventory Items</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Search className="w-4 h-4 text-gray-500" />
-            <Input
-              placeholder="Search items..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
+          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item Name</TableHead>
-                  <TableHead>Section</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Unit Cost</TableHead>
-                  <TableHead>Total Cost</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Updated</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>{item.itemName}</TableCell>
-                    <TableCell>{item.section}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>{item.unitCost}</TableCell>
-                    <TableCell>{item.totalCost}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
-                        {itemStatuses[item.status]}
-                      </span>
-                    </TableCell>
-                    <TableCell>{new Date(item.lastUpdated).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            Update Status
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-white">
-                          {Object.entries(itemStatuses).map(([key, label]) => (
-                            <DropdownMenuItem
-                              key={key}
-                              onClick={() => handleStatusChange(item.id, key)}
-                              className="cursor-pointer"
-                            >
-                              {label}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <InventoryTable
+            items={filteredItems}
+            itemStatuses={itemStatuses}
+            getStatusColor={getStatusColor}
+            handleStatusChange={handleStatusChange}
+          />
         </CardContent>
       </Card>
     </div>
