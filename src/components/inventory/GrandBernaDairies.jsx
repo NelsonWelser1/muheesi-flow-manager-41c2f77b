@@ -6,9 +6,14 @@ import ColdRoomStock from './dairy/ColdRoomStock';
 import SlaughterhouseStock from './dairy/SlaughterhouseStock';
 import SalesMarketing from './dairy/SalesMarketing';
 import CheeseFactoryDashboard from './dairy/cheese-factory/CheeseFactoryDashboard';
+import LogisticsDashboard from './dairy/logistics/LogisticsDashboard';
+import PersonnelDashboard from './dairy/personnel/PersonnelDashboard';
+import ReportsDashboard from './dairy/reports/ReportsDashboard';
 import { Milk, Factory, Snowflake, Beef, TrendingUp, Truck, Users, FileSpreadsheet, Bell } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
+
+// ... keep existing code (sections array and other constants)
 
 const GrandBernaDairies = () => {
   const [selectedSection, setSelectedSection] = useState(null);
@@ -67,23 +72,23 @@ const GrandBernaDairies = () => {
       id: 'logistics', 
       title: 'Logistics & Distribution', 
       icon: Truck, 
-      component: () => <div>Logistics Dashboard Coming Soon</div>,
-      notifications: 0,
+      component: LogisticsDashboard,
+      notifications: 2,
       status: 'operational'
     },
     { 
       id: 'personnel', 
       title: 'Personnel Management', 
       icon: Users, 
-      component: () => <div>Personnel Management Dashboard Coming Soon</div>,
-      notifications: 2,
+      component: PersonnelDashboard,
+      notifications: 1,
       status: 'operational'
     },
     { 
       id: 'reports', 
       title: 'Reports & Analytics', 
       icon: FileSpreadsheet, 
-      component: () => <div>Reports Dashboard Coming Soon</div>,
+      component: ReportsDashboard,
       notifications: 0,
       status: 'operational'
     }
