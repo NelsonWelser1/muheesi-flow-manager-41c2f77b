@@ -21,10 +21,14 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   }
 });
 
-// Test the connection
-supabase.from('cheese_production').select('count', { count: 'exact' })
-  .then(() => {
-    console.log('Successfully connected to Supabase');
+// Test the connection with proper query format
+supabase.from('cheese_production').select('*', { count: 'exact', head: true })
+  .then(({ count, error }) => {
+    if (error) {
+      console.error('Error connecting to Supabase:', error);
+    } else {
+      console.log('Successfully connected to Supabase. Table exists and is accessible.');
+    }
   })
   .catch(error => {
     console.error('Error connecting to Supabase:', error);
