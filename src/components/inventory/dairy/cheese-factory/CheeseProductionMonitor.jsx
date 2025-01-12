@@ -1,21 +1,20 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import { useToast } from "@/components/ui/use-toast";
-import ProductionMetrics from './monitor/ProductionMetrics';
-import ProductionTrends from './monitor/ProductionTrends';
-import BatchList from './monitor/BatchList';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import ProductionMetrics from '../cheese-factory/monitor/ProductionMetrics';
+import BatchList from '../cheese-factory/monitor/BatchList';
+import ProductionTrends from '../cheese-factory/monitor/ProductionTrends';
+import { Card } from "@/components/ui/card";
 
 const CheeseProductionMonitor = () => {
   console.log('Rendering CheeseProductionMonitor');
   const { toast } = useToast();
 
-  const { data: productionData, isLoading: isLoadingProduction, error: productionError } = useQuery({
+  const { data: activeBatches, isLoading: isLoadingProduction, error: productionError } = useQuery({
     queryKey: ['cheeseProduction'],
     queryFn: async () => {
-      console.log('Fetching cheese production data');
+      console.log('Fetching cheese production data...');
       try {
         const { data, error } = await supabase
           .from('cheese_production')
@@ -33,10 +32,10 @@ const CheeseProductionMonitor = () => {
           throw error;
         }
 
-        console.log('Cheese production data:', data);
-        return data || [];
+        console.log('Successfully fetched cheese production data:', data);
+        return data;
       } catch (error) {
-        console.error('Failed to fetch cheese production data:', error);
+        console.error('Error in cheese production query:', error);
         throw error;
       }
     },
@@ -47,14 +46,14 @@ const CheeseProductionMonitor = () => {
   });
 
   const { data: productionStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['cheeseProductionStats'],
+    queryKey: ['productionStats'],
     queryFn: async () => {
-      console.log('Fetching production stats');
+      console.log('Fetching production stats...');
       try {
         const { data, error } = await supabase
           .from('cheese_production_stats')
           .select('*')
-          .order('date', { ascending: true })
+          .order('date', { ascending: false })
           .limit(7);
 
         if (error) {
@@ -67,10 +66,10 @@ const CheeseProductionMonitor = () => {
           throw error;
         }
 
-        console.log('Production stats:', data);
-        return data || [];
+        console.log('Successfully fetched production stats:', data);
+        return data;
       } catch (error) {
-        console.error('Failed to fetch production stats:', error);
+        console.error('Error in production stats query:', error);
         throw error;
       }
     },
@@ -81,41 +80,38 @@ const CheeseProductionMonitor = () => {
   });
 
   if (productionError) {
-    console.error('Production error:', productionError);
     return (
-      <Alert variant="destructive">
-        <AlertDescription>
-          Failed to fetch production data. Please try again later.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (isLoadingProduction || isLoadingStats) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="p-4">
+        <p className="text-red-500">Error loading production data. Please try again later.</p>
       </div>
     );
   }
 
-  const activeBatches = productionData?.filter(batch => batch.status === 'active') || [];
-  const totalProduction = productionData?.reduce((acc, curr) => acc + (curr.yield_amount || 0), 0) || 0;
-  const averageQuality = Math.round(
-    productionData?.reduce((acc, curr) => acc + (curr.quality_score || 0), 0) / (productionData?.length || 1)
-  ) || 0;
+  if (isLoadingProduction || isLoadingStats) {
+    return <div className="p-4">Loading production data...</div>;
+  }
 
   return (
-    <div className="space-y-6">
-      <ProductionMetrics 
-        activeBatches={activeBatches}
-        totalProduction={totalProduction}
-        averageQuality={averageQuality}
-      />
+    <div className="space-y-6 p-4">
+      <h2 className="text-2xl font-bold">Cheese Production Monitor</h2>
       
-      <ProductionTrends productionStats={productionStats} />
-      
-      <BatchList activeBatches={activeBatches} />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <ProductionMetrics 
+          activeBatches={activeBatches || []}
+          totalProduction={productionStats?.[0]?.production_amount || 0}
+          averageQuality={85}
+        />
+      </div>
+
+      <Card className="p-4">
+        <h3 className="text-lg font-semibold mb-4">Active Production Batches</h3>
+        <BatchList activeBatches={activeBatches || []} />
+      </Card>
+
+      <Card className="p-4">
+        <h3 className="text-lg font-semibold mb-4">Production Trends</h3>
+        <ProductionTrends productionStats={productionStats || []} />
+      </Card>
     </div>
   );
 };
