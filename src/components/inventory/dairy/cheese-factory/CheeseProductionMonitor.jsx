@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
-import { Thermometer, Timer, AlertCircle } from 'lucide-react';
+import { Thermometer, Timer, AlertCircle, LineChart } from 'lucide-react';
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const CheeseProductionMonitor = () => {
   const { data: productionData, isLoading } = useQuery({
@@ -26,8 +27,76 @@ const CheeseProductionMonitor = () => {
     },
   });
 
+  const { data: productionStats } = useQuery({
+    queryKey: ['cheeseProductionStats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cheese_production_stats')
+        .select('*')
+        .order('date', { ascending: true })
+        .limit(7);
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Active Batches</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {productionData?.filter(batch => batch.status === 'active').length || 0}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Daily Production</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {productionData?.reduce((acc, curr) => acc + (curr.yield_amount || 0), 0)} kg
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">Quality Score</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {Math.round(productionData?.reduce((acc, curr) => acc + (curr.quality_score || 0), 0) / (productionData?.length || 1))}%
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Production Trends</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsLineChart data={productionStats}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="production_amount" stroke="#8884d8" name="Production (kg)" />
+              </RechartsLineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Active Production Batches</CardTitle>
