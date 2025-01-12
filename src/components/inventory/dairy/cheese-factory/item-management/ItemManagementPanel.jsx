@@ -22,6 +22,16 @@ const sections = [
   "Others (General and Safety)"
 ];
 
+const itemStatuses = {
+  'good': 'Good for Service',
+  'fair': 'Fair for Service',
+  'bad': 'Bad for Service',
+  'out': 'Out of Service',
+  'repair': 'Out for Repair & Maintenance',
+  'used': 'Used-up',
+  'need': 'More Needed'
+};
+
 const initialItems = [
   { id: 1, itemName: "Milk Cans", section: "Milk Reception and Initial Processing", quantity: 10, unitCost: 50000, totalCost: 500000, lastUpdated: new Date().toISOString() },
   { id: 2, itemName: "Aluminium Buckets", section: "Milk Reception and Initial Processing", quantity: 15, unitCost: 30000, totalCost: 450000, lastUpdated: new Date().toISOString() },
@@ -88,16 +98,6 @@ const initialItems = [
   { id: 63, itemName: "Gumboots", section: "Others (General and Safety)", quantity: 15, unitCost: 30000, totalCost: 450000, lastUpdated: new Date().toISOString() },
   { id: 64, itemName: "Wall Clock", section: "Others (General and Safety)", quantity: 3, unitCost: 20000, totalCost: 60000, lastUpdated: new Date().toISOString() }
 ];
-
-const itemStatuses = {
-  'good': 'Good for Service',
-  'fair': 'Fair for Service',
-  'bad': 'Bad for Service',
-  'out': 'Out of Service',
-  'repair': 'Out for Repair & Maintenance',
-  'used': 'Used-up',
-  'need': 'More Needed'
-};
 
 const ItemManagementPanel = () => {
   const { toast } = useToast();
@@ -167,11 +167,6 @@ const ItemManagementPanel = () => {
     });
   };
 
-  const filteredItems = items.filter(item =>
-    item.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.section.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const getStatusColor = (status) => {
     const colors = {
       good: 'bg-green-100 text-green-800',
@@ -184,6 +179,11 @@ const ItemManagementPanel = () => {
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
+
+  const filteredItems = items.filter(item =>
+    item.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.section.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
