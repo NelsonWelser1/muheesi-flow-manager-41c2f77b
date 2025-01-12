@@ -19,15 +19,17 @@ const CheeseProductionMonitor = () => {
       try {
         const { data, error } = await supabase
           .from('cheese_production')
-          .select(`
-            *,
-            production_line:production_line_id(*)
-          `)
+          .select('*, production_line:production_line_id(*)')
           .order('created_at', { ascending: false })
           .limit(5);
 
         if (error) {
           console.error('Error fetching cheese production data:', error);
+          toast({
+            variant: "destructive",
+            title: "Error fetching production data",
+            description: error.message
+          });
           throw error;
         }
 
@@ -41,7 +43,7 @@ const CheeseProductionMonitor = () => {
     retry: 1,
     staleTime: 30000,
     refetchOnWindowFocus: false,
-    enabled: true // Only fetch when component mounts
+    enabled: true
   });
 
   const { data: productionStats, isLoading: isLoadingStats } = useQuery({
@@ -57,6 +59,11 @@ const CheeseProductionMonitor = () => {
 
         if (error) {
           console.error('Error fetching production stats:', error);
+          toast({
+            variant: "destructive",
+            title: "Error fetching production stats",
+            description: error.message
+          });
           throw error;
         }
 
@@ -70,7 +77,7 @@ const CheeseProductionMonitor = () => {
     retry: 1,
     staleTime: 30000,
     refetchOnWindowFocus: false,
-    enabled: true // Only fetch when component mounts
+    enabled: true
   });
 
   if (productionError) {
