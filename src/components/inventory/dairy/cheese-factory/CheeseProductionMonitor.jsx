@@ -7,61 +7,77 @@ import ProductionTrends from './monitor/ProductionTrends';
 import BatchList from './monitor/BatchList';
 
 const CheeseProductionMonitor = () => {
+  console.log('Rendering CheeseProductionMonitor');
   const { toast } = useToast();
 
-  const { data: productionData, isLoading, error } = useQuery({
+  const { data: productionData, isLoading: isLoadingProduction, error: productionError } = useQuery({
     queryKey: ['cheeseProduction'],
     queryFn: async () => {
       console.log('Fetching cheese production data');
-      const { data, error } = await supabase
-        .from('cheese_production')
-        .select(`
-          *,
-          production_line:production_line_id(*)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      try {
+        const { data, error } = await supabase
+          .from('cheese_production')
+          .select(`
+            *,
+            production_line:production_line_id(*)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(5);
 
-      if (error) {
-        console.error('Error fetching cheese production data:', error);
+        if (error) {
+          console.error('Error fetching cheese production data:', error);
+          throw error;
+        }
+
+        console.log('Cheese production data:', data);
+        return data || [];
+      } catch (error) {
+        console.error('Error in production data query:', error);
         throw error;
       }
-
-      console.log('Cheese production data:', data);
-      return data;
     },
+    retry: 1,
+    staleTime: 30000, // Cache data for 30 seconds
   });
 
-  const { data: productionStats } = useQuery({
+  const { data: productionStats, isLoading: isLoadingStats } = useQuery({
     queryKey: ['cheeseProductionStats'],
     queryFn: async () => {
       console.log('Fetching production stats');
-      const { data, error } = await supabase
-        .from('cheese_production_stats')
-        .select('*')
-        .order('date', { ascending: true })
-        .limit(7);
+      try {
+        const { data, error } = await supabase
+          .from('cheese_production_stats')
+          .select('*')
+          .order('date', { ascending: true })
+          .limit(7);
 
-      if (error) {
-        console.error('Error fetching production stats:', error);
+        if (error) {
+          console.error('Error fetching production stats:', error);
+          throw error;
+        }
+
+        console.log('Production stats:', data);
+        return data || [];
+      } catch (error) {
+        console.error('Error in production stats query:', error);
         throw error;
       }
-
-      console.log('Production stats:', data);
-      return data;
     },
+    retry: 1,
+    staleTime: 30000,
   });
 
-  if (error) {
+  if (productionError) {
+    console.error('Production error:', productionError);
     toast({
       title: "Error",
       description: "Failed to fetch production data. Please try again later.",
       variant: "destructive",
     });
-    return null;
+    return <div>Error loading production data. Please try again later.</div>;
   }
 
-  if (isLoading) {
+  if (isLoadingProduction || isLoadingStats) {
     return <div>Loading production data...</div>;
   }
 
