@@ -72,8 +72,14 @@ const ItemManagementPanel = () => {
       const { data, error } = await supabase
         .from('inventory_items')
         .insert([{
-          ...itemData,
+          item_name: itemData.itemName,
+          section: itemData.section,
+          quantity: Number(itemData.quantity),
+          unit_cost: Number(itemData.unitCost),
           total_cost: Number(itemData.quantity) * Number(itemData.unitCost),
+          supplier_details: itemData.supplierDetails,
+          notes: itemData.notes,
+          status: itemData.status,
           procurement_date: new Date().toISOString()
         }])
         .select();
