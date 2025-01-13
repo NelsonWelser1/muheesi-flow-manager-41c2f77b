@@ -8,6 +8,14 @@ const handleSupabaseResponse = async (promise) => {
   return data;
 };
 
+// Add the missing hook
+export const useGrandBernaDairy = () => useQuery({
+  queryKey: ['grandBernaDairy'],
+  queryFn: () => handleSupabaseResponse(
+    supabase.from('grand_berna_dairy').select('*')
+  ),
+});
+
 // Production Batches
 export const useProductionBatches = () => useQuery({
   queryKey: ['productionBatches'],
