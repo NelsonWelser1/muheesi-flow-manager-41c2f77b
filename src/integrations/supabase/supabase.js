@@ -18,11 +18,18 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   },
   db: {
     schema: 'public'
+  },
+  global: {
+    headers: {
+      'Content-Type': 'application/json'
+    }
   }
 });
 
 // Test the connection with proper query format
-supabase.from('cheese_production').select('*', { count: 'exact', head: true })
+supabase
+  .from('cheese_production')
+  .select('*', { count: 'exact', head: true })
   .then(({ count, error }) => {
     if (error) {
       console.error('Error connecting to Supabase:', error);
