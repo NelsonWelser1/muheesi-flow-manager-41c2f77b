@@ -6,6 +6,8 @@ import ProductionMetrics from '../cheese-factory/monitor/ProductionMetrics';
 import BatchList from '../cheese-factory/monitor/BatchList';
 import ProductionTrends from '../cheese-factory/monitor/ProductionTrends';
 import { Card } from "@/components/ui/card";
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const CheeseProductionMonitor = () => {
   console.log('Rendering CheeseProductionMonitor');
@@ -24,11 +26,6 @@ const CheeseProductionMonitor = () => {
 
         if (error) {
           console.error('Error fetching cheese production data:', error);
-          toast({
-            variant: "destructive",
-            title: "Error fetching production data",
-            description: error.message
-          });
           throw error;
         }
 
@@ -39,10 +36,16 @@ const CheeseProductionMonitor = () => {
         throw error;
       }
     },
-    retry: 1,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
-    enabled: true
+    retry: 2,
+    retryDelay: 1000,
+    onError: (error) => {
+      console.error('Query error:', error);
+      toast({
+        variant: "destructive",
+        title: "Error fetching production data",
+        description: error.message || "Please check your connection and try again"
+      });
+    }
   });
 
   const { data: productionStats, isLoading: isLoadingStats } = useQuery({
@@ -58,11 +61,6 @@ const CheeseProductionMonitor = () => {
 
         if (error) {
           console.error('Error fetching production stats:', error);
-          toast({
-            variant: "destructive",
-            title: "Error fetching production stats",
-            description: error.message
-          });
           throw error;
         }
 
@@ -73,16 +71,26 @@ const CheeseProductionMonitor = () => {
         throw error;
       }
     },
-    retry: 1,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
-    enabled: true
+    retry: 2,
+    retryDelay: 1000,
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error fetching production stats",
+        description: error.message || "Please check your connection and try again"
+      });
+    }
   });
 
   if (productionError) {
     return (
       <div className="p-4">
-        <p className="text-red-500">Error loading production data. Please try again later.</p>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Unable to load production data. Please check your connection and try again.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
