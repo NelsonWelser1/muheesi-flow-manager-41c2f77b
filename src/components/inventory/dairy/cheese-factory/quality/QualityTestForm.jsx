@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation } from '@tanstack/react-query';
@@ -62,6 +62,9 @@ const QualityTestForm = () => {
 
   return (
     <Card>
+      <CardHeader>
+        <CardTitle>Submit Quality Test Report</CardTitle>
+      </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-6">

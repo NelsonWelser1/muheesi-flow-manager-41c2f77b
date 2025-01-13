@@ -9,18 +9,25 @@ CREATE TABLE IF NOT EXISTS quality_reports (
     ph_level FLOAT NOT NULL,
     moisture_content FLOAT NOT NULL,
     salt_content FLOAT NOT NULL,
+    temperature FLOAT,
+    density FLOAT,
+    fat_content FLOAT,
     texture_score INTEGER NOT NULL,
     flavor_score INTEGER NOT NULL,
+    texture_type TEXT,
+    flavor_profile TEXT,
     report_type TEXT NOT NULL,
     recipient_level TEXT NOT NULL,
     notes TEXT,
     test_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Add indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_quality_reports_batch ON quality_reports(batch_number);
 CREATE INDEX IF NOT EXISTS idx_quality_reports_date ON quality_reports(test_date);
+CREATE INDEX IF NOT EXISTS idx_quality_reports_type ON quality_reports(cheese_type);
 
 -- Enable RLS
 ALTER TABLE quality_reports ENABLE ROW LEVEL SECURITY;
@@ -31,3 +38,17 @@ CREATE POLICY "Allow authenticated read access" ON quality_reports
 
 CREATE POLICY "Allow authenticated insert" ON quality_reports
     FOR INSERT TO authenticated WITH CHECK (true);
+
+-- Add trigger for updating the updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_quality_reports_updated_at
+    BEFORE UPDATE ON quality_reports
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
