@@ -100,3 +100,11 @@ export const useColdRoomManagement = () => useQuery({
     supabase.from('cold_room_inventory').select('*')
   ),
 });
+
+// Add the missing Dairy Sales Records hook
+export const useDairySalesRecords = () => useQuery({
+  queryKey: ['dairySalesRecords'],
+  queryFn: () => handleSupabaseResponse(
+    supabase.from('dairy_sales_records').select('*').order('created_at', { ascending: false })
+  ),
+});
