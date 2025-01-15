@@ -1,91 +1,123 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, AlertTriangle } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useToast } from "@/components/ui/use-toast";
+import { Progress } from "@/components/ui/progress";
 
-const mockBudgets = [
-  {
-    id: 1,
-    department: 'Marketing',
-    allocated: 50000,
-    spent: 35000,
-    remaining: 15000,
-    status: 'On Track',
-  },
-  {
-    id: 2,
-    department: 'Production',
-    allocated: 80000,
-    spent: 75000,
-    remaining: 5000,
-    status: 'Warning',
-  },
-  {
-    id: 3,
-    department: 'R&D',
-    allocated: 30000,
-    spent: 20000,
-    remaining: 10000,
-    status: 'On Track',
-  },
+const departments = [
+  'Marketing',
+  'Sales',
+  'Operations',
+  'Research & Development',
+  'Human Resources',
+  'IT',
+  'Finance'
 ];
 
 const BudgetManagement = () => {
+  const [budgets, setBudgets] = useState([]);
+  const [newBudget, setNewBudget] = useState({
+    department: '',
+    allocated: '',
+    spent: '',
+    fiscalYear: new Date().getFullYear()
+  });
+  const { toast } = useToast();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Creating new budget allocation:', newBudget);
+    
+    setBudgets([...budgets, { 
+      ...newBudget, 
+      id: Date.now(),
+      allocated: parseFloat(newBudget.allocated),
+      spent: parseFloat(newBudget.spent) || 0
+    }]);
+    
+    setNewBudget({
+      department: '',
+      allocated: '',
+      spent: '',
+      fiscalYear: new Date().getFullYear()
+    });
+    
+    toast({
+      title: "Success",
+      description: "Budget allocation created successfully",
+    });
+  };
+
+  const calculateProgress = (spent, allocated) => {
+    return (spent / allocated) * 100;
+  };
+
+  const getProgressColor = (progress) => {
+    if (progress >= 90) return "bg-red-500";
+    if (progress >= 70) return "bg-yellow-500";
+    return "bg-green-500";
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Budget Allocation</CardTitle>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              New Budget
-            </Button>
-          </div>
+          <CardTitle>Budget Allocation</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="department">Department</Label>
-                <Select>
+                <Select
+                  value={newBudget.department}
+                  onValueChange={(value) => setNewBudget({ ...newBudget, department: value })}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select department" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="marketing">Marketing</SelectItem>
-                    <SelectItem value="production">Production</SelectItem>
-                    <SelectItem value="rd">R&D</SelectItem>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="amount">Budget Amount</Label>
-                <Input id="amount" type="number" placeholder="Enter amount" />
+                <Label htmlFor="allocated">Allocated Budget (UGX)</Label>
+                <Input
+                  id="allocated"
+                  type="number"
+                  value={newBudget.allocated}
+                  onChange={(e) => setNewBudget({ ...newBudget, allocated: e.target.value })}
+                  required
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="period">Budget Period</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
-                    <SelectItem value="annual">Annual</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="spent">Current Expenditure (UGX)</Label>
+                <Input
+                  id="spent"
+                  type="number"
+                  value={newBudget.spent}
+                  onChange={(e) => setNewBudget({ ...newBudget, spent: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Input id="notes" placeholder="Add notes" />
+                <Label htmlFor="fiscalYear">Fiscal Year</Label>
+                <Input
+                  id="fiscalYear"
+                  type="number"
+                  value={newBudget.fiscalYear}
+                  onChange={(e) => setNewBudget({ ...newBudget, fiscalYear: e.target.value })}
+                  required
+                />
               </div>
             </div>
+            <Button type="submit" className="w-full">Create Budget Allocation</Button>
           </form>
         </CardContent>
       </Card>
@@ -99,43 +131,35 @@ const BudgetManagement = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Department</TableHead>
-                <TableHead>Allocated</TableHead>
+                <TableHead>Allocated Budget</TableHead>
                 <TableHead>Spent</TableHead>
                 <TableHead>Remaining</TableHead>
-                <TableHead>Usage</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Progress</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockBudgets.map((budget) => (
-                <TableRow key={budget.id}>
-                  <TableCell>{budget.department}</TableCell>
-                  <TableCell>${budget.allocated.toLocaleString()}</TableCell>
-                  <TableCell>${budget.spent.toLocaleString()}</TableCell>
-                  <TableCell>${budget.remaining.toLocaleString()}</TableCell>
-                  <TableCell className="w-[200px]">
-                    <div className="space-y-1">
-                      <Progress 
-                        value={(budget.spent / budget.allocated) * 100} 
-                        className={budget.status === 'Warning' ? 'bg-red-100' : ''}
-                      />
-                      <p className="text-xs text-gray-500">
-                        {((budget.spent / budget.allocated) * 100).toFixed(1)}% used
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {budget.status === 'Warning' ? (
-                      <div className="flex items-center text-yellow-600">
-                        <AlertTriangle className="h-4 w-4 mr-1" />
-                        {budget.status}
+              {budgets.map((budget) => {
+                const progress = calculateProgress(budget.spent, budget.allocated);
+                const remaining = budget.allocated - budget.spent;
+                
+                return (
+                  <TableRow key={budget.id}>
+                    <TableCell>{budget.department}</TableCell>
+                    <TableCell>UGX {budget.allocated.toLocaleString()}</TableCell>
+                    <TableCell>UGX {budget.spent.toLocaleString()}</TableCell>
+                    <TableCell>UGX {remaining.toLocaleString()}</TableCell>
+                    <TableCell className="w-[200px]">
+                      <div className="space-y-1">
+                        <Progress
+                          value={progress}
+                          className={getProgressColor(progress)}
+                        />
+                        <span className="text-xs text-gray-500">{progress.toFixed(1)}% spent</span>
                       </div>
-                    ) : (
-                      <span className="text-green-600">{budget.status}</span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
