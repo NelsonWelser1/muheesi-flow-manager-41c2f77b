@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Home, LogOut, Clock } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import InventoryAlerts from '../components/inventory/alerts/InventoryAlerts';
+import InventoryMovements from '../components/inventory/tracking/InventoryMovements';
+import InventoryAnalytics from '../components/inventory/analytics/InventoryAnalytics';
 
 const companies = [
   {
@@ -95,11 +98,19 @@ const ManageInventory = () => {
           </div>
         </div>
 
-        <Card className="w-full">
-          <CardContent className="p-6">
-            <UpdateStock defaultTab={selectedCompany.component} />
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card className="w-full">
+            <CardContent className="p-6">
+              <UpdateStock defaultTab={selectedCompany.component} />
+            </CardContent>
+          </Card>
+
+          <InventoryAlerts />
+          
+          <InventoryAnalytics />
+          
+          <InventoryMovements />
+        </div>
       </div>
     );
   }
