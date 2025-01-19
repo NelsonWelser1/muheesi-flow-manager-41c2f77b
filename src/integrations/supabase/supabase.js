@@ -30,18 +30,16 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 const testConnection = async () => {
   try {
     console.log('Testing Supabase connection...');
-    const { data, error, status } = await supabase
-      .from('cheese_production')
-      .select('count', { count: 'exact', head: true });
-
-    if (error) {
-      console.error('Error connecting to Supabase:', error);
-      console.error('Status code:', status);
-      throw error;
+    // First test basic connectivity
+    const { data: healthCheck } = await supabase.rpc('pg_stat_database');
+    
+    if (healthCheck) {
+      console.log('Successfully connected to Supabase');
+      return true;
     }
-
-    console.log('Successfully connected to Supabase. Database is accessible.');
-    return true;
+    
+    console.error('Could not verify Supabase connection');
+    return false;
   } catch (error) {
     console.error('Failed to connect to Supabase:', error);
     console.error('Please check your Supabase configuration and network connection');
