@@ -30,14 +30,18 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 const testConnection = async () => {
   try {
     console.log('Testing Supabase connection...');
-    // Simple health check by trying to get system time
+    
+    // First check if we can connect at all
     const { data, error } = await supabase
       .from('cheese_production')
-      .select('*')
-      .limit(1);
+      .select('count');
 
     if (error) {
-      console.error('Error connecting to Supabase:', error);
+      if (error.code === '42P01') {
+        console.error('Table cheese_production does not exist. Please run the migrations.');
+      } else {
+        console.error('Error connecting to Supabase:', error);
+      }
       return false;
     }
 
