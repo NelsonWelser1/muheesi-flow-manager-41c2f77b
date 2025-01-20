@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/supabase';
 import AddItemForm from './components/AddItemForm';
 import InventoryTable from './components/InventoryTable';
 import SearchBar from './components/SearchBar';
 import InventorySection from './components/InventorySection';
+import { useInventoryItems, useAddInventoryItem } from '@/hooks/useInventoryOperations';
 
 const sections = [
   "Milk Reception and Initial Processing",
@@ -33,7 +31,6 @@ const itemStatuses = {
 };
 
 const ItemManagementPanel = () => {
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [newItem, setNewItem] = useState({
     itemName: '',
@@ -45,72 +42,8 @@ const ItemManagementPanel = () => {
     status: 'pending'
   });
 
-  const queryClient = useQueryClient();
-
-  const { data: items = [], isLoading } = useQuery({
-    queryKey: ['inventoryItems'],
-    queryFn: async () => {
-      console.log('Fetching inventory items...');
-      const { data, error } = await supabase
-        .from('inventory_items')
-        .select('*')
-        .order('procurement_date', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching inventory items:', error);
-        throw error;
-      }
-      
-      return data || [];
-    }
-  });
-
-  const addItemMutation = useMutation({
-    mutationFn: async (itemData) => {
-      console.log('Adding new item:', itemData);
-      const { data, error } = await supabase
-        .from('inventory_items')
-        .insert([{
-          item_name: itemData.itemName,
-          section: itemData.section,
-          quantity: Number(itemData.quantity),
-          unit_cost: Number(itemData.unitCost),
-          total_cost: Number(itemData.quantity) * Number(itemData.unitCost),
-          supplier_details: itemData.supplierDetails,
-          notes: itemData.notes,
-          status: 'pending',
-          procurement_date: new Date().toISOString()
-        }])
-        .select();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['inventoryItems']);
-      toast({
-        title: "Success",
-        description: "Item added successfully and pending review"
-      });
-      setNewItem({
-        itemName: '',
-        section: '',
-        quantity: '',
-        unitCost: '',
-        supplierDetails: '',
-        notes: '',
-        status: 'pending'
-      });
-    },
-    onError: (error) => {
-      console.error('Error in mutation:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add item. Please try again.",
-        variant: "destructive"
-      });
-    }
-  });
+  const { data: items = [], isLoading } = useInventoryItems();
+  const addItemMutation = useAddInventoryItem();
 
   const filteredItems = items.filter(item =>
     item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
