@@ -24,6 +24,8 @@ export const useCheeseProduction = () => {
       console.error('Error in cheese production query:', error);
       throw error;
     }
+    
+    console.log('Cheese production data:', data);
     return data;
   };
 
@@ -48,6 +50,8 @@ export const useProductionStats = () => {
       console.error('Error in production stats query:', error);
       throw error;
     }
+    
+    console.log('Production stats data:', data);
     return data;
   };
 
