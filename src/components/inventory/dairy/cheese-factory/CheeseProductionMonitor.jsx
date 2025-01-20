@@ -6,7 +6,7 @@ import ProductionMetrics from '../cheese-factory/monitor/ProductionMetrics';
 import BatchList from '../cheese-factory/monitor/BatchList';
 import ProductionTrends from '../cheese-factory/monitor/ProductionTrends';
 import { Card } from "@/components/ui/card";
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const CheeseProductionMonitor = () => {
@@ -20,7 +20,15 @@ const CheeseProductionMonitor = () => {
       try {
         const { data, error } = await supabase
           .from('cheese_production')
-          .select('*, production_line:production_line_id(*)')
+          .select(`
+            *,
+            production_line:production_line_id (
+              id,
+              name,
+              status,
+              manager
+            )
+          `)
           .order('created_at', { ascending: false })
           .limit(5);
 
@@ -82,6 +90,15 @@ const CheeseProductionMonitor = () => {
     }
   });
 
+  if (isLoadingProduction || isLoadingStats) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Loading production data...</span>
+      </div>
+    );
+  }
+
   if (productionError) {
     return (
       <div className="p-4">
@@ -95,10 +112,6 @@ const CheeseProductionMonitor = () => {
     );
   }
 
-  if (isLoadingProduction || isLoadingStats) {
-    return <div className="p-4">Loading production data...</div>;
-  }
-
   return (
     <div className="space-y-6 p-4">
       <h2 className="text-2xl font-bold">Cheese Production Monitor</h2>
@@ -107,7 +120,7 @@ const CheeseProductionMonitor = () => {
         <ProductionMetrics 
           activeBatches={activeBatches || []}
           totalProduction={productionStats?.[0]?.production_amount || 0}
-          averageQuality={85}
+          averageQuality={productionStats?.[0]?.quality_score || 0}
         />
       </div>
 
