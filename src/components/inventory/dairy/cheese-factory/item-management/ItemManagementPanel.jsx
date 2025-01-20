@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/supabase';
 import AddItemForm from './components/AddItemForm';
 import InventoryTable from './components/InventoryTable';
 import SearchBar from './components/SearchBar';
+import InventorySection from './components/InventorySection';
 
 const sections = [
   "Milk Reception and Initial Processing",
@@ -27,7 +28,8 @@ const itemStatuses = {
   'out': 'Out of Service',
   'repair': 'Out for Repair & Maintenance',
   'used': 'Used-up',
-  'need': 'More Needed'
+  'need': 'More Needed',
+  'pending': 'Pending Review'
 };
 
 const ItemManagementPanel = () => {
@@ -40,12 +42,11 @@ const ItemManagementPanel = () => {
     unitCost: '',
     supplierDetails: '',
     notes: '',
-    status: 'good'
+    status: 'pending'
   });
 
   const queryClient = useQueryClient();
 
-  // Fetch inventory items
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['inventoryItems'],
     queryFn: async () => {
@@ -60,12 +61,10 @@ const ItemManagementPanel = () => {
         throw error;
       }
       
-      console.log('Fetched inventory items:', data);
       return data || [];
     }
   });
 
-  // Add new item mutation
   const addItemMutation = useMutation({
     mutationFn: async (itemData) => {
       console.log('Adding new item:', itemData);
@@ -79,23 +78,19 @@ const ItemManagementPanel = () => {
           total_cost: Number(itemData.quantity) * Number(itemData.unitCost),
           supplier_details: itemData.supplierDetails,
           notes: itemData.notes,
-          status: itemData.status,
+          status: 'pending',
           procurement_date: new Date().toISOString()
         }])
         .select();
 
-      if (error) {
-        console.error('Error adding item:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['inventoryItems']);
       toast({
         title: "Success",
-        description: "Item added successfully"
+        description: "Item added successfully and pending review"
       });
       setNewItem({
         itemName: '',
@@ -104,7 +99,7 @@ const ItemManagementPanel = () => {
         unitCost: '',
         supplierDetails: '',
         notes: '',
-        status: 'good'
+        status: 'pending'
       });
     },
     onError: (error) => {
@@ -117,50 +112,11 @@ const ItemManagementPanel = () => {
     }
   });
 
-  // Update item status mutation
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, newStatus }) => {
-      const { data, error } = await supabase
-        .from('inventory_items')
-        .update({ status: newStatus })
-        .eq('id', id)
-        .select();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['inventoryItems']);
-      toast({
-        title: "Status Updated",
-        description: "Item status updated successfully"
-      });
-    }
-  });
-
-  const handleAddItem = () => {
-    if (!newItem.itemName || !newItem.section || !newItem.quantity || !newItem.unitCost) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    addItemMutation.mutate(newItem);
-  };
-
-  const handleStatusChange = (id, newStatus) => {
-    updateStatusMutation.mutate({ id, newStatus });
-  };
-
   const filteredItems = items.filter(item =>
     item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.section?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Group items by section
   const groupedItems = sections.reduce((acc, section) => {
     acc[section] = filteredItems.filter(item => item.section === section);
     return acc;
@@ -176,45 +132,18 @@ const ItemManagementPanel = () => {
         sections={sections}
         newItem={newItem}
         setNewItem={setNewItem}
-        handleAddItem={handleAddItem}
+        handleAddItem={() => addItemMutation.mutate(newItem)}
       />
 
       <div className="space-y-4">
-        {sections.map((section) => {
-          const sectionItems = groupedItems[section];
-          if (sectionItems && sectionItems.length > 0) {
-            return (
-              <Card key={section}>
-                <CardHeader>
-                  <CardTitle>{section}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {sectionItems.map((item) => (
-                      <Card key={item.id} className="bg-white shadow-sm">
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold text-lg mb-2">{item.item_name}</h3>
-                          <div className="space-y-1 text-sm">
-                            <p>Quantity: {item.quantity}</p>
-                            <p>Unit Cost: ${item.unit_cost}</p>
-                            <p>Total Cost: ${item.total_cost}</p>
-                            <p>Status: <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                              item.status === 'good' ? 'bg-green-100 text-green-800' :
-                              item.status === 'fair' ? 'bg-yellow-100 text-yellow-800' :
-                              item.status === 'bad' ? 'bg-red-100 text-red-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>{itemStatuses[item.status]}</span></p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          }
-          return null;
-        })}
+        {sections.map((section) => (
+          <InventorySection
+            key={section}
+            section={section}
+            items={groupedItems[section]}
+            itemStatuses={itemStatuses}
+          />
+        ))}
       </div>
 
       <Card>
@@ -226,7 +155,6 @@ const ItemManagementPanel = () => {
           <InventoryTable
             items={filteredItems}
             itemStatuses={itemStatuses}
-            handleStatusChange={handleStatusChange}
           />
         </CardContent>
       </Card>
