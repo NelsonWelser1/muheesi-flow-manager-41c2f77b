@@ -160,6 +160,12 @@ const ItemManagementPanel = () => {
     item.section?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Group items by section
+  const groupedItems = sections.reduce((acc, section) => {
+    acc[section] = filteredItems.filter(item => item.section === section);
+    return acc;
+  }, {});
+
   if (isLoading) {
     return <div>Loading inventory items...</div>;
   }
@@ -172,6 +178,44 @@ const ItemManagementPanel = () => {
         setNewItem={setNewItem}
         handleAddItem={handleAddItem}
       />
+
+      <div className="space-y-4">
+        {sections.map((section) => {
+          const sectionItems = groupedItems[section];
+          if (sectionItems && sectionItems.length > 0) {
+            return (
+              <Card key={section}>
+                <CardHeader>
+                  <CardTitle>{section}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {sectionItems.map((item) => (
+                      <Card key={item.id} className="bg-white shadow-sm">
+                        <CardContent className="p-4">
+                          <h3 className="font-semibold text-lg mb-2">{item.item_name}</h3>
+                          <div className="space-y-1 text-sm">
+                            <p>Quantity: {item.quantity}</p>
+                            <p>Unit Cost: ${item.unit_cost}</p>
+                            <p>Total Cost: ${item.total_cost}</p>
+                            <p>Status: <span className={`inline-block px-2 py-1 rounded-full text-xs ${
+                              item.status === 'good' ? 'bg-green-100 text-green-800' :
+                              item.status === 'fair' ? 'bg-yellow-100 text-yellow-800' :
+                              item.status === 'bad' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>{itemStatuses[item.status]}</span></p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }
+          return null;
+        })}
+      </div>
 
       <Card>
         <CardHeader>
