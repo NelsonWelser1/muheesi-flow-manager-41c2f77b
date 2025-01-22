@@ -42,8 +42,10 @@ const ItemManagementPanel = () => {
     status: 'pending'
   });
 
-  const { data: items = [], isLoading } = useInventoryItems();
+  const { data: items = [], isLoading, error } = useInventoryItems();
   const addItemMutation = useAddInventoryItem();
+
+  console.log('Current inventory items:', items);
 
   const filteredItems = items.filter(item =>
     item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -56,7 +58,11 @@ const ItemManagementPanel = () => {
   }, {});
 
   if (isLoading) {
-    return <div>Loading inventory items...</div>;
+    return <div className="flex items-center justify-center p-8">Loading inventory items...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 p-4">Error loading inventory items: {error.message}</div>;
   }
 
   return (
@@ -68,21 +74,28 @@ const ItemManagementPanel = () => {
         handleAddItem={() => addItemMutation.mutate(newItem)}
       />
 
-      <div className="space-y-4">
-        {sections.map((section) => (
-          <InventorySection
-            key={section}
-            section={section}
-            items={groupedItems[section]}
-            itemStatuses={itemStatuses}
-          />
-        ))}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Inventory Overview</CardTitle>
+          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {sections.map((section) => (
+              <InventorySection
+                key={section}
+                section={section}
+                items={groupedItems[section]}
+                itemStatuses={itemStatuses}
+              />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Inventory Items</CardTitle>
-          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+          <CardTitle>Detailed Inventory List</CardTitle>
         </CardHeader>
         <CardContent>
           <InventoryTable
