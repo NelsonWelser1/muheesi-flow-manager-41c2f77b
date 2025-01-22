@@ -44,6 +44,19 @@ const ItemManagementPanel = () => {
     status: 'good'
   });
 
+  const getStatusColor = (status) => {
+    const colors = {
+      good: 'bg-green-100 text-green-800',
+      fair: 'bg-yellow-100 text-yellow-800',
+      bad: 'bg-red-100 text-red-800',
+      out: 'bg-gray-100 text-gray-800',
+      repair: 'bg-blue-100 text-blue-800',
+      used: 'bg-purple-100 text-purple-800',
+      need: 'bg-orange-100 text-orange-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
   // Fetch items on component mount
   useEffect(() => {
     fetchItems();
@@ -55,7 +68,7 @@ const ItemManagementPanel = () => {
       const { data, error } = await supabase
         .from('inventory_items')
         .select('*')
-        .order('last_updated', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
@@ -94,7 +107,7 @@ const ItemManagementPanel = () => {
         supplier_details: newItem.supplierDetails,
         notes: newItem.notes,
         status: 'good',
-        last_updated: new Date().toISOString()
+        created_at: new Date().toISOString()
       };
 
       const { data, error } = await supabase
@@ -138,7 +151,7 @@ const ItemManagementPanel = () => {
         .from('inventory_items')
         .update({ 
           status: newStatus,
-          last_updated: new Date().toISOString()
+          created_at: new Date().toISOString()
         })
         .eq('id', id);
 
@@ -149,7 +162,7 @@ const ItemManagementPanel = () => {
           return {
             ...item,
             status: newStatus,
-            last_updated: new Date().toISOString()
+            created_at: new Date().toISOString()
           };
         }
         return item;
@@ -167,19 +180,6 @@ const ItemManagementPanel = () => {
         variant: "destructive"
       });
     }
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      good: 'bg-green-100 text-green-800',
-      fair: 'bg-yellow-100 text-yellow-800',
-      bad: 'bg-red-100 text-red-800',
-      out: 'bg-gray-100 text-gray-800',
-      repair: 'bg-blue-100 text-blue-800',
-      used: 'bg-purple-100 text-purple-800',
-      need: 'bg-orange-100 text-orange-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
   const filteredItems = items.filter(item =>
