@@ -5,6 +5,7 @@ import AddItemForm from './components/AddItemForm';
 import InventoryTable from './components/InventoryTable';
 import SearchBar from './components/SearchBar';
 import { supabase } from '@/integrations/supabase/supabase';
+import { useSupabaseAuth } from '@/integrations/supabase';
 
 const sections = [
   "Milk Reception and Initial Processing",
@@ -34,6 +35,7 @@ const ItemManagementPanel = () => {
   const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const { session } = useSupabaseAuth();
   const [newItem, setNewItem] = useState({
     itemName: '',
     section: '',
@@ -57,10 +59,11 @@ const ItemManagementPanel = () => {
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  // Fetch items on component mount
   useEffect(() => {
-    fetchItems();
-  }, []);
+    if (session) {
+      fetchItems();
+    }
+  }, [session]);
 
   const fetchItems = async () => {
     try {
@@ -110,6 +113,7 @@ const ItemManagementPanel = () => {
         created_at: new Date().toISOString()
       };
 
+      console.log('Adding item:', itemToAdd);
       const { data, error } = await supabase
         .from('inventory_items')
         .insert([itemToAdd])
@@ -117,6 +121,7 @@ const ItemManagementPanel = () => {
 
       if (error) throw error;
 
+      console.log('Added item successfully:', data);
       setItems([...(data || []), ...items]);
       setNewItem({
         itemName: '',
