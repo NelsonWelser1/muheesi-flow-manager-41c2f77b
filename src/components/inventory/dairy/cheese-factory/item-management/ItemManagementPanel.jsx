@@ -29,6 +29,19 @@ const itemStatuses = {
   'need': 'More Needed'
 };
 
+const getStatusColor = (status) => {
+  const colors = {
+    'good': 'bg-green-100 text-green-800',
+    'fair': 'bg-yellow-100 text-yellow-800',
+    'bad': 'bg-red-100 text-red-800',
+    'out': 'bg-gray-100 text-gray-800',
+    'repair': 'bg-orange-100 text-orange-800',
+    'used': 'bg-purple-100 text-purple-800',
+    'need': 'bg-blue-100 text-blue-800'
+  };
+  return colors[status] || 'bg-gray-100 text-gray-800';
+};
+
 const ItemManagementPanel = () => {
   const { toast } = useToast();
   const [items, setItems] = useState([]);
