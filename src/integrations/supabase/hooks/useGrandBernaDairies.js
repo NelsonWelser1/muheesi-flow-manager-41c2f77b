@@ -8,14 +8,6 @@ const handleSupabaseResponse = async (promise) => {
   return data;
 };
 
-// Add the missing hook
-export const useGrandBernaDairy = () => useQuery({
-  queryKey: ['grandBernaDairy'],
-  queryFn: () => handleSupabaseResponse(
-    supabase.from('grand_berna_dairy').select('*')
-  ),
-});
-
 // Production Batches
 export const useProductionBatches = () => useQuery({
   queryKey: ['productionBatches'],
@@ -98,13 +90,5 @@ export const useColdRoomManagement = () => useQuery({
   queryKey: ['coldRoomManagement'],
   queryFn: () => handleSupabaseResponse(
     supabase.from('cold_room_inventory').select('*')
-  ),
-});
-
-// Add the missing Dairy Sales Records hook
-export const useDairySalesRecords = () => useQuery({
-  queryKey: ['dairySalesRecords'],
-  queryFn: () => handleSupabaseResponse(
-    supabase.from('dairy_sales_records').select('*').order('created_at', { ascending: false })
   ),
 });

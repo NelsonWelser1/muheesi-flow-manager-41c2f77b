@@ -1,55 +1,68 @@
 import React from 'react';
-import { useCheeseProduction, useProductionStats } from '@/hooks/useCheeseProduction';
-import ProductionBatchCard from './components/ProductionBatchCard';
-import ProductionStats from './components/ProductionStats';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/supabase';
+import { Thermometer, Timer, AlertCircle } from 'lucide-react';
 
 const CheeseProductionMonitor = () => {
-  console.log('Rendering CheeseProductionMonitor');
-  
-  const { 
-    data: productionData, 
-    isLoading: isLoadingProduction,
-    error: productionError 
-  } = useCheeseProduction();
-  
-  const { 
-    data: statsData, 
-    isLoading: isLoadingStats,
-    error: statsError 
-  } = useProductionStats();
+  const { data: productionData, isLoading } = useQuery({
+    queryKey: ['cheeseProduction'],
+    queryFn: async () => {
+      console.log('Fetching cheese production data');
+      const { data, error } = await supabase
+        .from('cheese_production')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
 
-  if (isLoadingProduction || isLoadingStats) {
-    return (
-      <div className="flex justify-center items-center h-48">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
+      if (error) {
+        console.error('Error fetching cheese production data:', error);
+        throw error;
+      }
 
-  if (productionError || statsError) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>
-          {productionError?.message || statsError?.message || 'Failed to load production data'}
-        </AlertDescription>
-      </Alert>
-    );
-  }
+      console.log('Cheese production data:', data);
+      return data;
+    },
+  });
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Active Production Batches</h3>
-          {productionData?.map((batch) => (
-            <ProductionBatchCard key={batch.id} batch={batch} />
-          ))}
-        </div>
-        
-        <ProductionStats stats={statsData || []} />
-      </div>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Active Production Batches</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div>Loading production data...</div>
+          ) : (
+            <div className="space-y-4">
+              {productionData?.map((batch) => (
+                <div key={batch.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-semibold">Batch #{batch.batch_number}</h3>
+                    <Badge>{batch.status}</Badge>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 mt-4">
+                    <div className="flex items-center gap-2">
+                      <Thermometer className="h-4 w-4" />
+                      <span>{batch.temperature}°C</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Timer className="h-4 w-4" />
+                      <span>{batch.duration} hrs</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{batch.ph_level} pH</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

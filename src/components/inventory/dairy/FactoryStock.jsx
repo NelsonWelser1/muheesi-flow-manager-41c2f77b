@@ -2,7 +2,6 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, TrendingUp, AlertCircle, Factory } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import ProductionLineManagement from './production/ProductionLineManagement';
 
 const mockData = {
   inventory: [
@@ -25,8 +24,6 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
 const FactoryStock = () => {
   return (
     <div className="space-y-6">
-      <ProductionLineManagement />
-      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
