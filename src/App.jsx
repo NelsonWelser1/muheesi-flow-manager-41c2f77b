@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AutoFillProvider } from "./contexts/AutoFillContext";
 import Navigation from "./components/Navigation";
 import LandingPage from "./pages/LandingPage";
@@ -14,46 +14,32 @@ import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-bu
 import KashariFarmDashboard from "./components/inventory/kashari/KashariFarmDashboard";
 import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDairyDashboard";
 import SmartProductionDashboard from "./components/inventory/dairy/production/SmartProductionDashboard";
-import MarketingDashboard from "./components/marketing/MarketingDashboard";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-const App = () => {
-  console.log('App component rendered');
-  
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AutoFillProvider>
-        <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
-            <Navigation />
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/manage-inventory" element={<ManageInventory />} />
-              <Route path="/manage-companies" element={<ManageCompanies />} />
-              <Route path="/feedback" element={<Feedback />} />
-              <Route path="/marketing" element={<MarketingDashboard />} />
-              <Route path="/manage-inventory/kajon-export" element={<ExportManagementDashboard />} />
-              <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
-              <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
-              <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
-              <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AutoFillProvider>
-    </QueryClientProvider>
-  );
-};
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <AutoFillProvider>
+      <TooltipProvider>
+        <Toaster />
+        <BrowserRouter>
+          <Navigation />
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/manage-inventory" element={<ManageInventory />} />
+            <Route path="/manage-companies" element={<ManageCompanies />} />
+            <Route path="/feedback" element={<Feedback />} />
+            <Route path="/manage-inventory/kajon-export" element={<ExportManagementDashboard />} />
+            <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
+            <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
+            <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
+            <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AutoFillProvider>
+  </QueryClientProvider>
+);
 
 export default App;

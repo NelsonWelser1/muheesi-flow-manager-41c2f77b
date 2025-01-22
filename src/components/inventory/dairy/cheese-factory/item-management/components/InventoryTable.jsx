@@ -1,41 +1,38 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { format } from 'date-fns';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-const InventoryTable = ({ items, itemStatuses, handleStatusChange }) => {
+const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChange }) => {
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Item ID</TableHead>
             <TableHead>Item Name</TableHead>
             <TableHead>Section</TableHead>
             <TableHead>Quantity</TableHead>
             <TableHead>Unit Cost</TableHead>
             <TableHead>Total Cost</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Procurement Date</TableHead>
+            <TableHead>Last Updated</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.map((item) => (
             <TableRow key={item.id}>
-              <TableCell className="font-mono">{item.id.slice(0, 8)}</TableCell>
-              <TableCell>{item.item_name}</TableCell>
+              <TableCell>{item.itemName}</TableCell>
               <TableCell>{item.section}</TableCell>
               <TableCell>{item.quantity}</TableCell>
-              <TableCell>{item.unit_cost}</TableCell>
-              <TableCell>{item.total_cost}</TableCell>
+              <TableCell>{item.unitCost}</TableCell>
+              <TableCell>{item.totalCost}</TableCell>
               <TableCell>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
                   {itemStatuses[item.status]}
                 </span>
               </TableCell>
-              <TableCell>{format(new Date(item.procurement_date), 'PPpp')}</TableCell>
+              <TableCell>{new Date(item.lastUpdated).toLocaleDateString()}</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -62,19 +59,6 @@ const InventoryTable = ({ items, itemStatuses, handleStatusChange }) => {
       </Table>
     </div>
   );
-};
-
-const getStatusColor = (status) => {
-  const colors = {
-    good: 'bg-green-100 text-green-800',
-    fair: 'bg-yellow-100 text-yellow-800',
-    bad: 'bg-red-100 text-red-800',
-    out: 'bg-gray-100 text-gray-800',
-    repair: 'bg-blue-100 text-blue-800',
-    used: 'bg-purple-100 text-purple-800',
-    need: 'bg-orange-100 text-orange-800'
-  };
-  return colors[status] || 'bg-gray-100 text-gray-800';
 };
 
 export default InventoryTable;

@@ -26,35 +26,17 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   }
 });
 
-// Test the connection with proper error handling
-const testConnection = async () => {
-  try {
-    console.log('Testing Supabase connection...');
-    
-    // First check if we can connect at all
-    const { data, error } = await supabase
-      .from('cheese_production')
-      .select('count');
-
+// Test the connection with proper query format
+supabase
+  .from('cheese_production')
+  .select('*', { count: 'exact', head: true })
+  .then(({ count, error }) => {
     if (error) {
-      if (error.code === '42P01') {
-        console.error('Table cheese_production does not exist. Please run the migrations.');
-      } else {
-        console.error('Error connecting to Supabase:', error);
-      }
-      return false;
+      console.error('Error connecting to Supabase:', error);
+    } else {
+      console.log('Successfully connected to Supabase. Table exists and is accessible.');
     }
-
-    console.log('Successfully connected to Supabase');
-    return true;
-  } catch (error) {
-    console.error('Failed to connect to Supabase:', error);
-    console.error('Please check your Supabase configuration and network connection');
-    return false;
-  }
-};
-
-// Run the connection test immediately
-testConnection();
-
-export { testConnection };
+  })
+  .catch(error => {
+    console.error('Error connecting to Supabase:', error);
+  });

@@ -1,12 +1,12 @@
 import { 
   Milk, Factory, Snowflake, Beef, TrendingUp, 
-  Truck, Users, FileSpreadsheet, DollarSign 
+  Truck, Users, FileSpreadsheet 
 } from "lucide-react";
 import DairyCoolers from '../DairyCoolers';
 import FactoryStock from '../FactoryStock';
 import ColdRoomStock from '../ColdRoomStock';
 import SlaughterhouseStock from '../SlaughterhouseStock';
-import FinanceDepartmentIMS from '../FinanceDepartmentIMS';
+import SalesMarketing from '../SalesMarketing';
 import CheeseFactoryDashboard from '../cheese-factory/CheeseFactoryDashboard';
 import LogisticsDashboard from '../logistics/LogisticsDashboard';
 import PersonnelDashboard from '../personnel/PersonnelDashboard';
@@ -54,10 +54,10 @@ export const dairySections = [
     status: 'operational'
   },
   { 
-    id: 'finance', 
-    title: 'Finance Department IMS', 
-    icon: DollarSign, 
-    component: FinanceDepartmentIMS,
+    id: 'sales', 
+    title: 'Sales & Marketing', 
+    icon: TrendingUp, 
+    component: SalesMarketing,
     notifications: 1,
     status: 'operational'
   },
