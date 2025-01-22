@@ -30,7 +30,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
             <TableHead>Unit Cost</TableHead>
             <TableHead>Total Cost</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Notes</TableHead>
+            <TableHead>Last Updated</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -47,7 +47,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
                   {itemStatuses[item.status]}
                 </span>
               </TableCell>
-              <TableCell>{item.notes}</TableCell>
+              <TableCell>{new Date(item.updated_at).toLocaleDateString()}</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

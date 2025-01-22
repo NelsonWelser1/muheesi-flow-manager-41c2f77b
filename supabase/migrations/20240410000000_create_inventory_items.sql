@@ -15,43 +15,29 @@ CREATE TABLE IF NOT EXISTS inventory_items (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
--- Insert initial data from the Excel sheet
-INSERT INTO inventory_items (item_name, section, quantity, unit_cost, total_cost, status, notes) VALUES
--- Milk Reception and Initial Processing
-('Milk cans', 'Milk Reception and Initial Processing', 3, 500000.00, 1500000.00, 'good', 'Must have at the start'),
-('Aluminium buckets', 'Milk Reception and Initial Processing', 2, 100000.00, 200000.00, 'good', 'Must have at the start'),
-('Sieving cloths', 'Milk Reception and Initial Processing', 4, 30000.00, 120000.00, 'good', 'Must have at the start'),
+-- Insert initial data from the image
+INSERT INTO inventory_items (item_name, section, quantity, unit_cost, total_cost, status, updated_at) VALUES
+('Milk Cans', 'Milk Reception and Initial Processing', 10, 50000, 500000, 'good', '2023-01-22'),
+('Aluminium Buckets', 'Milk Reception and Initial Processing', 15, 30000, 450000, 'good', '2023-01-22'),
+('Sieving Cloths', 'Milk Reception and Initial Processing', 20, 5000, 100000, 'good', '2023-01-22'),
+('Processing Vats (Big)', 'Processing Section', 5, 200000, 1000000, 'good', '2023-01-22'),
+('Processing Vats (Small)', 'Processing Section', 8, 150000, 1200000, 'good', '2023-01-22'),
+('Saucepans (Big)', 'Processing Section', 4, 80000, 320000, 'good', '2023-01-22'),
+('Saucepans (Medium)', 'Processing Section', 6, 60000, 360000, 'good', '2023-01-22'),
+('Sauce Pans (Small)', 'Processing Section', 8, 40000, 320000, 'good', '2023-01-22'),
+('Plungers', 'Processing Section', 10, 15000, 150000, 'good', '2023-01-22'),
+('Mingling Sticks', 'Processing Section', 12, 10000, 120000, 'good', '2023-01-22'),
+('Basin/Plastic Buckets', 'Processing Section', 15, 20000, 300000, 'good', '2023-01-22'),
+('Knives', 'Processing Section', 8, 25000, 200000, 'good', '2023-01-22'),
+('Cheese Stretcher', 'Processing Section', 3, 100000, 300000, 'good', '2023-01-22'),
+('Charcoal Stoves', 'Heating and Cooking', 4, 150000, 600000, 'good', '2023-01-22'),
+('Stove Stands (Small)', 'Heating and Cooking', 6, 50000, 300000, 'good', '2023-01-22'),
+('Stove Stands (Big)', 'Heating and Cooking', 4, 80000, 320000, 'good', '2023-01-22');
 
--- Processing Section
-('Processing vats (Big)', 'Processing Section', 1, 0.00, 0.00, 'need', 'Needed at later stage'),
-('Processing vats (Small)', 'Processing Section', 1, 0.00, 0.00, 'need', 'Needed at later stage'),
-('Saucepans (Big)', 'Processing Section', 4, 350000.00, 1400000.00, 'good', 'Must have at the start'),
-('Saucepans (Medium)', 'Processing Section', 2, 200000.00, 400000.00, 'good', 'Must have at the start'),
-('Sauce pans (Small)', 'Processing Section', 3, 50000.00, 150000.00, 'good', 'Must have at the start'),
-
--- Lab and Quality Control
-('Test tubes', 'Lab and Quality Control', 40, 2000.00, 80000.00, 'good', 'Must have at the start'),
-('Test tube rack', 'Lab and Quality Control', 2, 5000.00, 10000.00, 'good', 'Must have at the start'),
-('Test tube holders', 'Lab and Quality Control', 2, 10000.00, 20000.00, 'good', 'Must have at the start'),
-('Milk analyser', 'Lab and Quality Control', 1, 3500000.00, 3500000.00, 'good', 'Must have at the start'),
-('Lactometer', 'Lab and Quality Control', 1, 40000.00, 40000.00, 'good', 'Must have at the start'),
-('Digital thermometer', 'Lab and Quality Control', 2, 50000.00, 100000.00, 'good', 'Must have at the start'),
-
--- Packaging Section
-('Impulse Sealer', 'Packaging Section', 1, 200000.00, 200000.00, 'good', 'Must have at the start'),
-('Vacuum sealer', 'Packaging Section', 1, 15000000.00, 15000000.00, 'need', 'Needed at later stage'),
-('Weighing scale', 'Packaging Section', 1, 350000.00, 350000.00, 'good', 'Must have at the start'),
-('Labels Mozzarella', 'Packaging Section', 15, 15000.00, 225000.00, 'good', 'Must have at the start'),
-('Labels Gouda', 'Packaging Section', 1, 0.00, 0.00, 'need', 'Needed at later stage'),
-
--- Storage and Refrigeration
-('Deep freezers', 'Storage and Refrigeration', 1, 2000000.00, 2000000.00, 'need', 'Needed at later stage'),
-('Fridge guards', 'Storage and Refrigeration', 4, 40000.00, 160000.00, 'good', 'Must have at the start'),
-('Extension cables', 'Storage and Refrigeration', 4, 35000.00, 140000.00, 'good', 'Must have at the start');
-
--- Add RLS policies
+-- Enable Row Level Security
 ALTER TABLE inventory_items ENABLE ROW LEVEL SECURITY;
 
+-- Create policies for authenticated users
 CREATE POLICY "Enable read access for all users" ON inventory_items
     FOR SELECT USING (true);
 
