@@ -5,7 +5,6 @@ import InventoryTable from './components/InventoryTable';
 import SearchBar from './components/SearchBar';
 import InventorySection from './components/InventorySection';
 import { useInventoryItems, useAddInventoryItem } from '@/hooks/useInventoryOperations';
-import { useToast } from "@/components/ui/use-toast";
 
 const sections = [
   "Milk Reception and Initial Processing",
@@ -43,14 +42,8 @@ const ItemManagementPanel = () => {
     status: 'pending'
   });
 
-  const { toast } = useToast();
-  const { data: items = [], isLoading, error } = useInventoryItems();
+  const { data: items = [], isLoading } = useInventoryItems();
   const addItemMutation = useAddInventoryItem();
-
-  console.log('ItemManagementPanel rendered with items:', items);
-  if (error) {
-    console.error('Error loading inventory items:', error);
-  }
 
   const filteredItems = items.filter(item =>
     item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -63,15 +56,7 @@ const ItemManagementPanel = () => {
   }, {});
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Loading inventory items...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center p-8 text-red-500">
-        Error loading inventory items. Please try again later.
-      </div>
-    );
+    return <div>Loading inventory items...</div>;
   }
 
   return (
@@ -80,34 +65,7 @@ const ItemManagementPanel = () => {
         sections={sections}
         newItem={newItem}
         setNewItem={setNewItem}
-        handleAddItem={() => {
-          console.log('Adding new item:', newItem);
-          addItemMutation.mutate(newItem, {
-            onSuccess: () => {
-              setNewItem({
-                itemName: '',
-                section: '',
-                quantity: '',
-                unitCost: '',
-                supplierDetails: '',
-                notes: '',
-                status: 'pending'
-              });
-              toast({
-                title: "Success",
-                description: "Item added successfully",
-              });
-            },
-            onError: (error) => {
-              console.error('Error adding item:', error);
-              toast({
-                title: "Error",
-                description: "Failed to add item. Please try again.",
-                variant: "destructive",
-              });
-            }
-          });
-        }}
+        handleAddItem={() => addItemMutation.mutate(newItem)}
       />
 
       <div className="space-y-4">
