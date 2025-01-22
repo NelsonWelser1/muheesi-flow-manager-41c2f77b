@@ -12,19 +12,19 @@ CREATE TABLE IF NOT EXISTS inventory_items (
     supplier_details TEXT,
     notes TEXT,
     status TEXT DEFAULT 'good',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
 
--- Enable RLS
+-- Enable Row Level Security
 ALTER TABLE inventory_items ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
-CREATE POLICY "Enable read access for all users" ON inventory_items
-    FOR SELECT USING (true);
+CREATE POLICY "Enable read access for authenticated users" ON inventory_items
+    FOR SELECT TO authenticated USING (true);
 
-CREATE POLICY "Enable insert for authenticated users" ON inventory_items
-    FOR INSERT WITH CHECK (true);
+CREATE POLICY "Enable insert access for authenticated users" ON inventory_items
+    FOR INSERT TO authenticated WITH CHECK (true);
 
-CREATE POLICY "Enable update for authenticated users" ON inventory_items
-    FOR UPDATE USING (true);
+CREATE POLICY "Enable update access for authenticated users" ON inventory_items
+    FOR UPDATE TO authenticated USING (true);
