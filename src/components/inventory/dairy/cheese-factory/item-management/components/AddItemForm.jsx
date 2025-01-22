@@ -15,11 +15,11 @@ const AddItemForm = ({ sections, newItem, setNewItem, handleAddItem }) => {
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="itemName">Item Name *</Label>
+            <Label htmlFor="item_name">Item Name *</Label>
             <Input
-              id="itemName"
-              value={newItem.itemName}
-              onChange={(e) => setNewItem({ ...newItem, itemName: e.target.value })}
+              id="item_name"
+              value={newItem.item_name}
+              onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })}
               placeholder="e.g., Milk Cans"
             />
           </div>
@@ -52,21 +52,21 @@ const AddItemForm = ({ sections, newItem, setNewItem, handleAddItem }) => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="unitCost">Unit Cost *</Label>
+            <Label htmlFor="unit_cost">Unit Cost *</Label>
             <Input
-              id="unitCost"
+              id="unit_cost"
               type="number"
-              value={newItem.unitCost}
-              onChange={(e) => setNewItem({ ...newItem, unitCost: e.target.value })}
+              value={newItem.unit_cost}
+              onChange={(e) => setNewItem({ ...newItem, unit_cost: e.target.value })}
               placeholder="Enter unit cost"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="supplierDetails">Supplier Details</Label>
+            <Label htmlFor="supplier_details">Supplier Details</Label>
             <Input
-              id="supplierDetails"
-              value={newItem.supplierDetails}
-              onChange={(e) => setNewItem({ ...newItem, supplierDetails: e.target.value })}
+              id="supplier_details"
+              value={newItem.supplier_details}
+              onChange={(e) => setNewItem({ ...newItem, supplier_details: e.target.value })}
               placeholder="Enter supplier details"
             />
           </div>
