@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/supabase';
 import { Wrench, Calendar, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 
 const MaintenanceTracker = () => {
-  const { data: maintenanceData, isLoading } = useQuery({
+  const { data: maintenanceData, isLoading: isLoadingMaintenance, error: maintenanceError } = useQuery({
     queryKey: ['maintenance'],
     queryFn: async () => {
       console.log('Fetching maintenance data');
@@ -21,11 +21,11 @@ const MaintenanceTracker = () => {
       }
 
       console.log('Maintenance data:', data);
-      return data;
+      return data || [];
     },
   });
 
-  const { data: maintenanceStats } = useQuery({
+  const { data: maintenanceStats, isLoading: isLoadingStats, error: statsError } = useQuery({
     queryKey: ['maintenanceStats'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -33,10 +33,26 @@ const MaintenanceTracker = () => {
         .select('*')
         .single();
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching maintenance stats:', error);
+        throw error;
+      }
+
+      return data || { completed_today: 0, equipment_health: 0, pending_maintenance: 0 };
     },
   });
+
+  if (isLoadingMaintenance || isLoadingStats) {
+    return <div className="p-4">Loading maintenance data...</div>;
+  }
+
+  if (maintenanceError || statsError) {
+    return (
+      <div className="p-4 text-red-500">
+        Error loading maintenance data. Please try again later.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
