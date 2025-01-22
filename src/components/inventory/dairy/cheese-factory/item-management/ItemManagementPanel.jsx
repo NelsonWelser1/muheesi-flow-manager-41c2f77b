@@ -32,6 +32,7 @@ const itemStatuses = {
 const ItemManagementPanel = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const { items, isLoading, addItem, updateItemStatus } = useInventoryItems();
   const [newItem, setNewItem] = useState({
     item_name: '',
     section: '',
@@ -42,7 +43,7 @@ const ItemManagementPanel = () => {
     status: 'good'
   });
 
-  const { items, isLoading, addItem, updateItemStatus } = useInventoryItems();
+  console.log('ItemManagementPanel rendered with items:', items);
 
   const handleAddItem = () => {
     if (!newItem.item_name || !newItem.section || !newItem.quantity || !newItem.unit_cost) {
@@ -125,10 +126,6 @@ const ItemManagementPanel = () => {
     item.section.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
-  if (isLoading) {
-    return <div>Loading inventory items...</div>;
-  }
-
   return (
     <div className="space-y-6">
       <AddItemForm
@@ -149,6 +146,7 @@ const ItemManagementPanel = () => {
             itemStatuses={itemStatuses}
             getStatusColor={getStatusColor}
             handleStatusChange={handleStatusChange}
+            isLoading={isLoading}
           />
         </CardContent>
       </Card>

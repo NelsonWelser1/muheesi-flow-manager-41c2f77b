@@ -3,7 +3,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChange }) => {
+const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChange, isLoading }) => {
+  console.log('Rendering InventoryTable with items:', items);
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-UG', {
       style: 'currency',
@@ -12,6 +14,10 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
       maximumFractionDigits: 0,
     }).format(amount);
   };
+
+  if (isLoading) {
+    return <div>Loading inventory items...</div>;
+  }
 
   return (
     <div className="rounded-md border">
@@ -29,7 +35,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
           </TableRow>
         </TableHeader>
         <TableBody>
-          {items.map((item) => (
+          {items?.map((item) => (
             <TableRow key={item.id}>
               <TableCell className="font-medium">{item.item_name}</TableCell>
               <TableCell>{item.section}</TableCell>
