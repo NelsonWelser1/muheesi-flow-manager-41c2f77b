@@ -38,11 +38,10 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
     return colors[urgency.toLowerCase()] || colors.medium;
   };
 
-  const generateSerialNumbers = (item) => {
+  const generateSerialNumber = (item, index) => {
     const prefix = item.item_name.substring(0, 2).toUpperCase();
-    return Array.from({ length: item.quantity }, (_, index) => 
-      `${prefix}${String(item.id).padStart(3, '0')}-${String(index + 1).padStart(3, '0')}`
-    );
+    const paddedId = String(index + 1).padStart(5, '0');
+    return `${prefix}${paddedId}`;
   };
 
   const handleSort = (key) => {
@@ -118,15 +117,13 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Serial Numbers for {item.item_name}</DialogTitle>
+                      <DialogTitle>Serial Number for {item.item_name}</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-2">
-                      {generateSerialNumbers(item).map((serial, index) => (
-                        <div key={serial} className="p-2 bg-gray-50 rounded flex justify-between">
-                          <span className="font-medium">{index + 1}.</span>
-                          <span>{serial}</span>
-                        </div>
-                      ))}
+                      <div className="p-2 bg-gray-50 rounded flex justify-between">
+                        <span className="font-medium">Serial Number:</span>
+                        <span>{generateSerialNumber(item, index)}</span>
+                      </div>
                     </div>
                   </DialogContent>
                 </Dialog>

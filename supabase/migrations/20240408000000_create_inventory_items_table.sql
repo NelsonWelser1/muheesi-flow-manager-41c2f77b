@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS inventory_items (
     notes TEXT,
     status TEXT DEFAULT 'good',
     urgency TEXT DEFAULT 'medium' NOT NULL,
-    serial_numbers TEXT[], -- Array of serial numbers
+    serial_number TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
@@ -31,9 +31,5 @@ CREATE POLICY "Enable insert access for authenticated users" ON inventory_items
 CREATE POLICY "Enable update access for authenticated users" ON inventory_items
     FOR UPDATE TO authenticated USING (true);
 
--- Insert initial data from the Excel sheet
-INSERT INTO inventory_items (item_name, section, quantity, unit_cost, total_cost, urgency, serial_numbers) VALUES
-('Milk cans', 'Milk Reception and Initial Processing', 3, 500000.00, 1500000.00, 'high', ARRAY['MC001', 'MC002', 'MC003']),
-('Aluminium buckets', 'Milk Reception and Initial Processing', 2, 100000.00, 200000.00, 'high', ARRAY['AB001', 'AB002']),
--- ... Add all other items from the Excel sheet following the same pattern
-('Wall clock', 'Others (General and Safety)', 1, 20000.00, 20000.00, 'medium', ARRAY['WC001']);
+-- Create index for serial numbers
+CREATE INDEX idx_inventory_items_serial_number ON inventory_items(serial_number);
