@@ -19,19 +19,26 @@ const SearchBar = ({ searchTerm, setSearchTerm, items }) => {
       item.quantity,
       item.unit_cost,
       item.total_cost,
+      item.supplier_details || 'N/A',
+      item.notes || 'N/A',
       item.status
     ]);
 
     doc.autoTable({
-      head: [['Item Name', 'Section', 'Quantity', 'Unit Cost', 'Total Cost', 'Status']],
+      head: [['Item Name', 'Section', 'Quantity', 'Unit Cost', 'Total Cost', 'Supplier Details', 'Notes', 'Status']],
       body: tableData,
+      styles: { fontSize: 8 },
+      columnStyles: {
+        5: { cellWidth: 30 },
+        6: { cellWidth: 30 }
+      }
     });
 
     doc.save('inventory-list.pdf');
   };
 
   const downloadCSV = () => {
-    const headers = ['Item Name', 'Section', 'Quantity', 'Unit Cost', 'Total Cost', 'Status'];
+    const headers = ['Item Name', 'Section', 'Quantity', 'Unit Cost', 'Total Cost', 'Supplier Details', 'Notes', 'Status'];
     const csvData = items.map(item => 
       [
         item.item_name,
@@ -39,6 +46,8 @@ const SearchBar = ({ searchTerm, setSearchTerm, items }) => {
         item.quantity,
         item.unit_cost,
         item.total_cost,
+        item.supplier_details || 'N/A',
+        item.notes || 'N/A',
         item.status
       ].join(',')
     );
