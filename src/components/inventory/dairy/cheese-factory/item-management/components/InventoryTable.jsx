@@ -38,12 +38,11 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
     return colors[urgency.toLowerCase()] || colors.medium;
   };
 
-  const generateSerialNumber = (item, index) => {
-    // Get the first two letters of the item name (uppercase)
+  const generateSerialNumbers = (item) => {
     const prefix = item.item_name.substring(0, 2).toUpperCase();
-    // Create a 3-digit number (padded with zeros)
-    const number = String(index + 1).padStart(3, '0');
-    return `${prefix}${number}`;
+    return Array.from({ length: item.quantity }, (_, index) => 
+      `${prefix}${String(item.id).padStart(3, '0')}-${String(index + 1).padStart(3, '0')}`
+    );
   };
 
   const handleSort = (key) => {
@@ -108,36 +107,30 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
           {sortedItems?.map((item, index) => (
             <TableRow key={item.id}>
               <TableCell className="font-medium">{index + 1}</TableCell>
-              <TableCell className="font-medium">
+              <TableCell className="font-medium">{item.item_name}</TableCell>
+              <TableCell>{item.section}</TableCell>
+              <TableCell>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="ghost" className="hover:bg-gray-100">
-                      {item.item_name} ({generateSerialNumber(item, index)})
+                      {item.quantity}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Item Details: {item.item_name}</DialogTitle>
+                      <DialogTitle>Serial Numbers for {item.item_name}</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-2">
-                      <div className="p-2 bg-gray-50 rounded flex justify-between">
-                        <span className="font-medium">Serial Number:</span>
-                        <span>{generateSerialNumber(item, index)}</span>
-                      </div>
-                      <div className="p-2 bg-gray-50 rounded flex justify-between">
-                        <span className="font-medium">Section:</span>
-                        <span>{item.section}</span>
-                      </div>
-                      <div className="p-2 bg-gray-50 rounded flex justify-between">
-                        <span className="font-medium">Quantity:</span>
-                        <span>{item.quantity}</span>
-                      </div>
+                      {generateSerialNumbers(item).map((serial, index) => (
+                        <div key={serial} className="p-2 bg-gray-50 rounded flex justify-between">
+                          <span className="font-medium">{index + 1}.</span>
+                          <span>{serial}</span>
+                        </div>
+                      ))}
                     </div>
                   </DialogContent>
                 </Dialog>
               </TableCell>
-              <TableCell>{item.section}</TableCell>
-              <TableCell>{item.quantity}</TableCell>
               <TableCell>{formatCurrency(item.unit_cost)}</TableCell>
               <TableCell>{formatCurrency(item.total_cost)}</TableCell>
               <TableCell>
