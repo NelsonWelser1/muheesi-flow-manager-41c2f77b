@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 const urgencyLevels = {
   'critical': 'Critical',
@@ -54,6 +55,18 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
     setSortConfig({ key, direction });
   };
 
+  const findDuplicateItems = (items) => {
+    const itemGroups = {};
+    items.forEach(item => {
+      const key = item.item_name.trim().toLowerCase();
+      if (!itemGroups[key]) {
+        itemGroups[key] = [];
+      }
+      itemGroups[key].push(item);
+    });
+    return itemGroups;
+  };
+
   const sortedItems = React.useMemo(() => {
     if (!sortConfig.key) return items;
 
@@ -67,6 +80,8 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
       return 0;
     });
   }, [items, sortConfig]);
+
+  const duplicateGroups = findDuplicateItems(sortedItems);
 
   if (isLoading) {
     return <div>Loading inventory items...</div>;
@@ -105,10 +120,27 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedItems?.map((item, index) => (
-            <TableRow key={item.id}>
-              <TableCell className="font-medium">{index + 1}</TableCell>
-              <TableCell className="font-medium">{item.item_name}</TableCell>
+          {sortedItems?.map((item, index) => {
+            const itemKey = item.item_name.trim().toLowerCase();
+            const duplicateCount = duplicateGroups[itemKey]?.length || 0;
+            const isOverlapping = duplicateCount > 1;
+
+            return (
+              <TableRow 
+                key={item.id}
+                className={isOverlapping ? 'relative border-l-4 border-l-blue-400' : ''}
+              >
+                <TableCell className="font-medium">{index + 1}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {item.item_name}
+                    {isOverlapping && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                        {duplicateCount} entries
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
               <TableCell>{item.section}</TableCell>
               <TableCell>
                 <Dialog>
@@ -193,8 +225,9 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
                   </DialogContent>
                 </Dialog>
               </TableCell>
-            </TableRow>
-          ))}
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
