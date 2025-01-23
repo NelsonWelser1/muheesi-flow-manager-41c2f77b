@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS inventory_items (
     supplier_details TEXT,
     notes TEXT,
     status TEXT DEFAULT 'good',
-    urgency TEXT NOT NULL,
+    urgency TEXT DEFAULT 'medium' NOT NULL,
     serial_numbers TEXT[], -- Array of serial numbers
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())

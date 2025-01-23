@@ -18,13 +18,13 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
     }).format(amount);
   };
 
-  const getUrgencyColor = (urgency) => {
+  const getUrgencyColor = (urgency = 'medium') => {
     const colors = {
       high: 'bg-red-100 text-red-800',
       medium: 'bg-yellow-100 text-yellow-800',
       low: 'bg-green-100 text-green-800'
     };
-    return colors[urgency.toLowerCase()] || 'bg-gray-100 text-gray-800';
+    return colors[urgency.toLowerCase()] || colors.medium;
   };
 
   if (isLoading) {
@@ -77,7 +77,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
               <TableCell>{formatCurrency(item.total_cost)}</TableCell>
               <TableCell>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(item.urgency)}`}>
-                  {item.urgency}
+                  {item.urgency || 'medium'}
                 </span>
               </TableCell>
               <TableCell>
