@@ -28,7 +28,9 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
   };
 
   const generateSerialNumbers = (item) => {
+    // Get first two letters of item name, convert to uppercase
     const prefix = item.item_name.substring(0, 2).toUpperCase();
+    // Generate array of serial numbers based on quantity
     return Array.from({ length: item.quantity }, (_, index) => 
       `${prefix}${String(item.id).padStart(3, '0')}-${String(index + 1).padStart(3, '0')}`
     );
@@ -43,6 +45,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[50px]">#</TableHead>
             <TableHead>Item Name</TableHead>
             <TableHead>Section</TableHead>
             <TableHead>Quantity</TableHead>
@@ -55,8 +58,9 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
           </TableRow>
         </TableHeader>
         <TableBody>
-          {items?.map((item) => (
+          {items?.map((item, index) => (
             <TableRow key={item.id}>
+              <TableCell className="font-medium">{index + 1}</TableCell>
               <TableCell className="font-medium">{item.item_name}</TableCell>
               <TableCell>{item.section}</TableCell>
               <TableCell>
@@ -72,8 +76,9 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
                     </DialogHeader>
                     <div className="grid gap-2">
                       {generateSerialNumbers(item).map((serial, index) => (
-                        <div key={serial} className="p-2 bg-gray-50 rounded">
-                          {serial}
+                        <div key={serial} className="p-2 bg-gray-50 rounded flex justify-between">
+                          <span className="font-medium">{index + 1}.</span>
+                          <span>{serial}</span>
                         </div>
                       ))}
                     </div>
