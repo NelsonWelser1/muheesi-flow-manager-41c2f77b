@@ -27,6 +27,13 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
     return colors[urgency.toLowerCase()] || colors.medium;
   };
 
+  const generateSerialNumbers = (item) => {
+    const prefix = item.item_name.substring(0, 2).toUpperCase();
+    return Array.from({ length: item.quantity }, (_, index) => 
+      `${prefix}${String(item.id).padStart(3, '0')}-${String(index + 1).padStart(3, '0')}`
+    );
+  };
+
   if (isLoading) {
     return <div>Loading inventory items...</div>;
   }
@@ -64,7 +71,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
                       <DialogTitle>Serial Numbers for {item.item_name}</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-2">
-                      {item.serial_numbers?.map((serial, index) => (
+                      {generateSerialNumbers(item).map((serial, index) => (
                         <div key={serial} className="p-2 bg-gray-50 rounded">
                           {serial}
                         </div>
