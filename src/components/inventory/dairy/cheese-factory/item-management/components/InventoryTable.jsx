@@ -89,7 +89,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border inventory-table">
       <Table>
         <TableHeader>
           <TableRow>

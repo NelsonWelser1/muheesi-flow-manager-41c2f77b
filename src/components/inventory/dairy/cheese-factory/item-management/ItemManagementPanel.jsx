@@ -138,7 +138,11 @@ const ItemManagementPanel = () => {
       <Card>
         <CardHeader>
           <CardTitle>Inventory Items</CardTitle>
-          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+          <SearchBar 
+            searchTerm={searchTerm} 
+            setSearchTerm={setSearchTerm} 
+            items={filteredItems}
+          />
         </CardHeader>
         <CardContent>
           <InventoryTable
