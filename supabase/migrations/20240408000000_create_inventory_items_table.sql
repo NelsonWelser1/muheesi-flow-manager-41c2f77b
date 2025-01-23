@@ -1,4 +1,4 @@
--- Enable UUID extension if not already enabled
+-- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create inventory_items table
@@ -7,13 +7,11 @@ CREATE TABLE IF NOT EXISTS inventory_items (
     item_name TEXT NOT NULL,
     section TEXT NOT NULL,
     quantity INTEGER NOT NULL,
-    unit_cost DECIMAL(10,2) NOT NULL,
-    total_cost DECIMAL(10,2) NOT NULL,
-    supplier_details TEXT,
-    notes TEXT,
+    unit_cost DECIMAL(12,2) NOT NULL,
+    total_cost DECIMAL(12,2) NOT NULL,
     status TEXT DEFAULT 'good',
     urgency TEXT DEFAULT 'medium' NOT NULL,
-    serial_number TEXT NOT NULL,
+    serial_numbers TEXT[] NOT NULL DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
@@ -21,7 +19,7 @@ CREATE TABLE IF NOT EXISTS inventory_items (
 -- Enable Row Level Security
 ALTER TABLE inventory_items ENABLE ROW LEVEL SECURITY;
 
--- Create policies
+-- Create policies for authenticated users
 CREATE POLICY "Enable read access for authenticated users" ON inventory_items
     FOR SELECT TO authenticated USING (true);
 
@@ -32,4 +30,4 @@ CREATE POLICY "Enable update access for authenticated users" ON inventory_items
     FOR UPDATE TO authenticated USING (true);
 
 -- Create index for serial numbers
-CREATE INDEX idx_inventory_items_serial_number ON inventory_items(serial_number);
+CREATE INDEX idx_inventory_items_serial_numbers ON inventory_items USING GIN(serial_numbers);
