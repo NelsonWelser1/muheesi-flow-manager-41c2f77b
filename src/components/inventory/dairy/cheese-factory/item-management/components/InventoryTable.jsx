@@ -99,8 +99,8 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
             <TableHead onClick={() => handleSort('status')} className="cursor-pointer hover:bg-gray-50">
               Status {sortConfig.key === 'status' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
             </TableHead>
-            <TableHead onClick={() => handleSort('updated_at')} className="cursor-pointer hover:bg-gray-50">
-              Last Updated {sortConfig.key === 'updated_at' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            <TableHead onClick={() => handleSort('created_at')} className="cursor-pointer hover:bg-gray-50">
+              Purchase Date {sortConfig.key === 'created_at' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -174,7 +174,25 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
-              <TableCell>{new Date(item.updated_at).toLocaleDateString()}</TableCell>
+              <TableCell>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" className="hover:bg-gray-100">
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Purchase Details for {item.item_name}</DialogTitle>
+                    </DialogHeader>
+                    <div className="p-4">
+                      <p className="mb-2"><span className="font-medium">Purchase Date:</span> {new Date(item.created_at).toLocaleString()}</p>
+                      <p className="mb-2"><span className="font-medium">Batch ID:</span> {`BATCH-${new Date(item.created_at).toISOString().split('T')[0]}-${index + 1}`}</p>
+                      <p><span className="font-medium">Quantity Added:</span> {item.quantity} units</p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
