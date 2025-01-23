@@ -82,6 +82,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
   }, [items, sortConfig]);
 
   const duplicateGroups = findDuplicateItems(sortedItems);
+  const processedItems = new Set();
 
   if (isLoading) {
     return <div>Loading inventory items...</div>;
@@ -122,13 +123,21 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
         <TableBody>
           {sortedItems?.map((item, index) => {
             const itemKey = item.item_name.trim().toLowerCase();
-            const duplicateCount = duplicateGroups[itemKey]?.length || 0;
-            const isOverlapping = duplicateCount > 1;
+            const duplicateItems = duplicateGroups[itemKey] || [];
+            const isOverlapping = duplicateItems.length > 1;
+            
+            // Skip if we've already processed this item group
+            if (isOverlapping && processedItems.has(itemKey)) {
+              return null;
+            }
+            
+            // Mark this item group as processed
+            processedItems.add(itemKey);
 
             return (
               <TableRow 
                 key={item.id}
-                className={isOverlapping ? 'relative border-l-4 border-l-blue-400' : ''}
+                className={isOverlapping ? 'relative border-l-4 border-l-blue-400 hover:bg-gray-50' : ''}
               >
                 <TableCell className="font-medium">{index + 1}</TableCell>
                 <TableCell className="font-medium">
@@ -136,95 +145,99 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
                     {item.item_name}
                     {isOverlapping && (
                       <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                        {duplicateCount} entries
+                        {duplicateItems.length} entries
                       </Badge>
                     )}
                   </div>
                 </TableCell>
-              <TableCell>{item.section}</TableCell>
-              <TableCell>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" className="hover:bg-gray-100">
-                      {item.quantity}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Serial Numbers for {item.item_name}</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-2">
-                      {generateSerialNumbers(item, index).map((serial, idx) => (
-                        <div key={serial} className="p-2 bg-gray-50 rounded flex justify-between">
-                          <span className="font-medium">Serial Number {idx + 1}:</span>
-                          <span>{serial}</span>
-                        </div>
+                <TableCell>{item.section}</TableCell>
+                <TableCell>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" className="hover:bg-gray-100">
+                        {item.quantity}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Serial Numbers for {item.item_name}</DialogTitle>
+                      </DialogHeader>
+                      <div className="grid gap-2">
+                        {generateSerialNumbers(item, index).map((serial, idx) => (
+                          <div key={serial} className="p-2 bg-gray-50 rounded flex justify-between">
+                            <span className="font-medium">Serial Number {idx + 1}:</span>
+                            <span>{serial}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </TableCell>
+                <TableCell>{formatCurrency(item.unit_cost)}</TableCell>
+                <TableCell>{formatCurrency(item.total_cost)}</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(item.urgency)}`}>
+                        {urgencyLevels[item.urgency] || 'Medium'}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-white">
+                      {Object.entries(urgencyLevels).map(([key, label]) => (
+                        <DropdownMenuItem
+                          key={key}
+                          onClick={() => handleStatusChange(item.id, key)}
+                          className="cursor-pointer"
+                        >
+                          {label}
+                        </DropdownMenuItem>
                       ))}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </TableCell>
-              <TableCell>{formatCurrency(item.unit_cost)}</TableCell>
-              <TableCell>{formatCurrency(item.total_cost)}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(item.urgency)}`}>
-                      {urgencyLevels[item.urgency] || 'Medium'}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-white">
-                    {Object.entries(urgencyLevels).map(([key, label]) => (
-                      <DropdownMenuItem
-                        key={key}
-                        onClick={() => handleStatusChange(item.id, key)}
-                        className="cursor-pointer"
-                      >
-                        {label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
-                      {itemStatuses[item.status]}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-white">
-                    {Object.entries(itemStatuses).map(([key, label]) => (
-                      <DropdownMenuItem
-                        key={key}
-                        onClick={() => handleStatusChange(item.id, key)}
-                        className="cursor-pointer"
-                      >
-                        {label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-              <TableCell>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" className="hover:bg-gray-100">
-                      {new Date(item.created_at).toLocaleDateString()}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Purchase Details for {item.item_name}</DialogTitle>
-                    </DialogHeader>
-                    <div className="p-4">
-                      <p className="mb-2"><span className="font-medium">Purchase Date:</span> {new Date(item.created_at).toLocaleString()}</p>
-                      <p className="mb-2"><span className="font-medium">Batch ID:</span> {`BATCH-${new Date(item.created_at).toISOString().split('T')[0]}-${index + 1}`}</p>
-                      <p><span className="font-medium">Quantity Added:</span> {item.quantity} units</p>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </TableCell>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                        {itemStatuses[item.status]}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-white">
+                      {Object.entries(itemStatuses).map(([key, label]) => (
+                        <DropdownMenuItem
+                          key={key}
+                          onClick={() => handleStatusChange(item.id, key)}
+                          className="cursor-pointer"
+                        >
+                          {label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+                <TableCell>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" className="hover:bg-gray-100">
+                        {new Date(item.created_at).toLocaleDateString()}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Purchase History for {item.item_name}</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        {duplicateItems.map((entry, idx) => (
+                          <div key={entry.id} className="p-4 bg-gray-50 rounded-lg">
+                            <p className="mb-2"><span className="font-medium">Purchase Date:</span> {new Date(entry.created_at).toLocaleString()}</p>
+                            <p className="mb-2"><span className="font-medium">Batch ID:</span> {`BATCH-${new Date(entry.created_at).toISOString().split('T')[0]}-${idx + 1}`}</p>
+                            <p><span className="font-medium">Quantity Added:</span> {entry.quantity} units</p>
+                          </div>
+                        ))}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </TableCell>
               </TableRow>
             );
           })}
