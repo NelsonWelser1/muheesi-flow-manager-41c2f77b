@@ -4,8 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
+const urgencyLevels = {
+  'critical': 'Critical',
+  'high': 'High',
+  'medium': 'Medium',
+  'medium-low': 'Medium-Low',
+  'low': 'Low'
+};
+
 const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChange, isLoading }) => {
   const [selectedItem, setSelectedItem] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
 
   console.log('Rendering InventoryTable with items:', items);
 
@@ -20,21 +29,43 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
 
   const getUrgencyColor = (urgency = 'medium') => {
     const colors = {
+      critical: 'bg-red-600 text-white',
       high: 'bg-red-100 text-red-800',
       medium: 'bg-yellow-100 text-yellow-800',
+      'medium-low': 'bg-blue-100 text-blue-800',
       low: 'bg-green-100 text-green-800'
     };
     return colors[urgency.toLowerCase()] || colors.medium;
   };
 
   const generateSerialNumbers = (item) => {
-    // Get first two letters of item name, convert to uppercase
     const prefix = item.item_name.substring(0, 2).toUpperCase();
-    // Generate array of serial numbers based on quantity
     return Array.from({ length: item.quantity }, (_, index) => 
       `${prefix}${String(item.id).padStart(3, '0')}-${String(index + 1).padStart(3, '0')}`
     );
   };
+
+  const handleSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedItems = React.useMemo(() => {
+    if (!sortConfig.key) return items;
+
+    return [...items].sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === 'ascending' ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === 'ascending' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [items, sortConfig]);
 
   if (isLoading) {
     return <div>Loading inventory items...</div>;
@@ -46,19 +77,34 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
         <TableHeader>
           <TableRow>
             <TableHead className="w-[50px]">#</TableHead>
-            <TableHead>Item Name</TableHead>
-            <TableHead>Section</TableHead>
-            <TableHead>Quantity</TableHead>
-            <TableHead>Unit Cost</TableHead>
-            <TableHead>Total Cost</TableHead>
-            <TableHead>Urgency</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Last Updated</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead onClick={() => handleSort('item_name')} className="cursor-pointer hover:bg-gray-50">
+              Item Name {sortConfig.key === 'item_name' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('section')} className="cursor-pointer hover:bg-gray-50">
+              Section {sortConfig.key === 'section' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('quantity')} className="cursor-pointer hover:bg-gray-50">
+              Quantity {sortConfig.key === 'quantity' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('unit_cost')} className="cursor-pointer hover:bg-gray-50">
+              Unit Cost {sortConfig.key === 'unit_cost' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('total_cost')} className="cursor-pointer hover:bg-gray-50">
+              Total Cost {sortConfig.key === 'total_cost' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('urgency')} className="cursor-pointer hover:bg-gray-50">
+              Urgency {sortConfig.key === 'urgency' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('status')} className="cursor-pointer hover:bg-gray-50">
+              Status {sortConfig.key === 'status' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('updated_at')} className="cursor-pointer hover:bg-gray-50">
+              Last Updated {sortConfig.key === 'updated_at' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {items?.map((item, index) => (
+          {sortedItems?.map((item, index) => (
             <TableRow key={item.id}>
               <TableCell className="font-medium">{index + 1}</TableCell>
               <TableCell className="font-medium">{item.item_name}</TableCell>
@@ -88,21 +134,30 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
               <TableCell>{formatCurrency(item.unit_cost)}</TableCell>
               <TableCell>{formatCurrency(item.total_cost)}</TableCell>
               <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(item.urgency)}`}>
-                  {item.urgency || 'medium'}
-                </span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(item.urgency)}`}>
+                      {urgencyLevels[item.urgency] || 'Medium'}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-white">
+                    {Object.entries(urgencyLevels).map(([key, label]) => (
+                      <DropdownMenuItem
+                        key={key}
+                        onClick={() => handleStatusChange(item.id, key)}
+                        className="cursor-pointer"
+                      >
+                        {label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
-                  {itemStatuses[item.status]}
-                </span>
-              </TableCell>
-              <TableCell>{new Date(item.updated_at).toLocaleDateString()}</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      Update Status
+                    <Button variant="ghost" className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                      {itemStatuses[item.status]}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-white">
@@ -118,6 +173,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
+              <TableCell>{new Date(item.updated_at).toLocaleDateString()}</TableCell>
             </TableRow>
           ))}
         </TableBody>
