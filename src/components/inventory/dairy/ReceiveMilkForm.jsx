@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 const ReceiveMilkForm = () => {
   const { toast } = useToast();
@@ -23,23 +24,24 @@ const ReceiveMilkForm = () => {
     notes: ''
   });
 
-  useEffect(() => {
-    const generateBatchId = () => {
-      const date = new Date();
-      const year = date.getFullYear().toString().slice(-2);
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
-      const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-      return `MK${year}${month}${day}-${random}`;
-    };
+  const generateBatchId = () => {
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `MK${year}${month}${day}-${random}`;
+  };
 
+  useEffect(() => {
+    console.log('Initializing form...');
     setBatchId(generateBatchId());
     
-    // Get current user
     const getCurrentUser = async () => {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
         console.error('Error fetching user:', error);
+        showErrorToast(toast, 'Error fetching user data');
         return;
       }
       console.log('Current user:', user);
@@ -47,27 +49,37 @@ const ReceiveMilkForm = () => {
     };
 
     getCurrentUser();
-  }, []);
+  }, [toast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Form submission started');
     
     if (!currentUser) {
-      toast({
-        title: "Authentication Error",
-        description: "You must be logged in to submit milk reception data",
-        variant: "destructive"
-      });
+      showErrorToast(toast, 'You must be logged in to submit milk reception data');
       return;
     }
 
-    setIsSubmitting(true);
-    const receptionDateTime = new Date().toISOString();
-
     try {
-      console.log('Submitting form data to Supabase...');
+      setIsSubmitting(true);
+      console.log('Validating form data...');
       
+      // Validate required fields
+      const requiredFields = ['supplier', 'quantity', 'temperature', 'fatPercentage', 'proteinPercentage', 'totalPlateCount', 'acidity'];
+      const missingFields = requiredFields.filter(field => !formData[field]);
+      
+      if (missingFields.length > 0) {
+        showErrorToast(toast, `Please fill in all required fields: ${missingFields.join(', ')}`);
+        return;
+      }
+
+      const receptionDateTime = new Date().toISOString();
+      console.log('Submitting data to Supabase:', {
+        batch_id: batchId,
+        reception_date: receptionDateTime,
+        ...formData
+      });
+
       const { data, error } = await supabase
         .from('milk_reception_data')
         .insert([{
@@ -88,28 +100,16 @@ const ReceiveMilkForm = () => {
 
       if (error) {
         console.error('Error submitting form:', error);
-        toast({
-          title: "Error",
-          description: error.message || "Failed to record milk reception data. Please try again.",
-          variant: "destructive"
-        });
+        showErrorToast(toast, error.message || "Failed to record milk reception data");
         return;
       }
 
       console.log('Form submitted successfully:', data);
-      toast({
-        title: "Success",
-        description: "Milk reception data has been recorded",
-      });
-      
+      showSuccessToast(toast, "Milk reception data has been recorded");
       resetForm();
     } catch (error) {
       console.error('Error in form submission:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      });
+      showErrorToast(toast, "An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -138,10 +138,11 @@ const ReceiveMilkForm = () => {
     setMilkType('cow');
   };
 
+  // ... keep existing code (form JSX structure)
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-[800px] mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Date and Time - Read Only */}
         <div className="space-y-2">
           <Label htmlFor="receptionDateTime">Date and Time of Reception</Label>
           <Input 
@@ -153,7 +154,6 @@ const ReceiveMilkForm = () => {
           />
         </div>
 
-        {/* Supplier Information */}
         <div className="space-y-2">
           <Label htmlFor="supplier">Supplier Name/ID</Label>
           <Input 
@@ -167,7 +167,6 @@ const ReceiveMilkForm = () => {
           />
         </div>
 
-        {/* Milk Volume */}
         <div className="space-y-2">
           <Label htmlFor="quantity">Milk Volume (Liters)</Label>
           <Input 
@@ -182,7 +181,6 @@ const ReceiveMilkForm = () => {
           />
         </div>
 
-        {/* Temperature */}
         <div className="space-y-2">
           <Label htmlFor="temperature">Temperature at Reception (°C)</Label>
           <Input 
@@ -197,7 +195,6 @@ const ReceiveMilkForm = () => {
           />
         </div>
 
-        {/* Milk Type - Now with default value */}
         <div className="space-y-2">
           <Label htmlFor="milkType">Milk Type</Label>
           <Select value={milkType} onValueChange={setMilkType} required>
@@ -212,7 +209,6 @@ const ReceiveMilkForm = () => {
           </Select>
         </div>
 
-        {/* Batch ID */}
         <div className="space-y-2">
           <Label htmlFor="batchId">Batch ID</Label>
           <Input 
@@ -225,7 +221,6 @@ const ReceiveMilkForm = () => {
         </div>
       </div>
 
-      {/* Quality Parameters Section */}
       <div className="border-t pt-6">
         <h3 className="text-lg font-semibold mb-4">Quality Parameters</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -286,7 +281,6 @@ const ReceiveMilkForm = () => {
         </div>
       </div>
 
-      {/* Additional Notes Section */}
       <div className="border-t pt-6">
         <div className="space-y-2">
           <Label htmlFor="notes">Additional Notes</Label>
