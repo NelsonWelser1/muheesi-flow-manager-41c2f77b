@@ -138,8 +138,6 @@ const ReceiveMilkForm = () => {
     setMilkType('cow');
   };
 
-  // ... keep existing code (form JSX structure)
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-[800px] mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -298,9 +296,9 @@ const ReceiveMilkForm = () => {
         <Button 
           type="submit"
           disabled={isSubmitting}
-          className="w-full md:w-auto"
+          className="w-full md:w-auto bg-primary hover:bg-primary/90"
         >
-          {isSubmitting ? 'Recording...' : 'Record Milk Receipt'}
+          {isSubmitting ? 'Submitting...' : 'Submit'}
         </Button>
       </div>
     </form>
