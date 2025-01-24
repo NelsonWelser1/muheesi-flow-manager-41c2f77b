@@ -9,32 +9,46 @@ const ReceiveMilkForm = () => {
   return (
     <form className="space-y-6 max-w-[800px] mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2 border-b pb-4 md:border-b-0 md:border-r md:pr-4">
-          <Label htmlFor="source">Source Location</Label>
-          <Select>
-            <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200 border-gray-200">
-              <SelectValue placeholder="Select source location" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="farm1">Farm Location 1</SelectItem>
-              <SelectItem value="farm2">Farm Location 2</SelectItem>
-              <SelectItem value="collection">Collection Center</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
+        {/* Date and Time */}
         <div className="space-y-2">
-          <Label htmlFor="quantity">Quantity (Liters)</Label>
+          <Label htmlFor="receptionDateTime">Date and Time of Reception</Label>
           <Input 
-            id="quantity" 
-            type="number" 
-            placeholder="Enter quantity"
+            id="receptionDateTime" 
+            type="datetime-local"
             className="focus:ring-2 focus:ring-blue-200 border-gray-200"
           />
         </div>
 
-        <div className="space-y-2 border-t pt-4 md:border-t-0 md:pt-0">
-          <Label htmlFor="temperature">Temperature (°C)</Label>
+        {/* Supplier Information */}
+        <div className="space-y-2">
+          <Label htmlFor="supplier">Supplier Name/ID</Label>
+          <Select>
+            <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200 border-gray-200">
+              <SelectValue placeholder="Select supplier" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="sup1">Supplier 1 (ID: 001)</SelectItem>
+              <SelectItem value="sup2">Supplier 2 (ID: 002)</SelectItem>
+              <SelectItem value="sup3">Supplier 3 (ID: 003)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Milk Volume */}
+        <div className="space-y-2">
+          <Label htmlFor="quantity">Milk Volume (Liters)</Label>
+          <Input 
+            id="quantity" 
+            type="number" 
+            step="0.1"
+            placeholder="Enter volume"
+            className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+          />
+        </div>
+
+        {/* Temperature */}
+        <div className="space-y-2">
+          <Label htmlFor="temperature">Temperature at Reception (°C)</Label>
           <Input 
             id="temperature" 
             type="number" 
@@ -44,18 +58,79 @@ const ReceiveMilkForm = () => {
           />
         </div>
 
+        {/* Milk Type */}
         <div className="space-y-2">
-          <Label htmlFor="quality">Quality Grade</Label>
+          <Label htmlFor="milkType">Milk Type</Label>
           <Select>
             <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200 border-gray-200">
-              <SelectValue placeholder="Select quality grade" />
+              <SelectValue placeholder="Select milk type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="grade-a">Grade A</SelectItem>
-              <SelectItem value="grade-b">Grade B</SelectItem>
-              <SelectItem value="grade-c">Grade C</SelectItem>
+              <SelectItem value="cow">Cow Milk</SelectItem>
+              <SelectItem value="goat">Goat Milk</SelectItem>
+              <SelectItem value="sheep">Sheep Milk</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Batch ID */}
+        <div className="space-y-2">
+          <Label htmlFor="batchId">Batch ID</Label>
+          <Input 
+            id="batchId" 
+            type="text"
+            placeholder="Enter batch ID"
+            className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+          />
+        </div>
+      </div>
+
+      {/* Quality Parameters Section */}
+      <div className="border-t pt-6">
+        <h3 className="text-lg font-semibold mb-4">Quality Parameters</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="fatPercentage">Fat Percentage (%)</Label>
+            <Input 
+              id="fatPercentage" 
+              type="number" 
+              step="0.01"
+              placeholder="Enter fat %"
+              className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="proteinPercentage">Protein Percentage (%)</Label>
+            <Input 
+              id="proteinPercentage" 
+              type="number" 
+              step="0.01"
+              placeholder="Enter protein %"
+              className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="totalPlateCount">Total Plate Count (CFU/ml)</Label>
+            <Input 
+              id="totalPlateCount" 
+              type="number"
+              placeholder="Enter TPC"
+              className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="acidity">Acidity (%)</Label>
+            <Input 
+              id="acidity" 
+              type="number" 
+              step="0.01"
+              placeholder="Enter acidity"
+              className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+            />
+          </div>
         </div>
       </div>
 
