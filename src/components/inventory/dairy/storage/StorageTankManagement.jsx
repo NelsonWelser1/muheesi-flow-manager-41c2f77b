@@ -10,15 +10,14 @@ import { Thermometer, Droplet, AlertTriangle } from "lucide-react";
 import MilkVolumeGraph from './MilkVolumeGraph';
 import { predictProduction } from '@/utils/productionAI';
 
-// ... keep existing code (imports and initial setup)
-
 const StorageTankManagement = () => {
+  // Move all hooks to the top level
   const [selectedTank, setSelectedTank] = useState(null);
   const [milkVolume, setMilkVolume] = useState('');
   const [temperature, setTemperature] = useState('');
   const [pricePerLiter, setPricePerLiter] = useState('');
 
-  // Fetch tanks data
+  // Query for tanks data
   const { data: tanks, isLoading } = useQuery({
     queryKey: ['storageTanks'],
     queryFn: async () => {
@@ -35,6 +34,31 @@ const StorageTankManagement = () => {
       return data || [];
     }
   });
+
+  // Query for milk volume data - moved outside of conditional
+  const { data: volumeData } = useQuery({
+    queryKey: ['milkVolumes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('milk_transactions')
+        .select('*')
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      
+      return data.map(transaction => ({
+        date: transaction.created_at,
+        volume: transaction.liters_added,
+        predicted: null
+      }));
+    }
+  });
+
+  // Calculate predicted data - moved outside conditional
+  const predictedData = React.useMemo(() => {
+    if (!volumeData) return [];
+    return predictProduction(volumeData);
+  }, [volumeData]);
 
   // Calculate total cost
   const calculateTotalCost = () => {
@@ -59,7 +83,6 @@ const StorageTankManagement = () => {
 
       if (error) throw error;
       
-      // Update tank volume
       const { error: updateError } = await supabase
         .from('storage_tanks')
         .update({ 
@@ -70,7 +93,6 @@ const StorageTankManagement = () => {
 
       if (updateError) throw updateError;
 
-      // Reset form
       setMilkVolume('');
       setTemperature('');
       setPricePerLiter('');
@@ -90,32 +112,6 @@ const StorageTankManagement = () => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
-
-  // Add new query for milk volume data
-  const { data: volumeData } = useQuery({
-    queryKey: ['milkVolumes'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('milk_transactions')
-        .select('*')
-        .order('created_at', { ascending: true });
-      
-      if (error) throw error;
-      
-      // Transform data for the graph
-      return data.map(transaction => ({
-        date: transaction.created_at,
-        volume: transaction.liters_added,
-        predicted: null // Will be filled by prediction logic
-      }));
-    }
-  });
-
-  // Get predicted data
-  const predictedData = React.useMemo(() => {
-    if (!volumeData) return [];
-    return predictProduction(volumeData);
-  }, [volumeData]);
 
   return (
     <div className="space-y-6">
