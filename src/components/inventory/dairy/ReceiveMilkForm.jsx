@@ -297,7 +297,8 @@ const ReceiveMilkForm = () => {
 
       <div className="flex justify-end pt-4 border-t">
         <Button 
-          type="submit" 
+          type="submit"
+          onClick={handleSubmit}
           className="w-full md:w-auto"
           disabled={isSubmitting}
         >
