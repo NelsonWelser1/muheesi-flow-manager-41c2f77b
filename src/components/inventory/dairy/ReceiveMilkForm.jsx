@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
-import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 const ReceiveMilkForm = () => {
   const { toast } = useToast();
@@ -24,6 +23,35 @@ const ReceiveMilkForm = () => {
     notes: ''
   });
 
+  useEffect(() => {
+    console.log('Initializing form...');
+    setBatchId(generateBatchId());
+    getCurrentUser();
+  }, []);
+
+  const getCurrentUser = async () => {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('Error fetching user:', error);
+        toast({
+          title: "Authentication Error",
+          description: "Please ensure you are logged in",
+          variant: "destructive",
+        });
+        return;
+      }
+      setCurrentUser(user);
+    } catch (error) {
+      console.error('Error in getCurrentUser:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch user data",
+        variant: "destructive",
+      });
+    }
+  };
+
   const generateBatchId = () => {
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
@@ -33,74 +61,74 @@ const ReceiveMilkForm = () => {
     return `MK${year}${month}${day}-${random}`;
   };
 
-  useEffect(() => {
-    console.log('Initializing form...');
-    setBatchId(generateBatchId());
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const validateForm = () => {
+    const requiredFields = ['supplier', 'quantity', 'temperature', 'fatPercentage', 'proteinPercentage', 'totalPlateCount', 'acidity'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
     
-    const getCurrentUser = async () => {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error) {
-          console.error('Error fetching user:', error);
-          showErrorToast(toast, 'Error fetching user data');
-          return;
-        }
-        console.log('Current user:', user);
-        setCurrentUser(user);
-      } catch (error) {
-        console.error('Error in getCurrentUser:', error);
-        showErrorToast(toast, 'Error fetching user data');
-      }
+    if (missingFields.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: `Please fill in all required fields: ${missingFields.join(', ')}`,
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate numeric fields
+    const numericFields = {
+      quantity: parseFloat(formData.quantity),
+      temperature: parseFloat(formData.temperature),
+      fatPercentage: parseFloat(formData.fatPercentage),
+      proteinPercentage: parseFloat(formData.proteinPercentage),
+      totalPlateCount: parseInt(formData.totalPlateCount),
+      acidity: parseFloat(formData.acidity)
     };
 
-    getCurrentUser();
-  }, [toast]);
+    for (const [field, value] of Object.entries(numericFields)) {
+      if (isNaN(value)) {
+        toast({
+          title: "Validation Error",
+          description: `Invalid numeric value for ${field}`,
+          variant: "destructive",
+        });
+        return false;
+      }
+    }
+
+    return { numericFields };
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Form submission started');
-    
+
     if (!currentUser) {
-      showErrorToast(toast, 'You must be logged in to submit milk reception data');
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to submit data",
+        variant: "destructive",
+      });
       return;
     }
 
+    const validation = validateForm();
+    if (!validation) return;
+
     try {
       setIsSubmitting(true);
-      console.log('Validating form data...');
-      
-      // Validate required fields
-      const requiredFields = ['supplier', 'quantity', 'temperature', 'fatPercentage', 'proteinPercentage', 'totalPlateCount', 'acidity'];
-      const missingFields = requiredFields.filter(field => !formData[field]);
-      
-      if (missingFields.length > 0) {
-        showErrorToast(toast, `Please fill in all required fields: ${missingFields.join(', ')}`);
-        setIsSubmitting(false);
-        return;
-      }
+      const { numericFields } = validation;
 
-      // Validate numeric fields
-      const numericFields = {
-        quantity: parseFloat(formData.quantity),
-        temperature: parseFloat(formData.temperature),
-        fatPercentage: parseFloat(formData.fatPercentage),
-        proteinPercentage: parseFloat(formData.proteinPercentage),
-        totalPlateCount: parseInt(formData.totalPlateCount),
-        acidity: parseFloat(formData.acidity)
-      };
-
-      for (const [field, value] of Object.entries(numericFields)) {
-        if (isNaN(value)) {
-          showErrorToast(toast, `Invalid numeric value for ${field}`);
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
-      const receptionDateTime = new Date().toISOString();
       const dataToSubmit = {
         batch_id: batchId,
-        reception_date: receptionDateTime,
+        reception_date: new Date().toISOString(),
         supplier: formData.supplier,
         milk_type: milkType,
         quantity: numericFields.quantity,
@@ -115,51 +143,50 @@ const ReceiveMilkForm = () => {
 
       console.log('Submitting data to Supabase:', dataToSubmit);
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('milk_reception_data')
-        .insert([dataToSubmit])
-        .select();
+        .insert([dataToSubmit]);
 
       if (error) {
         console.error('Error submitting form:', error);
-        showErrorToast(toast, error.message || "Failed to record milk reception data");
+        toast({
+          title: "Submission Error",
+          description: error.message || "Failed to record milk reception data",
+          variant: "destructive",
+        });
         return;
       }
 
-      console.log('Form submitted successfully:', data);
-      showSuccessToast(toast, "Milk reception data has been recorded");
-      
-      // Reset form after successful submission
-      resetForm();
+      console.log('Form submitted successfully');
+      toast({
+        title: "Success",
+        description: "Milk reception data has been recorded",
+      });
+
+      // Reset form
+      setFormData({
+        supplier: '',
+        quantity: '',
+        temperature: '',
+        fatPercentage: '',
+        proteinPercentage: '',
+        totalPlateCount: '',
+        acidity: '',
+        notes: ''
+      });
+      setBatchId(generateBatchId());
+      setMilkType('cow');
+
     } catch (error) {
       console.error('Error in form submission:', error);
-      showErrorToast(toast, "An unexpected error occurred");
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleInputChange = (e) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
-  };
-
-  const resetForm = () => {
-    setFormData({
-      supplier: '',
-      quantity: '',
-      temperature: '',
-      fatPercentage: '',
-      proteinPercentage: '',
-      totalPlateCount: '',
-      acidity: '',
-      notes: ''
-    });
-    setBatchId(generateBatchId());
-    setMilkType('cow');
   };
 
   return (
@@ -327,6 +354,7 @@ const ReceiveMilkForm = () => {
       </div>
     </form>
   );
+
 };
 
 export default ReceiveMilkForm;
