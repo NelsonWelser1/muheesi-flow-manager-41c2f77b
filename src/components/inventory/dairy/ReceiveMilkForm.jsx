@@ -9,7 +9,7 @@ import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const ReceiveMilkForm = () => {
   const { toast } = useToast();
-  const { session } = useSupabaseAuth();
+  const auth = useSupabaseAuth();
   const [batchId, setBatchId] = useState('');
   const [milkType, setMilkType] = useState('cow');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,7 +65,7 @@ const ReceiveMilkForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!session?.user?.id) {
+    if (!auth?.session?.user?.id) {
       console.error('No authenticated user found');
       toast({
         title: "Authentication Error",
@@ -79,7 +79,7 @@ const ReceiveMilkForm = () => {
     const receptionDateTime = new Date().toISOString();
 
     try {
-      console.log('Preparing form submission with user ID:', session.user.id);
+      console.log('Preparing form submission with user ID:', auth.session.user.id);
       
       const { data, error } = await supabase
         .from('milk_reception_data')
@@ -95,7 +95,7 @@ const ReceiveMilkForm = () => {
           total_plate_count: parseInt(formData.totalPlateCount),
           acidity: parseFloat(formData.acidity),
           notes: formData.notes,
-          user_id: session.user.id
+          user_id: auth.session.user.id
         }]);
 
       if (error) {
@@ -300,6 +300,7 @@ const ReceiveMilkForm = () => {
       </div>
     </form>
   );
+
 };
 
 export default ReceiveMilkForm;
