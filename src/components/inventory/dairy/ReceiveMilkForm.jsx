@@ -60,6 +60,11 @@ const ReceiveMilkForm = () => {
     e.preventDefault();
     console.log('Form submission started');
     
+    if (!currentUser) {
+      showErrorToast(toast, 'You must be logged in to submit milk reception data');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       console.log('Validating form data...');
@@ -96,7 +101,8 @@ const ReceiveMilkForm = () => {
       console.log('Submitting data to Supabase:', {
         batch_id: batchId,
         reception_date: receptionDateTime,
-        ...formData
+        ...formData,
+        user_id: currentUser.id
       });
 
       const { data, error } = await supabase
@@ -112,7 +118,8 @@ const ReceiveMilkForm = () => {
           protein_percentage: numericFields.proteinPercentage,
           total_plate_count: numericFields.totalPlateCount,
           acidity: numericFields.acidity,
-          notes: formData.notes || null
+          notes: formData.notes || null,
+          user_id: currentUser.id
         }])
         .select();
 
