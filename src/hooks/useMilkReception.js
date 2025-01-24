@@ -10,7 +10,7 @@ export const useMilkReception = () => {
       const { data, error } = await supabase
         .from('milk_reception')
         .select('*')
-        .order('dateTime', { ascending: false });
+        .order('datetime', { ascending: false });
       
       if (error) throw error;
       return data;
@@ -22,7 +22,10 @@ export const useMilkReception = () => {
       console.log('Submitting milk reception data:', formData);
       const { data, error } = await supabase
         .from('milk_reception')
-        .insert([formData])
+        .insert([{
+          ...formData,
+          datetime: new Date().toISOString(), // Changed from dateTime to datetime
+        }])
         .select();
       
       if (error) throw error;

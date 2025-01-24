@@ -15,7 +15,6 @@ const MilkReceptionForm = () => {
     try {
       await addMilkReception.mutateAsync({
         ...data,
-        dateTime: new Date().toISOString(),
         milkVolume: parseFloat(data.milkVolume),
         temperature: parseFloat(data.temperature),
         fatPercentage: parseFloat(data.fatPercentage),
