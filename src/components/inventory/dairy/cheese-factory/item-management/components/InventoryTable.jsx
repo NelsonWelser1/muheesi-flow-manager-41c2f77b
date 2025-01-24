@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
 
 const urgencyLevels = {
   'critical': 'Critical',
@@ -16,8 +17,7 @@ const urgencyLevels = {
 const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChange, isLoading }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
-
-  console.log('Rendering InventoryTable with items:', items);
+  const [expandedItems, setExpandedItems] = useState(new Set());
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-UG', {
@@ -55,6 +55,16 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
     setSortConfig({ key, direction });
   };
 
+  const toggleItemExpansion = (itemKey) => {
+    const newExpandedItems = new Set(expandedItems);
+    if (newExpandedItems.has(itemKey)) {
+      newExpandedItems.delete(itemKey);
+    } else {
+      newExpandedItems.add(itemKey);
+    }
+    setExpandedItems(newExpandedItems);
+  };
+
   const findDuplicateItems = (items) => {
     const itemGroups = {};
     items.forEach(item => {
@@ -87,6 +97,45 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
   if (isLoading) {
     return <div>Loading inventory items...</div>;
   }
+
+  const renderItemDetails = (item) => (
+    <div className="p-4 bg-gray-50 rounded-lg shadow-sm">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-sm font-medium text-gray-500">Item Name</p>
+          <p className="text-sm">{item.item_name}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-500">Section</p>
+          <p className="text-sm">{item.section}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-500">Quantity</p>
+          <p className="text-sm">{item.quantity}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-500">Unit Cost</p>
+          <p className="text-sm">{formatCurrency(item.unit_cost)}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-500">Total Cost</p>
+          <p className="text-sm">{formatCurrency(item.total_cost)}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-500">Purchase Date</p>
+          <p className="text-sm">{new Date(item.created_at).toLocaleDateString()}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-500">Supplier Details</p>
+          <p className="text-sm">{item.supplier_details || 'N/A'}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-500">Notes</p>
+          <p className="text-sm">{item.notes || 'N/A'}</p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="rounded-md border inventory-table">
@@ -126,30 +175,31 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
             const duplicateItems = duplicateGroups[itemKey] || [];
             const isOverlapping = duplicateItems.length > 1;
             
-            // Skip if we've already processed this item group
             if (isOverlapping && processedItems.has(itemKey)) {
               return null;
             }
             
-            // Mark this item group as processed
             processedItems.add(itemKey);
+            const isExpanded = expandedItems.has(itemKey);
 
             return (
-              <TableRow 
-                key={item.id}
-                className={isOverlapping ? 'relative border-l-4 border-l-blue-400 hover:bg-gray-50' : ''}
-              >
-                <TableCell className="font-medium">{index + 1}</TableCell>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    {item.item_name}
-                    {isOverlapping && (
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                        {duplicateItems.length} entries
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
+              <React.Fragment key={item.id}>
+                <TableRow className={isOverlapping ? 'relative border-l-4 border-l-blue-400 hover:bg-gray-50' : ''}>
+                  <TableCell className="font-medium">{index + 1}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {item.item_name}
+                      {isOverlapping && (
+                        <Badge 
+                          variant="secondary" 
+                          className="bg-blue-100 text-blue-800 cursor-pointer hover:bg-blue-200"
+                          onClick={() => toggleItemExpansion(itemKey)}
+                        >
+                          {duplicateItems.length} entries
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
                 <TableCell>{item.section}</TableCell>
                 <TableCell>
                   <Dialog>
@@ -215,30 +265,38 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
-                <TableCell>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="ghost" className="hover:bg-gray-100">
-                        {new Date(item.created_at).toLocaleDateString()}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Purchase History for {item.item_name}</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        {duplicateItems.map((entry, idx) => (
-                          <div key={entry.id} className="p-4 bg-gray-50 rounded-lg">
-                            <p className="mb-2"><span className="font-medium">Purchase Date:</span> {new Date(entry.created_at).toLocaleString()}</p>
-                            <p className="mb-2"><span className="font-medium">Batch ID:</span> {`BATCH-${new Date(entry.created_at).toISOString().split('T')[0]}-${idx + 1}`}</p>
-                            <p><span className="font-medium">Quantity Added:</span> {entry.quantity} units</p>
-                          </div>
-                        ))}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </TableCell>
-              </TableRow>
+                  <TableCell>
+                    <Button variant="ghost" className="hover:bg-gray-100">
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.tr
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <td colSpan={9} className="px-4 py-2">
+                        <div className="space-y-2">
+                          {duplicateItems.map((entry, idx) => (
+                            <motion.div
+                              key={entry.id}
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: idx * 0.1 }}
+                            >
+                              {renderItemDetails(entry)}
+                            </motion.div>
+                          ))}
+                        </div>
+                      </td>
+                    </motion.tr>
+                  )}
+                </AnimatePresence>
+              </React.Fragment>
             );
           })}
         </TableBody>
