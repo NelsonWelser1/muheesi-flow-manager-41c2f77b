@@ -4,11 +4,23 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/supabase';
 
 const ReceiveMilkForm = () => {
   const { toast } = useToast();
   const [batchId, setBatchId] = useState('');
-  const [milkType, setMilkType] = useState('cow'); // Set default value to 'cow'
+  const [milkType, setMilkType] = useState('cow');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    supplier: '',
+    quantity: '',
+    temperature: '',
+    fatPercentage: '',
+    proteinPercentage: '',
+    totalPlateCount: '',
+    acidity: '',
+    notes: ''
+  });
 
   // Generate Batch ID on component mount
   useEffect(() => {
@@ -24,20 +36,86 @@ const ReceiveMilkForm = () => {
     setBatchId(generateBatchId());
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const receptionDateTime = new Date().toISOString(); // Generate current date/time on submit
-    console.log('Form submitted with batch ID:', batchId, 'and reception time:', receptionDateTime);
-    toast({
-      title: "Success",
-      description: "Milk reception data has been recorded",
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      supplier: '',
+      quantity: '',
+      temperature: '',
+      fatPercentage: '',
+      proteinPercentage: '',
+      totalPlateCount: '',
+      acidity: '',
+      notes: ''
     });
+    setBatchId(generateBatchId());
+    setMilkType('cow');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const receptionDateTime = new Date().toISOString();
+
+    try {
+      console.log('Submitting form data to Supabase...');
+      
+      const { data, error } = await supabase
+        .from('milk_reception_data')
+        .insert([{
+          batch_id: batchId,
+          reception_date: receptionDateTime,
+          supplier: formData.supplier,
+          milk_type: milkType,
+          quantity: parseFloat(formData.quantity),
+          temperature: parseFloat(formData.temperature),
+          fat_percentage: parseFloat(formData.fatPercentage),
+          protein_percentage: parseFloat(formData.proteinPercentage),
+          total_plate_count: parseInt(formData.totalPlateCount),
+          acidity: parseFloat(formData.acidity),
+          notes: formData.notes
+        }]);
+
+      if (error) {
+        console.error('Error submitting form:', error);
+        toast({
+          title: "Error",
+          description: "Failed to record milk reception data. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log('Form submitted successfully:', data);
+      toast({
+        title: "Success",
+        description: "Milk reception data has been recorded",
+      });
+      
+      resetForm();
+    } catch (error) {
+      console.error('Error in form submission:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-[800px] mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Date and Time - Now Read Only */}
+        {/* Date and Time - Read Only */}
         <div className="space-y-2">
           <Label htmlFor="receptionDateTime">Date and Time of Reception</Label>
           <Input 
@@ -55,6 +133,8 @@ const ReceiveMilkForm = () => {
           <Input 
             id="supplier" 
             type="text"
+            value={formData.supplier}
+            onChange={handleInputChange}
             placeholder="Enter supplier name or ID"
             className="focus:ring-2 focus:ring-blue-200 border-gray-200"
             required
@@ -68,6 +148,8 @@ const ReceiveMilkForm = () => {
             id="quantity" 
             type="number" 
             step="0.1"
+            value={formData.quantity}
+            onChange={handleInputChange}
             placeholder="Enter volume"
             className="focus:ring-2 focus:ring-blue-200 border-gray-200"
             required
@@ -81,6 +163,8 @@ const ReceiveMilkForm = () => {
             id="temperature" 
             type="number" 
             step="0.1"
+            value={formData.temperature}
+            onChange={handleInputChange}
             placeholder="Enter temperature"
             className="focus:ring-2 focus:ring-blue-200 border-gray-200"
             required
@@ -125,6 +209,8 @@ const ReceiveMilkForm = () => {
               id="fatPercentage" 
               type="number" 
               step="0.01"
+              value={formData.fatPercentage}
+              onChange={handleInputChange}
               placeholder="Enter fat %"
               className="focus:ring-2 focus:ring-blue-200 border-gray-200"
               required
@@ -137,6 +223,8 @@ const ReceiveMilkForm = () => {
               id="proteinPercentage" 
               type="number" 
               step="0.01"
+              value={formData.proteinPercentage}
+              onChange={handleInputChange}
               placeholder="Enter protein %"
               className="focus:ring-2 focus:ring-blue-200 border-gray-200"
               required
@@ -148,6 +236,8 @@ const ReceiveMilkForm = () => {
             <Input 
               id="totalPlateCount" 
               type="number"
+              value={formData.totalPlateCount}
+              onChange={handleInputChange}
               placeholder="Enter TPC"
               className="focus:ring-2 focus:ring-blue-200 border-gray-200"
               required
@@ -160,6 +250,8 @@ const ReceiveMilkForm = () => {
               id="acidity" 
               type="number" 
               step="0.01"
+              value={formData.acidity}
+              onChange={handleInputChange}
               placeholder="Enter acidity"
               className="focus:ring-2 focus:ring-blue-200 border-gray-200"
               required
@@ -174,6 +266,8 @@ const ReceiveMilkForm = () => {
           <Label htmlFor="notes">Additional Notes</Label>
           <Input 
             id="notes" 
+            value={formData.notes}
+            onChange={handleInputChange}
             placeholder="Enter any additional notes"
             className="focus:ring-2 focus:ring-blue-200 border-gray-200"
           />
@@ -181,8 +275,12 @@ const ReceiveMilkForm = () => {
       </div>
 
       <div className="flex justify-end pt-4 border-t">
-        <Button type="submit" className="w-full md:w-auto">
-          Record Milk Receipt
+        <Button 
+          type="submit" 
+          className="w-full md:w-auto"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Recording...' : 'Record Milk Receipt'}
         </Button>
       </div>
     </form>
