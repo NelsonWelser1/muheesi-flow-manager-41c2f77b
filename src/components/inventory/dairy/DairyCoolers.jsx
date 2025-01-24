@@ -17,7 +17,7 @@ const DairyCoolers = () => {
       <Card className="border border-gray-200 shadow-sm">
         <CardHeader className="border-b border-gray-200">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-2xl font-bold">Dairy Coolers Management</CardTitle>
+            <CardTitle className="text-2xl font-bold">Reception & Milk Coolers Management</CardTitle>
             <Button 
               variant="ghost" 
               onClick={() => navigate(-1)}
@@ -57,7 +57,7 @@ const DairyCoolers = () => {
                   <div className="flex justify-between items-center">
                     <div>
                       <h1 className="text-2xl font-bold text-gray-900">Grand Berna Dairies</h1>
-                      <p className="text-gray-500">Dairy Coolers Management Dashboard</p>
+                      <p className="text-gray-500">Milk Coolers Management Dashboard</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-500">Current Time</p>
@@ -71,9 +71,9 @@ const DairyCoolers = () => {
                       <CardContent className="pt-4">
                         <div className="flex items-center space-x-2">
                           <RefreshCcw className="h-5 w-5 text-blue-600" />
-                          <p className="text-sm font-medium">Active Cold Rooms</p>
+                          <p className="text-sm font-medium">Active Coolers</p>
                         </div>
-                        <p className="text-2xl font-bold mt-2">4/5</p>
+                        <p className="text-2xl font-bold mt-2">2/2</p>
                       </CardContent>
                     </Card>
 
@@ -103,28 +103,26 @@ const DairyCoolers = () => {
                           <AlertCircle className="h-5 w-5 text-red-600" />
                           <p className="text-sm font-medium">Active Alerts</p>
                         </div>
-                        <p className="text-2xl font-bold mt-2">2</p>
+                        <p className="text-2xl font-bold mt-2">1</p>
                       </CardContent>
                     </Card>
                   </div>
 
-                  {/* Cold Room Performance Panel */}
+                  {/* Milk Cooler Status Panel */}
                   <Card>
                     <CardHeader>
-                      <CardTitle>Cold Room Status</CardTitle>
+                      <CardTitle>Milk Cooler Status</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {[1, 2, 3, 4, 5].map((room) => (
+                        {[1, 2].map((room) => (
                           <div key={room} className="flex items-center justify-between p-4 border rounded-lg">
                             <div className="flex items-center space-x-4">
                               <div className={`w-3 h-3 rounded-full ${
-                                room === 2 ? 'bg-yellow-400' : 
-                                room === 4 ? 'bg-red-500' : 
-                                'bg-green-500'
+                                room === 2 ? 'bg-yellow-400' : 'bg-green-500'
                               }`} />
                               <div>
-                                <p className="font-medium">Cold Room {room}</p>
+                                <p className="font-medium">{room === 1 ? 'Reception Milk Cooler' : 'Factory Milk Cooler'}</p>
                                 <p className="text-sm text-gray-500">Manager: John Doe</p>
                               </div>
                             </div>
@@ -145,14 +143,9 @@ const DairyCoolers = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
-                        <div className="flex items-center space-x-2 text-red-700">
-                          <AlertCircle className="h-4 w-4" />
-                          <p>Cold Room 4 temperature above threshold (6.2°C)</p>
-                          <span className="text-sm">2:45 PM</span>
-                        </div>
                         <div className="flex items-center space-x-2 text-yellow-700">
                           <AlertCircle className="h-4 w-4" />
-                          <p>Cold Room 2 maintenance due in 2 days</p>
+                          <p>Factory Milk Cooler maintenance due in 2 days</p>
                           <span className="text-sm">1:30 PM</span>
                         </div>
                       </div>
