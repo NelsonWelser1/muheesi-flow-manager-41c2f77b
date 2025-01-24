@@ -34,16 +34,13 @@ const ReceiveMilkForm = () => {
         {/* Supplier Information */}
         <div className="space-y-2">
           <Label htmlFor="supplier">Supplier Name/ID</Label>
-          <Select required>
-            <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200 border-gray-200">
-              <SelectValue placeholder="Select supplier" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sup1">Supplier 1 (ID: 001)</SelectItem>
-              <SelectItem value="sup2">Supplier 2 (ID: 002)</SelectItem>
-              <SelectItem value="sup3">Supplier 3 (ID: 003)</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input 
+            id="supplier" 
+            type="text"
+            placeholder="Enter supplier name or ID"
+            className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+            required
+          />
         </div>
 
         {/* Milk Volume */}
