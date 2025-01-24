@@ -15,7 +15,7 @@ import ReportsDashboard from '../reports/ReportsDashboard';
 export const dairySections = [
   { 
     id: 'coolers', 
-    title: 'Dairy Coolers', 
+    title: 'Reception & Milk Coolers', 
     icon: Milk, 
     component: DairyCoolers,
     notifications: 2,
