@@ -49,31 +49,9 @@ const ReceiveMilkForm = () => {
     getCurrentUser();
   }, []);
 
-  const handleInputChange = (e) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
-  };
-
-  const resetForm = () => {
-    setFormData({
-      supplier: '',
-      quantity: '',
-      temperature: '',
-      fatPercentage: '',
-      proteinPercentage: '',
-      totalPlateCount: '',
-      acidity: '',
-      notes: ''
-    });
-    setBatchId(generateBatchId());
-    setMilkType('cow');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submission started');
     
     if (!currentUser) {
       toast({
@@ -104,8 +82,9 @@ const ReceiveMilkForm = () => {
           total_plate_count: parseInt(formData.totalPlateCount),
           acidity: parseFloat(formData.acidity),
           notes: formData.notes,
-          user_id: currentUser.id // Add user_id to the form data
-        }]);
+          user_id: currentUser.id
+        }])
+        .select();
 
       if (error) {
         console.error('Error submitting form:', error);
@@ -134,6 +113,29 @@ const ReceiveMilkForm = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      supplier: '',
+      quantity: '',
+      temperature: '',
+      fatPercentage: '',
+      proteinPercentage: '',
+      totalPlateCount: '',
+      acidity: '',
+      notes: ''
+    });
+    setBatchId(generateBatchId());
+    setMilkType('cow');
   };
 
   return (
@@ -300,16 +302,15 @@ const ReceiveMilkForm = () => {
 
       <div className="flex justify-end pt-4 border-t">
         <Button 
-          type="submit" 
-          className="w-full md:w-auto"
+          type="submit"
           disabled={isSubmitting}
+          className="w-full md:w-auto"
         >
           {isSubmitting ? 'Recording...' : 'Record Milk Receipt'}
         </Button>
       </div>
     </form>
   );
-
 };
 
 export default ReceiveMilkForm;
