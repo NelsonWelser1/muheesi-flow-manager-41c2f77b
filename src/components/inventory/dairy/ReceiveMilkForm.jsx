@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 const ReceiveMilkForm = () => {
   const { toast } = useToast();
   const [batchId, setBatchId] = useState('');
+  const [milkType, setMilkType] = useState('cow'); // Set default value to 'cow'
 
   // Generate Batch ID on component mount
   useEffect(() => {
@@ -25,7 +26,8 @@ const ReceiveMilkForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted with batch ID:', batchId);
+    const receptionDateTime = new Date().toISOString(); // Generate current date/time on submit
+    console.log('Form submitted with batch ID:', batchId, 'and reception time:', receptionDateTime);
     toast({
       title: "Success",
       description: "Milk reception data has been recorded",
@@ -35,14 +37,15 @@ const ReceiveMilkForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-[800px] mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Date and Time */}
+        {/* Date and Time - Now Read Only */}
         <div className="space-y-2">
           <Label htmlFor="receptionDateTime">Date and Time of Reception</Label>
           <Input 
             id="receptionDateTime" 
-            type="datetime-local"
-            className="focus:ring-2 focus:ring-blue-200 border-gray-200"
-            required
+            type="text"
+            value={new Date().toLocaleString()}
+            className="focus:ring-2 focus:ring-blue-200 border-gray-200 bg-gray-50"
+            readOnly
           />
         </div>
 
@@ -84,10 +87,10 @@ const ReceiveMilkForm = () => {
           />
         </div>
 
-        {/* Milk Type */}
+        {/* Milk Type - Now with default value */}
         <div className="space-y-2">
           <Label htmlFor="milkType">Milk Type</Label>
-          <Select required>
+          <Select value={milkType} onValueChange={setMilkType} required>
             <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200 border-gray-200">
               <SelectValue placeholder="Select milk type" />
             </SelectTrigger>
@@ -99,7 +102,7 @@ const ReceiveMilkForm = () => {
           </Select>
         </div>
 
-        {/* Batch ID - Now Read Only */}
+        {/* Batch ID */}
         <div className="space-y-2">
           <Label htmlFor="batchId">Batch ID</Label>
           <Input 
@@ -165,6 +168,7 @@ const ReceiveMilkForm = () => {
         </div>
       </div>
 
+      {/* Additional Notes Section */}
       <div className="border-t pt-6">
         <div className="space-y-2">
           <Label htmlFor="notes">Additional Notes</Label>
