@@ -20,56 +20,38 @@ CREATE TABLE IF NOT EXISTS milk_reception_data (
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    user_id UUID REFERENCES auth.users(id)
+    user_id UUID REFERENCES auth.users(id) NOT NULL
 );
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE milk_reception_data ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if they exist
-DROP POLICY IF EXISTS "Users can view their own records" ON milk_reception_data;
-DROP POLICY IF EXISTS "Users can insert records" ON milk_reception_data;
-DROP POLICY IF EXISTS "Users can update their own records" ON milk_reception_data;
+DROP POLICY IF EXISTS "Users can view milk reception data" ON milk_reception_data;
+DROP POLICY IF EXISTS "Users can insert milk reception data" ON milk_reception_data;
+DROP POLICY IF EXISTS "Users can update milk reception data" ON milk_reception_data;
 
--- Create new RLS policies
-CREATE POLICY "Users can view their own records"
+-- Create RLS policies
+CREATE POLICY "Users can view milk reception data"
 ON milk_reception_data
 FOR SELECT
 TO authenticated
-USING (
-    auth.uid() = user_id OR
-    EXISTS (
-        SELECT 1 FROM user_roles
-        WHERE user_id = auth.uid()
-        AND (role_name = 'System Administrator' OR company = 'Grand Berna Dairies')
-    )
-);
+USING (true);  -- Allow all authenticated users to view records
 
-CREATE POLICY "Users can insert records"
+CREATE POLICY "Users can insert milk reception data"
 ON milk_reception_data
 FOR INSERT
 TO authenticated
 WITH CHECK (
-    auth.uid() IS NOT NULL AND (
-        EXISTS (
-            SELECT 1 FROM user_roles
-            WHERE user_id = auth.uid()
-            AND (role_name = 'System Administrator' OR company = 'Grand Berna Dairies')
-        )
-    )
+    auth.uid() = user_id  -- Only allow users to insert records with their own user_id
 );
 
-CREATE POLICY "Users can update their own records"
+CREATE POLICY "Users can update milk reception data"
 ON milk_reception_data
 FOR UPDATE
 TO authenticated
 USING (
-    auth.uid() = user_id OR
-    EXISTS (
-        SELECT 1 FROM user_roles
-        WHERE user_id = auth.uid()
-        AND (role_name = 'System Administrator' OR company = 'Grand Berna Dairies')
-    )
+    auth.uid() = user_id  -- Only allow users to update their own records
 );
 
 -- Create indexes for better query performance

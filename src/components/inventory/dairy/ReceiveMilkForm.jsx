@@ -11,6 +11,7 @@ const ReceiveMilkForm = () => {
   const [batchId, setBatchId] = useState('');
   const [milkType, setMilkType] = useState('cow');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [formData, setFormData] = useState({
     supplier: '',
     quantity: '',
@@ -22,7 +23,6 @@ const ReceiveMilkForm = () => {
     notes: ''
   });
 
-  // Generate Batch ID on component mount
   useEffect(() => {
     const generateBatchId = () => {
       const date = new Date();
@@ -34,6 +34,19 @@ const ReceiveMilkForm = () => {
     };
 
     setBatchId(generateBatchId());
+    
+    // Get current user
+    const getCurrentUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('Error fetching user:', error);
+        return;
+      }
+      console.log('Current user:', user);
+      setCurrentUser(user);
+    };
+
+    getCurrentUser();
   }, []);
 
   const handleInputChange = (e) => {
@@ -61,6 +74,16 @@ const ReceiveMilkForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!currentUser) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to submit milk reception data",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     const receptionDateTime = new Date().toISOString();
 
@@ -80,14 +103,15 @@ const ReceiveMilkForm = () => {
           protein_percentage: parseFloat(formData.proteinPercentage),
           total_plate_count: parseInt(formData.totalPlateCount),
           acidity: parseFloat(formData.acidity),
-          notes: formData.notes
+          notes: formData.notes,
+          user_id: currentUser.id // Add user_id to the form data
         }]);
 
       if (error) {
         console.error('Error submitting form:', error);
         toast({
           title: "Error",
-          description: "Failed to record milk reception data. Please try again.",
+          description: error.message || "Failed to record milk reception data. Please try again.",
           variant: "destructive"
         });
         return;
@@ -285,6 +309,7 @@ const ReceiveMilkForm = () => {
       </div>
     </form>
   );
+
 };
 
 export default ReceiveMilkForm;
