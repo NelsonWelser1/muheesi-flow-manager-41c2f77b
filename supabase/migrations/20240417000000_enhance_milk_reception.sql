@@ -111,34 +111,6 @@ CREATE OR REPLACE TRIGGER calculate_quality_score_trigger
     FOR EACH ROW
     EXECUTE FUNCTION update_quality_score();
 
--- Add RLS policies
-ALTER TABLE milk_reception ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view milk reception data in their company"
-    ON milk_reception FOR SELECT
-    TO authenticated
-    USING (company_id IN (
-        SELECT company_id FROM user_companies 
-        WHERE user_id = auth.uid()
-    ));
-
-CREATE POLICY "Users can insert milk reception data for their company"
-    ON milk_reception FOR INSERT
-    TO authenticated
-    WITH CHECK (company_id IN (
-        SELECT company_id FROM user_companies 
-        WHERE user_id = auth.uid()
-    ));
-
-CREATE POLICY "Users can update their own milk reception data"
-    ON milk_reception FOR UPDATE
-    TO authenticated
-    USING (user_id = auth.uid())
-    WITH CHECK (company_id IN (
-        SELECT company_id FROM user_companies 
-        WHERE user_id = auth.uid()
-    ));
-
 -- Create audit log table
 CREATE TABLE IF NOT EXISTS milk_reception_audit_log (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

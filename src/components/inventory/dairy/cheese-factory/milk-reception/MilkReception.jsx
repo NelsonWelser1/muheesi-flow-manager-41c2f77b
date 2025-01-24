@@ -6,17 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from 'date-fns';
-import { Download, Printer, FileText, Image } from 'lucide-react';
+import { format, sub } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import html2canvas from 'html2canvas';
 
 const MilkReception = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("entry");
-  const [receptionData, setReceptionData] = useState([]);
   const [timeFilter, setTimeFilter] = useState('24h');
   const [formData, setFormData] = useState({
     dateTime: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
@@ -30,6 +26,26 @@ const MilkReception = () => {
     totalPlateCount: '',
     acidity: '',
     notes: ''
+  });
+
+  const { data: receptionData = [], isLoading } = useQuery({
+    queryKey: ['milkReception', timeFilter],
+    queryFn: async () => {
+      const timeAgo = {
+        '24h': '24 hours',
+        '7d': '7 days',
+        '30d': '30 days'
+      }[timeFilter];
+
+      const { data, error } = await supabase
+        .from('milk_reception')
+        .select('*')
+        .gte('dateTime', format(sub(new Date(), { [timeFilter.endsWith('h') ? 'hours' : 'days']: parseInt(timeFilter) }), "yyyy-MM-dd'T'HH:mm:ssX"))
+        .order('dateTime', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    }
   });
 
   const handleInputChange = (e) => {
@@ -49,8 +65,14 @@ const MilkReception = () => {
         .from('milk_reception')
         .insert([{
           ...formData,
-          quality_score: calculateQualityScore()
-        }]);
+          milkVolume: parseFloat(formData.milkVolume),
+          temperature: parseFloat(formData.temperature),
+          fatPercentage: parseFloat(formData.fatPercentage),
+          proteinPercentage: parseFloat(formData.proteinPercentage),
+          totalPlateCount: parseInt(formData.totalPlateCount),
+          acidity: parseFloat(formData.acidity)
+        }])
+        .select();
 
       if (error) throw error;
 
@@ -81,64 +103,6 @@ const MilkReception = () => {
         description: "Failed to record milk reception data",
         variant: "destructive",
       });
-    }
-  };
-
-  const calculateQualityScore = () => {
-    // Implement quality score calculation based on parameters
-    const fatScore = parseFloat(formData.fatPercentage) * 20;
-    const proteinScore = parseFloat(formData.proteinPercentage) * 20;
-    const acidityScore = (1 - Math.abs(parseFloat(formData.acidity) - 6.7) / 6.7) * 60;
-    return Math.round((fatScore + proteinScore + acidityScore) / 3);
-  };
-
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    
-    doc.autoTable({
-      head: [['Batch ID', 'Date', 'Supplier', 'Volume (L)', 'Temperature (°C)', 'Quality Score']],
-      body: receptionData.map(item => [
-        item.batchId,
-        format(new Date(item.dateTime), 'yyyy-MM-dd HH:mm'),
-        item.supplierName,
-        item.milkVolume,
-        item.temperature,
-        item.quality_score
-      ])
-    });
-
-    doc.save('milk-reception-history.pdf');
-  };
-
-  const downloadCSV = () => {
-    const headers = ['Batch ID', 'Date', 'Supplier', 'Volume (L)', 'Temperature (°C)', 'Quality Score'];
-    const csvData = receptionData.map(item => 
-      [
-        item.batchId,
-        format(new Date(item.dateTime), 'yyyy-MM-dd HH:mm'),
-        item.supplierName,
-        item.milkVolume,
-        item.temperature,
-        item.quality_score
-      ].join(',')
-    );
-    
-    const csvContent = [headers.join(','), ...csvData].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'milk-reception-history.csv';
-    link.click();
-  };
-
-  const downloadJPG = async () => {
-    const element = document.querySelector('.history-table');
-    if (element) {
-      const canvas = await html2canvas(element);
-      const link = document.createElement('a');
-      link.download = 'milk-reception-history.jpg';
-      link.href = canvas.toDataURL('image/jpeg');
-      link.click();
     }
   };
 
@@ -323,25 +287,6 @@ const MilkReception = () => {
                     <SelectItem value="30d">Last 30 Days</SelectItem>
                   </SelectContent>
                 </Select>
-
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={downloadPDF}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    PDF
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={downloadCSV}>
-                    <Download className="h-4 w-4 mr-2" />
-                    CSV
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={downloadJPG}>
-                    <Image className="h-4 w-4 mr-2" />
-                    JPG
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => window.print()}>
-                    <Printer className="h-4 w-4 mr-2" />
-                    Print
-                  </Button>
-                </div>
               </div>
 
               <div className="history-table overflow-x-auto">
