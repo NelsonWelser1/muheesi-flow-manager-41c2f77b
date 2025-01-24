@@ -5,10 +5,16 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS milk_reception_data (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     batch_id TEXT NOT NULL,
+    reception_date TIMESTAMP WITH TIME ZONE,
     supplier TEXT NOT NULL,
-    quantity FLOAT NOT NULL,
-    temperature FLOAT NOT NULL,
-    quality_score INTEGER NOT NULL,
+    milk_type TEXT NOT NULL,
+    quantity DECIMAL(10,2) NOT NULL,
+    temperature DECIMAL(5,2) NOT NULL,
+    fat_percentage DECIMAL(5,2) NOT NULL,
+    protein_percentage DECIMAL(5,2) NOT NULL,
+    total_plate_count INTEGER NOT NULL,
+    acidity DECIMAL(5,2) NOT NULL,
+    notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
