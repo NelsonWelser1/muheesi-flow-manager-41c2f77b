@@ -11,6 +11,7 @@ const CheeseProductionMonitor = () => {
   console.log('Rendering CheeseProductionMonitor');
   const { toast } = useToast();
 
+  // Query for active production batches
   const { data: activeBatches, isLoading: isLoadingProduction, error: productionError } = useQuery({
     queryKey: ['cheeseProduction'],
     queryFn: async () => {
@@ -19,6 +20,7 @@ const CheeseProductionMonitor = () => {
         const { data, error } = await supabase
           .from('cheese_production')
           .select('*, production_line:production_line_id(*)')
+          .eq('status', 'in_progress')  // Only fetch active batches
           .order('created_at', { ascending: false })
           .limit(5);
 
@@ -39,20 +41,22 @@ const CheeseProductionMonitor = () => {
         throw error;
       }
     },
-    retry: 1,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
-    enabled: true
+    staleTime: 10000, // Reduced to 10 seconds for more frequent updates
+    refetchInterval: 15000, // Refetch every 15 seconds
+    refetchOnWindowFocus: true
   });
 
+  // Query for production statistics
   const { data: productionStats, isLoading: isLoadingStats } = useQuery({
     queryKey: ['productionStats'],
     queryFn: async () => {
       console.log('Fetching production stats...');
       try {
+        const today = new Date().toISOString().split('T')[0];
         const { data, error } = await supabase
           .from('cheese_production_stats')
           .select('*')
+          .gte('date', today) // Only fetch today's stats
           .order('date', { ascending: false })
           .limit(7);
 
@@ -73,16 +77,15 @@ const CheeseProductionMonitor = () => {
         throw error;
       }
     },
-    retry: 1,
-    staleTime: 30000,
-    refetchOnWindowFocus: false,
-    enabled: true
+    staleTime: 10000,
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true
   });
 
   if (productionError) {
     return (
       <div className="p-4">
-        <p className="text-red-500">Error loading production data. Please try again later.</p>
+        <p className="text-red-500">Error loading production data: {productionError.message}</p>
       </div>
     );
   }
@@ -99,7 +102,7 @@ const CheeseProductionMonitor = () => {
         <ProductionMetrics 
           activeBatches={activeBatches || []}
           totalProduction={productionStats?.[0]?.production_amount || 0}
-          averageQuality={85}
+          averageQuality={productionStats?.[0]?.quality_score || 85}
         />
       </div>
 
