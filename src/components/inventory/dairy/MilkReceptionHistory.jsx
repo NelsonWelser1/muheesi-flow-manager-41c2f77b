@@ -16,7 +16,7 @@ const MilkReceptionHistory = () => {
   const [endDate, setEndDate] = useState('');
 
   // Fetch data from Supabase
-  const { data: receptionData, isLoading } = useQuery({
+  const { data: receptionData, isLoading, error } = useQuery({
     queryKey: ['milkReception', timeRange, startDate, endDate],
     queryFn: async () => {
       console.log('Fetching milk reception data with range:', timeRange);
@@ -30,8 +30,19 @@ const MilkReceptionHistory = () => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching milk reception data:', error);
+        throw error;
+      }
       return data;
+    },
+    onError: (error) => {
+      console.error('Query error:', error);
+      toast({
+        title: "Error loading data",
+        description: "There was a problem loading the milk reception data. Please try again later.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -144,6 +155,12 @@ const MilkReceptionHistory = () => {
                 {isLoading ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-4 text-center">Loading...</td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-red-500">
+                      Error loading data. Please try again later.
+                    </td>
                   </tr>
                 ) : receptionData?.length ? (
                   receptionData.map((record) => (
