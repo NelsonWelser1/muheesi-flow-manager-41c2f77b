@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -7,10 +7,25 @@ import { useToast } from "@/components/ui/use-toast";
 
 const ReceiveMilkForm = () => {
   const { toast } = useToast();
+  const [batchId, setBatchId] = useState('');
+
+  // Generate Batch ID on component mount
+  useEffect(() => {
+    const generateBatchId = () => {
+      const date = new Date();
+      const year = date.getFullYear().toString().slice(-2);
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      return `MK${year}${month}${day}-${random}`;
+    };
+
+    setBatchId(generateBatchId());
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted');
+    console.log('Form submitted with batch ID:', batchId);
     toast({
       title: "Success",
       description: "Milk reception data has been recorded",
@@ -84,15 +99,15 @@ const ReceiveMilkForm = () => {
           </Select>
         </div>
 
-        {/* Batch ID */}
+        {/* Batch ID - Now Read Only */}
         <div className="space-y-2">
           <Label htmlFor="batchId">Batch ID</Label>
           <Input 
             id="batchId" 
             type="text"
-            placeholder="Enter batch ID"
-            className="focus:ring-2 focus:ring-blue-200 border-gray-200"
-            required
+            value={batchId}
+            className="focus:ring-2 focus:ring-blue-200 border-gray-200 bg-gray-50"
+            readOnly
           />
         </div>
       </div>
