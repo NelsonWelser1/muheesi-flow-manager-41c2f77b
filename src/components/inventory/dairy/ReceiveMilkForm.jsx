@@ -98,29 +98,26 @@ const ReceiveMilkForm = () => {
       }
 
       const receptionDateTime = new Date().toISOString();
-      console.log('Submitting data to Supabase:', {
+      const dataToSubmit = {
         batch_id: batchId,
         reception_date: receptionDateTime,
-        ...formData,
+        supplier: formData.supplier,
+        milk_type: milkType,
+        quantity: numericFields.quantity,
+        temperature: numericFields.temperature,
+        fat_percentage: numericFields.fatPercentage,
+        protein_percentage: numericFields.proteinPercentage,
+        total_plate_count: numericFields.totalPlateCount,
+        acidity: numericFields.acidity,
+        notes: formData.notes || null,
         user_id: currentUser.id
-      });
+      };
+
+      console.log('Submitting data to Supabase:', dataToSubmit);
 
       const { data, error } = await supabase
         .from('milk_reception_data')
-        .insert([{
-          batch_id: batchId,
-          reception_date: receptionDateTime,
-          supplier: formData.supplier,
-          milk_type: milkType,
-          quantity: numericFields.quantity,
-          temperature: numericFields.temperature,
-          fat_percentage: numericFields.fatPercentage,
-          protein_percentage: numericFields.proteinPercentage,
-          total_plate_count: numericFields.totalPlateCount,
-          acidity: numericFields.acidity,
-          notes: formData.notes || null,
-          user_id: currentUser.id
-        }])
+        .insert([dataToSubmit])
         .select();
 
       if (error) {
