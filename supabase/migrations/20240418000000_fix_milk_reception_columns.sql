@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS milk_reception (
     notes TEXT,
     datetime TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     quality_score INTEGER,
+    user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -23,7 +24,12 @@ CREATE TABLE IF NOT EXISTS milk_reception (
 -- Enable RLS
 ALTER TABLE milk_reception ENABLE ROW LEVEL SECURITY;
 
--- Create policies
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Enable read access for authenticated users" ON milk_reception;
+DROP POLICY IF EXISTS "Enable insert access for authenticated users" ON milk_reception;
+DROP POLICY IF EXISTS "Enable update access for authenticated users" ON milk_reception;
+
+-- Create updated policies
 CREATE POLICY "Enable read access for authenticated users"
 ON milk_reception FOR SELECT
 TO authenticated
@@ -32,11 +38,18 @@ USING (true);
 CREATE POLICY "Enable insert access for authenticated users"
 ON milk_reception FOR INSERT
 TO authenticated
-WITH CHECK (true);
+WITH CHECK (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Enable update access for own rows"
+ON milk_reception FOR UPDATE
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
 
 -- Create indexes
 CREATE INDEX idx_milk_reception_datetime ON milk_reception(datetime);
 CREATE INDEX idx_milk_reception_supplier ON milk_reception(supplier_name);
+CREATE INDEX idx_milk_reception_user_id ON milk_reception(user_id);
 
 -- Create updated_at trigger
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -65,10 +78,11 @@ FROM milk_reception
 GROUP BY date_trunc('day', datetime)
 ORDER BY reception_date DESC;
 
--- Recreate the audit log table
+-- Recreate the audit log table with user tracking
 CREATE TABLE IF NOT EXISTS milk_reception_audit_log (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     milk_reception_id UUID REFERENCES milk_reception(id),
+    user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid(),
     action TEXT NOT NULL,
     old_data JSONB,
     new_data JSONB,

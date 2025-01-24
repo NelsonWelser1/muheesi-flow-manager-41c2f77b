@@ -6,6 +6,12 @@ export const useMilkReception = () => {
 
   const fetchMilkReception = async () => {
     console.log('Fetching milk reception data');
+    const { data: session } = await supabase.auth.getSession();
+    
+    if (!session?.session?.user) {
+      throw new Error('User not authenticated');
+    }
+
     const { data, error } = await supabase
       .from('milk_reception')
       .select('*')
@@ -22,9 +28,18 @@ export const useMilkReception = () => {
 
   const addMilkReception = async (newData) => {
     console.log('Adding new milk reception data:', newData);
+    const { data: session } = await supabase.auth.getSession();
+    
+    if (!session?.session?.user) {
+      throw new Error('User not authenticated');
+    }
+
     const { data, error } = await supabase
       .from('milk_reception')
-      .insert([newData])
+      .insert([{
+        ...newData,
+        user_id: session.session.user.id
+      }])
       .select();
 
     if (error) {
