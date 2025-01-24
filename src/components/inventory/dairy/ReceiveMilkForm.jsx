@@ -1,13 +1,24 @@
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
 
 const ReceiveMilkForm = () => {
+  const { toast } = useToast();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Form submitted');
+    toast({
+      title: "Success",
+      description: "Milk reception data has been recorded",
+    });
+  };
+
   return (
-    <form className="space-y-6 max-w-[800px] mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-[800px] mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Date and Time */}
         <div className="space-y-2">
@@ -16,13 +27,14 @@ const ReceiveMilkForm = () => {
             id="receptionDateTime" 
             type="datetime-local"
             className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+            required
           />
         </div>
 
         {/* Supplier Information */}
         <div className="space-y-2">
           <Label htmlFor="supplier">Supplier Name/ID</Label>
-          <Select>
+          <Select required>
             <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200 border-gray-200">
               <SelectValue placeholder="Select supplier" />
             </SelectTrigger>
@@ -43,6 +55,7 @@ const ReceiveMilkForm = () => {
             step="0.1"
             placeholder="Enter volume"
             className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+            required
           />
         </div>
 
@@ -55,13 +68,14 @@ const ReceiveMilkForm = () => {
             step="0.1"
             placeholder="Enter temperature"
             className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+            required
           />
         </div>
 
         {/* Milk Type */}
         <div className="space-y-2">
           <Label htmlFor="milkType">Milk Type</Label>
-          <Select>
+          <Select required>
             <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-200 border-gray-200">
               <SelectValue placeholder="Select milk type" />
             </SelectTrigger>
@@ -81,6 +95,7 @@ const ReceiveMilkForm = () => {
             type="text"
             placeholder="Enter batch ID"
             className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+            required
           />
         </div>
       </div>
@@ -97,6 +112,7 @@ const ReceiveMilkForm = () => {
               step="0.01"
               placeholder="Enter fat %"
               className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+              required
             />
           </div>
 
@@ -108,6 +124,7 @@ const ReceiveMilkForm = () => {
               step="0.01"
               placeholder="Enter protein %"
               className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+              required
             />
           </div>
 
@@ -118,6 +135,7 @@ const ReceiveMilkForm = () => {
               type="number"
               placeholder="Enter TPC"
               className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+              required
             />
           </div>
 
@@ -129,6 +147,7 @@ const ReceiveMilkForm = () => {
               step="0.01"
               placeholder="Enter acidity"
               className="focus:ring-2 focus:ring-blue-200 border-gray-200"
+              required
             />
           </div>
         </div>
