@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import MilkReception from './milk-reception/MilkReception';
+import MilkReception from './cheese-factory/milk-reception/MilkReception';
 import DairyCoolerDashboard from './storage/DairyCoolerDashboard';
 
 const DairyCoolers = () => {
