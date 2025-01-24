@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
+import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const ReceiveMilkForm = () => {
   const { toast } = useToast();
+  const { session } = useSupabaseAuth();
   const [batchId, setBatchId] = useState('');
   const [milkType, setMilkType] = useState('cow');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,11 +63,22 @@ const ReceiveMilkForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!session?.user?.id) {
+      console.error('No authenticated user found');
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to submit milk reception data.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     const receptionDateTime = new Date().toISOString();
 
     try {
-      console.log('Submitting form data to Supabase...');
+      console.log('Preparing form submission with user ID:', session.user.id);
       
       const { data, error } = await supabase
         .from('milk_reception_data')
@@ -80,14 +93,15 @@ const ReceiveMilkForm = () => {
           protein_percentage: parseFloat(formData.proteinPercentage),
           total_plate_count: parseInt(formData.totalPlateCount),
           acidity: parseFloat(formData.acidity),
-          notes: formData.notes
+          notes: formData.notes,
+          user_id: session.user.id
         }]);
 
       if (error) {
         console.error('Error submitting form:', error);
         toast({
           title: "Error",
-          description: "Failed to record milk reception data. Please try again.",
+          description: error.message || "Failed to record milk reception data. Please try again.",
           variant: "destructive"
         });
         return;
@@ -285,6 +299,7 @@ const ReceiveMilkForm = () => {
       </div>
     </form>
   );
+
 };
 
 export default ReceiveMilkForm;
