@@ -11,6 +11,7 @@ const ReceiveMilkForm = () => {
   const [batchId, setBatchId] = useState('');
   const [milkType, setMilkType] = useState('cow');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userId, setUserId] = useState(null);
   const [formData, setFormData] = useState({
     supplier: '',
     quantity: '',
@@ -21,6 +22,18 @@ const ReceiveMilkForm = () => {
     acidity: '',
     notes: ''
   });
+
+  // Get current user on component mount
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        console.log('Current user ID:', user.id);
+        setUserId(user.id);
+      }
+    };
+    getCurrentUser();
+  }, []);
 
   // Generate Batch ID on component mount
   useEffect(() => {
@@ -67,6 +80,16 @@ const ReceiveMilkForm = () => {
     try {
       console.log('Submitting form data to Supabase...');
       
+      if (!userId) {
+        console.error('No user ID available');
+        toast({
+          title: "Error",
+          description: "You must be logged in to submit data",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const { data, error } = await supabase
         .from('milk_reception_data')
         .insert([{
@@ -80,7 +103,8 @@ const ReceiveMilkForm = () => {
           protein_percentage: parseFloat(formData.proteinPercentage),
           total_plate_count: parseInt(formData.totalPlateCount),
           acidity: parseFloat(formData.acidity),
-          notes: formData.notes
+          notes: formData.notes,
+          user_id: userId
         }]);
 
       if (error) {
@@ -285,6 +309,7 @@ const ReceiveMilkForm = () => {
       </div>
     </form>
   );
+
 };
 
 export default ReceiveMilkForm;
