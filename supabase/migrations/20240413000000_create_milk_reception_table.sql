@@ -1,7 +1,10 @@
 -- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create milk_reception_data table
+-- Drop existing table if it exists
+DROP TABLE IF EXISTS milk_reception_data;
+
+-- Create milk_reception_data table with all required columns
 CREATE TABLE IF NOT EXISTS milk_reception_data (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     batch_id TEXT NOT NULL,
