@@ -24,6 +24,7 @@ const ReceiveMilkForm = () => {
     notes: ''
   });
 
+  // Define generateBatchId before using it
   const generateBatchId = () => {
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
@@ -33,7 +34,7 @@ const ReceiveMilkForm = () => {
     return `MK${year}${month}${day}-${random}`;
   };
 
-  // Generate Batch ID on component mount
+  // Use generateBatchId in useEffect
   useEffect(() => {
     setBatchId(generateBatchId());
   }, []);
@@ -299,7 +300,6 @@ const ReceiveMilkForm = () => {
       </div>
     </form>
   );
-
 };
 
 export default ReceiveMilkForm;
