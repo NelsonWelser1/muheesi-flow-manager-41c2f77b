@@ -7,10 +7,20 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
+// Define generateBatchId outside the component to avoid recreation
+const generateBatchId = () => {
+  const date = new Date();
+  const year = date.getFullYear().toString().slice(-2);
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `MK${year}${month}${day}-${random}`;
+};
+
 const ReceiveMilkForm = () => {
   const { toast } = useToast();
   const auth = useSupabaseAuth();
-  const [batchId, setBatchId] = useState('');
+  const [batchId, setBatchId] = useState(generateBatchId());
   const [milkType, setMilkType] = useState('cow');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,21 +33,6 @@ const ReceiveMilkForm = () => {
     acidity: '',
     notes: ''
   });
-
-  // Define generateBatchId before using it
-  const generateBatchId = () => {
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `MK${year}${month}${day}-${random}`;
-  };
-
-  // Use generateBatchId in useEffect
-  useEffect(() => {
-    setBatchId(generateBatchId());
-  }, []);
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -64,12 +59,27 @@ const ReceiveMilkForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submission started');
     
     if (!auth?.session?.user?.id) {
       console.error('No authenticated user found');
       toast({
         title: "Authentication Error",
-        description: "You must be logged in to submit milk reception data.",
+        description: "Please log in to submit milk reception data.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate required fields
+    const requiredFields = ['supplier', 'quantity', 'temperature'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields);
+      toast({
+        title: "Validation Error",
+        description: `Please fill in all required fields: ${missingFields.join(', ')}`,
         variant: "destructive"
       });
       return;
@@ -144,7 +154,7 @@ const ReceiveMilkForm = () => {
 
         {/* Supplier Information */}
         <div className="space-y-2">
-          <Label htmlFor="supplier">Supplier Name/ID</Label>
+          <Label htmlFor="supplier">Supplier Name/ID *</Label>
           <Input 
             id="supplier" 
             type="text"
@@ -158,7 +168,7 @@ const ReceiveMilkForm = () => {
 
         {/* Milk Volume */}
         <div className="space-y-2">
-          <Label htmlFor="quantity">Milk Volume (Liters)</Label>
+          <Label htmlFor="quantity">Milk Volume (Liters) *</Label>
           <Input 
             id="quantity" 
             type="number" 
@@ -173,7 +183,7 @@ const ReceiveMilkForm = () => {
 
         {/* Temperature */}
         <div className="space-y-2">
-          <Label htmlFor="temperature">Temperature at Reception (°C)</Label>
+          <Label htmlFor="temperature">Temperature at Reception (°C) *</Label>
           <Input 
             id="temperature" 
             type="number" 
@@ -186,7 +196,7 @@ const ReceiveMilkForm = () => {
           />
         </div>
 
-        {/* Milk Type - Now with default value */}
+        {/* Milk Type */}
         <div className="space-y-2">
           <Label htmlFor="milkType">Milk Type</Label>
           <Select value={milkType} onValueChange={setMilkType} required>
@@ -228,7 +238,6 @@ const ReceiveMilkForm = () => {
               onChange={handleInputChange}
               placeholder="Enter fat %"
               className="focus:ring-2 focus:ring-blue-200 border-gray-200"
-              required
             />
           </div>
 
@@ -242,7 +251,6 @@ const ReceiveMilkForm = () => {
               onChange={handleInputChange}
               placeholder="Enter protein %"
               className="focus:ring-2 focus:ring-blue-200 border-gray-200"
-              required
             />
           </div>
 
@@ -255,7 +263,6 @@ const ReceiveMilkForm = () => {
               onChange={handleInputChange}
               placeholder="Enter TPC"
               className="focus:ring-2 focus:ring-blue-200 border-gray-200"
-              required
             />
           </div>
 
@@ -269,7 +276,6 @@ const ReceiveMilkForm = () => {
               onChange={handleInputChange}
               placeholder="Enter acidity"
               className="focus:ring-2 focus:ring-blue-200 border-gray-200"
-              required
             />
           </div>
         </div>
@@ -300,7 +306,6 @@ const ReceiveMilkForm = () => {
       </div>
     </form>
   );
-
 };
 
 export default ReceiveMilkForm;
