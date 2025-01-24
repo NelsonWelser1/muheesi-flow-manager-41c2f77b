@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Thermometer, Tank, Milk, History, AlertCircle } from "lucide-react";
+import { Thermometer, Container, Milk, History, AlertCircle } from "lucide-react";
 import MilkReception from './cheese-factory/milk-reception/MilkReception';
 import { useDairyCoolerData } from '@/hooks/useDairyCoolerData';
 
@@ -35,7 +35,7 @@ const DairyCoolers = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             {renderMetricCard('Average Temperature', '4.2°C', Thermometer)}
-            {renderMetricCard('Storage Capacity', '78%', Tank, 'warning')}
+            {renderMetricCard('Storage Capacity', '78%', Container, 'warning')}
             {renderMetricCard('Daily Reception', '2,450L', Milk)}
             {renderMetricCard('Active Alerts', '2', AlertCircle, 'critical')}
           </div>
