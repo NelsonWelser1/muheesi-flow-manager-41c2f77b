@@ -7,7 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { format, subYears, addYears } from 'date-fns';
 
-const MilkVolumeGraph = ({ data, predictedData }) => {
+const MilkVolumeGraph = ({ data = [], predictedData = [] }) => {
   const [viewMode, setViewMode] = useState('month');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [showCalendar, setShowCalendar] = useState(false);
@@ -18,19 +18,30 @@ const MilkVolumeGraph = ({ data, predictedData }) => {
   };
 
   const getFilteredData = () => {
+    if (!Array.isArray(data)) {
+      console.log('Data is not an array:', data);
+      return [];
+    }
+
     let filteredData = [...data];
+    
     if (dateRange.from && dateRange.to) {
       filteredData = data.filter(item => {
         const itemDate = new Date(item.date);
         return itemDate >= dateRange.from && itemDate <= dateRange.to;
       });
     } else {
-      filteredData = data.filter(item => 
-        new Date(item.date).getFullYear() === selectedYear
-      );
+      filteredData = data.filter(item => {
+        const itemDate = new Date(item.date);
+        return itemDate.getFullYear() === selectedYear;
+      });
     }
+    
     return filteredData;
   };
+
+  console.log('MilkVolumeGraph data:', data);
+  console.log('MilkVolumeGraph filtered data:', getFilteredData());
 
   return (
     <Card className="w-full">
