@@ -6,6 +6,7 @@ import { ArrowLeft, Thermometer, AlertCircle, Package, RefreshCcw } from "lucide
 import { useNavigate } from "react-router-dom";
 import ReceiveMilkForm from './ReceiveMilkForm';
 import OffloadMilkForm from './OffloadMilkForm';
+import MilkReceptionHistory from './MilkReceptionHistory';
 import { useTimer } from '@/hooks/useTimer';
 
 const DairyCoolers = () => {
@@ -155,6 +156,7 @@ const DairyCoolers = () => {
               </TabsContent>
               <TabsContent value="receive" className="mt-0">
                 <ReceiveMilkForm />
+                <MilkReceptionHistory />
               </TabsContent>
               <TabsContent value="offload" className="mt-0">
                 <OffloadMilkForm />
