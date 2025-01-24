@@ -11,7 +11,6 @@ const ReceiveMilkForm = () => {
   const [batchId, setBatchId] = useState('');
   const [milkType, setMilkType] = useState('cow');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userId, setUserId] = useState(null);
   const [formData, setFormData] = useState({
     supplier: '',
     quantity: '',
@@ -22,44 +21,6 @@ const ReceiveMilkForm = () => {
     acidity: '',
     notes: ''
   });
-
-  // Get current user on component mount
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      try {
-        console.log('Fetching current user...');
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Error fetching session:', sessionError);
-          return;
-        }
-
-        if (!session) {
-          console.log('No active session found');
-          return;
-        }
-
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError) {
-          console.error('Error fetching user:', userError);
-          return;
-        }
-
-        if (user) {
-          console.log('Current user ID:', user.id);
-          setUserId(user.id);
-        } else {
-          console.log('No user found in the session');
-        }
-      } catch (error) {
-        console.error('Error in getCurrentUser:', error);
-      }
-    };
-
-    getCurrentUser();
-  }, []);
 
   // Generate Batch ID on component mount
   useEffect(() => {
@@ -104,33 +65,8 @@ const ReceiveMilkForm = () => {
     const receptionDateTime = new Date().toISOString();
 
     try {
-      console.log('Starting form submission...');
-      console.log('Current user ID:', userId);
+      console.log('Submitting form data to Supabase...');
       
-      if (!userId) {
-        console.error('No user ID available - user must be logged in');
-        toast({
-          title: "Authentication Error",
-          description: "Please log in to submit data",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log('Preparing data for submission:', {
-        batch_id: batchId,
-        user_id: userId,
-        milk_type: milkType,
-        supplier: formData.supplier,
-        quantity: parseFloat(formData.quantity),
-        temperature: parseFloat(formData.temperature),
-        fat_percentage: parseFloat(formData.fatPercentage),
-        protein_percentage: parseFloat(formData.proteinPercentage),
-        total_plate_count: parseInt(formData.totalPlateCount),
-        acidity: parseFloat(formData.acidity),
-        notes: formData.notes
-      });
-
       const { data, error } = await supabase
         .from('milk_reception_data')
         .insert([{
@@ -144,15 +80,14 @@ const ReceiveMilkForm = () => {
           protein_percentage: parseFloat(formData.proteinPercentage),
           total_plate_count: parseInt(formData.totalPlateCount),
           acidity: parseFloat(formData.acidity),
-          notes: formData.notes,
-          user_id: userId
+          notes: formData.notes
         }]);
 
       if (error) {
         console.error('Error submitting form:', error);
         toast({
           title: "Error",
-          description: error.message || "Failed to record milk reception data",
+          description: "Failed to record milk reception data. Please try again.",
           variant: "destructive"
         });
         return;
@@ -350,7 +285,6 @@ const ReceiveMilkForm = () => {
       </div>
     </form>
   );
-
 };
 
 export default ReceiveMilkForm;
