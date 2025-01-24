@@ -47,12 +47,12 @@ const MilkReception = () => {
                     ) : receptionData?.length > 0 ? (
                       receptionData.map((item, index) => (
                         <tr key={index} className="border-b">
-                          <td className="p-2">{format(new Date(item.dateTime), 'yyyy-MM-dd HH:mm')}</td>
-                          <td className="p-2">{item.supplierName}</td>
-                          <td className="p-2">{item.milkVolume}</td>
+                          <td className="p-2">{format(new Date(item.datetime), 'yyyy-MM-dd HH:mm')}</td>
+                          <td className="p-2">{item.supplier_name}</td>
+                          <td className="p-2">{item.milk_volume}</td>
                           <td className="p-2">{item.temperature}</td>
-                          <td className="p-2">{item.fatPercentage}</td>
-                          <td className="p-2">{item.proteinPercentage}</td>
+                          <td className="p-2">{item.fat_percentage}</td>
+                          <td className="p-2">{item.protein_percentage}</td>
                           <td className="p-2">{item.quality_score || 'N/A'}</td>
                         </tr>
                       ))

@@ -23,8 +23,15 @@ export const useMilkReception = () => {
       const { data, error } = await supabase
         .from('milk_reception')
         .insert([{
-          ...formData,
-          datetime: new Date().toISOString(), // Changed from dateTime to datetime
+          supplier_name: formData.supplierName,
+          milk_volume: parseFloat(formData.milkVolume),
+          temperature: parseFloat(formData.temperature),
+          fat_percentage: parseFloat(formData.fatPercentage),
+          protein_percentage: parseFloat(formData.proteinPercentage),
+          total_plate_count: parseInt(formData.totalPlateCount),
+          acidity: parseFloat(formData.acidity),
+          notes: formData.notes,
+          datetime: new Date().toISOString(),
         }])
         .select();
       
