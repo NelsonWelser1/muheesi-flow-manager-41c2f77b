@@ -38,14 +38,19 @@ const ReceiveMilkForm = () => {
     setBatchId(generateBatchId());
     
     const getCurrentUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Error fetching user:', error);
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) {
+          console.error('Error fetching user:', error);
+          showErrorToast(toast, 'Error fetching user data');
+          return;
+        }
+        console.log('Current user:', user);
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('Error in getCurrentUser:', error);
         showErrorToast(toast, 'Error fetching user data');
-        return;
       }
-      console.log('Current user:', user);
-      setCurrentUser(user);
     };
 
     getCurrentUser();
@@ -55,11 +60,6 @@ const ReceiveMilkForm = () => {
     e.preventDefault();
     console.log('Form submission started');
     
-    if (!currentUser) {
-      showErrorToast(toast, 'You must be logged in to submit milk reception data');
-      return;
-    }
-
     try {
       setIsSubmitting(true);
       console.log('Validating form data...');
@@ -70,7 +70,26 @@ const ReceiveMilkForm = () => {
       
       if (missingFields.length > 0) {
         showErrorToast(toast, `Please fill in all required fields: ${missingFields.join(', ')}`);
+        setIsSubmitting(false);
         return;
+      }
+
+      // Validate numeric fields
+      const numericFields = {
+        quantity: parseFloat(formData.quantity),
+        temperature: parseFloat(formData.temperature),
+        fatPercentage: parseFloat(formData.fatPercentage),
+        proteinPercentage: parseFloat(formData.proteinPercentage),
+        totalPlateCount: parseInt(formData.totalPlateCount),
+        acidity: parseFloat(formData.acidity)
+      };
+
+      for (const [field, value] of Object.entries(numericFields)) {
+        if (isNaN(value)) {
+          showErrorToast(toast, `Invalid numeric value for ${field}`);
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       const receptionDateTime = new Date().toISOString();
@@ -87,14 +106,13 @@ const ReceiveMilkForm = () => {
           reception_date: receptionDateTime,
           supplier: formData.supplier,
           milk_type: milkType,
-          quantity: parseFloat(formData.quantity),
-          temperature: parseFloat(formData.temperature),
-          fat_percentage: parseFloat(formData.fatPercentage),
-          protein_percentage: parseFloat(formData.proteinPercentage),
-          total_plate_count: parseInt(formData.totalPlateCount),
-          acidity: parseFloat(formData.acidity),
-          notes: formData.notes,
-          user_id: currentUser.id
+          quantity: numericFields.quantity,
+          temperature: numericFields.temperature,
+          fat_percentage: numericFields.fatPercentage,
+          protein_percentage: numericFields.proteinPercentage,
+          total_plate_count: numericFields.totalPlateCount,
+          acidity: numericFields.acidity,
+          notes: formData.notes || null
         }])
         .select();
 
@@ -106,6 +124,8 @@ const ReceiveMilkForm = () => {
 
       console.log('Form submitted successfully:', data);
       showSuccessToast(toast, "Milk reception data has been recorded");
+      
+      // Reset form after successful submission
       resetForm();
     } catch (error) {
       console.error('Error in form submission:', error);
