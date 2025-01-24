@@ -4,9 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Thermometer, AlertCircle, Package, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import ReceiveMilkForm from './ReceiveMilkForm';
-import OffloadMilkForm from './OffloadMilkForm';
-import MilkReceptionHistory from './MilkReceptionHistory';
 import { useTimer } from '@/hooks/useTimer';
 
 const DairyCoolers = () => {
@@ -18,7 +15,7 @@ const DairyCoolers = () => {
       <Card className="border border-gray-200 shadow-sm">
         <CardHeader className="border-b border-gray-200">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-2xl font-bold">Reception & Milk Coolers Management</CardTitle>
+            <CardTitle className="text-2xl font-bold">Milk Coolers Management</CardTitle>
             <Button 
               variant="ghost" 
               onClick={() => navigate(-1)}
@@ -36,18 +33,6 @@ const DairyCoolers = () => {
                 className="data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
               >
                 Dashboard
-              </TabsTrigger>
-              <TabsTrigger 
-                value="receive" 
-                className="data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
-              >
-                Receive Milk
-              </TabsTrigger>
-              <TabsTrigger 
-                value="offload"
-                className="data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
-              >
-                Offload Milk
               </TabsTrigger>
             </TabsList>
             
@@ -153,13 +138,6 @@ const DairyCoolers = () => {
                     </CardContent>
                   </Card>
                 </div>
-              </TabsContent>
-              <TabsContent value="receive" className="mt-0">
-                <ReceiveMilkForm />
-                <MilkReceptionHistory />
-              </TabsContent>
-              <TabsContent value="offload" className="mt-0">
-                <OffloadMilkForm />
               </TabsContent>
             </div>
           </Tabs>
