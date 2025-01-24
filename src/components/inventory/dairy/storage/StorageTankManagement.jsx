@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { Thermometer, Droplet, AlertTriangle } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import MilkVolumeGraph from './MilkVolumeGraph';
 import { predictProduction } from '@/utils/productionAI';
+
+// ... keep existing code (imports and initial setup)
 
 const StorageTankManagement = () => {
   const [selectedTank, setSelectedTank] = useState(null);
@@ -88,6 +90,32 @@ const StorageTankManagement = () => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
+
+  // Add new query for milk volume data
+  const { data: volumeData } = useQuery({
+    queryKey: ['milkVolumes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('milk_transactions')
+        .select('*')
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      
+      // Transform data for the graph
+      return data.map(transaction => ({
+        date: transaction.created_at,
+        volume: transaction.liters_added,
+        predicted: null // Will be filled by prediction logic
+      }));
+    }
+  });
+
+  // Get predicted data
+  const predictedData = React.useMemo(() => {
+    if (!volumeData) return [];
+    return predictProduction(volumeData);
+  }, [volumeData]);
 
   return (
     <div className="space-y-6">
@@ -193,8 +221,13 @@ const StorageTankManagement = () => {
           </form>
         </CardContent>
       </Card>
-
-      {/* Alerts Section */}
+      
+      {/* Add the new graph component */}
+      <MilkVolumeGraph 
+        data={volumeData || []} 
+        predictedData={predictedData}
+      />
+      
       <Card className="bg-red-50">
         <CardHeader>
           <CardTitle className="text-red-700 flex items-center">
