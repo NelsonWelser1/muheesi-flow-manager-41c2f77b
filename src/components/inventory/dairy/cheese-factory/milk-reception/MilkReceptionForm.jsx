@@ -10,7 +10,7 @@ import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const MilkReceptionForm = () => {
   const { toast } = useToast();
-  const { addMilkReception } = useMilkReception() || {};
+  const milkReception = useMilkReception();
   const { session } = useSupabaseAuth();
   const [formData, setFormData] = useState({
     supplier_name: '',
@@ -44,11 +44,11 @@ const MilkReceptionForm = () => {
       return;
     }
 
-    if (!addMilkReception?.mutateAsync) {
-      console.error('Mutation function is not available');
+    if (!milkReception?.addMilkReception) {
+      console.error('Milk reception mutation is not available');
       toast({
         title: "Error",
-        description: "System error: Mutation function not available",
+        description: "System error: Unable to submit data",
         variant: "destructive",
       });
       return;
@@ -69,7 +69,7 @@ const MilkReceptionForm = () => {
         datetime: new Date().toISOString()
       };
 
-      await addMilkReception.mutateAsync(numericData);
+      await milkReception.addMilkReception.mutateAsync(numericData);
       
       console.log('Successfully submitted milk reception data');
       
@@ -224,9 +224,9 @@ const MilkReceptionForm = () => {
           <Button 
             type="submit" 
             className="w-full"
-            disabled={addMilkReception.isPending}
+            disabled={milkReception.addMilkReception.isPending}
           >
-            {addMilkReception.isPending ? 'Adding...' : 'Add Record'}
+            {milkReception.addMilkReception.isPending ? 'Adding...' : 'Add Record'}
           </Button>
         </form>
       </CardContent>
