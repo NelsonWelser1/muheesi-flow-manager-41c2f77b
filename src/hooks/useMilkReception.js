@@ -3,64 +3,55 @@ import { supabase } from '@/integrations/supabase/supabase';
 
 export const useMilkReception = () => {
   const queryClient = useQueryClient();
+  console.log('Initializing useMilkReception hook');
 
   const fetchMilkReception = async () => {
     console.log('Fetching milk reception data');
-    const { data: session } = await supabase.auth.getSession();
-    
-    if (!session?.session?.user) {
-      throw new Error('User not authenticated');
-    }
-
     const { data, error } = await supabase
       .from('milk_reception')
       .select('*')
-      .order('datetime', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching milk reception data:', error);
       throw error;
     }
 
-    console.log('Fetched milk reception data:', data);
+    console.log('Successfully fetched milk reception data:', data);
     return data;
   };
 
-  const addMilkReception = async (newData) => {
-    console.log('Adding new milk reception data:', newData);
-    const { data: session } = await supabase.auth.getSession();
-    
-    if (!session?.session?.user) {
-      throw new Error('User not authenticated');
-    }
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['milkReception'],
+    queryFn: fetchMilkReception,
+  });
 
-    const { data, error } = await supabase
-      .from('milk_reception')
-      .insert([{
-        ...newData,
-        user_id: session.session.user.id
-      }])
-      .select();
+  const addMilkReception = useMutation({
+    mutationFn: async (newData) => {
+      console.log('Adding new milk reception data:', newData);
+      const { data: result, error } = await supabase
+        .from('milk_reception')
+        .insert([newData])
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error adding milk reception data:', error);
-      throw error;
-    }
+      if (error) {
+        console.error('Error adding milk reception data:', error);
+        throw error;
+      }
 
-    console.log('Successfully added milk reception data:', data);
-    return data;
-  };
+      console.log('Successfully added milk reception data:', result);
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['milkReception']);
+    },
+  });
 
   return {
-    data: useQuery({
-      queryKey: ['milkReception'],
-      queryFn: fetchMilkReception,
-    }),
-    addMilkReception: useMutation({
-      mutationFn: addMilkReception,
-      onSuccess: () => {
-        queryClient.invalidateQueries(['milkReception']);
-      },
-    }),
+    data,
+    isLoading,
+    error,
+    addMilkReception,
   };
 };

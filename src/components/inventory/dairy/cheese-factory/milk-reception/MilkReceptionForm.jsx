@@ -3,28 +3,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useMilkReception } from '@/hooks/useMilkReception';
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const MilkReceptionForm = () => {
   const { toast } = useToast();
-  const { data, addMilkReception } = useMilkReception();
+  const { data, isLoading, error, addMilkReception } = useMilkReception();
   const { session } = useSupabaseAuth();
+  
+  console.log('MilkReceptionForm rendered with:', { data, isLoading, error, addMilkReception });
+
   const [formData, setFormData] = useState({
     supplier_name: '',
-    milk_volume: '',
+    milk_type: '',
+    quantity: '',
+    fat_content: '',
+    protein_content: '',
     temperature: '',
-    quality_score: '',
-    fat_percentage: '',
-    protein_percentage: '',
-    total_plate_count: '',
     acidity: '',
+    density: '',
     notes: ''
   });
 
-  const handleChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -34,12 +36,14 @@ const MilkReceptionForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!session?.user) {
+    console.log('Form submitted with data:', formData);
+
+    if (!session) {
+      console.error('No active session found');
       toast({
         title: "Authentication Error",
-        description: "You must be logged in to submit milk reception data",
-        variant: "destructive",
+        description: "You must be logged in to submit records",
+        variant: "destructive"
       });
       return;
     }
@@ -48,24 +52,24 @@ const MilkReceptionForm = () => {
       console.error('Milk reception mutation is not available');
       toast({
         title: "Error",
-        description: "System error: Unable to submit data",
-        variant: "destructive",
+        description: "System error: Mutation not available",
+        variant: "destructive"
       });
       return;
     }
 
     try {
-      console.log('Submitting milk reception form with data:', formData);
-      
+      // Convert string values to numbers where needed
       const numericData = {
         ...formData,
-        milk_volume: parseFloat(formData.milk_volume),
+        quantity: parseFloat(formData.quantity),
+        fat_content: parseFloat(formData.fat_content),
+        protein_content: parseFloat(formData.protein_content),
         temperature: parseFloat(formData.temperature),
-        quality_score: parseInt(formData.quality_score),
-        fat_percentage: parseFloat(formData.fat_percentage),
-        protein_percentage: parseFloat(formData.protein_percentage),
-        total_plate_count: parseInt(formData.total_plate_count),
         acidity: parseFloat(formData.acidity),
+        density: parseFloat(formData.density),
+        user_id: session.user.id,
+        created_at: new Date().toISOString(),
         datetime: new Date().toISOString()
       };
 
@@ -73,28 +77,29 @@ const MilkReceptionForm = () => {
       
       console.log('Successfully submitted milk reception data');
       
+      // Reset form after successful submission
+      setFormData({
+        supplier_name: '',
+        milk_type: '',
+        quantity: '',
+        fat_content: '',
+        protein_content: '',
+        temperature: '',
+        acidity: '',
+        density: '',
+        notes: ''
+      });
+
       toast({
         title: "Success",
         description: "Milk reception record added successfully",
       });
-
-      setFormData({
-        supplier_name: '',
-        milk_volume: '',
-        temperature: '',
-        quality_score: '',
-        fat_percentage: '',
-        protein_percentage: '',
-        total_plate_count: '',
-        acidity: '',
-        notes: ''
-      });
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Error submitting milk reception data:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to add milk reception record",
-        variant: "destructive",
+        description: "Failed to add milk reception record",
+        variant: "destructive"
       });
     }
   };
@@ -102,7 +107,7 @@ const MilkReceptionForm = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Add New Milk Reception Record</CardTitle>
+        <CardTitle>Add Milk Reception Record</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -113,20 +118,57 @@ const MilkReceptionForm = () => {
                 id="supplier_name"
                 name="supplier_name"
                 value={formData.supplier_name}
-                onChange={handleChange}
+                onChange={handleInputChange}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="milk_volume">Milk Volume (L)</Label>
+              <Label htmlFor="milk_type">Milk Type</Label>
               <Input
-                id="milk_volume"
-                name="milk_volume"
+                id="milk_type"
+                name="milk_type"
+                value={formData.milk_type}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity (Liters)</Label>
+              <Input
+                id="quantity"
+                name="quantity"
                 type="number"
                 step="0.01"
-                value={formData.milk_volume}
-                onChange={handleChange}
+                value={formData.quantity}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fat_content">Fat Content (%)</Label>
+              <Input
+                id="fat_content"
+                name="fat_content"
+                type="number"
+                step="0.01"
+                value={formData.fat_content}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="protein_content">Protein Content (%)</Label>
+              <Input
+                id="protein_content"
+                name="protein_content"
+                type="number"
+                step="0.01"
+                value={formData.protein_content}
+                onChange={handleInputChange}
                 required
               />
             </div>
@@ -139,72 +181,33 @@ const MilkReceptionForm = () => {
                 type="number"
                 step="0.1"
                 value={formData.temperature}
-                onChange={handleChange}
+                onChange={handleInputChange}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="quality_score">Quality Score</Label>
-              <Input
-                id="quality_score"
-                name="quality_score"
-                type="number"
-                min="0"
-                max="100"
-                value={formData.quality_score}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fat_percentage">Fat Percentage</Label>
-              <Input
-                id="fat_percentage"
-                name="fat_percentage"
-                type="number"
-                step="0.1"
-                value={formData.fat_percentage}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="protein_percentage">Protein Percentage</Label>
-              <Input
-                id="protein_percentage"
-                name="protein_percentage"
-                type="number"
-                step="0.1"
-                value={formData.protein_percentage}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="total_plate_count">Total Plate Count</Label>
-              <Input
-                id="total_plate_count"
-                name="total_plate_count"
-                type="number"
-                value={formData.total_plate_count}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="acidity">Acidity</Label>
+              <Label htmlFor="acidity">Acidity (pH)</Label>
               <Input
                 id="acidity"
                 name="acidity"
                 type="number"
-                step="0.1"
+                step="0.01"
                 value={formData.acidity}
-                onChange={handleChange}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="density">Density (g/ml)</Label>
+              <Input
+                id="density"
+                name="density"
+                type="number"
+                step="0.001"
+                value={formData.density}
+                onChange={handleInputChange}
                 required
               />
             </div>
@@ -212,12 +215,11 @@ const MilkReceptionForm = () => {
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
-            <Textarea
+            <Input
               id="notes"
               name="notes"
               value={formData.notes}
-              onChange={handleChange}
-              placeholder="Add any additional notes here..."
+              onChange={handleInputChange}
             />
           </div>
 
