@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useMilkReception } from '@/hooks/useMilkReception';
+import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const MilkReceptionForm = () => {
   const { toast } = useToast();
   const { addMilkReception } = useMilkReception();
+  const { session } = useSupabaseAuth();
   const [formData, setFormData] = useState({
     supplier_name: '',
     milk_volume: '',
@@ -33,7 +35,18 @@ const MilkReceptionForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!session?.user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to submit milk reception data",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      console.log('Submitting milk reception form with data:', formData);
+      
       const numericData = {
         ...formData,
         milk_volume: parseFloat(formData.milk_volume),
@@ -47,6 +60,8 @@ const MilkReceptionForm = () => {
       };
 
       await addMilkReception.mutateAsync(numericData);
+      
+      console.log('Successfully submitted milk reception data');
       
       toast({
         title: "Success",
@@ -68,7 +83,7 @@ const MilkReceptionForm = () => {
       console.error('Error submitting form:', error);
       toast({
         title: "Error",
-        description: "Failed to add milk reception record",
+        description: error.message || "Failed to add milk reception record",
         variant: "destructive",
       });
     }
