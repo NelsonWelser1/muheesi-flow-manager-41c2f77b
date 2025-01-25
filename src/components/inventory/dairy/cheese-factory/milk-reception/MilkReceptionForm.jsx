@@ -10,7 +10,7 @@ import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const MilkReceptionForm = () => {
   const { toast } = useToast();
-  const { addMilkReception } = useMilkReception();
+  const { addMilkReception } = useMilkReception() || {};
   const { session } = useSupabaseAuth();
   const [formData, setFormData] = useState({
     supplier_name: '',
@@ -39,6 +39,16 @@ const MilkReceptionForm = () => {
       toast({
         title: "Authentication Error",
         description: "You must be logged in to submit milk reception data",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!addMilkReception?.mutateAsync) {
+      console.error('Mutation function is not available');
+      toast({
+        title: "Error",
+        description: "System error: Mutation function not available",
         variant: "destructive",
       });
       return;
