@@ -10,7 +10,7 @@ import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const MilkReceptionForm = () => {
   const { toast } = useToast();
-  const milkReception = useMilkReception();
+  const { data, addMilkReception } = useMilkReception();
   const { session } = useSupabaseAuth();
   const [formData, setFormData] = useState({
     supplier_name: '',
@@ -44,7 +44,7 @@ const MilkReceptionForm = () => {
       return;
     }
 
-    if (!milkReception?.addMilkReception) {
+    if (!addMilkReception) {
       console.error('Milk reception mutation is not available');
       toast({
         title: "Error",
@@ -69,7 +69,7 @@ const MilkReceptionForm = () => {
         datetime: new Date().toISOString()
       };
 
-      await milkReception.addMilkReception.mutateAsync(numericData);
+      await addMilkReception.mutateAsync(numericData);
       
       console.log('Successfully submitted milk reception data');
       
@@ -224,9 +224,9 @@ const MilkReceptionForm = () => {
           <Button 
             type="submit" 
             className="w-full"
-            disabled={milkReception.addMilkReception.isPending}
+            disabled={addMilkReception?.isPending}
           >
-            {milkReception.addMilkReception.isPending ? 'Adding...' : 'Add Record'}
+            {addMilkReception?.isPending ? 'Adding...' : 'Add Record'}
           </Button>
         </form>
       </CardContent>
