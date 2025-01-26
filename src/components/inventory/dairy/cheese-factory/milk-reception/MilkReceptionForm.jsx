@@ -27,7 +27,7 @@ const MilkReceptionForm = () => {
     console.log('Submitting form data:', formData);
 
     try {
-      await addMilkReception.mutateAsync({
+      const dataToSubmit = {
         ...formData,
         milk_volume: parseFloat(formData.milk_volume),
         temperature: parseFloat(formData.temperature),
@@ -35,8 +35,13 @@ const MilkReceptionForm = () => {
         protein_percentage: parseFloat(formData.protein_percentage),
         total_plate_count: parseInt(formData.total_plate_count),
         acidity: parseFloat(formData.acidity),
-        quality_score: Math.floor(Math.random() * 100) + 1 // Placeholder for quality score
-      });
+        quality_score: Math.floor(Math.random() * 100) + 1,
+        created_at: new Date().toISOString()
+      };
+
+      console.log('Submitting to Supabase:', dataToSubmit);
+      
+      await addMilkReception.mutateAsync(dataToSubmit);
 
       toast({
         title: "Success",
