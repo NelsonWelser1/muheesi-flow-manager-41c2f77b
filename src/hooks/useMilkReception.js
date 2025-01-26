@@ -28,7 +28,6 @@ export const useMilkReception = () => {
     mutationFn: async (newReception) => {
       console.log('Adding new milk reception:', newReception);
       
-      // First try to insert
       const { data: insertedData, error: insertError } = await supabase
         .from('milk_reception')
         .insert([newReception])

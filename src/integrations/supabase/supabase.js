@@ -20,15 +20,17 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     schema: 'public'
   },
   global: {
-    headers: {
-      'Content-Type': 'application/json'
+    headers: { 
+      'Content-Type': 'application/json',
+      // Add anonymous auth header
+      'Authorization': `Bearer ${supabaseKey}`
     }
   }
 });
 
 // Test the connection with proper query format
 supabase
-  .from('cheese_production')
+  .from('milk_reception')
   .select('*', { count: 'exact', head: true })
   .then(({ count, error }) => {
     if (error) {
