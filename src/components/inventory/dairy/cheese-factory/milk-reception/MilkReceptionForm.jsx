@@ -12,19 +12,19 @@ const MilkReceptionForm = () => {
   console.log('Rendering MilkReceptionForm');
 
   const [formData, setFormData] = useState({
-    supplier_name: '',
-    milk_volume: '',
-    temperature: '',
-    fat_percentage: '',
-    protein_percentage: '',
-    total_plate_count: '',
-    acidity: '',
-    notes: ''
+    supplier_name: 'Test Supplier',
+    milk_volume: '100',
+    temperature: '4.5',
+    fat_percentage: '3.5',
+    protein_percentage: '3.2',
+    total_plate_count: '1000',
+    acidity: '6.5',
+    notes: 'Test submission'
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitting form data:', formData);
+    console.log('Starting form submission with data:', formData);
 
     try {
       const dataToSubmit = {
@@ -40,10 +40,12 @@ const MilkReceptionForm = () => {
         created_at: new Date().toISOString()
       };
 
-      console.log('Submitting to Supabase:', dataToSubmit);
+      console.log('Prepared data for submission:', dataToSubmit);
       
       await addMilkReception.mutateAsync(dataToSubmit);
 
+      console.log('Submission successful');
+      
       toast({
         title: "Success",
         description: "Milk reception record added successfully",
@@ -60,10 +62,10 @@ const MilkReceptionForm = () => {
         notes: ''
       });
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Error details:', error);
       toast({
         title: "Error",
-        description: "Failed to add milk reception record",
+        description: "Failed to add milk reception record: " + error.message,
         variant: "destructive",
       });
     }
