@@ -27,23 +27,29 @@ export const useMilkReception = () => {
   const addMilkReception = useMutation({
     mutationFn: async (newReception) => {
       console.log('Adding new milk reception:', newReception);
-      const { data, error } = await supabase
+      
+      // First try to insert
+      const { data: insertedData, error: insertError } = await supabase
         .from('milk_reception')
         .insert([newReception])
         .select()
         .single();
 
-      if (error) {
-        console.error('Error adding milk reception:', error);
-        throw error;
+      if (insertError) {
+        console.error('Error inserting milk reception:', insertError);
+        throw insertError;
       }
 
-      console.log('Successfully added milk reception:', data);
-      return data;
+      console.log('Successfully inserted milk reception:', insertedData);
+      return insertedData;
     },
-    onSuccess: () => {
-      console.log('Invalidating milk reception queries');
+    onSuccess: (data) => {
+      console.log('Mutation successful, invalidating queries');
       queryClient.invalidateQueries(['milkReception']);
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error);
+      throw error;
     }
   });
 

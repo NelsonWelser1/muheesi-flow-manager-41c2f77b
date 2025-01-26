@@ -36,21 +36,21 @@ const MilkReceptionForm = () => {
         total_plate_count: parseInt(formData.total_plate_count),
         acidity: parseFloat(formData.acidity),
         notes: formData.notes,
-        quality_score: Math.floor(Math.random() * 100) + 1,
+        quality_score: Math.floor(Math.random() * 100) + 1, // Random score for testing
         created_at: new Date().toISOString()
       };
 
       console.log('Prepared data for submission:', dataToSubmit);
       
-      await addMilkReception.mutateAsync(dataToSubmit);
+      const result = await addMilkReception.mutateAsync(dataToSubmit);
+      console.log('Submission result:', result);
 
-      console.log('Submission successful');
-      
       toast({
         title: "Success",
         description: "Milk reception record added successfully",
       });
 
+      // Reset form
       setFormData({
         supplier_name: '',
         milk_volume: '',
