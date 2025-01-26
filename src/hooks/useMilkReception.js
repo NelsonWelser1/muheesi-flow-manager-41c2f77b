@@ -20,14 +20,14 @@ export const useMilkReception = () => {
       }
 
       console.log('Fetched milk reception data:', data);
-      return { data };
+      return data;
     }
   });
 
   const addMilkReception = useMutation({
     mutationFn: async (newReception) => {
       console.log('Adding new milk reception:', newReception);
-      const { data: insertedData, error } = await supabase
+      const { data, error } = await supabase
         .from('milk_reception')
         .insert([newReception])
         .select()
@@ -38,8 +38,8 @@ export const useMilkReception = () => {
         throw error;
       }
 
-      console.log('Successfully added milk reception:', insertedData);
-      return insertedData;
+      console.log('Successfully added milk reception:', data);
+      return data;
     },
     onSuccess: () => {
       console.log('Invalidating milk reception queries');
@@ -48,7 +48,7 @@ export const useMilkReception = () => {
   });
 
   return {
-    data: data?.data || [],
+    data: data || [],
     isLoading,
     error,
     addMilkReception

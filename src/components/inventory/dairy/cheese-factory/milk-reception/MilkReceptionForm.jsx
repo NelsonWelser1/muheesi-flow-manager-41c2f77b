@@ -28,13 +28,14 @@ const MilkReceptionForm = () => {
 
     try {
       const dataToSubmit = {
-        ...formData,
+        supplier_name: formData.supplier_name,
         milk_volume: parseFloat(formData.milk_volume),
         temperature: parseFloat(formData.temperature),
         fat_percentage: parseFloat(formData.fat_percentage),
         protein_percentage: parseFloat(formData.protein_percentage),
         total_plate_count: parseInt(formData.total_plate_count),
         acidity: parseFloat(formData.acidity),
+        notes: formData.notes,
         quality_score: Math.floor(Math.random() * 100) + 1,
         created_at: new Date().toISOString()
       };
