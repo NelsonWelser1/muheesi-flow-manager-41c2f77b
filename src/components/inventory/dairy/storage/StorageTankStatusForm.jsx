@@ -52,16 +52,21 @@ const StorageTankStatusForm = () => {
   // Submit tank status update
   const submitMutation = useMutation({
     mutationFn: async (formData) => {
+      // Validate required fields
+      if (!formData.tankId) {
+        throw new Error('Please select a tank');
+      }
+
       console.log('Submitting tank status update:', formData);
       const lastCleaned = `${formData.cleaningRecord.date} ${formData.cleaningRecord.time}`;
       
       const { error } = await supabase
         .from('storage_tanks')
         .update({
-          initial_volume: parseFloat(formData.initialVolume),
-          added_volume: parseFloat(formData.addedVolume),
+          initial_volume: parseFloat(formData.initialVolume) || 0,
+          added_volume: parseFloat(formData.addedVolume) || 0,
           current_volume: formData.currentVolume,
-          temperature: formData.temperature,
+          temperature: parseFloat(formData.temperature) || 0,
           last_cleaned: lastCleaned,
           cleaner_id: formData.cleaningRecord.cleanerId
         })
@@ -75,12 +80,19 @@ const StorageTankStatusForm = () => {
         title: "Success",
         description: "Tank status updated successfully",
       });
+      // Reset form
+      setVolumeData({
+        initialVolume: '',
+        addedVolume: '',
+        temperature: ''
+      });
+      setSelectedTank('');
     },
     onError: (error) => {
       console.error('Error updating tank status:', error);
       toast({
         title: "Error",
-        description: "Failed to update tank status",
+        description: error.message || "Failed to update tank status",
         variant: "destructive",
       });
     }
@@ -88,6 +100,17 @@ const StorageTankStatusForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validate tank selection
+    if (!selectedTank) {
+      toast({
+        title: "Error",
+        description: "Please select a tank",
+        variant: "destructive",
+      });
+      return;
+    }
+
     submitMutation.mutate({
       tankId: selectedTank,
       initialVolume: volumeData.initialVolume,
