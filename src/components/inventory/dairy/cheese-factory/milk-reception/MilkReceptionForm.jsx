@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { useMilkReception } from '@/hooks/useMilkReception';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const MilkReceptionForm = () => {
   const { toast } = useToast();
@@ -19,7 +20,7 @@ const MilkReceptionForm = () => {
     protein_percentage: '',
     total_plate_count: '',
     acidity: '',
-    quality: '',
+    quality: 'Grade A',
     notes: ''
   });
 
@@ -28,6 +29,13 @@ const MilkReceptionForm = () => {
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleQualityChange = (value) => {
+    setFormData(prev => ({
+      ...prev,
+      quality: value
     }));
   };
 
@@ -66,7 +74,7 @@ const MilkReceptionForm = () => {
         protein_percentage: '',
         total_plate_count: '',
         acidity: '',
-        quality: '',
+        quality: 'Grade A',
         notes: ''
       });
     } catch (error) {
@@ -174,14 +182,18 @@ const MilkReceptionForm = () => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="quality">Quality</Label>
-            <Input
-              id="quality"
-              name="quality"
-              value={formData.quality}
-              onChange={handleChange}
-              placeholder="Enter quality grade"
-            />
+            <Label htmlFor="quality">Quality Grade *</Label>
+            <Select value={formData.quality} onValueChange={handleQualityChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select quality grade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Grade A">Grade A</SelectItem>
+                <SelectItem value="Grade B">Grade B</SelectItem>
+                <SelectItem value="Grade C">Grade C</SelectItem>
+                <SelectItem value="Rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
