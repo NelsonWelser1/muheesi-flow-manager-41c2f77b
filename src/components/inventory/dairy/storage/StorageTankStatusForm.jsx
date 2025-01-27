@@ -50,12 +50,16 @@ const StorageTankStatusForm = () => {
   const submitMutation = useMutation({
     mutationFn: async (formData) => {
       console.log('Submitting tank status update:', formData);
+      const lastCleaned = `${formData.cleaningRecord.date} ${formData.cleaningRecord.time}`;
+      
       const { error } = await supabase
         .from('storage_tanks')
         .update({
+          initial_volume: parseFloat(formData.initialVolume),
+          added_volume: parseFloat(formData.addedVolume),
           current_volume: formData.currentVolume,
           temperature: formData.temperature,
-          last_cleaned: formData.cleaningRecord.date + ' ' + formData.cleaningRecord.time,
+          last_cleaned: lastCleaned,
           cleaner_id: formData.cleaningRecord.cleanerId
         })
         .eq('id', formData.tankId);
@@ -83,6 +87,8 @@ const StorageTankStatusForm = () => {
     e.preventDefault();
     submitMutation.mutate({
       tankId: selectedTank,
+      initialVolume: volumeData.initialVolume,
+      addedVolume: volumeData.addedVolume,
       currentVolume: calculateCurrentVolume(),
       temperature: parseFloat(volumeData.temperature),
       cleaningRecord
