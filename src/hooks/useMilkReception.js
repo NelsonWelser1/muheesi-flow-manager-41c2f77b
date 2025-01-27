@@ -43,14 +43,15 @@ export const useMilkReception = () => {
     },
   });
 
-  const { data: receptions, isLoading } = useQuery({
+  const query = useQuery({
     queryKey: ['milkReceptions'],
     queryFn: fetchMilkReceptions,
   });
 
   return {
-    receptions,
-    isLoading,
-    addMilkReception,
+    data: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    addMilkReception
   };
 };

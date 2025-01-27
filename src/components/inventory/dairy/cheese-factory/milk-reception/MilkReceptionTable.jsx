@@ -12,7 +12,7 @@ import { useMilkReception } from '@/hooks/useMilkReception';
 import { format } from 'date-fns';
 
 const MilkReceptionTable = () => {
-  const { data: { data: milkReception, isLoading, error } } = useMilkReception();
+  const { data: milkReception, isLoading, error } = useMilkReception();
 
   if (isLoading) {
     return <div>Loading milk reception data...</div>;
