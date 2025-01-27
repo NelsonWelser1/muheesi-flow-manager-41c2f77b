@@ -41,11 +41,17 @@ export const useMilkReception = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(['milkReceptions']);
     },
+    onError: (error) => {
+      console.error('Mutation error:', error);
+    }
   });
 
   const query = useQuery({
     queryKey: ['milkReceptions'],
     queryFn: fetchMilkReceptions,
+    onError: (error) => {
+      console.error('Query error:', error);
+    }
   });
 
   return {

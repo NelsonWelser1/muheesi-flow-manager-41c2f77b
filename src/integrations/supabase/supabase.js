@@ -12,33 +12,27 @@ console.log('Initializing Supabase client with URL:', supabaseUrl);
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  },
-  db: {
-    schema: 'public'
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false
   },
   global: {
-    headers: { 
+    headers: {
       'Content-Type': 'application/json',
-      // Add anonymous auth header
-      'Authorization': `Bearer ${supabaseKey}`
+      'Authorization': `Bearer ${supabaseKey}`,
+      'apikey': supabaseKey
     }
   }
 });
 
-// Test the connection with proper query format
+// Test the connection
 supabase
   .from('milk_reception')
-  .select('*', { count: 'exact', head: true })
+  .select('count', { count: 'exact', head: true })
   .then(({ count, error }) => {
     if (error) {
       console.error('Error connecting to Supabase:', error);
     } else {
-      console.log('Successfully connected to Supabase. Table exists and is accessible.');
+      console.log('Successfully connected to Supabase. Table count:', count);
     }
-  })
-  .catch(error => {
-    console.error('Error connecting to Supabase:', error);
   });
