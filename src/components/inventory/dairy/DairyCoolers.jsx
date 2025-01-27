@@ -3,11 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Thermometer, Container, Milk, History, AlertCircle } from "lucide-react";
 import MilkReception from './cheese-factory/milk-reception/MilkReception';
+import StorageTankStatusForm from './storage/StorageTankStatusForm';
 import { useDairyCoolerData } from '@/hooks/useDairyCoolerData';
-
-const DairyCoolers = () => {
-  const { data: coolerData, isLoading } = useDairyCoolerData();
-  console.log('Cooler data:', coolerData);
 
   const renderMetricCard = (title, value, icon, status = 'normal') => {
     const Icon = icon;
@@ -25,6 +22,10 @@ const DairyCoolers = () => {
       </Card>
     );
   };
+
+const DairyCoolers = () => {
+  const { data: coolerData, isLoading } = useDairyCoolerData();
+  console.log('Cooler data:', coolerData);
 
   return (
     <div className="container mx-auto p-4">
@@ -54,6 +55,7 @@ const DairyCoolers = () => {
 
             <TabsContent value="storage">
               <div className="grid gap-4">
+                <StorageTankStatusForm />
                 <Card>
                   <CardHeader>
                     <CardTitle>Storage Tanks Status</CardTitle>
