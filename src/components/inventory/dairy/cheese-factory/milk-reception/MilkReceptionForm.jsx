@@ -19,7 +19,7 @@ const MilkReceptionForm = () => {
     protein_percentage: '',
     total_plate_count: '',
     acidity: '',
-    quality_score: 'Grade A', // Set default value
+    quality_score: 'Grade A',
     notes: ''
   });
 
