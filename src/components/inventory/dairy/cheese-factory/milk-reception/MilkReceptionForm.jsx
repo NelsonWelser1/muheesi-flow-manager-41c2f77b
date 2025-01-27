@@ -107,27 +107,32 @@ const MilkReceptionForm = () => {
       const result = await addMilkReception.mutateAsync(dataToSubmit);
       console.log('Submission result:', result);
 
-      toast({
-        title: "Success",
-        description: "Milk reception record added successfully",
-      });
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Milk reception record added successfully",
+        });
 
-      setFormData({
-        supplier_name: '',
-        milk_volume: '',
-        temperature: '',
-        fat_percentage: '',
-        protein_percentage: '',
-        total_plate_count: '',
-        acidity: '',
-        quality: '',
-        notes: ''
-      });
+        // Reset form after successful submission
+        setFormData({
+          supplier_name: '',
+          milk_volume: '',
+          temperature: '',
+          fat_percentage: '',
+          protein_percentage: '',
+          total_plate_count: '',
+          acidity: '',
+          quality: '',
+          notes: ''
+        });
+      } else {
+        throw new Error('Failed to add record');
+      }
     } catch (error) {
       console.error('Error details:', error);
       toast({
-        title: "Error",
-        description: "Failed to add milk reception record: " + error.message,
+        title: "Submission Failed",
+        description: "Please check your data and try again. " + (error.message || ''),
         variant: "destructive",
       });
     }
