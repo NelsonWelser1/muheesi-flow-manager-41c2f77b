@@ -165,33 +165,37 @@ const MilkReceptionTable = () => {
       <CardContent>
         <Table className="milk-reception-table">
           <TableHeader>
-            <TableRow>
-              <TableHead>Supplier</TableHead>
-              <TableHead>Volume (L)</TableHead>
-              <TableHead>Temperature (°C)</TableHead>
-              <TableHead>Quality Score</TableHead>
-              <TableHead>Fat %</TableHead>
-              <TableHead>Protein %</TableHead>
-              <TableHead>TPC</TableHead>
-              <TableHead>Acidity</TableHead>
-              <TableHead>Date & Time</TableHead>
-              <TableHead>Notes</TableHead>
-            </TableRow>
+
+<TableRow>
+  <TableHead>Supplier</TableHead>
+  <TableHead>Volume (L)</TableHead>
+  <TableHead>Temperature (°C)</TableHead>
+  <TableHead>Quality Score</TableHead>
+  <TableHead>Fat %</TableHead>
+  <TableHead>Protein %</TableHead>
+  <TableHead>TPC</TableHead>
+  <TableHead>Acidity</TableHead>
+  <TableHead>Date & Time</TableHead>
+  <TableHead>Notes</TableHead>
+</TableRow>
+
           </TableHeader>
           <TableBody>
             {milkReception?.map((record) => (
-              <TableRow key={record.id}>
-                <TableCell>{record.supplier_name}</TableCell>
-                <TableCell>{record.milk_volume.toFixed(2)}</TableCell>
-                <TableCell>{record.temperature.toFixed(1)}</TableCell>
-                <TableCell>{record.quality_score}</TableCell>
-                <TableCell>{record.fat_percentage.toFixed(1)}</TableCell>
-                <TableCell>{record.protein_percentage.toFixed(1)}</TableCell>
-                <TableCell>{record.total_plate_count.toLocaleString()}</TableCell>
-                <TableCell>{record.acidity.toFixed(1)}</TableCell>
-                <TableCell>{format(new Date(record.datetime), 'PPp')}</TableCell>
-                <TableCell className="max-w-xs truncate">{record.notes}</TableCell>
-              </TableRow>
+
+<TableRow key={record.id}>
+  <TableCell>{record.supplier_name}</TableCell>
+  <TableCell>{record.milk_volume.toFixed(2)}</TableCell>
+  <TableCell>{record.temperature.toFixed(1)}</TableCell>
+  <TableCell>{record.quality_score}</TableCell>
+  <TableCell>{record.fat_percentage.toFixed(1)}</TableCell>
+  <TableCell>{record.protein_percentage.toFixed(1)}</TableCell>
+  <TableCell>{record.total_plate_count.toLocaleString()}</TableCell>
+  <TableCell>{record.acidity.toFixed(1)}</TableCell>
+  <TableCell>{format(new Date(record.datetime), 'PPp')}</TableCell>
+  <TableCell className="max-w-xs truncate">{record.notes}</TableCell>
+</TableRow>
+
             ))}
           </TableBody>
         </Table>
