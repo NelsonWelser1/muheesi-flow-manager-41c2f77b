@@ -6,20 +6,22 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
-import { Thermometer, Droplet, AlertTriangle } from "lucide-react";
+import { Thermometer, Droplet, AlertTriangle, Trash2 } from "lucide-react";
 import MilkVolumeGraph from './MilkVolumeGraph';
-import { predictProduction } from '@/utils/productionAI';
-
-// ... keep existing code (imports and initial setup)
+import CleaningRecordsTable from './CleaningRecordsTable';
+import AddCleaningRecord from './AddCleaningRecord';
+import { useToast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const StorageTankManagement = () => {
   const [selectedTank, setSelectedTank] = useState(null);
   const [milkVolume, setMilkVolume] = useState('');
   const [temperature, setTemperature] = useState('');
   const [pricePerLiter, setPricePerLiter] = useState('');
+  const { toast } = useToast();
 
   // Fetch tanks data
-  const { data: tanks, isLoading } = useQuery({
+  const { data: tanks, isLoading, refetch: refetchTanks } = useQuery({
     queryKey: ['storageTanks'],
     queryFn: async () => {
       console.log('Fetching storage tanks data');
@@ -36,6 +38,30 @@ const StorageTankManagement = () => {
     }
   });
 
+  // Fetch cleaning records
+  const { data: cleaningRecords } = useQuery({
+    queryKey: ['cleaningRecords', selectedTank],
+    enabled: !!selectedTank,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cleaning_records')
+        .select(`
+          id,
+          cleaned_at,
+          notes,
+          storage_tanks (name)
+        `)
+        .eq('tank_id', selectedTank)
+        .order('cleaned_at', { ascending: false });
+
+      if (error) throw error;
+      return data.map(record => ({
+        ...record,
+        tank_name: record.storage_tanks.name
+      }));
+    }
+  });
+
   // Calculate total cost
   const calculateTotalCost = () => {
     return (parseFloat(milkVolume) || 0) * (parseFloat(pricePerLiter) || 0);
@@ -47,6 +73,18 @@ const StorageTankManagement = () => {
     console.log('Submitting tank update:', { selectedTank, milkVolume, temperature, pricePerLiter });
     
     try {
+      const selectedTankData = tanks.find(t => t.id === selectedTank);
+      const newVolume = selectedTankData.current_volume + parseFloat(milkVolume);
+      
+      if (newVolume > selectedTankData.capacity) {
+        toast({
+          title: "Error",
+          description: "Adding this volume would exceed tank capacity",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('milk_transactions')
         .insert([{
@@ -63,20 +101,31 @@ const StorageTankManagement = () => {
       const { error: updateError } = await supabase
         .from('storage_tanks')
         .update({ 
-          current_volume: supabase.raw('current_volume + ?', [parseFloat(milkVolume)]),
+          current_volume: newVolume,
           temperature: parseFloat(temperature)
         })
         .eq('id', selectedTank);
 
       if (updateError) throw updateError;
 
+      toast({
+        title: "Success",
+        description: "Tank updated successfully",
+      });
+
       // Reset form
       setMilkVolume('');
       setTemperature('');
       setPricePerLiter('');
+      refetchTanks();
       
     } catch (error) {
       console.error('Error updating tank:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update tank",
+        variant: "destructive",
+      });
     }
   };
 
@@ -91,32 +140,6 @@ const StorageTankManagement = () => {
     return <div>Loading...</div>;
   }
 
-  // Add new query for milk volume data
-  const { data: volumeData } = useQuery({
-    queryKey: ['milkVolumes'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('milk_transactions')
-        .select('*')
-        .order('created_at', { ascending: true });
-      
-      if (error) throw error;
-      
-      // Transform data for the graph
-      return data.map(transaction => ({
-        date: transaction.created_at,
-        volume: transaction.liters_added,
-        predicted: null // Will be filled by prediction logic
-      }));
-    }
-  });
-
-  // Get predicted data
-  const predictedData = React.useMemo(() => {
-    if (!volumeData) return [];
-    return predictProduction(volumeData);
-  }, [volumeData]);
-
   return (
     <div className="space-y-6">
       <Card>
@@ -128,7 +151,8 @@ const StorageTankManagement = () => {
             {tanks?.map((tank) => (
               <Card 
                 key={tank.id} 
-                className={`${getTankStatusColor(tank)} border`}
+                className={`${getTankStatusColor(tank)} border cursor-pointer transition-all hover:shadow-lg`}
+                onClick={() => setSelectedTank(tank.id)}
               >
                 <CardContent className="pt-4">
                   <h3 className="font-bold mb-2">{tank.name}</h3>
@@ -145,88 +169,118 @@ const StorageTankManagement = () => {
                         <Thermometer className="h-4 w-4 mr-2" />
                         <span>Temperature:</span>
                       </div>
-                      <span>{tank.temperature}°C</span>
+                      <span className={temperature > 4.5 ? 'text-red-500' : 'text-green-500'}>
+                        {tank.temperature}°C
+                      </span>
                     </div>
+                    {tank.last_cleaned_at && (
+                      <div className="text-sm text-gray-500">
+                        Last cleaned: {new Date(tank.last_cleaned_at).toLocaleDateString()}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="tank">Select Tank</Label>
-                <Select 
-                  onValueChange={setSelectedTank}
-                  value={selectedTank}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a tank" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tanks?.map((tank) => (
-                      <SelectItem key={tank.id} value={tank.id}>
-                        {tank.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <Tabs defaultValue="update" className="w-full">
+            <TabsList>
+              <TabsTrigger value="update">Update Tank</TabsTrigger>
+              <TabsTrigger value="cleaning">Cleaning Records</TabsTrigger>
+            </TabsList>
 
-              <div className="space-y-2">
-                <Label htmlFor="temperature">Temperature (°C)</Label>
-                <Input
-                  id="temperature"
-                  type="number"
-                  step="0.1"
-                  value={temperature}
-                  onChange={(e) => setTemperature(e.target.value)}
-                  placeholder="Enter temperature"
-                />
-              </div>
+            <TabsContent value="update">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="tank">Select Tank</Label>
+                    <Select 
+                      onValueChange={setSelectedTank}
+                      value={selectedTank}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a tank" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tanks?.map((tank) => (
+                          <SelectItem key={tank.id} value={tank.id}>
+                            {tank.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="volume">Volume Added (L)</Label>
-                <Input
-                  id="volume"
-                  type="number"
-                  step="0.1"
-                  value={milkVolume}
-                  onChange={(e) => setMilkVolume(e.target.value)}
-                  placeholder="Enter volume"
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="temperature">Temperature (°C)</Label>
+                    <Input
+                      id="temperature"
+                      type="number"
+                      step="0.1"
+                      value={temperature}
+                      onChange={(e) => setTemperature(e.target.value)}
+                      placeholder="Enter temperature"
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="price">Price per Liter (UGX)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.1"
-                  value={pricePerLiter}
-                  onChange={(e) => setPricePerLiter(e.target.value)}
-                  placeholder="Enter price"
-                />
-              </div>
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="volume">Volume Added (L)</Label>
+                    <Input
+                      id="volume"
+                      type="number"
+                      step="0.1"
+                      value={milkVolume}
+                      onChange={(e) => setMilkVolume(e.target.value)}
+                      placeholder="Enter volume"
+                    />
+                  </div>
 
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="text-sm text-gray-500">Total Cost: </span>
-                <span className="font-bold">UGX {calculateTotalCost().toLocaleString()}</span>
-              </div>
-              <Button type="submit">Update Tank</Button>
-            </div>
-          </form>
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Price per Liter (UGX)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.1"
+                      value={pricePerLiter}
+                      onChange={(e) => setPricePerLiter(e.target.value)}
+                      placeholder="Enter price"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-sm text-gray-500">Total Cost: </span>
+                    <span className="font-bold">UGX {calculateTotalCost().toLocaleString()}</span>
+                  </div>
+                  <Button type="submit">Update Tank</Button>
+                </div>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="cleaning">
+              {selectedTank ? (
+                <div className="space-y-4">
+                  <AddCleaningRecord 
+                    tankId={selectedTank}
+                    onRecordAdded={() => {
+                      refetchTanks();
+                    }}
+                  />
+                  <CleaningRecordsTable records={cleaningRecords || []} />
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  Please select a tank to view cleaning records
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
       
-      {/* Add the new graph component */}
-      <MilkVolumeGraph 
-        data={volumeData || []} 
-        predictedData={predictedData}
-      />
+      <MilkVolumeGraph />
       
       <Card className="bg-red-50">
         <CardHeader>
