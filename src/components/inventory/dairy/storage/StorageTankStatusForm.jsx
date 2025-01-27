@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
-import { Thermometer, Droplet, Clock, User, AlertCircle, Settings, Tool } from "lucide-react";
+import { Thermometer, Droplet, Clock, User, AlertCircle, Settings, Wrench } from "lucide-react";
 import { format } from 'date-fns';
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -341,7 +341,7 @@ const StorageTankStatusForm = () => {
                     type="submit"
                     className="flex items-center gap-2"
                   >
-                    <Tool className="h-4 w-4" />
+                    <Wrench className="h-4 w-4" />
                     Save Settings
                   </Button>
                 </div>
