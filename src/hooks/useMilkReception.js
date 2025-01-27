@@ -6,37 +6,46 @@ export const useMilkReception = () => {
 
   const fetchMilkReceptions = async () => {
     console.log('Fetching milk reception data');
-    const { data, error } = await supabase
-      .from('milk_reception')
-      .select('*')
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('milk_reception')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching milk reception data:', error);
+      if (error) {
+        console.error('Error fetching milk reception data:', error);
+        throw error;
+      }
+
+      console.log('Fetched milk reception data:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in fetchMilkReceptions:', error);
       throw error;
     }
-
-    console.log('Fetched milk reception data:', data);
-    return data;
   };
 
   const addMilkReception = useMutation({
     mutationFn: async (newReception) => {
       console.log('Adding new milk reception:', newReception);
-      
-      const { data, error } = await supabase
-        .from('milk_reception')
-        .insert([newReception])
-        .select()
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('milk_reception')
+          .insert([newReception])
+          .select()
+          .single();
 
-      if (error) {
-        console.error('Error inserting milk reception:', error);
+        if (error) {
+          console.error('Error inserting milk reception:', error);
+          throw error;
+        }
+
+        console.log('Successfully added milk reception:', data);
+        return data;
+      } catch (error) {
+        console.error('Error in addMilkReception:', error);
         throw error;
       }
-
-      console.log('Successfully added milk reception:', data);
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['milkReceptions']);

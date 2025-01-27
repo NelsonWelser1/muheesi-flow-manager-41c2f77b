@@ -12,14 +12,13 @@ console.log('Initializing Supabase client with URL:', supabaseUrl);
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-    detectSessionInUrl: false
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
   },
   global: {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${supabaseKey}`,
       'apikey': supabaseKey
     }
   }
@@ -33,6 +32,6 @@ supabase
     if (error) {
       console.error('Error connecting to Supabase:', error);
     } else {
-      console.log('Successfully connected to Supabase. Table count:', count);
+      console.log('Successfully connected to Supabase. Row count:', count);
     }
   });
