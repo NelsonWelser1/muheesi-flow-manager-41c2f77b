@@ -18,7 +18,7 @@ export const useMilkReception = () => {
       }
 
       console.log('Fetched milk reception data:', data);
-      return data;
+      return data || [];
     } catch (error) {
       console.error('Error in fetchMilkReceptions:', error);
       throw error;
@@ -64,7 +64,7 @@ export const useMilkReception = () => {
   });
 
   return {
-    data: query.data,
+    data: query.data || [],
     isLoading: query.isLoading,
     error: query.error,
     addMilkReception
