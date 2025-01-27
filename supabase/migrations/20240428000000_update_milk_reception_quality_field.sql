@@ -1,11 +1,6 @@
--- Update the quality field to quality_score
+-- Update the quality_score column to be TEXT type
 ALTER TABLE milk_reception 
-RENAME COLUMN quality TO quality_score;
-
--- Ensure the column allows the correct values
-ALTER TABLE milk_reception 
-ALTER COLUMN quality_score TYPE TEXT,
-ALTER COLUMN quality_score SET DEFAULT 'Grade A';
+ALTER COLUMN quality_score TYPE TEXT;
 
 -- Add check constraint for valid quality scores
 ALTER TABLE milk_reception 

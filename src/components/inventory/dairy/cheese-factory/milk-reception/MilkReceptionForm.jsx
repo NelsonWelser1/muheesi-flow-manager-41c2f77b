@@ -19,7 +19,7 @@ const MilkReceptionForm = () => {
     protein_percentage: '',
     total_plate_count: '',
     acidity: '',
-    quality_score: '',  // Changed from quality to quality_score
+    quality_score: '',
     notes: ''
   });
 
@@ -32,9 +32,10 @@ const MilkReceptionForm = () => {
   };
 
   const handleQualityChange = (value) => {
+    console.log('Setting quality score to:', value);
     setFormData(prev => ({
       ...prev,
-      quality_score: value  // Changed from quality to quality_score
+      quality_score: value
     }));
   };
 
@@ -47,7 +48,7 @@ const MilkReceptionForm = () => {
       'protein_percentage',
       'total_plate_count',
       'acidity',
-      'quality_score'  // Changed from quality to quality_score
+      'quality_score'
     ];
 
     const errors = [];
@@ -99,6 +100,7 @@ const MilkReceptionForm = () => {
         protein_percentage: parseFloat(formData.protein_percentage),
         total_plate_count: parseInt(formData.total_plate_count),
         acidity: parseFloat(formData.acidity),
+        quality_score: formData.quality_score // Keep as string
       };
 
       console.log('Submitting data:', dataToSubmit);
@@ -120,14 +122,14 @@ const MilkReceptionForm = () => {
           protein_percentage: '',
           total_plate_count: '',
           acidity: '',
-          quality_score: '',  // Changed from quality to quality_score
+          quality_score: '',
           notes: ''
         });
       } else {
         throw new Error('Failed to add record');
       }
     } catch (error) {
-      console.error('Error details:', error);
+      console.error('Error in form submission:', error);
       toast({
         title: "Submission Failed",
         description: "Please check your data and try again. " + (error.message || ''),
