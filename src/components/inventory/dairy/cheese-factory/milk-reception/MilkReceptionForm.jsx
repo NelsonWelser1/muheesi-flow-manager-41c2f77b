@@ -23,16 +23,70 @@ const MilkReceptionForm = () => {
     notes: ''
   });
 
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Required fields validation
+    if (!formData.supplier_name) newErrors.supplier_name = 'Supplier name is required';
+    if (!formData.milk_volume) newErrors.milk_volume = 'Milk volume is required';
+    if (!formData.temperature) newErrors.temperature = 'Temperature is required';
+    if (!formData.fat_percentage) newErrors.fat_percentage = 'Fat percentage is required';
+    if (!formData.protein_percentage) newErrors.protein_percentage = 'Protein percentage is required';
+    if (!formData.total_plate_count) newErrors.total_plate_count = 'Total plate count is required';
+    if (!formData.acidity) newErrors.acidity = 'Acidity is required';
+
+    // Number validation
+    if (formData.milk_volume && isNaN(parseFloat(formData.milk_volume))) {
+      newErrors.milk_volume = 'Must be a valid number';
+    }
+    if (formData.temperature && isNaN(parseFloat(formData.temperature))) {
+      newErrors.temperature = 'Must be a valid number';
+    }
+    if (formData.fat_percentage && isNaN(parseFloat(formData.fat_percentage))) {
+      newErrors.fat_percentage = 'Must be a valid number';
+    }
+    if (formData.protein_percentage && isNaN(parseFloat(formData.protein_percentage))) {
+      newErrors.protein_percentage = 'Must be a valid number';
+    }
+    if (formData.total_plate_count && isNaN(parseInt(formData.total_plate_count))) {
+      newErrors.total_plate_count = 'Must be a valid number';
+    }
+    if (formData.acidity && isNaN(parseFloat(formData.acidity))) {
+      newErrors.acidity = 'Must be a valid number';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
   };
 
   const handleSubmit = async () => {
     console.log('Starting form submission with data:', formData);
+
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields correctly",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const dataToSubmit = {
@@ -94,8 +148,11 @@ const MilkReceptionForm = () => {
               value={formData.supplier_name}
               onChange={handleChange}
               placeholder="e.g., Dairy Farm A"
-              required
+              className={errors.supplier_name ? "border-red-500" : ""}
             />
+            {errors.supplier_name && (
+              <p className="text-sm text-red-500">{errors.supplier_name}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="milk_volume">Volume (L) *</Label>
@@ -106,8 +163,11 @@ const MilkReceptionForm = () => {
               value={formData.milk_volume}
               onChange={handleChange}
               placeholder="Enter volume"
-              required
+              className={errors.milk_volume ? "border-red-500" : ""}
             />
+            {errors.milk_volume && (
+              <p className="text-sm text-red-500">{errors.milk_volume}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="temperature">Temperature (°C) *</Label>
@@ -119,8 +179,11 @@ const MilkReceptionForm = () => {
               value={formData.temperature}
               onChange={handleChange}
               placeholder="Enter temperature"
-              required
+              className={errors.temperature ? "border-red-500" : ""}
             />
+            {errors.temperature && (
+              <p className="text-sm text-red-500">{errors.temperature}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="fat_percentage">Fat Percentage (%) *</Label>
@@ -132,8 +195,11 @@ const MilkReceptionForm = () => {
               value={formData.fat_percentage}
               onChange={handleChange}
               placeholder="Enter fat percentage"
-              required
+              className={errors.fat_percentage ? "border-red-500" : ""}
             />
+            {errors.fat_percentage && (
+              <p className="text-sm text-red-500">{errors.fat_percentage}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="protein_percentage">Protein Percentage (%) *</Label>
@@ -145,8 +211,11 @@ const MilkReceptionForm = () => {
               value={formData.protein_percentage}
               onChange={handleChange}
               placeholder="Enter protein percentage"
-              required
+              className={errors.protein_percentage ? "border-red-500" : ""}
             />
+            {errors.protein_percentage && (
+              <p className="text-sm text-red-500">{errors.protein_percentage}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="total_plate_count">Total Plate Count *</Label>
@@ -157,8 +226,11 @@ const MilkReceptionForm = () => {
               value={formData.total_plate_count}
               onChange={handleChange}
               placeholder="Enter plate count"
-              required
+              className={errors.total_plate_count ? "border-red-500" : ""}
             />
+            {errors.total_plate_count && (
+              <p className="text-sm text-red-500">{errors.total_plate_count}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="acidity">Acidity (pH) *</Label>
@@ -170,8 +242,11 @@ const MilkReceptionForm = () => {
               value={formData.acidity}
               onChange={handleChange}
               placeholder="Enter acidity"
-              required
+              className={errors.acidity ? "border-red-500" : ""}
             />
+            {errors.acidity && (
+              <p className="text-sm text-red-500">{errors.acidity}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="quality">Quality</Label>
