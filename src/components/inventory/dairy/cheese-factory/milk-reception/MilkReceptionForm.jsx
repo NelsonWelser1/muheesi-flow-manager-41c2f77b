@@ -19,6 +19,7 @@ const MilkReceptionForm = () => {
     protein_percentage: '',
     total_plate_count: '',
     acidity: '',
+    quality: '',
     notes: ''
   });
 
@@ -42,6 +43,7 @@ const MilkReceptionForm = () => {
         protein_percentage: parseFloat(formData.protein_percentage),
         total_plate_count: parseInt(formData.total_plate_count),
         acidity: parseFloat(formData.acidity),
+        quality: formData.quality,
         notes: formData.notes,
         created_at: new Date().toISOString()
       };
@@ -64,6 +66,7 @@ const MilkReceptionForm = () => {
         protein_percentage: '',
         total_plate_count: '',
         acidity: '',
+        quality: '',
         notes: ''
       });
     } catch (error) {
@@ -168,6 +171,16 @@ const MilkReceptionForm = () => {
               onChange={handleChange}
               placeholder="Enter acidity"
               required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="quality">Quality</Label>
+            <Input
+              id="quality"
+              name="quality"
+              value={formData.quality}
+              onChange={handleChange}
+              placeholder="Enter quality grade"
             />
           </div>
           <div className="space-y-2">
