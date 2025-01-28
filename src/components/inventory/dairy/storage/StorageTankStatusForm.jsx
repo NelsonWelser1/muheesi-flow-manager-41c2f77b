@@ -39,7 +39,7 @@ const StorageTankStatusForm = () => {
     nextMaintenance: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
   });
 
-  // Fetch tanks data
+  // Fetch tanks data - modified to use specific tank names
   const { data: tanks, isLoading } = useQuery({
     queryKey: ['storageTanks'],
     queryFn: async () => {
@@ -52,7 +52,27 @@ const StorageTankStatusForm = () => {
         console.error('Error fetching tanks:', error);
         throw error;
       }
-      return data || [];
+
+      // If no tanks exist, create Tank A and Tank B
+      if (!data || data.length === 0) {
+        const defaultTanks = [
+          { id: 'tank-a', name: 'Tank A', capacity: 5000, current_volume: 0, temperature: 4 },
+          { id: 'tank-b', name: 'Tank B', capacity: 5000, current_volume: 0, temperature: 4 }
+        ];
+
+        const { error: insertError } = await supabase
+          .from('storage_tanks')
+          .insert(defaultTanks);
+
+        if (insertError) {
+          console.error('Error creating default tanks:', insertError);
+          throw insertError;
+        }
+
+        return defaultTanks;
+      }
+
+      return data;
     }
   });
 
