@@ -19,14 +19,15 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   global: {
     headers: {
       'Content-Type': 'application/json',
-      'apikey': supabaseKey
+      'apikey': supabaseKey,
+      'Authorization': `Bearer ${supabaseKey}`
     }
   }
 });
 
 // Test the connection
 supabase
-  .from('milk_reception')
+  .from('storage_tanks')
   .select('count', { count: 'exact', head: true })
   .then(({ count, error }) => {
     if (error) {
