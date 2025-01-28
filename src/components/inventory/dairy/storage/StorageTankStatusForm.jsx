@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { Thermometer, Clock, User, AlertCircle, Settings, Wrench } from "lucide-react";
@@ -15,6 +16,7 @@ const StorageTankStatusForm = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [errors, setErrors] = useState({});
+  const [selectedTank, setSelectedTank] = useState('Tank 1');
   const [cleaningRecord, setCleaningRecord] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     time: format(new Date(), 'HH:mm'),
@@ -59,14 +61,15 @@ const StorageTankStatusForm = () => {
   const validateForm = () => {
     const newErrors = {};
     
+    if (!selectedTank) {
+      newErrors.selectedTank = 'Tank selection is required';
+    }
     if (!volumeData.initialVolume) {
       newErrors.initialVolume = 'Initial volume is required';
     }
-    
     if (!volumeData.temperature) {
       newErrors.temperature = 'Temperature is required';
     }
-    
     if (!cleaningRecord.cleanerId) {
       newErrors.cleanerId = 'Cleaner ID is required';
     }
@@ -95,8 +98,7 @@ const StorageTankStatusForm = () => {
       return;
     }
 
-    // Handle the submission logic here
-    console.log('Form submitted:', { volumeData, cleaningRecord });
+    console.log('Form submitted:', { selectedTank, volumeData, cleaningRecord });
   };
 
   if (isLoadingTanks) {
@@ -123,6 +125,26 @@ const StorageTankStatusForm = () => {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="tankSelection" className={errors.selectedTank ? 'text-red-500' : ''}>
+                      Select Tank {errors.selectedTank && <span className="text-red-500">*</span>}
+                    </Label>
+                    <Select
+                      value={selectedTank}
+                      onValueChange={setSelectedTank}
+                    >
+                      <SelectTrigger className={errors.selectedTank ? 'border-red-500' : ''}>
+                        <SelectValue placeholder="Select a tank" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Tank 1">Tank 1</SelectItem>
+                        <SelectItem value="Tank 2">Tank 2</SelectItem>
+                        <SelectItem value="Both Tanks">Both Tanks</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.selectedTank && <p className="text-sm text-red-500">{errors.selectedTank}</p>}
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="initialVolume" className={errors.initialVolume ? 'text-red-500' : ''}>
                       Initial Volume (L) {errors.initialVolume && <span className="text-red-500">*</span>}
