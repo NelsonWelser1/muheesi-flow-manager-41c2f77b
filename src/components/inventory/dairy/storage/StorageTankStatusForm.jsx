@@ -54,17 +54,14 @@ const StorageTankStatusForm = () => {
     nextMaintenance: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
   });
 
-  // Pre-fetch tanks data
-  React.useEffect(() => {
-    queryClient.prefetchQuery({
-      queryKey: ['storageTanks'],
-      queryFn: fetchTanks,
-      staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    });
-  }, [queryClient]);
+  // Add static tank options as fallback
+  const staticTankOptions = [
+    { id: 'tank-a', name: 'Tank A', capacity: 5000, current_volume: 0 },
+    { id: 'tank-b', name: 'Tank B', capacity: 5000, current_volume: 0 }
+  ];
 
-  // Use the pre-fetched data with proper error handling
-  const { data: tanks, isLoading, error } = useQuery({
+  // Pre-fetch tanks data with better error handling
+  const { data: tanks = staticTankOptions, isLoading, error } = useQuery({
     queryKey: ['storageTanks'],
     queryFn: fetchTanks,
     staleTime: 5 * 60 * 1000,
@@ -72,9 +69,9 @@ const StorageTankStatusForm = () => {
     onError: (error) => {
       console.error('Error fetching tanks:', error);
       toast({
-        title: "Error",
-        description: "Failed to load storage tanks. Please try again.",
-        variant: "destructive",
+        title: "Using default tank options",
+        description: "Could not load tank data from server",
+        variant: "warning",
       });
     }
   });
@@ -170,17 +167,17 @@ const StorageTankStatusForm = () => {
                       }}
                     >
                       <SelectTrigger 
-                        className={`bg-white ${errors.tank ? 'border-red-500' : ''}`}
+                        className={`bg-white border-gray-200 hover:bg-gray-50 ${errors.tank ? 'border-red-500' : ''}`}
                         id="tank"
                       >
                         <SelectValue placeholder="Select a tank" />
                       </SelectTrigger>
-                      <SelectContent>
-                        {tanks?.map((tank) => (
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                        {(tanks || staticTankOptions).map((tank) => (
                           <SelectItem 
                             key={tank.id} 
                             value={tank.id}
-                            className="cursor-pointer hover:bg-gray-100"
+                            className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100"
                           >
                             {tank.name} ({tank.current_volume}/{tank.capacity}L)
                           </SelectItem>
