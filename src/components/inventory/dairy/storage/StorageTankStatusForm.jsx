@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 const StorageTankStatusForm = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [selectedTank, setSelectedTank] = useState('Tank A');
   const [cleaningRecord, setCleaningRecord] = useState({
@@ -28,7 +29,7 @@ const StorageTankStatusForm = () => {
     temperature: ''
   });
 
-  // Fetch tanks data
+  // Fetch tanks data with error handling
   const { data: tanks, isLoading: isLoadingTanks, error: tanksError } = useQuery({
     queryKey: ['storageTanks'],
     queryFn: async () => {
@@ -39,6 +40,11 @@ const StorageTankStatusForm = () => {
       
       if (error) {
         console.error('Error fetching storage tanks:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch tanks data. Please try again.",
+          variant: "destructive",
+        });
         throw error;
       }
       
@@ -46,84 +52,38 @@ const StorageTankStatusForm = () => {
     }
   });
 
-  // Add mutation for updating tank status
-  const updateTankStatusMutation = useMutation({
-    mutationFn: async (formData) => {
-      console.log('Updating tank status with data:', formData);
+  // Add mutation for cleaning records
+  const addCleaningRecordMutation = useMutation({
+    mutationFn: async (cleaningData) => {
+      console.log('Adding cleaning record:', cleaningData);
       const { data, error } = await supabase
-        .from('storage_tanks')
-        .upsert([{
-          name: formData.selectedTank,
-          current_volume: formData.currentVolume,
-          temperature: formData.temperature,
-          last_cleaned: `${formData.cleaningDate}T${formData.cleaningTime}`,
-          cleaner_id: formData.cleanerId
-        }])
+        .from('tank_cleaning_records')
+        .insert([cleaningData])
         .select();
 
-      if (error) {
-        console.error('Error updating tank status:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Tank status updated successfully",
-      });
       queryClient.invalidateQueries({ queryKey: ['storageTanks'] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update tank status: " + error.message,
-        variant: "destructive",
-      });
     }
   });
 
-  // Add mutation for updating settings
-  const updateSettingsMutation = useMutation({
-    mutationFn: async (settingsData) => {
-      console.log('Updating tank settings with data:', settingsData);
+  // Add mutation for volume records
+  const addVolumeRecordMutation = useMutation({
+    mutationFn: async (volumeData) => {
+      console.log('Adding volume record:', volumeData);
       const { data, error } = await supabase
-        .from('storage_tank_settings')
-        .upsert([settingsData])
+        .from('tank_volume_records')
+        .insert([volumeData])
         .select();
 
-      if (error) {
-        console.error('Error updating tank settings:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Tank settings updated successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update settings: " + error.message,
-        variant: "destructive",
-      });
+      queryClient.invalidateQueries({ queryKey: ['storageTanks'] });
     }
-  });
-
-  // New settings states
-  const [settings, setSettings] = useState({
-    temperatureThreshold: 4.5,
-    capacityWarningThreshold: 90,
-    autoCleaningEnabled: false,
-    cleaningInterval: 7, // days
-    maintenanceInterval: 30, // days
-    lastMaintenance: format(new Date(), 'yyyy-MM-dd'),
-    nextMaintenance: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
   });
 
   // Validate form fields
@@ -154,32 +114,51 @@ const StorageTankStatusForm = () => {
     return initial + added;
   };
 
-  // Submit tank status update
+  // Submit form with error handling
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const currentVolume = calculateCurrentVolume();
+    setIsSubmitting(true);
     
     try {
-      await updateTankStatusMutation.mutateAsync({
-        selectedTank,
-        currentVolume,
-        temperature: parseFloat(volumeData.temperature),
-        cleaningDate: cleaningRecord.date,
-        cleaningTime: cleaningRecord.time,
-        cleanerId: cleaningRecord.cleanerId
+      if (!validateForm()) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const currentVolume = calculateCurrentVolume();
+      const selectedTankData = tanks?.find(tank => tank.name === selectedTank);
+      
+      if (!selectedTankData) {
+        throw new Error('Selected tank not found');
+      }
+
+      // Submit cleaning record
+      await addCleaningRecordMutation.mutateAsync({
+        tank_id: selectedTankData.id,
+        cleaning_date: cleaningRecord.date,
+        cleaning_time: cleaningRecord.time,
+        cleaner_id: cleaningRecord.cleanerId
       });
 
-      // Reset form after successful submission
+      // Submit volume record
+      await addVolumeRecordMutation.mutateAsync({
+        tank_id: selectedTankData.id,
+        initial_volume: parseFloat(volumeData.initialVolume),
+        added_volume: parseFloat(volumeData.addedVolume) || 0,
+        temperature: parseFloat(volumeData.temperature),
+        total_volume: currentVolume
+      });
+
+      toast({
+        title: "Success",
+        description: "Tank status updated successfully",
+      });
+
+      // Reset form
       setVolumeData({
         initialVolume: '',
         addedVolume: '',
@@ -190,8 +169,16 @@ const StorageTankStatusForm = () => {
         time: format(new Date(), 'HH:mm'),
         cleanerId: ''
       });
+
     } catch (error) {
       console.error('Error submitting form:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update tank status",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
