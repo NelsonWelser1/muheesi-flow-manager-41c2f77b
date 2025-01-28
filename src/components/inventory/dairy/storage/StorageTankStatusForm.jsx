@@ -12,6 +12,40 @@ import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 
+// Pre-fetch function for tanks data
+const fetchTanks = async () => {
+  console.log('Fetching storage tanks data');
+  const { data, error } = await supabase
+    .from('storage_tanks')
+    .select('*');
+  
+  if (error) {
+    console.error('Error fetching tanks:', error);
+    throw error;
+  }
+
+  // If no tanks exist, create Tank A and Tank B
+  if (!data || data.length === 0) {
+    const defaultTanks = [
+      { id: 'tank-a', name: 'Tank A', capacity: 5000, current_volume: 0, temperature: 4 },
+      { id: 'tank-b', name: 'Tank B', capacity: 5000, current_volume: 0, temperature: 4 }
+    ];
+
+    const { error: insertError } = await supabase
+      .from('storage_tanks')
+      .insert(defaultTanks);
+
+    if (insertError) {
+      console.error('Error creating default tanks:', insertError);
+      throw insertError;
+    }
+
+    return defaultTanks;
+  }
+
+  return data;
+};
+
 const StorageTankStatusForm = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -39,41 +73,28 @@ const StorageTankStatusForm = () => {
     nextMaintenance: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
   });
 
-  // Fetch tanks data - modified to use specific tank names
+  // Pre-fetch tanks data
+  React.useEffect(() => {
+    queryClient.prefetchQuery({
+      queryKey: ['storageTanks'],
+      queryFn: fetchTanks,
+      staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    });
+  }, [queryClient]);
+
+  // Use the pre-fetched data
   const { data: tanks, isLoading } = useQuery({
     queryKey: ['storageTanks'],
-    queryFn: async () => {
-      console.log('Fetching storage tanks data');
-      const { data, error } = await supabase
-        .from('storage_tanks')
-        .select('*');
-      
-      if (error) {
-        console.error('Error fetching tanks:', error);
-        throw error;
+    queryFn: fetchTanks,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    initialData: () => {
+      const cachedData = queryClient.getQueryData(['storageTanks']);
+      if (cachedData) {
+        console.log('Using cached tanks data');
+        return cachedData;
       }
-
-      // If no tanks exist, create Tank A and Tank B
-      if (!data || data.length === 0) {
-        const defaultTanks = [
-          { id: 'tank-a', name: 'Tank A', capacity: 5000, current_volume: 0, temperature: 4 },
-          { id: 'tank-b', name: 'Tank B', capacity: 5000, current_volume: 0, temperature: 4 }
-        ];
-
-        const { error: insertError } = await supabase
-          .from('storage_tanks')
-          .insert(defaultTanks);
-
-        if (insertError) {
-          console.error('Error creating default tanks:', insertError);
-          throw insertError;
-        }
-
-        return defaultTanks;
-      }
-
-      return data;
-    }
+      return undefined;
+    },
   });
 
   // Update settings mutation
