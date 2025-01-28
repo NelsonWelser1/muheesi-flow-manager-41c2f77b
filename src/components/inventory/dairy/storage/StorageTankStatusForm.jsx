@@ -61,8 +61,7 @@ const StorageTankStatusForm = () => {
       console.log('Adding cleaning record:', cleaningData);
       const { data, error } = await supabase
         .from('tank_cleaning_records')
-        .insert([cleaningData])
-        .select();
+        .insert([cleaningData]);
 
       if (error) {
         console.error('Error adding cleaning record:', error);
@@ -78,6 +77,14 @@ const StorageTankStatusForm = () => {
         title: "Success",
         description: "Cleaning record added successfully",
       });
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add cleaning record: " + error.message,
+        variant: "destructive"
+      });
     }
   });
 
@@ -87,8 +94,7 @@ const StorageTankStatusForm = () => {
       console.log('Adding volume record:', volumeData);
       const { data, error } = await supabase
         .from('tank_volume_records')
-        .insert([volumeData])
-        .select();
+        .insert([volumeData]);
 
       if (error) {
         console.error('Error adding volume record:', error);
@@ -104,6 +110,14 @@ const StorageTankStatusForm = () => {
         title: "Success",
         description: "Volume record added successfully",
       });
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add volume record: " + error.message,
+        variant: "destructive"
+      });
     }
   });
 
@@ -113,8 +127,7 @@ const StorageTankStatusForm = () => {
       console.log('Updating settings:', settingsData);
       const { data, error } = await supabase
         .from('storage_tank_settings')
-        .upsert([settingsData])
-        .select();
+        .upsert([settingsData]);
 
       if (error) {
         console.error('Error updating settings:', error);
@@ -129,6 +142,14 @@ const StorageTankStatusForm = () => {
       toast({
         title: "Success",
         description: "Settings updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Settings mutation error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update settings: " + error.message,
+        variant: "destructive"
       });
     }
   });
@@ -175,6 +196,7 @@ const StorageTankStatusForm = () => {
           description: "Please fill in all required fields",
           variant: "destructive",
         });
+        setIsSubmitting(false);
         return;
       }
 
@@ -292,8 +314,11 @@ const StorageTankStatusForm = () => {
                         <SelectValue placeholder="Select a tank" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Tank A">Tank A</SelectItem>
-                        <SelectItem value="Tank B">Tank B</SelectItem>
+                        {tanks?.map(tank => (
+                          <SelectItem key={tank.id} value={tank.name}>
+                            {tank.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     {errors.selectedTank && <p className="text-sm text-red-500">{errors.selectedTank}</p>}
@@ -481,39 +506,6 @@ const StorageTankStatusForm = () => {
           </Card>
         </TabsContent>
       </Tabs>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Storage Tanks Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {tanks?.map((tank) => (
-              <div key={tank.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                <div className="space-y-1">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    {tank.name}
-                    {parseFloat(tank.temperature) > 6 && (
-                      <AlertCircle className="h-4 w-4 text-red-500" />
-                    )}
-                  </h4>
-                  <p className="text-sm text-gray-500">
-                    Last cleaned: {format(new Date(tank.last_cleaned || new Date()), 'PPp')}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Cleaner ID: {tank.cleaner_id || 'N/A'}
-                  </p>
-                </div>
-                <div className="text-right space-y-1">
-                  <div className="font-bold">{tank.current_volume}L</div>
-                  <div className="text-sm text-gray-500">Temperature: {tank.temperature}°C</div>
-                  <div className="text-sm text-gray-500">Capacity: {tank.capacity || 5000}L</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
