@@ -28,6 +28,13 @@ const StorageTankStatusForm = () => {
     addedVolume: '',
     temperature: ''
   });
+  const [settings, setSettings] = useState({
+    temperatureThreshold: 4.5,
+    capacityWarningThreshold: 90,
+    autoCleaningEnabled: false,
+    cleaningInterval: 7,
+    maintenanceInterval: 30
+  });
 
   // Fetch tanks data with error handling
   const { data: tanks, isLoading: isLoadingTanks, error: tanksError } = useQuery({
@@ -66,6 +73,18 @@ const StorageTankStatusForm = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['storageTanks'] });
+      toast({
+        title: "Success",
+        description: "Cleaning record added successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error adding cleaning record:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add cleaning record. Please try again.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -83,10 +102,50 @@ const StorageTankStatusForm = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['storageTanks'] });
+      toast({
+        title: "Success",
+        description: "Volume record added successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error adding volume record:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add volume record. Please try again.",
+        variant: "destructive",
+      });
     }
   });
 
-  // Validate form fields
+  // Add mutation for settings
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (settingsData) => {
+      console.log('Updating settings:', settingsData);
+      const { data, error } = await supabase
+        .from('storage_tank_settings')
+        .upsert([settingsData])
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tankSettings'] });
+      toast({
+        title: "Success",
+        description: "Settings updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update settings. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const validateForm = () => {
     const newErrors = {};
     
@@ -179,6 +238,15 @@ const StorageTankStatusForm = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSettingsSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await updateSettingsMutation.mutateAsync(settings);
+    } catch (error) {
+      console.error('Error updating settings:', error);
     }
   };
 
