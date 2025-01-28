@@ -46,6 +46,75 @@ const StorageTankStatusForm = () => {
     }
   });
 
+  // Add mutation for updating tank status
+  const updateTankStatusMutation = useMutation({
+    mutationFn: async (formData) => {
+      console.log('Updating tank status with data:', formData);
+      const { data, error } = await supabase
+        .from('storage_tanks')
+        .upsert([{
+          name: formData.selectedTank,
+          current_volume: formData.currentVolume,
+          temperature: formData.temperature,
+          last_cleaned: `${formData.cleaningDate}T${formData.cleaningTime}`,
+          cleaner_id: formData.cleanerId
+        }])
+        .select();
+
+      if (error) {
+        console.error('Error updating tank status:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Tank status updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['storageTanks'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update tank status: " + error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Add mutation for updating settings
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (settingsData) => {
+      console.log('Updating tank settings with data:', settingsData);
+      const { data, error } = await supabase
+        .from('storage_tank_settings')
+        .upsert([settingsData])
+        .select();
+
+      if (error) {
+        console.error('Error updating tank settings:', error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Tank settings updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update settings: " + error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
   // New settings states
   const [settings, setSettings] = useState({
     temperatureThreshold: 4.5,
@@ -86,7 +155,7 @@ const StorageTankStatusForm = () => {
   };
 
   // Submit tank status update
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -98,7 +167,32 @@ const StorageTankStatusForm = () => {
       return;
     }
 
-    console.log('Form submitted:', { selectedTank, volumeData, cleaningRecord });
+    const currentVolume = calculateCurrentVolume();
+    
+    try {
+      await updateTankStatusMutation.mutateAsync({
+        selectedTank,
+        currentVolume,
+        temperature: parseFloat(volumeData.temperature),
+        cleaningDate: cleaningRecord.date,
+        cleaningTime: cleaningRecord.time,
+        cleanerId: cleaningRecord.cleanerId
+      });
+
+      // Reset form after successful submission
+      setVolumeData({
+        initialVolume: '',
+        addedVolume: '',
+        temperature: ''
+      });
+      setCleaningRecord({
+        date: format(new Date(), 'yyyy-MM-dd'),
+        time: format(new Date(), 'HH:mm'),
+        cleanerId: ''
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
   };
 
   if (isLoadingTanks) {
