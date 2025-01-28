@@ -26,6 +26,24 @@ const StorageTankStatusForm = () => {
     temperature: ''
   });
 
+  // Fetch tanks data
+  const { data: tanks, isLoading: isLoadingTanks, error: tanksError } = useQuery({
+    queryKey: ['storageTanks'],
+    queryFn: async () => {
+      console.log('Fetching storage tanks data');
+      const { data, error } = await supabase
+        .from('storage_tanks')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching storage tanks:', error);
+        throw error;
+      }
+      
+      return data || [];
+    }
+  });
+
   // New settings states
   const [settings, setSettings] = useState({
     temperatureThreshold: 4.5,
@@ -78,7 +96,16 @@ const StorageTankStatusForm = () => {
     }
 
     // Handle the submission logic here
+    console.log('Form submitted:', { volumeData, cleaningRecord });
   };
+
+  if (isLoadingTanks) {
+    return <div>Loading tanks data...</div>;
+  }
+
+  if (tanksError) {
+    return <div>Error loading tanks: {tanksError.message}</div>;
+  }
 
   return (
     <div className="space-y-6">
