@@ -27,8 +27,8 @@ const fetchTanks = async () => {
   // If no tanks exist, create Tank A and Tank B
   if (!data || data.length === 0) {
     const defaultTanks = [
-      { id: 'tank-a', name: 'Tank A', capacity: 5000, current_volume: 0, temperature: 4 },
-      { id: 'tank-b', name: 'Tank B', capacity: 5000, current_volume: 0, temperature: 4 }
+      { name: 'Tank A', capacity: 5000, current_volume: 0, temperature: 4 },
+      { name: 'Tank B', capacity: 5000, current_volume: 0, temperature: 4 }
     ];
 
     const { error: insertError } = await supabase
@@ -40,7 +40,18 @@ const fetchTanks = async () => {
       throw insertError;
     }
 
-    return defaultTanks;
+    // Fetch the newly created tanks to get their UUIDs
+    const { data: newTanks, error: fetchError } = await supabase
+      .from('storage_tanks')
+      .select('*')
+      .in('name', ['Tank A', 'Tank B']);
+
+    if (fetchError) {
+      console.error('Error fetching new tanks:', fetchError);
+      throw fetchError;
+    }
+
+    return newTanks;
   }
 
   return data;
