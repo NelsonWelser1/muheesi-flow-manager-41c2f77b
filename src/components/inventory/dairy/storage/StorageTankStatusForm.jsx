@@ -47,11 +47,6 @@ const StorageTankStatusForm = () => {
       
       if (error) {
         console.error('Error fetching storage tanks:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch tanks data. Please try again.",
-          variant: "destructive",
-        });
         throw error;
       }
       
@@ -177,9 +172,11 @@ const StorageTankStatusForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    console.log('Form submission started');
     
     try {
       if (!validateForm()) {
+        console.log('Form validation failed');
         toast({
           title: "Validation Error",
           description: "Please fill in all required fields",
@@ -195,6 +192,7 @@ const StorageTankStatusForm = () => {
         throw new Error('Selected tank not found');
       }
 
+      console.log('Submitting cleaning record...');
       // Submit cleaning record
       await addCleaningRecordMutation.mutateAsync({
         tank_id: selectedTankData.id,
@@ -203,6 +201,7 @@ const StorageTankStatusForm = () => {
         cleaner_id: cleaningRecord.cleanerId
       });
 
+      console.log('Submitting volume record...');
       // Submit volume record
       await addVolumeRecordMutation.mutateAsync({
         tank_id: selectedTankData.id,
@@ -212,6 +211,7 @@ const StorageTankStatusForm = () => {
         total_volume: currentVolume
       });
 
+      console.log('Form submission completed successfully');
       toast({
         title: "Success",
         description: "Tank status updated successfully",
@@ -243,10 +243,20 @@ const StorageTankStatusForm = () => {
 
   const handleSettingsSubmit = async (e) => {
     e.preventDefault();
+    console.log('Settings submission started');
     try {
-      await updateSettingsMutation.mutateAsync(settings);
+      await updateSettingsMutation.mutateAsync({
+        ...settings,
+        tank_id: tanks?.find(tank => tank.name === selectedTank)?.id
+      });
+      console.log('Settings updated successfully');
     } catch (error) {
       console.error('Error updating settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update settings",
+        variant: "destructive",
+      });
     }
   };
 
@@ -257,6 +267,8 @@ const StorageTankStatusForm = () => {
   if (tanksError) {
     return <div>Error loading tanks: {tanksError.message}</div>;
   }
+
+  // ... keep existing code (JSX for the form UI)
 
   return (
     <div className="space-y-6">
@@ -288,10 +300,26 @@ const StorageTankStatusForm = () => {
                       <SelectContent>
                         <SelectItem value="Tank A">Tank A</SelectItem>
                         <SelectItem value="Tank B">Tank B</SelectItem>
-                        <SelectItem value="Both Tanks">Both Tanks</SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.selectedTank && <p className="text-sm text-red-500">{errors.selectedTank}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cleanerId" className={errors.cleanerId ? 'text-red-500' : ''}>
+                      Cleaner ID {errors.cleanerId && <span className="text-red-500">*</span>}
+                    </Label>
+                    <Input
+                      id="cleanerId"
+                      value={cleaningRecord.cleanerId}
+                      onChange={(e) => setCleaningRecord(prev => ({
+                        ...prev,
+                        cleanerId: e.target.value
+                      }))}
+                      placeholder="Enter cleaner ID"
+                      className={errors.cleanerId ? 'border-red-500' : ''}
+                    />
+                    {errors.cleanerId && <p className="text-sm text-red-500">{errors.cleanerId}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -356,9 +384,10 @@ const StorageTankStatusForm = () => {
                   </div>
                   <Button 
                     type="submit" 
+                    disabled={isSubmitting}
                     className="flex items-center gap-2"
                   >
-                    Update Tank Status
+                    {isSubmitting ? 'Updating...' : 'Update Tank Status'}
                   </Button>
                 </div>
               </form>
@@ -375,10 +404,7 @@ const StorageTankStatusForm = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                updateSettingsMutation.mutate(settings);
-              }} className="space-y-6">
+              <form onSubmit={handleSettingsSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="temperatureThreshold">Temperature Threshold (°C)</Label>
@@ -450,9 +476,10 @@ const StorageTankStatusForm = () => {
                   <Button 
                     type="submit"
                     className="flex items-center gap-2"
+                    disabled={updateSettingsMutation.isPending}
                   >
                     <Wrench className="h-4 w-4" />
-                    Save Settings
+                    {updateSettingsMutation.isPending ? 'Saving...' : 'Save Settings'}
                   </Button>
                 </div>
               </form>
