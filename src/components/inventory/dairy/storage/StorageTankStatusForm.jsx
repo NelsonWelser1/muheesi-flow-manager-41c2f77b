@@ -393,7 +393,6 @@ const StorageTankStatusForm = () => {
                     </div>
                     {errors.temperature && <p className="text-sm text-red-500">{errors.temperature}</p>}
                   </div>
-
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -424,6 +423,7 @@ const StorageTankStatusForm = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSettingsSubmit} className="space-y-6">
+                <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="temperatureThreshold">Temperature Threshold (°C)</Label>
                     <Input
