@@ -3,34 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
-import { Thermometer, Droplet, Clock, User, AlertCircle, Settings, Wrench } from "lucide-react";
+import { Thermometer, Clock, User, AlertCircle, Settings, Wrench } from "lucide-react";
 import { format } from 'date-fns';
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 
-// Pre-fetch function for tanks data
-const fetchTanks = async () => {
-  console.log('Fetching storage tanks data');
-  const { data, error } = await supabase
-    .from('storage_tanks')
-    .select('*');
-  
-  if (error) {
-    console.error('Error fetching tanks:', error);
-    throw error;
-  }
-
-  return data || [];
-};
-
 const StorageTankStatusForm = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedTank, setSelectedTank] = useState('');
   const [errors, setErrors] = useState({});
   const [cleaningRecord, setCleaningRecord] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -54,35 +37,9 @@ const StorageTankStatusForm = () => {
     nextMaintenance: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
   });
 
-  // Add static tank options as fallback
-  const staticTankOptions = [
-    { id: 'tank-a', name: 'Tank A', capacity: 5000, current_volume: 0 },
-    { id: 'tank-b', name: 'Tank B', capacity: 5000, current_volume: 0 }
-  ];
-
-  // Pre-fetch tanks data with better error handling
-  const { data: tanks = staticTankOptions, isLoading, error } = useQuery({
-    queryKey: ['storageTanks'],
-    queryFn: fetchTanks,
-    staleTime: 5 * 60 * 1000,
-    retry: 2,
-    onError: (error) => {
-      console.error('Error fetching tanks:', error);
-      toast({
-        title: "Using default tank options",
-        description: "Could not load tank data from server",
-        variant: "warning",
-      });
-    }
-  });
-
   // Validate form fields
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!selectedTank) {
-      newErrors.tank = 'Please select a tank';
-    }
     
     if (!volumeData.initialVolume) {
       newErrors.initialVolume = 'Initial volume is required';
@@ -123,18 +80,6 @@ const StorageTankStatusForm = () => {
     // Handle the submission logic here
   };
 
-  if (isLoading) {
-    return <div>Loading tanks...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="text-red-500">
-        Error loading tanks. Please refresh the page.
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <Tabs defaultValue="status">
@@ -146,47 +91,11 @@ const StorageTankStatusForm = () => {
         <TabsContent value="status">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Droplet className="h-5 w-5" />
-                Storage Tank Status Entry
-              </CardTitle>
+              <CardTitle>Storage Tank Status Entry</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="tank" className={errors.tank ? 'text-red-500' : ''}>
-                      Select Tank {errors.tank && <span className="text-red-500">*</span>}
-                    </Label>
-                    <Select 
-                      value={selectedTank}
-                      onValueChange={(value) => {
-                        console.log('Selected tank:', value);
-                        setSelectedTank(value);
-                        setErrors(prev => ({ ...prev, tank: '' }));
-                      }}
-                    >
-                      <SelectTrigger 
-                        className={`bg-white border-gray-200 hover:bg-gray-50 ${errors.tank ? 'border-red-500' : ''}`}
-                        id="tank"
-                      >
-                        <SelectValue placeholder="Select a tank" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                        {(tanks || staticTankOptions).map((tank) => (
-                          <SelectItem 
-                            key={tank.id} 
-                            value={tank.id}
-                            className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100"
-                          >
-                            {tank.name} ({tank.current_volume}/{tank.capacity}L)
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.tank && <p className="text-sm text-red-500">{errors.tank}</p>}
-                  </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="initialVolume" className={errors.initialVolume ? 'text-red-500' : ''}>
                       Initial Volume (L) {errors.initialVolume && <span className="text-red-500">*</span>}
