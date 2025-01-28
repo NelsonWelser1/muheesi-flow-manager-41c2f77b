@@ -36,8 +36,8 @@ const StorageTankStatusForm = () => {
     maintenanceInterval: 30
   });
 
-  // Fetch tanks data with error handling
-  const { data: tanks, isLoading: isLoadingTanks, error: tanksError } = useQuery({
+  // Fetch tanks data
+  const { data: tanks, isLoading: isLoadingTanks } = useQuery({
     queryKey: ['storageTanks'],
     queryFn: async () => {
       console.log('Fetching storage tanks data');
@@ -50,11 +50,12 @@ const StorageTankStatusForm = () => {
         throw error;
       }
       
+      console.log('Fetched tanks data:', data);
       return data || [];
     }
   });
 
-  // Add mutation for cleaning records
+  // Add cleaning record mutation
   const addCleaningRecordMutation = useMutation({
     mutationFn: async (cleaningData) => {
       console.log('Adding cleaning record:', cleaningData);
@@ -63,7 +64,12 @@ const StorageTankStatusForm = () => {
         .insert([cleaningData])
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding cleaning record:', error);
+        throw error;
+      }
+      
+      console.log('Successfully added cleaning record:', data);
       return data;
     },
     onSuccess: () => {
@@ -72,18 +78,10 @@ const StorageTankStatusForm = () => {
         title: "Success",
         description: "Cleaning record added successfully",
       });
-    },
-    onError: (error) => {
-      console.error('Error adding cleaning record:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add cleaning record. Please try again.",
-        variant: "destructive",
-      });
     }
   });
 
-  // Add mutation for volume records
+  // Add volume record mutation
   const addVolumeRecordMutation = useMutation({
     mutationFn: async (volumeData) => {
       console.log('Adding volume record:', volumeData);
@@ -92,7 +90,12 @@ const StorageTankStatusForm = () => {
         .insert([volumeData])
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding volume record:', error);
+        throw error;
+      }
+      
+      console.log('Successfully added volume record:', data);
       return data;
     },
     onSuccess: () => {
@@ -101,18 +104,10 @@ const StorageTankStatusForm = () => {
         title: "Success",
         description: "Volume record added successfully",
       });
-    },
-    onError: (error) => {
-      console.error('Error adding volume record:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add volume record. Please try again.",
-        variant: "destructive",
-      });
     }
   });
 
-  // Add mutation for settings
+  // Update tank settings mutation
   const updateSettingsMutation = useMutation({
     mutationFn: async (settingsData) => {
       console.log('Updating settings:', settingsData);
@@ -121,7 +116,12 @@ const StorageTankStatusForm = () => {
         .upsert([settingsData])
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating settings:', error);
+        throw error;
+      }
+      
+      console.log('Successfully updated settings:', data);
       return data;
     },
     onSuccess: () => {
@@ -130,17 +130,10 @@ const StorageTankStatusForm = () => {
         title: "Success",
         description: "Settings updated successfully",
       });
-    },
-    onError: (error) => {
-      console.error('Error updating settings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update settings. Please try again.",
-        variant: "destructive",
-      });
     }
   });
 
+  // Form validation
   const validateForm = () => {
     const newErrors = {};
     
@@ -168,7 +161,7 @@ const StorageTankStatusForm = () => {
     return initial + added;
   };
 
-  // Submit form with error handling
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -192,7 +185,6 @@ const StorageTankStatusForm = () => {
         throw new Error('Selected tank not found');
       }
 
-      console.log('Submitting cleaning record...');
       // Submit cleaning record
       await addCleaningRecordMutation.mutateAsync({
         tank_id: selectedTankData.id,
@@ -201,7 +193,6 @@ const StorageTankStatusForm = () => {
         cleaner_id: cleaningRecord.cleanerId
       });
 
-      console.log('Submitting volume record...');
       // Submit volume record
       await addVolumeRecordMutation.mutateAsync({
         tank_id: selectedTankData.id,
@@ -212,11 +203,7 @@ const StorageTankStatusForm = () => {
       });
 
       console.log('Form submission completed successfully');
-      toast({
-        title: "Success",
-        description: "Tank status updated successfully",
-      });
-
+      
       // Reset form
       setVolumeData({
         initialVolume: '',
@@ -227,6 +214,11 @@ const StorageTankStatusForm = () => {
         date: format(new Date(), 'yyyy-MM-dd'),
         time: format(new Date(), 'HH:mm'),
         cleanerId: ''
+      });
+
+      toast({
+        title: "Success",
+        description: "Tank status updated successfully",
       });
 
     } catch (error) {
@@ -241,14 +233,22 @@ const StorageTankStatusForm = () => {
     }
   };
 
+  // Handle settings submission
   const handleSettingsSubmit = async (e) => {
     e.preventDefault();
     console.log('Settings submission started');
+    
     try {
+      const selectedTankData = tanks?.find(tank => tank.name === selectedTank);
+      if (!selectedTankData) {
+        throw new Error('Selected tank not found');
+      }
+
       await updateSettingsMutation.mutateAsync({
         ...settings,
-        tank_id: tanks?.find(tank => tank.name === selectedTank)?.id
+        tank_id: selectedTankData.id
       });
+      
       console.log('Settings updated successfully');
     } catch (error) {
       console.error('Error updating settings:', error);
@@ -263,12 +263,6 @@ const StorageTankStatusForm = () => {
   if (isLoadingTanks) {
     return <div>Loading tanks data...</div>;
   }
-
-  if (tanksError) {
-    return <div>Error loading tanks: {tanksError.message}</div>;
-  }
-
-  // ... keep existing code (JSX for the form UI)
 
   return (
     <div className="space-y-6">
