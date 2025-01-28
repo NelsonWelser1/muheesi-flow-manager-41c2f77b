@@ -24,37 +24,7 @@ const fetchTanks = async () => {
     throw error;
   }
 
-  // If no tanks exist, create Tank A and Tank B
-  if (!data || data.length === 0) {
-    const defaultTanks = [
-      { name: 'Tank A', capacity: 5000, current_volume: 0, temperature: 4 },
-      { name: 'Tank B', capacity: 5000, current_volume: 0, temperature: 4 }
-    ];
-
-    const { error: insertError } = await supabase
-      .from('storage_tanks')
-      .insert(defaultTanks);
-
-    if (insertError) {
-      console.error('Error creating default tanks:', insertError);
-      throw insertError;
-    }
-
-    // Fetch the newly created tanks to get their UUIDs
-    const { data: newTanks, error: fetchError } = await supabase
-      .from('storage_tanks')
-      .select('*')
-      .in('name', ['Tank A', 'Tank B']);
-
-    if (fetchError) {
-      console.error('Error fetching new tanks:', fetchError);
-      throw fetchError;
-    }
-
-    return newTanks;
-  }
-
-  return data;
+  return data || [];
 };
 
 const StorageTankStatusForm = () => {
@@ -93,52 +63,17 @@ const StorageTankStatusForm = () => {
     });
   }, [queryClient]);
 
-  // Use the pre-fetched data
-  const { data: tanks, isLoading } = useQuery({
+  // Use the pre-fetched data with proper error handling
+  const { data: tanks, isLoading, error } = useQuery({
     queryKey: ['storageTanks'],
     queryFn: fetchTanks,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    initialData: () => {
-      const cachedData = queryClient.getQueryData(['storageTanks']);
-      if (cachedData) {
-        console.log('Using cached tanks data');
-        return cachedData;
-      }
-      return undefined;
-    },
-  });
-
-  // Update settings mutation
-  const updateSettingsMutation = useMutation({
-    mutationFn: async (newSettings) => {
-      console.log('Updating tank settings:', newSettings);
-      const { error } = await supabase
-        .from('storage_tanks')
-        .update({
-          temperature_threshold: newSettings.temperatureThreshold,
-          capacity_warning_threshold: newSettings.capacityWarningThreshold,
-          auto_cleaning_enabled: newSettings.autoCleaningEnabled,
-          cleaning_interval: newSettings.cleaningInterval,
-          maintenance_interval: newSettings.maintenanceInterval,
-          last_maintenance: newSettings.lastMaintenance,
-          next_maintenance: newSettings.nextMaintenance
-        })
-        .eq('id', selectedTank);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['storageTanks']);
-      toast({
-        title: "Success",
-        description: "Tank settings updated successfully",
-      });
-    },
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
     onError: (error) => {
-      console.error('Error updating settings:', error);
+      console.error('Error fetching tanks:', error);
       toast({
         title: "Error",
-        description: "Failed to update tank settings",
+        description: "Failed to load storage tanks. Please try again.",
         variant: "destructive",
       });
     }
@@ -192,7 +127,15 @@ const StorageTankStatusForm = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>Loading tanks...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-500">
+        Error loading tanks. Please refresh the page.
+      </div>
+    );
   }
 
   return (
@@ -220,15 +163,26 @@ const StorageTankStatusForm = () => {
                     </Label>
                     <Select 
                       value={selectedTank}
-                      onValueChange={setSelectedTank}
+                      onValueChange={(value) => {
+                        console.log('Selected tank:', value);
+                        setSelectedTank(value);
+                        setErrors(prev => ({ ...prev, tank: '' }));
+                      }}
                     >
-                      <SelectTrigger className={errors.tank ? 'border-red-500' : ''}>
+                      <SelectTrigger 
+                        className={`bg-white ${errors.tank ? 'border-red-500' : ''}`}
+                        id="tank"
+                      >
                         <SelectValue placeholder="Select a tank" />
                       </SelectTrigger>
                       <SelectContent>
                         {tanks?.map((tank) => (
-                          <SelectItem key={tank.id} value={tank.id}>
-                            {tank.name}
+                          <SelectItem 
+                            key={tank.id} 
+                            value={tank.id}
+                            className="cursor-pointer hover:bg-gray-100"
+                          >
+                            {tank.name} ({tank.current_volume}/{tank.capacity}L)
                           </SelectItem>
                         ))}
                       </SelectContent>
