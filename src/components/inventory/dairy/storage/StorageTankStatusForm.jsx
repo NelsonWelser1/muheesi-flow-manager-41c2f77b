@@ -16,7 +16,7 @@ const StorageTankStatusForm = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [errors, setErrors] = useState({});
-  const [selectedTank, setSelectedTank] = useState('Tank 1');
+  const [selectedTank, setSelectedTank] = useState('Tank A');
   const [cleaningRecord, setCleaningRecord] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     time: format(new Date(), 'HH:mm'),
@@ -231,8 +231,8 @@ const StorageTankStatusForm = () => {
                         <SelectValue placeholder="Select a tank" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Tank 1">Tank 1</SelectItem>
-                        <SelectItem value="Tank 2">Tank 2</SelectItem>
+                        <SelectItem value="Tank A">Tank A</SelectItem>
+                        <SelectItem value="Tank B">Tank B</SelectItem>
                         <SelectItem value="Both Tanks">Both Tanks</SelectItem>
                       </SelectContent>
                     </Select>
