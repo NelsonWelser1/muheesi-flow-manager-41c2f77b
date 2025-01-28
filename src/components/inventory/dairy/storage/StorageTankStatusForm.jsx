@@ -17,7 +17,7 @@ const StorageTankStatusForm = () => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
-  const [selectedTank, setSelectedTank] = useState('Tank A');
+  const [selectedTank, setSelectedTank] = useState('');
   const [cleaningRecord, setCleaningRecord] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     time: format(new Date(), 'HH:mm'),
@@ -200,7 +200,6 @@ const StorageTankStatusForm = () => {
         return;
       }
 
-      const currentVolume = calculateCurrentVolume();
       const selectedTankData = tanks?.find(tank => tank.name === selectedTank);
       
       if (!selectedTankData) {
@@ -221,7 +220,7 @@ const StorageTankStatusForm = () => {
         initial_volume: parseFloat(volumeData.initialVolume),
         added_volume: parseFloat(volumeData.addedVolume) || 0,
         temperature: parseFloat(volumeData.temperature),
-        total_volume: currentVolume
+        total_volume: calculateCurrentVolume()
       });
 
       console.log('Form submission completed successfully');
@@ -255,33 +254,6 @@ const StorageTankStatusForm = () => {
     }
   };
 
-  // Handle settings submission
-  const handleSettingsSubmit = async (e) => {
-    e.preventDefault();
-    console.log('Settings submission started');
-    
-    try {
-      const selectedTankData = tanks?.find(tank => tank.name === selectedTank);
-      if (!selectedTankData) {
-        throw new Error('Selected tank not found');
-      }
-
-      await updateSettingsMutation.mutateAsync({
-        ...settings,
-        tank_id: selectedTankData.id
-      });
-      
-      console.log('Settings updated successfully');
-    } catch (error) {
-      console.error('Error updating settings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update settings",
-        variant: "destructive",
-      });
-    }
-  };
-
   if (isLoadingTanks) {
     return <div>Loading tanks data...</div>;
   }
@@ -310,15 +282,12 @@ const StorageTankStatusForm = () => {
                       value={selectedTank}
                       onValueChange={setSelectedTank}
                     >
-                      <SelectTrigger className={errors.selectedTank ? 'border-red-500' : ''}>
+                      <SelectTrigger id="tankSelection" className={errors.selectedTank ? 'border-red-500' : ''}>
                         <SelectValue placeholder="Select a tank" />
                       </SelectTrigger>
                       <SelectContent>
-                        {tanks?.map(tank => (
-                          <SelectItem key={tank.id} value={tank.name}>
-                            {tank.name}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="Tank A">Tank A</SelectItem>
+                        <SelectItem value="Tank B">Tank B</SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.selectedTank && <p className="text-sm text-red-500">{errors.selectedTank}</p>}
