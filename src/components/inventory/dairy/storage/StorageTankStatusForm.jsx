@@ -36,7 +36,6 @@ const StorageTankStatusForm = () => {
     maintenanceInterval: 30
   });
 
-  // Fetch tanks data
   const { data: tanks, isLoading: isLoadingTanks } = useQuery({
     queryKey: ['storageTanks'],
     queryFn: async () => {
@@ -254,6 +253,37 @@ const StorageTankStatusForm = () => {
     }
   };
 
+  // Handle settings submission
+  const handleSettingsSubmit = async (e) => {
+    e.preventDefault();
+    console.log('Settings submission started');
+    
+    try {
+      const selectedTankData = tanks?.find(tank => tank.name === selectedTank);
+      if (!selectedTankData) {
+        throw new Error('Selected tank not found');
+      }
+
+      await updateSettingsMutation.mutateAsync({
+        ...settings,
+        tank_id: selectedTankData.id
+      });
+      
+      console.log('Settings updated successfully');
+      toast({
+        title: "Success",
+        description: "Settings updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update settings",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoadingTanks) {
     return <div>Loading tanks data...</div>;
   }
@@ -363,6 +393,7 @@ const StorageTankStatusForm = () => {
                     </div>
                     {errors.temperature && <p className="text-sm text-red-500">{errors.temperature}</p>}
                   </div>
+
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -393,7 +424,6 @@ const StorageTankStatusForm = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSettingsSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="temperatureThreshold">Temperature Threshold (°C)</Label>
                     <Input
