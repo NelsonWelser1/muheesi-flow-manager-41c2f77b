@@ -13,11 +13,11 @@ const MilkReceptionSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [settings, setSettings] = useState({
-    temperatureThreshold: 4.5,
-    capacityWarningThreshold: 90,
-    autoCleaningEnabled: false,
-    cleaningInterval: 7,
-    maintenanceInterval: 30
+    temperature_threshold: 4.5,
+    capacity_warning_threshold: 90,
+    auto_cleaning_enabled: false,
+    cleaning_interval: 7,
+    maintenance_interval: 30
   });
 
   const updateSettingsMutation = useMutation({
@@ -25,7 +25,8 @@ const MilkReceptionSettings = () => {
       console.log('Updating milk reception settings:', settingsData);
       const { data, error } = await supabase
         .from('milk_reception_settings')
-        .upsert([settingsData]);
+        .upsert([settingsData])
+        .select();
 
       if (error) {
         console.error('Error updating settings:', error);
@@ -82,68 +83,68 @@ const MilkReceptionSettings = () => {
           <form onSubmit={handleSettingsSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="temperatureThreshold">Temperature Threshold (°C)</Label>
+                <Label htmlFor="temperature_threshold">Temperature Threshold (°C)</Label>
                 <Input
-                  id="temperatureThreshold"
+                  id="temperature_threshold"
                   type="number"
                   step="0.1"
-                  value={settings.temperatureThreshold}
+                  value={settings.temperature_threshold}
                   onChange={(e) => setSettings(prev => ({
                     ...prev,
-                    temperatureThreshold: parseFloat(e.target.value)
+                    temperature_threshold: parseFloat(e.target.value)
                   }))}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="capacityWarning">Capacity Warning Threshold (%)</Label>
+                <Label htmlFor="capacity_warning">Capacity Warning Threshold (%)</Label>
                 <Input
-                  id="capacityWarning"
+                  id="capacity_warning"
                   type="number"
-                  value={settings.capacityWarningThreshold}
+                  value={settings.capacity_warning_threshold}
                   onChange={(e) => setSettings(prev => ({
                     ...prev,
-                    capacityWarningThreshold: parseInt(e.target.value)
+                    capacity_warning_threshold: parseInt(e.target.value)
                   }))}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="cleaningInterval">Cleaning Interval (days)</Label>
+                <Label htmlFor="cleaning_interval">Cleaning Interval (days)</Label>
                 <Input
-                  id="cleaningInterval"
+                  id="cleaning_interval"
                   type="number"
-                  value={settings.cleaningInterval}
+                  value={settings.cleaning_interval}
                   onChange={(e) => setSettings(prev => ({
                     ...prev,
-                    cleaningInterval: parseInt(e.target.value)
+                    cleaning_interval: parseInt(e.target.value)
                   }))}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="maintenanceInterval">Maintenance Interval (days)</Label>
+                <Label htmlFor="maintenance_interval">Maintenance Interval (days)</Label>
                 <Input
-                  id="maintenanceInterval"
+                  id="maintenance_interval"
                   type="number"
-                  value={settings.maintenanceInterval}
+                  value={settings.maintenance_interval}
                   onChange={(e) => setSettings(prev => ({
                     ...prev,
-                    maintenanceInterval: parseInt(e.target.value)
+                    maintenance_interval: parseInt(e.target.value)
                   }))}
                 />
               </div>
 
               <div className="flex items-center space-x-2">
                 <Switch
-                  id="autoCleaningEnabled"
-                  checked={settings.autoCleaningEnabled}
+                  id="auto_cleaning_enabled"
+                  checked={settings.auto_cleaning_enabled}
                   onCheckedChange={(checked) => setSettings(prev => ({
                     ...prev,
-                    autoCleaningEnabled: checked
+                    auto_cleaning_enabled: checked
                   }))}
                 />
-                <Label htmlFor="autoCleaningEnabled">Enable Auto-Cleaning Alerts</Label>
+                <Label htmlFor="auto_cleaning_enabled">Enable Auto-Cleaning Alerts</Label>
               </div>
             </div>
 
