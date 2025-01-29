@@ -7,9 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase';
+import { useMilkReception } from '@/hooks/useMilkReception';
 
 const MilkOffloadForm = () => {
   const { toast } = useToast();
+  const { data: milkReceptionData, refetch: refetchMilkReception } = useMilkReception();
   const [formData, setFormData] = useState({
     tank_number: '',
     volume_offloaded: '',
@@ -51,7 +53,46 @@ const MilkOffloadForm = () => {
       }
     });
 
+    // Check if there's enough milk in the tank
+    const tankMilk = milkReceptionData?.filter(record => 
+      record.tank_number === formData.tank_number
+    ).reduce((total, record) => total + record.milk_volume, 0) || 0;
+
+    if (parseFloat(formData.volume_offloaded) > tankMilk) {
+      errors.push(`Not enough milk in ${formData.tank_number}. Available: ${tankMilk}L`);
+    }
+
     return errors;
+  };
+
+  const updateMilkReceptionRecord = async (volumeOffloaded, tankNumber) => {
+    try {
+      // Create a negative milk reception record to track the offload
+      const deductionRecord = {
+        supplier_name: `Offload from ${tankNumber}`,
+        milk_volume: -parseFloat(volumeOffloaded),
+        temperature: parseFloat(formData.temperature),
+        fat_percentage: 0,
+        protein_percentage: 0,
+        total_plate_count: 0,
+        acidity: 0,
+        notes: `Offloaded to: ${formData.destination}`,
+        datetime: new Date().toISOString(),
+        quality_score: formData.quality_check
+      };
+
+      const { error } = await supabase
+        .from('milk_reception')
+        .insert([deductionRecord]);
+
+      if (error) throw error;
+
+      console.log('Successfully deducted milk from reception records');
+      await refetchMilkReception();
+    } catch (error) {
+      console.error('Error updating milk reception record:', error);
+      throw error;
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -77,6 +118,8 @@ const MilkOffloadForm = () => {
       };
 
       console.log('Submitting offload data:', dataToSubmit);
+      
+      // First record the offload
       const { data, error } = await supabase
         .from('milk_tank_offloads')
         .insert([dataToSubmit])
@@ -85,10 +128,16 @@ const MilkOffloadForm = () => {
 
       if (error) throw error;
 
+      // Then update milk reception records to reflect the deduction
+      await updateMilkReceptionRecord(
+        formData.volume_offloaded,
+        formData.tank_number
+      );
+
       console.log('Offload record added successfully:', data);
       toast({
         title: "Success",
-        description: "Tank offload record added successfully",
+        description: "Tank offload record added and milk volume deducted",
       });
 
       // Reset form
