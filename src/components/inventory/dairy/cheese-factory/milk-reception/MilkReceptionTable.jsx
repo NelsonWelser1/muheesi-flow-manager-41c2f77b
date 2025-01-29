@@ -169,14 +169,17 @@ const MilkReceptionTable = () => {
           <Table className="milk-reception-table">
             <TableHeader>
               <TableRow>
+                <TableHead>Entry Type</TableHead>
+                <TableHead>Storage Tank</TableHead>
+                <TableHead>Quality Score</TableHead>
                 <TableHead>Supplier</TableHead>
                 <TableHead>Volume (L)</TableHead>
                 <TableHead>Temperature (°C)</TableHead>
-                <TableHead>Quality Score</TableHead>
                 <TableHead>Fat %</TableHead>
                 <TableHead>Protein %</TableHead>
                 <TableHead>TPC</TableHead>
                 <TableHead>Acidity</TableHead>
+                <TableHead>Destination</TableHead>
                 <TableHead>Date & Time</TableHead>
                 <TableHead>Notes</TableHead>
               </TableRow>
@@ -187,18 +190,23 @@ const MilkReceptionTable = () => {
                   key={record.id}
                   className={record.supplier_name.startsWith('Offload from') ? 'bg-red-50' : ''}
                 >
+                  <TableCell>
+                    {record.supplier_name.startsWith('Offload from') ? 'Tank Offload' : 'Reception'}
+                  </TableCell>
+                  <TableCell>{record.tank_number || 'N/A'}</TableCell>
+                  <TableCell>{record.quality_score || 'N/A'}</TableCell>
                   <TableCell>{record.supplier_name}</TableCell>
                   <TableCell className={record.milk_volume < 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>
                     {record.milk_volume.toFixed(2)}
                   </TableCell>
-                  <TableCell>{record.temperature.toFixed(1)}</TableCell>
-                  <TableCell>{record.quality_score}</TableCell>
-                  <TableCell>{record.fat_percentage.toFixed(1)}</TableCell>
-                  <TableCell>{record.protein_percentage.toFixed(1)}</TableCell>
-                  <TableCell>{record.total_plate_count.toLocaleString()}</TableCell>
-                  <TableCell>{record.acidity.toFixed(1)}</TableCell>
+                  <TableCell>{record.temperature?.toFixed(1) || 'N/A'}</TableCell>
+                  <TableCell>{record.fat_percentage?.toFixed(1) || 'N/A'}</TableCell>
+                  <TableCell>{record.protein_percentage?.toFixed(1) || 'N/A'}</TableCell>
+                  <TableCell>{record.total_plate_count?.toLocaleString() || 'N/A'}</TableCell>
+                  <TableCell>{record.acidity?.toFixed(1) || 'N/A'}</TableCell>
+                  <TableCell>{record.destination || 'N/A'}</TableCell>
                   <TableCell>{format(new Date(record.datetime), 'PPp')}</TableCell>
-                  <TableCell className="max-w-xs truncate">{record.notes}</TableCell>
+                  <TableCell className="max-w-xs truncate">{record.notes || 'N/A'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
