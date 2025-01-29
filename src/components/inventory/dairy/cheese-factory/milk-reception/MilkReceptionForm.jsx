@@ -20,11 +20,13 @@ const MilkReceptionForm = () => {
     total_plate_count: '',
     acidity: '',
     quality_score: 'Grade A',
+    tank_number: '',  // Added tank_number field
     notes: ''
   });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    console.log(`Input changed - ${name}:`, value);
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -39,6 +41,14 @@ const MilkReceptionForm = () => {
     }));
   };
 
+  const handleTankSelection = (value) => {
+    console.log('Selected tank:', value);
+    setFormData(prev => ({
+      ...prev,
+      tank_number: value
+    }));
+  };
+
   const validateForm = () => {
     const requiredFields = [
       'supplier_name',
@@ -48,7 +58,8 @@ const MilkReceptionForm = () => {
       'protein_percentage',
       'total_plate_count',
       'acidity',
-      'quality_score'
+      'quality_score',
+      'tank_number'  // Added tank_number validation
     ];
 
     const errors = [];
@@ -58,7 +69,6 @@ const MilkReceptionForm = () => {
       }
     });
 
-    // Validate numeric fields
     const numericFields = [
       'milk_volume',
       'temperature',
@@ -100,7 +110,8 @@ const MilkReceptionForm = () => {
         protein_percentage: parseFloat(formData.protein_percentage),
         total_plate_count: parseInt(formData.total_plate_count),
         acidity: parseFloat(formData.acidity),
-        quality_score: formData.quality_score // Keep as string
+        quality_score: formData.quality_score,
+        tank_number: formData.tank_number
       };
 
       console.log('Submitting data:', dataToSubmit);
@@ -122,7 +133,8 @@ const MilkReceptionForm = () => {
           protein_percentage: '',
           total_plate_count: '',
           acidity: '',
-          quality_score: 'Grade A', // Reset to default
+          quality_score: 'Grade A',
+          tank_number: '',
           notes: ''
         });
       } else {
@@ -155,6 +167,22 @@ const MilkReceptionForm = () => {
                 onChange={handleInputChange}
                 required
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tank_number">Storage Tank</Label>
+              <Select 
+                value={formData.tank_number} 
+                onValueChange={handleTankSelection}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select tank" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Tank A">Tank A</SelectItem>
+                  <SelectItem value="Tank B">Tank B</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -251,6 +279,7 @@ const MilkReceptionForm = () => {
                 </SelectContent>
               </Select>
             </div>
+
           </div>
 
           <div className="space-y-2">
