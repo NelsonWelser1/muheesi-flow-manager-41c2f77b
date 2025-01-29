@@ -11,11 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useMilkReception } from '@/hooks/useMilkReception';
-import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format } from 'date-fns';
 import { Download, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
+import MilkBalanceTracker from './MilkBalanceTracker';
 
 const MilkReceptionTable = () => {
   const { data: milkReception, isLoading, error } = useMilkReception();
@@ -114,93 +115,92 @@ const MilkReceptionTable = () => {
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Milk Reception Records</CardTitle>
-        <div className="flex space-x-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <FileText className="h-4 w-4 mr-2" />
-                Reports
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => {
-                const monthlyData = generateMonthlyReport();
-                downloadPDF(monthlyData, 'Monthly-Report');
-              }}>
-                Monthly Report
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                const annualData = generateAnnualReport();
-                downloadPDF(annualData, 'Annual-Report');
-              }}>
-                Annual Report
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+    <>
+      <MilkBalanceTracker />
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Milk Reception Records</CardTitle>
+          <div className="flex space-x-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Reports
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => {
+                  const monthlyData = generateMonthlyReport();
+                  downloadPDF(monthlyData, 'Monthly-Report');
+                }}>
+                  Monthly Report
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  const annualData = generateAnnualReport();
+                  downloadPDF(annualData, 'Annual-Report');
+                }}>
+                  Annual Report
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => downloadPDF(milkReception, 'All-Records')}>
-                Download PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => downloadCSV(milkReception, 'All-Records')}>
-                Download CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => downloadJPG(milkReception, 'All-Records')}>
-                Download JPG
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table className="milk-reception-table">
-          <TableHeader>
-
-<TableRow>
-  <TableHead>Supplier</TableHead>
-  <TableHead>Volume (L)</TableHead>
-  <TableHead>Temperature (°C)</TableHead>
-  <TableHead>Quality Score</TableHead>
-  <TableHead>Fat %</TableHead>
-  <TableHead>Protein %</TableHead>
-  <TableHead>TPC</TableHead>
-  <TableHead>Acidity</TableHead>
-  <TableHead>Date & Time</TableHead>
-  <TableHead>Notes</TableHead>
-</TableRow>
-
-          </TableHeader>
-          <TableBody>
-            {milkReception?.map((record) => (
-
-<TableRow key={record.id}>
-  <TableCell>{record.supplier_name}</TableCell>
-  <TableCell>{record.milk_volume.toFixed(2)}</TableCell>
-  <TableCell>{record.temperature.toFixed(1)}</TableCell>
-  <TableCell>{record.quality_score}</TableCell>
-  <TableCell>{record.fat_percentage.toFixed(1)}</TableCell>
-  <TableCell>{record.protein_percentage.toFixed(1)}</TableCell>
-  <TableCell>{record.total_plate_count.toLocaleString()}</TableCell>
-  <TableCell>{record.acidity.toFixed(1)}</TableCell>
-  <TableCell>{format(new Date(record.datetime), 'PPp')}</TableCell>
-  <TableCell className="max-w-xs truncate">{record.notes}</TableCell>
-</TableRow>
-
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => downloadPDF(milkReception, 'All-Records')}>
+                  Download PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => downloadCSV(milkReception, 'All-Records')}>
+                  Download CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => downloadJPG(milkReception, 'All-Records')}>
+                  Download JPG
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table className="milk-reception-table">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Supplier</TableHead>
+                <TableHead>Volume (L)</TableHead>
+                <TableHead>Temperature (°C)</TableHead>
+                <TableHead>Quality Score</TableHead>
+                <TableHead>Fat %</TableHead>
+                <TableHead>Protein %</TableHead>
+                <TableHead>TPC</TableHead>
+                <TableHead>Acidity</TableHead>
+                <TableHead>Date & Time</TableHead>
+                <TableHead>Notes</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {milkReception?.map((record) => (
+                <TableRow key={record.id}>
+                  <TableCell>{record.supplier_name}</TableCell>
+                  <TableCell>{record.milk_volume.toFixed(2)}</TableCell>
+                  <TableCell>{record.temperature.toFixed(1)}</TableCell>
+                  <TableCell>{record.quality_score}</TableCell>
+                  <TableCell>{record.fat_percentage.toFixed(1)}</TableCell>
+                  <TableCell>{record.protein_percentage.toFixed(1)}</TableCell>
+                  <TableCell>{record.total_plate_count.toLocaleString()}</TableCell>
+                  <TableCell>{record.acidity.toFixed(1)}</TableCell>
+                  <TableCell>{format(new Date(record.datetime), 'PPp')}</TableCell>
+                  <TableCell className="max-w-xs truncate">{record.notes}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </>
   );
 };
 
