@@ -12,6 +12,8 @@ const MilkReceptionForm = () => {
   const { toast } = useToast();
   const { addMilkReception } = useMilkReception();
   const [formData, setFormData] = useState({
+    tank_number: '',
+    quality_score: 'Grade A',
     supplier_name: '',
     milk_volume: '',
     temperature: '',
@@ -19,8 +21,6 @@ const MilkReceptionForm = () => {
     protein_percentage: '',
     total_plate_count: '',
     acidity: '',
-    quality_score: 'Grade A',
-    tank_number: '',  // Added tank_number field
     notes: ''
   });
 
@@ -157,18 +157,8 @@ const MilkReceptionForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Storage Tank and Quality Score at the top */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="supplier_name">Supplier Name</Label>
-              <Input
-                id="supplier_name"
-                name="supplier_name"
-                value={formData.supplier_name}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="tank_number">Storage Tank</Label>
               <Select 
@@ -183,6 +173,38 @@ const MilkReceptionForm = () => {
                   <SelectItem value="Tank B">Tank B</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="quality_score">Quality Score</Label>
+              <Select 
+                value={formData.quality_score} 
+                onValueChange={handleQualityChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select quality score" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Grade A">Grade A</SelectItem>
+                  <SelectItem value="Grade B">Grade B</SelectItem>
+                  <SelectItem value="Grade C">Grade C</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Rest of the form fields */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="supplier_name">Supplier Name</Label>
+              <Input
+                id="supplier_name"
+                name="supplier_name"
+                value={formData.supplier_name}
+                onChange={handleInputChange}
+                required
+              />
             </div>
 
             <div className="space-y-2">
@@ -261,25 +283,6 @@ const MilkReceptionForm = () => {
                 required
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="quality_score">Quality Score</Label>
-              <Select 
-                value={formData.quality_score} 
-                onValueChange={handleQualityChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select quality score" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Grade A">Grade A</SelectItem>
-                  <SelectItem value="Grade B">Grade B</SelectItem>
-                  <SelectItem value="Grade C">Grade C</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
           </div>
 
           <div className="space-y-2">
