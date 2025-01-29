@@ -56,27 +56,6 @@ const DairyCoolers = () => {
             <TabsContent value="storage">
               <div className="grid gap-4">
                 <StorageTankStatusForm />
-                <Card>
-                  <CardHeader>
-                    <CardTitle>View Storage Tanks Status</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((tank) => (
-                        <div key={tank} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div>
-                            <h4 className="font-semibold">Tank {tank}</h4>
-                            <p className="text-sm text-gray-500">Last cleaned: 2 hours ago</p>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-bold">{Math.floor(Math.random() * 2000 + 1000)}L</div>
-                            <div className="text-sm text-gray-500">Capacity: 5000L</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
             </TabsContent>
 
