@@ -22,6 +22,7 @@ const MilkOffloadForm = () => {
   });
 
   const handleTankSelection = (tankNumber) => {
+    console.log('Selected tank:', tankNumber);
     setFormData(prev => ({
       ...prev,
       tank_number: tankNumber
@@ -30,6 +31,7 @@ const MilkOffloadForm = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    console.log(`Input changed - ${name}:`, value);
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -37,6 +39,7 @@ const MilkOffloadForm = () => {
   };
 
   const handleQualityChange = (value) => {
+    console.log('Quality check changed:', value);
     setFormData(prev => ({
       ...prev,
       quality_check: value
@@ -44,6 +47,7 @@ const MilkOffloadForm = () => {
   };
 
   const validateForm = () => {
+    console.log('Validating form with data:', formData);
     const errors = [];
     const requiredFields = ['tank_number', 'volume_offloaded', 'destination', 'temperature'];
 
@@ -58,6 +62,7 @@ const MilkOffloadForm = () => {
       record.tank_number === formData.tank_number
     ).reduce((total, record) => total + record.milk_volume, 0) || 0;
 
+    console.log('Available milk in tank:', tankMilk);
     if (parseFloat(formData.volume_offloaded) > tankMilk) {
       errors.push(`Not enough milk in ${formData.tank_number}. Available: ${tankMilk}L`);
     }
@@ -71,6 +76,7 @@ const MilkOffloadForm = () => {
 
     const errors = validateForm();
     if (errors.length > 0) {
+      console.log('Validation errors:', errors);
       toast({
         title: "Validation Error",
         description: errors.join(', '),
@@ -91,7 +97,8 @@ const MilkOffloadForm = () => {
           temperature: parseFloat(formData.temperature),
           quality_check: formData.quality_check,
           notes: formData.notes,
-          offload_date: new Date().toISOString()
+          offload_date: new Date().toISOString(),
+          created_at: new Date().toISOString()
         }])
         .select();
 
