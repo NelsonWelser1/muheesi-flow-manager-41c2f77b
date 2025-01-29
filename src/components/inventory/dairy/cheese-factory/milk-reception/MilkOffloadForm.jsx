@@ -92,7 +92,7 @@ const MilkOffloadForm = () => {
         .insert([{
           storage_tank: formData.storage_tank,
           supplier_name: formData.supplier_name,
-          volume_offloaded: parseFloat(formData.milk_volume),
+          volume_offloaded: parseFloat(formData.milk_volume), // Changed from milk_volume to volume_offloaded
           temperature: parseFloat(formData.temperature),
           fat_percentage: parseFloat(formData.fat_percentage),
           protein_percentage: parseFloat(formData.protein_percentage),
@@ -144,6 +144,8 @@ const MilkOffloadForm = () => {
       });
     }
   };
+
+  // ... keep existing code (form JSX)
 
   return (
     <Card>
