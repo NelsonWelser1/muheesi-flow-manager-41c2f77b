@@ -22,7 +22,7 @@ const MilkOffloadForm = () => {
     total_plate_count: '',
     acidity: '',
     destination: '',
-    quality_check: 'Pass',
+    quality_check: 'Grade A',
     notes: ''
   });
 
@@ -44,7 +44,7 @@ const MilkOffloadForm = () => {
   };
 
   const handleQualityChange = (value) => {
-    console.log('Quality score changed:', value);
+    console.log('Quality grade changed:', value);
     setFormData(prev => ({
       ...prev,
       quality_check: value
@@ -137,7 +137,7 @@ const MilkOffloadForm = () => {
         total_plate_count: '',
         acidity: '',
         destination: '',
-        quality_check: 'Pass',
+        quality_check: 'Grade A',
         notes: ''
       });
 
@@ -179,18 +179,19 @@ const MilkOffloadForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="quality_check">Quality Score</Label>
+              <Label htmlFor="quality_check">Quality Grade</Label>
               <Select 
                 value={formData.quality_check} 
                 onValueChange={handleQualityChange}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select quality status" />
+                  <SelectValue placeholder="Select quality grade" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Pass">Pass</SelectItem>
-                  <SelectItem value="Fail">Fail</SelectItem>
-                  <SelectItem value="Pending">Pending Review</SelectItem>
+                  <SelectItem value="Grade A">Grade A</SelectItem>
+                  <SelectItem value="Grade B">Grade B</SelectItem>
+                  <SelectItem value="Grade C">Grade C</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
