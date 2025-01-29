@@ -183,9 +183,14 @@ const MilkReceptionTable = () => {
             </TableHeader>
             <TableBody>
               {milkReception?.map((record) => (
-                <TableRow key={record.id}>
+                <TableRow 
+                  key={record.id}
+                  className={record.supplier_name.startsWith('Offload from') ? 'bg-red-50' : ''}
+                >
                   <TableCell>{record.supplier_name}</TableCell>
-                  <TableCell>{record.milk_volume.toFixed(2)}</TableCell>
+                  <TableCell className={record.milk_volume < 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>
+                    {record.milk_volume.toFixed(2)}
+                  </TableCell>
                   <TableCell>{record.temperature.toFixed(1)}</TableCell>
                   <TableCell>{record.quality_score}</TableCell>
                   <TableCell>{record.fat_percentage.toFixed(1)}</TableCell>
