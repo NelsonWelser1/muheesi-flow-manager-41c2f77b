@@ -67,32 +67,34 @@ const MilkOffloadForm = () => {
 
   const updateMilkReceptionRecord = async (volumeOffloaded, tankNumber) => {
     try {
-      console.log('Attempting to update milk reception record...');
-      const deductionRecord = {
+      console.log('Creating deduction record with data:', {
         supplier_name: `Offload from ${tankNumber}`,
         milk_volume: -parseFloat(volumeOffloaded),
         temperature: parseFloat(formData.temperature),
-        fat_percentage: 0,
-        protein_percentage: 0,
-        total_plate_count: 0,
-        acidity: 0,
         notes: `Offloaded to: ${formData.destination}`,
-        datetime: new Date().toISOString(),
         quality_check: formData.quality_check
-      };
+      });
 
-      console.log('Deduction record:', deductionRecord);
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('milk_reception')
-        .insert([deductionRecord]);
+        .insert([{
+          supplier_name: `Offload from ${tankNumber}`,
+          milk_volume: -parseFloat(volumeOffloaded),
+          temperature: parseFloat(formData.temperature),
+          fat_percentage: 0,
+          protein_percentage: 0,
+          total_plate_count: 0,
+          acidity: 0,
+          notes: `Offloaded to: ${formData.destination}`,
+          quality_check: formData.quality_check
+        }]);
 
       if (error) {
         console.error('Error in updateMilkReceptionRecord:', error);
         throw error;
       }
 
-      console.log('Successfully deducted milk from reception records');
+      console.log('Successfully created deduction record:', data);
       await refetchMilkReception();
     } catch (error) {
       console.error('Error updating milk reception record:', error);
@@ -102,7 +104,7 @@ const MilkOffloadForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form data before submission:', formData);
+    console.log('Starting form submission with data:', formData);
 
     const errors = validateForm();
     if (errors.length > 0) {
@@ -115,30 +117,29 @@ const MilkOffloadForm = () => {
     }
 
     try {
-      const dataToSubmit = {
-        ...formData,
-        volume_offloaded: parseFloat(formData.volume_offloaded),
-        temperature: parseFloat(formData.temperature),
-        offload_date: new Date().toISOString()
-      };
-
-      console.log('Submitting offload data:', dataToSubmit);
-      
       // First record the offload
+      console.log('Recording milk tank offload...');
       const { data: offloadData, error: offloadError } = await supabase
         .from('milk_tank_offloads')
-        .insert([dataToSubmit])
-        .select()
-        .single();
+        .insert([{
+          tank_number: formData.tank_number,
+          volume_offloaded: parseFloat(formData.volume_offloaded),
+          destination: formData.destination,
+          temperature: parseFloat(formData.temperature),
+          quality_check: formData.quality_check,
+          notes: formData.notes,
+          offload_date: new Date().toISOString()
+        }])
+        .select();
 
       if (offloadError) {
         console.error('Error in milk tank offload:', offloadError);
         throw offloadError;
       }
 
-      console.log('Offload record added successfully:', offloadData);
+      console.log('Successfully recorded milk tank offload:', offloadData);
 
-      // Then update milk reception records to reflect the deduction
+      // Then update milk reception records
       await updateMilkReceptionRecord(
         formData.volume_offloaded,
         formData.tank_number
@@ -158,16 +159,16 @@ const MilkOffloadForm = () => {
         quality_check: 'Pass',
         notes: ''
       });
-      
+
       // Refresh available tanks
       const event = new CustomEvent('milkOffloadCompleted');
       window.dispatchEvent(event);
-      
+
     } catch (error) {
-      console.error('Error in form submission:', error);
+      console.error('Form submission error:', error);
       toast({
         title: "Submission Failed",
-        description: "Please check your data and try again. " + (error.message || ''),
+        description: error.message || "An error occurred while submitting the form",
         variant: "destructive",
       });
     }
