@@ -66,7 +66,6 @@ const MilkOffloadForm = () => {
       }
     });
 
-    // Check if there's enough milk in the tank
     const tankMilk = milkReceptionData?.filter(record => 
       record.tank_number === formData.storage_tank
     ).reduce((total, record) => total + record.milk_volume, 0) || 0;
@@ -108,7 +107,7 @@ const MilkOffloadForm = () => {
           total_plate_count: parseInt(formData.total_plate_count),
           acidity: parseFloat(formData.acidity),
           destination: formData.destination,
-          quality_check: formData.quality_check,
+          quality_check: formData.quality_check, // This now matches the database constraint
           notes: formData.notes,
           offload_date: new Date().toISOString(),
           created_at: new Date().toISOString()
@@ -182,7 +181,7 @@ const MilkOffloadForm = () => {
               <Label htmlFor="quality_check">Quality Grade</Label>
               <Select 
                 value={formData.quality_check} 
-                onValueChange={handleQualityChange}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, quality_check: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select quality grade" />
