@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Thermometer, Container, Milk, History, AlertCircle } from "lucide-react";
 import MilkReception from './cheese-factory/milk-reception/MilkReception';
-import StorageTankStatusForm from './storage/StorageTankStatusForm';
 import { useDairyCoolerData } from '@/hooks/useDairyCoolerData';
 
 const renderMetricCard = (title, value, icon, status = 'normal') => {
@@ -44,19 +43,12 @@ const DairyCoolers = () => {
           <Tabs defaultValue="reception" className="w-full">
             <TabsList className="w-full justify-start mb-6 bg-gray-100 p-1 rounded-lg border border-gray-200">
               <TabsTrigger value="reception">Milk Reception</TabsTrigger>
-              <TabsTrigger value="storage">Storage Management</TabsTrigger>
               <TabsTrigger value="monitoring">Temperature Monitoring</TabsTrigger>
               <TabsTrigger value="activity">Recent Activity</TabsTrigger>
             </TabsList>
 
             <TabsContent value="reception">
               <MilkReception />
-            </TabsContent>
-
-            <TabsContent value="storage">
-              <div className="grid gap-4">
-                <StorageTankStatusForm />
-              </div>
             </TabsContent>
 
             <TabsContent value="monitoring">
