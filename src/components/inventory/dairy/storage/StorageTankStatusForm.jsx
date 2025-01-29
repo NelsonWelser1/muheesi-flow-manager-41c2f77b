@@ -199,7 +199,10 @@ const StorageTankStatusForm = () => {
         return;
       }
 
+      // Find selected tank data
       const selectedTankData = tanks?.find(tank => tank.name === selectedTank);
+      console.log('Selected tank:', selectedTank);
+      console.log('Available tanks:', tanks);
       
       if (!selectedTankData) {
         throw new Error('Selected tank not found');
@@ -235,6 +238,7 @@ const StorageTankStatusForm = () => {
         time: format(new Date(), 'HH:mm'),
         cleanerId: ''
       });
+      setSelectedTank('');
 
       toast({
         title: "Success",
