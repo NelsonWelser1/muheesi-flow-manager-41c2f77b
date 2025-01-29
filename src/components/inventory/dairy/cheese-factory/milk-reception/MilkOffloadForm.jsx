@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase';
 
 const MilkOffloadForm = () => {
   const { toast } = useToast();
+  const [availableTanks, setAvailableTanks] = useState([]);
+  const [selectedTankData, setSelectedTankData] = useState(null);
   const [formData, setFormData] = useState({
     tank_number: '',
     volume_offloaded: '',
@@ -18,6 +20,72 @@ const MilkOffloadForm = () => {
     quality_check: 'Pass',
     notes: ''
   });
+
+  // Fetch available tanks with their current volumes
+  useEffect(() => {
+    const fetchTanks = async () => {
+      try {
+        console.log('Fetching available tanks');
+        const { data: milkReceptionData, error } = await supabase
+          .from('milk_reception')
+          .select('*')
+          .order('datetime', { ascending: false });
+
+        if (error) throw error;
+
+        // Group by tank number and sum volumes
+        const tankVolumes = milkReceptionData.reduce((acc, curr) => {
+          if (!acc[curr.tank_number]) {
+            acc[curr.tank_number] = 0;
+          }
+          acc[curr.tank_number] += parseFloat(curr.milk_volume);
+          return acc;
+        }, {});
+
+        // Get offloaded volumes
+        const { data: offloadData, error: offloadError } = await supabase
+          .from('milk_tank_offloads')
+          .select('*');
+
+        if (offloadError) throw offloadError;
+
+        // Subtract offloaded volumes
+        offloadData?.forEach(offload => {
+          if (tankVolumes[offload.tank_number]) {
+            tankVolumes[offload.tank_number] -= parseFloat(offload.volume_offloaded);
+          }
+        });
+
+        const availableTanksData = Object.entries(tankVolumes)
+          .map(([tank_number, available_volume]) => ({
+            tank_number,
+            available_volume: Math.max(0, available_volume)
+          }))
+          .filter(tank => tank.available_volume > 0);
+
+        console.log('Available tanks:', availableTanksData);
+        setAvailableTanks(availableTanksData);
+      } catch (error) {
+        console.error('Error fetching tanks:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch available tanks",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchTanks();
+  }, [toast]);
+
+  const handleTankSelection = (tankNumber) => {
+    const selectedTank = availableTanks.find(tank => tank.tank_number === tankNumber);
+    setSelectedTankData(selectedTank);
+    setFormData(prev => ({
+      ...prev,
+      tank_number: tankNumber
+    }));
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -35,28 +103,19 @@ const MilkOffloadForm = () => {
   };
 
   const validateForm = () => {
-    const requiredFields = [
-      'tank_number',
-      'volume_offloaded',
-      'destination',
-      'temperature',
-      'quality_check'
-    ];
-
     const errors = [];
+    const requiredFields = ['tank_number', 'volume_offloaded', 'destination', 'temperature'];
+
     requiredFields.forEach(field => {
       if (!formData[field]) {
         errors.push(`${field.replace('_', ' ')} is required`);
       }
     });
 
-    // Validate numeric fields
-    const numericFields = ['volume_offloaded', 'temperature'];
-    numericFields.forEach(field => {
-      if (isNaN(parseFloat(formData[field]))) {
-        errors.push(`${field.replace('_', ' ')} must be a valid number`);
-      }
-    });
+    // Validate volume against available
+    if (selectedTankData && parseFloat(formData.volume_offloaded) > selectedTankData.available_volume) {
+      errors.push(`Cannot offload more than available volume (${selectedTankData.available_volume}L)`);
+    }
 
     return errors;
   };
@@ -107,6 +166,11 @@ const MilkOffloadForm = () => {
         quality_check: 'Pass',
         notes: ''
       });
+      
+      // Refresh available tanks
+      const event = new CustomEvent('milkOffloadCompleted');
+      window.dispatchEvent(event);
+      
     } catch (error) {
       console.error('Error in form submission:', error);
       toast({
@@ -127,17 +191,25 @@ const MilkOffloadForm = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="tank_number">Tank Number</Label>
-              <Input
-                id="tank_number"
-                name="tank_number"
-                value={formData.tank_number}
-                onChange={handleInputChange}
-                required
-              />
+              <Select 
+                value={formData.tank_number} 
+                onValueChange={handleTankSelection}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select tank" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTanks.map(tank => (
+                    <SelectItem key={tank.tank_number} value={tank.tank_number}>
+                      Tank {tank.tank_number} ({tank.available_volume}L available)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="volume_offloaded">Volume Offloaded (L)</Label>
+              <Label htmlFor="volume_offloaded">Volume to Offload (L)</Label>
               <Input
                 id="volume_offloaded"
                 name="volume_offloaded"
@@ -146,7 +218,13 @@ const MilkOffloadForm = () => {
                 value={formData.volume_offloaded}
                 onChange={handleInputChange}
                 required
+                max={selectedTankData?.available_volume}
               />
+              {selectedTankData && (
+                <p className="text-sm text-muted-foreground">
+                  Available: {selectedTankData.available_volume}L
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
