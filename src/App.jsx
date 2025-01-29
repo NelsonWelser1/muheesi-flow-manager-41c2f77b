@@ -14,7 +14,6 @@ import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-bu
 import KashariFarmDashboard from "./components/inventory/kashari/KashariFarmDashboard";
 import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDairyDashboard";
 import SmartProductionDashboard from "./components/inventory/dairy/production/SmartProductionDashboard";
-import StorageTankManagement from "./components/inventory/dairy/storage/StorageTankManagement";
 
 const queryClient = new QueryClient();
 
@@ -36,7 +35,6 @@ const App = () => (
             <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
             <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
             <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
-            <Route path="/manage-inventory/storage-tanks" element={<StorageTankManagement />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
