@@ -299,7 +299,7 @@ const StorageTankStatusForm = () => {
         <TabsContent value="status">
           <Card>
             <CardHeader>
-              <CardTitle>Storage Tank Status Entry</CardTitle>
+              <CardTitle>Add Storage Tank Status</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
