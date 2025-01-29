@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,6 @@ import { supabase } from '@/integrations/supabase';
 
 const MilkOffloadForm = () => {
   const { toast } = useToast();
-  const [availableTanks, setAvailableTanks] = useState([]);
-  const [selectedTankData, setSelectedTankData] = useState(null);
   const [formData, setFormData] = useState({
     tank_number: '',
     volume_offloaded: '',
@@ -21,66 +19,7 @@ const MilkOffloadForm = () => {
     notes: ''
   });
 
-  // Fetch available tanks with their current volumes
-  useEffect(() => {
-    const fetchTanks = async () => {
-      try {
-        console.log('Fetching available tanks');
-        const { data: milkReceptionData, error } = await supabase
-          .from('milk_reception')
-          .select('*')
-          .order('datetime', { ascending: false });
-
-        if (error) throw error;
-
-        // Group by tank number and sum volumes
-        const tankVolumes = milkReceptionData.reduce((acc, curr) => {
-          if (!acc[curr.tank_number]) {
-            acc[curr.tank_number] = 0;
-          }
-          acc[curr.tank_number] += parseFloat(curr.milk_volume);
-          return acc;
-        }, {});
-
-        // Get offloaded volumes
-        const { data: offloadData, error: offloadError } = await supabase
-          .from('milk_tank_offloads')
-          .select('*');
-
-        if (offloadError) throw offloadError;
-
-        // Subtract offloaded volumes
-        offloadData?.forEach(offload => {
-          if (tankVolumes[offload.tank_number]) {
-            tankVolumes[offload.tank_number] -= parseFloat(offload.volume_offloaded);
-          }
-        });
-
-        const availableTanksData = Object.entries(tankVolumes)
-          .map(([tank_number, available_volume]) => ({
-            tank_number,
-            available_volume: Math.max(0, available_volume)
-          }))
-          .filter(tank => tank.available_volume > 0);
-
-        console.log('Available tanks:', availableTanksData);
-        setAvailableTanks(availableTanksData);
-      } catch (error) {
-        console.error('Error fetching tanks:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch available tanks",
-          variant: "destructive",
-        });
-      }
-    };
-
-    fetchTanks();
-  }, [toast]);
-
   const handleTankSelection = (tankNumber) => {
-    const selectedTank = availableTanks.find(tank => tank.tank_number === tankNumber);
-    setSelectedTankData(selectedTank);
     setFormData(prev => ({
       ...prev,
       tank_number: tankNumber
@@ -111,11 +50,6 @@ const MilkOffloadForm = () => {
         errors.push(`${field.replace('_', ' ')} is required`);
       }
     });
-
-    // Validate volume against available
-    if (selectedTankData && parseFloat(formData.volume_offloaded) > selectedTankData.available_volume) {
-      errors.push(`Cannot offload more than available volume (${selectedTankData.available_volume}L)`);
-    }
 
     return errors;
   };
@@ -199,11 +133,8 @@ const MilkOffloadForm = () => {
                   <SelectValue placeholder="Select tank" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableTanks.map(tank => (
-                    <SelectItem key={tank.tank_number} value={tank.tank_number}>
-                      Tank {tank.tank_number} ({tank.available_volume}L available)
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="Tank A">Tank A</SelectItem>
+                  <SelectItem value="Tank B">Tank B</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -218,13 +149,7 @@ const MilkOffloadForm = () => {
                 value={formData.volume_offloaded}
                 onChange={handleInputChange}
                 required
-                max={selectedTankData?.available_volume}
               />
-              {selectedTankData && (
-                <p className="text-sm text-muted-foreground">
-                  Available: {selectedTankData.available_volume}L
-                </p>
-              )}
             </div>
 
             <div className="space-y-2">
