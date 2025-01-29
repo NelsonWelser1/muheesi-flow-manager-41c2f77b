@@ -43,14 +43,6 @@ const MilkOffloadForm = () => {
     }));
   };
 
-  const handleQualityChange = (value) => {
-    console.log('Quality grade changed:', value);
-    setFormData(prev => ({
-      ...prev,
-      quality_check: value
-    }));
-  };
-
   const validateForm = () => {
     console.log('Validating form with data:', formData);
     const errors = [];
@@ -67,7 +59,7 @@ const MilkOffloadForm = () => {
     });
 
     const tankMilk = milkReceptionData?.filter(record => 
-      record.tank_number === formData.storage_tank
+      record.storage_tank === formData.storage_tank
     ).reduce((total, record) => total + record.milk_volume, 0) || 0;
 
     console.log('Available milk in tank:', tankMilk);
@@ -107,7 +99,7 @@ const MilkOffloadForm = () => {
           total_plate_count: parseInt(formData.total_plate_count),
           acidity: parseFloat(formData.acidity),
           destination: formData.destination,
-          quality_check: formData.quality_check, // This now matches the database constraint
+          quality_check: formData.quality_check,
           notes: formData.notes,
           offload_date: new Date().toISOString(),
           created_at: new Date().toISOString()
