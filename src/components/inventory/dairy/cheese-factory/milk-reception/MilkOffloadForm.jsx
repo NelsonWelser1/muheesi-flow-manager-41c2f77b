@@ -67,7 +67,7 @@ const MilkOffloadForm = () => {
 
   const updateMilkReceptionRecord = async (volumeOffloaded, tankNumber) => {
     try {
-      // Create a negative milk reception record to track the offload
+      console.log('Attempting to update milk reception record...');
       const deductionRecord = {
         supplier_name: `Offload from ${tankNumber}`,
         milk_volume: -parseFloat(volumeOffloaded),
@@ -78,14 +78,19 @@ const MilkOffloadForm = () => {
         acidity: 0,
         notes: `Offloaded to: ${formData.destination}`,
         datetime: new Date().toISOString(),
-        quality_score: formData.quality_check
+        quality_check: formData.quality_check
       };
+
+      console.log('Deduction record:', deductionRecord);
 
       const { error } = await supabase
         .from('milk_reception')
         .insert([deductionRecord]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error in updateMilkReceptionRecord:', error);
+        throw error;
+      }
 
       console.log('Successfully deducted milk from reception records');
       await refetchMilkReception();
@@ -120,13 +125,18 @@ const MilkOffloadForm = () => {
       console.log('Submitting offload data:', dataToSubmit);
       
       // First record the offload
-      const { data, error } = await supabase
+      const { data: offloadData, error: offloadError } = await supabase
         .from('milk_tank_offloads')
         .insert([dataToSubmit])
         .select()
         .single();
 
-      if (error) throw error;
+      if (offloadError) {
+        console.error('Error in milk tank offload:', offloadError);
+        throw offloadError;
+      }
+
+      console.log('Offload record added successfully:', offloadData);
 
       // Then update milk reception records to reflect the deduction
       await updateMilkReceptionRecord(
@@ -134,7 +144,6 @@ const MilkOffloadForm = () => {
         formData.tank_number
       );
 
-      console.log('Offload record added successfully:', data);
       toast({
         title: "Success",
         description: "Tank offload record added and milk volume deducted",
