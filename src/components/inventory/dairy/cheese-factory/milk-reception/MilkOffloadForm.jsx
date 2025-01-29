@@ -65,43 +65,6 @@ const MilkOffloadForm = () => {
     return errors;
   };
 
-  const updateMilkReceptionRecord = async (volumeOffloaded, tankNumber) => {
-    try {
-      console.log('Creating deduction record with data:', {
-        supplier_name: `Offload from ${tankNumber}`,
-        milk_volume: -parseFloat(volumeOffloaded),
-        temperature: parseFloat(formData.temperature),
-        notes: `Offloaded to: ${formData.destination}`,
-        quality_check: formData.quality_check
-      });
-
-      const { data, error } = await supabase
-        .from('milk_reception')
-        .insert([{
-          supplier_name: `Offload from ${tankNumber}`,
-          milk_volume: -parseFloat(volumeOffloaded),
-          temperature: parseFloat(formData.temperature),
-          fat_percentage: 0,
-          protein_percentage: 0,
-          total_plate_count: 0,
-          acidity: 0,
-          notes: `Offloaded to: ${formData.destination}`,
-          quality_check: formData.quality_check
-        }]);
-
-      if (error) {
-        console.error('Error in updateMilkReceptionRecord:', error);
-        throw error;
-      }
-
-      console.log('Successfully created deduction record:', data);
-      await refetchMilkReception();
-    } catch (error) {
-      console.error('Error updating milk reception record:', error);
-      throw error;
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Starting form submission with data:', formData);
@@ -117,7 +80,7 @@ const MilkOffloadForm = () => {
     }
 
     try {
-      // First record the offload
+      // Record the offload in milk_tank_offloads table
       console.log('Recording milk tank offload...');
       const { data: offloadData, error: offloadError } = await supabase
         .from('milk_tank_offloads')
@@ -139,15 +102,9 @@ const MilkOffloadForm = () => {
 
       console.log('Successfully recorded milk tank offload:', offloadData);
 
-      // Then update milk reception records
-      await updateMilkReceptionRecord(
-        formData.volume_offloaded,
-        formData.tank_number
-      );
-
       toast({
         title: "Success",
-        description: "Tank offload record added and milk volume deducted",
+        description: "Tank offload record added successfully",
       });
 
       // Reset form
@@ -160,7 +117,10 @@ const MilkOffloadForm = () => {
         notes: ''
       });
 
-      // Refresh available tanks
+      // Refresh data
+      await refetchMilkReception();
+
+      // Dispatch event for other components to update
       const event = new CustomEvent('milkOffloadCompleted');
       window.dispatchEvent(event);
 
