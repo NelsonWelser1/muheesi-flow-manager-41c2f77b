@@ -13,7 +13,7 @@ const MilkOffloadForm = () => {
   const { toast } = useToast();
   const { data: milkReceptionData, refetch: refetchMilkReception } = useMilkReception();
   const [formData, setFormData] = useState({
-    tank_number: '',
+    storage_tank: '',
     supplier_name: '',
     milk_volume: '',
     temperature: '',
@@ -22,7 +22,7 @@ const MilkOffloadForm = () => {
     total_plate_count: '',
     acidity: '',
     destination: '',
-    quality_check: 'Pass',
+    quality_check: 'Grade A',
     notes: ''
   });
 
@@ -30,7 +30,7 @@ const MilkOffloadForm = () => {
     console.log('Selected tank:', tankValue);
     setFormData(prev => ({
       ...prev,
-      tank_number: tankValue
+      storage_tank: tankValue
     }));
   };
 
@@ -47,7 +47,7 @@ const MilkOffloadForm = () => {
     console.log('Validating form with data:', formData);
     const errors = [];
     const requiredFields = [
-      'tank_number', 'supplier_name', 'milk_volume', 'temperature',
+      'storage_tank', 'supplier_name', 'milk_volume', 'temperature',
       'fat_percentage', 'protein_percentage', 'total_plate_count', 'acidity',
       'destination'
     ];
@@ -59,12 +59,12 @@ const MilkOffloadForm = () => {
     });
 
     const tankMilk = milkReceptionData?.filter(record => 
-      record.tank_number === formData.tank_number
+      record.storage_tank === formData.storage_tank
     ).reduce((total, record) => total + record.milk_volume, 0) || 0;
 
     console.log('Available milk in tank:', tankMilk);
     if (parseFloat(formData.milk_volume) > tankMilk) {
-      errors.push(`Not enough milk in ${formData.tank_number}. Available: ${tankMilk}L`);
+      errors.push(`Not enough milk in ${formData.storage_tank}. Available: ${tankMilk}L`);
     }
 
     return errors;
@@ -90,9 +90,9 @@ const MilkOffloadForm = () => {
       const { data: offloadData, error: offloadError } = await supabase
         .from('milk_tank_offloads')
         .insert([{
-          tank_number: formData.tank_number,
+          storage_tank: formData.storage_tank,
           supplier_name: formData.supplier_name,
-          milk_volume: parseFloat(formData.milk_volume),
+          volume_offloaded: parseFloat(formData.milk_volume), // Changed from milk_volume to volume_offloaded
           temperature: parseFloat(formData.temperature),
           fat_percentage: parseFloat(formData.fat_percentage),
           protein_percentage: parseFloat(formData.protein_percentage),
@@ -119,7 +119,7 @@ const MilkOffloadForm = () => {
       });
 
       setFormData({
-        tank_number: '',
+        storage_tank: '',
         supplier_name: '',
         milk_volume: '',
         temperature: '',
@@ -128,7 +128,7 @@ const MilkOffloadForm = () => {
         total_plate_count: '',
         acidity: '',
         destination: '',
-        quality_check: 'Pass',
+        quality_check: 'Grade A',
         notes: ''
       });
 
@@ -145,6 +145,8 @@ const MilkOffloadForm = () => {
     }
   };
 
+  // ... keep existing code (form JSX)
+
   return (
     <Card>
       <CardHeader>
@@ -154,9 +156,9 @@ const MilkOffloadForm = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="tank_number">Storage Tank</Label>
+              <Label htmlFor="storage_tank">Storage Tank</Label>
               <Select 
-                value={formData.tank_number} 
+                value={formData.storage_tank} 
                 onValueChange={handleTankSelection}
               >
                 <SelectTrigger>
@@ -170,17 +172,19 @@ const MilkOffloadForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="quality_check">Quality Check</Label>
+              <Label htmlFor="quality_check">Quality Grade</Label>
               <Select 
                 value={formData.quality_check} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, quality_check: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select quality check" />
+                  <SelectValue placeholder="Select quality grade" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Pass">Pass</SelectItem>
-                  <SelectItem value="Fail">Fail</SelectItem>
+                  <SelectItem value="Grade A">Grade A</SelectItem>
+                  <SelectItem value="Grade B">Grade B</SelectItem>
+                  <SelectItem value="Grade C">Grade C</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
