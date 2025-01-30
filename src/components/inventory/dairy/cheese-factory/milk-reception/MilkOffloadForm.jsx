@@ -86,36 +86,36 @@ const MilkOffloadForm = () => {
     }
 
     try {
-      console.log('Recording milk tank offload...');
+      console.log('Recording milk reception...');
       const { data: offloadData, error: offloadError } = await supabase
-        .from('milk_tank_offloads')
+        .from('milk_reception')
         .insert([{
-          storage_tank: formData.storage_tank,
           supplier_name: formData.supplier_name,
-          volume_offloaded: parseFloat(formData.milk_volume), // Changed from milk_volume to volume_offloaded
+          milk_volume: parseFloat(formData.milk_volume),
           temperature: parseFloat(formData.temperature),
           fat_percentage: parseFloat(formData.fat_percentage),
           protein_percentage: parseFloat(formData.protein_percentage),
           total_plate_count: parseInt(formData.total_plate_count),
           acidity: parseFloat(formData.acidity),
-          destination: formData.destination,
-          quality_check: formData.quality_check,
           notes: formData.notes,
-          offload_date: new Date().toISOString(),
-          created_at: new Date().toISOString()
+          quality_score: formData.quality_check,
+          tank_number: formData.storage_tank,
+          destination: formData.destination,
+          entry_type: 'reception',
+          quality_check: 'Pass'
         }])
         .select();
 
       if (offloadError) {
-        console.error('Error in milk tank offload:', offloadError);
+        console.error('Error in milk reception:', offloadError);
         throw offloadError;
       }
 
-      console.log('Successfully recorded milk tank offload:', offloadData);
+      console.log('Successfully recorded milk reception:', offloadData);
 
       toast({
         title: "Success",
-        description: "Tank offload record added successfully",
+        description: "Milk reception record added successfully",
       });
 
       setFormData({
@@ -144,8 +144,6 @@ const MilkOffloadForm = () => {
       });
     }
   };
-
-  // ... keep existing code (form JSX)
 
   return (
     <Card>
