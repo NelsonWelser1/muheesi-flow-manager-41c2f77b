@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 
 export const useMilkReception = () => {
   const queryClient = useQueryClient();
 
+  // Fetch all milk reception records
   const fetchMilkReceptions = async () => {
     console.log('Fetching milk reception data');
     try {
@@ -25,6 +26,7 @@ export const useMilkReception = () => {
     }
   };
 
+  // Add new milk reception record
   const addMilkReception = useMutation({
     mutationFn: async (newReception) => {
       console.log('Adding new milk reception:', newReception);
@@ -49,9 +51,34 @@ export const useMilkReception = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['milkReceptions']);
+    }
+  });
+
+  // Add new milk tank offload record
+  const addMilkTankOffload = useMutation({
+    mutationFn: async (newOffload) => {
+      console.log('Adding new milk tank offload:', newOffload);
+      try {
+        const { data, error } = await supabase
+          .from('milk_tank_offloads')
+          .insert([newOffload])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error inserting milk tank offload:', error);
+          throw error;
+        }
+
+        console.log('Successfully added milk tank offload:', data);
+        return data;
+      } catch (error) {
+        console.error('Error in addMilkTankOffload:', error);
+        throw error;
+      }
     },
-    onError: (error) => {
-      console.error('Mutation error:', error);
+    onSuccess: () => {
+      queryClient.invalidateQueries(['milkReceptions']);
     }
   });
 
@@ -67,6 +94,7 @@ export const useMilkReception = () => {
     data: query.data || [],
     isLoading: query.isLoading,
     error: query.error,
-    addMilkReception
+    addMilkReception,
+    addMilkTankOffload
   };
 };
