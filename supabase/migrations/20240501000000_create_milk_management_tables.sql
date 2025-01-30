@@ -1,9 +1,10 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Drop existing tables if they exist
-DROP TABLE IF EXISTS public.milk_tank_offloads;
-DROP TABLE IF EXISTS public.milk_reception;
+-- Drop dependent tables first
+DROP TABLE IF EXISTS public.milk_reception_audit_log CASCADE;
+DROP TABLE IF EXISTS public.milk_tank_offloads CASCADE;
+DROP TABLE IF EXISTS public.milk_reception CASCADE;
 
 -- Create milk_reception table
 CREATE TABLE IF NOT EXISTS public.milk_reception (
@@ -43,13 +44,25 @@ CREATE TABLE IF NOT EXISTS public.milk_tank_offloads (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create audit log table
+CREATE TABLE IF NOT EXISTS public.milk_reception_audit_log (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    milk_reception_id UUID REFERENCES public.milk_reception(id),
+    action TEXT NOT NULL,
+    old_data JSONB,
+    new_data JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Enable RLS
 ALTER TABLE public.milk_reception ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.milk_tank_offloads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.milk_reception_audit_log ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Enable all operations for milk_reception" ON public.milk_reception;
 DROP POLICY IF EXISTS "Enable all operations for milk_tank_offloads" ON public.milk_tank_offloads;
+DROP POLICY IF EXISTS "Enable all operations for milk_reception_audit_log" ON public.milk_reception_audit_log;
 
 -- Create new policies
 CREATE POLICY "Enable all operations for milk_reception"
@@ -60,6 +73,12 @@ WITH CHECK (true);
 
 CREATE POLICY "Enable all operations for milk_tank_offloads"
 ON public.milk_tank_offloads FOR ALL 
+TO PUBLIC
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all operations for milk_reception_audit_log"
+ON public.milk_reception_audit_log FOR ALL 
 TO PUBLIC
 USING (true)
 WITH CHECK (true);
@@ -78,3 +97,4 @@ ADD CONSTRAINT chk_milk_tank_offloads_quality CHECK (quality_check IN ('Grade A'
 CREATE INDEX idx_milk_reception_supplier ON public.milk_reception(supplier_name);
 CREATE INDEX idx_milk_reception_tank ON public.milk_reception(tank_number);
 CREATE INDEX idx_milk_tank_offloads_tank ON public.milk_tank_offloads(storage_tank);
+CREATE INDEX idx_milk_reception_audit_created_at ON public.milk_reception_audit_log(created_at);
