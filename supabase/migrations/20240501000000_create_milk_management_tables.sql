@@ -1,9 +1,9 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Drop existing policies if they exist
-DROP POLICY IF EXISTS "Enable all operations for milk_reception" ON public.milk_reception;
-DROP POLICY IF EXISTS "Enable all operations for milk_tank_offloads" ON public.milk_tank_offloads;
+-- Drop existing tables if they exist
+DROP TABLE IF EXISTS public.milk_tank_offloads;
+DROP TABLE IF EXISTS public.milk_reception;
 
 -- Create milk_reception table
 CREATE TABLE IF NOT EXISTS public.milk_reception (
@@ -43,19 +43,13 @@ CREATE TABLE IF NOT EXISTS public.milk_tank_offloads (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Drop existing constraints if they exist
-ALTER TABLE IF EXISTS public.milk_reception 
-    DROP CONSTRAINT IF EXISTS chk_milk_reception_tank,
-    DROP CONSTRAINT IF EXISTS chk_milk_reception_quality,
-    DROP CONSTRAINT IF EXISTS chk_milk_reception_quality_score;
-
-ALTER TABLE IF EXISTS public.milk_tank_offloads 
-    DROP CONSTRAINT IF EXISTS chk_milk_tank_offloads_tank,
-    DROP CONSTRAINT IF EXISTS chk_milk_tank_offloads_quality;
-
 -- Enable RLS
 ALTER TABLE public.milk_reception ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.milk_tank_offloads ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Enable all operations for milk_reception" ON public.milk_reception;
+DROP POLICY IF EXISTS "Enable all operations for milk_tank_offloads" ON public.milk_tank_offloads;
 
 -- Create new policies
 CREATE POLICY "Enable all operations for milk_reception"
@@ -70,15 +64,6 @@ TO PUBLIC
 USING (true)
 WITH CHECK (true);
 
--- Create indexes for better performance
-DROP INDEX IF EXISTS idx_milk_reception_supplier;
-DROP INDEX IF EXISTS idx_milk_reception_tank;
-DROP INDEX IF EXISTS idx_milk_tank_offloads_tank;
-
-CREATE INDEX idx_milk_reception_supplier ON public.milk_reception(supplier_name);
-CREATE INDEX idx_milk_reception_tank ON public.milk_reception(tank_number);
-CREATE INDEX idx_milk_tank_offloads_tank ON public.milk_tank_offloads(storage_tank);
-
 -- Add constraints
 ALTER TABLE public.milk_reception
 ADD CONSTRAINT chk_milk_reception_tank CHECK (tank_number IN ('Tank A', 'Tank B')),
@@ -88,3 +73,8 @@ ADD CONSTRAINT chk_milk_reception_quality_score CHECK (quality_score IN ('Grade 
 ALTER TABLE public.milk_tank_offloads
 ADD CONSTRAINT chk_milk_tank_offloads_tank CHECK (storage_tank IN ('Tank A', 'Tank B')),
 ADD CONSTRAINT chk_milk_tank_offloads_quality CHECK (quality_check IN ('Grade A', 'Grade B', 'Grade C', 'Rejected'));
+
+-- Create indexes for better performance
+CREATE INDEX idx_milk_reception_supplier ON public.milk_reception(supplier_name);
+CREATE INDEX idx_milk_reception_tank ON public.milk_reception(tank_number);
+CREATE INDEX idx_milk_tank_offloads_tank ON public.milk_tank_offloads(storage_tank);
