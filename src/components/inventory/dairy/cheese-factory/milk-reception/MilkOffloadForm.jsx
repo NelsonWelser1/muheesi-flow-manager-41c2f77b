@@ -50,8 +50,7 @@ const MilkOffloadForm = () => {
     const errors = [];
     const requiredFields = [
       'storage_tank', 'milk_volume', 'temperature',
-      'fat_percentage', 'protein_percentage', 'total_plate_count', 'acidity',
-      'destination'
+      'fat_percentage', 'protein_percentage', 'total_plate_count', 'acidity'
     ];
 
     requiredFields.forEach(field => {
@@ -108,8 +107,7 @@ const MilkOffloadForm = () => {
           acidity: parseFloat(formData.acidity),
           notes: formData.notes,
           quality_score: formData.quality_check,
-          tank_number: formData.storage_tank,
-          destination: formData.destination // Add destination field
+          tank_number: formData.storage_tank
         }])
         .select();
 
@@ -278,7 +276,6 @@ const MilkOffloadForm = () => {
                   name="destination"
                   value={formData.destination}
                   onChange={handleInputChange}
-                  required
                 />
               </div>
             </div>
@@ -330,9 +327,6 @@ const MilkOffloadForm = () => {
                         </div>
                         <div>
                           <strong>Quality:</strong> {record.quality_score}
-                        </div>
-                        <div>
-                          <strong>Destination:</strong> {record.destination}
                         </div>
                         {record.notes && (
                           <div className="col-span-2">
