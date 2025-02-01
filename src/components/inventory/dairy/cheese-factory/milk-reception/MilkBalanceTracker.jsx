@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 const MilkBalanceTracker = () => {
   const { data: milkReception } = useMilkReception();
@@ -26,8 +26,19 @@ const MilkBalanceTracker = () => {
 
   const { totalReceived, totalOffloaded, currentBalance } = calculateMilkBalance();
 
+  const formatDate = (dateString) => {
+    try {
+      if (!dateString) return 'No records';
+      const date = parseISO(dateString);
+      return format(date, 'PPp');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
+  };
+
   const lastUpdate = milkReception && milkReception.length > 0 
-    ? format(new Date(milkReception[0].datetime), 'PPp')
+    ? formatDate(milkReception[0].datetime || milkReception[0].created_at)
     : 'No records';
 
   return (
