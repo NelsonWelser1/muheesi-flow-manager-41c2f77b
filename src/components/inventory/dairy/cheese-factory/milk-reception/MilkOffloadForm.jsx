@@ -109,7 +109,7 @@ const MilkOffloadForm = () => {
           notes: formData.notes,
           quality_score: formData.quality_check,
           tank_number: formData.storage_tank,
-          destination: formData.destination
+          destination: formData.destination // Add destination field
         }])
         .select();
 
@@ -150,8 +150,6 @@ const MilkOffloadForm = () => {
       });
     }
   };
-
-  // ... keep existing code (form JSX)
 
   return (
     <div className="space-y-6">
