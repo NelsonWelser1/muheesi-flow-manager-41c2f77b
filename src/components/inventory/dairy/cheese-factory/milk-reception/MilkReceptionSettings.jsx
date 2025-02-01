@@ -23,6 +23,14 @@ const MilkReceptionSettings = () => {
   const updateSettingsMutation = useMutation({
     mutationFn: async (settingsData) => {
       console.log('Updating milk reception settings:', settingsData);
+      
+      // First check if we have an authenticated session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Authentication required');
+      }
+
       const { data, error } = await supabase
         .from('milk_reception_settings')
         .upsert([settingsData])
