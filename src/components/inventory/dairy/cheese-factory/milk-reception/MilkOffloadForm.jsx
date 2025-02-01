@@ -15,7 +15,7 @@ const MilkOffloadForm = () => {
   const { data: milkReceptionData, refetch: refetchMilkReception } = useMilkReception();
   const [formData, setFormData] = useState({
     storage_tank: '',
-    supplier_name: '',
+    supplier_name: 'Offload from Tank',
     milk_volume: '',
     temperature: '',
     fat_percentage: '',
@@ -31,7 +31,8 @@ const MilkOffloadForm = () => {
     console.log('Selected tank:', tankValue);
     setFormData(prev => ({
       ...prev,
-      storage_tank: tankValue
+      storage_tank: tankValue,
+      supplier_name: `Offload from ${tankValue}`
     }));
   };
 
@@ -48,7 +49,7 @@ const MilkOffloadForm = () => {
     console.log('Validating form with data:', formData);
     const errors = [];
     const requiredFields = [
-      'storage_tank', 'supplier_name', 'milk_volume', 'temperature',
+      'storage_tank', 'milk_volume', 'temperature',
       'fat_percentage', 'protein_percentage', 'total_plate_count', 'acidity',
       'destination'
     ];
@@ -59,12 +60,19 @@ const MilkOffloadForm = () => {
       }
     });
 
-    const tankMilk = milkReceptionData?.filter(record => 
-      record.storage_tank === formData.storage_tank
-    ).reduce((total, record) => total + record.milk_volume, 0) || 0;
+    // Calculate available milk in tank
+    const tankMilk = milkReceptionData
+      ?.filter(record => record.tank_number === formData.storage_tank)
+      .reduce((total, record) => {
+        // Add positive volumes (receptions) and subtract negative volumes (offloads)
+        return total + (record.milk_volume || 0);
+      }, 0) || 0;
 
     console.log('Available milk in tank:', tankMilk);
-    if (parseFloat(formData.milk_volume) > tankMilk) {
+    
+    // Convert milk_volume to negative for offload
+    const offloadVolume = Math.abs(parseFloat(formData.milk_volume));
+    if (offloadVolume > tankMilk) {
       errors.push(`Not enough milk in ${formData.storage_tank}. Available: ${tankMilk}L`);
     }
 
@@ -87,12 +95,12 @@ const MilkOffloadForm = () => {
     }
 
     try {
-      console.log('Recording milk reception...');
+      console.log('Recording milk offload...');
       const { data: offloadData, error: offloadError } = await supabase
         .from('milk_reception')
         .insert([{
           supplier_name: formData.supplier_name,
-          milk_volume: parseFloat(formData.milk_volume),
+          milk_volume: -Math.abs(parseFloat(formData.milk_volume)), // Make volume negative for offloads
           temperature: parseFloat(formData.temperature),
           fat_percentage: parseFloat(formData.fat_percentage),
           protein_percentage: parseFloat(formData.protein_percentage),
@@ -101,27 +109,25 @@ const MilkOffloadForm = () => {
           notes: formData.notes,
           quality_score: formData.quality_check,
           tank_number: formData.storage_tank,
-          destination: formData.destination,
-          entry_type: 'reception',
-          quality_check: 'Pass'
+          destination: formData.destination
         }])
         .select();
 
       if (offloadError) {
-        console.error('Error in milk reception:', offloadError);
+        console.error('Error in milk offload:', offloadError);
         throw offloadError;
       }
 
-      console.log('Successfully recorded milk reception:', offloadData);
+      console.log('Successfully recorded milk offload:', offloadData);
 
       toast({
         title: "Success",
-        description: "Milk reception record added successfully",
+        description: "Milk offload record added successfully",
       });
 
       setFormData({
         storage_tank: '',
-        supplier_name: '',
+        supplier_name: 'Offload from Tank',
         milk_volume: '',
         temperature: '',
         fat_percentage: '',
@@ -134,7 +140,6 @@ const MilkOffloadForm = () => {
       });
 
       await refetchMilkReception();
-      window.dispatchEvent(new CustomEvent('milkOffloadCompleted'));
 
     } catch (error) {
       console.error('Form submission error:', error);
@@ -145,6 +150,8 @@ const MilkOffloadForm = () => {
       });
     }
   };
+
+  // ... keep existing code (form JSX)
 
   return (
     <div className="space-y-6">
@@ -187,17 +194,6 @@ const MilkOffloadForm = () => {
                     <SelectItem value="Rejected">Rejected</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="supplier_name">Supplier Name</Label>
-                <Input
-                  id="supplier_name"
-                  name="supplier_name"
-                  value={formData.supplier_name}
-                  onChange={handleInputChange}
-                  required
-                />
               </div>
 
               <div className="space-y-2">
@@ -316,38 +312,41 @@ const MilkOffloadForm = () => {
           <div className="space-y-4">
             {milkReceptionData && milkReceptionData.length > 0 ? (
               <div className="grid gap-4">
-                {milkReceptionData.slice(0, 5).map((record) => (
-                  <Card key={record.id} className="p-4">
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <strong>Tank:</strong> {record.tank_number}
-                      </div>
-                      <div>
-                        <strong>Date:</strong> {format(new Date(record.created_at), 'PPp')}
-                      </div>
-                      <div>
-                        <strong>Supplier:</strong> {record.supplier_name}
-                      </div>
-                      <div>
-                        <strong>Volume:</strong> {record.milk_volume}L
-                      </div>
-                      <div>
-                        <strong>Temperature:</strong> {record.temperature}°C
-                      </div>
-                      <div>
-                        <strong>Quality:</strong> {record.quality_score}
-                      </div>
-                      {record.notes && (
-                        <div className="col-span-2">
-                          <strong>Notes:</strong> {record.notes}
+                {milkReceptionData
+                  .filter(record => record.supplier_name.includes('Offload from'))
+                  .slice(0, 5)
+                  .map((record) => (
+                    <Card key={record.id} className="p-4">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <strong>Tank:</strong> {record.tank_number}
                         </div>
-                      )}
-                    </div>
-                  </Card>
-                ))}
+                        <div>
+                          <strong>Date:</strong> {format(new Date(record.created_at), 'PPp')}
+                        </div>
+                        <div>
+                          <strong>Volume:</strong> {Math.abs(record.milk_volume)}L
+                        </div>
+                        <div>
+                          <strong>Temperature:</strong> {record.temperature}°C
+                        </div>
+                        <div>
+                          <strong>Quality:</strong> {record.quality_score}
+                        </div>
+                        <div>
+                          <strong>Destination:</strong> {record.destination}
+                        </div>
+                        {record.notes && (
+                          <div className="col-span-2">
+                            <strong>Notes:</strong> {record.notes}
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
               </div>
             ) : (
-              <p className="text-center text-gray-500">No records found</p>
+              <p className="text-center text-gray-500">No offload records found</p>
             )}
           </div>
         </CardContent>
