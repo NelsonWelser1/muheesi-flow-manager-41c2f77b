@@ -9,7 +9,8 @@ export const useDairyCoolerData = () => {
       const { data, error } = await supabase
         .from('dairy_cooler_records')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(10); // Adding limit for better performance
 
       if (error) {
         console.error('Error fetching dairy cooler data:', error);
