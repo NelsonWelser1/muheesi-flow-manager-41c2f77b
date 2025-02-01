@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useMilkReception } from '@/hooks/useMilkReception';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Download, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -22,26 +22,37 @@ const MilkReceptionTable = () => {
   const { data: milkReception, isLoading, error } = useMilkReception();
 
   const generateMonthlyReport = () => {
+    if (!milkReception) return [];
     const now = new Date();
-    const monthStart = startOfMonth(now);
-    const monthEnd = endOfMonth(now);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     
-    const monthlyData = milkReception.filter(record => {
-      const recordDate = new Date(record.datetime);
+    return milkReception.filter(record => {
+      const recordDate = new Date(record.datetime || record.created_at);
       return recordDate >= monthStart && recordDate <= monthEnd;
     });
-
-    return monthlyData;
   };
 
   const generateAnnualReport = () => {
+    if (!milkReception) return [];
     const now = new Date();
     const yearStart = new Date(now.getFullYear(), 0, 1);
     
     return milkReception.filter(record => {
-      const recordDate = new Date(record.datetime);
+      const recordDate = new Date(record.datetime || record.created_at);
       return recordDate >= yearStart;
     });
+  };
+
+  const formatDate = (dateString) => {
+    try {
+      if (!dateString) return 'N/A';
+      const date = parseISO(dateString);
+      return format(date, 'PPp');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
   };
 
   const downloadPDF = (data, title) => {
@@ -56,7 +67,7 @@ const MilkReceptionTable = () => {
       record.protein_percentage.toFixed(1),
       record.total_plate_count.toLocaleString(),
       record.acidity.toFixed(1),
-      format(new Date(record.datetime), 'PPp'),
+      formatDate(record.datetime || record.created_at),
     ]);
 
     doc.text(title, 14, 15);
@@ -81,7 +92,7 @@ const MilkReceptionTable = () => {
         record.protein_percentage,
         record.total_plate_count,
         record.acidity,
-        format(new Date(record.datetime), 'PPp')
+        formatDate(record.datetime || record.created_at)
       ].join(',')
     );
     
@@ -205,7 +216,7 @@ const MilkReceptionTable = () => {
                   <TableCell>{record.total_plate_count?.toLocaleString() || 'N/A'}</TableCell>
                   <TableCell>{record.acidity?.toFixed(1) || 'N/A'}</TableCell>
                   <TableCell>{record.destination || 'N/A'}</TableCell>
-                  <TableCell>{format(new Date(record.datetime), 'PPp')}</TableCell>
+                  <TableCell>{formatDate(record.datetime || record.created_at)}</TableCell>
                   <TableCell className="max-w-xs truncate">{record.notes || 'N/A'}</TableCell>
                 </TableRow>
               ))}
