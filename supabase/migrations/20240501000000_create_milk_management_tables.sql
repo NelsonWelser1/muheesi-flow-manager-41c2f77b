@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS public.milk_reception_audit_log CASCADE;
 DROP TABLE IF EXISTS public.milk_tank_offloads CASCADE;
 DROP TABLE IF EXISTS public.milk_reception CASCADE;
 
--- Create milk_reception table
+-- Create milk_reception table with all required fields
 CREATE TABLE IF NOT EXISTS public.milk_reception (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     supplier_name TEXT NOT NULL,
@@ -17,11 +17,8 @@ CREATE TABLE IF NOT EXISTS public.milk_reception (
     total_plate_count INTEGER NOT NULL,
     acidity DECIMAL(5,2) NOT NULL,
     notes TEXT,
-    quality_score TEXT,
+    quality_score TEXT NOT NULL,
     tank_number TEXT NOT NULL,
-    destination TEXT,
-    entry_type TEXT DEFAULT 'reception',
-    quality_check TEXT DEFAULT 'Pass',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -35,11 +32,6 @@ CREATE TABLE IF NOT EXISTS public.milk_tank_offloads (
     temperature DECIMAL(5,2) NOT NULL,
     quality_check TEXT DEFAULT 'Grade A',
     notes TEXT,
-    supplier_name TEXT,
-    fat_percentage DECIMAL(5,2),
-    protein_percentage DECIMAL(5,2),
-    total_plate_count INTEGER,
-    acidity DECIMAL(5,2),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -86,12 +78,7 @@ WITH CHECK (true);
 -- Add constraints
 ALTER TABLE public.milk_reception
 ADD CONSTRAINT chk_milk_reception_tank CHECK (tank_number IN ('Tank A', 'Tank B')),
-ADD CONSTRAINT chk_milk_reception_quality CHECK (quality_check IN ('Pass', 'Fail')),
 ADD CONSTRAINT chk_milk_reception_quality_score CHECK (quality_score IN ('Grade A', 'Grade B', 'Grade C', 'Rejected'));
-
-ALTER TABLE public.milk_tank_offloads
-ADD CONSTRAINT chk_milk_tank_offloads_tank CHECK (storage_tank IN ('Tank A', 'Tank B')),
-ADD CONSTRAINT chk_milk_tank_offloads_quality CHECK (quality_check IN ('Grade A', 'Grade B', 'Grade C', 'Rejected'));
 
 -- Create indexes for better performance
 CREATE INDEX idx_milk_reception_supplier ON public.milk_reception(supplier_name);
