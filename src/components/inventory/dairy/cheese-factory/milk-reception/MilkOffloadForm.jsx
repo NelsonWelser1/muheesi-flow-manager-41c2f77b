@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase';
 import { useMilkReception } from '@/hooks/useMilkReception';
+import { format } from 'date-fns';
 
 const MilkOffloadForm = () => {
   const { toast } = useToast();
@@ -146,164 +147,212 @@ const MilkOffloadForm = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>New Tank Offload Entry</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="storage_tank">Storage Tank</Label>
-              <Select 
-                value={formData.storage_tank} 
-                onValueChange={handleTankSelection}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select tank" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Tank A">Tank A</SelectItem>
-                  <SelectItem value="Tank B">Tank B</SelectItem>
-                </SelectContent>
-              </Select>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>New Tank Offload Entry</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="storage_tank">Storage Tank</Label>
+                <Select 
+                  value={formData.storage_tank} 
+                  onValueChange={handleTankSelection}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select tank" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Tank A">Tank A</SelectItem>
+                    <SelectItem value="Tank B">Tank B</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="quality_check">Quality Grade</Label>
+                <Select 
+                  value={formData.quality_check} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, quality_check: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select quality grade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Grade A">Grade A</SelectItem>
+                    <SelectItem value="Grade B">Grade B</SelectItem>
+                    <SelectItem value="Grade C">Grade C</SelectItem>
+                    <SelectItem value="Rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="supplier_name">Supplier Name</Label>
+                <Input
+                  id="supplier_name"
+                  name="supplier_name"
+                  value={formData.supplier_name}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="milk_volume">Milk Volume (L)</Label>
+                <Input
+                  id="milk_volume"
+                  name="milk_volume"
+                  type="number"
+                  step="0.01"
+                  value={formData.milk_volume}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="temperature">Temperature (°C)</Label>
+                <Input
+                  id="temperature"
+                  name="temperature"
+                  type="number"
+                  step="0.1"
+                  value={formData.temperature}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="fat_percentage">Fat Percentage (%)</Label>
+                <Input
+                  id="fat_percentage"
+                  name="fat_percentage"
+                  type="number"
+                  step="0.01"
+                  value={formData.fat_percentage}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="protein_percentage">Protein Percentage (%)</Label>
+                <Input
+                  id="protein_percentage"
+                  name="protein_percentage"
+                  type="number"
+                  step="0.01"
+                  value={formData.protein_percentage}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="total_plate_count">Total Plate Count</Label>
+                <Input
+                  id="total_plate_count"
+                  name="total_plate_count"
+                  type="number"
+                  value={formData.total_plate_count}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="acidity">Acidity (pH)</Label>
+                <Input
+                  id="acidity"
+                  name="acidity"
+                  type="number"
+                  step="0.01"
+                  value={formData.acidity}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="destination">Destination</Label>
+                <Input
+                  id="destination"
+                  name="destination"
+                  value={formData.destination}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="quality_check">Quality Grade</Label>
-              <Select 
-                value={formData.quality_check} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, quality_check: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select quality grade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Grade A">Grade A</SelectItem>
-                  <SelectItem value="Grade B">Grade B</SelectItem>
-                  <SelectItem value="Grade C">Grade C</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="supplier_name">Supplier Name</Label>
-              <Input
-                id="supplier_name"
-                name="supplier_name"
-                value={formData.supplier_name}
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                value={formData.notes}
                 onChange={handleInputChange}
-                required
+                className="min-h-[100px]"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="milk_volume">Milk Volume (L)</Label>
-              <Input
-                id="milk_volume"
-                name="milk_volume"
-                type="number"
-                step="0.01"
-                value={formData.milk_volume}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
+            <Button type="submit" className="w-full">
+              Submit Offload Record
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="temperature">Temperature (°C)</Label>
-              <Input
-                id="temperature"
-                name="temperature"
-                type="number"
-                step="0.1"
-                value={formData.temperature}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fat_percentage">Fat Percentage (%)</Label>
-              <Input
-                id="fat_percentage"
-                name="fat_percentage"
-                type="number"
-                step="0.01"
-                value={formData.fat_percentage}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="protein_percentage">Protein Percentage (%)</Label>
-              <Input
-                id="protein_percentage"
-                name="protein_percentage"
-                type="number"
-                step="0.01"
-                value={formData.protein_percentage}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="total_plate_count">Total Plate Count</Label>
-              <Input
-                id="total_plate_count"
-                name="total_plate_count"
-                type="number"
-                value={formData.total_plate_count}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="acidity">Acidity (pH)</Label>
-              <Input
-                id="acidity"
-                name="acidity"
-                type="number"
-                step="0.01"
-                value={formData.acidity}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="destination">Destination</Label>
-              <Input
-                id="destination"
-                name="destination"
-                value={formData.destination}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
+      {/* Display submitted data */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Offload Records</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {milkReceptionData && milkReceptionData.length > 0 ? (
+              <div className="grid gap-4">
+                {milkReceptionData.slice(0, 5).map((record) => (
+                  <Card key={record.id} className="p-4">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <strong>Tank:</strong> {record.tank_number}
+                      </div>
+                      <div>
+                        <strong>Date:</strong> {format(new Date(record.created_at), 'PPp')}
+                      </div>
+                      <div>
+                        <strong>Supplier:</strong> {record.supplier_name}
+                      </div>
+                      <div>
+                        <strong>Volume:</strong> {record.milk_volume}L
+                      </div>
+                      <div>
+                        <strong>Temperature:</strong> {record.temperature}°C
+                      </div>
+                      <div>
+                        <strong>Quality:</strong> {record.quality_score}
+                      </div>
+                      {record.notes && (
+                        <div className="col-span-2">
+                          <strong>Notes:</strong> {record.notes}
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-500">No records found</p>
+            )}
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              name="notes"
-              value={formData.notes}
-              onChange={handleInputChange}
-              className="min-h-[100px]"
-            />
-          </div>
-
-          <Button type="submit" className="w-full">
-            Submit Offload Record
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
