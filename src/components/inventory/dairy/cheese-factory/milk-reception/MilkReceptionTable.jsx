@@ -19,6 +19,9 @@ import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import MilkBalanceTracker from './MilkBalanceTracker';
 
+const MilkReceptionTable = () => {
+  const { data: milkReception, isLoading, error } = useMilkReception();
+
   const generateMonthlyReport = () => {
     if (!milkReception) return [];
     const now = new Date();
@@ -114,11 +117,6 @@ import MilkBalanceTracker from './MilkBalanceTracker';
       link.click();
     }
   };
-
-const MilkReceptionTable = () => {
-  const { data: milkReception, isLoading, error } = useMilkReception();
-
-  // ... keep existing code (other functions)
 
   if (isLoading) {
     return <div>Loading milk reception data...</div>;
