@@ -66,6 +66,7 @@ const EquipmentManagement = () => {
             <div className="text-2xl font-bold">2 Items</div>
           </CardContent>
         </Card>
+
       </div>
 
       <Tabs defaultValue="storage" className="space-y-4">
@@ -217,6 +218,7 @@ const EquipmentManagement = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
       </Tabs>
     </div>
   );
