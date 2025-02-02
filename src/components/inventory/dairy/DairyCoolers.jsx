@@ -59,10 +59,10 @@ const DairyCoolers = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
+                      {['Tank A', 'Tank B'].map((tankName, i) => (
+                        <div key={tankName} className="flex items-center justify-between p-4 border rounded-lg">
                           <div>
-                            <h4 className="font-semibold">Tank {i + 1}</h4>
+                            <h4 className="font-semibold">{tankName}</h4>
                             <p className="text-sm text-gray-500">{new Date().toLocaleTimeString()}</p>
                           </div>
                           <div className="font-bold">{(4 + Math.random()).toFixed(1)}°C</div>
