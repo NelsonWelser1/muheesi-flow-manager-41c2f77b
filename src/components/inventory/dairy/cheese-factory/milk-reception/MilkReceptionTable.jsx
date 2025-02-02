@@ -10,6 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { useMilkReception } from '@/hooks/useMilkReception';
 import { format, parseISO } from 'date-fns';
 import { Download, FileText } from 'lucide-react';
@@ -17,9 +18,6 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import MilkBalanceTracker from './MilkBalanceTracker';
-
-const MilkReceptionTable = () => {
-  const { data: milkReception, isLoading, error } = useMilkReception();
 
   const generateMonthlyReport = () => {
     if (!milkReception) return [];
@@ -117,6 +115,11 @@ const MilkReceptionTable = () => {
     }
   };
 
+const MilkReceptionTable = () => {
+  const { data: milkReception, isLoading, error } = useMilkReception();
+
+  // ... keep existing code (other functions)
+
   if (isLoading) {
     return <div>Loading milk reception data...</div>;
   }
@@ -176,52 +179,54 @@ const MilkReceptionTable = () => {
             </DropdownMenu>
           </div>
         </CardHeader>
-        <CardContent>
-          <Table className="milk-reception-table">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Entry Type</TableHead>
-                <TableHead>Storage Tank</TableHead>
-                <TableHead>Quality Score</TableHead>
-                <TableHead>Supplier</TableHead>
-                <TableHead>Volume (L)</TableHead>
-                <TableHead>Temperature (°C)</TableHead>
-                <TableHead>Fat %</TableHead>
-                <TableHead>Protein %</TableHead>
-                <TableHead>TPC</TableHead>
-                <TableHead>Acidity</TableHead>
-                <TableHead>Destination</TableHead>
-                <TableHead>Date & Time</TableHead>
-                <TableHead>Notes</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {milkReception?.map((record) => (
-                <TableRow 
-                  key={record.id}
-                  className={record.supplier_name.startsWith('Offload from') ? 'bg-red-50' : ''}
-                >
-                  <TableCell>
-                    {record.supplier_name.startsWith('Offload from') ? 'Tank Offload' : 'Reception'}
-                  </TableCell>
-                  <TableCell>{record.tank_number || 'N/A'}</TableCell>
-                  <TableCell>{record.quality_score || 'N/A'}</TableCell>
-                  <TableCell>{record.supplier_name}</TableCell>
-                  <TableCell className={record.milk_volume < 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>
-                    {record.milk_volume.toFixed(2)}
-                  </TableCell>
-                  <TableCell>{record.temperature?.toFixed(1) || 'N/A'}</TableCell>
-                  <TableCell>{record.fat_percentage?.toFixed(1) || 'N/A'}</TableCell>
-                  <TableCell>{record.protein_percentage?.toFixed(1) || 'N/A'}</TableCell>
-                  <TableCell>{record.total_plate_count?.toLocaleString() || 'N/A'}</TableCell>
-                  <TableCell>{record.acidity?.toFixed(1) || 'N/A'}</TableCell>
-                  <TableCell>{record.destination || 'N/A'}</TableCell>
-                  <TableCell>{formatDate(record.datetime || record.created_at)}</TableCell>
-                  <TableCell className="max-w-xs truncate">{record.notes || 'N/A'}</TableCell>
+        <CardContent className="overflow-x-auto">
+          <div className="w-full overflow-auto">
+            <Table className="milk-reception-table relative w-full">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[120px] whitespace-nowrap">Entry Type</TableHead>
+                  <TableHead className="min-w-[120px] whitespace-nowrap">Storage Tank</TableHead>
+                  <TableHead className="min-w-[100px] whitespace-nowrap">Quality Score</TableHead>
+                  <TableHead className="min-w-[150px] whitespace-nowrap">Supplier</TableHead>
+                  <TableHead className="min-w-[100px] whitespace-nowrap">Volume (L)</TableHead>
+                  <TableHead className="min-w-[120px] whitespace-nowrap">Temperature (°C)</TableHead>
+                  <TableHead className="min-w-[80px] whitespace-nowrap">Fat %</TableHead>
+                  <TableHead className="min-w-[100px] whitespace-nowrap">Protein %</TableHead>
+                  <TableHead className="min-w-[100px] whitespace-nowrap">TPC</TableHead>
+                  <TableHead className="min-w-[100px] whitespace-nowrap">Acidity</TableHead>
+                  <TableHead className="min-w-[120px] whitespace-nowrap">Destination</TableHead>
+                  <TableHead className="min-w-[180px] whitespace-nowrap">Date & Time</TableHead>
+                  <TableHead className="min-w-[200px] whitespace-nowrap">Notes</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {milkReception?.map((record) => (
+                  <TableRow 
+                    key={record.id}
+                    className={record.supplier_name.startsWith('Offload from') ? 'bg-red-50' : ''}
+                  >
+                    <TableCell className="whitespace-nowrap">
+                      {record.supplier_name.startsWith('Offload from') ? 'Tank Offload' : 'Reception'}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{record.tank_number || 'N/A'}</TableCell>
+                    <TableCell className="whitespace-nowrap">{record.quality_score || 'N/A'}</TableCell>
+                    <TableCell className="whitespace-nowrap">{record.supplier_name}</TableCell>
+                    <TableCell className={`whitespace-nowrap ${record.milk_volume < 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}`}>
+                      {record.milk_volume.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{record.temperature?.toFixed(1) || 'N/A'}</TableCell>
+                    <TableCell className="whitespace-nowrap">{record.fat_percentage?.toFixed(1) || 'N/A'}</TableCell>
+                    <TableCell className="whitespace-nowrap">{record.protein_percentage?.toFixed(1) || 'N/A'}</TableCell>
+                    <TableCell className="whitespace-nowrap">{record.total_plate_count?.toLocaleString() || 'N/A'}</TableCell>
+                    <TableCell className="whitespace-nowrap">{record.acidity?.toFixed(1) || 'N/A'}</TableCell>
+                    <TableCell className="whitespace-nowrap">{record.destination || 'N/A'}</TableCell>
+                    <TableCell className="whitespace-nowrap">{formatDate(record.datetime || record.created_at)}</TableCell>
+                    <TableCell className="max-w-xs truncate">{record.notes || 'N/A'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </>
