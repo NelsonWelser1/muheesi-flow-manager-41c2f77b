@@ -58,15 +58,24 @@ const DairyCoolers = () => {
                     <CardTitle>Temperature Log</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
                       {['Tank A', 'Tank B'].map((tankName, i) => (
-                        <div key={tankName} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div>
-                            <h4 className="font-semibold">{tankName}</h4>
-                            <p className="text-sm text-gray-500">{new Date().toLocaleTimeString()}</p>
-                          </div>
-                          <div className="font-bold">{(4 + Math.random()).toFixed(1)}°C</div>
-                        </div>
+                        <Card key={tankName} className="bg-gray-50 border-none shadow-sm">
+                          <CardContent className="p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Thermometer className="h-4 w-4 text-blue-500" />
+                                <span className="font-medium">{tankName}</span>
+                              </div>
+                              <span className="text-lg font-bold text-blue-600">
+                                {(4 + Math.random()).toFixed(1)}°C
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {new Date().toLocaleTimeString()}
+                            </div>
+                          </CardContent>
+                        </Card>
                       ))}
                     </div>
                   </CardContent>
