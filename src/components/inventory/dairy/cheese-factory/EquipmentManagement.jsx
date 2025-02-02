@@ -5,8 +5,8 @@ import { Container, Thermometer, Box, Wrench, Droplets, Clock, Package, Sparkles
 
 const mockData = {
   storageTanks: [
-    { id: 'T1', capacity: 5000, currentVolume: 3500, temperature: 3.5 },
-    { id: 'T2', capacity: 3000, currentVolume: 2800, temperature: 3.2 },
+    { id: 'T1', name: 'Tank A', capacity: 5000, currentVolume: 3500, temperature: 3.5 },
+    { id: 'T2', name: 'Tank B', capacity: 3000, currentVolume: 2800, temperature: 3.2 },
   ],
   pasteurizers: [
     { id: 'P1', status: 'Active', currentTemp: 72, batchVolume: 1000 },
@@ -82,28 +82,36 @@ const EquipmentManagement = () => {
               <CardTitle>Storage Tank Status</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {mockData.storageTanks.map((tank) => (
-                  <div key={tank.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-semibold">Tank {tank.id}</h3>
-                      <span className={`px-2 py-1 rounded text-sm ${
-                        tank.temperature > 4 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                      }`}>
-                        {tank.temperature}°C
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Capacity</p>
-                        <p>{tank.capacity}L</p>
+                  <Card key={tank.id} className="bg-gray-50 border shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-semibold text-lg">{tank.name}</h3>
+                        <span className={`px-2 py-1 rounded text-sm ${
+                          tank.temperature > 4 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                        }`}>
+                          {tank.temperature}°C
+                        </span>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Current Volume</p>
-                        <p>{tank.currentVolume}L</p>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Capacity</span>
+                          <span>{tank.capacity}L</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Current Volume</span>
+                          <span>{tank.currentVolume}L</span>
+                        </div>
+                        <div className="mt-2 pt-2 border-t">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-600">Status</span>
+                            <span className="text-green-600">Active</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </CardContent>
