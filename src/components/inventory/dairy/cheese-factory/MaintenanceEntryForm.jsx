@@ -12,6 +12,7 @@ import { Calendar as CalendarIcon, Printer, Mail, FileText } from 'lucide-react'
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { DateRange } from 'react-day-picker';
 
 const MaintenanceEntryForm = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +23,11 @@ const MaintenanceEntryForm = () => {
     next_maintenance: new Date(),
     health_score: 100,
     notes: ''
+  });
+
+  const [dateRange, setDateRange] = useState({
+    from: new Date(),
+    to: new Date()
   });
 
   const { toast } = useToast();
@@ -37,6 +43,8 @@ const MaintenanceEntryForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log('Submitting maintenance record:', formData);
+      
       // Insert maintenance record
       const { error: maintenanceError } = await supabase
         .from('equipment_maintenance')
@@ -45,24 +53,25 @@ const MaintenanceEntryForm = () => {
       if (maintenanceError) throw maintenanceError;
 
       // Update maintenance stats
-      const { data: statsData } = await supabase
+      const { data: statsData, error: statsError } = await supabase
         .from('maintenance_stats')
         .select('*')
         .limit(1)
-        .single();
-
-      const updatedStats = {
-        completed_today: statsData.completed_today + (formData.status === 'completed' ? 1 : 0),
-        equipment_health: formData.health_score,
-        pending_maintenance: statsData.pending_maintenance + (formData.status === 'pending' ? 1 : 0)
-      };
-
-      const { error: statsError } = await supabase
-        .from('maintenance_stats')
-        .update(updatedStats)
-        .eq('id', statsData.id);
+        .maybeSingle();
 
       if (statsError) throw statsError;
+
+      const updatedStats = {
+        completed_today: (statsData?.completed_today || 0) + (formData.status === 'completed' ? 1 : 0),
+        equipment_health: formData.health_score,
+        pending_maintenance: (statsData?.pending_maintenance || 0) + (formData.status === 'pending' ? 1 : 0)
+      };
+
+      const { error: updateStatsError } = await supabase
+        .from('maintenance_stats')
+        .upsert([{ id: statsData?.id || undefined, ...updatedStats }]);
+
+      if (updateStatsError) throw updateStatsError;
 
       // Invalidate queries to refresh data
       queryClient.invalidateQueries(['maintenance']);
@@ -96,9 +105,13 @@ const MaintenanceEntryForm = () => {
 
   const generateReport = async () => {
     try {
+      console.log('Generating report for date range:', dateRange);
+      
       const { data: maintenanceData, error: maintenanceError } = await supabase
         .from('equipment_maintenance')
         .select('*')
+        .gte('created_at', dateRange.from.toISOString())
+        .lte('created_at', dateRange.to.toISOString())
         .order('next_maintenance', { ascending: true });
 
       if (maintenanceError) throw maintenanceError;
@@ -107,21 +120,22 @@ const MaintenanceEntryForm = () => {
         .from('maintenance_stats')
         .select('*')
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (statsError) throw statsError;
 
       const reportContent = `
         Maintenance Report
         Generated on: ${format(new Date(), 'PPpp')}
+        Report Period: ${format(dateRange.from, 'PP')} to ${format(dateRange.to, 'PP')}
         
         Summary:
-        - Completed Today: ${statsData.completed_today}
-        - Equipment Health: ${statsData.equipment_health}%
-        - Pending Maintenance: ${statsData.pending_maintenance}
+        - Completed Today: ${statsData?.completed_today || 0}
+        - Equipment Health: ${statsData?.equipment_health || 0}%
+        - Pending Maintenance: ${statsData?.pending_maintenance || 0}
         
         Equipment Maintenance Schedule:
-        ${maintenanceData.map(item => `
+        ${maintenanceData?.map(item => `
           * ${item.equipment_name}
             - Type: ${item.maintenance_type}
             - Status: ${item.status}
@@ -311,6 +325,45 @@ const MaintenanceEntryForm = () => {
               onChange={(e) => handleInputChange('notes', e.target.value)}
               placeholder="Add any additional notes"
             />
+          </div>
+
+          <div className="space-y-4 mt-6">
+            <Label>Report Date Range</Label>
+            <div className="flex space-x-4">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange.from ? format(dateRange.from, 'PP') : 'Pick start date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={dateRange.from}
+                    onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange.to ? format(dateRange.to, 'PP') : 'Pick end date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={dateRange.to}
+                    onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
           <div className="flex justify-between">

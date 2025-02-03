@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Mail, MessageSquare, Phone } from "lucide-react";
+import { Mail, MessageSquare, Phone, Calendar as CalendarIcon } from "lucide-react";
 import { supabase } from '@/integrations/supabase/supabase';
 import { format } from 'date-fns';
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const MakeReports = ({ isKazo = false }) => {
   const [recipient, setRecipient] = useState({
@@ -16,12 +18,16 @@ const MakeReports = ({ isKazo = false }) => {
     phone: '',
     email: '',
   });
+  
   const [report, setReport] = useState({
     title: '',
     type: '',
     content: '',
     sendVia: [],
+    startDate: new Date(),
+    endDate: new Date()
   });
+  
   const { toast } = useToast();
 
   const reportTypes = [
@@ -46,12 +52,42 @@ const MakeReports = ({ isKazo = false }) => {
     e.preventDefault();
     
     try {
-      // Here you would implement the actual sending logic
+      console.log('Submitting report:', { recipient, report });
+      
+      const { error } = await supabase
+        .from('maintenance_reports')
+        .insert([{
+          title: report.title,
+          type: report.type,
+          content: report.content,
+          recipient_name: recipient.name,
+          recipient_email: recipient.email,
+          recipient_phone: recipient.phone,
+          send_via: report.sendVia,
+          start_date: report.startDate,
+          end_date: report.endDate
+        }]);
+
+      if (error) throw error;
+
       toast({
         title: "Report Sent Successfully",
         description: `Report has been sent to ${recipient.name} via ${report.sendVia.join(', ')}`,
       });
+
+      // Reset form
+      setRecipient({ name: '', phone: '', email: '' });
+      setReport({
+        title: '',
+        type: '',
+        content: '',
+        sendVia: [],
+        startDate: new Date(),
+        endDate: new Date()
+      });
+
     } catch (error) {
+      console.error('Error sending report:', error);
       toast({
         title: "Error Sending Report",
         description: "There was an error sending your report. Please try again.",
@@ -98,6 +134,54 @@ const MakeReports = ({ isKazo = false }) => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Start Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(report.startDate, 'PP')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={report.startDate}
+                        onSelect={(date) => setReport({ ...report, startDate: date })}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div>
+                  <Label>End Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(report.endDate, 'PP')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={report.endDate}
+                        onSelect={(date) => setReport({ ...report, endDate: date })}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
 
               <div>
@@ -165,13 +249,6 @@ const MakeReports = ({ isKazo = false }) => {
                   >
                     <MessageSquare className="mr-2 h-4 w-4" />
                     WhatsApp
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={report.sendVia.includes('system') ? 'default' : 'outline'}
-                    onClick={() => handleSendViaToggle('system')}
-                  >
-                    System Account
                   </Button>
                 </div>
               </div>
