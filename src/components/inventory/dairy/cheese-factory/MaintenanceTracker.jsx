@@ -28,16 +28,19 @@ const MaintenanceTracker = () => {
   const { data: maintenanceStats, isLoading: isLoadingStats, error: statsError } = useQuery({
     queryKey: ['maintenanceStats'],
     queryFn: async () => {
+      console.log('Fetching maintenance stats');
       const { data, error } = await supabase
         .from('maintenance_stats')
         .select('*')
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching maintenance stats:', error);
         throw error;
       }
 
+      console.log('Maintenance stats:', data);
       return data || { completed_today: 0, equipment_health: 0, pending_maintenance: 0 };
     },
   });
@@ -107,7 +110,7 @@ const MaintenanceTracker = () => {
           <CardTitle>Equipment Maintenance Schedule</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isLoadingMaintenance ? (
             <div>Loading maintenance data...</div>
           ) : (
             <div className="space-y-4">
