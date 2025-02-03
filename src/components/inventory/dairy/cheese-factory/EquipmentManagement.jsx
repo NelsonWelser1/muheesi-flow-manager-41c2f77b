@@ -1,28 +1,59 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Container, Thermometer, Box, Wrench, Droplets, Clock, Package, Sparkles } from "lucide-react";
-
-const mockData = {
-  storageTanks: [
-    { id: 'T1', name: 'Tank A', capacity: 5000, currentVolume: 3500, temperature: 3.5 },
-    { id: 'T2', name: 'Tank B', capacity: 3000, currentVolume: 2800, temperature: 3.2 },
-  ],
-  pasteurizers: [
-    { id: 'P1', status: 'Active', currentTemp: 72, batchVolume: 1000 },
-    { id: 'P2', status: 'Standby', currentTemp: 25, batchVolume: 0 },
-  ],
-  cheeseVats: [
-    { id: 'V1', status: 'In Use', product: 'Cheddar', phase: 'Curd Cutting' },
-    { id: 'V2', status: 'Cleaning', product: '-', phase: '-' },
-  ],
-  agingRooms: [
-    { id: 'A1', temp: 12, humidity: 85, occupancy: '75%' },
-    { id: 'A2', temp: 13, humidity: 82, occupancy: '60%' },
-  ]
-};
+import { Container, Thermometer, Box, Wrench } from "lucide-react";
+import { useMilkReception } from '@/hooks/useMilkReception';
 
 const EquipmentManagement = () => {
+  const { data: milkReceptionData } = useMilkReception();
+
+  // Calculate tank volumes from milk reception records
+  const calculateTankVolumes = () => {
+    if (!milkReceptionData) return { tankA: 0, tankB: 0 };
+    
+    return milkReceptionData.reduce((acc, record) => {
+      if (record.tank_number === 'Tank A') {
+        acc.tankA += record.milk_volume;
+      } else if (record.tank_number === 'Tank B') {
+        acc.tankB += record.milk_volume;
+      }
+      return acc;
+    }, { tankA: 0, tankB: 0 });
+  };
+
+  const tankVolumes = calculateTankVolumes();
+
+  const mockData = {
+    storageTanks: [
+      { 
+        id: 'TA', 
+        name: 'Tank A', 
+        capacity: 5000, 
+        currentVolume: tankVolumes.tankA, 
+        temperature: 3.5 
+      },
+      { 
+        id: 'TB', 
+        name: 'Tank B', 
+        capacity: 3000, 
+        currentVolume: tankVolumes.tankB, 
+        temperature: 3.2 
+      }
+    ],
+    pasteurizers: [
+      { id: 'P1', status: 'Active', currentTemp: 72, batchVolume: 1000 },
+      { id: 'P2', status: 'Standby', currentTemp: 25, batchVolume: 0 },
+    ],
+    cheeseVats: [
+      { id: 'V1', status: 'In Use', product: 'Cheddar', phase: 'Curd Cutting' },
+      { id: 'V2', status: 'Cleaning', product: '-', phase: '-' },
+    ],
+    agingRooms: [
+      { id: 'A1', temp: 12, humidity: 85, occupancy: '75%' },
+      { id: 'A2', temp: 13, humidity: 82, occupancy: '60%' },
+    ]
+  };
+
   return (
     <div className="space-y-6">
       {/* Overview Cards */}
@@ -102,7 +133,7 @@ const EquipmentManagement = () => {
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Current Volume</span>
-                          <span>{tank.currentVolume}L</span>
+                          <span>{tank.currentVolume.toFixed(2)}L</span>
                         </div>
                         <div className="mt-2 pt-2 border-t">
                           <div className="flex items-center justify-between text-sm">
