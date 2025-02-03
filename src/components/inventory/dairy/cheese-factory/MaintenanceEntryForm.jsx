@@ -12,7 +12,7 @@ import { Calendar as CalendarIcon, Printer, Mail, FileText } from 'lucide-react'
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { DateRange } from 'react-day-picker';
+import type { DayPicker } from 'react-day-picker';
 
 const MaintenanceEntryForm = () => {
   const [formData, setFormData] = useState({
