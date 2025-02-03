@@ -1,7 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Thermometer, Container, Milk, History, AlertCircle } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import MilkReception from './cheese-factory/milk-reception/MilkReception';
 import { useDairyCoolerData } from '@/hooks/useDairyCoolerData';
 
@@ -24,7 +26,23 @@ const renderMetricCard = (title, value, icon, status = 'normal') => {
 
 const DairyCoolers = () => {
   const { data: coolerData, isLoading } = useDairyCoolerData();
+  const { toast } = useToast();
   console.log('Cooler data:', coolerData);
+
+  const handleActionChange = (value, activityId) => {
+    console.log(`Activity ${activityId} status changed to: ${value}`);
+    toast({
+      title: "Status Updated",
+      description: `Activity status has been updated to: ${value}`,
+    });
+  };
+
+  const activities = [
+    { id: 1, time: '10:30 AM', action: 'Temperature check completed', status: 'normal' },
+    { id: 2, time: '09:45 AM', action: 'New milk batch received', status: 'normal' },
+    { id: 3, time: '09:15 AM', action: 'Tank A cleaning scheduled', status: 'warning' },
+    { id: 4, time: '08:30 AM', action: 'Temperature alert resolved', status: 'critical' },
+  ];
 
   return (
     <div className="container mx-auto p-4">
@@ -90,23 +108,33 @@ const DairyCoolers = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {[
-                      { time: '10:30 AM', action: 'Temperature check completed', status: 'normal' },
-                      { time: '09:45 AM', action: 'New milk batch received', status: 'normal' },
-                      { time: '09:15 AM', action: 'Tank 2 cleaning scheduled', status: 'warning' },
-                      { time: '08:30 AM', action: 'Temperature alert resolved', status: 'critical' },
-                    ].map((activity, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
+                    {activities.map((activity) => (
+                      <div key={activity.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex-grow">
                           <h4 className="font-semibold">{activity.action}</h4>
                           <p className="text-sm text-gray-500">{activity.time}</p>
                         </div>
-                        <div className={`px-2 py-1 rounded text-sm ${
-                          activity.status === 'normal' ? 'bg-green-100 text-green-800' :
-                          activity.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {activity.status}
+                        <div className="flex items-center gap-4">
+                          <Select onValueChange={(value) => handleActionChange(value, activity.id)}>
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Set status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="done">Done</SelectItem>
+                              <SelectItem value="not-done">Not Done</SelectItem>
+                              <SelectItem value="to-be-redone">To Be Redone</SelectItem>
+                              <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                              <SelectItem value="in-progress">In Progress</SelectItem>
+                              <SelectItem value="cancelled">Cancelled</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <div className={`px-2 py-1 rounded text-sm ${
+                            activity.status === 'normal' ? 'bg-green-100 text-green-800' :
+                            activity.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {activity.status}
+                          </div>
                         </div>
                       </div>
                     ))}
