@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { Wrench, Calendar, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import MaintenanceEntryForm from './MaintenanceEntryForm';
 
 const MaintenanceTracker = () => {
   const { data: maintenanceData, isLoading: isLoadingMaintenance, error: maintenanceError } = useQuery({
@@ -68,6 +69,8 @@ const MaintenanceTracker = () => {
 
   return (
     <div className="space-y-6">
+      <MaintenanceEntryForm />
+      
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader>
@@ -167,7 +170,6 @@ const MaintenanceTracker = () => {
       </Card>
     </div>
   );
-
 };
 
 export default MaintenanceTracker;
