@@ -8,10 +8,12 @@ import { Settings, Wrench } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
+import { useMilkReception } from '@/hooks/useMilkReception';
 
 const MilkReceptionSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: milkReceptionData } = useMilkReception();
   const [settings, setSettings] = useState({
     temperature_threshold: 4.5,
     capacity_warning_threshold: 90,
@@ -24,7 +26,6 @@ const MilkReceptionSettings = () => {
     mutationFn: async (settingsData) => {
       console.log('Updating milk reception settings:', settingsData);
       
-      // First check if we have an authenticated session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session) {
@@ -41,7 +42,6 @@ const MilkReceptionSettings = () => {
         throw error;
       }
       
-      console.log('Successfully updated settings:', data);
       return data;
     },
     onSuccess: () => {
@@ -77,6 +77,22 @@ const MilkReceptionSettings = () => {
       });
     }
   };
+
+  // Calculate total milk volume for each tank from milk reception records
+  const calculateTankVolumes = () => {
+    if (!milkReceptionData) return { tankA: 0, tankB: 0 };
+    
+    return milkReceptionData.reduce((acc, record) => {
+      if (record.tank_number === 'Tank A') {
+        acc.tankA += record.milk_volume;
+      } else if (record.tank_number === 'Tank B') {
+        acc.tankB += record.milk_volume;
+      }
+      return acc;
+    }, { tankA: 0, tankB: 0 });
+  };
+
+  const tankVolumes = calculateTankVolumes();
 
   return (
     <div className="space-y-6">
@@ -177,15 +193,19 @@ const MilkReceptionSettings = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[1, 2, 3].map((tank) => (
+            {['Tank A', 'Tank B'].map((tank) => (
               <div key={tank} className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
-                  <h4 className="font-semibold">Tank {tank}</h4>
-                  <p className="text-sm text-gray-500">Last cleaned: 2 hours ago</p>
+                  <h4 className="font-semibold">{tank}</h4>
+                  <p className="text-sm text-gray-500">Capacity: 5000L</p>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold">{Math.floor(Math.random() * 2000 + 1000)}L</div>
-                  <div className="text-sm text-gray-500">Capacity: 5000L</div>
+                  <div className="font-bold">
+                    {tank === 'Tank A' ? tankVolumes.tankA.toFixed(2) : tankVolumes.tankB.toFixed(2)}L
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {((tank === 'Tank A' ? tankVolumes.tankA : tankVolumes.tankB) / 5000 * 100).toFixed(1)}% Full
+                  </div>
                 </div>
               </div>
             ))}
