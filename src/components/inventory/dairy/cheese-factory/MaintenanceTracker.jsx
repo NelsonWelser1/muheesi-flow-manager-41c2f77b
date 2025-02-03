@@ -29,19 +29,28 @@ const MaintenanceTracker = () => {
     queryKey: ['maintenanceStats'],
     queryFn: async () => {
       console.log('Fetching maintenance stats');
-      const { data, error } = await supabase
-        .from('maintenance_stats')
-        .select('*')
-        .limit(1)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from('maintenance_stats')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching maintenance stats:', error);
-        throw error;
+        if (error) {
+          console.error('Error fetching maintenance stats:', error);
+          throw error;
+        }
+
+        console.log('Maintenance stats:', data);
+        if (!data) {
+          console.log('No maintenance stats found, using defaults');
+          return { completed_today: 0, equipment_health: 0, pending_maintenance: 0 };
+        }
+        return data;
+      } catch (error) {
+        console.error('Error in maintenance stats query:', error);
+        return { completed_today: 0, equipment_health: 0, pending_maintenance: 0 };
       }
-
-      console.log('Maintenance stats:', data);
-      return data || { completed_today: 0, equipment_health: 0, pending_maintenance: 0 };
     },
   });
 
@@ -158,6 +167,7 @@ const MaintenanceTracker = () => {
       </Card>
     </div>
   );
+
 };
 
 export default MaintenanceTracker;
