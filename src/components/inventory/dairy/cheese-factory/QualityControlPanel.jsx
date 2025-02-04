@@ -41,6 +41,18 @@ const QualityControlPanel = () => {
     },
   });
 
+  // Group quality checks by batch_id
+  const groupedChecks = React.useMemo(() => {
+    if (!qualityChecks) return {};
+    return qualityChecks.reduce((acc, check) => {
+      if (!acc[check.batch_id]) {
+        acc[check.batch_id] = [];
+      }
+      acc[check.batch_id].push(check);
+      return acc;
+    }, {});
+  }, [qualityChecks]);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -102,40 +114,45 @@ const QualityControlPanel = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Quality Control Checks</CardTitle>
+          <CardTitle>Quality Control Checks by Batch</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div>Loading quality control data...</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Batch ID</TableHead>
-                  <TableHead>Parameter</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead>Standard</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Time</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {qualityChecks?.map((check) => (
-                  <TableRow key={check.id}>
-                    <TableCell>{check.batch_id}</TableCell>
-                    <TableCell>{check.parameter}</TableCell>
-                    <TableCell>{check.actual_value}</TableCell>
-                    <TableCell>{check.standard_value}</TableCell>
-                    <TableCell>
-                      <Badge className={check.status === 'passed' ? 'bg-green-500' : 'bg-red-500'}>
-                        {check.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{new Date(check.created_at).toLocaleTimeString()}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="space-y-6">
+              {Object.entries(groupedChecks).map(([batchId, checks]) => (
+                <Card key={batchId} className="p-4">
+                  <h3 className="font-medium mb-4">Batch ID: {batchId}</h3>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Parameter</TableHead>
+                        <TableHead>Value</TableHead>
+                        <TableHead>Standard</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Time</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {checks.map((check) => (
+                        <TableRow key={check.id}>
+                          <TableCell className="font-medium">{check.parameter}</TableCell>
+                          <TableCell>{check.actual_value}</TableCell>
+                          <TableCell>{check.standard_value}</TableCell>
+                          <TableCell>
+                            <Badge className={check.status === 'passed' ? 'bg-green-500' : 'bg-red-500'}>
+                              {check.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{new Date(check.created_at).toLocaleTimeString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
