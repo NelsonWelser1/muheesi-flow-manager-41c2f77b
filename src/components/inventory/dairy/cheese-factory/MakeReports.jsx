@@ -33,14 +33,12 @@ const MakeReports = ({ isKazo = false }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check authentication status on component mount
     const checkSession = async () => {
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         console.log('Current session:', currentSession);
         setSession(currentSession);
         
-        // Subscribe to auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
           console.log('Auth state changed:', session);
           setSession(session);
@@ -78,8 +76,6 @@ const MakeReports = ({ isKazo = false }) => {
     setIsLoading(true);
     
     try {
-      console.log('Checking authentication before submission');
-      
       if (!session?.user?.id) {
         console.error('No authenticated user found');
         toast({
@@ -90,13 +86,6 @@ const MakeReports = ({ isKazo = false }) => {
         return;
       }
 
-      console.log('Submitting report with session:', { 
-        userId: session.user.id,
-        reportType: report.type,
-        startDate: report.startDate,
-        endDate: report.endDate 
-      });
-
       // First, save report configuration
       const { data: configData, error: configError } = await supabase
         .from('report_configurations')
@@ -105,7 +94,8 @@ const MakeReports = ({ isKazo = false }) => {
           start_date: report.startDate,
           end_date: report.endDate,
           user_id: session.user.id
-        }]);
+        }])
+        .select();
 
       if (configError) {
         console.error('Error saving report configuration:', configError);
@@ -128,7 +118,8 @@ const MakeReports = ({ isKazo = false }) => {
           start_date: report.startDate,
           end_date: report.endDate,
           user_id: session.user.id
-        }]);
+        }])
+        .select();
 
       if (reportError) {
         console.error('Error saving maintenance report:', reportError);
