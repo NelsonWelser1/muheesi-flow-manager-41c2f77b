@@ -22,7 +22,9 @@ const MaintenanceEntryForm = () => {
     last_maintenance: new Date(),
     next_maintenance: new Date(),
     health_score: 100,
-    notes: ''
+    notes: '',
+    company: 'Grand Berna Dairies', // Added company context
+    project: 'Cheese Factory' // Added project context
   });
 
   const [dateRange, setDateRange] = useState({
@@ -45,20 +47,22 @@ const MaintenanceEntryForm = () => {
     try {
       console.log('Submitting maintenance record:', formData);
       
+      // Format dates for database
+      const formattedData = {
+        ...formData,
+        last_maintenance: formData.last_maintenance.toISOString(),
+        next_maintenance: formData.next_maintenance.toISOString()
+      };
+      
       // Insert maintenance record
       const { error: maintenanceError } = await supabase
         .from('equipment_maintenance')
-        .insert([{
-          equipment_name: formData.equipment_name,
-          maintenance_type: formData.maintenance_type,
-          status: formData.status,
-          last_maintenance: formData.last_maintenance.toISOString(),
-          next_maintenance: formData.next_maintenance.toISOString(),
-          health_score: formData.health_score,
-          notes: formData.notes
-        }]);
+        .insert([formattedData]);
 
-      if (maintenanceError) throw maintenanceError;
+      if (maintenanceError) {
+        console.error('Maintenance insert error:', maintenanceError);
+        throw maintenanceError;
+      }
 
       // Update maintenance stats
       const { data: statsData, error: statsError } = await supabase
@@ -98,7 +102,9 @@ const MaintenanceEntryForm = () => {
         last_maintenance: new Date(),
         next_maintenance: new Date(),
         health_score: 100,
-        notes: ''
+        notes: '',
+        company: 'Grand Berna Dairies',
+        project: 'Cheese Factory'
       });
 
     } catch (error) {
