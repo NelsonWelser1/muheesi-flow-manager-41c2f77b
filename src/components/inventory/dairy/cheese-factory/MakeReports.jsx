@@ -90,7 +90,7 @@ const MakeReports = ({ isKazo = false }) => {
           report_type: report.type,
           start_date: report.startDate,
           end_date: report.endDate,
-          user_id: session.user.id // Add user_id to track ownership
+          user_id: session.user.id
         }]);
 
       if (configError) {
@@ -111,7 +111,7 @@ const MakeReports = ({ isKazo = false }) => {
           send_via: report.sendVia,
           start_date: report.startDate,
           end_date: report.endDate,
-          user_id: session.user.id // Add user_id to track ownership
+          user_id: session.user.id
         }]);
 
       if (reportError) throw reportError;
