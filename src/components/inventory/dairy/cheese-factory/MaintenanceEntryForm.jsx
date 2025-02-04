@@ -12,6 +12,7 @@ import { Calendar as CalendarIcon, Printer, Mail, FileText } from 'lucide-react'
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const MaintenanceEntryForm = () => {
   const [formData, setFormData] = useState({
@@ -47,7 +48,15 @@ const MaintenanceEntryForm = () => {
       // Insert maintenance record
       const { error: maintenanceError } = await supabase
         .from('equipment_maintenance')
-        .insert([formData]);
+        .insert([{
+          equipment_name: formData.equipment_name,
+          maintenance_type: formData.maintenance_type,
+          status: formData.status,
+          last_maintenance: formData.last_maintenance.toISOString(),
+          next_maintenance: formData.next_maintenance.toISOString(),
+          health_score: formData.health_score,
+          notes: formData.notes
+        }]);
 
       if (maintenanceError) throw maintenanceError;
 
@@ -102,9 +111,20 @@ const MaintenanceEntryForm = () => {
     }
   };
 
-  const generateReport = async () => {
+  const generateReport = async (dateRange) => {
     try {
       console.log('Generating report for date range:', dateRange);
+      
+      // Save report configuration
+      const { error: configError } = await supabase
+        .from('report_configurations')
+        .insert([{
+          report_type: 'maintenance',
+          start_date: dateRange.from.toISOString(),
+          end_date: dateRange.to.toISOString()
+        }]);
+
+      if (configError) throw configError;
       
       const { data: maintenanceData, error: maintenanceError } = await supabase
         .from('equipment_maintenance')
@@ -123,7 +143,7 @@ const MaintenanceEntryForm = () => {
 
       if (statsError) throw statsError;
 
-      const reportContent = `
+      return `
         Maintenance Report
         Generated on: ${format(new Date(), 'PPpp')}
         Report Period: ${format(dateRange.from, 'PP')} to ${format(dateRange.to, 'PP')}
@@ -143,17 +163,83 @@ const MaintenanceEntryForm = () => {
             - Notes: ${item.notes}
         `).join('\n')}
       `;
-
-      return reportContent;
     } catch (error) {
       console.error('Error generating report:', error);
       throw error;
     }
   };
 
-  const printReport = async () => {
+  const ReportDialog = ({ children, onPrint }) => {
+    const [localDateRange, setLocalDateRange] = useState({
+      from: new Date(),
+      to: new Date()
+    });
+
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Report Date Range</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {localDateRange.from ? format(localDateRange.from, 'PP') : 'Pick start date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={localDateRange.from}
+                      onSelect={(date) => setLocalDateRange(prev => ({ ...prev, from: date }))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <Label>End Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {localDateRange.to ? format(localDateRange.to, 'PP') : 'Pick end date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={localDateRange.to}
+                      onSelect={(date) => setLocalDateRange(prev => ({ ...prev, to: date }))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <Button 
+              className="w-full" 
+              onClick={() => onPrint(localDateRange)}
+            >
+              Generate Report
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  const printReport = async (dateRange) => {
     try {
-      const reportContent = await generateReport();
+      const reportContent = await generateReport(dateRange);
       const printWindow = window.open('', '_blank');
       printWindow.document.write(`
         <html>
@@ -182,9 +268,9 @@ const MaintenanceEntryForm = () => {
     }
   };
 
-  const emailReport = async () => {
+  const emailReport = async (dateRange) => {
     try {
-      const reportContent = await generateReport();
+      const reportContent = await generateReport(dateRange);
       const emailUrl = `mailto:?subject=Maintenance Report - ${format(new Date(), 'PP')}&body=${encodeURIComponent(reportContent)}`;
       window.location.href = emailUrl;
     } catch (error) {
@@ -326,55 +412,20 @@ const MaintenanceEntryForm = () => {
             />
           </div>
 
-          <div className="space-y-4 mt-6">
-            <Label>Report Date Range</Label>
-            <div className="flex space-x-4">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange.from ? format(dateRange.from, 'PP') : 'Pick start date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={dateRange.from}
-                    onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange.to ? format(dateRange.to, 'PP') : 'Pick end date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={dateRange.to}
-                    onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
           <div className="flex justify-between">
             <div className="space-x-2">
-              <Button type="button" variant="outline" onClick={printReport}>
-                <Printer className="mr-2 h-4 w-4" />
-                Print Report
-              </Button>
-              <Button type="button" variant="outline" onClick={emailReport}>
-                <Mail className="mr-2 h-4 w-4" />
-                Email Report
-              </Button>
+              <ReportDialog onPrint={printReport}>
+                <Button type="button" variant="outline">
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print Report
+                </Button>
+              </ReportDialog>
+              <ReportDialog onPrint={emailReport}>
+                <Button type="button" variant="outline">
+                  <Mail className="mr-2 h-4 w-4" />
+                  Email Report
+                </Button>
+              </ReportDialog>
               <Button type="button" variant="outline" onClick={() => window.open('/reports', '_blank')}>
                 <FileText className="mr-2 h-4 w-4" />
                 View All Reports
