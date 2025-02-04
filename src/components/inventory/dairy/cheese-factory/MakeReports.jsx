@@ -29,20 +29,27 @@ const MakeReports = ({ isKazo = false }) => {
   });
 
   const [session, setSession] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Check authentication status on component mount
   useEffect(() => {
+    // Check authentication status on component mount
     const checkSession = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSession(currentSession);
-      
-      // Subscribe to auth changes
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        setSession(session);
-      });
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log('Current session:', currentSession);
+        setSession(currentSession);
+        
+        // Subscribe to auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          console.log('Auth state changed:', session);
+          setSession(session);
+        });
 
-      return () => subscription.unsubscribe();
+        return () => subscription.unsubscribe();
+      } catch (error) {
+        console.error('Error checking session:', error);
+      }
     };
 
     checkSession();
@@ -68,11 +75,13 @@ const MakeReports = ({ isKazo = false }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     
     try {
       console.log('Checking authentication before submission');
       
-      if (!session) {
+      if (!session?.user?.id) {
+        console.error('No authenticated user found');
         toast({
           title: "Authentication Required",
           description: "Please log in to submit reports",
@@ -81,10 +90,15 @@ const MakeReports = ({ isKazo = false }) => {
         return;
       }
 
-      console.log('Submitting report with session:', { recipient, report, sessionId: session.user.id });
+      console.log('Submitting report with session:', { 
+        userId: session.user.id,
+        reportType: report.type,
+        startDate: report.startDate,
+        endDate: report.endDate 
+      });
 
       // First, save report configuration
-      const { error: configError } = await supabase
+      const { data: configData, error: configError } = await supabase
         .from('report_configurations')
         .insert([{
           report_type: report.type,
@@ -98,8 +112,10 @@ const MakeReports = ({ isKazo = false }) => {
         throw configError;
       }
 
+      console.log('Report configuration saved:', configData);
+
       // Then save the maintenance report
-      const { error: reportError } = await supabase
+      const { data: reportData, error: reportError } = await supabase
         .from('maintenance_reports')
         .insert([{
           title: report.title,
@@ -114,7 +130,12 @@ const MakeReports = ({ isKazo = false }) => {
           user_id: session.user.id
         }]);
 
-      if (reportError) throw reportError;
+      if (reportError) {
+        console.error('Error saving maintenance report:', reportError);
+        throw reportError;
+      }
+
+      console.log('Maintenance report saved:', reportData);
 
       toast({
         title: "Report Sent Successfully",
@@ -139,6 +160,8 @@ const MakeReports = ({ isKazo = false }) => {
         description: error.message || "There was an error sending your report. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
