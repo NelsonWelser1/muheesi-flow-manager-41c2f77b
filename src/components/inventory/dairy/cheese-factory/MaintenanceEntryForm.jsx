@@ -106,8 +106,25 @@ const MaintenanceEntryForm = () => {
       };
       
       console.log('Formatted data for submission:', formattedData);
+
+      // Get the current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      // Insert maintenance record with explicit columns
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw sessionError;
+      }
+
+      if (!session) {
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to perform this action",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Insert maintenance record with authentication
       const { error: maintenanceError } = await supabase
         .from('equipment_maintenance')
         .insert([formattedData])
