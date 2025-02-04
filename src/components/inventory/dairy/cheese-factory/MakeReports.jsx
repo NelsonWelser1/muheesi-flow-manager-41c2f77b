@@ -53,7 +53,36 @@ const MakeReports = ({ isKazo = false }) => {
     
     try {
       console.log('Submitting report:', { recipient, report });
+
+      // Get the current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw sessionError;
+      }
+
+      if (!session) {
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to perform this action",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // First, save report configuration
+      const { error: configError } = await supabase
+        .from('report_configurations')
+        .insert([{
+          report_type: report.type,
+          start_date: report.startDate,
+          end_date: report.endDate
+        }]);
+
+      if (configError) throw configError;
+
+      // Then save the maintenance report
       const { error } = await supabase
         .from('maintenance_reports')
         .insert([{
@@ -262,6 +291,7 @@ const MakeReports = ({ isKazo = false }) => {
       </Card>
     </div>
   );
+
 };
 
 export default MakeReports;
