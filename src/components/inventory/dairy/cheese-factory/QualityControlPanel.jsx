@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import QualityCheckEntryForm from './quality-control/QualityCheckEntryForm';
 
 const QualityControlPanel = () => {
   const { data: qualityChecks, isLoading } = useQuery({
@@ -12,7 +13,7 @@ const QualityControlPanel = () => {
     queryFn: async () => {
       console.log('Fetching quality control data');
       const { data, error } = await supabase
-        .from('quality_control')
+        .from('quality_checks')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -78,6 +79,8 @@ const QualityControlPanel = () => {
         </Card>
       </div>
 
+      <QualityCheckEntryForm />
+
       <Card>
         <CardHeader>
           <CardTitle>Quality Trends</CardTitle>
@@ -121,7 +124,7 @@ const QualityControlPanel = () => {
                   <TableRow key={check.id}>
                     <TableCell>{check.batch_id}</TableCell>
                     <TableCell>{check.parameter}</TableCell>
-                    <TableCell>{check.value}</TableCell>
+                    <TableCell>{check.actual_value}</TableCell>
                     <TableCell>{check.standard_value}</TableCell>
                     <TableCell>
                       <Badge className={check.status === 'passed' ? 'bg-green-500' : 'bg-red-500'}>
