@@ -36,6 +36,31 @@ const MaintenanceEntryForm = () => {
   const queryClient = useQueryClient();
 
   const handleInputChange = (field, value) => {
+    // Add date validation
+    if (field === 'last_maintenance') {
+      const currentDate = new Date();
+      if (value > currentDate) {
+        toast({
+          title: "Invalid Date",
+          description: "Last maintenance date cannot exceed current date",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (field === 'next_maintenance') {
+      const currentDate = new Date();
+      if (value < currentDate) {
+        toast({
+          title: "Invalid Date",
+          description: "Next maintenance date cannot be before current date",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -47,6 +72,26 @@ const MaintenanceEntryForm = () => {
     try {
       console.log('Submitting maintenance record:', formData);
       
+      // Validate dates before submission
+      const currentDate = new Date();
+      if (formData.last_maintenance > currentDate) {
+        toast({
+          title: "Invalid Date",
+          description: "Last maintenance date cannot exceed current date",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (formData.next_maintenance < currentDate) {
+        toast({
+          title: "Invalid Date",
+          description: "Next maintenance date cannot be before current date",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Format dates for database
       const formattedData = {
         equipment_name: formData.equipment_name,
@@ -62,10 +107,11 @@ const MaintenanceEntryForm = () => {
       
       console.log('Formatted data for submission:', formattedData);
       
-      // Insert maintenance record
+      // Insert maintenance record with explicit columns
       const { error: maintenanceError } = await supabase
         .from('equipment_maintenance')
-        .insert([formattedData]);
+        .insert([formattedData])
+        .select();
 
       if (maintenanceError) {
         console.error('Maintenance insert error:', maintenanceError);
