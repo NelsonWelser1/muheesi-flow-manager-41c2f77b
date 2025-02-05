@@ -22,19 +22,34 @@ const ProductionLineForm = ({ productionLine }) => {
   const { toast } = useToast();
 
   const onSubmit = async (data) => {
-    console.log('Submitting production data:', { ...data, productionLineId: productionLine.id });
+    console.log('Submitting production data:', data);
     
     try {
       // Use the correct table name based on production line ID
       const tableName = productionLine.id === 1 ? 'production_line_international' : 'production_line_local';
       
+      // Create submission data without production_line_id
+      const submissionData = {
+        batch_id: data.batch_id,
+        date_time: data.date_time,
+        milk_volume: parseFloat(data.milk_volume),
+        cheese_type: data.cheese_type,
+        starter_culture: data.starter_culture,
+        starter_quantity: parseFloat(data.starter_quantity),
+        coagulant: data.coagulant,
+        coagulant_quantity: parseFloat(data.coagulant_quantity),
+        temperature: parseFloat(data.temperature),
+        processing_time: parseInt(data.processing_time),
+        yield: parseFloat(data.yield),
+        operator_id: data.operator_id,
+        created_at: new Date().toISOString()
+      };
+
+      console.log('Submitting to table:', tableName, 'with data:', submissionData);
+
       const { error } = await supabase
         .from(tableName)
-        .insert([{
-          ...data,
-          production_line_id: productionLine.id,
-          created_at: new Date().toISOString()
-        }]);
+        .insert([submissionData]);
 
       if (error) throw error;
 
