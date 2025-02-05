@@ -18,7 +18,7 @@ const CHEESE_TYPES = [
 ];
 
 const ProductionLineForm = ({ productionLine }) => {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm();
   const { toast } = useToast();
 
   const onSubmit = async (data) => {
@@ -69,6 +69,10 @@ const ProductionLineForm = ({ productionLine }) => {
     }
   };
 
+  const handleCheeseTypeChange = (value) => {
+    setValue('cheese_type', value);
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <Card>
@@ -105,7 +109,7 @@ const ProductionLineForm = ({ productionLine }) => {
 
             <div className="space-y-2">
               <Label htmlFor="cheeseType">Type of Cheese</Label>
-              <Select onValueChange={(value) => register("cheese_type").onChange({ target: { value } })}>
+              <Select onValueChange={handleCheeseTypeChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select cheese type" />
                 </SelectTrigger>
