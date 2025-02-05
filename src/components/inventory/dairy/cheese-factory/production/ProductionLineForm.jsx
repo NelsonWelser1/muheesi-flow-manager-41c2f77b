@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +25,7 @@ const ProductionLineForm = ({ productionLine }) => {
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
       batch_id: '',
-      date_time: new Date().toISOString(),
+      date_time: new Date().toISOString().slice(0, 16),
       milk_volume: '',
       cheese_type: '',
       starter_culture: '',
@@ -42,9 +42,11 @@ const ProductionLineForm = ({ productionLine }) => {
   const { toast } = useToast();
   const { session } = useSupabaseAuth();
 
-  React.useEffect(() => {
+  useEffect(() => {
     register('cheese_type', { required: 'Cheese type is required' });
   }, [register]);
+
+  console.log('ProductionLineForm rendered with productionLine:', productionLine);
 
   const onSubmit = async (data) => {
     if (!session) {
