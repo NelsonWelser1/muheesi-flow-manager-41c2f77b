@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Container, Thermometer, Box, Wrench } from "lucide-react";
 import { useMilkReception } from '@/hooks/useMilkReception';
+import AgingRoomForm from './forms/AgingRoomForm';
+import CheeseVatForm from './forms/CheeseVatForm';
+import PasteurizerForm from './forms/PasteurizerForm';
 
 const EquipmentManagement = () => {
   const { data: milkReceptionData } = useMilkReception();
@@ -151,105 +154,119 @@ const EquipmentManagement = () => {
         </TabsContent>
 
         <TabsContent value="pasteurizer">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pasteurizer Operations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {mockData.pasteurizers.map((unit) => (
-                  <div key={unit.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-semibold">Unit {unit.id}</h3>
-                      <span className={`px-2 py-1 rounded text-sm ${
-                        unit.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {unit.status}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Temperature</p>
-                        <p>{unit.currentTemp}°C</p>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Pasteurizer Operations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {mockData.pasteurizers.map((unit) => (
+                    <div key={unit.id} className="space-y-4">
+                      <div className="border rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <h3 className="font-semibold">Unit {unit.id}</h3>
+                          <span className={`px-2 py-1 rounded text-sm ${
+                            unit.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {unit.status}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-500">Temperature</p>
+                            <p>{unit.currentTemp}°C</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Batch Volume</p>
+                            <p>{unit.batchVolume}L</p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Batch Volume</p>
-                        <p>{unit.batchVolume}L</p>
-                      </div>
+                      <PasteurizerForm unitId={unit.id} />
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="vats">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cheese Vat Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {mockData.cheeseVats.map((vat) => (
-                  <div key={vat.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-semibold">Vat {vat.id}</h3>
-                      <span className={`px-2 py-1 rounded text-sm ${
-                        vat.status === 'In Use' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {vat.status}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Product</p>
-                        <p>{vat.product}</p>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Cheese Vat Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {mockData.cheeseVats.map((vat) => (
+                    <div key={vat.id} className="space-y-4">
+                      <div className="border rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <h3 className="font-semibold">Vat {vat.id}</h3>
+                          <span className={`px-2 py-1 rounded text-sm ${
+                            vat.status === 'In Use' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {vat.status}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-500">Product</p>
+                            <p>{vat.product}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Current Phase</p>
+                            <p>{vat.phase}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Current Phase</p>
-                        <p>{vat.phase}</p>
-                      </div>
+                      <CheeseVatForm vatId={vat.id} />
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="aging">
-          <Card>
-            <CardHeader>
-              <CardTitle>Aging Room Conditions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {mockData.agingRooms.map((room) => (
-                  <div key={room.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-semibold">Room {room.id}</h3>
-                      <span className="px-2 py-1 rounded text-sm bg-blue-100 text-blue-800">
-                        {room.occupancy} Full
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Temperature</p>
-                        <p>{room.temp}°C</p>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Aging Room Conditions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {mockData.agingRooms.map((room) => (
+                    <div key={room.id} className="space-y-4">
+                      <div className="border rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <h3 className="font-semibold">Room {room.id}</h3>
+                          <span className="px-2 py-1 rounded text-sm bg-blue-100 text-blue-800">
+                            {room.occupancy} Full
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-500">Temperature</p>
+                            <p>{room.temp}°C</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Humidity</p>
+                            <p>{room.humidity}%</p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Humidity</p>
-                        <p>{room.humidity}%</p>
-                      </div>
+                      <AgingRoomForm roomId={room.id} />
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
-
       </Tabs>
     </div>
   );
