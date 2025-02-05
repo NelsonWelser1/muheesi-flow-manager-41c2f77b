@@ -1,5 +1,4 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
 import { supabase } from '@/integrations/supabase/supabase';
+import { useForm } from 'react-hook-form';
 
 const CHEESE_TYPES = [
   'Mozzarella',
@@ -19,8 +19,8 @@ const CHEESE_TYPES = [
 ];
 
 const ProductionLineForm = ({ productionLine }) => {
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [selectedCheeseType, setSelectedCheeseType] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCheeseType, setSelectedCheeseType] = useState('');
   
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
