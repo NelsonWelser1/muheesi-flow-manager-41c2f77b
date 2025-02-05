@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
+import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const CHEESE_TYPES = [
   { id: 'mozzarella', name: 'Mozzarella' },
@@ -20,15 +21,25 @@ const CHEESE_TYPES = [
 const ProductionLineForm = ({ productionLine }) => {
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm();
   const { toast } = useToast();
+  const { session } = useSupabaseAuth();
 
   const onSubmit = async (data) => {
     console.log('Submitting production data:', data);
+    
+    if (!session) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to submit production data",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       // Use the correct table name based on production line ID
       const tableName = productionLine.id === 1 ? 'production_line_international' : 'production_line_local';
       
-      // Create submission data without production_line_id
+      // Create submission data
       const submissionData = {
         batch_id: data.batch_id,
         date_time: data.date_time,
@@ -49,9 +60,13 @@ const ProductionLineForm = ({ productionLine }) => {
 
       const { error } = await supabase
         .from(tableName)
-        .insert([submissionData]);
+        .insert([submissionData])
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error details:', error);
+        throw error;
+      }
 
       toast({
         title: "Production Record Created",
@@ -61,9 +76,15 @@ const ProductionLineForm = ({ productionLine }) => {
       reset();
     } catch (error) {
       console.error('Error submitting production data:', error);
+      
+      let errorMessage = "Failed to save production record";
+      if (error.code === '42501') {
+        errorMessage = "You don't have permission to add production records";
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to save production record",
+        description: errorMessage,
         variant: "destructive",
       });
     }
