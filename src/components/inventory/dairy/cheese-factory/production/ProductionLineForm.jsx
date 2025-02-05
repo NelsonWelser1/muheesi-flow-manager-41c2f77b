@@ -19,7 +19,11 @@ const CHEESE_TYPES = [
 ];
 
 const ProductionLineForm = ({ productionLine }) => {
-  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
+    defaultValues: {
+      cheese_type: '',
+    }
+  });
   const { toast } = useToast();
   const { session } = useSupabaseAuth();
 
@@ -36,10 +40,8 @@ const ProductionLineForm = ({ productionLine }) => {
     }
     
     try {
-      // Use the correct table name based on production line ID
       const tableName = productionLine.id === 1 ? 'production_line_international' : 'production_line_local';
       
-      // Create submission data
       const submissionData = {
         batch_id: data.batch_id,
         date_time: data.date_time,
@@ -89,6 +91,11 @@ const ProductionLineForm = ({ productionLine }) => {
       });
     }
   };
+
+  // Register cheese_type with react-hook-form
+  React.useEffect(() => {
+    register('cheese_type', { required: true });
+  }, [register]);
 
   const handleCheeseTypeChange = (value) => {
     setValue('cheese_type', value);
@@ -142,6 +149,9 @@ const ProductionLineForm = ({ productionLine }) => {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.cheese_type && (
+                <p className="text-sm text-red-500">Cheese type is required</p>
+              )}
             </div>
 
             <div className="space-y-2">
