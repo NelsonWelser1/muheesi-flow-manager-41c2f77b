@@ -21,7 +21,9 @@ const CHEESE_TYPES = [
 const ProductionLineForm = ({ productionLine }) => {
   const [selectedCheeseType, setSelectedCheeseType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const { toast } = useToast();
+  const { session } = useSupabaseAuth();
+
   console.log('ProductionLineForm rendered with productionLine:', productionLine);
 
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
@@ -37,12 +39,9 @@ const ProductionLineForm = ({ productionLine }) => {
       temperature: '',
       processing_time: '',
       yield: '',
-      operator_id: ''
+      operator_id: session?.user?.id || ''
     }
   });
-
-  const { toast } = useToast();
-  const { session } = useSupabaseAuth();
 
   useEffect(() => {
     if (selectedCheeseType) {
@@ -246,15 +245,6 @@ const ProductionLineForm = ({ productionLine }) => {
                 step="0.1"
                 {...register("yield", { required: true, min: 0 })}
                 placeholder="Enter cheese yield"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="operator_id">Operator Name/ID</Label>
-              <Input
-                id="operator_id"
-                {...register("operator_id", { required: true })}
-                placeholder="Enter operator name or ID"
               />
             </div>
           </div>
