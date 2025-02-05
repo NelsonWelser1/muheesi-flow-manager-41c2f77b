@@ -25,8 +25,11 @@ const ProductionLineForm = ({ productionLine }) => {
     console.log('Submitting production data:', { ...data, productionLineId: productionLine.id });
     
     try {
+      // Use the correct table name based on production line ID
+      const tableName = productionLine.id === 1 ? 'production_line_international' : 'production_line_local';
+      
       const { error } = await supabase
-        .from(`cheese_production_line_${productionLine.id}`)
+        .from(tableName)
         .insert([{
           ...data,
           production_line_id: productionLine.id,
