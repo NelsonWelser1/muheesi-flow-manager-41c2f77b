@@ -43,7 +43,6 @@ const ProductionLineForm = ({ productionLine }) => {
   const { session } = useSupabaseAuth();
 
   React.useEffect(() => {
-    // Register fields that need manual control
     register('cheese_type', { required: 'Cheese type is required' });
   }, [register]);
 
@@ -60,7 +59,7 @@ const ProductionLineForm = ({ productionLine }) => {
     setIsSubmitting(true);
     
     try {
-      const tableName = productionLine.id === 1 ? 'production_line_international' : 'production_line_local';
+      const tableName = productionLine?.id === 1 ? 'production_line_international' : 'production_line_local';
       
       const submissionData = {
         batch_id: data.batch_id,
@@ -178,18 +177,18 @@ const ProductionLineForm = ({ productionLine }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="starterCulture">Starter Culture</Label>
+              <Label htmlFor="starter_culture">Starter Culture</Label>
               <Input
-                id="starterCulture"
+                id="starter_culture"
                 {...register("starter_culture", { required: true })}
                 placeholder="Enter starter culture"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="starterQuantity">Starter Culture Quantity (g)</Label>
+              <Label htmlFor="starter_quantity">Starter Culture Quantity (g)</Label>
               <Input
-                id="starterQuantity"
+                id="starter_quantity"
                 type="number"
                 step="0.1"
                 {...register("starter_quantity", { required: true, min: 0 })}
@@ -207,9 +206,9 @@ const ProductionLineForm = ({ productionLine }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="coagulantQuantity">Coagulant Quantity (ml)</Label>
+              <Label htmlFor="coagulant_quantity">Coagulant Quantity (ml)</Label>
               <Input
-                id="coagulantQuantity"
+                id="coagulant_quantity"
                 type="number"
                 step="0.1"
                 {...register("coagulant_quantity", { required: true, min: 0 })}
@@ -229,9 +228,9 @@ const ProductionLineForm = ({ productionLine }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="processingTime">Processing Time (minutes)</Label>
+              <Label htmlFor="processing_time">Processing Time (minutes)</Label>
               <Input
-                id="processingTime"
+                id="processing_time"
                 type="number"
                 {...register("processing_time", { required: true, min: 0 })}
                 placeholder="Enter processing time"
@@ -250,9 +249,9 @@ const ProductionLineForm = ({ productionLine }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="operatorId">Operator Name/ID</Label>
+              <Label htmlFor="operator_id">Operator Name/ID</Label>
               <Input
-                id="operatorId"
+                id="operator_id"
                 {...register("operator_id", { required: true })}
                 placeholder="Enter operator name or ID"
               />
