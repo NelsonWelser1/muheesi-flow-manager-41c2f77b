@@ -4,10 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
 import { supabase } from '@/integrations/supabase/supabase';
-import { useForm } from 'react-hook-form';
 
 const CHEESE_TYPES = [
   'Mozzarella',
@@ -19,9 +19,11 @@ const CHEESE_TYPES = [
 ];
 
 const ProductionLineForm = ({ productionLine }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCheeseType, setSelectedCheeseType] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
+  console.log('ProductionLineForm rendered with productionLine:', productionLine);
+
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
       batch_id: '',
@@ -43,10 +45,12 @@ const ProductionLineForm = ({ productionLine }) => {
   const { session } = useSupabaseAuth();
 
   useEffect(() => {
-    register('cheese_type', { required: 'Cheese type is required' });
-  }, [register]);
+    if (selectedCheeseType) {
+      setValue('cheese_type', selectedCheeseType);
+    }
+  }, [selectedCheeseType, setValue]);
 
-  console.log('ProductionLineForm rendered with productionLine:', productionLine);
+  console.log('Form initialized with session:', session);
 
   const onSubmit = async (data) => {
     if (!session) {
@@ -107,11 +111,6 @@ const ProductionLineForm = ({ productionLine }) => {
     }
   };
 
-  const handleCheeseTypeChange = (value) => {
-    setSelectedCheeseType(value);
-    setValue('cheese_type', value);
-  };
-
   return (
     <Card>
       <CardContent>
@@ -144,7 +143,7 @@ const ProductionLineForm = ({ productionLine }) => {
               <Label htmlFor="cheese_type">Cheese Type</Label>
               <Select
                 value={selectedCheeseType}
-                onValueChange={handleCheeseTypeChange}
+                onValueChange={setSelectedCheeseType}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select cheese type" />
