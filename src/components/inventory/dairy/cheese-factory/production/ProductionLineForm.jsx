@@ -19,12 +19,13 @@ const CHEESE_TYPES = [
 ];
 
 const ProductionLineForm = ({ productionLine }) => {
-  const [selectedCheeseType, setSelectedCheeseType] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { session } = useSupabaseAuth();
+  const [selectedCheeseType, setSelectedCheeseType] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   console.log('ProductionLineForm rendered with productionLine:', productionLine);
+  console.log('Current session:', session);
 
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
@@ -170,6 +171,7 @@ const ProductionLineForm = ({ productionLine }) => {
                   required: 'Milk volume is required',
                   min: { value: 0, message: 'Volume must be positive' }
                 })}
+                placeholder="Enter milk volume"
               />
               {errors.milk_volume && (
                 <p className="text-sm text-red-500">{errors.milk_volume.message}</p>
