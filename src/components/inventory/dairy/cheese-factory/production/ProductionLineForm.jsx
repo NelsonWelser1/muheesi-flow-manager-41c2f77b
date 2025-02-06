@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
-import { useSupabaseAuth } from '@/integrations/supabase/auth';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -21,7 +20,6 @@ const ProductionLineForm = ({ productionLine }) => {
   console.log('Initializing ProductionLineForm with:', { productionLine });
   
   const { toast } = useToast();
-  const { session } = useSupabaseAuth();
   const [selectedCheeseType, setSelectedCheeseType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,6 +35,7 @@ const ProductionLineForm = ({ productionLine }) => {
 
   useEffect(() => {
     if (productionLine && typeof productionLine === 'object') {
+      console.log('Setting form values from productionLine:', productionLine);
       Object.entries(productionLine).forEach(([key, value]) => {
         if (value !== undefined) {
           setValue(key, value);
