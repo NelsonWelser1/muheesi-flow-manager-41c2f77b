@@ -69,10 +69,12 @@ const ProductionLineForm = ({ productionLine }) => {
     }
   }, [productionLine, setValue]);
 
-  const generateBatchId = async () => {
+  const generateBatchId = async (cheeseType) => {
     try {
-      console.log('Generating new batch ID...');
-      const { data, error } = await supabase.rpc('generate_batch_id');
+      console.log('Generating new batch ID for cheese type:', cheeseType);
+      const { data, error } = await supabase.rpc('generate_batch_id', {
+        cheese_type: cheeseType
+      });
       
       if (error) {
         console.error('Error generating batch ID:', error);
@@ -97,7 +99,7 @@ const ProductionLineForm = ({ productionLine }) => {
     setSelectedCheeseType(value);
     setValue('cheese_type', value);
     
-    const newBatchId = await generateBatchId();
+    const newBatchId = await generateBatchId(value);
     if (newBatchId) {
       setBatchId(newBatchId);
       setValue('batch_id', newBatchId);
