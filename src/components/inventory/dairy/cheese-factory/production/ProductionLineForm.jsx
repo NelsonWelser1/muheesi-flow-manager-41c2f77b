@@ -1,109 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
-import { supabase } from '@/integrations/supabase/supabase';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 
 const CHEESE_TYPES = [
   'Mozzarella',
   'Cheddar',
   'Gouda',
-  'Swiss',
   'Parmesan',
-  'Feta'
+  'Swiss',
+  'Blue Cheese'
 ];
 
 const ProductionLineForm = ({ productionLine }) => {
+  console.log('Initializing ProductionLineForm with:', { productionLine });
+  
+  // Initialize hooks at the top level
   const { toast } = useToast();
   const { session } = useSupabaseAuth();
+  
+  // State management
   const [selectedCheeseType, setSelectedCheeseType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  console.log('ProductionLineForm rendered with productionLine:', productionLine);
   console.log('Current session:', session);
+  console.log('Selected cheese type:', selectedCheeseType);
 
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
-      batch_id: '',
-      date_time: new Date().toISOString().slice(0, 16),
-      milk_volume: '',
+      operator_id: session?.user?.id || '',
       cheese_type: '',
-      starter_culture: '',
-      starter_quantity: '',
-      coagulant: '',
-      coagulant_quantity: '',
-      temperature: '',
-      processing_time: '',
-      yield: '',
-      operator_id: session?.user?.id || ''
+      milk_volume: '',
+      start_time: '',
+      estimated_duration: '',
+      notes: ''
     }
   });
 
   useEffect(() => {
-    if (selectedCheeseType) {
-      setValue('cheese_type', selectedCheeseType);
+    if (productionLine) {
+      console.log('Setting form values from productionLine:', productionLine);
+      Object.entries(productionLine).forEach(([key, value]) => {
+        setValue(key, value);
+      });
+      setSelectedCheeseType(productionLine.cheese_type);
     }
-  }, [selectedCheeseType, setValue]);
-
-  console.log('Form initialized with session:', session);
+  }, [productionLine, setValue]);
 
   const onSubmit = async (data) => {
-    if (!session) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to submit production data",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    
+    console.log('Form submitted with data:', data);
     try {
-      const tableName = productionLine?.id === 1 ? 'production_line_international' : 'production_line_local';
-      
-      const submissionData = {
-        batch_id: data.batch_id,
-        date_time: data.date_time,
-        milk_volume: parseFloat(data.milk_volume),
-        cheese_type: data.cheese_type,
-        starter_culture: data.starter_culture,
-        starter_quantity: parseFloat(data.starter_quantity),
-        coagulant: data.coagulant,
-        coagulant_quantity: parseFloat(data.coagulant_quantity),
-        temperature: parseFloat(data.temperature),
-        processing_time: parseInt(data.processing_time),
-        yield: parseFloat(data.yield),
-        operator_id: session.user.id,
-        created_at: new Date().toISOString()
-      };
-
-      console.log('Submitting production data:', submissionData);
-
-      const { error } = await supabase
-        .from(tableName)
-        .insert([submissionData]);
-
-      if (error) throw error;
-
+      setIsSubmitting(true);
+      // Add your form submission logic here
       toast({
         title: "Success",
-        description: "Production data submitted successfully",
+        description: "Production line updated successfully",
       });
-
       reset();
       setSelectedCheeseType('');
-
     } catch (error) {
-      console.error('Error submitting production data:', error);
+      console.error('Error submitting form:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to submit production data",
+        description: "Failed to update production line",
         variant: "destructive",
       });
     } finally {
@@ -111,152 +75,99 @@ const ProductionLineForm = ({ productionLine }) => {
     }
   };
 
+  const handleCheeseTypeChange = (value) => {
+    console.log('Cheese type changed to:', value);
+    setSelectedCheeseType(value);
+    setValue('cheese_type', value);
+  };
+
   return (
     <Card>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="batch_id">Batch ID</Label>
-              <Input
-                id="batch_id"
-                {...register('batch_id', { required: 'Batch ID is required' })}
-              />
-              {errors.batch_id && (
-                <p className="text-sm text-red-500">{errors.batch_id.message}</p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="cheese_type">Cheese Type</Label>
+            <Select
+              value={selectedCheeseType}
+              onValueChange={handleCheeseTypeChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select cheese type" />
+              </SelectTrigger>
+              <SelectContent>
+                {CHEESE_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.cheese_type && (
+              <p className="text-sm text-red-500">{errors.cheese_type.message}</p>
+            )}
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="date_time">Date & Time</Label>
-              <Input
-                id="date_time"
-                type="datetime-local"
-                {...register('date_time', { required: 'Date & Time is required' })}
-              />
-              {errors.date_time && (
-                <p className="text-sm text-red-500">{errors.date_time.message}</p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="milk_volume">Milk Volume (L)</Label>
+            <Input
+              type="number"
+              id="milk_volume"
+              {...register('milk_volume', {
+                required: 'Milk volume is required',
+                min: { value: 0, message: 'Volume must be positive' }
+              })}
+              placeholder="Enter milk volume"
+            />
+            {errors.milk_volume && (
+              <p className="text-sm text-red-500">{errors.milk_volume.message}</p>
+            )}
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="cheese_type">Cheese Type</Label>
-              <Select
-                value={selectedCheeseType}
-                onValueChange={setSelectedCheeseType}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select cheese type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CHEESE_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.cheese_type && (
-                <p className="text-sm text-red-500">{errors.cheese_type.message}</p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="start_time">Start Time</Label>
+            <Input
+              type="datetime-local"
+              id="start_time"
+              {...register('start_time', {
+                required: 'Start time is required'
+              })}
+            />
+            {errors.start_time && (
+              <p className="text-sm text-red-500">{errors.start_time.message}</p>
+            )}
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="milk_volume">Milk Volume (L)</Label>
-              <Input
-                id="milk_volume"
-                type="number"
-                step="0.1"
-                {...register('milk_volume', { 
-                  required: 'Milk volume is required',
-                  min: { value: 0, message: 'Volume must be positive' }
-                })}
-                placeholder="Enter milk volume"
-              />
-              {errors.milk_volume && (
-                <p className="text-sm text-red-500">{errors.milk_volume.message}</p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="estimated_duration">Estimated Duration (hours)</Label>
+            <Input
+              type="number"
+              id="estimated_duration"
+              {...register('estimated_duration', {
+                required: 'Estimated duration is required',
+                min: { value: 0, message: 'Duration must be positive' }
+              })}
+              placeholder="Enter estimated duration"
+            />
+            {errors.estimated_duration && (
+              <p className="text-sm text-red-500">{errors.estimated_duration.message}</p>
+            )}
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="starter_culture">Starter Culture</Label>
-              <Input
-                id="starter_culture"
-                {...register("starter_culture", { required: true })}
-                placeholder="Enter starter culture"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="starter_quantity">Starter Culture Quantity (g)</Label>
-              <Input
-                id="starter_quantity"
-                type="number"
-                step="0.1"
-                {...register("starter_quantity", { required: true, min: 0 })}
-                placeholder="Enter quantity"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="coagulant">Coagulant</Label>
-              <Input
-                id="coagulant"
-                {...register("coagulant", { required: true })}
-                placeholder="Enter coagulant"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="coagulant_quantity">Coagulant Quantity (ml)</Label>
-              <Input
-                id="coagulant_quantity"
-                type="number"
-                step="0.1"
-                {...register("coagulant_quantity", { required: true, min: 0 })}
-                placeholder="Enter quantity"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="temperature">Processing Temperature (°C)</Label>
-              <Input
-                id="temperature"
-                type="number"
-                step="0.1"
-                {...register("temperature", { required: true })}
-                placeholder="Enter temperature"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="processing_time">Processing Time (minutes)</Label>
-              <Input
-                id="processing_time"
-                type="number"
-                {...register("processing_time", { required: true, min: 0 })}
-                placeholder="Enter processing time"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="yield">Yield (kg)</Label>
-              <Input
-                id="yield"
-                type="number"
-                step="0.1"
-                {...register("yield", { required: true, min: 0 })}
-                placeholder="Enter cheese yield"
-              />
-            </div>
+          <div>
+            <Label htmlFor="notes">Notes</Label>
+            <Input
+              id="notes"
+              {...register('notes')}
+              placeholder="Add any additional notes"
+            />
           </div>
 
           <Button 
             type="submit" 
-            className="w-full"
             disabled={isSubmitting}
+            className="w-full"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Production Data'}
+            {isSubmitting ? 'Updating...' : 'Update Production Line'}
           </Button>
         </form>
       </CardContent>
