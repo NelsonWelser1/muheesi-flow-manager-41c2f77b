@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from '@/integrations/supabase/supabase';
 
 const CHEESE_TYPES = [
   'Mozzarella',
@@ -38,10 +39,9 @@ const ProductionLineForm = ({ productionLine }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [batchId, setBatchId] = useState('');
 
-  const { register, handleSubmit, setValue, reset, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
-      fromager_name: '',
-      fromager_id: '',
+      fromager_identifier: '',
       cheese_type: '',
       batch_id: '',
       milk_volume: '',
@@ -69,23 +69,48 @@ const ProductionLineForm = ({ productionLine }) => {
     }
   }, [productionLine, setValue]);
 
-  const handleCheeseTypeChange = (value) => {
+  const handleCheeseTypeChange = async (value) => {
     console.log('Cheese type changed to:', value);
     setSelectedCheeseType(value);
     setValue('cheese_type', value);
-    // Generate batch ID based on cheese type
-    const prefix = value.substring(0, 3).toUpperCase();
-    const timestamp = new Date().getTime().toString().slice(-6);
-    const newBatchId = `${prefix}-${timestamp}`;
-    setBatchId(newBatchId);
-    setValue('batch_id', newBatchId);
+    
+    try {
+      // Get new batch ID from the database
+      const { data, error } = await supabase.rpc('generate_batch_id');
+      
+      if (error) throw error;
+      
+      setBatchId(data);
+      setValue('batch_id', data);
+    } catch (error) {
+      console.error('Error generating batch ID:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate batch ID",
+        variant: "destructive",
+      });
+    }
   };
 
   const onSubmit = async (data) => {
     console.log('Form submitted with data:', data);
     try {
       setIsSubmitting(true);
-      // Add your form submission logic here
+      
+      // Determine which table to insert into based on production line
+      const tableName = productionLine.name.toLowerCase().includes('international') 
+        ? 'production_line_international' 
+        : 'production_line_local';
+      
+      const { error } = await supabase
+        .from(tableName)
+        .insert([{
+          ...data,
+          batch_id: batchId,
+        }]);
+
+      if (error) throw error;
+
       toast({
         title: "Success",
         description: "Production line updated successfully",
@@ -109,28 +134,22 @@ const ProductionLineForm = ({ productionLine }) => {
     <Card>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="fromager_name">In-Charge/Fromager Name</Label>
-              <Input
-                id="fromager_name"
-                {...register('fromager_name', { required: 'Fromager name is required' })}
-              />
-              {errors.fromager_name && (
-                <p className="text-sm text-red-500">{errors.fromager_name.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="fromager_id">Fromager ID</Label>
-              <Input
-                id="fromager_id"
-                {...register('fromager_id', { required: 'Fromager ID is required' })}
-              />
-              {errors.fromager_id && (
-                <p className="text-sm text-red-500">{errors.fromager_id.message}</p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="fromager_identifier">In-Charge/Fromager Name or ID</Label>
+            <Input
+              id="fromager_identifier"
+              {...register('fromager_identifier', { 
+                required: 'Fromager name or ID is required',
+                pattern: {
+                  value: /^[A-Za-z0-9\s-]+$/,
+                  message: 'Please enter a valid name or ID'
+                }
+              })}
+              placeholder="Enter name, ID, or both"
+            />
+            {errors.fromager_identifier && (
+              <p className="text-sm text-red-500">{errors.fromager_identifier.message}</p>
+            )}
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
