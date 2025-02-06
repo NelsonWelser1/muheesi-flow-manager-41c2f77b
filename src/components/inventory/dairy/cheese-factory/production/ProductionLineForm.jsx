@@ -69,26 +69,38 @@ const ProductionLineForm = ({ productionLine }) => {
     }
   }, [productionLine, setValue]);
 
+  const generateBatchId = async () => {
+    try {
+      console.log('Generating new batch ID...');
+      const { data, error } = await supabase.rpc('generate_batch_id');
+      
+      if (error) {
+        console.error('Error generating batch ID:', error);
+        throw error;
+      }
+      
+      console.log('Generated batch ID:', data);
+      return data;
+    } catch (error) {
+      console.error('Failed to generate batch ID:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate batch ID. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   const handleCheeseTypeChange = async (value) => {
     console.log('Cheese type changed to:', value);
     setSelectedCheeseType(value);
     setValue('cheese_type', value);
     
-    try {
-      // Get new batch ID from the database
-      const { data, error } = await supabase.rpc('generate_batch_id');
-      
-      if (error) throw error;
-      
-      setBatchId(data);
-      setValue('batch_id', data);
-    } catch (error) {
-      console.error('Error generating batch ID:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate batch ID",
-        variant: "destructive",
-      });
+    const newBatchId = await generateBatchId();
+    if (newBatchId) {
+      setBatchId(newBatchId);
+      setValue('batch_id', newBatchId);
     }
   };
 
@@ -97,7 +109,6 @@ const ProductionLineForm = ({ productionLine }) => {
     try {
       setIsSubmitting(true);
       
-      // Determine which table to insert into based on production line
       const tableName = productionLine.name.toLowerCase().includes('international') 
         ? 'production_line_international' 
         : 'production_line_local';
