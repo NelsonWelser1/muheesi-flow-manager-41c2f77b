@@ -141,12 +141,27 @@ const ProductionLineForm = ({ productionLine }) => {
       const finalBatchId = await generateBatchId(data.cheese_type);
       if (!finalBatchId) throw new Error('Failed to generate final batch ID');
       
+      // Only include form fields in the submission, excluding production line metadata
+      const formData = {
+        fromager_identifier: data.fromager_identifier,
+        cheese_type: data.cheese_type,
+        batch_id: finalBatchId,
+        milk_volume: data.milk_volume,
+        start_time: data.start_time,
+        estimated_duration: data.estimated_duration,
+        starter_culture: data.starter_culture,
+        starter_quantity: data.starter_quantity,
+        coagulant_type: data.coagulant_type,
+        coagulant_quantity: data.coagulant_quantity,
+        processing_temperature: data.processing_temperature,
+        processing_time: data.processing_time,
+        expected_yield: data.expected_yield,
+        notes: data.notes
+      };
+
       const { error } = await supabase
         .from(tableName)
-        .insert([{
-          ...data,
-          batch_id: finalBatchId,
-        }]);
+        .insert([formData]);
 
       if (error) throw error;
 
