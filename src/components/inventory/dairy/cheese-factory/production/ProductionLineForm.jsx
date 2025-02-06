@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/supabase';
+import { format } from 'date-fns';
 
 const CHEESE_TYPES = [
   'Mozzarella',
@@ -38,6 +39,7 @@ const ProductionLineForm = ({ productionLine }) => {
   const [selectedCheeseType, setSelectedCheeseType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [batchId, setBatchId] = useState('');
+  const [currentSequenceNumber, setCurrentSequenceNumber] = useState(null);
 
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
@@ -69,20 +71,40 @@ const ProductionLineForm = ({ productionLine }) => {
     }
   }, [productionLine, setValue]);
 
-  const generateBatchId = async (cheeseType) => {
+  const generateBatchId = async (cheeseType, seqNumber = null) => {
     try {
-      console.log('Generating new batch ID for cheese type:', cheeseType);
-      const { data, error } = await supabase.rpc('generate_batch_id', {
-        cheese_type: cheeseType
-      });
+      console.log('Generating batch ID for cheese type:', cheeseType, 'with sequence number:', seqNumber);
       
-      if (error) {
-        console.error('Error generating batch ID:', error);
-        throw error;
+      if (seqNumber === null) {
+        const { data: newSeqNumber, error: seqError } = await supabase.rpc('generate_batch_id', {
+          cheese_type: cheeseType
+        });
+        
+        if (seqError) {
+          console.error('Error generating batch ID:', seqError);
+          throw seqError;
+        }
+        
+        seqNumber = newSeqNumber.match(/\d+$/)[0]; // Extract the number part
+        setCurrentSequenceNumber(seqNumber);
       }
       
-      console.log('Generated batch ID:', data);
-      return data;
+      // Get current date/time prefix
+      const datePrefix = format(new Date(), 'yyyyMMdd');
+      
+      // Determine cheese type prefix
+      let typePrefix = 'CHE';
+      if (cheeseType === 'Mozzarella') typePrefix = 'MOZ';
+      else if (cheeseType === 'Gouda') typePrefix = 'GOU';
+      else if (cheeseType === 'Parmesan') typePrefix = 'PAR';
+      else if (cheeseType === 'Swiss') typePrefix = 'SUI';
+      else if (cheeseType === 'Blue Cheese') typePrefix = 'BLU';
+      
+      // Construct the full batch ID
+      const fullBatchId = `${datePrefix}-${typePrefix}-${seqNumber}`;
+      console.log('Generated batch ID:', fullBatchId);
+      return fullBatchId;
+      
     } catch (error) {
       console.error('Failed to generate batch ID:', error);
       toast({
@@ -99,7 +121,7 @@ const ProductionLineForm = ({ productionLine }) => {
     setSelectedCheeseType(value);
     setValue('cheese_type', value);
     
-    const newBatchId = await generateBatchId(value);
+    const newBatchId = await generateBatchId(value, currentSequenceNumber);
     if (newBatchId) {
       setBatchId(newBatchId);
       setValue('batch_id', newBatchId);
@@ -115,11 +137,15 @@ const ProductionLineForm = ({ productionLine }) => {
         ? 'production_line_international' 
         : 'production_line_local';
       
+      // Generate a new batch ID with a new sequence number for the submission
+      const finalBatchId = await generateBatchId(data.cheese_type);
+      if (!finalBatchId) throw new Error('Failed to generate final batch ID');
+      
       const { error } = await supabase
         .from(tableName)
         .insert([{
           ...data,
-          batch_id: batchId,
+          batch_id: finalBatchId,
         }]);
 
       if (error) throw error;
@@ -131,6 +157,7 @@ const ProductionLineForm = ({ productionLine }) => {
       reset();
       setSelectedCheeseType('');
       setBatchId('');
+      setCurrentSequenceNumber(null);
     } catch (error) {
       console.error('Error submitting form:', error);
       toast({
