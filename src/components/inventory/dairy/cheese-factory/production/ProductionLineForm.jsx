@@ -36,14 +36,23 @@ const ProductionLineForm = ({ productionLine }) => {
   });
 
   useEffect(() => {
-    if (productionLine) {
-      console.log('Setting form values from productionLine:', productionLine);
+    if (productionLine && typeof productionLine === 'object') {
       Object.entries(productionLine).forEach(([key, value]) => {
-        setValue(key, value);
+        if (value !== undefined) {
+          setValue(key, value);
+        }
       });
-      setSelectedCheeseType(productionLine.cheese_type || '');
+      if (productionLine.cheese_type) {
+        setSelectedCheeseType(productionLine.cheese_type);
+      }
     }
   }, [productionLine, setValue]);
+
+  const handleCheeseTypeChange = (value) => {
+    console.log('Cheese type changed to:', value);
+    setSelectedCheeseType(value);
+    setValue('cheese_type', value);
+  };
 
   const onSubmit = async (data) => {
     console.log('Form submitted with data:', data);
@@ -66,12 +75,6 @@ const ProductionLineForm = ({ productionLine }) => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleCheeseTypeChange = (value) => {
-    console.log('Cheese type changed to:', value);
-    setSelectedCheeseType(value);
-    setValue('cheese_type', value);
   };
 
   return (
