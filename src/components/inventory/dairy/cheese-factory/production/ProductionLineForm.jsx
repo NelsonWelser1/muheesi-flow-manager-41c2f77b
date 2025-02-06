@@ -20,20 +20,13 @@ const CHEESE_TYPES = [
 const ProductionLineForm = ({ productionLine }) => {
   console.log('Initializing ProductionLineForm with:', { productionLine });
   
-  // Initialize hooks at the top level
   const { toast } = useToast();
   const { session } = useSupabaseAuth();
-  
-  // State management
   const [selectedCheeseType, setSelectedCheeseType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  console.log('Current session:', session);
-  console.log('Selected cheese type:', selectedCheeseType);
-
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
-      operator_id: session?.user?.id || '',
       cheese_type: '',
       milk_volume: '',
       start_time: '',
@@ -48,7 +41,7 @@ const ProductionLineForm = ({ productionLine }) => {
       Object.entries(productionLine).forEach(([key, value]) => {
         setValue(key, value);
       });
-      setSelectedCheeseType(productionLine.cheese_type);
+      setSelectedCheeseType(productionLine.cheese_type || '');
     }
   }, [productionLine, setValue]);
 
