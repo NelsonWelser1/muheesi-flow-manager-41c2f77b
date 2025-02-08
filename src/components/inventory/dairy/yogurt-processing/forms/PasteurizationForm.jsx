@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
@@ -7,6 +8,7 @@ import { supabase } from '@/integrations/supabase/supabase';
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import BatchInfoSection from './sections/BatchInfoSection';
 
 const PasteurizationForm = () => {
   const { toast } = useToast();
@@ -59,23 +61,9 @@ const PasteurizationForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <BatchInfoSection register={register} />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="batch_id">Batch ID</Label>
-              <Input
-                {...register('batch_id', { required: true })}
-                placeholder="Enter batch ID"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="date_time">Date & Time</Label>
-              <Input
-                type="datetime-local"
-                {...register('date_time', { required: true })}
-              />
-            </div>
-
             <div>
               <Label htmlFor="volume_processed">Volume Processed (Liters)</Label>
               <Input
