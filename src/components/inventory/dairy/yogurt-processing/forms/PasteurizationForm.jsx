@@ -36,6 +36,8 @@ const PasteurizationForm = () => {
         .from('yogurt_pasteurization')
         .insert([{
           ...data,
+          batch_id: `BATCH-${Date.now()}`,
+          date_time: new Date().toISOString(),
           operator_id: session.user.id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
