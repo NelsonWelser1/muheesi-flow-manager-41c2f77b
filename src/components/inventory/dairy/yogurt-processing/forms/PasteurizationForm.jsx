@@ -7,17 +7,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/supabase';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import BatchInfoSection from './sections/BatchInfoSection';
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const PasteurizationForm = () => {
   const { toast } = useToast();
   const { session } = useSupabaseAuth();
-  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    defaultValues: {
+      volume_processed: '',
+      pasteurization_temp: '',
+      duration: '',
+      cooling_start_temp: ''
+    }
+  });
 
   const onSubmit = async (data) => {
     try {
-      // Check if user is logged in
       if (!session?.user?.id) {
         toast({
           title: "Authentication Error",
@@ -27,7 +32,6 @@ const PasteurizationForm = () => {
         return;
       }
 
-      // Create pasteurization record with current user ID
       const { error } = await supabase
         .from('yogurt_pasteurization')
         .insert([{
@@ -37,17 +41,12 @@ const PasteurizationForm = () => {
           updated_at: new Date().toISOString()
         }]);
 
-      if (error) {
-        console.error('Error submitting pasteurization data:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
         description: "Pasteurization record added successfully",
       });
-
-      reset();
     } catch (error) {
       console.error('Error submitting pasteurization data:', error);
       toast({
@@ -58,7 +57,6 @@ const PasteurizationForm = () => {
     }
   };
 
-  // If not authenticated, show login message
   if (!session) {
     return (
       <Card>
@@ -79,8 +77,6 @@ const PasteurizationForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <BatchInfoSection register={register} errors={errors} />
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="volume_processed">Volume Processed (Liters)</Label>
