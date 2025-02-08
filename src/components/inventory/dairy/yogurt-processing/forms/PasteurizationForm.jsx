@@ -5,10 +5,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/supabase';
-import { useSupabaseAuth } from '@/integrations/supabase/auth';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BatchInfoSection from './sections/BatchInfoSection';
+import { AuthError } from '@supabase/supabase-js';
+
+// Import useSupabaseAuth from the auth hook file
+import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const PasteurizationForm = () => {
   const { toast } = useToast();
@@ -137,3 +140,4 @@ const PasteurizationForm = () => {
 };
 
 export default PasteurizationForm;
+
