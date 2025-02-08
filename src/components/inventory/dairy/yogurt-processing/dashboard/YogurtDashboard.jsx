@@ -74,4 +74,3 @@ const YogurtDashboard = () => {
 };
 
 export default YogurtDashboard;
-

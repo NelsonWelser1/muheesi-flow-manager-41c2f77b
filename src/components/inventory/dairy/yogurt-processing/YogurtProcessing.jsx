@@ -80,4 +80,3 @@ const YogurtProcessing = () => {
 };
 
 export default YogurtProcessing;
-

@@ -115,4 +115,3 @@ const MilkPreparationForm = () => {
 };
 
 export default MilkPreparationForm;
-
