@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MetricsCards from './dashboard/MetricsCards';
 import Charts from './dashboard/Charts';
 import QuoteManagement from './quotations/QuoteManagement';
-import ProformaInvoice from './quotations/ProformaInvoice';
-import OrderManagement from './OrderManagement';
+import ProformaInvoice from './modules/ProformaInvoice';
+import OrderManagement from './modules/OrderManagement';
 import DeliveryManagement from './modules/DeliveryManagement';
 import InvoiceManagement from './modules/InvoiceManagement';
 import PackingList from './modules/PackingList';
