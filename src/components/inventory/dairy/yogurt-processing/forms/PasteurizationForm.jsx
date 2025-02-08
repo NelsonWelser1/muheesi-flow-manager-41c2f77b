@@ -8,9 +8,6 @@ import { supabase } from '@/integrations/supabase/supabase';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BatchInfoSection from './sections/BatchInfoSection';
-import { AuthError } from '@supabase/supabase-js';
-
-// Import useSupabaseAuth from the auth hook file
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const PasteurizationForm = () => {
@@ -89,6 +86,7 @@ const PasteurizationForm = () => {
               <Input
                 type="number"
                 step="0.01"
+                id="volume_processed"
                 {...register('volume_processed', { required: true, min: 0 })}
               />
               {errors.volume_processed && (
@@ -101,6 +99,7 @@ const PasteurizationForm = () => {
               <Input
                 type="number"
                 step="0.1"
+                id="pasteurization_temp"
                 {...register('pasteurization_temp', { required: true })}
               />
               {errors.pasteurization_temp && (
@@ -112,6 +111,7 @@ const PasteurizationForm = () => {
               <Label htmlFor="duration">Duration (Seconds)</Label>
               <Input
                 type="number"
+                id="duration"
                 {...register('duration', { required: true, min: 0 })}
               />
               {errors.duration && (
@@ -124,6 +124,7 @@ const PasteurizationForm = () => {
               <Input
                 type="number"
                 step="0.1"
+                id="cooling_start_temp"
                 {...register('cooling_start_temp', { required: true })}
               />
               {errors.cooling_start_temp && (
@@ -140,4 +141,3 @@ const PasteurizationForm = () => {
 };
 
 export default PasteurizationForm;
-
