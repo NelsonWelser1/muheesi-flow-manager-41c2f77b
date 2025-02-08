@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/supabase';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const MilkPreparationForm = () => {
   const { toast } = useToast();
@@ -39,13 +41,55 @@ const MilkPreparationForm = () => {
     }
   };
 
+  const handlePrint = async () => {
+    try {
+      const formElement = document.getElementById('milk-preparation-form');
+      const canvas = await html2canvas(formElement);
+      const pdf = new jsPDF();
+      
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 210, 297);
+      pdf.save('milk-preparation-record.pdf');
+      
+      toast({
+        title: "Success",
+        description: "Form printed to PDF successfully",
+      });
+    } catch (error) {
+      console.error('Error printing form:', error);
+      toast({
+        title: "Error",
+        description: "Failed to print form",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Milk Preparation Record',
+          text: 'Yogurt milk preparation process details',
+          url: window.location.href
+        });
+      } else {
+        toast({
+          title: "Info",
+          description: "Sharing not supported on this device",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Milk Preparation & Standardization</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form id="milk-preparation-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="date_time">Date & Time</Label>
@@ -107,7 +151,15 @@ const MilkPreparationForm = () => {
             </div>
           </div>
 
-          <Button type="submit" className="w-full">Submit Record</Button>
+          <div className="flex flex-wrap gap-4 justify-end">
+            <Button type="button" variant="outline" onClick={handlePrint}>
+              Print Form
+            </Button>
+            <Button type="button" variant="outline" onClick={handleShare}>
+              Share
+            </Button>
+            <Button type="submit">Submit Record</Button>
+          </div>
         </form>
       </CardContent>
     </Card>
@@ -115,3 +167,4 @@ const MilkPreparationForm = () => {
 };
 
 export default MilkPreparationForm;
+
