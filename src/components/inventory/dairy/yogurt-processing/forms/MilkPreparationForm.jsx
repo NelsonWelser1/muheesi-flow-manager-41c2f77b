@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
@@ -15,6 +16,15 @@ const MilkPreparationForm = () => {
 
   const onSubmit = async (data) => {
     try {
+      // Get current user session
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) throw userError;
+      
+      if (!user) {
+        throw new Error('You must be logged in to submit records');
+      }
+
       const pre_standardization_fat = Number(data.pre_standardization_fat);
       const target_fat = Number(data.target_fat);
 
@@ -30,7 +40,7 @@ const MilkPreparationForm = () => {
           target_fat,
           milk_volume: Number(data.milk_volume),
           homogenization_duration: Number(data.homogenization_duration),
-          operator_id: 'current-user-id', // Replace with actual user ID from auth context
+          operator_id: user.id, // Use the actual authenticated user ID
         }]);
 
       if (error) throw error;
@@ -201,3 +211,4 @@ const MilkPreparationForm = () => {
 };
 
 export default MilkPreparationForm;
+
