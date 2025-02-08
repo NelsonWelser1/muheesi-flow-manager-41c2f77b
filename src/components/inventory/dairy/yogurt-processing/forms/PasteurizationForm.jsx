@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/supabase';
@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const PasteurizationForm = () => {
-  const { toast } = useToast();
   const { session } = useSupabaseAuth();
 
   const { 
