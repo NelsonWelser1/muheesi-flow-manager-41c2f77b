@@ -8,18 +8,46 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/supabase';
+import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const CultureAdditionForm = () => {
   const { toast } = useToast();
-  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const auth = useSupabaseAuth();
+  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm({
+    defaultValues: {
+      yogurt_type: '',
+      culture_type: '',
+      culture_quantity: '',
+      additives: '',
+      pre_fermentation_temp: '',
+      expected_duration: ''
+    }
+  });
 
   const onSubmit = async (data) => {
     try {
+      if (!auth?.session?.user?.id) {
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to submit records",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Convert additives string to array format expected by PostgreSQL
+      const additivesList = data.additives
+        ? `{${data.additives.split(',').map(item => item.trim()).join(',')}}`
+        : '{}';
+
       const { error } = await supabase
         .from('yogurt_culture_addition')
         .insert([{
           ...data,
-          operator_id: 'current-user-id', // Replace with actual user ID from auth context
+          additives: additivesList,
+          batch_id: `BATCH-${Date.now()}`,
+          date_time: new Date().toISOString(),
+          operator_id: auth.session.user.id
         }]);
 
       if (error) throw error;
@@ -34,11 +62,28 @@ const CultureAdditionForm = () => {
       console.error('Error submitting culture addition data:', error);
       toast({
         title: "Error",
-        description: "Failed to add culture addition record",
+        description: error.message || "Failed to add culture addition record",
         variant: "destructive",
       });
     }
   };
+
+  const handleYogurtTypeChange = (value) => {
+    setValue('yogurt_type', value);
+  };
+
+  if (!auth?.session) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Culture Addition & Fermentation Setup</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">Please log in to submit culture addition records.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -49,24 +94,8 @@ const CultureAdditionForm = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="batch_id">Batch ID</Label>
-              <Input
-                {...register('batch_id', { required: true })}
-                placeholder="Enter batch ID"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="date_time">Date & Time</Label>
-              <Input
-                type="datetime-local"
-                {...register('date_time', { required: true })}
-              />
-            </div>
-
-            <div>
               <Label htmlFor="yogurt_type">Type of Yogurt</Label>
-              <Select onValueChange={(value) => register('yogurt_type').onChange({ target: { value } })}>
+              <Select onValueChange={handleYogurtTypeChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select yogurt type" />
                 </SelectTrigger>
@@ -82,9 +111,12 @@ const CultureAdditionForm = () => {
             <div>
               <Label htmlFor="culture_type">Culture Type</Label>
               <Input
-                {...register('culture_type', { required: true })}
+                {...register('culture_type', { required: "Culture type is required" })}
                 placeholder="Enter culture type"
               />
+              {errors.culture_type && (
+                <p className="text-sm text-red-500">{errors.culture_type.message}</p>
+              )}
             </div>
 
             <div>
@@ -92,15 +124,21 @@ const CultureAdditionForm = () => {
               <Input
                 type="number"
                 step="0.01"
-                {...register('culture_quantity', { required: true, min: 0 })}
+                {...register('culture_quantity', { 
+                  required: "Culture quantity is required",
+                  min: { value: 0, message: "Quantity must be positive" }
+                })}
               />
+              {errors.culture_quantity && (
+                <p className="text-sm text-red-500">{errors.culture_quantity.message}</p>
+              )}
             </div>
 
             <div>
-              <Label htmlFor="additives">Additives</Label>
+              <Label htmlFor="additives">Additives (comma separated)</Label>
               <Input
                 {...register('additives')}
-                placeholder="Enter additives (comma separated)"
+                placeholder="e.g., sugar, vanilla, pectin"
               />
             </div>
 
@@ -109,16 +147,27 @@ const CultureAdditionForm = () => {
               <Input
                 type="number"
                 step="0.1"
-                {...register('pre_fermentation_temp', { required: true })}
+                {...register('pre_fermentation_temp', { 
+                  required: "Temperature is required" 
+                })}
               />
+              {errors.pre_fermentation_temp && (
+                <p className="text-sm text-red-500">{errors.pre_fermentation_temp.message}</p>
+              )}
             </div>
 
             <div>
               <Label htmlFor="expected_duration">Expected Duration (hours)</Label>
               <Input
                 type="number"
-                {...register('expected_duration', { required: true, min: 0 })}
+                {...register('expected_duration', { 
+                  required: "Duration is required",
+                  min: { value: 0, message: "Duration must be positive" }
+                })}
               />
+              {errors.expected_duration && (
+                <p className="text-sm text-red-500">{errors.expected_duration.message}</p>
+              )}
             </div>
           </div>
 

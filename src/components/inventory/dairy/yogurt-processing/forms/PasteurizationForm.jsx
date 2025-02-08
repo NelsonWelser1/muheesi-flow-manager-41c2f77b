@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const PasteurizationForm = () => {
-  const { session } = useSupabaseAuth();
+  const auth = useSupabaseAuth();
   const { toast } = useToast();
 
   const { 
@@ -29,7 +29,7 @@ const PasteurizationForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      if (!session?.user?.id) {
+      if (!auth?.session?.user?.id) {
         toast({
           title: "Authentication Error",
           description: "You must be logged in to submit records",
@@ -44,7 +44,7 @@ const PasteurizationForm = () => {
           ...data,
           batch_id: `BATCH-${Date.now()}`,
           date_time: new Date().toISOString(),
-          operator_id: session.user.id,
+          operator_id: auth.session.user.id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }]);
@@ -67,7 +67,7 @@ const PasteurizationForm = () => {
     }
   };
 
-  if (!session) {
+  if (!auth?.session) {
     return (
       <Card>
         <CardHeader>
