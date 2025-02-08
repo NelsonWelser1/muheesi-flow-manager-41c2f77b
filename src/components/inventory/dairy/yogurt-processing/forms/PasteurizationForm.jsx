@@ -93,10 +93,13 @@ const PasteurizationForm = () => {
                 type="number"
                 step="0.01"
                 id="volume_processed"
-                {...register('volume_processed', { required: true, min: 0 })}
+                {...register('volume_processed', { 
+                  required: "Volume is required",
+                  min: { value: 0, message: "Volume must be positive" }
+                })}
               />
               {errors.volume_processed && (
-                <p className="text-sm text-red-500">Volume is required</p>
+                <p className="text-sm text-red-500">{errors.volume_processed.message}</p>
               )}
             </div>
 
@@ -106,10 +109,12 @@ const PasteurizationForm = () => {
                 type="number"
                 step="0.1"
                 id="pasteurization_temp"
-                {...register('pasteurization_temp', { required: true })}
+                {...register('pasteurization_temp', { 
+                  required: "Temperature is required"
+                })}
               />
               {errors.pasteurization_temp && (
-                <p className="text-sm text-red-500">Temperature is required</p>
+                <p className="text-sm text-red-500">{errors.pasteurization_temp.message}</p>
               )}
             </div>
 
@@ -118,10 +123,13 @@ const PasteurizationForm = () => {
               <Input
                 type="number"
                 id="duration"
-                {...register('duration', { required: true, min: 0 })}
+                {...register('duration', { 
+                  required: "Duration is required",
+                  min: { value: 0, message: "Duration must be positive" }
+                })}
               />
               {errors.duration && (
-                <p className="text-sm text-red-500">Duration is required</p>
+                <p className="text-sm text-red-500">{errors.duration.message}</p>
               )}
             </div>
 
@@ -131,10 +139,12 @@ const PasteurizationForm = () => {
                 type="number"
                 step="0.1"
                 id="cooling_start_temp"
-                {...register('cooling_start_temp', { required: true })}
+                {...register('cooling_start_temp', { 
+                  required: "Cooling temperature is required"
+                })}
               />
               {errors.cooling_start_temp && (
-                <p className="text-sm text-red-500">Cooling temperature is required</p>
+                <p className="text-sm text-red-500">{errors.cooling_start_temp.message}</p>
               )}
             </div>
           </div>
