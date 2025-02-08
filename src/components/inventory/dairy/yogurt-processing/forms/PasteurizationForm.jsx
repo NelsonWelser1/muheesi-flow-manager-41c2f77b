@@ -58,6 +58,7 @@ const PasteurizationForm = () => {
     }
   };
 
+  // If not authenticated, show login message
   if (!session) {
     return (
       <Card>
@@ -78,7 +79,7 @@ const PasteurizationForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <BatchInfoSection register={register} />
+          <BatchInfoSection register={register} errors={errors} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
