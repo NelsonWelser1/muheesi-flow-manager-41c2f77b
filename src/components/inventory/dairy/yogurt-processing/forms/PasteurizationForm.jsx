@@ -1,27 +1,40 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/supabase';
+import { useSupabaseAuth } from '@/integrations/supabase/auth';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const PasteurizationForm = () => {
   const { toast } = useToast();
+  const { session } = useSupabaseAuth();
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
 
   const onSubmit = async (data) => {
     try {
+      if (!session?.user?.id) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to submit records",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('yogurt_pasteurization')
         .insert([{
           ...data,
-          operator_id: 'current-user-id', // Replace with actual user ID from auth context
+          operator_id: session.user.id,
         }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error submitting pasteurization data:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -33,7 +46,7 @@ const PasteurizationForm = () => {
       console.error('Error submitting pasteurization data:', error);
       toast({
         title: "Error",
-        description: "Failed to add pasteurization record",
+        description: error.message || "Failed to add pasteurization record",
         variant: "destructive",
       });
     }
@@ -107,4 +120,3 @@ const PasteurizationForm = () => {
 };
 
 export default PasteurizationForm;
-
