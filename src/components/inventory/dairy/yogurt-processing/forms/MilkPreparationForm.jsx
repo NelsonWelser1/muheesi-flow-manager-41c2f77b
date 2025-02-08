@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
@@ -13,7 +14,8 @@ import jsPDF from 'jspdf';
 const MilkPreparationForm = () => {
   const { toast } = useToast();
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
-  const { session } = useSupabaseAuth();
+  const auth = useSupabaseAuth();
+  const session = auth?.session;
 
   const onSubmit = async (data) => {
     try {
