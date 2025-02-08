@@ -12,7 +12,13 @@ import { useSupabaseAuth } from '@/integrations/supabase/auth';
 const PasteurizationForm = () => {
   const { toast } = useToast();
   const { session } = useSupabaseAuth();
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors }, 
+    reset 
+  } = useForm({
     defaultValues: {
       volume_processed: '',
       pasteurization_temp: '',
