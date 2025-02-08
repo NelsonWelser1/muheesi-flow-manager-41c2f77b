@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
@@ -7,21 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/supabase';
+import { useSupabaseAuth } from '@/integrations/supabase/auth';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 const MilkPreparationForm = () => {
   const { toast } = useToast();
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const { session } = useSupabaseAuth();
 
   const onSubmit = async (data) => {
     try {
-      // Get current user session
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) throw userError;
-      
-      if (!user) {
+      if (!session?.user) {
         throw new Error('You must be logged in to submit records');
       }
 
@@ -40,7 +36,7 @@ const MilkPreparationForm = () => {
           target_fat,
           milk_volume: Number(data.milk_volume),
           homogenization_duration: Number(data.homogenization_duration),
-          operator_id: user.id, // Use the actual authenticated user ID
+          operator_id: session.user.id,
         }]);
 
       if (error) throw error;
@@ -211,4 +207,3 @@ const MilkPreparationForm = () => {
 };
 
 export default MilkPreparationForm;
-
