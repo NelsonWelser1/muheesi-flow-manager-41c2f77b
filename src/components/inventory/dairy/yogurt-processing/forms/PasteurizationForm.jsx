@@ -17,20 +17,24 @@ const PasteurizationForm = () => {
 
   const onSubmit = async (data) => {
     try {
+      // Check if user is logged in
       if (!session?.user?.id) {
         toast({
-          title: "Error",
+          title: "Authentication Error",
           description: "You must be logged in to submit records",
           variant: "destructive",
         });
         return;
       }
 
+      // Create pasteurization record with current user ID
       const { error } = await supabase
         .from('yogurt_pasteurization')
         .insert([{
           ...data,
           operator_id: session.user.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }]);
 
       if (error) {
@@ -54,6 +58,19 @@ const PasteurizationForm = () => {
     }
   };
 
+  if (!session) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Pasteurization Process</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">Please log in to submit pasteurization records.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -71,6 +88,9 @@ const PasteurizationForm = () => {
                 step="0.01"
                 {...register('volume_processed', { required: true, min: 0 })}
               />
+              {errors.volume_processed && (
+                <p className="text-sm text-red-500">Volume is required</p>
+              )}
             </div>
 
             <div>
@@ -80,6 +100,9 @@ const PasteurizationForm = () => {
                 step="0.1"
                 {...register('pasteurization_temp', { required: true })}
               />
+              {errors.pasteurization_temp && (
+                <p className="text-sm text-red-500">Temperature is required</p>
+              )}
             </div>
 
             <div>
@@ -88,6 +111,9 @@ const PasteurizationForm = () => {
                 type="number"
                 {...register('duration', { required: true, min: 0 })}
               />
+              {errors.duration && (
+                <p className="text-sm text-red-500">Duration is required</p>
+              )}
             </div>
 
             <div>
@@ -97,6 +123,9 @@ const PasteurizationForm = () => {
                 step="0.1"
                 {...register('cooling_start_temp', { required: true })}
               />
+              {errors.cooling_start_temp && (
+                <p className="text-sm text-red-500">Cooling temperature is required</p>
+              )}
             </div>
           </div>
 
