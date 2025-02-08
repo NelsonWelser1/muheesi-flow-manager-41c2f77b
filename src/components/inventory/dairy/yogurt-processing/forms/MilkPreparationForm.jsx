@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
@@ -16,10 +15,21 @@ const MilkPreparationForm = () => {
 
   const onSubmit = async (data) => {
     try {
+      const pre_standardization_fat = Number(data.pre_standardization_fat);
+      const target_fat = Number(data.target_fat);
+
+      if (pre_standardization_fat > 99.99 || target_fat > 99.99) {
+        throw new Error('Fat percentage must be less than 99.99%');
+      }
+
       const { error } = await supabase
         .from('yogurt_milk_preparation')
         .insert([{
           ...data,
+          pre_standardization_fat,
+          target_fat,
+          milk_volume: Number(data.milk_volume),
+          homogenization_duration: Number(data.homogenization_duration),
           operator_id: 'current-user-id', // Replace with actual user ID from auth context
         }]);
 
@@ -35,7 +45,7 @@ const MilkPreparationForm = () => {
       console.error('Error submitting milk preparation data:', error);
       toast({
         title: "Error",
-        description: "Failed to add milk preparation record",
+        description: error.message || "Failed to add milk preparation record",
         variant: "destructive",
       });
     }
@@ -112,7 +122,11 @@ const MilkPreparationForm = () => {
               <Input
                 type="number"
                 step="0.01"
-                {...register('milk_volume', { required: true, min: 0 })}
+                {...register('milk_volume', { 
+                  required: true, 
+                  min: 0,
+                  valueAsNumber: true 
+                })}
               />
             </div>
 
@@ -121,8 +135,16 @@ const MilkPreparationForm = () => {
               <Input
                 type="number"
                 step="0.01"
-                {...register('pre_standardization_fat', { required: true, min: 0 })}
+                {...register('pre_standardization_fat', { 
+                  required: true, 
+                  min: 0,
+                  max: 99.99,
+                  valueAsNumber: true
+                })}
               />
+              {errors.pre_standardization_fat && (
+                <span className="text-sm text-red-500">Fat % must be between 0 and 99.99</span>
+              )}
             </div>
 
             <div>
@@ -130,8 +152,16 @@ const MilkPreparationForm = () => {
               <Input
                 type="number"
                 step="0.01"
-                {...register('target_fat', { required: true, min: 0 })}
+                {...register('target_fat', { 
+                  required: true, 
+                  min: 0,
+                  max: 99.99,
+                  valueAsNumber: true
+                })}
               />
+              {errors.target_fat && (
+                <span className="text-sm text-red-500">Fat % must be between 0 and 99.99</span>
+              )}
             </div>
 
             <div>
@@ -146,7 +176,11 @@ const MilkPreparationForm = () => {
               <Label htmlFor="homogenization_duration">Homogenization Duration (minutes)</Label>
               <Input
                 type="number"
-                {...register('homogenization_duration', { required: true, min: 0 })}
+                {...register('homogenization_duration', { 
+                  required: true, 
+                  min: 0,
+                  valueAsNumber: true
+                })}
               />
             </div>
           </div>
@@ -167,4 +201,3 @@ const MilkPreparationForm = () => {
 };
 
 export default MilkPreparationForm;
-
