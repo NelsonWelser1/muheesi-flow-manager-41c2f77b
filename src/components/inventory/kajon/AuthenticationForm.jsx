@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,30 +15,30 @@ const AuthenticationForm = ({ onAuthenticate, title }) => {
     e.preventDefault();
     
     // Check for System Administrator or General Manager
-    if ((managerName === 'Namanya Nelson' && pin === 'welser55055')) {
+    if ((managerName === 'Namanya Nelson' && pin === 'Welsar55055')) {
+      // Store login details in localStorage
+      const loginDetails = {
+        userId: '0af319fd-05ce-4687-bf8e-74a14e6ab126',
+        username: managerName,
+        loginTime: new Date().toISOString(),
+        role: 'System Administrator'
+      };
+      localStorage.setItem('currentUser', JSON.stringify(loginDetails));
+      
       toast({
         title: "Success",
-        description: "Authentication successful",
+        description: "Authentication successful as System Administrator",
       });
       onAuthenticate(managerName);
       return;
     }
 
-    // Add your other authentication logic here
-    // For demo purposes, we'll accept any non-empty values
-    if (managerName && pin) {
-      toast({
-        title: "Success",
-        description: "Authentication successful",
-      });
-      onAuthenticate(managerName);
-    } else {
-      toast({
-        title: "Error",
-        description: "Invalid credentials. Please try again.",
-        variant: "destructive",
-      });
-    }
+    // Authentication failed
+    toast({
+      title: "Error",
+      description: "Invalid credentials. Please try again.",
+      variant: "destructive",
+    });
   };
 
   return (
