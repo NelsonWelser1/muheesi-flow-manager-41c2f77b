@@ -1,7 +1,6 @@
-
 // Simulated IoT sensor data (replace with actual IoT API integration)
 const MOCK_SENSOR_DATA = {
-  temperature: () => 4 + Math.random() * 2, // Simulate temperature between 4-6°C
+  temperature: () => 20 + Math.random() * 5,
   humidity: () => 45 + Math.random() * 10,
   pressure: () => 1013 + Math.random() * 10,
 };
