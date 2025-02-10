@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
 import UpdateStock from '../components/inventory/UpdateStock';
+import ColdRoomDashboard from '../components/inventory/dairy/cold-room/ColdRoomDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Home, LogOut, Clock } from "lucide-react";
@@ -55,6 +57,8 @@ const ManageInventory = () => {
       navigate('/manage-inventory/kashari-farm');
     } else if (company.component === 'bukomero-dairy') {
       navigate('/manage-inventory/bukomero-dairy');
+    } else if (company.component === 'grand-berna') {
+      setSelectedCompany({ ...company, showColdRoom: true });
     } else {
       setSelectedCompany(company);
     }
@@ -63,6 +67,42 @@ const ManageInventory = () => {
   const handleBackToCompanies = () => {
     setSelectedCompany(null);
   };
+
+  if (selectedCompany?.showColdRoom) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" onClick={handleBackToCompanies}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Companies
+            </Button>
+            <h1 className="text-3xl font-bold">Cold Room Inventory - {selectedCompany.name}</h1>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-600">
+              <div>{currentUser.name}</div>
+              <div>{currentUser.role}</div>
+            </div>
+            <div className="text-sm text-gray-600">
+              <Clock className="inline mr-2" />
+              {format(new Date(), 'PPpp')}
+            </div>
+            <Button variant="outline" onClick={() => navigate('/home')}>
+              <Home className="h-4 w-4 mr-2" />
+              Home
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/logout')}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Log Out
+            </Button>
+          </div>
+        </div>
+
+        <ColdRoomDashboard />
+      </div>
+    );
+  }
 
   if (selectedCompany) {
     return (
