@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Temperature, Boxes, ArrowLeftRight } from 'lucide-react';
+import { Thermometer, Boxes, ArrowLeftRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { getIoTSensorData } from '@/utils/iotIntegration';
 
@@ -44,7 +44,7 @@ const MetricsCards = () => {
           <CardTitle className="text-sm font-medium">
             Current Temperature
           </CardTitle>
-          <Temperature className="h-4 w-4 text-muted-foreground" />
+          <Thermometer className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
