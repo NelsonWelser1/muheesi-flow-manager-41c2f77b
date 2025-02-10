@@ -38,3 +38,36 @@ export const monitorEquipmentStatus = async () => {
     throw error;
   }
 };
+
+// Add new function for cold room specific monitoring
+export const getColdRoomSensorData = async (coldRoomId) => {
+  console.log('Fetching Cold Room sensor data for:', coldRoomId);
+  try {
+    const baseData = await getIoTSensorData();
+    return {
+      ...baseData,
+      coldRoomId,
+      additionalMetrics: {
+        doorStatus: 'closed',
+        lastMaintenance: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        alertLevel: 'normal'
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching Cold Room data:', error);
+    throw error;
+  }
+};
+
+// Add new function for monitoring multiple cold rooms
+export const monitorAllColdRooms = async () => {
+  console.log('Monitoring all cold rooms');
+  try {
+    const coldRoomIds = ['CR001', 'CR002', 'CR003'];
+    const promises = coldRoomIds.map(id => getColdRoomSensorData(id));
+    return await Promise.all(promises);
+  } catch (error) {
+    console.error('Error monitoring cold rooms:', error);
+    throw error;
+  }
+};
