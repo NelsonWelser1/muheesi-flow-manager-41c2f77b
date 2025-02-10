@@ -1,14 +1,14 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getIoTSensorData } from '@/utils/iotIntegration';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
+import { getColdRoomSensorData } from '@/utils/iotIntegration';
 
 const RealTimeMonitoring = () => {
   const { data: sensorData } = useQuery({
     queryKey: ['iot-sensor-data'],
-    queryFn: getIoTSensorData,
+    queryFn: () => getColdRoomSensorData('CR001'),
     refetchInterval: 5000, // Refresh every 5 seconds
   });
 
