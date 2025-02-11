@@ -4,13 +4,13 @@ CREATE TABLE IF NOT EXISTS cold_room_inventory (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     cold_room_id TEXT NOT NULL,
     batch_id TEXT NOT NULL,
-    storage_date_time TIMESTAMPTZ NOT NULL,
     temperature DECIMAL(5,2) NOT NULL,
     humidity DECIMAL(5,2) NOT NULL,
     quantity_stored INTEGER NOT NULL CHECK (quantity_stored >= 0),
     movement_action TEXT NOT NULL CHECK (movement_action IN ('In', 'Out')),
     remarks TEXT,
     operator_id TEXT NOT NULL,
+    storage_date_time TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -73,3 +73,4 @@ CREATE POLICY "Enable insert for authenticated users" ON cold_room_environment_l
     FOR INSERT
     TO authenticated
     WITH CHECK (true);
+
