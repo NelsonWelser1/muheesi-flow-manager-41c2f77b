@@ -47,33 +47,27 @@ CREATE TRIGGER update_cold_room_inventory_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Add RLS policies
+-- Enable RLS and create policies
 ALTER TABLE cold_room_inventory ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cold_room_environment_logs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Enable read access for authenticated users" ON cold_room_inventory
-    FOR SELECT
-    TO authenticated
-    USING (true);
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Enable all access for authenticated users" ON cold_room_inventory;
+DROP POLICY IF EXISTS "Enable all access for authenticated users" ON cold_room_environment_logs;
 
-CREATE POLICY "Enable insert for authenticated users" ON cold_room_inventory
-    FOR INSERT
-    TO authenticated
-    WITH CHECK (true);
+-- Create a single comprehensive policy for cold_room_inventory
+CREATE POLICY "Enable all access for authenticated users"
+ON cold_room_inventory
+FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
 
-CREATE POLICY "Enable update for authenticated users" ON cold_room_inventory
-    FOR UPDATE
-    TO authenticated
-    USING (true)
-    WITH CHECK (true);
+-- Create a single comprehensive policy for cold_room_environment_logs
+CREATE POLICY "Enable all access for authenticated users"
+ON cold_room_environment_logs
+FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
 
--- Similar policies for environment logs
-CREATE POLICY "Enable read access for authenticated users" ON cold_room_environment_logs
-    FOR SELECT
-    TO authenticated
-    USING (true);
-
-CREATE POLICY "Enable insert for authenticated users" ON cold_room_environment_logs
-    FOR INSERT
-    TO authenticated
-    WITH CHECK (true);
