@@ -16,7 +16,7 @@ const InventorySummary = () => {
       const { data, error } = await supabase
         .from('cold_room_inventory')
         .select('*')
-        .order('storage_date_time', { ascending: false });
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data;
@@ -61,7 +61,7 @@ const InventorySummary = () => {
               <TableRow>
                 <TableHead>Batch ID</TableHead>
                 <TableHead>Cold Room ID</TableHead>
-                <TableHead>Storage Date</TableHead>
+                <TableHead>Date</TableHead>
                 <TableHead>Quantity</TableHead>
                 <TableHead>Temperature</TableHead>
                 <TableHead>Humidity</TableHead>
@@ -73,7 +73,7 @@ const InventorySummary = () => {
                 <TableRow key={item.id}>
                   <TableCell>{item.batch_id}</TableCell>
                   <TableCell>{item.cold_room_id}</TableCell>
-                  <TableCell>{new Date(item.storage_date_time).toLocaleString()}</TableCell>
+                  <TableCell>{new Date(item.created_at).toLocaleString()}</TableCell>
                   <TableCell>{item.quantity_stored}</TableCell>
                   <TableCell>{item.temperature}°C</TableCell>
                   <TableCell>{item.humidity}%</TableCell>
