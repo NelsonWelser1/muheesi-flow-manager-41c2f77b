@@ -17,7 +17,7 @@ const MovementTracking = () => {
       const { data, error } = await supabase
         .from('cold_room_inventory')
         .select('*')
-        .order('storage_date_time', { ascending: false });
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data;
@@ -30,7 +30,7 @@ const MovementTracking = () => {
     
     const filterDate = new Date(dateFilter);
     return movements.filter(movement => {
-      const movementDate = new Date(movement.storage_date_time);
+      const movementDate = new Date(movement.created_at);
       return movementDate.toDateString() === filterDate.toDateString();
     });
   }, [movements, dateFilter]);
@@ -72,7 +72,7 @@ const MovementTracking = () => {
             <TableBody>
               {filteredMovements.map((movement) => (
                 <TableRow key={movement.id}>
-                  <TableCell>{new Date(movement.storage_date_time).toLocaleString()}</TableCell>
+                  <TableCell>{new Date(movement.created_at).toLocaleString()}</TableCell>
                   <TableCell>{movement.batch_id}</TableCell>
                   <TableCell>
                     <Badge variant={movement.movement_action === 'In' ? 'default' : 'secondary'}>
@@ -93,3 +93,4 @@ const MovementTracking = () => {
 };
 
 export default MovementTracking;
+
