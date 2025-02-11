@@ -6,7 +6,7 @@ import RealTimeMonitoring from './RealTimeMonitoring';
 import InventorySummary from './InventorySummary';
 import MovementTracking from './MovementTracking';
 import DataEntryForm from './DataEntryForm';
-import { useSupabaseAuth } from '@/integrations/supabase/auth';
+import { useSupabaseAuth } from '@/integrations/supabase/hooks/useAuth';
 
 const ColdRoomDashboard = () => {
   const { user } = useSupabaseAuth();
