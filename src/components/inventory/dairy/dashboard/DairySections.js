@@ -1,10 +1,10 @@
+
 import { 
   Milk, Factory, Snowflake, Beef, TrendingUp, 
   Truck, Users, FileSpreadsheet, Package 
 } from "lucide-react";
 import DairyCoolers from '../DairyCoolers';
 import YogurtProcessing from '../YogurtProcessing';
-import ColdRoomStock from '../ColdRoomStock';
 import SlaughterhouseStock from '../SlaughterhouseStock';
 import SalesMarketing from '../SalesMarketing';
 import CheeseFactoryDashboard from '../cheese-factory/CheeseFactoryDashboard';
@@ -40,15 +40,6 @@ export const dairySections = [
     group: 'Cheese Factory',
     notifications: 0,
     status: 'operational'
-  },
-  { 
-    id: 'coldroom', 
-    title: 'Cold Room', 
-    icon: Snowflake, 
-    component: ColdRoomStock,
-    group: 'Cheese Factory',
-    notifications: 3,
-    status: 'attention'
   },
   { 
     id: 'packaging', 
