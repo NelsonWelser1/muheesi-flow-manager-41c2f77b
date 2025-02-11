@@ -6,10 +6,11 @@ import RealTimeMonitoring from './RealTimeMonitoring';
 import InventorySummary from './InventorySummary';
 import MovementTracking from './MovementTracking';
 import DataEntryForm from './DataEntryForm';
-import { useSupabaseAuth } from '@/integrations/supabase/hooks/useAuth';
+import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const ColdRoomDashboard = () => {
-  const { user } = useSupabaseAuth();
+  const { session } = useSupabaseAuth();
+  const user = session?.user;
 
   return (
     <div className="space-y-4 p-4">
@@ -74,3 +75,4 @@ const ColdRoomDashboard = () => {
 };
 
 export default ColdRoomDashboard;
+
