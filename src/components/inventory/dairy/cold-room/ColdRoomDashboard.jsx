@@ -75,4 +75,3 @@ const ColdRoomDashboard = () => {
 };
 
 export default ColdRoomDashboard;
-
