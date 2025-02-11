@@ -12,6 +12,7 @@ import PackagingLabeling from '../packaging/PackagingLabeling';
 import LogisticsDashboard from '../logistics/LogisticsDashboard';
 import PersonnelDashboard from '../personnel/PersonnelDashboard';
 import ReportsDashboard from '../reports/ReportsDashboard';
+import ColdRoomDashboard from '../cold-room/ColdRoomDashboard';
 
 export const dairySections = [
   { 
@@ -40,6 +41,15 @@ export const dairySections = [
     group: 'Cheese Factory',
     notifications: 0,
     status: 'operational'
+  },
+  { 
+    id: 'coldroom', 
+    title: 'Cold Room', 
+    icon: Snowflake, 
+    component: ColdRoomDashboard,
+    group: 'Cheese Factory',
+    notifications: 3,
+    status: 'attention'
   },
   { 
     id: 'packaging', 

@@ -1,3 +1,4 @@
+
 // Simulated IoT sensor data (replace with actual IoT API integration)
 const MOCK_SENSOR_DATA = {
   temperature: () => 20 + Math.random() * 5,
