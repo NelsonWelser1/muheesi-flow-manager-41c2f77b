@@ -1,4 +1,8 @@
 
+-- Drop existing tables first
+DROP TABLE IF EXISTS cold_room_inventory CASCADE;
+DROP TABLE IF EXISTS cold_room_environment_logs CASCADE;
+
 -- Create cold room inventory table
 CREATE TABLE IF NOT EXISTS cold_room_inventory (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -73,4 +77,3 @@ CREATE POLICY "Enable insert for authenticated users" ON cold_room_environment_l
     FOR INSERT
     TO authenticated
     WITH CHECK (true);
-
