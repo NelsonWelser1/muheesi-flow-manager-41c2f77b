@@ -8,22 +8,37 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from '@/integrations/supabase/supabase';
+import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const DataEntryForm = ({ userId, username }) => {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const { toast } = useToast();
+  const { session } = useSupabaseAuth();
 
   const onSubmit = async (data) => {
     try {
+      // Ensure we have an authenticated session
+      if (!session) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to submit data",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('cold_room_inventory')
         .insert([{
           ...data,
-          operator_id: userId,
+          operator_id: session.user.id,
           storage_date_time: new Date().toISOString()
         }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -133,3 +148,4 @@ const DataEntryForm = ({ userId, username }) => {
 };
 
 export default DataEntryForm;
+

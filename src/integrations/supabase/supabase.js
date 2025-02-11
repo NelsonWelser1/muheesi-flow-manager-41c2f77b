@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_PROJECT_URL;
@@ -15,19 +16,12 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true
-  },
-  global: {
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': supabaseKey,
-      'Authorization': `Bearer ${supabaseKey}`
-    }
   }
 });
 
 // Test the connection
 supabase
-  .from('storage_tanks')
+  .from('cold_room_inventory')
   .select('count', { count: 'exact', head: true })
   .then(({ count, error }) => {
     if (error) {
@@ -36,3 +30,4 @@ supabase
       console.log('Successfully connected to Supabase. Row count:', count);
     }
   });
+
