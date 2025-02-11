@@ -12,6 +12,9 @@ const RealTimeMonitoring = () => {
     refetchInterval: 5000, // Refresh every 5 seconds
   });
 
+  // Transform sensor data into the format expected by recharts
+  const chartData = sensorData ? [sensorData.sensors] : [];
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -23,7 +26,7 @@ const RealTimeMonitoring = () => {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={[sensorData?.sensors]}>
+                <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="timestamp" />
                   <YAxis />
@@ -48,7 +51,7 @@ const RealTimeMonitoring = () => {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={[sensorData?.sensors]}>
+                <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="timestamp" />
                   <YAxis />
@@ -70,3 +73,4 @@ const RealTimeMonitoring = () => {
 };
 
 export default RealTimeMonitoring;
+
