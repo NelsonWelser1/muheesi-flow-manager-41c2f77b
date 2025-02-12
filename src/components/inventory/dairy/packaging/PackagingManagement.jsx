@@ -8,26 +8,15 @@ import PackagingForm from './PackagingForm';
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
-import { useSupabaseAuth } from "@/integrations/supabase/auth";
 
 const PackagingManagement = () => {
   const navigate = useNavigate();
   const [packagingData, setPackagingData] = useState([]);
   const [showScanner, setShowScanner] = useState(false);
   const { toast } = useToast();
-  const { session } = useSupabaseAuth();
 
   const handlePackagingSubmit = async (data) => {
     try {
-      if (!session?.user) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to save packaging records",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const { error } = await supabase
         .from('packaging_records')
         .insert([{
@@ -37,13 +26,12 @@ const PackagingManagement = () => {
           quantity: data.quantity,
           package_material: data.packageMaterial,
           package_weight: data.packageWeight,
-          created_at: new Date().toISOString(),
-          created_by: session.user.id
+          created_at: new Date().toISOString()
         }]);
 
       if (error) throw error;
 
-      fetchPackagingRecords();
+      setPackagingData([...packagingData, { ...data, id: Date.now() }]);
       
       toast({
         title: "Success",
@@ -59,49 +47,28 @@ const PackagingManagement = () => {
     }
   };
 
-  const fetchPackagingRecords = async () => {
-    try {
-      if (!session?.user) {
-        console.log('No authenticated user');
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('packaging_records')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setPackagingData(data || []);
-    } catch (error) {
-      console.error('Error fetching packaging records:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch packaging records",
-        variant: "destructive",
-      });
-    }
-  };
-
   React.useEffect(() => {
-    if (session?.user) {
-      fetchPackagingRecords();
-    }
-  }, [session]);
+    const fetchPackagingRecords = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('packaging_records')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-  if (!session?.user) {
-    return (
-      <div className="container mx-auto py-6">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center p-6">
-            <h2 className="text-xl font-semibold mb-4">Authentication Required</h2>
-            <p className="text-gray-600 mb-4">Please log in to access packaging management.</p>
-            <Button onClick={() => navigate('/login')}>Log In</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+        if (error) throw error;
+        setPackagingData(data);
+      } catch (error) {
+        console.error('Error fetching packaging records:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch packaging records",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchPackagingRecords();
+  }, [toast]);
 
   return (
     <div className="space-y-6 container mx-auto py-6">
