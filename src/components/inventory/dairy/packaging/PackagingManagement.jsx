@@ -17,53 +17,21 @@ const PackagingManagement = () => {
 
   const handlePackagingSubmit = async (data) => {
     try {
-      // Convert empty strings to null and ensure numeric fields are numbers
-      const packageWeight = data.packageWeight === '' ? null : Number(data.packageWeight);
-      const quantity = Number(data.quantity);
-
-      if (isNaN(quantity)) {
-        toast({
-          title: "Error",
-          description: "Quantity must be a valid number",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (packageWeight !== null && isNaN(packageWeight)) {
-        toast({
-          title: "Error",
-          description: "Package weight must be a valid number",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const { error } = await supabase
         .from('packaging_records')
         .insert([{
           batch_id: data.batchId,
           cheese_type: data.cheeseType,
           package_size: data.packageSize,
-          quantity: quantity,
+          quantity: data.quantity,
           package_material: data.packageMaterial,
-          package_weight: packageWeight,
+          package_weight: data.packageWeight,
           created_at: new Date().toISOString()
         }]);
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      // Refresh the data after successful insert
-      const { data: newData, error: fetchError } = await supabase
-        .from('packaging_records')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (fetchError) throw fetchError;
-      setPackagingData(newData || []);
+      setPackagingData([...packagingData, { ...data, id: Date.now() }]);
       
       toast({
         title: "Success",
@@ -73,7 +41,7 @@ const PackagingManagement = () => {
       console.error('Error saving packaging record:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to save packaging record",
+        description: "Failed to save packaging record",
         variant: "destructive",
       });
     }
@@ -88,7 +56,7 @@ const PackagingManagement = () => {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setPackagingData(data || []);
+        setPackagingData(data);
       } catch (error) {
         console.error('Error fetching packaging records:', error);
         toast({

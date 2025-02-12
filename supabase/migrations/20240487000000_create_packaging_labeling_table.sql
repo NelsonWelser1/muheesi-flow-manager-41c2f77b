@@ -30,12 +30,12 @@ CREATE POLICY "Enable read access for authenticated users"
 CREATE POLICY "Enable insert access for authenticated users"
     ON packaging_labeling FOR INSERT
     TO authenticated
-    WITH CHECK (true);
+    WITH CHECK (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Enable update access for authenticated users"
     ON packaging_labeling FOR UPDATE
     TO authenticated
-    USING (true);
+    USING (auth.uid() IS NOT NULL);
 
 -- Create indexes for better query performance
 CREATE INDEX idx_packaging_batch_id ON packaging_labeling(batch_id);
