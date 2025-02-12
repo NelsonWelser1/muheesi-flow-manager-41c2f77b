@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
@@ -8,13 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { CheeseTypes, PackagingSizes } from './data/constants';
 
-const PackagingForm = () => {
+const PackagingForm = ({ onSubmit }) => {
   const { register, handleSubmit, reset } = useForm();
   const { toast } = useToast();
 
-  const onSubmit = async (data) => {
+  const handleFormSubmit = async (data) => {
     try {
       console.log('Packaging data:', data);
+      onSubmit?.(data);
       toast({
         title: "Success",
         description: "Packaging details have been saved successfully.",
@@ -30,7 +30,7 @@ const PackagingForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Batch ID</Label>

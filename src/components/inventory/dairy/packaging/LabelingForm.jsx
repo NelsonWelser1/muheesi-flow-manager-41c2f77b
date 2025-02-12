@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
@@ -12,14 +11,15 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-const LabelingForm = () => {
+const LabelingForm = ({ onSubmit }) => {
   const { register, handleSubmit, reset, setValue } = useForm();
   const { toast } = useToast();
   const [date, setDate] = React.useState();
 
-  const onSubmit = async (data) => {
+  const handleFormSubmit = async (data) => {
     try {
       console.log('Labeling data:', data);
+      onSubmit?.(data);
       toast({
         title: "Success",
         description: "Labeling details have been saved successfully.",
@@ -35,7 +35,7 @@ const LabelingForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Batch ID</Label>
