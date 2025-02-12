@@ -17,6 +17,17 @@ const LabelingManagement = () => {
 
   const handleLabelingSubmit = async (data) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to submit records",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('packaging_labeling')
         .insert([{
@@ -24,10 +35,11 @@ const LabelingManagement = () => {
           batch_id: data.batchId,
           cheese_type: data.productName,
           packaging_size: data.netWeight,
-          operator_id: 'OP-001', // This should come from authenticated user
+          operator_id: user.id,
           quantity: 1,
           expiry_date: new Date(data.productionDate),
           nutritional_info: data.nutritionalInfo,
+          created_by: user.id,
           created_at: new Date().toISOString()
         }]);
 
@@ -51,6 +63,13 @@ const LabelingManagement = () => {
 
   const fetchLabelingRecords = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error('No authenticated user found');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('packaging_labeling')
         .select('*')
