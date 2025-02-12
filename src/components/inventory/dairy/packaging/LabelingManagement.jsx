@@ -6,24 +6,80 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { QrCode } from "lucide-react";
 import LabelingForm from './LabelingForm';
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/supabase";
+import { useToast } from "@/components/ui/use-toast";
 
 const LabelingManagement = () => {
   const navigate = useNavigate();
   const [labelingData, setLabelingData] = useState([]);
   const [showScanner, setShowScanner] = useState(false);
+  const { toast } = useToast();
 
-  const handleLabelingSubmit = (data) => {
-    setLabelingData([...labelingData, { ...data, id: Date.now() }]);
+  const handleLabelingSubmit = async (data) => {
+    try {
+      const { error } = await supabase
+        .from('packaging_labeling')
+        .insert([{
+          date_time: data.productionDate,
+          batch_id: data.batchId,
+          cheese_type: data.productName,
+          packaging_size: data.netWeight,
+          operator_id: 'OP-001', // This should come from authenticated user
+          quantity: 1,
+          expiry_date: new Date(data.productionDate),
+          nutritional_info: data.nutritionalInfo,
+          created_at: new Date().toISOString()
+        }]);
+
+      if (error) throw error;
+
+      fetchLabelingRecords();
+      
+      toast({
+        title: "Success",
+        description: "Labeling record saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving labeling record:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save labeling record",
+        variant: "destructive",
+      });
+    }
   };
 
+  const fetchLabelingRecords = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('packaging_labeling')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setLabelingData(data);
+    } catch (error) {
+      console.error('Error fetching labeling records:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch labeling records",
+        variant: "destructive",
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    fetchLabelingRecords();
+  }, []);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 container mx-auto py-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Labeling Management</h2>
         <Button onClick={() => navigate(-1)} variant="outline">Back</Button>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -52,18 +108,22 @@ const LabelingManagement = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Batch ID</TableHead>
-                    <TableHead>Brand</TableHead>
-                    <TableHead>Product</TableHead>
                     <TableHead>Production Date</TableHead>
+                    <TableHead>Product Name</TableHead>
+                    <TableHead>Net Weight</TableHead>
+                    <TableHead>Nutritional Info</TableHead>
+                    <TableHead>Expiry Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {labelingData.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell>{item.batchId}</TableCell>
-                      <TableCell>{item.brandName}</TableCell>
-                      <TableCell>{item.productName}</TableCell>
-                      <TableCell>{item.productionDate}</TableCell>
+                      <TableCell>{item.batch_id}</TableCell>
+                      <TableCell>{new Date(item.date_time).toLocaleDateString()}</TableCell>
+                      <TableCell>{item.cheese_type}</TableCell>
+                      <TableCell>{item.packaging_size}</TableCell>
+                      <TableCell>{item.nutritional_info}</TableCell>
+                      <TableCell>{new Date(item.expiry_date).toLocaleDateString()}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
