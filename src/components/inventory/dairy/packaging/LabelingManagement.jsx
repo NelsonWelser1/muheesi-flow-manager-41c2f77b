@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,15 +7,26 @@ import LabelingForm from './LabelingForm';
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { useSupabaseAuth } from "@/integrations/supabase/auth";
 
 const LabelingManagement = () => {
   const navigate = useNavigate();
   const [labelingData, setLabelingData] = useState([]);
   const [showScanner, setShowScanner] = useState(false);
   const { toast } = useToast();
+  const { session } = useSupabaseAuth();
 
   const handleLabelingSubmit = async (data) => {
     try {
+      if (!session?.user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to save labeling records",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('packaging_labeling')
         .insert([{
@@ -24,11 +34,12 @@ const LabelingManagement = () => {
           batch_id: data.batchId,
           cheese_type: data.productName,
           packaging_size: data.netWeight,
-          operator_id: 'OP-001', // This should come from authenticated user
+          operator_id: session.user.id,
           quantity: 1,
           expiry_date: new Date(data.productionDate),
           nutritional_info: data.nutritionalInfo,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          created_by: session.user.id
         }]);
 
       if (error) throw error;
@@ -51,6 +62,11 @@ const LabelingManagement = () => {
 
   const fetchLabelingRecords = async () => {
     try {
+      if (!session?.user) {
+        console.log('No authenticated user');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('packaging_labeling')
         .select('*')
@@ -69,8 +85,25 @@ const LabelingManagement = () => {
   };
 
   React.useEffect(() => {
-    fetchLabelingRecords();
-  }, []);
+    if (session?.user) {
+      fetchLabelingRecords();
+    }
+  }, [session]);
+
+  // Check for authentication
+  if (!session?.user) {
+    return (
+      <div className="container mx-auto py-6">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <h2 className="text-xl font-semibold mb-4">Authentication Required</h2>
+            <p className="text-gray-600 mb-4">Please log in to access labeling management.</p>
+            <Button onClick={() => navigate('/login')}>Log In</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 container mx-auto py-6">
