@@ -17,6 +17,17 @@ const PackagingManagement = () => {
 
   const handlePackagingSubmit = async (data) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to submit records",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('packaging_records')
         .insert([{
@@ -26,6 +37,7 @@ const PackagingManagement = () => {
           quantity: data.quantity,
           package_material: data.packageMaterial,
           package_weight: data.packageWeight,
+          created_by: user.id,
           created_at: new Date().toISOString()
         }]);
 
