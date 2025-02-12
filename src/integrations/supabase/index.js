@@ -1,3 +1,4 @@
+
 import { supabase } from './supabase';
 import { SupabaseAuthProvider, useSupabaseAuth, SupabaseAuthUI } from './auth';
 
