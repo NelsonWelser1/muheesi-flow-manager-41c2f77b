@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { barcode } from "lucide-react";
+import { Barcode } from "lucide-react";
 import PackagingForm from './PackagingForm';
 import { useNavigate } from "react-router-dom";
 
@@ -33,7 +33,7 @@ const PackagingManagement = () => {
                 size="icon"
                 onClick={() => setShowScanner(!showScanner)}
               >
-                <barcode className="h-4 w-4" />
+                <Barcode className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>

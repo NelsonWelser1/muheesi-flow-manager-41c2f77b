@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package2, Tags, barcode, QrCode } from "lucide-react";
+import { Package2, Tags, Barcode, QrCode } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const PackagingLabeling = () => {
@@ -13,7 +13,7 @@ const PackagingLabeling = () => {
       description: "Manage product packaging details",
       icon: <Package2 className="h-6 w-6" />,
       path: "packaging-form",
-      secondaryIcon: <barcode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />
+      secondaryIcon: <Barcode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />
     },
     {
       title: "Labeling",
