@@ -6,24 +6,78 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Barcode } from "lucide-react";
 import PackagingForm from './PackagingForm';
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/supabase";
+import { useToast } from "@/components/ui/use-toast";
 
 const PackagingManagement = () => {
   const navigate = useNavigate();
   const [packagingData, setPackagingData] = useState([]);
   const [showScanner, setShowScanner] = useState(false);
+  const { toast } = useToast();
 
-  const handlePackagingSubmit = (data) => {
-    setPackagingData([...packagingData, { ...data, id: Date.now() }]);
+  const handlePackagingSubmit = async (data) => {
+    try {
+      const { error } = await supabase
+        .from('packaging_records')
+        .insert([{
+          batch_id: data.batchId,
+          cheese_type: data.cheeseType,
+          package_size: data.packageSize,
+          quantity: data.quantity,
+          package_material: data.packageMaterial,
+          package_weight: data.packageWeight,
+          created_at: new Date().toISOString()
+        }]);
+
+      if (error) throw error;
+
+      setPackagingData([...packagingData, { ...data, id: Date.now() }]);
+      
+      toast({
+        title: "Success",
+        description: "Packaging record saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving packaging record:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save packaging record",
+        variant: "destructive",
+      });
+    }
   };
 
+  React.useEffect(() => {
+    const fetchPackagingRecords = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('packaging_records')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setPackagingData(data);
+      } catch (error) {
+        console.error('Error fetching packaging records:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch packaging records",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchPackagingRecords();
+  }, [toast]);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 container mx-auto py-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Packaging Management</h2>
         <Button onClick={() => navigate(-1)} variant="outline">Back</Button>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -55,15 +109,19 @@ const PackagingManagement = () => {
                     <TableHead>Type</TableHead>
                     <TableHead>Size</TableHead>
                     <TableHead>Quantity</TableHead>
+                    <TableHead>Material</TableHead>
+                    <TableHead>Weight (g)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {packagingData.map((item) => (
                     <TableRow key={item.id}>
-                      <TableCell>{item.batchId}</TableCell>
-                      <TableCell>{item.cheeseType}</TableCell>
-                      <TableCell>{item.packageSize}</TableCell>
+                      <TableCell>{item.batch_id}</TableCell>
+                      <TableCell>{item.cheese_type}</TableCell>
+                      <TableCell>{item.package_size}</TableCell>
                       <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{item.package_material}</TableCell>
+                      <TableCell>{item.package_weight}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
