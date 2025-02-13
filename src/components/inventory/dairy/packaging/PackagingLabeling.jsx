@@ -1,9 +1,12 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package2, Tags, Barcode, QrCode } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 const PackagingLabeling = () => {
   const navigate = useNavigate();
+  
   const tiles = [{
     title: "Packaging",
     description: "Manage product packaging details",
@@ -17,22 +20,40 @@ const PackagingLabeling = () => {
     path: "labeling-management",
     secondaryIcon: <QrCode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />
   }];
-  return <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>Packaging & Labeling Management</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-4">
-          {tiles.map(tile => <button key={tile.title} onClick={() => navigate(tile.path)} className="group relative p-6 rounded-lg border border-border hover:border-primary transition-all duration-300 bg-card hover:shadow-lg text-orange-800 bg-cyan-50 px-[24px]">
-              <div className="flex flex-col items-center justify-center gap-2 h-24">
-                {tile.icon}
-                <span className="font-semibold">{tile.title}</span>
-                <span className="text-xs text-muted-foreground">{tile.description}</span>
-                {tile.secondaryIcon}
-              </div>
-            </button>)}
-        </div>
-      </CardContent>
-    </Card>;
+
+  return (
+    <div className="space-y-4">
+      <button 
+        onClick={() => navigate('/manage-inventory')}
+        className="mb-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+      >
+        ← Back to Main Dashboard
+      </button>
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle>Packaging & Labeling Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            {tiles.map(tile => (
+              <button 
+                key={tile.title} 
+                onClick={() => navigate(tile.path)} 
+                className="group relative p-6 rounded-lg border border-border hover:border-primary transition-all duration-300 bg-card hover:shadow-lg text-orange-800 bg-cyan-50 px-[24px]"
+              >
+                <div className="flex flex-col items-center justify-center gap-2 h-24">
+                  {tile.icon}
+                  <span className="font-semibold">{tile.title}</span>
+                  <span className="text-xs text-muted-foreground">{tile.description}</span>
+                  {tile.secondaryIcon}
+                </div>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
+
 export default PackagingLabeling;
