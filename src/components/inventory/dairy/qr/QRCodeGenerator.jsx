@@ -3,7 +3,7 @@ import React from 'react';
 import { QrCode } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 
 const QRCodeGenerator = ({ data, title }) => {
   return (
@@ -16,7 +16,7 @@ const QRCodeGenerator = ({ data, title }) => {
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
         <div className="bg-white p-4 rounded-lg">
-          <QRCode value={JSON.stringify(data)} size={200} />
+          <QRCodeSVG value={JSON.stringify(data)} size={200} />
         </div>
         <Button onClick={() => window.print()}>Print QR Code</Button>
       </CardContent>
