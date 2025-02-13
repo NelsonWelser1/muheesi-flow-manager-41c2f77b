@@ -1,10 +1,27 @@
+
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { Bell } from "lucide-react";
+import { Bell, DollarSign, Megaphone } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import SalesDistributionForm from '../sales/SalesDistributionForm';
+import MarketingCampaignForm from '../marketing/MarketingCampaignForm';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const DairySectionView = ({ section, onBack }) => {
+  const [activeForm, setActiveForm] = React.useState(null);
+
   console.log('Rendering DairySectionView for:', section.title);
-  const Component = section.component;
+
+  const renderContent = () => {
+    switch (activeForm) {
+      case 'sales':
+        return <SalesDistributionForm />;
+      case 'marketing':
+        return <MarketingCampaignForm />;
+      default:
+        return section.component && <section.component />;
+    }
+  };
 
   return (
     <div className="max-w-[1200px] mx-auto p-4">
@@ -28,7 +45,29 @@ const DairySectionView = ({ section, onBack }) => {
           )}
         </div>
       </div>
-      <Component />
+
+      {section.title === "Sales & Marketing" && (
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Button
+            onClick={() => setActiveForm('sales')}
+            className="h-24 text-lg flex flex-col items-center justify-center gap-2"
+            variant={activeForm === 'sales' ? "default" : "outline"}
+          >
+            <DollarSign className="h-6 w-6" />
+            Sales Distribution Form
+          </Button>
+          <Button
+            onClick={() => setActiveForm('marketing')}
+            className="h-24 text-lg flex flex-col items-center justify-center gap-2"
+            variant={activeForm === 'marketing' ? "default" : "outline"}
+          >
+            <Megaphone className="h-6 w-6" />
+            Marketing Campaign Form
+          </Button>
+        </div>
+      )}
+
+      {renderContent()}
     </div>
   );
 };
