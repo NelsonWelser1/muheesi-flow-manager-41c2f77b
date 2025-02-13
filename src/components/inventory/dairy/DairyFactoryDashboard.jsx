@@ -8,7 +8,7 @@ import ProductionForms from './factory/ProductionForms';
 import LogisticsDashboard from './logistics/LogisticsDashboard';
 import PersonnelDashboard from './personnel/PersonnelDashboard';
 import ReportsDashboard from './reports/ReportsDashboard';
-import SalesMarketingDashboard from './dashboard/SalesMarketingDashboard';
+import SalesMarketing from './SalesMarketing';
 import { Card } from "@/components/ui/card";
 import { useFactoryOperations } from '@/integrations/supabase/hooks/useGrandBernaDairies';
 
@@ -71,7 +71,7 @@ const DairyFactoryDashboard = () => {
         </TabsContent>
 
         <TabsContent value="sales-marketing">
-          <SalesMarketingDashboard />
+          <SalesMarketing />
         </TabsContent>
 
         <TabsContent value="logistics">
