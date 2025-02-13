@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductionSchedule from './factory/ProductionSchedule';
@@ -7,10 +8,11 @@ import ProductionForms from './factory/ProductionForms';
 import LogisticsDashboard from './logistics/LogisticsDashboard';
 import PersonnelDashboard from './personnel/PersonnelDashboard';
 import ReportsDashboard from './reports/ReportsDashboard';
+import SalesMarketingDashboard from './dashboard/SalesMarketingDashboard';
+import { Card } from "@/components/ui/card";
 import { useFactoryOperations } from '@/integrations/supabase/hooks/useGrandBernaDairies';
 
 const DairyFactoryDashboard = () => {
-  console.log('Rendering DairyFactoryDashboard');
   const { batches, inventory, totalProduction, lowInventoryItems } = useFactoryOperations();
 
   return (
@@ -18,40 +20,35 @@ const DairyFactoryDashboard = () => {
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Total Production Today</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <div className="p-4">
+            <h3 className="text-lg font-semibold">Total Production Today</h3>
             <p className="text-2xl font-bold">{totalProduction.toFixed(2)} L</p>
-          </CardContent>
+          </div>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Active Batches</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <div className="p-4">
+            <h3 className="text-lg font-semibold">Active Batches</h3>
             <p className="text-2xl font-bold">
               {batches?.filter(b => !b.end_time).length || 0}
             </p>
-          </CardContent>
+          </div>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Low Inventory Items</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <div className="p-4">
+            <h3 className="text-lg font-semibold">Low Inventory Items</h3>
             <p className="text-2xl font-bold">{lowInventoryItems?.length || 0}</p>
-          </CardContent>
+          </div>
         </Card>
       </div>
 
       {/* Main Content */}
       <Tabs defaultValue="schedule" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex space-x-2 overflow-x-auto">
           <TabsTrigger value="schedule">Production Schedule</TabsTrigger>
           <TabsTrigger value="inventory">Inventory Status</TabsTrigger>
           <TabsTrigger value="quality">Quality Control</TabsTrigger>
           <TabsTrigger value="production">Production Forms</TabsTrigger>
+          <TabsTrigger value="sales-marketing">Sales & Marketing</TabsTrigger>
           <TabsTrigger value="logistics">Logistics</TabsTrigger>
           <TabsTrigger value="personnel">Personnel</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
@@ -71,6 +68,10 @@ const DairyFactoryDashboard = () => {
 
         <TabsContent value="production">
           <ProductionForms />
+        </TabsContent>
+
+        <TabsContent value="sales-marketing">
+          <SalesMarketingDashboard />
         </TabsContent>
 
         <TabsContent value="logistics">
