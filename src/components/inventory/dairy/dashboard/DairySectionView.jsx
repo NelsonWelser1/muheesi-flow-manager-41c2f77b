@@ -5,7 +5,6 @@ import { Bell, DollarSign, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SalesDistributionForm from '../sales/SalesDistributionForm';
 import MarketingCampaignForm from '../marketing/MarketingCampaignForm';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const DairySectionView = ({ section, onBack }) => {
   const [activeForm, setActiveForm] = React.useState(null);
@@ -15,9 +14,9 @@ const DairySectionView = ({ section, onBack }) => {
   const renderContent = () => {
     switch (activeForm) {
       case 'sales':
-        return <SalesDistributionForm />;
+        return <SalesDistributionForm onBack={() => setActiveForm(null)} />;
       case 'marketing':
-        return <MarketingCampaignForm />;
+        return <MarketingCampaignForm onBack={() => setActiveForm(null)} />;
       default:
         return section.component && <section.component />;
     }
@@ -46,12 +45,12 @@ const DairySectionView = ({ section, onBack }) => {
         </div>
       </div>
 
-      {section.title === "Sales & Marketing" && (
+      {section.title === "Sales & Marketing" && !activeForm && (
         <div className="grid grid-cols-2 gap-4 mb-6">
           <Button
             onClick={() => setActiveForm('sales')}
             className="h-24 text-lg flex flex-col items-center justify-center gap-2"
-            variant={activeForm === 'sales' ? "default" : "outline"}
+            style={{ backgroundColor: '#F97316', color: 'white' }}
           >
             <DollarSign className="h-6 w-6" />
             Sales Distribution Form
@@ -59,7 +58,7 @@ const DairySectionView = ({ section, onBack }) => {
           <Button
             onClick={() => setActiveForm('marketing')}
             className="h-24 text-lg flex flex-col items-center justify-center gap-2"
-            variant={activeForm === 'marketing' ? "default" : "outline"}
+            style={{ backgroundColor: '#D946EF', color: 'white' }}
           >
             <Megaphone className="h-6 w-6" />
             Marketing Campaign Form

@@ -7,13 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { ArrowLeft, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/supabase";
+import QRCodeGenerator from '../qr/QRCodeGenerator';
 
 const PRODUCT_TYPES = ["Cheese", "Yogurt", "Milk", "Butter"];
 
-const SalesDistributionForm = () => {
-  const { register, handleSubmit, reset } = useForm();
+const SalesDistributionForm = ({ onBack }) => {
+  const { register, handleSubmit, reset, watch } = useForm();
   const { toast } = useToast();
+  const [showQR, setShowQR] = React.useState(false);
+  const formData = watch();
 
   const handleFormSubmit = async (data) => {
     try {
@@ -53,68 +57,106 @@ const SalesDistributionForm = () => {
     }
   };
 
+  if (showQR) {
+    return (
+      <div className="space-y-4">
+        <Button 
+          variant="outline" 
+          onClick={() => setShowQR(false)}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Form
+        </Button>
+        <QRCodeGenerator 
+          data={formData} 
+          title="Sales Distribution"
+        />
+      </div>
+    );
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Sales & Distribution Form</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Customer Name/ID</Label>
-              <Input {...register("customer_name", { required: true })} />
+    <div className="space-y-4">
+      <Button 
+        variant="outline" 
+        onClick={onBack}
+        className="flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" /> Back to Sales & Marketing
+      </Button>
+      <Card>
+        <CardHeader>
+          <CardTitle>Sales & Distribution Form</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Customer Name/ID</Label>
+                <Input {...register("customer_name", { required: true })} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Product Type</Label>
+                <Select onValueChange={(value) => register("product_type").onChange({ target: { value } })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select product type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRODUCT_TYPES.map((type) => (
+                      <SelectItem key={type} value={type.toLowerCase()}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Quantity Sold</Label>
+                <Input type="number" {...register("quantity", { required: true, min: 1 })} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Price Per Unit</Label>
+                <Input type="number" step="0.01" {...register("price_per_unit", { required: true, min: 0 })} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Invoice Number</Label>
+                <Input {...register("invoice_number", { required: true })} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Driver ID</Label>
+                <Input {...register("driver_id")} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Vehicle ID</Label>
+                <Input {...register("vehicle_id")} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Destination</Label>
+                <Input {...register("destination")} />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Product Type</Label>
-              <Select onValueChange={(value) => register("product_type").onChange({ target: { value } })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select product type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRODUCT_TYPES.map((type) => (
-                    <SelectItem key={type} value={type.toLowerCase()}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex gap-4">
+              <Button type="submit" className="flex-1">Submit Sales Record</Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowQR(true)}
+                className="flex items-center gap-2"
+              >
+                <QrCode className="h-4 w-4" />
+                Generate QR
+              </Button>
             </div>
-
-            <div className="space-y-2">
-              <Label>Quantity Sold</Label>
-              <Input type="number" {...register("quantity", { required: true, min: 1 })} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Price Per Unit</Label>
-              <Input type="number" step="0.01" {...register("price_per_unit", { required: true, min: 0 })} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Invoice Number</Label>
-              <Input {...register("invoice_number", { required: true })} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Driver ID</Label>
-              <Input {...register("driver_id")} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Vehicle ID</Label>
-              <Input {...register("vehicle_id")} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Destination</Label>
-              <Input {...register("destination")} />
-            </div>
-          </div>
-
-          <Button type="submit" className="w-full">Submit Sales Record</Button>
-        </form>
-      </CardContent>
-    </Card>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
