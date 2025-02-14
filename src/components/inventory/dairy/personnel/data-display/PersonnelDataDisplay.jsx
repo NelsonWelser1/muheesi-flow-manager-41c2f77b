@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, FileDown, Printer, Mail, Share2, WhatsappIcon } from "lucide-react";
+import { Search, FileDown, Printer, Mail, Share2 } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/supabase";
 import { format } from 'date-fns';
