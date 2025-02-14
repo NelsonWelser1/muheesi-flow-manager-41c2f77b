@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
@@ -35,12 +36,18 @@ const TrainingEvaluationForm = () => {
         return;
       }
 
+      const formattedData = {
+        employee_id: data.employeeId,
+        training_module: data.trainingModule,
+        training_date: data.trainingDate,
+        performance_rating: parseInt(data.performanceRating),
+        feedback: data.feedback,
+        operator_id: user.id
+      };
+
       const { error } = await supabase
         .from('personnel_training_evaluations')
-        .insert([{
-          ...data,
-          operator_id: user.id,
-        }]);
+        .insert([formattedData]);
 
       if (error) throw error;
 
