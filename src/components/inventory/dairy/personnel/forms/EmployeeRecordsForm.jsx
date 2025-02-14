@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
 
 const JOB_TITLES = [
   "Production Manager",
@@ -22,13 +22,41 @@ const EmployeeRecordsForm = () => {
   const { register, handleSubmit, reset } = useForm();
   const { toast } = useToast();
 
-  const onSubmit = (data) => {
-    console.log(data);
-    toast({
-      title: "Success",
-      description: "Employee record has been saved",
-    });
-    reset();
+  const onSubmit = async (data) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to submit records",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('personnel_employee_records')
+        .insert([{
+          ...data,
+          operator_id: user.id,
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Employee record has been saved",
+      });
+      reset();
+    } catch (error) {
+      console.error('Error saving employee record:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save employee record",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
