@@ -29,9 +29,7 @@ const KAJONCoffeeLimited = () => {
   if (!selectedInterface) {
     return <Card>
         <CardContent className="space-y-4 pt-6">
-          <Button variant="outline" onClick={() => setSelectedInterface('kajon')} className="w-full justify-start text-left h-auto text-lg font-semibold py-[50px] px-[150px] mx-px my-[25px] text-inherit bg-orange-50">
-            Update KAJON Coffee Limited Stock
-          </Button>
+          <Button variant="outline" onClick={() => setSelectedInterface('kajon')} className="w-full justify-start text-left h-auto text-lg font-semibold py-[50px] px-[150px] my-[25px] text-inherit bg-orange-50 mx-0">KAJON Coffee Limited - Export Oriented Business</Button>
           <Button variant="outline" onClick={() => setSelectedInterface('kazo')} className="w-full justify-start text-left h-auto text-lg font-semibold my-[25px] py-[50px] px-[150px] bg-green-50">Kazo Coffee Development Project</Button>
         </CardContent>
       </Card>;
