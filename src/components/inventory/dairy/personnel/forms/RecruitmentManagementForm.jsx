@@ -1,6 +1,5 @@
 import React from 'react';
 import { useForm } from "react-hook-form";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
+import PersonnelDataDisplay from '../data-display/PersonnelDataDisplay';
 
 const JOB_POSITIONS = [
   "Production Manager",
@@ -60,51 +60,57 @@ const RecruitmentManagementForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label>Candidate Name</Label>
-          <Input {...register("candidateName", { required: true })} placeholder="Enter candidate name" />
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label>Candidate Name</Label>
+            <Input {...register("candidateName", { required: true })} placeholder="Enter candidate name" />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Job Title Applied For</Label>
+            <Select onValueChange={(value) => register("jobTitle").onChange({ target: { value } })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select job position" />
+              </SelectTrigger>
+              <SelectContent>
+                {JOB_POSITIONS.map((position) => (
+                  <SelectItem key={position} value={position}>
+                    {position}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Interview Date & Time</Label>
+            <Input type="datetime-local" {...register("interviewDateTime", { required: true })} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Hiring Manager ID</Label>
+            <Input {...register("hiringManagerId", { required: true })} placeholder="Enter hiring manager ID" />
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Label>Job Title Applied For</Label>
-          <Select onValueChange={(value) => register("jobTitle").onChange({ target: { value } })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select job position" />
-            </SelectTrigger>
-            <SelectContent>
-              {JOB_POSITIONS.map((position) => (
-                <SelectItem key={position} value={position}>
-                  {position}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label>Feedback/Comments</Label>
+          <Textarea 
+            {...register("feedback")} 
+            placeholder="Enter interview feedback and comments"
+            className="min-h-[100px]"
+          />
         </div>
 
-        <div className="space-y-2">
-          <Label>Interview Date & Time</Label>
-          <Input type="datetime-local" {...register("interviewDateTime", { required: true })} />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Hiring Manager ID</Label>
-          <Input {...register("hiringManagerId", { required: true })} placeholder="Enter hiring manager ID" />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Feedback/Comments</Label>
-        <Textarea 
-          {...register("feedback")} 
-          placeholder="Enter interview feedback and comments"
-          className="min-h-[100px]"
-        />
-      </div>
-
-      <Button type="submit" className="w-full">Save Recruitment Record</Button>
-    </form>
+        <Button type="submit" className="w-full">Save Recruitment Record</Button>
+      </form>
+      <PersonnelDataDisplay 
+        tableName="personnel_recruitment_records" 
+        title="Recruitment"
+      />
+    </div>
   );
 };
 
