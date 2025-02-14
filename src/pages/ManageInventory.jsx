@@ -108,7 +108,7 @@ const ManageInventory = () => {
         </div>
       </div>
       <div className="flex flex-col space-y-4">
-        {companies.map(company => <Card key={company.name} className="w-full cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleCompanyClick(company)}>
+        {companies.map(company => <Card key={company.name} onClick={() => handleCompanyClick(company)} className="w-full cursor-pointer hover:shadow-lg transition-shadow bg-[#e7f5e7]">
             <CardHeader className="my-[10px] bg-[#f6f9f6] rounded-none">
               <CardTitle className="flex justify-between items-start">
                 <span>{company.name}</span>
