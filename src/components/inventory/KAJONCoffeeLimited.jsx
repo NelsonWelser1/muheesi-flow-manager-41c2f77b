@@ -32,9 +32,7 @@ const KAJONCoffeeLimited = () => {
           <Button variant="outline" onClick={() => setSelectedInterface('kajon')} className="w-full justify-start text-left h-auto text-lg font-semibold py-[50px] px-[150px] mx-px my-[25px] text-inherit bg-orange-50">
             Update KAJON Coffee Limited Stock
           </Button>
-          <Button variant="outline" className="w-full justify-start text-left h-auto py-4 text-lg font-semibold" onClick={() => setSelectedInterface('kazo')}>
-            Update Kazo Coffee Development Project Stock
-          </Button>
+          <Button variant="outline" onClick={() => setSelectedInterface('kazo')} className="w-full justify-start text-left h-auto text-lg font-semibold my-[25px] py-[50px] px-[150px]">Kazo Coffee Development Project</Button>
         </CardContent>
       </Card>;
   }
