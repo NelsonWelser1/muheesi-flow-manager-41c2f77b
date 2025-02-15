@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Add this import
+import { AlertCircle } from "lucide-react"; // Add this import
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase';
 import { useMilkReception } from '@/hooks/useMilkReception';
@@ -13,6 +16,7 @@ import { format } from 'date-fns';
 const MilkOffloadForm = () => {
   const { toast } = useToast();
   const { data: milkReceptionData, refetch: refetchMilkReception } = useMilkReception();
+  const [validationError, setValidationError] = useState(null);
   const [formData, setFormData] = useState({
     storage_tank: '',
     supplier_name: 'Offload from Tank',
@@ -34,6 +38,7 @@ const MilkOffloadForm = () => {
       storage_tank: tankValue,
       supplier_name: `Offload from ${tankValue}`
     }));
+    setValidationError(null); // Clear any previous errors
   };
 
   const handleInputChange = (e) => {
@@ -43,6 +48,7 @@ const MilkOffloadForm = () => {
       ...prev,
       [name]: value
     }));
+    setValidationError(null); // Clear any previous errors
   };
 
   const validateForm = () => {
@@ -59,27 +65,49 @@ const MilkOffloadForm = () => {
       }
     });
 
-    // Calculate available milk in selected tank
-    const selectedTankMilk = milkReceptionData
-      ?.filter(record => record.tank_number === formData.storage_tank)
+    // Get tanks data
+    const tankAMilk = milkReceptionData
+      ?.filter(record => record.tank_number === 'Tank A')
       .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
 
-    console.log('Available milk in selected tank:', selectedTankMilk);
-    
+    const tankBMilk = milkReceptionData
+      ?.filter(record => record.tank_number === 'Tank B')
+      .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
+
     // Convert milk_volume to number for comparison
     const offloadVolume = Math.abs(parseFloat(formData.milk_volume));
     
-    if (offloadVolume > selectedTankMilk) {
-      // Check if other tank has enough volume
-      const otherTankName = formData.storage_tank === 'Tank A' ? 'Tank B' : 'Tank A';
-      const otherTankMilk = milkReceptionData
-        ?.filter(record => record.tank_number === otherTankName)
-        .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
-
-      if (offloadVolume <= otherTankMilk) {
-        errors.push(`Not enough milk in ${formData.storage_tank}. Please use ${otherTankName} which has ${otherTankMilk.toFixed(2)}L available.`);
-      } else {
-        errors.push(`Not enough milk in either tank. ${formData.storage_tank} has ${selectedTankMilk.toFixed(2)}L and ${otherTankName} has ${otherTankMilk.toFixed(2)}L available.`);
+    if (offloadVolume > 0) {
+      if (formData.storage_tank === 'Tank A' && offloadVolume > tankAMilk) {
+        if (offloadVolume <= tankBMilk) {
+          setValidationError({
+            title: "Insufficient Volume in Tank A",
+            description: `Tank A only has ${tankAMilk.toFixed(2)}L available. Consider using Tank B which has ${tankBMilk.toFixed(2)}L available.`,
+            suggestedTank: 'Tank B'
+          });
+        } else {
+          setValidationError({
+            title: "Insufficient Volume in Both Tanks",
+            description: `Not enough milk in either tank. Tank A has ${tankAMilk.toFixed(2)}L and Tank B has ${tankBMilk.toFixed(2)}L available.`,
+            suggestedTank: null
+          });
+        }
+        errors.push("Insufficient volume");
+      } else if (formData.storage_tank === 'Tank B' && offloadVolume > tankBMilk) {
+        if (offloadVolume <= tankAMilk) {
+          setValidationError({
+            title: "Insufficient Volume in Tank B",
+            description: `Tank B only has ${tankBMilk.toFixed(2)}L available. Consider using Tank A which has ${tankAMilk.toFixed(2)}L available.`,
+            suggestedTank: 'Tank A'
+          });
+        } else {
+          setValidationError({
+            title: "Insufficient Volume in Both Tanks",
+            description: `Not enough milk in either tank. Tank A has ${tankAMilk.toFixed(2)}L and Tank B has ${tankBMilk.toFixed(2)}L available.`,
+            suggestedTank: null
+          });
+        }
+        errors.push("Insufficient volume");
       }
     }
 
@@ -89,15 +117,18 @@ const MilkOffloadForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Starting form submission with data:', formData);
+    setValidationError(null);
 
     const errors = validateForm();
     if (errors.length > 0) {
       console.log('Validation errors:', errors);
-      toast({
-        title: "Validation Error",
-        description: errors.join(', '),
-        variant: "destructive",
-      });
+      if (!validationError) {
+        toast({
+          title: "Validation Error",
+          description: errors.join(', '),
+          variant: "destructive",
+        });
+      }
       return;
     }
 
@@ -107,7 +138,7 @@ const MilkOffloadForm = () => {
         .from('milk_reception')
         .insert([{
           supplier_name: formData.supplier_name,
-          milk_volume: -Math.abs(parseFloat(formData.milk_volume)), // Make volume negative for offloads
+          milk_volume: -Math.abs(parseFloat(formData.milk_volume)),
           temperature: parseFloat(formData.temperature),
           fat_percentage: parseFloat(formData.fat_percentage),
           protein_percentage: parseFloat(formData.protein_percentage),
@@ -119,10 +150,7 @@ const MilkOffloadForm = () => {
         }])
         .select();
 
-      if (offloadError) {
-        console.error('Error in milk offload:', offloadError);
-        throw offloadError;
-      }
+      if (offloadError) throw offloadError;
 
       console.log('Successfully recorded milk offload:', offloadData);
 
@@ -164,6 +192,26 @@ const MilkOffloadForm = () => {
           <CardTitle>New Tank Offload Entry</CardTitle>
         </CardHeader>
         <CardContent>
+          {validationError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>{validationError.title}</AlertTitle>
+              <AlertDescription className="mt-2">
+                {validationError.description}
+                {validationError.suggestedTank && (
+                  <div className="mt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleTankSelection(validationError.suggestedTank)}
+                    >
+                      Switch to {validationError.suggestedTank}
+                    </Button>
+                  </div>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
