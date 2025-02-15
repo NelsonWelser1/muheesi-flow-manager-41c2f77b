@@ -1,19 +1,33 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Settings, Wrench } from "lucide-react";
+import { Settings, Wrench, Plus, Trash2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useMilkReception } from '@/hooks/useMilkReception';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const MilkReceptionSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: milkReceptionData } = useMilkReception();
+  const [newTankName, setNewTankName] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [tankToDelete, setTankToDelete] = useState(null);
   const [settings, setSettings] = useState({
     temperature_threshold: 4.5,
     capacity_warning_threshold: 90,
@@ -24,24 +38,12 @@ const MilkReceptionSettings = () => {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (settingsData) => {
-      console.log('Updating milk reception settings:', settingsData);
-      
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Authentication required');
-      }
-
       const { data, error } = await supabase
         .from('milk_reception_settings')
         .upsert([settingsData])
         .select();
 
-      if (error) {
-        console.error('Error updating settings:', error);
-        throw error;
-      }
-      
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
@@ -52,7 +54,6 @@ const MilkReceptionSettings = () => {
       });
     },
     onError: (error) => {
-      console.error('Settings mutation error:', error);
       toast({
         title: "Error",
         description: "Failed to update settings: " + error.message,
@@ -61,46 +62,194 @@ const MilkReceptionSettings = () => {
     }
   });
 
-  const handleSettingsSubmit = async (e) => {
-    e.preventDefault();
-    console.log('Settings submission started');
-    
-    try {
-      await updateSettingsMutation.mutateAsync(settings);
-      console.log('Settings updated successfully');
-    } catch (error) {
-      console.error('Error updating settings:', error);
+  const addTankMutation = useMutation({
+    mutationFn: async (tankData) => {
+      const { data, error } = await supabase
+        .from('storage_tanks')
+        .insert([{
+          tank_name: tankData.name,
+          capacity: 5000, // Default capacity
+          status: 'active'
+        }])
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['milkReception'] });
+      toast({
+        title: "Success",
+        description: "Tank added successfully",
+      });
+      setNewTankName('');
+    },
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update settings",
-        variant: "destructive",
+        description: "Failed to add tank: " + error.message,
+        variant: "destructive"
       });
+    }
+  });
+
+  const deleteTankMutation = useMutation({
+    mutationFn: async (tankName) => {
+      const { error } = await supabase
+        .from('storage_tanks')
+        .delete()
+        .eq('tank_name', tankName);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['milkReception'] });
+      toast({
+        title: "Success",
+        description: "Tank removed successfully",
+      });
+      setShowDeleteDialog(false);
+      setTankToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to remove tank: " + error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleSettingsSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await updateSettingsMutation.mutateAsync(settings);
+    } catch (error) {
+      console.error('Error updating settings:', error);
     }
   };
 
-  // Calculate total milk volume for each tank from milk reception records
+  const handleAddTank = async (e) => {
+    e.preventDefault();
+    if (!newTankName.trim()) {
+      toast({
+        title: "Error",
+        description: "Tank name is required",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      await addTankMutation.mutateAsync({ name: newTankName.trim() });
+    } catch (error) {
+      console.error('Error adding tank:', error);
+    }
+  };
+
+  const handleDeleteTank = async () => {
+    if (!tankToDelete) return;
+    
+    try {
+      await deleteTankMutation.mutateAsync(tankToDelete);
+    } catch (error) {
+      console.error('Error deleting tank:', error);
+    }
+  };
+
+  // Calculate tank volumes from milk reception records
   const calculateTankVolumes = () => {
-    if (!milkReceptionData) return { tankA: 0, tankB: 0 };
+    if (!milkReceptionData) return { tankA: 0, tankB: 0, directProcessing: 0 };
     
     return milkReceptionData.reduce((acc, record) => {
       if (record.tank_number === 'Tank A') {
         acc.tankA += record.milk_volume;
       } else if (record.tank_number === 'Tank B') {
         acc.tankB += record.milk_volume;
+      } else if (record.tank_number === 'Direct-Processing') {
+        acc.directProcessing += record.milk_volume;
       }
       return acc;
-    }, { tankA: 0, tankB: 0 });
+    }, { tankA: 0, tankB: 0, directProcessing: 0 });
   };
 
   const tankVolumes = calculateTankVolumes();
 
   return (
     <div className="space-y-6">
+      {/* Tank Management Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Milk Reception Settings
+            Storage Tanks Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Add New Tank */}
+            <form onSubmit={handleAddTank} className="flex gap-2">
+              <Input
+                placeholder="Enter new tank name"
+                value={newTankName}
+                onChange={(e) => setNewTankName(e.target.value)}
+                className="max-w-xs"
+              />
+              <Button type="submit" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add Tank
+              </Button>
+            </form>
+
+            {/* Tank List */}
+            <div className="grid gap-4">
+              {['Tank A', 'Tank B', 'Direct-Processing'].map((tank) => (
+                <div key={tank} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-semibold">{tank}</h4>
+                    <p className="text-sm text-gray-500">
+                      {tank === 'Direct-Processing' 
+                        ? 'Bypass storage tanks for immediate processing'
+                        : `Capacity: 5000L`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <div className="font-bold">
+                        {tank === 'Tank A' 
+                          ? tankVolumes.tankA.toFixed(2)
+                          : tank === 'Tank B'
+                            ? tankVolumes.tankB.toFixed(2)
+                            : tankVolumes.directProcessing.toFixed(2)}L
+                      </div>
+                      <div className="text-sm text-gray-500">Current Volume</div>
+                    </div>
+                    {tank !== 'Direct-Processing' && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          setTankToDelete(tank);
+                          setShowDeleteDialog(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Settings Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Wrench className="h-5 w-5" />
+            Reception Settings
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -186,32 +335,27 @@ const MilkReceptionSettings = () => {
         </CardContent>
       </Card>
 
-      {/* Storage Tanks Status View */}
-      <Card>
-        <CardHeader>
-          <CardTitle>View Storage Tanks Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {['Tank A', 'Tank B'].map((tank) => (
-              <div key={tank} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h4 className="font-semibold">{tank}</h4>
-                  <p className="text-sm text-gray-500">Capacity: 5000L</p>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold">
-                    {tank === 'Tank A' ? tankVolumes.tankA.toFixed(2) : tankVolumes.tankB.toFixed(2)}L
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {((tank === 'Tank A' ? tankVolumes.tankA : tankVolumes.tankB) / 5000 * 100).toFixed(1)}% Full
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Tank?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the tank
+              and all associated records.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteTank}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
