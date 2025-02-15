@@ -1,69 +1,97 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
-import { format, parseISO } from 'date-fns';
+import { Thermometer, Droplet } from 'lucide-react';
 
 const MilkBalanceTracker = () => {
-  const { data: milkReception } = useMilkReception();
+  const { data: milkReceptionData } = useMilkReception();
 
-  const calculateMilkBalance = () => {
-    if (!milkReception) return { totalReceived: 0, totalOffloaded: 0, currentBalance: 0 };
+  const calculateTankBalance = (tankName) => {
+    if (!milkReceptionData) return { volume: 0, lastTemperature: 0 };
 
-    return milkReception.reduce((acc, record) => {
-      const volume = parseFloat(record.milk_volume);
-      
-      // Check if it's an offload record (negative volume or supplier name contains "Offload")
-      if (volume < 0 || record.supplier_name.includes('Offload')) {
-        acc.totalOffloaded += Math.abs(volume);
-      } else {
-        acc.totalReceived += volume;
-      }
-      
-      acc.currentBalance = acc.totalReceived - acc.totalOffloaded;
-      return acc;
-    }, { totalReceived: 0, totalOffloaded: 0, currentBalance: 0 });
+    const tankData = milkReceptionData
+      .filter(record => record.tank_number === tankName)
+      .reduce((acc, record) => {
+        // Add positive volumes (receptions) and subtract negative volumes (offloads)
+        acc.volume += record.milk_volume;
+        // Update temperature only if it's the most recent record
+        if (!acc.lastTimestamp || new Date(record.created_at) > new Date(acc.lastTimestamp)) {
+          acc.lastTemperature = record.temperature;
+          acc.lastTimestamp = record.created_at;
+        }
+        return acc;
+      }, { volume: 0, lastTemperature: 0, lastTimestamp: null });
+
+    return {
+      volume: Math.max(0, tankData.volume), // Ensure volume doesn't go below 0
+      lastTemperature: tankData.lastTemperature
+    };
   };
 
-  const { totalReceived, totalOffloaded, currentBalance } = calculateMilkBalance();
-
-  const formatDate = (dateString) => {
-    try {
-      if (!dateString) return 'No records';
-      const date = parseISO(dateString);
-      return format(date, 'PPp');
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Invalid date';
-    }
-  };
-
-  const lastUpdate = milkReception && milkReception.length > 0 
-    ? formatDate(milkReception[0].datetime || milkReception[0].created_at)
-    : 'No records';
+  const tankA = calculateTankBalance('Tank A');
+  const tankB = calculateTankBalance('Tank B');
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>Milk Balance Tracker</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-green-50 rounded-lg">
-            <p className="text-sm text-green-600 font-medium">Total Received</p>
-            <p className="text-2xl font-bold text-green-700">{totalReceived.toFixed(2)} L</p>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card className="bg-blue-50">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-lg font-medium">Tank A Status</CardTitle>
+          <Droplet className="h-4 w-4 text-blue-500" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Current Volume:</span>
+              <span className="text-lg font-bold text-blue-600">{tankA.volume.toFixed(2)}L</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Temperature:</span>
+              <div className="flex items-center gap-1">
+                <Thermometer className="h-4 w-4 text-red-500" />
+                <span className="text-lg font-bold text-gray-700">{tankA.lastTemperature}°C</span>
+              </div>
+            </div>
           </div>
-          <div className="p-4 bg-red-50 rounded-lg">
-            <p className="text-sm text-red-600 font-medium">Total Offloaded</p>
-            <p className="text-2xl font-bold text-red-700">{totalOffloaded.toFixed(2)} L</p>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-green-50">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-lg font-medium">Tank B Status</CardTitle>
+          <Droplet className="h-4 w-4 text-green-500" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Current Volume:</span>
+              <span className="text-lg font-bold text-green-600">{tankB.volume.toFixed(2)}L</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Temperature:</span>
+              <div className="flex items-center gap-1">
+                <Thermometer className="h-4 w-4 text-red-500" />
+                <span className="text-lg font-bold text-gray-700">{tankB.lastTemperature}°C</span>
+              </div>
+            </div>
           </div>
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-600 font-medium">Current Balance</p>
-            <p className="text-2xl font-bold text-blue-700">{currentBalance.toFixed(2)} L</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Total Balance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {(tankA.volume + tankB.volume).toFixed(2)}L
           </div>
-        </div>
-        <p className="text-sm text-gray-500 mt-4">Last updated: {lastUpdate}</p>
-      </CardContent>
-    </Card>
+          <p className="text-xs text-muted-foreground">
+            Combined volume across all tanks
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

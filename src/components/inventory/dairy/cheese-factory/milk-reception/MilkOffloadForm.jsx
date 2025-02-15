@@ -59,20 +59,28 @@ const MilkOffloadForm = () => {
       }
     });
 
-    // Calculate available milk in tank
-    const tankMilk = milkReceptionData
+    // Calculate available milk in selected tank
+    const selectedTankMilk = milkReceptionData
       ?.filter(record => record.tank_number === formData.storage_tank)
-      .reduce((total, record) => {
-        // Add positive volumes (receptions) and subtract negative volumes (offloads)
-        return total + (record.milk_volume || 0);
-      }, 0) || 0;
+      .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
 
-    console.log('Available milk in tank:', tankMilk);
+    console.log('Available milk in selected tank:', selectedTankMilk);
     
-    // Convert milk_volume to negative for offload
+    // Convert milk_volume to number for comparison
     const offloadVolume = Math.abs(parseFloat(formData.milk_volume));
-    if (offloadVolume > tankMilk) {
-      errors.push(`Not enough milk in ${formData.storage_tank}. Available: ${tankMilk}L`);
+    
+    if (offloadVolume > selectedTankMilk) {
+      // Check if other tank has enough volume
+      const otherTankName = formData.storage_tank === 'Tank A' ? 'Tank B' : 'Tank A';
+      const otherTankMilk = milkReceptionData
+        ?.filter(record => record.tank_number === otherTankName)
+        .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
+
+      if (offloadVolume <= otherTankMilk) {
+        errors.push(`Not enough milk in ${formData.storage_tank}. Please use ${otherTankName} which has ${otherTankMilk.toFixed(2)}L available.`);
+      } else {
+        errors.push(`Not enough milk in either tank. ${formData.storage_tank} has ${selectedTankMilk.toFixed(2)}L and ${otherTankName} has ${otherTankMilk.toFixed(2)}L available.`);
+      }
     }
 
     return errors;
