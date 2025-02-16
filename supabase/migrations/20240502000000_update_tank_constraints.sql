@@ -1,6 +1,7 @@
 
 -- Drop the existing constraint
 ALTER TABLE public.milk_reception 
+DROP CONSTRAINT IF EXISTS check_tank_number;
 DROP CONSTRAINT IF EXISTS chk_milk_reception_tank;
 
 -- Add the updated constraint that includes Direct-Processing
