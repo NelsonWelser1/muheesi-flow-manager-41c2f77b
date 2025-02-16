@@ -1,8 +1,12 @@
 
 -- Drop all existing constraints first
 ALTER TABLE public.milk_reception 
-DROP CONSTRAINT IF EXISTS check_tank_number,
-DROP CONSTRAINT IF EXISTS chk_milk_reception_tank,
+DROP CONSTRAINT IF EXISTS check_tank_number;
+
+ALTER TABLE public.milk_reception 
+DROP CONSTRAINT IF EXISTS chk_milk_reception_tank;
+
+ALTER TABLE public.milk_reception 
 DROP CONSTRAINT IF EXISTS chk_milk_reception_tank_number;
 
 -- Add the updated constraint
@@ -12,8 +16,12 @@ CHECK (tank_number IN ('Tank A', 'Tank B', 'Direct-Processing'));
 
 -- Drop all existing storage tank constraints
 ALTER TABLE public.storage_tanks 
-DROP CONSTRAINT IF EXISTS valid_tank_names,
-DROP CONSTRAINT IF EXISTS check_tank_name,
+DROP CONSTRAINT IF EXISTS valid_tank_names;
+
+ALTER TABLE public.storage_tanks 
+DROP CONSTRAINT IF EXISTS check_tank_name;
+
+ALTER TABLE public.storage_tanks 
 DROP CONSTRAINT IF EXISTS valid_tank_names_check;
 
 -- Add updated storage tank constraint
