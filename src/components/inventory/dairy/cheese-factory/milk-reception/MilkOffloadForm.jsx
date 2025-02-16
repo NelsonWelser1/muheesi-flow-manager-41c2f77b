@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -57,7 +56,7 @@ const MilkOffloadForm = () => {
     const requiredFields = [
       'storage_tank', 'milk_volume', 'temperature',
       'fat_percentage', 'protein_percentage', 'total_plate_count', 
-      'acidity', 'destination'  // Added destination as required
+      'acidity', 'destination'
     ];
 
     requiredFields.forEach(field => {
@@ -66,7 +65,34 @@ const MilkOffloadForm = () => {
       }
     });
 
-    if (formData.storage_tank !== 'Direct-Processing') {
+    const offloadVolume = Math.abs(parseFloat(formData.milk_volume));
+
+    if (formData.storage_tank === 'Direct-Processing') {
+      const directProcessingReceived = milkReceptionData
+        ?.filter(record => 
+          record.tank_number === 'Direct-Processing' && 
+          record.milk_volume > 0
+        )
+        .reduce((total, record) => total + record.milk_volume, 0) || 0;
+
+      const directProcessingOffloaded = milkReceptionData
+        ?.filter(record => 
+          record.tank_number === 'Direct-Processing' && 
+          record.milk_volume < 0
+        )
+        .reduce((total, record) => total + Math.abs(record.milk_volume), 0) || 0;
+
+      const availableDirectProcessing = directProcessingReceived - directProcessingOffloaded;
+
+      if (offloadVolume > availableDirectProcessing) {
+        setValidationError({
+          title: "Insufficient Volume in Direct Processing",
+          description: `Direct Processing only has ${availableDirectProcessing.toFixed(2)}L available. Consider using Tank A or Tank B if available.`,
+          suggestedTank: null
+        });
+        errors.push("Insufficient volume in Direct Processing");
+      }
+    } else {
       const tankAMilk = milkReceptionData
         ?.filter(record => record.tank_number === 'Tank A')
         .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
@@ -75,8 +101,6 @@ const MilkOffloadForm = () => {
         ?.filter(record => record.tank_number === 'Tank B')
         .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
 
-      const offloadVolume = Math.abs(parseFloat(formData.milk_volume));
-      
       if (offloadVolume > 0) {
         if (formData.storage_tank === 'Tank A' && offloadVolume > tankAMilk) {
           if (offloadVolume <= tankBMilk) {
@@ -136,7 +160,6 @@ const MilkOffloadForm = () => {
     try {
       console.log('Recording milk offload...');
       
-      // First insert into milk_reception
       const { data: receptionData, error: receptionError } = await supabase
         .from('milk_reception')
         .insert([{
@@ -150,13 +173,12 @@ const MilkOffloadForm = () => {
           notes: formData.notes,
           quality_score: formData.quality_check,
           tank_number: formData.storage_tank,
-          destination: formData.destination // Added destination field
+          destination: formData.destination
         }])
         .select();
 
       if (receptionError) throw receptionError;
 
-      // Then insert into milk_tank_offloads
       const { data: offloadData, error: offloadError } = await supabase
         .from('milk_tank_offloads')
         .insert([{
@@ -165,7 +187,7 @@ const MilkOffloadForm = () => {
           temperature: parseFloat(formData.temperature),
           quality_check: formData.quality_check,
           notes: formData.notes,
-          destination: formData.destination // Added destination field
+          destination: formData.destination
         }])
         .select();
 
