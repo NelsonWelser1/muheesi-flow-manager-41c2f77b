@@ -73,8 +73,8 @@ const MilkReceptionSettings = () => {
           status: status,
           service_end_date: status === 'out_of_service' ? endDate?.toISOString() : null
         })
-        .eq('name', tankName)  // Changed from tank_name to name
-        .select('*');
+        .eq('tank_name', tankName)  // Changed from 'name' to 'tank_name' to match our schema
+        .select();
 
       if (error) {
         console.error('Supabase error:', error);
@@ -107,7 +107,7 @@ const MilkReceptionSettings = () => {
       const { data, error } = await supabase
         .from('storage_tanks')
         .insert([{
-          name: tankData.name,
+          tank_name: tankData.name,  // Changed from 'name' to 'tank_name'
           capacity: 5000,
           status: 'active'
         }])
