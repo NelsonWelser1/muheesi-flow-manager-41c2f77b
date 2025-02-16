@@ -21,4 +21,3 @@ ON storage_tanks(service_end_date);
 -- Grant necessary permissions
 GRANT ALL ON public.storage_tanks TO authenticated;
 GRANT ALL ON public.storage_tanks TO service_role;
-
