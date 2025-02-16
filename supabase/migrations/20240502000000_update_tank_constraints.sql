@@ -27,7 +27,7 @@ DROP CONSTRAINT IF EXISTS valid_tank_names_check;
 -- Add updated storage tank constraint
 ALTER TABLE public.storage_tanks
 ADD CONSTRAINT valid_tank_names 
-CHECK (tank_name IN ('Tank A', 'Tank B', 'Direct-Processing'));
+CHECK (tank_number IN ('Tank A', 'Tank B', 'Direct-Processing'));
 
 -- Grant necessary permissions
 GRANT ALL ON public.milk_reception TO authenticated;
