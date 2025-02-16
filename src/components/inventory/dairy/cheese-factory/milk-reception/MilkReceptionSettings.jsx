@@ -65,12 +65,17 @@ const MilkReceptionSettings = () => {
 
   const updateTankStatusMutation = useMutation({
     mutationFn: async ({ tankName, status, endDate = null }) => {
+      console.log('Updating tank status:', { tankName, status, endDate });
+      const updateData = {
+        status: status,
+        service_end_date: status === 'out_of_service' ? endDate?.toISOString() : null
+      };
+      
+      console.log('Update payload:', updateData);
+      
       const { data, error } = await supabase
         .from('storage_tanks')
-        .update({ 
-          status: status,
-          service_end_date: endDate,
-        })
+        .update(updateData)
         .eq('tank_name', tankName)
         .select();
 
@@ -88,6 +93,7 @@ const MilkReceptionSettings = () => {
       setOutOfServiceDate(null);
     },
     onError: (error) => {
+      console.error('Status update error:', error);
       toast({
         title: "Error",
         description: "Failed to update tank status: " + error.message,
