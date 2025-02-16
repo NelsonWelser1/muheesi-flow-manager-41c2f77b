@@ -64,47 +64,49 @@ const MilkOffloadForm = () => {
       }
     });
 
-    const tankAMilk = milkReceptionData
-      ?.filter(record => record.tank_number === 'Tank A')
-      .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
+    if (formData.storage_tank !== 'Direct-Processing') {
+      const tankAMilk = milkReceptionData
+        ?.filter(record => record.tank_number === 'Tank A')
+        .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
 
-    const tankBMilk = milkReceptionData
-      ?.filter(record => record.tank_number === 'Tank B')
-      .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
+      const tankBMilk = milkReceptionData
+        ?.filter(record => record.tank_number === 'Tank B')
+        .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
 
-    const offloadVolume = Math.abs(parseFloat(formData.milk_volume));
-    
-    if (offloadVolume > 0) {
-      if (formData.storage_tank === 'Tank A' && offloadVolume > tankAMilk) {
-        if (offloadVolume <= tankBMilk) {
-          setValidationError({
-            title: "Insufficient Volume in Tank A",
-            description: `Tank A only has ${tankAMilk.toFixed(2)}L available. Consider using Tank B which has ${tankBMilk.toFixed(2)}L available.`,
-            suggestedTank: 'Tank B'
-          });
-        } else {
-          setValidationError({
-            title: "Insufficient Volume in Both Tanks",
-            description: `Not enough milk in either tank. Tank A has ${tankAMilk.toFixed(2)}L and Tank B has ${tankBMilk.toFixed(2)}L available.`,
-            suggestedTank: null
-          });
+      const offloadVolume = Math.abs(parseFloat(formData.milk_volume));
+      
+      if (offloadVolume > 0) {
+        if (formData.storage_tank === 'Tank A' && offloadVolume > tankAMilk) {
+          if (offloadVolume <= tankBMilk) {
+            setValidationError({
+              title: "Insufficient Volume in Tank A",
+              description: `Tank A only has ${tankAMilk.toFixed(2)}L available. Consider using Tank B which has ${tankBMilk.toFixed(2)}L available.`,
+              suggestedTank: 'Tank B'
+            });
+          } else {
+            setValidationError({
+              title: "Insufficient Volume in Both Tanks",
+              description: `Not enough milk in either tank. Tank A has ${tankAMilk.toFixed(2)}L and Tank B has ${tankBMilk.toFixed(2)}L available.`,
+              suggestedTank: null
+            });
+          }
+          errors.push("Insufficient volume");
+        } else if (formData.storage_tank === 'Tank B' && offloadVolume > tankBMilk) {
+          if (offloadVolume <= tankAMilk) {
+            setValidationError({
+              title: "Insufficient Volume in Tank B",
+              description: `Tank B only has ${tankBMilk.toFixed(2)}L available. Consider using Tank A which has ${tankAMilk.toFixed(2)}L available.`,
+              suggestedTank: 'Tank A'
+            });
+          } else {
+            setValidationError({
+              title: "Insufficient Volume in Both Tanks",
+              description: `Not enough milk in either tank. Tank A has ${tankAMilk.toFixed(2)}L and Tank B has ${tankBMilk.toFixed(2)}L available.`,
+              suggestedTank: null
+            });
+          }
+          errors.push("Insufficient volume");
         }
-        errors.push("Insufficient volume");
-      } else if (formData.storage_tank === 'Tank B' && offloadVolume > tankBMilk) {
-        if (offloadVolume <= tankAMilk) {
-          setValidationError({
-            title: "Insufficient Volume in Tank B",
-            description: `Tank B only has ${tankBMilk.toFixed(2)}L available. Consider using Tank A which has ${tankAMilk.toFixed(2)}L available.`,
-            suggestedTank: 'Tank A'
-          });
-        } else {
-          setValidationError({
-            title: "Insufficient Volume in Both Tanks",
-            description: `Not enough milk in either tank. Tank A has ${tankAMilk.toFixed(2)}L and Tank B has ${tankBMilk.toFixed(2)}L available.`,
-            suggestedTank: null
-          });
-        }
-        errors.push("Insufficient volume");
       }
     }
 
