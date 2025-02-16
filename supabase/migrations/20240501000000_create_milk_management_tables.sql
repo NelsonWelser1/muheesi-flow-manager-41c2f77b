@@ -1,3 +1,4 @@
+
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -20,7 +21,9 @@ CREATE TABLE IF NOT EXISTS public.milk_reception (
     quality_score TEXT NOT NULL,
     tank_number TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_milk_reception_tank CHECK (tank_number IN ('Tank A', 'Tank B', 'Direct-Processing')),
+    CONSTRAINT chk_milk_reception_quality_score CHECK (quality_score IN ('Grade A', 'Grade B', 'Grade C', 'Rejected'))
 );
 
 -- Create milk_tank_offloads table
@@ -75,13 +78,13 @@ TO PUBLIC
 USING (true)
 WITH CHECK (true);
 
--- Add constraints
-ALTER TABLE public.milk_reception
-ADD CONSTRAINT chk_milk_reception_tank CHECK (tank_number IN ('Tank A', 'Tank B')),
-ADD CONSTRAINT chk_milk_reception_quality_score CHECK (quality_score IN ('Grade A', 'Grade B', 'Grade C', 'Rejected'));
-
 -- Create indexes for better performance
 CREATE INDEX idx_milk_reception_supplier ON public.milk_reception(supplier_name);
 CREATE INDEX idx_milk_reception_tank ON public.milk_reception(tank_number);
 CREATE INDEX idx_milk_tank_offloads_tank ON public.milk_tank_offloads(storage_tank);
 CREATE INDEX idx_milk_reception_audit_created_at ON public.milk_reception_audit_log(created_at);
+
+-- Grant necessary permissions
+GRANT ALL ON public.milk_reception TO authenticated;
+GRANT ALL ON public.milk_reception TO anon;
+GRANT ALL ON public.milk_reception TO service_role;
