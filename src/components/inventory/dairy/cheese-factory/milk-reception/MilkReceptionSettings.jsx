@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,20 +67,19 @@ const MilkReceptionSettings = () => {
   const updateTankStatusMutation = useMutation({
     mutationFn: async ({ tankName, status, endDate = null }) => {
       console.log('Updating tank status:', { tankName, status, endDate });
-      const updateData = {
-        status: status,
-        service_end_date: status === 'out_of_service' ? endDate?.toISOString() : null
-      };
-      
-      console.log('Update payload:', updateData);
-      
       const { data, error } = await supabase
         .from('storage_tanks')
-        .update(updateData)
-        .eq('tank_name', tankName)
-        .select();
+        .update({
+          status: status,
+          service_end_date: status === 'out_of_service' ? endDate?.toISOString() : null
+        })
+        .eq('name', tankName)  // Changed from tank_name to name
+        .select('*');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -107,7 +107,7 @@ const MilkReceptionSettings = () => {
       const { data, error } = await supabase
         .from('storage_tanks')
         .insert([{
-          tank_name: tankData.name,
+          name: tankData.name,
           capacity: 5000,
           status: 'active'
         }])
