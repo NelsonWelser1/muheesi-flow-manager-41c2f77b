@@ -1,3 +1,4 @@
+
 -- Create storage_tanks table to manage tank settings
 CREATE TABLE IF NOT EXISTS public.storage_tanks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
