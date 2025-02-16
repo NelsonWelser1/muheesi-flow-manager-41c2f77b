@@ -171,6 +171,7 @@ const MilkReceptionForm = () => {
                 <SelectContent>
                   <SelectItem value="Tank A">Tank A</SelectItem>
                   <SelectItem value="Tank B">Tank B</SelectItem>
+                  <SelectItem value="Direct-Processing">Direct Processing</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Add this import
-import { AlertCircle } from "lucide-react"; // Add this import
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase';
 import { useMilkReception } from '@/hooks/useMilkReception';
@@ -38,7 +37,7 @@ const MilkOffloadForm = () => {
       storage_tank: tankValue,
       supplier_name: `Offload from ${tankValue}`
     }));
-    setValidationError(null); // Clear any previous errors
+    setValidationError(null);
   };
 
   const handleInputChange = (e) => {
@@ -48,7 +47,7 @@ const MilkOffloadForm = () => {
       ...prev,
       [name]: value
     }));
-    setValidationError(null); // Clear any previous errors
+    setValidationError(null);
   };
 
   const validateForm = () => {
@@ -65,7 +64,6 @@ const MilkOffloadForm = () => {
       }
     });
 
-    // Get tanks data
     const tankAMilk = milkReceptionData
       ?.filter(record => record.tank_number === 'Tank A')
       .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
@@ -74,7 +72,6 @@ const MilkOffloadForm = () => {
       ?.filter(record => record.tank_number === 'Tank B')
       .reduce((total, record) => total + (record.milk_volume || 0), 0) || 0;
 
-    // Convert milk_volume to number for comparison
     const offloadVolume = Math.abs(parseFloat(formData.milk_volume));
     
     if (offloadVolume > 0) {
@@ -226,6 +223,7 @@ const MilkOffloadForm = () => {
                   <SelectContent>
                     <SelectItem value="Tank A">Tank A</SelectItem>
                     <SelectItem value="Tank B">Tank B</SelectItem>
+                    <SelectItem value="Direct-Processing">Direct Processing</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -354,7 +352,6 @@ const MilkOffloadForm = () => {
         </CardContent>
       </Card>
 
-      {/* Display submitted data */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Offload Records</CardTitle>
