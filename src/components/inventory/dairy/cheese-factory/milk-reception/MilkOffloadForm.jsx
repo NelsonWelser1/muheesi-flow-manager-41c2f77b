@@ -56,7 +56,8 @@ const MilkOffloadForm = () => {
     const errors = [];
     const requiredFields = [
       'storage_tank', 'milk_volume', 'temperature',
-      'fat_percentage', 'protein_percentage', 'total_plate_count', 'acidity'
+      'fat_percentage', 'protein_percentage', 'total_plate_count', 
+      'acidity', 'destination'  // Added destination as required
     ];
 
     requiredFields.forEach(field => {
@@ -134,7 +135,9 @@ const MilkOffloadForm = () => {
 
     try {
       console.log('Recording milk offload...');
-      const { data: offloadData, error: offloadError } = await supabase
+      
+      // First insert into milk_reception
+      const { data: receptionData, error: receptionError } = await supabase
         .from('milk_reception')
         .insert([{
           supplier_name: formData.supplier_name,
@@ -146,13 +149,29 @@ const MilkOffloadForm = () => {
           acidity: parseFloat(formData.acidity),
           notes: formData.notes,
           quality_score: formData.quality_check,
-          tank_number: formData.storage_tank
+          tank_number: formData.storage_tank,
+          destination: formData.destination // Added destination field
+        }])
+        .select();
+
+      if (receptionError) throw receptionError;
+
+      // Then insert into milk_tank_offloads
+      const { data: offloadData, error: offloadError } = await supabase
+        .from('milk_tank_offloads')
+        .insert([{
+          storage_tank: formData.storage_tank,
+          volume_offloaded: Math.abs(parseFloat(formData.milk_volume)),
+          temperature: parseFloat(formData.temperature),
+          quality_check: formData.quality_check,
+          notes: formData.notes,
+          destination: formData.destination // Added destination field
         }])
         .select();
 
       if (offloadError) throw offloadError;
 
-      console.log('Successfully recorded milk offload:', offloadData);
+      console.log('Successfully recorded milk offload:', { receptionData, offloadData });
 
       toast({
         title: "Success",
