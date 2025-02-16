@@ -1,14 +1,13 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Settings, Wrench, Plus, Trash2, AlertTriangle } from "lucide-react";
+import { Settings, Wrench, Plus, AlertTriangle, Power, PowerOff } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import { useMilkReception } from '@/hooks/useMilkReception';
 import {
   AlertDialog,
@@ -20,14 +19,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const MilkReceptionSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: milkReceptionData } = useMilkReception();
   const [newTankName, setNewTankName] = useState('');
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [tankToDelete, setTankToDelete] = useState(null);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [selectedTank, setSelectedTank] = useState(null);
+  const [outOfServiceDate, setOutOfServiceDate] = useState(null);
   const [settings, setSettings] = useState({
     temperature_threshold: 4.5,
     capacity_warning_threshold: 90,
@@ -62,13 +63,46 @@ const MilkReceptionSettings = () => {
     }
   });
 
+  const updateTankStatusMutation = useMutation({
+    mutationFn: async ({ tankName, status, endDate = null }) => {
+      const { data, error } = await supabase
+        .from('storage_tanks')
+        .update({ 
+          status: status,
+          service_end_date: endDate,
+        })
+        .eq('tank_name', tankName)
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['milkReception'] });
+      toast({
+        title: "Success",
+        description: "Tank status updated successfully",
+      });
+      setShowStatusDialog(false);
+      setSelectedTank(null);
+      setOutOfServiceDate(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update tank status: " + error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   const addTankMutation = useMutation({
     mutationFn: async (tankData) => {
       const { data, error } = await supabase
         .from('storage_tanks')
         .insert([{
           tank_name: tankData.name,
-          capacity: 5000, // Default capacity
+          capacity: 5000,
           status: 'active'
         }])
         .select();
@@ -93,32 +127,26 @@ const MilkReceptionSettings = () => {
     }
   });
 
-  const deleteTankMutation = useMutation({
-    mutationFn: async (tankName) => {
-      const { error } = await supabase
-        .from('storage_tanks')
-        .delete()
-        .eq('tank_name', tankName);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['milkReception'] });
-      toast({
-        title: "Success",
-        description: "Tank removed successfully",
-      });
-      setShowDeleteDialog(false);
-      setTankToDelete(null);
-    },
-    onError: (error) => {
+  const handleStatusChange = async (tank, status) => {
+    if (status === 'out_of_service' && !outOfServiceDate) {
       toast({
         title: "Error",
-        description: "Failed to remove tank: " + error.message,
+        description: "Please select an end date for out of service period",
         variant: "destructive"
       });
+      return;
     }
-  });
+
+    try {
+      await updateTankStatusMutation.mutateAsync({
+        tankName: tank,
+        status: status,
+        endDate: status === 'out_of_service' ? outOfServiceDate : null
+      });
+    } catch (error) {
+      console.error('Error updating tank status:', error);
+    }
+  };
 
   const handleSettingsSubmit = async (e) => {
     e.preventDefault();
@@ -129,35 +157,6 @@ const MilkReceptionSettings = () => {
     }
   };
 
-  const handleAddTank = async (e) => {
-    e.preventDefault();
-    if (!newTankName.trim()) {
-      toast({
-        title: "Error",
-        description: "Tank name is required",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      await addTankMutation.mutateAsync({ name: newTankName.trim() });
-    } catch (error) {
-      console.error('Error adding tank:', error);
-    }
-  };
-
-  const handleDeleteTank = async () => {
-    if (!tankToDelete) return;
-    
-    try {
-      await deleteTankMutation.mutateAsync(tankToDelete);
-    } catch (error) {
-      console.error('Error deleting tank:', error);
-    }
-  };
-
-  // Calculate tank volumes from milk reception records
   const calculateTankVolumes = () => {
     if (!milkReceptionData) return { tankA: 0, tankB: 0, directProcessing: 0 };
     
@@ -188,7 +187,10 @@ const MilkReceptionSettings = () => {
         <CardContent>
           <div className="space-y-4">
             {/* Add New Tank */}
-            <form onSubmit={handleAddTank} className="flex gap-2">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              addTankMutation.mutateAsync({ name: newTankName.trim() });
+            }} className="flex gap-2">
               <Input
                 placeholder="Enter new tank name"
                 value={newTankName}
@@ -216,26 +218,20 @@ const MilkReceptionSettings = () => {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <div className="font-bold">
-                        {tank === 'Tank A' 
-                          ? tankVolumes.tankA.toFixed(2)
-                          : tank === 'Tank B'
-                            ? tankVolumes.tankB.toFixed(2)
-                            : tankVolumes.directProcessing.toFixed(2)}L
+                        Status: {tank.status || 'Active'}
                       </div>
-                      <div className="text-sm text-gray-500">Current Volume</div>
+                      {tank !== 'Direct-Processing' && (
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedTank(tank);
+                            setShowStatusDialog(true);
+                          }}
+                        >
+                          Change Status
+                        </Button>
+                      )}
                     </div>
-                    {tank !== 'Direct-Processing' && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                          setTankToDelete(tank);
-                          setShowDeleteDialog(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
                 </div>
               ))}
@@ -243,6 +239,59 @@ const MilkReceptionSettings = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Status Change Dialog */}
+      <AlertDialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Tank Status - {selectedTank}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Select the new status for the tank
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="flex flex-col gap-4">
+              <Button 
+                variant="outline"
+                onClick={() => handleStatusChange(selectedTank, 'active')}
+                className="flex items-center gap-2"
+              >
+                <Power className="h-4 w-4 text-green-500" />
+                Activate
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => handleStatusChange(selectedTank, 'suspended')}
+                className="flex items-center gap-2"
+              >
+                <PowerOff className="h-4 w-4 text-yellow-500" />
+                Suspend
+              </Button>
+              <div className="space-y-2">
+                <Button 
+                  variant="outline"
+                  onClick={() => handleStatusChange(selectedTank, 'out_of_service')}
+                  className="w-full flex items-center gap-2"
+                >
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                  Out of Service
+                </Button>
+                <div className="pt-2">
+                  <Label>Service End Date</Label>
+                  <DatePicker
+                    date={outOfServiceDate}
+                    setDate={setOutOfServiceDate}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Settings Form */}
       <Card>
@@ -334,28 +383,6 @@ const MilkReceptionSettings = () => {
           </form>
         </CardContent>
       </Card>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Tank?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the tank
-              and all associated records.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteTank}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
