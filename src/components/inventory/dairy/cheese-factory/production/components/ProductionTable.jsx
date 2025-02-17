@@ -12,21 +12,21 @@ const ProductionTable = ({ records }) => {
       <table className="w-full">
         <thead>
           <tr className="border-b">
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Batch ID</th>
+            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[200px]">Batch ID</th>
             <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Fromager</th>
             <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Cheese Type</th>
             <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Milk Volume (L)</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[200px]">Start Time</th>
+            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[250px]">Start Time</th>
             <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Starter Culture</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Starter Quantity (g)</th>
+            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Starter Quantity (g)</th>
             <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Coagulant Type</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Coagulant Quantity (ml)</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[130px]">Temperature (°C)</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Processing Time (min)</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Expected Yield (kg)</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[130px]">Duration (hours)</th>
+            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Coagulant Quantity (ml)</th>
+            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Temperature (°C)</th>
+            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Processing Time (min)</th>
+            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Expected Yield (kg)</th>
+            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Duration (hours)</th>
             <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Status</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[250px]">Notes</th>
+            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[300px]">Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -41,7 +41,7 @@ const ProductionTable = ({ records }) => {
               <td className="px-6 py-4 whitespace-normal">{record.starter_quantity}</td>
               <td className="px-6 py-4 whitespace-normal">{record.coagulant_type}</td>
               <td className="px-6 py-4 whitespace-normal">{record.coagulant_quantity}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.temperature}</td>
+              <td className="px-6 py-4 whitespace-normal">{record.processing_temperature}</td>
               <td className="px-6 py-4 whitespace-normal">{record.processing_time}</td>
               <td className="px-6 py-4 whitespace-normal">{record.expected_yield}</td>
               <td className="px-6 py-4 whitespace-normal">{record.estimated_duration}</td>
