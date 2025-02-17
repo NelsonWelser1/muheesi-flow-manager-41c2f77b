@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
@@ -124,28 +123,16 @@ const ProductionLineForm = ({ productionLine }) => {
     try {
       setIsSubmitting(true);
       
-      // Get current user session
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) {
-        throw new Error('Please sign in to submit the form');
-      }
-      
-      const user = session.session.user;
-      
       // Determine which table to use based on production line type
       const tableName = productionLine.name.toLowerCase().includes('international') 
         ? 'production_line_international' 
         : 'production_line_local';
       
-      // Generate a new batch ID for the submission
-      const finalBatchId = batchId || await generateBatchId(data.cheese_type);
-      if (!finalBatchId) throw new Error('Failed to generate batch ID');
-      
       // Create the data object for submission
       const submissionData = {
         fromager_identifier: data.fromager_identifier,
         cheese_type: data.cheese_type,
-        batch_id: finalBatchId,
+        batch_id: batchId || await generateBatchId(data.cheese_type),
         milk_volume: parseFloat(data.milk_volume),
         start_time: data.start_time,
         estimated_duration: parseFloat(data.estimated_duration),
@@ -161,8 +148,7 @@ const ProductionLineForm = ({ productionLine }) => {
         manager: productionLine.manager,
         description: productionLine.description,
         created_at: new Date().toISOString(),
-        status: 'pending',
-        created_by: user.id
+        status: 'pending'
       };
 
       console.log('Submitting data to table:', tableName, submissionData);
