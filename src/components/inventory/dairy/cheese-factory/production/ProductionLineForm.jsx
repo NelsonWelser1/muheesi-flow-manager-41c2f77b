@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
@@ -133,6 +134,7 @@ const ProductionLineForm = ({ productionLine }) => {
     try {
       setIsSubmitting(true);
       
+      // Determine which table to use based on production line type
       const tableName = productionLine.name.toLowerCase().includes('international') 
         ? 'production_line_international' 
         : 'production_line_local';
@@ -141,43 +143,51 @@ const ProductionLineForm = ({ productionLine }) => {
       const finalBatchId = await generateBatchId(data.cheese_type);
       if (!finalBatchId) throw new Error('Failed to generate final batch ID');
       
-      // Only include form fields in the submission, excluding production line metadata
-      const formData = {
+      // Create the data object for submission
+      const submissionData = {
         fromager_identifier: data.fromager_identifier,
         cheese_type: data.cheese_type,
         batch_id: finalBatchId,
-        milk_volume: data.milk_volume,
+        milk_volume: parseFloat(data.milk_volume),
         start_time: data.start_time,
-        estimated_duration: data.estimated_duration,
+        estimated_duration: parseFloat(data.estimated_duration),
         starter_culture: data.starter_culture,
-        starter_quantity: data.starter_quantity,
+        starter_quantity: parseFloat(data.starter_quantity),
         coagulant_type: data.coagulant_type,
-        coagulant_quantity: data.coagulant_quantity,
-        processing_temperature: data.processing_temperature,
-        processing_time: data.processing_time,
-        expected_yield: data.expected_yield,
-        notes: data.notes
+        coagulant_quantity: parseFloat(data.coagulant_quantity),
+        processing_temperature: parseFloat(data.processing_temperature),
+        processing_time: parseFloat(data.processing_time),
+        expected_yield: parseFloat(data.expected_yield),
+        notes: data.notes,
+        created_at: new Date().toISOString(),
+        production_line: productionLine.name,
+        status: 'pending'
       };
 
       const { error } = await supabase
         .from(tableName)
-        .insert([formData]);
+        .insert([submissionData]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error submitting form:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
-        description: "Production line updated successfully",
+        description: "Production record added successfully",
       });
+
       reset();
       setSelectedCheeseType('');
       setBatchId('');
       setCurrentSequenceNumber(null);
+      
     } catch (error) {
       console.error('Error submitting form:', error);
       toast({
         title: "Error",
-        description: "Failed to update production line",
+        description: error.message || "Failed to update production line",
         variant: "destructive",
       });
     } finally {
