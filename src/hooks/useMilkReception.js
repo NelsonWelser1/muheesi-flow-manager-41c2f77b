@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase';
 
@@ -8,12 +9,12 @@ export const useMilkReception = () => {
   const fetchMilkReceptions = async () => {
     console.log('Fetching milk reception data');
     try {
-      const { data, error } = await supabase
+      const { data, error, status } = await supabase
         .from('milk_reception')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
+      if (error && status !== 406) {
         console.error('Error fetching milk reception data:', error);
         throw error;
       }
@@ -50,7 +51,7 @@ export const useMilkReception = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['milkReceptions']);
+      queryClient.invalidateQueries({ queryKey: ['milkReceptions'] });
     }
   });
 
@@ -78,16 +79,21 @@ export const useMilkReception = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['milkReceptions']);
+      queryClient.invalidateQueries({ queryKey: ['milkReceptions'] });
     }
   });
 
   const query = useQuery({
     queryKey: ['milkReceptions'],
     queryFn: fetchMilkReceptions,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     onError: (error) => {
       console.error('Query error:', error);
-    }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: true,
+    refetchOnMount: true
   });
 
   return {
