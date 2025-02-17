@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase';
 import { useMilkReception } from '@/hooks/useMilkReception';
-import { format } from 'date-fns';
+
+import { TankSelector } from './components/TankSelector';
+import { QualityGradeSelector } from './components/QualityGradeSelector';
+import { MilkOffloadFormFields } from './components/MilkOffloadFormFields';
+import { ValidationError } from './components/ValidationError';
+import { RecentOffloadRecords } from './components/RecentOffloadRecords';
 
 const MilkOffloadForm = () => {
   const { toast } = useToast();
@@ -33,12 +34,10 @@ const MilkOffloadForm = () => {
   const handleTankSelection = (tankValue) => {
     console.log('Selected tank:', tankValue);
     
-    // Find the most recent entry for this tank
     const mostRecentEntry = milkReceptionData
       ?.filter(record => record.tank_number === tankValue && record.milk_volume > 0)
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
 
-    // Auto-fill all fields if found
     if (mostRecentEntry) {
       setFormData(prev => ({
         ...prev,
@@ -54,7 +53,6 @@ const MilkOffloadForm = () => {
         destination: mostRecentEntry.destination || ''
       }));
     } else {
-      // If no recent entry, just set the tank and supplier name
       setFormData(prev => ({
         ...prev,
         storage_tank: tankValue,
@@ -259,149 +257,27 @@ const MilkOffloadForm = () => {
           <CardTitle>New Tank Offload Entry</CardTitle>
         </CardHeader>
         <CardContent>
-          {validationError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>{validationError.title}</AlertTitle>
-              <AlertDescription className="mt-2">
-                {validationError.description}
-                {validationError.suggestedTank && (
-                  <div className="mt-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => handleTankSelection(validationError.suggestedTank)}
-                    >
-                      Switch to {validationError.suggestedTank}
-                    </Button>
-                  </div>
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
+          <ValidationError 
+            error={validationError} 
+            onSwitchTank={handleTankSelection} 
+          />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="storage_tank">Storage Tank</Label>
-                <Select 
-                  value={formData.storage_tank} 
-                  onValueChange={handleTankSelection}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select tank" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Tank A">Tank A</SelectItem>
-                    <SelectItem value="Tank B">Tank B</SelectItem>
-                    <SelectItem value="Direct-Processing">Direct Processing</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <TankSelector 
+                value={formData.storage_tank} 
+                onValueChange={handleTankSelection} 
+              />
+              
+              <QualityGradeSelector 
+                value={formData.quality_check}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, quality_check: value }))}
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="quality_check">Quality Grade</Label>
-                <Select 
-                  value={formData.quality_check} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, quality_check: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select quality grade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Grade A">Grade A</SelectItem>
-                    <SelectItem value="Grade B">Grade B</SelectItem>
-                    <SelectItem value="Grade C">Grade C</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="milk_volume">Milk Volume (L)</Label>
-                <Input
-                  id="milk_volume"
-                  name="milk_volume"
-                  type="number"
-                  step="0.01"
-                  value={formData.milk_volume}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="temperature">Temperature (°C)</Label>
-                <Input
-                  id="temperature"
-                  name="temperature"
-                  type="number"
-                  step="0.1"
-                  value={formData.temperature}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="fat_percentage">Fat Percentage (%)</Label>
-                <Input
-                  id="fat_percentage"
-                  name="fat_percentage"
-                  type="number"
-                  step="0.01"
-                  value={formData.fat_percentage}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="protein_percentage">Protein Percentage (%)</Label>
-                <Input
-                  id="protein_percentage"
-                  name="protein_percentage"
-                  type="number"
-                  step="0.01"
-                  value={formData.protein_percentage}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="total_plate_count">Total Plate Count</Label>
-                <Input
-                  id="total_plate_count"
-                  name="total_plate_count"
-                  type="number"
-                  value={formData.total_plate_count}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="acidity">Acidity (pH)</Label>
-                <Input
-                  id="acidity"
-                  name="acidity"
-                  type="number"
-                  step="0.01"
-                  value={formData.acidity}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="destination">Destination</Label>
-                <Input
-                  id="destination"
-                  name="destination"
-                  value={formData.destination}
-                  onChange={handleInputChange}
-                />
-              </div>
+              <MilkOffloadFormFields 
+                formData={formData}
+                handleInputChange={handleInputChange}
+              />
             </div>
 
             <div className="space-y-2">
@@ -427,43 +303,7 @@ const MilkOffloadForm = () => {
           <CardTitle>Recent Offload Records</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {milkReceptionData && milkReceptionData.length > 0 ? (
-              <div className="grid gap-4">
-                {milkReceptionData
-                  .filter(record => record.supplier_name.includes('Offload from'))
-                  .slice(0, 5)
-                  .map((record) => (
-                    <Card key={record.id} className="p-4">
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <strong>Tank:</strong> {record.tank_number}
-                        </div>
-                        <div>
-                          <strong>Date:</strong> {format(new Date(record.created_at), 'PPp')}
-                        </div>
-                        <div>
-                          <strong>Volume:</strong> {Math.abs(record.milk_volume)}L
-                        </div>
-                        <div>
-                          <strong>Temperature:</strong> {record.temperature}°C
-                        </div>
-                        <div>
-                          <strong>Quality:</strong> {record.quality_score}
-                        </div>
-                        {record.notes && (
-                          <div className="col-span-2">
-                            <strong>Notes:</strong> {record.notes}
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  ))}
-              </div>
-            ) : (
-              <p className="text-center text-gray-500">No offload records found</p>
-            )}
-          </div>
+          <RecentOffloadRecords records={milkReceptionData} />
         </CardContent>
       </Card>
     </div>
