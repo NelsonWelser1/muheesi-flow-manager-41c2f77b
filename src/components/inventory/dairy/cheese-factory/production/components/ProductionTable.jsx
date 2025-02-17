@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { format as formatDate } from 'date-fns';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const ProductionTable = ({ records }) => {
   if (!records?.length) {
@@ -9,48 +10,64 @@ const ProductionTable = ({ records }) => {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b">
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[200px]">Batch ID</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Fromager</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Cheese Type</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Milk Volume (L)</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[250px]">Start Time</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Starter Culture</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Starter Quantity (g)</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[150px]">Coagulant Type</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Coagulant Quantity (ml)</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Temperature (°C)</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Processing Time (min)</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Expected Yield (kg)</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Duration (hours)</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[120px]">Status</th>
-            <th className="px-6 py-4 text-left whitespace-nowrap min-w-[300px]">Notes</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="whitespace-nowrap">Batch ID</TableHead>
+            <TableHead className="whitespace-nowrap">Fromager</TableHead>
+            <TableHead className="whitespace-nowrap">Cheese Type</TableHead>
+            <TableHead className="whitespace-nowrap">Milk Volume (L)</TableHead>
+            <TableHead className="whitespace-nowrap">Start Time</TableHead>
+            <TableHead className="whitespace-nowrap">Duration (hrs)</TableHead>
+            <TableHead className="whitespace-nowrap">Starter Culture</TableHead>
+            <TableHead className="whitespace-nowrap">Starter Qty (g)</TableHead>
+            <TableHead className="whitespace-nowrap">Coagulant Type</TableHead>
+            <TableHead className="whitespace-nowrap">Coagulant Qty (ml)</TableHead>
+            <TableHead className="whitespace-nowrap">Temp (°C)</TableHead>
+            <TableHead className="whitespace-nowrap">Process Time (min)</TableHead>
+            <TableHead className="whitespace-nowrap">Expected Yield (kg)</TableHead>
+            <TableHead className="whitespace-nowrap">Status</TableHead>
+            <TableHead className="whitespace-nowrap">Notes</TableHead>
+            <TableHead className="whitespace-nowrap">Created At</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {records.map((record) => (
-            <tr key={record.id} className="border-b hover:bg-muted/50">
-              <td className="px-6 py-4 whitespace-normal">{record.batch_id}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.fromager_identifier}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.cheese_type}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.milk_volume}</td>
-              <td className="px-6 py-4 whitespace-normal">{formatDate(new Date(record.start_time), 'PPp')}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.starter_culture}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.starter_quantity}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.coagulant_type}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.coagulant_quantity}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.processing_temperature}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.processing_time}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.expected_yield}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.estimated_duration}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.status}</td>
-              <td className="px-6 py-4 whitespace-normal">{record.notes}</td>
-            </tr>
+            <TableRow key={record.id} className="hover:bg-muted/50">
+              <TableCell className="whitespace-nowrap font-medium">{record.batch_id}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.fromager_identifier}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.cheese_type}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.milk_volume}</TableCell>
+              <TableCell className="whitespace-nowrap">
+                {formatDate(new Date(record.start_time), 'PPp')}
+              </TableCell>
+              <TableCell className="whitespace-nowrap">{record.estimated_duration}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.starter_culture}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.starter_quantity}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.coagulant_type}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.coagulant_quantity}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.processing_temperature}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.processing_time}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.expected_yield}</TableCell>
+              <TableCell className="whitespace-nowrap">
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  record.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  record.status === 'completed' ? 'bg-green-100 text-green-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {record.status}
+                </span>
+              </TableCell>
+              <TableCell className="max-w-[200px] truncate" title={record.notes}>
+                {record.notes}
+              </TableCell>
+              <TableCell className="whitespace-nowrap">
+                {formatDate(new Date(record.created_at), 'PPp')}
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 };
