@@ -19,23 +19,41 @@ export const exportToCsv = (records, productionLine, timeRange, toast) => {
       'Batch ID',
       'Fromager',
       'Cheese Type',
-      'Volume (L)',
+      'Milk Volume (L)',
       'Start Time',
+      'Starter Culture',
+      'Starter Quantity (g)',
+      'Coagulant Type',
+      'Coagulant Quantity (ml)',
+      'Temperature (°C)',
+      'Processing Time (min)',
+      'Expected Yield (kg)',
+      'Duration (hours)',
       'Status',
-      'Created At',
       'Notes'
     ].join(',');
 
-    const rows = records.map(record => [
-      record.batch_id,
-      record.fromager_identifier,
-      record.cheese_type,
-      record.milk_volume,
-      formatDate(new Date(record.start_time), 'PPp'),
-      record.status,
-      formatDate(new Date(record.created_at), 'PPp'),
-      record.notes ? `"${record.notes.replace(/"/g, '""')}"` : ''
-    ].join(','));
+    const rows = records.map(record => {
+      const startTime = record.start_time ? formatDate(new Date(record.start_time), 'PPp') : '';
+      
+      return [
+        record.batch_id || '',
+        record.fromager_identifier || '',
+        record.cheese_type || '',
+        record.milk_volume || '',
+        startTime,
+        record.starter_culture || '',
+        record.starter_quantity || '',
+        record.coagulant_type || '',
+        record.coagulant_quantity || '',
+        record.temperature || '',
+        record.processing_time || '',
+        record.expected_yield || '',
+        record.estimated_duration || '',
+        record.status || '',
+        record.notes ? `"${record.notes.replace(/"/g, '""')}"` : ''
+      ].join(',');
+    });
 
     const csvContent = [headers, ...rows].join('\n');
     
@@ -78,6 +96,7 @@ export const printRecords = (records, productionLine, timeRange) => {
           .header { margin-bottom: 20px; text-align: center; }
           @media print {
             .no-print { display: none; }
+            table { font-size: 12px; }
           }
         </style>
       </head>
@@ -94,22 +113,38 @@ export const printRecords = (records, productionLine, timeRange) => {
               <th>Batch ID</th>
               <th>Fromager</th>
               <th>Cheese Type</th>
-              <th>Volume (L)</th>
+              <th>Milk Volume (L)</th>
               <th>Start Time</th>
+              <th>Starter Culture</th>
+              <th>Starter Qty (g)</th>
+              <th>Coagulant Type</th>
+              <th>Coagulant Qty (ml)</th>
+              <th>Temp (°C)</th>
+              <th>Process Time (min)</th>
+              <th>Yield (kg)</th>
+              <th>Duration (hrs)</th>
               <th>Status</th>
-              <th>Created At</th>
+              <th>Notes</th>
             </tr>
           </thead>
           <tbody>
             ${records.map(record => `
               <tr>
-                <td>${record.batch_id}</td>
-                <td>${record.fromager_identifier}</td>
-                <td>${record.cheese_type}</td>
-                <td>${record.milk_volume}</td>
-                <td>${formatDate(new Date(record.start_time), 'PPp')}</td>
-                <td>${record.status}</td>
-                <td>${formatDate(new Date(record.created_at), 'PPp')}</td>
+                <td>${record.batch_id || ''}</td>
+                <td>${record.fromager_identifier || ''}</td>
+                <td>${record.cheese_type || ''}</td>
+                <td>${record.milk_volume || ''}</td>
+                <td>${record.start_time ? formatDate(new Date(record.start_time), 'PPp') : ''}</td>
+                <td>${record.starter_culture || ''}</td>
+                <td>${record.starter_quantity || ''}</td>
+                <td>${record.coagulant_type || ''}</td>
+                <td>${record.coagulant_quantity || ''}</td>
+                <td>${record.temperature || ''}</td>
+                <td>${record.processing_time || ''}</td>
+                <td>${record.expected_yield || ''}</td>
+                <td>${record.estimated_duration || ''}</td>
+                <td>${record.status || ''}</td>
+                <td>${record.notes || ''}</td>
               </tr>
             `).join('')}
           </tbody>

@@ -15,10 +15,18 @@ const ProductionTable = ({ records }) => {
             <th className="px-4 py-2 text-left">Batch ID</th>
             <th className="px-4 py-2 text-left">Fromager</th>
             <th className="px-4 py-2 text-left">Cheese Type</th>
-            <th className="px-4 py-2 text-left">Volume (L)</th>
+            <th className="px-4 py-2 text-left">Milk Volume (L)</th>
             <th className="px-4 py-2 text-left">Start Time</th>
+            <th className="px-4 py-2 text-left">Starter Culture</th>
+            <th className="px-4 py-2 text-left">Starter Quantity (g)</th>
+            <th className="px-4 py-2 text-left">Coagulant Type</th>
+            <th className="px-4 py-2 text-left">Coagulant Quantity (ml)</th>
+            <th className="px-4 py-2 text-left">Temperature (°C)</th>
+            <th className="px-4 py-2 text-left">Processing Time (min)</th>
+            <th className="px-4 py-2 text-left">Expected Yield (kg)</th>
+            <th className="px-4 py-2 text-left">Duration (hours)</th>
             <th className="px-4 py-2 text-left">Status</th>
-            <th className="px-4 py-2 text-left">Created At</th>
+            <th className="px-4 py-2 text-left">Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -29,8 +37,16 @@ const ProductionTable = ({ records }) => {
               <td className="px-4 py-2">{record.cheese_type}</td>
               <td className="px-4 py-2">{record.milk_volume}</td>
               <td className="px-4 py-2">{formatDate(new Date(record.start_time), 'PPp')}</td>
+              <td className="px-4 py-2">{record.starter_culture}</td>
+              <td className="px-4 py-2">{record.starter_quantity}</td>
+              <td className="px-4 py-2">{record.coagulant_type}</td>
+              <td className="px-4 py-2">{record.coagulant_quantity}</td>
+              <td className="px-4 py-2">{record.temperature}</td>
+              <td className="px-4 py-2">{record.processing_time}</td>
+              <td className="px-4 py-2">{record.expected_yield}</td>
+              <td className="px-4 py-2">{record.estimated_duration}</td>
               <td className="px-4 py-2">{record.status}</td>
-              <td className="px-4 py-2">{formatDate(new Date(record.created_at), 'PPp')}</td>
+              <td className="px-4 py-2">{record.notes}</td>
             </tr>
           ))}
         </tbody>
