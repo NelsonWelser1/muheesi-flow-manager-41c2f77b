@@ -1,3 +1,4 @@
+
 -- First, let's drop any existing duplicate policies to avoid conflicts
 DROP POLICY IF EXISTS "Enable read access for authenticated users" ON production_line_local;
 DROP POLICY IF EXISTS "Enable insert access for authenticated users" ON production_line_local;
@@ -90,33 +91,3 @@ CREATE POLICY "Enable insert access for authenticated users"
     TO authenticated
     WITH CHECK (true);
 
--- Create or replace the batch ID generation function
-CREATE OR REPLACE FUNCTION generate_batch_id(cheese_type TEXT)
-RETURNS TEXT
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    seq_number INTEGER;
-    date_prefix TEXT;
-    type_prefix TEXT;
-BEGIN
-    -- Get current date prefix
-    date_prefix := to_char(CURRENT_DATE, 'YYYYMMDD');
-    
-    -- Get next sequence number
-    seq_number := nextval('cheese_batch_id_seq');
-    
-    -- Determine cheese type prefix
-    CASE cheese_type
-        WHEN 'Mozzarella' THEN type_prefix := 'MOZ';
-        WHEN 'Gouda' THEN type_prefix := 'GOU';
-        WHEN 'Parmesan' THEN type_prefix := 'PAR';
-        WHEN 'Swiss' THEN type_prefix := 'SUI';
-        WHEN 'Blue Cheese' THEN type_prefix := 'BLU';
-        ELSE type_prefix := 'CHE';
-    END CASE;
-    
-    -- Return formatted batch ID
-    RETURN date_prefix || '-' || type_prefix || '-' || LPAD(seq_number::TEXT, 6, '0');
-END;
-$$;

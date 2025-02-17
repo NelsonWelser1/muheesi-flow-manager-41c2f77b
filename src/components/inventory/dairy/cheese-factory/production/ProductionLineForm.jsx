@@ -159,8 +159,10 @@ const ProductionLineForm = ({ productionLine }) => {
         processing_time: parseFloat(data.processing_time),
         expected_yield: parseFloat(data.expected_yield),
         notes: data.notes,
+        name: productionLine.name,
+        manager: productionLine.manager,
+        description: productionLine.description,
         created_at: new Date().toISOString(),
-        production_line: productionLine.name,
         status: 'pending'
       };
 
