@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
@@ -74,24 +73,15 @@ const ProductionLineForm = ({ productionLine }) => {
 
   const generateBatchId = async (cheeseType, seqNumber = null) => {
     try {
-      console.log('Generating batch ID for cheese type:', cheeseType, 'with sequence number:', seqNumber);
+      console.log('Generating batch ID for cheese type:', cheeseType);
       
-      if (seqNumber === null) {
-        const { data: newSeqNumber, error: seqError } = await supabase.rpc('generate_batch_id', {
-          cheese_type: cheeseType
-        });
-        
-        if (seqError) {
-          console.error('Error generating batch ID:', seqError);
-          throw seqError;
-        }
-        
-        seqNumber = newSeqNumber.match(/\d+$/)[0]; // Extract the number part
-        setCurrentSequenceNumber(seqNumber);
-      }
+      // Get current date/time components
+      const now = new Date();
+      const datePrefix = format(now, 'yyyyMMdd');
+      const timeComponent = format(now, 'HHmmss');
       
-      // Get current date/time prefix
-      const datePrefix = format(new Date(), 'yyyyMMdd');
+      // Determine line prefix based on production line name
+      const linePrefix = productionLine.name.toLowerCase().includes('international') ? 'INT' : 'LCL';
       
       // Determine cheese type prefix
       let typePrefix = 'CHE';
@@ -102,7 +92,7 @@ const ProductionLineForm = ({ productionLine }) => {
       else if (cheeseType === 'Blue Cheese') typePrefix = 'BLU';
       
       // Construct the full batch ID
-      const fullBatchId = `${datePrefix}-${typePrefix}-${seqNumber}`;
+      const fullBatchId = `${linePrefix}${datePrefix}-${typePrefix}-${timeComponent}`;
       console.log('Generated batch ID:', fullBatchId);
       return fullBatchId;
       
@@ -122,7 +112,7 @@ const ProductionLineForm = ({ productionLine }) => {
     setSelectedCheeseType(value);
     setValue('cheese_type', value);
     
-    const newBatchId = await generateBatchId(value, currentSequenceNumber);
+    const newBatchId = await generateBatchId(value);
     if (newBatchId) {
       setBatchId(newBatchId);
       setValue('batch_id', newBatchId);
