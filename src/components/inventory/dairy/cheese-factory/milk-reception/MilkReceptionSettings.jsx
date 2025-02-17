@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,48 @@ const MilkReceptionSettings = () => {
     cleaning_interval: 7,
     maintenance_interval: 30
   });
+
+  // Add settings update mutation
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (newSettings) => {
+      const { data, error } = await supabase
+        .from('milk_reception_settings')
+        .upsert([{
+          id: 'default', // Using a default ID for global settings
+          ...newSettings,
+          updated_at: new Date().toISOString()
+        }])
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['milkReceptionSettings'] });
+      toast({
+        title: "Success",
+        description: "Settings updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Settings update error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update settings: " + error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Add the missing handleSettingsSubmit function
+  const handleSettingsSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await updateSettingsMutation.mutateAsync(settings);
+    } catch (error) {
+      console.error('Error submitting settings:', error);
+    }
+  };
 
   const updateTankStatusMutation = useMutation({
     mutationFn: async ({ tankName, status, endDate = null }) => {
