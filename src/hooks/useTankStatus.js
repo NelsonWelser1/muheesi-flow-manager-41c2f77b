@@ -23,6 +23,8 @@ export const useTankStatus = () => {
         finalDate = endDate;
       }
 
+      console.log('Updating tank status:', { tankName, status, finalDate });
+
       const { data, error } = await supabase
         .from('storage_tanks')
         .update({
@@ -47,6 +49,7 @@ export const useTankStatus = () => {
       setOutOfServiceTime('');
     },
     onError: (error) => {
+      console.error('Status update error:', error);
       toast({
         title: "Error",
         description: "Failed to update tank status: " + error.message,

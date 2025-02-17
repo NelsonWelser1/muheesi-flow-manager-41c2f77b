@@ -15,6 +15,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
+import { format } from 'date-fns';
 
 export const TankStatusDialog = ({
   showDialog,
@@ -37,12 +38,12 @@ export const TankStatusDialog = ({
       });
       return;
     }
-    onStatusChange(selectedTank, status);
+    onStatusChange(selectedTank, status, outOfServiceDate);
   };
 
   return (
     <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-      <AlertDialogContent>
+      <AlertDialogContent className="sm:max-w-[425px]">
         <AlertDialogHeader>
           <AlertDialogTitle>Change Tank Status - {selectedTank}</AlertDialogTitle>
           <AlertDialogDescription>
@@ -70,28 +71,35 @@ export const TankStatusDialog = ({
             <div className="space-y-2">
               <Button 
                 variant="outline"
-                onClick={() => handleStatusChange('out_of_service')}
                 className="w-full flex items-center gap-2"
+                onClick={() => handleStatusChange('out_of_service')}
               >
                 <AlertTriangle className="h-4 w-4 text-red-500" />
                 Out of Service
               </Button>
               <div className="pt-2 space-y-4">
-                <div>
+                <div className="grid gap-2">
                   <Label>Service End Date</Label>
-                  <DatePicker
-                    date={outOfServiceDate}
-                    setDate={setOutOfServiceDate}
-                    className="w-full"
-                  />
+                  <div className="flex flex-col space-y-2">
+                    <DatePicker
+                      date={outOfServiceDate}
+                      setDate={setOutOfServiceDate}
+                      className="w-full"
+                    />
+                    {outOfServiceDate && (
+                      <p className="text-sm text-muted-foreground">
+                        Selected: {format(outOfServiceDate, 'PPP')}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div>
+                <div className="grid gap-2">
                   <Label>Service End Time</Label>
                   <Input
                     type="time"
                     value={outOfServiceTime}
                     onChange={(e) => setOutOfServiceTime(e.target.value)}
-                    className="w-full mt-1"
+                    className="w-full"
                   />
                 </div>
               </div>
