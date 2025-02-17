@@ -39,6 +39,7 @@ export const useTankStatus = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['milkReception'] });
+      queryClient.invalidateQueries({ queryKey: ['storageTanks'] });
       toast({
         title: "Success",
         description: "Tank status updated successfully",
