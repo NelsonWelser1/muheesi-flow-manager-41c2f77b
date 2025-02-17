@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 
@@ -10,7 +11,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-export function DatePicker({ date, onDateChange, className }) {
+export function DatePicker({ date, setDate, className }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -30,7 +31,12 @@ export function DatePicker({ date, onDateChange, className }) {
         <Calendar
           mode="single"
           selected={date}
-          onSelect={onDateChange}
+          onSelect={setDate}
+          disabled={(date) => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return date < today;
+          }}
           initialFocus
         />
       </PopoverContent>
