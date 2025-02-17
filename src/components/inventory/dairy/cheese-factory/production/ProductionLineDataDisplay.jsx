@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Search, FileDown, Printer, Calendar } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
-import { format, subDays, subWeeks, subMonths, subYears } from 'date-fns';
+import { format as formatDate, subDays, subWeeks, subMonths, subYears } from 'date-fns';
 
 const ProductionLineDataDisplay = ({ productionLine }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -90,7 +90,7 @@ const ProductionLineDataDisplay = ({ productionLine }) => {
               <div class="header">
                 <h1>${productionLine.name} Production Records</h1>
                 <p>Manager: ${productionLine.manager}</p>
-                <p>Generated on: ${format(new Date(), 'PPp')}</p>
+                <p>Generated on: ${formatDate(new Date(), 'PPp')}</p>
                 ${timeRange !== 'all' ? `<p>Time Range: ${timeRange}</p>` : ''}
               </div>
               <table>
@@ -112,9 +112,9 @@ const ProductionLineDataDisplay = ({ productionLine }) => {
                       <td>${record.fromager_identifier}</td>
                       <td>${record.cheese_type}</td>
                       <td>${record.milk_volume}</td>
-                      <td>${format(new Date(record.start_time), 'PPp')}</td>
+                      <td>${formatDate(new Date(record.start_time), 'PPp')}</td>
                       <td>${record.status}</td>
-                      <td>${format(new Date(record.created_at), 'PPp')}</td>
+                      <td>${formatDate(new Date(record.created_at), 'PPp')}</td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -128,7 +128,7 @@ const ProductionLineDataDisplay = ({ productionLine }) => {
       }
 
       // For CSV export
-      const timestamp = format(new Date(), 'yyyy-MM-dd-HH-mm');
+      const timestamp = formatDate(new Date(), 'yyyy-MM-dd-HH-mm');
       const filename = `${productionLine.name.toLowerCase().replace(/\s+/g, '-')}-production-records-${timestamp}.csv`;
       
       // Prepare CSV data with headers
@@ -149,9 +149,9 @@ const ProductionLineDataDisplay = ({ productionLine }) => {
         record.fromager_identifier,
         record.cheese_type,
         record.milk_volume,
-        format(new Date(record.start_time), 'PPp'),
+        formatDate(new Date(record.start_time), 'PPp'),
         record.status,
-        format(new Date(record.created_at), 'PPp'),
+        formatDate(new Date(record.created_at), 'PPp'),
         record.notes ? `"${record.notes.replace(/"/g, '""')}"` : ''
       ].join(','));
 
@@ -251,9 +251,9 @@ const ProductionLineDataDisplay = ({ productionLine }) => {
                     <td className="px-4 py-2">{record.fromager_identifier}</td>
                     <td className="px-4 py-2">{record.cheese_type}</td>
                     <td className="px-4 py-2">{record.milk_volume}</td>
-                    <td className="px-4 py-2">{format(new Date(record.start_time), 'PPp')}</td>
+                    <td className="px-4 py-2">{formatDate(new Date(record.start_time), 'PPp')}</td>
                     <td className="px-4 py-2">{record.status}</td>
-                    <td className="px-4 py-2">{format(new Date(record.created_at), 'PPp')}</td>
+                    <td className="px-4 py-2">{formatDate(new Date(record.created_at), 'PPp')}</td>
                   </tr>
                 ))}
               </tbody>
@@ -266,3 +266,4 @@ const ProductionLineDataDisplay = ({ productionLine }) => {
 };
 
 export default ProductionLineDataDisplay;
+
