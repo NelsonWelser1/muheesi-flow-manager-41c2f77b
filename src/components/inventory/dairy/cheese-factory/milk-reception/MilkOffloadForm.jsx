@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,15 +38,30 @@ const MilkOffloadForm = () => {
       ?.filter(record => record.tank_number === tankValue && record.milk_volume > 0)
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
 
-    // Auto-fill the quality grade if found
-    const qualityGrade = mostRecentEntry?.quality_score || 'Grade A';
-    
-    setFormData(prev => ({
-      ...prev,
-      storage_tank: tankValue,
-      supplier_name: `Offload from ${tankValue}`,
-      quality_check: qualityGrade
-    }));
+    // Auto-fill all fields if found
+    if (mostRecentEntry) {
+      setFormData(prev => ({
+        ...prev,
+        storage_tank: tankValue,
+        supplier_name: `Offload from ${tankValue}`,
+        quality_check: mostRecentEntry.quality_score || 'Grade A',
+        milk_volume: Math.abs(mostRecentEntry.milk_volume).toString(),
+        temperature: mostRecentEntry.temperature.toString(),
+        fat_percentage: mostRecentEntry.fat_percentage.toString(),
+        protein_percentage: mostRecentEntry.protein_percentage.toString(),
+        total_plate_count: mostRecentEntry.total_plate_count.toString(),
+        acidity: mostRecentEntry.acidity.toString(),
+        destination: mostRecentEntry.destination || ''
+      }));
+    } else {
+      // If no recent entry, just set the tank and supplier name
+      setFormData(prev => ({
+        ...prev,
+        storage_tank: tankValue,
+        supplier_name: `Offload from ${tankValue}`,
+        quality_check: 'Grade A'
+      }));
+    }
     
     setValidationError(null);
   };
