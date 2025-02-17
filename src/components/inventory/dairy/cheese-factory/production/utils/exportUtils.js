@@ -21,6 +21,7 @@ export const exportToCsv = (records, productionLine, timeRange, toast) => {
       'Cheese Type',
       'Milk Volume (L)',
       'Start Time',
+      'Duration (hrs)',
       'Starter Culture',
       'Starter Quantity (g)',
       'Coagulant Type',
@@ -28,13 +29,14 @@ export const exportToCsv = (records, productionLine, timeRange, toast) => {
       'Temperature (°C)',
       'Processing Time (min)',
       'Expected Yield (kg)',
-      'Duration (hours)',
       'Status',
-      'Notes'
+      'Notes',
+      'Created At'
     ].join(',');
 
     const rows = records.map(record => {
       const startTime = record.start_time ? formatDate(new Date(record.start_time), 'PPp') : '';
+      const createdAt = record.created_at ? formatDate(new Date(record.created_at), 'PPp') : '';
       
       return [
         record.batch_id || '',
@@ -42,16 +44,17 @@ export const exportToCsv = (records, productionLine, timeRange, toast) => {
         record.cheese_type || '',
         record.milk_volume || '',
         startTime,
+        record.estimated_duration || '',
         record.starter_culture || '',
         record.starter_quantity || '',
         record.coagulant_type || '',
         record.coagulant_quantity || '',
-        record.temperature || '',
+        record.processing_temperature || '',
         record.processing_time || '',
         record.expected_yield || '',
-        record.estimated_duration || '',
         record.status || '',
-        record.notes ? `"${record.notes.replace(/"/g, '""')}"` : ''
+        record.notes ? `"${record.notes.replace(/"/g, '""')}"` : '',
+        createdAt
       ].join(',');
     });
 
@@ -89,14 +92,48 @@ export const printRecords = (records, productionLine, timeRange) => {
       <head>
         <title>${productionLine.name} Production Records</title>
         <style>
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f5f5f5; }
-          h1 { text-align: center; }
-          .header { margin-bottom: 20px; text-align: center; }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px;
+            font-size: 12px;
+          }
+          th, td { 
+            border: 1px solid #ddd; 
+            padding: 8px; 
+            text-align: left;
+            white-space: nowrap;
+          }
+          td.notes {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          th { 
+            background-color: #f5f5f5;
+            font-weight: bold;
+          }
+          .header { 
+            margin-bottom: 20px; 
+            text-align: center; 
+          }
+          .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+            padding: 2px 8px;
+            border-radius: 9999px;
+          }
+          .status-completed {
+            background-color: #d1fae5;
+            color: #065f46;
+            padding: 2px 8px;
+            border-radius: 9999px;
+          }
           @media print {
             .no-print { display: none; }
-            table { font-size: 12px; }
+            table { page-break-inside: avoid; }
+            th { background-color: #f5f5f5 !important; }
           }
         </style>
       </head>
@@ -115,6 +152,7 @@ export const printRecords = (records, productionLine, timeRange) => {
               <th>Cheese Type</th>
               <th>Milk Volume (L)</th>
               <th>Start Time</th>
+              <th>Duration (hrs)</th>
               <th>Starter Culture</th>
               <th>Starter Qty (g)</th>
               <th>Coagulant Type</th>
@@ -122,9 +160,9 @@ export const printRecords = (records, productionLine, timeRange) => {
               <th>Temp (°C)</th>
               <th>Process Time (min)</th>
               <th>Yield (kg)</th>
-              <th>Duration (hrs)</th>
               <th>Status</th>
               <th>Notes</th>
+              <th>Created At</th>
             </tr>
           </thead>
           <tbody>
@@ -135,16 +173,21 @@ export const printRecords = (records, productionLine, timeRange) => {
                 <td>${record.cheese_type || ''}</td>
                 <td>${record.milk_volume || ''}</td>
                 <td>${record.start_time ? formatDate(new Date(record.start_time), 'PPp') : ''}</td>
+                <td>${record.estimated_duration || ''}</td>
                 <td>${record.starter_culture || ''}</td>
                 <td>${record.starter_quantity || ''}</td>
                 <td>${record.coagulant_type || ''}</td>
                 <td>${record.coagulant_quantity || ''}</td>
-                <td>${record.temperature || ''}</td>
+                <td>${record.processing_temperature || ''}</td>
                 <td>${record.processing_time || ''}</td>
                 <td>${record.expected_yield || ''}</td>
-                <td>${record.estimated_duration || ''}</td>
-                <td>${record.status || ''}</td>
-                <td>${record.notes || ''}</td>
+                <td>
+                  <span class="status-${record.status || 'pending'}">
+                    ${record.status || 'pending'}
+                  </span>
+                </td>
+                <td class="notes" title="${record.notes || ''}">${record.notes || ''}</td>
+                <td>${record.created_at ? formatDate(new Date(record.created_at), 'PPp') : ''}</td>
               </tr>
             `).join('')}
           </tbody>
