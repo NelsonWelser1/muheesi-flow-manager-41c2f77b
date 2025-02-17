@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
+import { format } from 'date-fns';
 
 const MilkReceptionSettings = () => {
   const { toast } = useToast();
@@ -30,6 +30,7 @@ const MilkReceptionSettings = () => {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [selectedTank, setSelectedTank] = useState(null);
   const [outOfServiceDate, setOutOfServiceDate] = useState(null);
+  const [outOfServiceTime, setOutOfServiceTime] = useState('');
   const [settings, setSettings] = useState({
     temperature_threshold: 4.5,
     capacity_warning_threshold: 90,
@@ -38,48 +39,29 @@ const MilkReceptionSettings = () => {
     maintenance_interval: 30
   });
 
-  const updateSettingsMutation = useMutation({
-    mutationFn: async (settingsData) => {
-      const { data, error } = await supabase
-        .from('milk_reception_settings')
-        .upsert([settingsData])
-        .select();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['milkReceptionSettings'] });
-      toast({
-        title: "Success",
-        description: "Settings updated successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update settings: " + error.message,
-        variant: "destructive"
-      });
-    }
-  });
-
   const updateTankStatusMutation = useMutation({
     mutationFn: async ({ tankName, status, endDate = null }) => {
       console.log('Updating tank status:', { tankName, status, endDate });
+      
+      let finalDate = null;
+      if (endDate && outOfServiceTime) {
+        const [hours, minutes] = outOfServiceTime.split(':');
+        finalDate = new Date(endDate);
+        finalDate.setHours(parseInt(hours), parseInt(minutes));
+      } else if (endDate) {
+        finalDate = endDate;
+      }
+
       const { data, error } = await supabase
         .from('storage_tanks')
         .update({
           status: status,
-          service_end_date: status === 'out_of_service' ? endDate?.toISOString() : null
+          service_end_date: finalDate?.toISOString()
         })
-        .eq('tank_name', tankName)  // Changed from 'name' to 'tank_name' to match our schema
+        .eq('tank_name', tankName)
         .select();
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
@@ -91,43 +73,13 @@ const MilkReceptionSettings = () => {
       setShowStatusDialog(false);
       setSelectedTank(null);
       setOutOfServiceDate(null);
+      setOutOfServiceTime('');
     },
     onError: (error) => {
       console.error('Status update error:', error);
       toast({
         title: "Error",
         description: "Failed to update tank status: " + error.message,
-        variant: "destructive"
-      });
-    }
-  });
-
-  const addTankMutation = useMutation({
-    mutationFn: async (tankData) => {
-      const { data, error } = await supabase
-        .from('storage_tanks')
-        .insert([{
-          tank_name: tankData.name,  // Changed from 'name' to 'tank_name'
-          capacity: 5000,
-          status: 'active'
-        }])
-        .select();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['milkReception'] });
-      toast({
-        title: "Success",
-        description: "Tank added successfully",
-      });
-      setNewTankName('');
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to add tank: " + error.message,
         variant: "destructive"
       });
     }
@@ -147,19 +99,10 @@ const MilkReceptionSettings = () => {
       await updateTankStatusMutation.mutateAsync({
         tankName: tank,
         status: status,
-        endDate: status === 'out_of_service' ? outOfServiceDate : null
+        endDate: outOfServiceDate
       });
     } catch (error) {
       console.error('Error updating tank status:', error);
-    }
-  };
-
-  const handleSettingsSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await updateSettingsMutation.mutateAsync(settings);
-    } catch (error) {
-      console.error('Error updating settings:', error);
     }
   };
 
@@ -192,56 +135,36 @@ const MilkReceptionSettings = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* Add New Tank */}
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              addTankMutation.mutateAsync({ name: newTankName.trim() });
-            }} className="flex gap-2">
-              <Input
-                placeholder="Enter new tank name"
-                value={newTankName}
-                onChange={(e) => setNewTankName(e.target.value)}
-                className="max-w-xs"
-              />
-              <Button type="submit" className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Add Tank
-              </Button>
-            </form>
-
-            {/* Tank List */}
-            <div className="grid gap-4">
-              {['Tank A', 'Tank B', 'Direct-Processing'].map((tank) => (
-                <div key={tank} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-semibold">{tank}</h4>
-                    <p className="text-sm text-gray-500">
-                      {tank === 'Direct-Processing' 
-                        ? 'Bypass storage tanks for immediate processing'
-                        : `Capacity: 5000L`}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="font-bold">
-                        Status: {tank.status || 'Active'}
-                      </div>
-                      {tank !== 'Direct-Processing' && (
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedTank(tank);
-                            setShowStatusDialog(true);
-                          }}
-                        >
-                          Change Status
-                        </Button>
-                      )}
+            {['Tank A', 'Tank B', 'Direct-Processing'].map((tank) => (
+              <div key={tank} className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <h4 className="font-semibold">{tank}</h4>
+                  <p className="text-sm text-gray-500">
+                    {tank === 'Direct-Processing' 
+                      ? 'Bypass storage tanks for immediate processing'
+                      : `Capacity: 5000L`}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <div className="font-bold">
+                      Status: {tank.status || 'Active'}
                     </div>
+                    {tank !== 'Direct-Processing' && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedTank(tank);
+                          setShowStatusDialog(true);
+                        }}
+                      >
+                        Change Status
+                      </Button>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -282,13 +205,24 @@ const MilkReceptionSettings = () => {
                   <AlertTriangle className="h-4 w-4 text-red-500" />
                   Out of Service
                 </Button>
-                <div className="pt-2">
-                  <Label>Service End Date</Label>
-                  <DatePicker
-                    date={outOfServiceDate}
-                    setDate={setOutOfServiceDate}
-                    className="w-full"
-                  />
+                <div className="pt-2 space-y-4">
+                  <div>
+                    <Label>Service End Date</Label>
+                    <DatePicker
+                      date={outOfServiceDate}
+                      setDate={setOutOfServiceDate}
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <Label>Service End Time</Label>
+                    <Input
+                      type="time"
+                      value={outOfServiceTime}
+                      onChange={(e) => setOutOfServiceTime(e.target.value)}
+                      className="w-full mt-1"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
