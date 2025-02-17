@@ -58,39 +58,124 @@ const ProductionLineDataDisplay = ({ productionLine }) => {
   });
 
   const handleExport = async (format) => {
-    if (!records?.length) return;
+    if (!records?.length) {
+      toast({
+        title: "Error",
+        description: "No records available to export",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       if (format === 'print') {
-        window.print();
+        // Create a printable version of the data
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>${productionLine.name} Production Records</title>
+              <style>
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f5f5f5; }
+                h1 { text-align: center; }
+                .header { margin-bottom: 20px; text-align: center; }
+                @media print {
+                  .no-print { display: none; }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h1>${productionLine.name} Production Records</h1>
+                <p>Manager: ${productionLine.manager}</p>
+                <p>Generated on: ${format(new Date(), 'PPp')}</p>
+                ${timeRange !== 'all' ? `<p>Time Range: ${timeRange}</p>` : ''}
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Batch ID</th>
+                    <th>Fromager</th>
+                    <th>Cheese Type</th>
+                    <th>Volume (L)</th>
+                    <th>Start Time</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${records.map(record => `
+                    <tr>
+                      <td>${record.batch_id}</td>
+                      <td>${record.fromager_identifier}</td>
+                      <td>${record.cheese_type}</td>
+                      <td>${record.milk_volume}</td>
+                      <td>${format(new Date(record.start_time), 'PPp')}</td>
+                      <td>${record.status}</td>
+                      <td>${format(new Date(record.created_at), 'PPp')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+              <button class="no-print" onclick="window.print()">Print</button>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
         return;
       }
 
+      // For CSV export
       const timestamp = format(new Date(), 'yyyy-MM-dd-HH-mm');
-      const filename = `production-line-${productionLine.name.toLowerCase()}-${timestamp}.csv`;
+      const filename = `${productionLine.name.toLowerCase().replace(/\s+/g, '-')}-production-records-${timestamp}.csv`;
       
-      // Create CSV content
-      const headers = Object.keys(records[0]).join(',');
-      const rows = records.map(record => Object.values(record).join(',')).join('\n');
-      const content = `${headers}\n${rows}`;
+      // Prepare CSV data with headers
+      const headers = [
+        'Batch ID',
+        'Fromager',
+        'Cheese Type',
+        'Volume (L)',
+        'Start Time',
+        'Status',
+        'Created At',
+        'Notes'
+      ].join(',');
+
+      // Format record data
+      const rows = records.map(record => [
+        record.batch_id,
+        record.fromager_identifier,
+        record.cheese_type,
+        record.milk_volume,
+        format(new Date(record.start_time), 'PPp'),
+        record.status,
+        format(new Date(record.created_at), 'PPp'),
+        record.notes ? `"${record.notes.replace(/"/g, '""')}"` : ''
+      ].join(','));
+
+      const csvContent = [headers, ...rows].join('\n');
       
       // Create and download file
-      const blob = new Blob([content], { type: 'text/csv' });
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
       toast({
         title: "Success",
-        description: "Records exported successfully",
+        description: `Records exported successfully as ${filename}`,
       });
     } catch (error) {
       console.error('Export error:', error);
       toast({
         title: "Error",
-        description: "Failed to export records",
+        description: "Failed to export records: " + error.message,
         variant: "destructive",
       });
     }
