@@ -20,7 +20,26 @@ BEGIN
     END IF;
 END $$;
 
--- If the table doesn't exist or needs to be recreated
+-- Drop existing constraints and clear invalid data
+ALTER TABLE IF EXISTS storage_tanks 
+DROP CONSTRAINT IF EXISTS check_tank_name,
+DROP CONSTRAINT IF EXISTS valid_tank_names;
+
+-- Delete any rows that don't match our expected tank names
+DELETE FROM storage_tanks 
+WHERE tank_name NOT IN ('Tank A', 'Tank B') 
+OR tank_name IS NULL;
+
+-- Update any existing tanks to have valid names
+UPDATE storage_tanks 
+SET tank_name = 'Tank A' 
+WHERE tank_name = 'Tank 1';
+
+UPDATE storage_tanks 
+SET tank_name = 'Tank B' 
+WHERE tank_name = 'Tank 2';
+
+-- Now recreate the table with proper constraints if it doesn't exist
 CREATE TABLE IF NOT EXISTS storage_tanks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     tank_name TEXT NOT NULL,
@@ -33,10 +52,7 @@ CREATE TABLE IF NOT EXISTS storage_tanks (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Ensure constraints
-ALTER TABLE storage_tanks 
-DROP CONSTRAINT IF EXISTS check_tank_name;
-
+-- Add the constraint after cleaning up data
 ALTER TABLE storage_tanks
 ADD CONSTRAINT check_tank_name 
 CHECK (tank_name IN ('Tank A', 'Tank B'));
