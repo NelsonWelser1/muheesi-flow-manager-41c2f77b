@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
@@ -39,7 +40,6 @@ const ProductionLineForm = ({ productionLine }) => {
   const [selectedCheeseType, setSelectedCheeseType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [batchId, setBatchId] = useState('');
-  const [currentSequenceNumber, setCurrentSequenceNumber] = useState(null);
 
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
@@ -124,18 +124,22 @@ const ProductionLineForm = ({ productionLine }) => {
     try {
       setIsSubmitting(true);
       
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user found');
+      // Get current user session
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) {
+        throw new Error('Please sign in to submit the form');
+      }
+      
+      const user = session.session.user;
       
       // Determine which table to use based on production line type
       const tableName = productionLine.name.toLowerCase().includes('international') 
         ? 'production_line_international' 
         : 'production_line_local';
       
-      // Generate a new batch ID with a new sequence number for the submission
-      const finalBatchId = await generateBatchId(data.cheese_type);
-      if (!finalBatchId) throw new Error('Failed to generate final batch ID');
+      // Generate a new batch ID for the submission
+      const finalBatchId = batchId || await generateBatchId(data.cheese_type);
+      if (!finalBatchId) throw new Error('Failed to generate batch ID');
       
       // Create the data object for submission
       const submissionData = {
@@ -161,6 +165,8 @@ const ProductionLineForm = ({ productionLine }) => {
         created_by: user.id
       };
 
+      console.log('Submitting data to table:', tableName, submissionData);
+
       const { error } = await supabase
         .from(tableName)
         .insert([submissionData]);
@@ -178,7 +184,6 @@ const ProductionLineForm = ({ productionLine }) => {
       reset();
       setSelectedCheeseType('');
       setBatchId('');
-      setCurrentSequenceNumber(null);
       
     } catch (error) {
       console.error('Error submitting form:', error);

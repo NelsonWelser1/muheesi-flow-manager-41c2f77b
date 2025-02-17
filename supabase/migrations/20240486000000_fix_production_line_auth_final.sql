@@ -1,3 +1,4 @@
+
 -- Drop existing policies
 DROP POLICY IF EXISTS "enable_all_for_authenticated_international" ON production_line_international;
 DROP POLICY IF EXISTS "enable_all_for_authenticated_local" ON production_line_local;
