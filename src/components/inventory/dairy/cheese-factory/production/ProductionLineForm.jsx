@@ -124,6 +124,10 @@ const ProductionLineForm = ({ productionLine }) => {
     try {
       setIsSubmitting(true);
       
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No authenticated user found');
+      
       // Determine which table to use based on production line type
       const tableName = productionLine.name.toLowerCase().includes('international') 
         ? 'production_line_international' 
@@ -153,7 +157,8 @@ const ProductionLineForm = ({ productionLine }) => {
         manager: productionLine.manager,
         description: productionLine.description,
         created_at: new Date().toISOString(),
-        status: 'pending'
+        status: 'pending',
+        created_by: user.id
       };
 
       const { error } = await supabase
