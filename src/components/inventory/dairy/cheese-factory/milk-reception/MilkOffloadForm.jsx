@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,11 +33,22 @@ const MilkOffloadForm = () => {
 
   const handleTankSelection = (tankValue) => {
     console.log('Selected tank:', tankValue);
+    
+    // Find the most recent entry for this tank
+    const mostRecentEntry = milkReceptionData
+      ?.filter(record => record.tank_number === tankValue && record.milk_volume > 0)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+
+    // Auto-fill the quality grade if found
+    const qualityGrade = mostRecentEntry?.quality_score || 'Grade A';
+    
     setFormData(prev => ({
       ...prev,
       storage_tank: tankValue,
-      supplier_name: `Offload from ${tankValue}`
+      supplier_name: `Offload from ${tankValue}`,
+      quality_check: qualityGrade
     }));
+    
     setValidationError(null);
   };
 
@@ -446,4 +457,3 @@ const MilkOffloadForm = () => {
 };
 
 export default MilkOffloadForm;
-
