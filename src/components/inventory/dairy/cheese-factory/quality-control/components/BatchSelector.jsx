@@ -17,6 +17,8 @@ const BatchSelector = ({
   filteredBatches,
   onSelectBatch
 }) => {
+  const batches = filteredBatches || [];
+
   return (
     <div className="space-y-2">
       <Label htmlFor="batchId">Batch ID</Label>
@@ -46,16 +48,20 @@ const BatchSelector = ({
           <Command>
             <CommandInput 
               placeholder="Search batch ID..."
-              value={searchQuery}
+              value={searchQuery || ""}
               onValueChange={setSearchQuery}
             />
             <CommandEmpty>No batch found.</CommandEmpty>
-            <CommandGroup>
-              {filteredBatches.map((batch) => (
+            <CommandGroup heading="Available Batches">
+              {batches.map((batch) => (
                 <CommandItem
                   key={batch.batch_id}
                   value={batch.batch_id}
-                  onSelect={() => onSelectBatch(batch)}
+                  onSelect={() => {
+                    onSelectBatch(batch);
+                    setOpen(false);
+                  }}
+                  className="cursor-pointer"
                 >
                   <Check
                     className={cn(
