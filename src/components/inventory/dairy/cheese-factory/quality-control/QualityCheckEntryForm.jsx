@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
-import { ClipboardCheck } from 'lucide-react';
+import { ClipboardCheck, Loader2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Check, ChevronsUpDown } from "lucide-react";
@@ -21,6 +21,7 @@ const QualityCheckEntryForm = () => {
   const [batchOptions, setBatchOptions] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [fetchingBatches, setFetchingBatches] = useState(true);
 
   const parameters = [
     'Temperature',
@@ -37,6 +38,7 @@ const QualityCheckEntryForm = () => {
 
   const fetchBatchIds = async () => {
     try {
+      setFetchingBatches(true);
       // Fetch from both production lines
       const [internationalResponse, localResponse] = await Promise.all([
         supabase
@@ -49,11 +51,15 @@ const QualityCheckEntryForm = () => {
           .order('created_at', { ascending: false })
       ]);
 
+      if (internationalResponse.error) throw internationalResponse.error;
+      if (localResponse.error) throw localResponse.error;
+
       const internationalBatches = internationalResponse.data || [];
       const localBatches = localResponse.data || [];
 
       // Combine and format the batches
       const combinedBatches = [...internationalBatches, ...localBatches]
+        .filter(batch => batch.batch_id && batch.cheese_type) // Ensure we have valid data
         .map(batch => ({
           ...batch,
           label: `${batch.batch_id} (${batch.cheese_type})`
@@ -68,10 +74,21 @@ const QualityCheckEntryForm = () => {
         description: "Failed to fetch batch IDs",
         variant: "destructive"
       });
+    } finally {
+      setFetchingBatches(false);
     }
   };
 
   const onSubmit = async (data) => {
+    if (!selectedBatch?.batch_id) {
+      toast({
+        title: "Error",
+        description: "Please select a batch ID",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       console.log('Submitting quality checks:', data);
@@ -88,7 +105,7 @@ const QualityCheckEntryForm = () => {
 
       // Create an array of quality check entries
       const qualityChecks = parameters.map(parameter => ({
-        batch_id: data.batchId,
+        batch_id: selectedBatch.batch_id,
         parameter: parameter,
         actual_value: data[`${parameter.toLowerCase().replace(' ', '_')}_value`],
         standard_value: data[`${parameter.toLowerCase().replace(' ', '_')}_standard`],
@@ -145,8 +162,18 @@ const QualityCheckEntryForm = () => {
                   role="combobox"
                   aria-expanded={open}
                   className="w-full justify-between"
+                  disabled={fetchingBatches}
                 >
-                  {selectedBatch ? selectedBatch.label : "Select batch..."}
+                  {fetchingBatches ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading batches...
+                    </div>
+                  ) : selectedBatch ? (
+                    selectedBatch.label
+                  ) : (
+                    "Select batch..."
+                  )}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -154,26 +181,28 @@ const QualityCheckEntryForm = () => {
                 <Command>
                   <CommandInput placeholder="Search batch ID..." />
                   <CommandEmpty>No batch found.</CommandEmpty>
-                  <CommandGroup className="max-h-60 overflow-y-auto">
-                    {batchOptions.map((batch) => (
-                      <CommandItem
-                        key={batch.batch_id}
-                        onSelect={() => {
-                          setSelectedBatch(batch);
-                          setValue('batchId', batch.batch_id);
-                          setOpen(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedBatch?.batch_id === batch.batch_id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {batch.label}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
+                  {batchOptions.length > 0 && (
+                    <CommandGroup className="max-h-60 overflow-y-auto">
+                      {batchOptions.map((batch) => (
+                        <CommandItem
+                          key={batch.batch_id}
+                          onSelect={() => {
+                            setSelectedBatch(batch);
+                            setValue('batchId', batch.batch_id);
+                            setOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedBatch?.batch_id === batch.batch_id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {batch.label}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
                 </Command>
               </PopoverContent>
             </Popover>
@@ -228,8 +257,15 @@ const QualityCheckEntryForm = () => {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Submitting..." : "Submit All Quality Checks"}
+          <Button type="submit" className="w-full" disabled={loading || !selectedBatch}>
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Submitting...
+              </div>
+            ) : (
+              "Submit All Quality Checks"
+            )}
           </Button>
         </form>
       </CardContent>
