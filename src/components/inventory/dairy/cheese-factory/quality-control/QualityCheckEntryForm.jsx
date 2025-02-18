@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,7 @@ const QualityCheckEntryForm = () => {
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetchingBatches, setFetchingBatches] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const parameters = [
     'Temperature',
@@ -76,6 +78,14 @@ const QualityCheckEntryForm = () => {
     }
   };
 
+  const filteredBatches = React.useMemo(() => {
+    if (!searchQuery) return batchOptions;
+    const lowerQuery = searchQuery.toLowerCase();
+    return batchOptions.filter(batch => 
+      batch.label.toLowerCase().includes(lowerQuery)
+    );
+  }, [batchOptions, searchQuery]);
+
   const onSubmit = async (data) => {
     if (!selectedBatch?.batch_id) {
       toast({
@@ -88,7 +98,6 @@ const QualityCheckEntryForm = () => {
 
     try {
       setLoading(true);
-      console.log('Submitting quality checks:', data);
       
       const session = await supabase.auth.getSession();
       if (!session.data.session?.user) {
@@ -172,12 +181,16 @@ const QualityCheckEntryForm = () => {
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command shouldFilter={false}>
-                  <CommandInput placeholder="Search batch ID..." />
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput 
+                    placeholder="Search batch ID..."
+                    value={searchQuery}
+                    onValueChange={setSearchQuery}
+                  />
                   <CommandEmpty>No batch found.</CommandEmpty>
                   <CommandGroup>
-                    {batchOptions?.map((batch) => (
+                    {filteredBatches.map((batch) => (
                       <CommandItem
                         key={batch.batch_id}
                         value={batch.batch_id}
@@ -185,6 +198,7 @@ const QualityCheckEntryForm = () => {
                           setSelectedBatch(batch);
                           setValue('batchId', batch.batch_id);
                           setOpen(false);
+                          setSearchQuery("");
                         }}
                       >
                         <Check
