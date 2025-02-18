@@ -12,6 +12,19 @@ export const useBatchOptions = () => {
   const fetchBatchIds = async () => {
     try {
       setFetchingBatches(true);
+      
+      // First, get all quality-checked batch IDs
+      const { data: checkedBatches, error: checkedError } = await supabase
+        .from('quality_checks')
+        .select('batch_id')
+        .distinct();
+
+      if (checkedError) throw checkedError;
+
+      // Create a Set of checked batch IDs for efficient lookup
+      const checkedBatchIds = new Set(checkedBatches.map(b => b.batch_id));
+
+      // Fetch batches from both production lines
       const [internationalResponse, localResponse] = await Promise.all([
         supabase
           .from('production_line_international')
@@ -29,8 +42,13 @@ export const useBatchOptions = () => {
       const internationalBatches = internationalResponse.data || [];
       const localBatches = localResponse.data || [];
 
+      // Filter out batches that have already been checked
       const combinedBatches = [...internationalBatches, ...localBatches]
-        .filter(batch => batch.batch_id && batch.cheese_type)
+        .filter(batch => 
+          batch.batch_id && 
+          batch.cheese_type && 
+          !checkedBatchIds.has(batch.batch_id)
+        )
         .map(batch => ({
           ...batch,
           label: `${batch.batch_id} (${batch.cheese_type})`
@@ -38,6 +56,10 @@ export const useBatchOptions = () => {
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       setBatchOptions(combinedBatches);
+      
+      // Log for debugging
+      console.log('Unchecked batches:', combinedBatches);
+      
     } catch (error) {
       console.error('Error fetching batch IDs:', error);
       toast({
@@ -60,13 +82,14 @@ export const useBatchOptions = () => {
 
   useEffect(() => {
     fetchBatchIds();
-  }, []);
+  }, []); // Refresh the list when component mounts
 
   return {
     batchOptions,
     fetchingBatches,
     searchQuery,
     setSearchQuery,
-    filteredBatches
+    filteredBatches,
+    refetchBatches: fetchBatchIds // Expose refetch function to refresh list after submission
   };
 };
