@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,7 +38,6 @@ const QualityCheckEntryForm = () => {
   const fetchBatchIds = async () => {
     try {
       setFetchingBatches(true);
-      // Fetch from both production lines
       const [internationalResponse, localResponse] = await Promise.all([
         supabase
           .from('production_line_international')
@@ -57,9 +55,8 @@ const QualityCheckEntryForm = () => {
       const internationalBatches = internationalResponse.data || [];
       const localBatches = localResponse.data || [];
 
-      // Combine and format the batches
       const combinedBatches = [...internationalBatches, ...localBatches]
-        .filter(batch => batch.batch_id && batch.cheese_type) // Ensure we have valid data
+        .filter(batch => batch.batch_id && batch.cheese_type)
         .map(batch => ({
           ...batch,
           label: `${batch.batch_id} (${batch.cheese_type})`
@@ -103,7 +100,6 @@ const QualityCheckEntryForm = () => {
         return;
       }
 
-      // Create an array of quality check entries
       const qualityChecks = parameters.map(parameter => ({
         batch_id: selectedBatch.batch_id,
         parameter: parameter,
@@ -116,7 +112,6 @@ const QualityCheckEntryForm = () => {
         updated_at: new Date().toISOString()
       }));
 
-      // Insert all quality checks
       const { error } = await supabase
         .from('quality_checks')
         .insert(qualityChecks);
@@ -178,31 +173,30 @@ const QualityCheckEntryForm = () => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
-                <Command>
+                <Command shouldFilter={false}>
                   <CommandInput placeholder="Search batch ID..." />
                   <CommandEmpty>No batch found.</CommandEmpty>
-                  {batchOptions.length > 0 && (
-                    <CommandGroup className="max-h-60 overflow-y-auto">
-                      {batchOptions.map((batch) => (
-                        <CommandItem
-                          key={batch.batch_id}
-                          onSelect={() => {
-                            setSelectedBatch(batch);
-                            setValue('batchId', batch.batch_id);
-                            setOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedBatch?.batch_id === batch.batch_id ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {batch.label}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  )}
+                  <CommandGroup>
+                    {batchOptions?.map((batch) => (
+                      <CommandItem
+                        key={batch.batch_id}
+                        value={batch.batch_id}
+                        onSelect={() => {
+                          setSelectedBatch(batch);
+                          setValue('batchId', batch.batch_id);
+                          setOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedBatch?.batch_id === batch.batch_id ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {batch.label}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
                 </Command>
               </PopoverContent>
             </Popover>
