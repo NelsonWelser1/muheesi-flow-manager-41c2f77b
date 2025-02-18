@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,37 +43,41 @@ const BatchSelector = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0">
-          <Command shouldFilter={false}>
+          <Command>
             <CommandInput
               placeholder="Search batch ID..."
               value={searchQuery}
               onValueChange={setSearchQuery}
+              className="h-9"
             />
-            {filteredBatches.length === 0 ? (
-              <CommandEmpty>No batch found.</CommandEmpty>
-            ) : (
-              <CommandGroup>
-                {filteredBatches.map((batch) => (
-                  <CommandItem
-                    key={batch.batch_id}
-                    onSelect={() => {
-                      onSelectBatch(batch);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedBatch?.batch_id === batch.batch_id 
-                          ? "opacity-100" 
-                          : "opacity-0"
-                      )}
-                    />
-                    {batch.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
+            <CommandList>
+              {filteredBatches.length === 0 ? (
+                <CommandEmpty>No batch found.</CommandEmpty>
+              ) : (
+                <CommandGroup>
+                  {filteredBatches.map((batch) => (
+                    <CommandItem
+                      key={batch.batch_id}
+                      value={batch.batch_id}
+                      onSelect={() => {
+                        onSelectBatch(batch);
+                        setOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedBatch?.batch_id === batch.batch_id 
+                            ? "opacity-100" 
+                            : "opacity-0"
+                        )}
+                      />
+                      {batch.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
