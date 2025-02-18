@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,7 +17,22 @@ const BatchSelector = ({
   filteredBatches,
   onSelectBatch
 }) => {
-  const batches = filteredBatches || [];
+  // Ensure we always have an array, even if empty
+  const batches = Array.isArray(filteredBatches) ? filteredBatches : [];
+  
+  // Initialize local state for command value
+  const [commandValue, setCommandValue] = useState('');
+
+  // Update command value when search query changes
+  useEffect(() => {
+    setCommandValue(searchQuery || '');
+  }, [searchQuery]);
+
+  // Handle command input change
+  const handleCommandInputChange = (value) => {
+    setCommandValue(value);
+    setSearchQuery(value);
+  };
 
   return (
     <div className="space-y-2">
@@ -45,11 +60,11 @@ const BatchSelector = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0" align="start">
-          <Command>
+          <Command value={commandValue} onValueChange={handleCommandInputChange}>
             <CommandInput 
               placeholder="Search batch ID..."
-              value={searchQuery || ""}
-              onValueChange={setSearchQuery}
+              value={commandValue}
+              onValueChange={handleCommandInputChange}
             />
             <CommandEmpty>No batch found.</CommandEmpty>
             <CommandGroup heading="Available Batches">
@@ -60,6 +75,7 @@ const BatchSelector = ({
                   onSelect={() => {
                     onSelectBatch(batch);
                     setOpen(false);
+                    setCommandValue('');
                   }}
                   className="cursor-pointer"
                 >
