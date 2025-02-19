@@ -20,15 +20,23 @@ export const useMilkOffloadForm = () => {
     destination: ''
   });
 
-  const handleTankSelection = (tankValue, batchId) => {
-    console.log('Selected tank:', tankValue, 'Batch ID:', batchId);
+  const generateBatchId = (tankValue) => {
+    const date = new Date();
+    const formattedDate = date.toISOString().split('T')[0].replace(/-/g, '');
+    const formattedTime = date.toTimeString().split(' ')[0].replace(/:/g, '');
+    return `${formattedDate}-${tankValue}-${formattedTime}`;
+  };
+
+  const handleTankSelection = (tankValue) => {
+    const batchId = generateBatchId(tankValue);
+    console.log('Selected tank:', tankValue, 'Generated Batch ID:', batchId);
     
-    // Get the most recent entry for the selected tank with positive milk volume
+    // Get the most recent entry for the selected tank
     const mostRecentEntry = milkReceptionData
       ?.filter(record => record.tank_number === tankValue && record.milk_volume > 0)
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
 
-    // Calculate total milk received and offloaded for the selected tank
+    // Calculate available milk
     const tankReceived = milkReceptionData
       ?.filter(record => 
         record.tank_number === tankValue && 
@@ -57,7 +65,6 @@ export const useMilkOffloadForm = () => {
         destination: mostRecentEntry.destination || ''
       }));
 
-      // Show available milk volume in toast
       toast({
         title: `${tankValue} Status`,
         description: `Available milk volume: ${availableMilk.toFixed(2)}L`,
