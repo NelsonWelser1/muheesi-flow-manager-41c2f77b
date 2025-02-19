@@ -1,36 +1,49 @@
 
 import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase';
 import { useMilkReception } from '@/hooks/useMilkReception';
-import { generateBatchId } from '../utils/batchIdGenerator';
-import { calculateTankVolumes, getMostRecentTankEntry } from '../utils/tankCalculations';
-import { validateMilkOffloadForm } from '../utils/formValidation';
-import { recordMilkOffload } from '../services/milkOffloadService';
-
-const initialFormState = {
-  batch_id: '',
-  storage_tank: '',
-  supplier_name: 'Offload from Tank',
-  milk_volume: '',
-  temperature: '',
-  quality_check: 'Grade A',
-  notes: '',
-  destination: ''
-};
 
 export const useMilkOffloadForm = () => {
   const { toast } = useToast();
   const { data: milkReceptionData, refetch: refetchMilkReception } = useMilkReception();
   const [validationError, setValidationError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState(initialFormState);
+  const [formData, setFormData] = useState({
+    batch_id: '',
+    storage_tank: '',
+    supplier_name: 'Offload from Tank',
+    milk_volume: '',
+    temperature: '',
+    quality_check: 'Grade A',
+    notes: '',
+    destination: ''
+  });
 
-  const handleTankSelection = (tankValue) => {
-    const batchId = generateBatchId(tankValue);
-    console.log('Selected tank:', tankValue, 'Generated Batch ID:', batchId);
+  const handleTankSelection = (tankValue, batchId) => {
+    console.log('Selected tank:', tankValue, 'Batch ID:', batchId);
     
-    const mostRecentEntry = getMostRecentTankEntry(milkReceptionData, tankValue);
-    const { availableMilk } = calculateTankVolumes(milkReceptionData, tankValue);
+    // Get the most recent entry for the selected tank with positive milk volume
+    const mostRecentEntry = milkReceptionData
+      ?.filter(record => record.tank_number === tankValue && record.milk_volume > 0)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+
+    // Calculate total milk received and offloaded for the selected tank
+    const tankReceived = milkReceptionData
+      ?.filter(record => 
+        record.tank_number === tankValue && 
+        record.milk_volume > 0
+      )
+      .reduce((total, record) => total + record.milk_volume, 0) || 0;
+
+    const tankOffloaded = milkReceptionData
+      ?.filter(record => 
+        record.tank_number === tankValue && 
+        record.milk_volume < 0
+      )
+      .reduce((total, record) => total + Math.abs(record.milk_volume), 0) || 0;
+
+    const availableMilk = tankReceived - tankOffloaded;
 
     if (mostRecentEntry) {
       setFormData(prev => ({
@@ -44,6 +57,7 @@ export const useMilkOffloadForm = () => {
         destination: mostRecentEntry.destination || ''
       }));
 
+      // Show available milk volume in toast
       toast({
         title: `${tankValue} Status`,
         description: `Available milk volume: ${availableMilk.toFixed(2)}L`,
@@ -77,34 +91,124 @@ export const useMilkOffloadForm = () => {
     setValidationError(null);
   };
 
+  const validateForm = () => {
+    console.log('Validating form with data:', formData);
+    const errors = [];
+    const requiredFields = [
+      'batch_id', 'storage_tank', 'milk_volume', 'temperature', 'destination'
+    ];
+
+    requiredFields.forEach(field => {
+      if (!formData[field]) {
+        errors.push(`${field.replace('_', ' ')} is required`);
+      }
+    });
+
+    const offloadVolume = Math.abs(parseFloat(formData.milk_volume));
+
+    // Calculate available milk in the selected tank
+    const tankReceived = milkReceptionData
+      ?.filter(record => 
+        record.tank_number === formData.storage_tank && 
+        record.milk_volume > 0
+      )
+      .reduce((total, record) => total + record.milk_volume, 0) || 0;
+
+    const tankOffloaded = milkReceptionData
+      ?.filter(record => 
+        record.tank_number === formData.storage_tank && 
+        record.milk_volume < 0
+      )
+      .reduce((total, record) => total + Math.abs(record.milk_volume), 0) || 0;
+
+    const availableMilk = tankReceived - tankOffloaded;
+
+    if (offloadVolume > availableMilk) {
+      setValidationError({
+        title: "Insufficient Volume",
+        description: `${formData.storage_tank} only has ${availableMilk.toFixed(2)}L available.`,
+        suggestedTank: null
+      });
+      errors.push("Insufficient volume");
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     console.log('Starting form submission with data:', formData);
     setValidationError(null);
 
-    const errors = validateMilkOffloadForm(formData, milkReceptionData);
+    const errors = validateForm();
     if (errors.length > 0) {
       console.log('Validation errors:', errors);
-      toast({
-        title: "Validation Error",
-        description: errors.join(', '),
-        variant: "destructive",
-      });
+      if (!validationError) {
+        toast({
+          title: "Validation Error",
+          description: errors.join(', '),
+          variant: "destructive",
+        });
+      }
       setLoading(false);
       return;
     }
 
     try {
-      const result = await recordMilkOffload(formData);
-      console.log('Successfully recorded milk offload:', result);
+      console.log('Recording milk offload...');
+      
+      // Record in milk_reception table
+      const { data: receptionData, error: receptionError } = await supabase
+        .from('milk_reception')
+        .insert([{
+          supplier_name: formData.supplier_name,
+          milk_volume: -Math.abs(parseFloat(formData.milk_volume)),
+          temperature: parseFloat(formData.temperature),
+          notes: formData.notes,
+          quality_score: formData.quality_check,
+          tank_number: formData.storage_tank,
+          destination: formData.destination
+        }])
+        .select();
+
+      if (receptionError) throw receptionError;
+
+      // Record in milk_tank_offloads table
+      const { data: offloadData, error: offloadError } = await supabase
+        .from('milk_tank_offloads')
+        .insert([{
+          batch_id: formData.batch_id,
+          storage_tank: formData.storage_tank,
+          volume_offloaded: Math.abs(parseFloat(formData.milk_volume)),
+          temperature: parseFloat(formData.temperature),
+          quality_check: formData.quality_check,
+          notes: formData.notes,
+          destination: formData.destination
+        }])
+        .select();
+
+      if (offloadError) throw offloadError;
+
+      console.log('Successfully recorded milk offload:', { receptionData, offloadData });
 
       toast({
         title: "Success",
         description: `Milk offload recorded successfully with Batch ID: ${formData.batch_id}`,
       });
 
-      setFormData(initialFormState);
+      // Reset form
+      setFormData({
+        batch_id: '',
+        storage_tank: '',
+        supplier_name: 'Offload from Tank',
+        milk_volume: '',
+        temperature: '',
+        quality_check: 'Grade A',
+        notes: '',
+        destination: ''
+      });
+
       await refetchMilkReception();
 
     } catch (error) {

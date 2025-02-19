@@ -17,27 +17,20 @@ export const MilkOffloadFormContent = ({
 }) => {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="batch_id">Batch ID</Label>
-          <Input
-            id="batch_id"
-            name="batch_id"
-            value={formData.batch_id}
-            readOnly
-            className="bg-muted"
-            placeholder="Auto-generated on tank selection"
-            required
-          />
-        </div>
+      <TankSelector 
+        value={formData.storage_tank} 
+        onValueChange={handleTankSelection}
+      />
 
-        <div className="space-y-2">
-          <Label>Storage Tank</Label>
-          <TankSelector 
-            value={formData.storage_tank} 
-            onValueChange={handleTankSelection}
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="batch_id">Batch ID</Label>
+        <Input
+          id="batch_id"
+          name="batch_id"
+          value={formData.batch_id}
+          readOnly
+          className="bg-muted"
+        />
       </div>
 
       <div className="space-y-2">
@@ -101,14 +94,7 @@ export const MilkOffloadFormContent = ({
         className="w-full"
         disabled={loading}
       >
-        {loading ? (
-          <div className="flex items-center gap-2">
-            <span className="animate-spin">◌</span>
-            Recording Offload...
-          </div>
-        ) : (
-          "Submit Offload Record"
-        )}
+        {loading ? 'Recording Offload...' : 'Record Tank Offload'}
       </Button>
     </div>
   );
