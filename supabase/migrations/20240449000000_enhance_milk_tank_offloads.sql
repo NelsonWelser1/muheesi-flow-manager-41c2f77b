@@ -28,7 +28,7 @@ END $$;
 
 -- Add constraints
 ALTER TABLE public.milk_tank_offloads
-ADD CONSTRAINT chk_storage_tank CHECK (storage_tank IN ('Tank A', 'Tank B')),
+ADD CONSTRAINT chk_storage_tank CHECK (storage_tank IN ('Tank A', 'Tank B', 'Direct-Processing')),
 ADD CONSTRAINT chk_fat_percentage CHECK (fat_percentage >= 0 AND fat_percentage <= 100),
 ADD CONSTRAINT chk_protein_percentage CHECK (protein_percentage >= 0 AND protein_percentage <= 100),
 ADD CONSTRAINT chk_acidity CHECK (acidity >= 0 AND acidity <= 14);
