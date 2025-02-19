@@ -24,6 +24,34 @@ export const useMilkOffloadForm = () => {
     destination: ''
   });
 
+  const calculateTankBalance = (tankName) => {
+    if (!milkReceptionData) return 0;
+    
+    const tankReceived = milkReceptionData
+      ?.filter(record => record.tank_number === tankName && record.milk_volume > 0)
+      .reduce((total, record) => total + record.milk_volume, 0) || 0;
+
+    const tankOffloaded = milkReceptionData
+      ?.filter(record => record.tank_number === tankName && record.milk_volume < 0)
+      .reduce((total, record) => total + Math.abs(record.milk_volume), 0) || 0;
+
+    return tankReceived - tankOffloaded;
+  };
+
+  const findAlternativeTank = (currentTank, requiredVolume) => {
+    const tanks = ['Tank A', 'Tank B', 'Direct-Processing'];
+    const alternatives = tanks
+      .filter(tank => tank !== currentTank)
+      .map(tank => ({
+        name: tank,
+        available: calculateTankBalance(tank)
+      }))
+      .filter(tank => tank.available >= requiredVolume)
+      .sort((a, b) => b.available - a.available);
+
+    return alternatives[0];
+  };
+
   const handleTankSelection = (tankValue, batchId) => {
     console.log('Selected tank:', tankValue, 'Batch ID:', batchId);
     
@@ -32,22 +60,7 @@ export const useMilkOffloadForm = () => {
       ?.filter(record => record.tank_number === tankValue && record.milk_volume > 0)
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
 
-    // Calculate total milk received and offloaded for the selected tank
-    const tankReceived = milkReceptionData
-      ?.filter(record => 
-        record.tank_number === tankValue && 
-        record.milk_volume > 0
-      )
-      .reduce((total, record) => total + record.milk_volume, 0) || 0;
-
-    const tankOffloaded = milkReceptionData
-      ?.filter(record => 
-        record.tank_number === tankValue && 
-        record.milk_volume < 0
-      )
-      .reduce((total, record) => total + Math.abs(record.milk_volume), 0) || 0;
-
-    const availableMilk = tankReceived - tankOffloaded;
+    const availableMilk = calculateTankBalance(tankValue);
 
     if (mostRecentEntry) {
       setFormData(prev => ({
@@ -91,15 +104,68 @@ export const useMilkOffloadForm = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     console.log(`Input changed - ${name}:`, value);
+
+    if (name === 'milk_volume' && formData.storage_tank) {
+      const requestedVolume = parseFloat(value);
+      const availableMilk = calculateTankBalance(formData.storage_tank);
+
+      if (requestedVolume > availableMilk) {
+        const alternativeTank = findAlternativeTank(formData.storage_tank, requestedVolume);
+        
+        setValidationError({
+          title: "Insufficient Milk Volume",
+          description: `Available milk in ${formData.storage_tank}: ${availableMilk.toFixed(2)}L`,
+          suggestedTank: alternativeTank ? alternativeTank.name : null
+        });
+
+        if (alternativeTank) {
+          toast({
+            title: "Alternative Tank Available",
+            description: `${alternativeTank.name} has ${alternativeTank.available.toFixed(2)}L available`,
+          });
+        }
+
+        // Still update the form value to show the invalid input
+        setFormData(prev => ({
+          ...prev,
+          [name]: value
+        }));
+        return;
+      } else {
+        setValidationError(null);
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    setValidationError(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate milk volume before submission
+    const requestedVolume = parseFloat(formData.milk_volume);
+    const availableMilk = calculateTankBalance(formData.storage_tank);
+    
+    if (requestedVolume > availableMilk) {
+      const alternativeTank = findAlternativeTank(formData.storage_tank, requestedVolume);
+      setValidationError({
+        title: "Cannot Submit - Insufficient Volume",
+        description: `Available milk in ${formData.storage_tank}: ${availableMilk.toFixed(2)}L`,
+        suggestedTank: alternativeTank ? alternativeTank.name : null
+      });
+      
+      toast({
+        title: "Submission Failed",
+        description: "Requested volume exceeds available milk",
+        variant: "destructive",
+      });
+      
+      return;
+    }
+
     setLoading(true);
     console.log('Starting form submission with data:', formData);
     setValidationError(null);
@@ -122,7 +188,7 @@ export const useMilkOffloadForm = () => {
           quality_score: formData.quality_check,
           tank_number: formData.storage_tank,
           destination: formData.destination,
-          batch_id: formData.batch_id // Add batch_id to milk_reception table
+          batch_id: formData.batch_id
         }])
         .select();
 
@@ -132,7 +198,7 @@ export const useMilkOffloadForm = () => {
       const { data: offloadData, error: offloadError } = await supabase
         .from('milk_tank_offloads')
         .insert([{
-          batch_id: formData.batch_id, // Ensure batch_id is included here
+          batch_id: formData.batch_id,
           storage_tank: formData.storage_tank,
           volume_offloaded: Math.abs(parseFloat(formData.milk_volume)),
           temperature: parseFloat(formData.temperature),
