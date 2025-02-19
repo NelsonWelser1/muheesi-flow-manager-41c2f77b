@@ -10,8 +10,9 @@ export const QualityGradeSelector = ({ value, onValueChange }) => {
       <Select 
         value={value} 
         onValueChange={onValueChange}
+        name="quality_check"
       >
-        <SelectTrigger>
+        <SelectTrigger id="quality_check">
           <SelectValue placeholder="Select quality grade" />
         </SelectTrigger>
         <SelectContent>

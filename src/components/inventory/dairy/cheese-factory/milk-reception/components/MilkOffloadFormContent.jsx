@@ -37,13 +37,10 @@ export const MilkOffloadFormContent = ({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>Quality Grade</Label>
-          <QualityGradeSelector 
-            value={formData.quality_check}
-            onValueChange={onQualityChange}
-          />
-        </div>
+        <QualityGradeSelector 
+          value={formData.quality_check}
+          onValueChange={onQualityChange}
+        />
 
         <div className="space-y-2">
           <Label htmlFor="temperature">Temperature (°C)</Label>
