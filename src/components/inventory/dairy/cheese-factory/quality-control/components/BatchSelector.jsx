@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const BatchSelector = ({ 
@@ -15,8 +15,14 @@ const BatchSelector = ({
   searchQuery = '',
   setSearchQuery,
   filteredBatches = [],
-  onSelectBatch
+  onSelectBatch,
+  refetchBatches
 }) => {
+  const handleRefresh = async (e) => {
+    e.preventDefault();
+    await refetchBatches();
+  };
+
   return (
     <div className="space-y-2">
       <Label htmlFor="batchId">Batch ID</Label>
@@ -44,15 +50,28 @@ const BatchSelector = ({
         </PopoverTrigger>
         <PopoverContent className="w-full p-0">
           <Command>
-            <CommandInput
-              placeholder="Search batch ID..."
-              value={searchQuery}
-              onValueChange={setSearchQuery}
-              className="h-9"
-            />
+            <div className="flex items-center gap-2 p-2">
+              <CommandInput
+                placeholder="Search batch ID..."
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+                className="h-9 flex-1"
+              />
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={handleRefresh}
+                className="h-9 w-9"
+                disabled={fetchingBatches}
+              >
+                <RefreshCw className={cn("h-4 w-4", fetchingBatches && "animate-spin")} />
+              </Button>
+            </div>
             <CommandList>
               {filteredBatches.length === 0 ? (
-                <CommandEmpty>No batch found.</CommandEmpty>
+                <CommandEmpty>
+                  {fetchingBatches ? 'Loading batches...' : 'No batch found.'}
+                </CommandEmpty>
               ) : (
                 <CommandGroup>
                   {filteredBatches.map((batch) => (

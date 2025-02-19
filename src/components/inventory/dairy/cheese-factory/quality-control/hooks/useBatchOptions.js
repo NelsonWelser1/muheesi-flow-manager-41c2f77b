@@ -22,7 +22,7 @@ export const useBatchOptions = () => {
       if (checkedError) throw checkedError;
 
       // Create a Set of checked batch IDs for efficient lookup
-      const checkedBatchIds = new Set(checkedBatches.map(b => b.batch_id));
+      const checkedBatchIds = new Set(checkedBatches?.map(b => b.batch_id) || []);
 
       // Fetch batches from both production lines
       const [internationalResponse, localResponse] = await Promise.all([
@@ -80,9 +80,19 @@ export const useBatchOptions = () => {
     );
   }, [batchOptions, searchQuery]);
 
+  // Initial fetch
   useEffect(() => {
     fetchBatchIds();
-  }, []); // Refresh the list when component mounts
+  }, []); 
+
+  // Refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchBatchIds();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return {
     batchOptions,
@@ -90,6 +100,6 @@ export const useBatchOptions = () => {
     searchQuery,
     setSearchQuery,
     filteredBatches,
-    refetchBatches: fetchBatchIds // Expose refetch function to refresh list after submission
+    refetchBatches: fetchBatchIds
   };
 };
