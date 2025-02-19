@@ -31,17 +31,16 @@ const MilkBalanceTracker = () => {
 
   const tankA = calculateTankBalance('Tank A');
   const tankB = calculateTankBalance('Tank B');
-  const directProcessing = calculateTankBalance('Direct-Processing');
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="bg-blue-50">
-        <CardHeader className="flex flex-row items-center justify-between py-2">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-lg font-medium">Tank A Status</CardTitle>
           <Droplet className="h-4 w-4 text-blue-500" />
         </CardHeader>
-        <CardContent className="py-2">
-          <div className="space-y-1">
+        <CardContent>
+          <div className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Current Volume:</span>
               <span className="text-lg font-bold text-blue-600">{tankA.volume.toFixed(2)}L</span>
@@ -58,12 +57,12 @@ const MilkBalanceTracker = () => {
       </Card>
 
       <Card className="bg-green-50">
-        <CardHeader className="flex flex-row items-center justify-between py-2">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-lg font-medium">Tank B Status</CardTitle>
           <Droplet className="h-4 w-4 text-green-500" />
         </CardHeader>
-        <CardContent className="py-2">
-          <div className="space-y-1">
+        <CardContent>
+          <div className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Current Volume:</span>
               <span className="text-lg font-bold text-green-600">{tankB.volume.toFixed(2)}L</span>
@@ -79,35 +78,13 @@ const MilkBalanceTracker = () => {
         </CardContent>
       </Card>
 
-      <Card className="bg-purple-50">
-        <CardHeader className="flex flex-row items-center justify-between py-2">
-          <CardTitle className="text-lg font-medium">Direct Processing</CardTitle>
-          <Droplet className="h-4 w-4 text-purple-500" />
-        </CardHeader>
-        <CardContent className="py-2">
-          <div className="space-y-1">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Current Volume:</span>
-              <span className="text-lg font-bold text-purple-600">{directProcessing.volume.toFixed(2)}L</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Temperature:</span>
-              <div className="flex items-center gap-1">
-                <Thermometer className="h-4 w-4 text-red-500" />
-                <span className="text-lg font-bold text-gray-700">{directProcessing.lastTemperature}°C</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       <Card>
-        <CardHeader className="py-2">
+        <CardHeader>
           <CardTitle>Total Balance</CardTitle>
         </CardHeader>
-        <CardContent className="py-2">
+        <CardContent>
           <div className="text-2xl font-bold">
-            {(tankA.volume + tankB.volume + directProcessing.volume).toFixed(2)}L
+            {(tankA.volume + tankB.volume).toFixed(2)}L
           </div>
           <p className="text-xs text-muted-foreground">
             Combined volume across all tanks

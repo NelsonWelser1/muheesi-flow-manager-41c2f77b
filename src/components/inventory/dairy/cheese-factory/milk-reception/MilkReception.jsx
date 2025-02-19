@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MilkReceptionForm from './MilkReceptionForm';
@@ -24,8 +23,8 @@ const MilkReception = () => {
         <MilkReceptionForm />
       </TabsContent>
 
-      <TabsContent value="offload" className="space-y-6">
-        <MilkOffloadForm key={Date.now()} />
+      <TabsContent value="offload">
+        <MilkOffloadForm />
       </TabsContent>
 
       <TabsContent value="settings">
