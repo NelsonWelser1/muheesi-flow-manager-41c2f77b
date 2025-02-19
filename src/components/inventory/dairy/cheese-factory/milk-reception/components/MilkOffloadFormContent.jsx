@@ -28,9 +28,8 @@ export const MilkOffloadFormContent = ({
           id="batch_id"
           name="batch_id"
           value={formData.batch_id}
-          onChange={handleInputChange}
-          placeholder="e.g., 20250219-Tank A-144827"
-          required
+          readOnly
+          className="bg-muted"
         />
       </div>
 
