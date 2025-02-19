@@ -16,6 +16,10 @@ export const useMilkOffloadForm = () => {
     milk_volume: '',
     temperature: '',
     quality_check: 'Grade A',
+    fat_percentage: '',
+    protein_percentage: '',
+    total_plate_count: '',
+    acidity: '',
     notes: '',
     destination: ''
   });
@@ -54,10 +58,13 @@ export const useMilkOffloadForm = () => {
         quality_check: mostRecentEntry.quality_score || 'Grade A',
         milk_volume: availableMilk.toString(),
         temperature: mostRecentEntry.temperature.toString(),
+        fat_percentage: mostRecentEntry.fat_percentage?.toString() || '',
+        protein_percentage: mostRecentEntry.protein_percentage?.toString() || '',
+        total_plate_count: mostRecentEntry.total_plate_count?.toString() || '',
+        acidity: mostRecentEntry.acidity?.toString() || '',
         destination: mostRecentEntry.destination || ''
       }));
 
-      // Show available milk volume in toast
       toast({
         title: `${tankValue} Status`,
         description: `Available milk volume: ${availableMilk.toFixed(2)}L`,
@@ -91,69 +98,11 @@ export const useMilkOffloadForm = () => {
     setValidationError(null);
   };
 
-  const validateForm = () => {
-    console.log('Validating form with data:', formData);
-    const errors = [];
-    const requiredFields = [
-      'batch_id', 'storage_tank', 'milk_volume', 'temperature', 'destination'
-    ];
-
-    requiredFields.forEach(field => {
-      if (!formData[field]) {
-        errors.push(`${field.replace('_', ' ')} is required`);
-      }
-    });
-
-    const offloadVolume = Math.abs(parseFloat(formData.milk_volume));
-
-    // Calculate available milk in the selected tank
-    const tankReceived = milkReceptionData
-      ?.filter(record => 
-        record.tank_number === formData.storage_tank && 
-        record.milk_volume > 0
-      )
-      .reduce((total, record) => total + record.milk_volume, 0) || 0;
-
-    const tankOffloaded = milkReceptionData
-      ?.filter(record => 
-        record.tank_number === formData.storage_tank && 
-        record.milk_volume < 0
-      )
-      .reduce((total, record) => total + Math.abs(record.milk_volume), 0) || 0;
-
-    const availableMilk = tankReceived - tankOffloaded;
-
-    if (offloadVolume > availableMilk) {
-      setValidationError({
-        title: "Insufficient Volume",
-        description: `${formData.storage_tank} only has ${availableMilk.toFixed(2)}L available.`,
-        suggestedTank: null
-      });
-      errors.push("Insufficient volume");
-    }
-
-    return errors;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     console.log('Starting form submission with data:', formData);
     setValidationError(null);
-
-    const errors = validateForm();
-    if (errors.length > 0) {
-      console.log('Validation errors:', errors);
-      if (!validationError) {
-        toast({
-          title: "Validation Error",
-          description: errors.join(', '),
-          variant: "destructive",
-        });
-      }
-      setLoading(false);
-      return;
-    }
 
     try {
       console.log('Recording milk offload...');
@@ -165,6 +114,10 @@ export const useMilkOffloadForm = () => {
           supplier_name: formData.supplier_name,
           milk_volume: -Math.abs(parseFloat(formData.milk_volume)),
           temperature: parseFloat(formData.temperature),
+          fat_percentage: parseFloat(formData.fat_percentage),
+          protein_percentage: parseFloat(formData.protein_percentage),
+          total_plate_count: parseInt(formData.total_plate_count),
+          acidity: parseFloat(formData.acidity),
           notes: formData.notes,
           quality_score: formData.quality_check,
           tank_number: formData.storage_tank,
@@ -182,6 +135,10 @@ export const useMilkOffloadForm = () => {
           storage_tank: formData.storage_tank,
           volume_offloaded: Math.abs(parseFloat(formData.milk_volume)),
           temperature: parseFloat(formData.temperature),
+          fat_percentage: parseFloat(formData.fat_percentage),
+          protein_percentage: parseFloat(formData.protein_percentage),
+          total_plate_count: parseInt(formData.total_plate_count),
+          acidity: parseFloat(formData.acidity),
           quality_check: formData.quality_check,
           notes: formData.notes,
           destination: formData.destination
@@ -205,6 +162,10 @@ export const useMilkOffloadForm = () => {
         milk_volume: '',
         temperature: '',
         quality_check: 'Grade A',
+        fat_percentage: '',
+        protein_percentage: '',
+        total_plate_count: '',
+        acidity: '',
         notes: '',
         destination: ''
       });
