@@ -23,7 +23,8 @@ const QualityCheckEntryForm = () => {
     fetchingBatches,
     searchQuery,
     setSearchQuery,
-    filteredBatches
+    filteredBatches,
+    refetchBatches
   } = useBatchOptions();
 
   const parameters = [
@@ -89,8 +90,11 @@ const QualityCheckEntryForm = () => {
         duration: 3000,
       });
 
+      // After successful submission, refresh the batch list and reset the form
+      await refetchBatches();
       reset();
       setSelectedBatch(null);
+      
     } catch (error) {
       console.error('Error submitting quality checks:', error);
       toast({
@@ -122,6 +126,7 @@ const QualityCheckEntryForm = () => {
             setSearchQuery={setSearchQuery}
             filteredBatches={filteredBatches}
             onSelectBatch={handleBatchSelect}
+            refetchBatches={refetchBatches}
           />
 
           {parameters.map((parameter) => (
