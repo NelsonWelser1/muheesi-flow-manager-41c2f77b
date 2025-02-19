@@ -1,3 +1,4 @@
+
 -- Enhance milk_tank_offloads table with additional fields
 ALTER TABLE public.milk_tank_offloads
 ADD COLUMN IF NOT EXISTS supplier_name TEXT,
