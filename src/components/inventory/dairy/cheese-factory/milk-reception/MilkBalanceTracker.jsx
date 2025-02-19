@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
@@ -29,9 +28,39 @@ const MilkBalanceTracker = () => {
     };
   };
 
+  const calculateDirectProcessing = () => {
+    if (!milkReceptionData) return { volume: 0, lastTemperature: 0 };
+
+    // Filter records for Direct Processing
+    const directProcessingRecords = milkReceptionData.filter(record => 
+      record.tank_number === 'Direct-Processing' || 
+      (record.destination && record.destination.toLowerCase().includes('direct'))
+    );
+
+    // Calculate total volume and get latest temperature
+    return directProcessingRecords.reduce((acc, record) => {
+      // For direct processing entries
+      if (record.tank_number === 'Direct-Processing') {
+        acc.volume += record.milk_volume;
+      }
+      // For tank offloads to direct processing
+      else if (record.destination && record.destination.toLowerCase().includes('direct')) {
+        acc.volume += Math.abs(record.milk_volume); // Convert negative offload to positive inflow
+      }
+
+      // Update temperature if this is the most recent record
+      if (!acc.lastTimestamp || new Date(record.created_at) > new Date(acc.lastTimestamp)) {
+        acc.lastTemperature = record.temperature;
+        acc.lastTimestamp = record.created_at;
+      }
+
+      return acc;
+    }, { volume: 0, lastTemperature: 0, lastTimestamp: null });
+  };
+
   const tankA = calculateTankBalance('Tank A');
   const tankB = calculateTankBalance('Tank B');
-  const directProcessing = calculateTankBalance('Direct-Processing');
+  const directProcessing = calculateDirectProcessing();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
