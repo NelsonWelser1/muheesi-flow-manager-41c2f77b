@@ -80,19 +80,19 @@ export const useBatchOptions = () => {
     );
   }, [batchOptions, searchQuery]);
 
-  // Initial fetch
+  // Combine both initial fetch and interval refresh into a single useEffect
   useEffect(() => {
+    // Initial fetch
     fetchBatchIds();
-  }, []); 
 
-  // Refresh every 30 seconds
-  useEffect(() => {
+    // Set up interval for periodic refresh
     const interval = setInterval(() => {
       fetchBatchIds();
     }, 30000);
 
+    // Cleanup interval on component unmount
     return () => clearInterval(interval);
-  }, []);
+  }, []); // Empty dependency array means this only runs once on mount
 
   return {
     batchOptions,
