@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ const MilkOffloadForm = () => {
   const { toast } = useToast();
   const { data: milkReceptionData, refetch: refetchMilkReception } = useMilkReception();
   const [validationError, setValidationError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     storage_tank: '',
     supplier_name: 'Offload from Tank',
@@ -165,6 +167,7 @@ const MilkOffloadForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     console.log('Starting form submission with data:', formData);
     setValidationError(null);
 
@@ -178,31 +181,37 @@ const MilkOffloadForm = () => {
           variant: "destructive",
         });
       }
+      setLoading(false);
       return;
     }
 
     try {
       console.log('Recording milk offload...');
       
+      // Optimistically update the local state
+      const newOffload = {
+        supplier_name: formData.supplier_name,
+        milk_volume: -Math.abs(parseFloat(formData.milk_volume)),
+        temperature: parseFloat(formData.temperature),
+        fat_percentage: parseFloat(formData.fat_percentage),
+        protein_percentage: parseFloat(formData.protein_percentage),
+        total_plate_count: parseInt(formData.total_plate_count),
+        acidity: parseFloat(formData.acidity),
+        notes: formData.notes,
+        quality_score: formData.quality_check,
+        tank_number: formData.storage_tank,
+        destination: formData.destination
+      };
+
+      // Insert into milk_reception
       const { data: receptionData, error: receptionError } = await supabase
         .from('milk_reception')
-        .insert([{
-          supplier_name: formData.supplier_name,
-          milk_volume: -Math.abs(parseFloat(formData.milk_volume)),
-          temperature: parseFloat(formData.temperature),
-          fat_percentage: parseFloat(formData.fat_percentage),
-          protein_percentage: parseFloat(formData.protein_percentage),
-          total_plate_count: parseInt(formData.total_plate_count),
-          acidity: parseFloat(formData.acidity),
-          notes: formData.notes,
-          quality_score: formData.quality_check,
-          tank_number: formData.storage_tank,
-          destination: formData.destination
-        }])
+        .insert([newOffload])
         .select();
 
       if (receptionError) throw receptionError;
 
+      // Insert into milk_tank_offloads
       const { data: offloadData, error: offloadError } = await supabase
         .from('milk_tank_offloads')
         .insert([{
@@ -211,7 +220,11 @@ const MilkOffloadForm = () => {
           temperature: parseFloat(formData.temperature),
           quality_check: formData.quality_check,
           notes: formData.notes,
-          destination: formData.destination
+          destination: formData.destination,
+          fat_percentage: parseFloat(formData.fat_percentage),
+          protein_percentage: parseFloat(formData.protein_percentage),
+          total_plate_count: parseInt(formData.total_plate_count),
+          acidity: parseFloat(formData.acidity)
         }])
         .select();
 
@@ -221,7 +234,7 @@ const MilkOffloadForm = () => {
 
       toast({
         title: "Success",
-        description: "Milk offload record added successfully",
+        description: `Milk offload recorded successfully with Batch ID: ${offloadData[0].batch_id}`,
       });
 
       setFormData({
@@ -247,6 +260,8 @@ const MilkOffloadForm = () => {
         description: error.message || "An error occurred while submitting the form",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -291,8 +306,15 @@ const MilkOffloadForm = () => {
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              Submit Offload Record
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <span className="animate-spin">◌</span>
+                  Recording Offload...
+                </div>
+              ) : (
+                "Submit Offload Record"
+              )}
             </Button>
           </form>
         </CardContent>
