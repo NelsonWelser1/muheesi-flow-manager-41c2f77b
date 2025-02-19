@@ -29,17 +29,16 @@ const MilkOffloadForm = () => {
             onSwitchTank={handleTankSelection} 
           />
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <MilkOffloadFormContent 
-              formData={formData}
-              loading={loading}
-              handleTankSelection={handleTankSelection}
-              handleInputChange={handleInputChange}
-              onQualityChange={(value) => handleInputChange({ 
-                target: { name: 'quality_check', value } 
-              })}
-            />
-          </form>
+          <MilkOffloadFormContent 
+            formData={formData}
+            loading={loading}
+            handleTankSelection={handleTankSelection}
+            handleInputChange={handleInputChange}
+            handleSubmit={handleSubmit}
+            onQualityChange={(value) => handleInputChange({ 
+              target: { name: 'quality_check', value } 
+            })}
+          />
         </CardContent>
       </Card>
 
