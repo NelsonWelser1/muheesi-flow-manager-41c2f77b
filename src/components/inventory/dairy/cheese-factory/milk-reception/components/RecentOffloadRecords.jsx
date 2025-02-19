@@ -25,7 +25,8 @@ export const RecentOffloadRecords = ({
       Object.values(record).some(value => 
         value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
-    );
+    )
+    .filter(record => !record.batch_id?.startsWith('LEGACY-')); // Filter out legacy batch IDs
 
   const handlePrint = () => {
     window.print();
@@ -35,7 +36,7 @@ export const RecentOffloadRecords = ({
     const doc = new jsPDF();
     
     const tableData = filteredRecords.map(record => [
-      record.batch_id,
+      record.batch_id || '',
       record.storage_tank || record.tank_number,
       format(new Date(record.created_at), 'PPp'),
       Math.abs(record.milk_volume),
@@ -61,7 +62,7 @@ export const RecentOffloadRecords = ({
 
   const downloadExcel = () => {
     const excelData = filteredRecords.map(record => ({
-      'Batch ID': record.batch_id,
+      'Batch ID': record.batch_id || '',
       'Tank': record.storage_tank || record.tank_number,
       'Date': format(new Date(record.created_at), 'PPp'),
       'Volume (L)': Math.abs(record.milk_volume),
@@ -130,7 +131,9 @@ export const RecentOffloadRecords = ({
           <TableBody>
             {filteredRecords.slice(0, 5).map(record => (
               <TableRow key={record.id}>
-                <TableCell className="whitespace-nowrap px-6 min-w-[150px]">{record.batch_id}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[150px] font-medium">
+                  {record.batch_id || ''}
+                </TableCell>
                 <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{record.storage_tank || record.tank_number}</TableCell>
                 <TableCell className="whitespace-nowrap px-6 min-w-[180px]">{format(new Date(record.created_at), 'PPp')}</TableCell>
                 <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{Math.abs(record.milk_volume)}</TableCell>
