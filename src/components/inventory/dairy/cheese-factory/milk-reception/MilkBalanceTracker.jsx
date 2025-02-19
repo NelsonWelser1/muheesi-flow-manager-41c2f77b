@@ -31,22 +31,14 @@ const MilkBalanceTracker = () => {
   const calculateDirectProcessing = () => {
     if (!milkReceptionData) return { volume: 0, lastTemperature: 0 };
 
-    // Filter records for Direct Processing
+    // Only consider records specifically marked as Direct-Processing
     const directProcessingRecords = milkReceptionData.filter(record => 
-      record.tank_number === 'Direct-Processing' || 
-      (record.destination && record.destination.toLowerCase().includes('direct'))
+      record.tank_number === 'Direct-Processing'
     );
 
     // Calculate total volume and get latest temperature
     return directProcessingRecords.reduce((acc, record) => {
-      // For direct processing entries
-      if (record.tank_number === 'Direct-Processing') {
-        acc.volume += record.milk_volume;
-      }
-      // For tank offloads to direct processing
-      else if (record.destination && record.destination.toLowerCase().includes('direct')) {
-        acc.volume += Math.abs(record.milk_volume); // Convert negative offload to positive inflow
-      }
+      acc.volume += record.milk_volume;
 
       // Update temperature if this is the most recent record
       if (!acc.lastTimestamp || new Date(record.created_at) > new Date(acc.lastTimestamp)) {
