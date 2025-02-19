@@ -109,39 +109,39 @@ export const RecentOffloadRecords = ({
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Batch ID</TableHead>
-              <TableHead>Tank</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Volume (L)</TableHead>
-              <TableHead>Temp (°C)</TableHead>
-              <TableHead>Quality</TableHead>
-              <TableHead>Fat %</TableHead>
-              <TableHead>Protein %</TableHead>
-              <TableHead>Plate Count</TableHead>
-              <TableHead>Acidity</TableHead>
-              <TableHead>Destination</TableHead>
-              <TableHead>Notes</TableHead>
+              <TableHead className="whitespace-nowrap px-6">Batch ID</TableHead>
+              <TableHead className="whitespace-nowrap px-6">Tank</TableHead>
+              <TableHead className="whitespace-nowrap px-6">Date</TableHead>
+              <TableHead className="whitespace-nowrap px-6">Volume (L)</TableHead>
+              <TableHead className="whitespace-nowrap px-6">Temp (°C)</TableHead>
+              <TableHead className="whitespace-nowrap px-6">Quality</TableHead>
+              <TableHead className="whitespace-nowrap px-6">Fat %</TableHead>
+              <TableHead className="whitespace-nowrap px-6">Protein %</TableHead>
+              <TableHead className="whitespace-nowrap px-6">Plate Count</TableHead>
+              <TableHead className="whitespace-nowrap px-6">Acidity</TableHead>
+              <TableHead className="whitespace-nowrap px-6">Destination</TableHead>
+              <TableHead className="whitespace-nowrap px-6">Notes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredRecords.slice(0, 5).map(record => (
               <TableRow key={record.id}>
-                <TableCell>{record.batch_id}</TableCell>
-                <TableCell>{record.storage_tank || record.tank_number}</TableCell>
-                <TableCell>{format(new Date(record.created_at), 'PPp')}</TableCell>
-                <TableCell>{Math.abs(record.milk_volume)}</TableCell>
-                <TableCell>{record.temperature}</TableCell>
-                <TableCell>{record.quality_score || record.quality_check}</TableCell>
-                <TableCell>{record.fat_percentage}</TableCell>
-                <TableCell>{record.protein_percentage}</TableCell>
-                <TableCell>{record.total_plate_count}</TableCell>
-                <TableCell>{record.acidity}</TableCell>
-                <TableCell>{record.destination}</TableCell>
-                <TableCell>{record.notes}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[150px]">{record.batch_id}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{record.storage_tank || record.tank_number}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[180px]">{format(new Date(record.created_at), 'PPp')}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{Math.abs(record.milk_volume)}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{record.temperature}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{record.quality_score || record.quality_check}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[80px]">{record.fat_percentage}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{record.protein_percentage}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[120px]">{record.total_plate_count}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{record.acidity}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[120px]">{record.destination}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[200px]">{record.notes}</TableCell>
               </TableRow>
             ))}
           </TableBody>
