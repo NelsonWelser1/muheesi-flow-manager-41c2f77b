@@ -5,19 +5,21 @@ import { useMilkReception } from '@/hooks/useMilkReception';
 import { Thermometer, Droplet } from 'lucide-react';
 
 const MilkBalanceTracker = () => {
-  const { data: milkReceptionData } = useMilkReception();
+  const { data: milkReceptionData, isLoading } = useMilkReception();
 
   const calculateTankBalance = (tankName) => {
-    if (!milkReceptionData) return { volume: 0, lastTemperature: 0 };
+    if (!milkReceptionData || !Array.isArray(milkReceptionData)) {
+      return { volume: 0, lastTemperature: 0 };
+    }
 
     const tankData = milkReceptionData
-      .filter(record => record.tank_number === tankName)
+      .filter(record => record && record.tank_number === tankName)
       .reduce((acc, record) => {
         // Add positive volumes (receptions) and subtract negative volumes (offloads)
-        acc.volume += record.milk_volume;
+        acc.volume += record.milk_volume || 0;
         // Update temperature only if it's the most recent record
         if (!acc.lastTimestamp || new Date(record.created_at) > new Date(acc.lastTimestamp)) {
-          acc.lastTemperature = record.temperature;
+          acc.lastTemperature = record.temperature || 0;
           acc.lastTimestamp = record.created_at;
         }
         return acc;
@@ -32,6 +34,26 @@ const MilkBalanceTracker = () => {
   const tankA = calculateTankBalance('Tank A');
   const tankB = calculateTankBalance('Tank B');
   const directProcessing = calculateTankBalance('Direct-Processing');
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+        {[...Array(4)].map((_, index) => (
+          <Card key={index} className="animate-pulse">
+            <CardHeader className="py-2">
+              <div className="h-6 bg-gray-200 rounded w-24"></div>
+            </CardHeader>
+            <CardContent className="py-2">
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
