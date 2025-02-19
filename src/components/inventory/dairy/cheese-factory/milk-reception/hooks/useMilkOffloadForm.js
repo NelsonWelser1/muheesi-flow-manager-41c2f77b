@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase';
@@ -14,17 +13,13 @@ export const useMilkOffloadForm = () => {
     supplier_name: 'Offload from Tank',
     milk_volume: '',
     temperature: '',
-    fat_percentage: '',
-    protein_percentage: '',
-    total_plate_count: '',
-    acidity: '',
-    destination: '',
     quality_check: 'Grade A',
-    notes: ''
+    notes: '',
+    destination: ''
   });
 
-  const handleTankSelection = (tankValue) => {
-    console.log('Selected tank:', tankValue);
+  const handleTankSelection = (tankValue, batchId) => {
+    console.log('Selected tank:', tankValue, 'Batch ID:', batchId);
     
     const mostRecentEntry = milkReceptionData
       ?.filter(record => record.tank_number === tankValue && record.milk_volume > 0)
@@ -38,10 +33,6 @@ export const useMilkOffloadForm = () => {
         quality_check: mostRecentEntry.quality_score || 'Grade A',
         milk_volume: Math.abs(mostRecentEntry.milk_volume).toString(),
         temperature: mostRecentEntry.temperature.toString(),
-        fat_percentage: mostRecentEntry.fat_percentage.toString(),
-        protein_percentage: mostRecentEntry.protein_percentage.toString(),
-        total_plate_count: mostRecentEntry.total_plate_count.toString(),
-        acidity: mostRecentEntry.acidity.toString(),
         destination: mostRecentEntry.destination || ''
       }));
     } else {
@@ -70,9 +61,7 @@ export const useMilkOffloadForm = () => {
     console.log('Validating form with data:', formData);
     const errors = [];
     const requiredFields = [
-      'storage_tank', 'milk_volume', 'temperature',
-      'fat_percentage', 'protein_percentage', 'total_plate_count', 
-      'acidity', 'destination'
+      'storage_tank', 'milk_volume', 'temperature', 'destination'
     ];
 
     requiredFields.forEach(field => {
@@ -182,13 +171,9 @@ export const useMilkOffloadForm = () => {
         supplier_name: formData.supplier_name,
         milk_volume: -Math.abs(parseFloat(formData.milk_volume)),
         temperature: parseFloat(formData.temperature),
-        fat_percentage: parseFloat(formData.fat_percentage),
-        protein_percentage: parseFloat(formData.protein_percentage),
-        total_plate_count: parseInt(formData.total_plate_count),
-        acidity: parseFloat(formData.acidity),
         notes: formData.notes,
-        quality_score: formData.quality_check,
-        tank_number: formData.storage_tank,
+        quality_check: formData.quality_check,
+        storage_tank: formData.storage_tank,
         destination: formData.destination
       };
 
@@ -207,11 +192,7 @@ export const useMilkOffloadForm = () => {
           temperature: parseFloat(formData.temperature),
           quality_check: formData.quality_check,
           notes: formData.notes,
-          destination: formData.destination,
-          fat_percentage: parseFloat(formData.fat_percentage),
-          protein_percentage: parseFloat(formData.protein_percentage),
-          total_plate_count: parseInt(formData.total_plate_count),
-          acidity: parseFloat(formData.acidity)
+          destination: formData.destination
         }])
         .select();
 
@@ -229,13 +210,9 @@ export const useMilkOffloadForm = () => {
         supplier_name: 'Offload from Tank',
         milk_volume: '',
         temperature: '',
-        fat_percentage: '',
-        protein_percentage: '',
-        total_plate_count: '',
-        acidity: '',
-        destination: '',
         quality_check: 'Grade A',
-        notes: ''
+        notes: '',
+        destination: ''
       });
 
       await refetchMilkReception();
