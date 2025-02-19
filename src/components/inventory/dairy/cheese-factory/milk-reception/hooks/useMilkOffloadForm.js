@@ -121,7 +121,8 @@ export const useMilkOffloadForm = () => {
           notes: formData.notes,
           quality_score: formData.quality_check,
           tank_number: formData.storage_tank,
-          destination: formData.destination
+          destination: formData.destination,
+          batch_id: formData.batch_id // Add batch_id to milk_reception table
         }])
         .select();
 
@@ -131,7 +132,7 @@ export const useMilkOffloadForm = () => {
       const { data: offloadData, error: offloadError } = await supabase
         .from('milk_tank_offloads')
         .insert([{
-          batch_id: formData.batch_id,
+          batch_id: formData.batch_id, // Ensure batch_id is included here
           storage_tank: formData.storage_tank,
           volume_offloaded: Math.abs(parseFloat(formData.milk_volume)),
           temperature: parseFloat(formData.temperature),
