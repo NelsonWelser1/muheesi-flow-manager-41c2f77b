@@ -1,22 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { useQueryClient } from '@tanstack/react-query';
 import { useMilkReception } from '@/hooks/useMilkReception';
 import { format, parseISO } from 'date-fns';
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, Search, RefreshCw } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import MilkBalanceTracker from './MilkBalanceTracker';
+
 const MilkReceptionTable = () => {
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
   const {
     data: milkReception,
     isLoading,
     error
   } = useMilkReception();
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['milkReceptions'] });
+  };
+
+  const filteredRecords = React.useMemo(() => {
+    if (!milkReception) return [];
+    return milkReception.filter(record => 
+      Object.values(record).some(value => 
+        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+  }, [milkReception, searchTerm]);
+
   const generateMonthlyReport = () => {
     if (!milkReception) return [];
     const now = new Date();
@@ -27,6 +45,7 @@ const MilkReceptionTable = () => {
       return recordDate >= monthStart && recordDate <= monthEnd;
     });
   };
+
   const generateAnnualReport = () => {
     if (!milkReception) return [];
     const now = new Date();
@@ -36,6 +55,7 @@ const MilkReceptionTable = () => {
       return recordDate >= yearStart;
     });
   };
+
   const formatDate = dateString => {
     try {
       if (!dateString) return 'N/A';
@@ -46,6 +66,7 @@ const MilkReceptionTable = () => {
       return 'Invalid date';
     }
   };
+
   const downloadPDF = (data, title) => {
     const doc = new jsPDF();
     const tableData = data.map(record => [record.supplier_name, record.milk_volume.toFixed(2), record.temperature.toFixed(1), record.quality_score || 'N/A', record.fat_percentage.toFixed(1), record.protein_percentage.toFixed(1), record.total_plate_count.toLocaleString(), record.acidity.toFixed(1), formatDate(record.datetime || record.created_at)]);
@@ -57,6 +78,7 @@ const MilkReceptionTable = () => {
     });
     doc.save(`milk-reception-${title.toLowerCase()}.pdf`);
   };
+
   const downloadCSV = (data, title) => {
     const headers = ['Supplier', 'Volume (L)', 'Temperature (°C)', 'Quality Score', 'Fat %', 'Protein %', 'TPC', 'Acidity', 'Date & Time'];
     const csvData = data.map(record => [record.supplier_name, record.milk_volume, record.temperature, record.quality_score || 'N/A', record.fat_percentage, record.protein_percentage, record.total_plate_count, record.acidity, formatDate(record.datetime || record.created_at)].join(','));
@@ -71,6 +93,7 @@ const MilkReceptionTable = () => {
     link.click();
     document.body.removeChild(link);
   };
+
   const downloadJPG = async (data, title) => {
     const table = document.querySelector('.milk-reception-table');
     if (table) {
@@ -81,12 +104,15 @@ const MilkReceptionTable = () => {
       link.click();
     }
   };
+
   if (isLoading) {
     return <div>Loading milk reception data...</div>;
   }
+
   if (error) {
     return <div>Error loading milk reception data: {error.message}</div>;
   }
+
   return <>
       <MilkBalanceTracker />
       <Card>
@@ -124,64 +150,85 @@ const MilkReceptionTable = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => downloadPDF(milkReception, 'All-Records')}>
+                <DropdownMenuItem onClick={() => downloadPDF(filteredRecords, 'All-Records')}>
                   Download PDF
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadCSV(milkReception, 'All-Records')}>
+                <DropdownMenuItem onClick={() => downloadCSV(filteredRecords, 'All-Records')}>
                   Download CSV
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadJPG(milkReception, 'All-Records')}>
+                <DropdownMenuItem onClick={() => downloadJPG(filteredRecords, 'All-Records')}>
                   Download JPG
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Button variant="outline" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
           </div>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <div className="w-full overflow-auto">
-            <Table className="milk-reception-table relative w-full">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[120px] whitespace-nowrap">Entry Type</TableHead>
-                  <TableHead className="min-w-[120px] whitespace-nowrap">Storage Tank</TableHead>
-                  <TableHead className="min-w-[100px] whitespace-nowrap">Quality Score</TableHead>
-                  <TableHead className="min-w-[150px] whitespace-nowrap">Supplier</TableHead>
-                  <TableHead className="min-w-[100px] whitespace-nowrap">Volume (L)</TableHead>
-                  <TableHead className="min-w-[120px] whitespace-nowrap">Temperature (°C)</TableHead>
-                  <TableHead className="min-w-[80px] whitespace-nowrap">Fat %</TableHead>
-                  <TableHead className="min-w-[100px] whitespace-nowrap">Protein %</TableHead>
-                  <TableHead className="min-w-[100px] whitespace-nowrap">TPC</TableHead>
-                  <TableHead className="min-w-[100px] whitespace-nowrap">Acidity</TableHead>
-                  <TableHead className="min-w-[120px] whitespace-nowrap">Destination</TableHead>
-                  <TableHead className="min-w-[180px] whitespace-nowrap">Date & Time</TableHead>
-                  <TableHead className="min-w-[200px] whitespace-nowrap">Notes</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {milkReception?.map(record => <TableRow key={record.id} className={record.supplier_name.startsWith('Offload from') ? 'bg-red-50' : ''}>
-                    <TableCell className="whitespace-nowrap">
-                      {record.supplier_name.startsWith('Offload from') ? 'Tank Offload' : 'Reception'}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">{record.tank_number || 'N/A'}</TableCell>
-                    <TableCell className="whitespace-nowrap">{record.quality_score || 'N/A'}</TableCell>
-                    <TableCell className="whitespace-nowrap">{record.supplier_name}</TableCell>
-                    <TableCell className={`whitespace-nowrap ${record.milk_volume < 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}`}>
-                      {record.milk_volume.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">{record.temperature?.toFixed(1) || 'N/A'}</TableCell>
-                    <TableCell className="whitespace-nowrap">{record.fat_percentage?.toFixed(1) || 'N/A'}</TableCell>
-                    <TableCell className="whitespace-nowrap">{record.protein_percentage?.toFixed(1) || 'N/A'}</TableCell>
-                    <TableCell className="whitespace-nowrap">{record.total_plate_count?.toLocaleString() || 'N/A'}</TableCell>
-                    <TableCell className="whitespace-nowrap">{record.acidity?.toFixed(1) || 'N/A'}</TableCell>
-                    <TableCell className="whitespace-nowrap">{record.destination || 'N/A'}</TableCell>
-                    <TableCell className="whitespace-nowrap">{formatDate(record.datetime || record.created_at)}</TableCell>
-                    <TableCell className="max-w-xs truncate">{record.notes || 'N/A'}</TableCell>
-                  </TableRow>)}
-              </TableBody>
-            </Table>
+        <CardContent>
+          <div className="flex gap-4 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search records..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <div className="w-full overflow-auto">
+              <Table className="milk-reception-table relative w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[120px] whitespace-nowrap">Entry Type</TableHead>
+                    <TableHead className="min-w-[120px] whitespace-nowrap">Storage Tank</TableHead>
+                    <TableHead className="min-w-[100px] whitespace-nowrap">Quality Score</TableHead>
+                    <TableHead className="min-w-[150px] whitespace-nowrap">Supplier</TableHead>
+                    <TableHead className="min-w-[100px] whitespace-nowrap">Volume (L)</TableHead>
+                    <TableHead className="min-w-[120px] whitespace-nowrap">Temperature (°C)</TableHead>
+                    <TableHead className="min-w-[80px] whitespace-nowrap">Fat %</TableHead>
+                    <TableHead className="min-w-[100px] whitespace-nowrap">Protein %</TableHead>
+                    <TableHead className="min-w-[100px] whitespace-nowrap">TPC</TableHead>
+                    <TableHead className="min-w-[100px] whitespace-nowrap">Acidity</TableHead>
+                    <TableHead className="min-w-[120px] whitespace-nowrap">Destination</TableHead>
+                    <TableHead className="min-w-[180px] whitespace-nowrap">Date & Time</TableHead>
+                    <TableHead className="min-w-[200px] whitespace-nowrap">Notes</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredRecords.map(record => (
+                    <TableRow key={record.id} className={record.supplier_name.startsWith('Offload from') ? 'bg-red-50' : ''}>
+                      <TableCell className="whitespace-nowrap">
+                        {record.supplier_name.startsWith('Offload from') ? 'Tank Offload' : 'Reception'}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">{record.tank_number || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.quality_score || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.supplier_name}</TableCell>
+                      <TableCell className={`whitespace-nowrap ${record.milk_volume < 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}`}>
+                        {record.milk_volume.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">{record.temperature?.toFixed(1) || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.fat_percentage?.toFixed(1) || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.protein_percentage?.toFixed(1) || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.total_plate_count?.toLocaleString() || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.acidity?.toFixed(1) || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.destination || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{formatDate(record.datetime || record.created_at)}</TableCell>
+                      <TableCell className="max-w-xs truncate">{record.notes || 'N/A'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </CardContent>
       </Card>
     </>;
 };
+
 export default MilkReceptionTable;
