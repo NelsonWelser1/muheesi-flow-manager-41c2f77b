@@ -14,6 +14,7 @@ const ProductionTable = ({ records }) => {
         <TableHeader>
           <TableRow>
             <TableHead className="whitespace-nowrap">Batch ID</TableHead>
+            <TableHead className="whitespace-nowrap">Offload Batch ID</TableHead>
             <TableHead className="whitespace-nowrap">Fromager</TableHead>
             <TableHead className="whitespace-nowrap">Cheese Type</TableHead>
             <TableHead className="whitespace-nowrap">Milk Volume (L)</TableHead>
@@ -35,6 +36,7 @@ const ProductionTable = ({ records }) => {
           {records.map((record) => (
             <TableRow key={record.id} className="hover:bg-muted/50">
               <TableCell className="whitespace-nowrap font-medium">{record.batch_id}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.offload_batch_id}</TableCell>
               <TableCell className="whitespace-nowrap">{record.fromager_identifier}</TableCell>
               <TableCell className="whitespace-nowrap">{record.cheese_type}</TableCell>
               <TableCell className="whitespace-nowrap">{record.milk_volume}</TableCell>
