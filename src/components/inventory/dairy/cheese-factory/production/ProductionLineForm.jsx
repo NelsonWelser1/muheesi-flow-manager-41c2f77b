@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ const ProductionLineForm = ({ productionLine }) => {
   const { toast } = useToast();
   const { register, handleSubmit, formState: { errors } } = useForm();
 
-  const onSubmit = data => {
+  const onSubmit = async (data) => {
     console.log(data);
     toast({
       title: "Success",
