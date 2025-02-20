@@ -4,10 +4,8 @@ import MilkReceptionForm from './MilkReceptionForm';
 import MilkReceptionTable from './MilkReceptionTable';
 import MilkReceptionSettings from './MilkReceptionSettings';
 import MilkOffloadForm from './MilkOffloadForm';
-
 const MilkReception = () => {
-  return (
-    <Tabs defaultValue="view" className="w-full">
+  return <Tabs defaultValue="view" className="w-full">
       <TabsList>
         <TabsTrigger value="view">View Records</TabsTrigger>
         <TabsTrigger value="add">Add New Record</TabsTrigger>
@@ -15,7 +13,7 @@ const MilkReception = () => {
         <TabsTrigger value="settings">Settings</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="view">
+      <TabsContent value="view" className="px-0 mx-0 my-[10px] py-[10px]">
         <MilkReceptionTable />
       </TabsContent>
 
@@ -30,8 +28,6 @@ const MilkReception = () => {
       <TabsContent value="settings">
         <MilkReceptionSettings />
       </TabsContent>
-    </Tabs>
-  );
+    </Tabs>;
 };
-
 export default MilkReception;
