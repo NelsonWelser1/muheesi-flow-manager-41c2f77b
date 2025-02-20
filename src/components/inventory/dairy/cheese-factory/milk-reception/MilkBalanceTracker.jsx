@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
@@ -28,31 +29,9 @@ const MilkBalanceTracker = () => {
     };
   };
 
-  const calculateDirectProcessing = () => {
-    if (!milkReceptionData) return { volume: 0, lastTemperature: 0 };
-
-    // Only consider records specifically marked as Direct-Processing
-    const directProcessingRecords = milkReceptionData.filter(record => 
-      record.tank_number === 'Direct-Processing'
-    );
-
-    // Calculate total volume and get latest temperature
-    return directProcessingRecords.reduce((acc, record) => {
-      acc.volume += record.milk_volume;
-
-      // Update temperature if this is the most recent record
-      if (!acc.lastTimestamp || new Date(record.created_at) > new Date(acc.lastTimestamp)) {
-        acc.lastTemperature = record.temperature;
-        acc.lastTimestamp = record.created_at;
-      }
-
-      return acc;
-    }, { volume: 0, lastTemperature: 0, lastTimestamp: null });
-  };
-
   const tankA = calculateTankBalance('Tank A');
   const tankB = calculateTankBalance('Tank B');
-  const directProcessing = calculateDirectProcessing();
+  const directProcessing = calculateTankBalance('Direct-Processing');
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
