@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from '@/integrations/supabase/supabase';
 import { format } from 'date-fns';
+import { useMilkReception } from '@/hooks/useMilkReception';
 
 const CHEESE_TYPES = [
   'Mozzarella',
@@ -33,12 +34,13 @@ const STARTER_CULTURES = [
 ];
 
 const ProductionLineForm = ({ productionLine }) => {
-  console.log('Initializing ProductionLineForm with:', { productionLine });
-  
   const { toast } = useToast();
   const [selectedCheeseType, setSelectedCheeseType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [batchId, setBatchId] = useState('');
+  const [availableOffloads, setAvailableOffloads] = useState([]);
+  const [selectedOffload, setSelectedOffload] = useState(null);
+  const { data: milkReceptionData } = useMilkReception();
 
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
@@ -55,13 +57,23 @@ const ProductionLineForm = ({ productionLine }) => {
       processing_temperature: '',
       processing_time: '',
       expected_yield: '',
-      notes: ''
+      notes: '',
+      offload_batch_id: ''
     }
   });
 
   useEffect(() => {
+    if (milkReceptionData) {
+      const offloads = milkReceptionData.filter(record => 
+        record.supplier_name.startsWith('Offload from') &&
+        ['Tank A', 'Tank B', 'Direct-Processing'].includes(record.tank_number)
+      );
+      setAvailableOffloads(offloads);
+    }
+  }, [milkReceptionData]);
+
+  useEffect(() => {
     if (productionLine && typeof productionLine === 'object') {
-      console.log('Setting form values from productionLine:', productionLine);
       Object.entries(productionLine).forEach(([key, value]) => {
         if (value !== undefined) {
           setValue(key, value);
@@ -69,6 +81,19 @@ const ProductionLineForm = ({ productionLine }) => {
       });
     }
   }, [productionLine, setValue]);
+
+  const handleOffloadSelect = (selectedBatchId) => {
+    const selectedRecord = availableOffloads.find(offload => offload.batch_id === selectedBatchId);
+    if (selectedRecord) {
+      setSelectedOffload(selectedRecord);
+      setValue('milk_volume', Math.abs(selectedRecord.milk_volume).toFixed(2));
+      setValue('offload_batch_id', selectedRecord.batch_id);
+      toast({
+        title: "Milk Volume Updated",
+        description: `Volume set to ${Math.abs(selectedRecord.milk_volume).toFixed(2)}L from batch ${selectedRecord.batch_id}`,
+      });
+    }
+  };
 
   const generateBatchId = async (cheeseType, seqNumber = null) => {
     try {
@@ -238,6 +263,22 @@ const ProductionLineForm = ({ productionLine }) => {
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
+              <Label htmlFor="offload_batch_id">Select Milk Offload</Label>
+              <Select onValueChange={handleOffloadSelect}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select offload batch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableOffloads.map((offload) => (
+                    <SelectItem key={offload.batch_id} value={offload.batch_id}>
+                      {`${offload.tank_number} - ${offload.batch_id} (${Math.abs(offload.milk_volume)}L)`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
               <Label htmlFor="milk_volume">Milk Volume (L)</Label>
               <Input
                 type="number"
@@ -246,21 +287,11 @@ const ProductionLineForm = ({ productionLine }) => {
                   required: 'Milk volume is required',
                   min: { value: 0, message: 'Volume must be positive' }
                 })}
+                disabled={selectedOffload !== null}
+                className={selectedOffload ? 'bg-gray-100' : ''}
               />
               {errors.milk_volume && (
                 <p className="text-sm text-red-500">{errors.milk_volume.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="start_time">Start Time</Label>
-              <Input
-                type="datetime-local"
-                id="start_time"
-                {...register('start_time', { required: 'Start time is required' })}
-              />
-              {errors.start_time && (
-                <p className="text-sm text-red-500">{errors.start_time.message}</p>
               )}
             </div>
           </div>
