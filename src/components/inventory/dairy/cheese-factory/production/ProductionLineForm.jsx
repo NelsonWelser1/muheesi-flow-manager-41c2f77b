@@ -174,13 +174,17 @@ const ProductionLineForm = ({ productionLine }) => {
       const tableName = productionLine.name.toLowerCase().includes('international') 
         ? 'production_line_international' 
         : 'production_line_local';
+
+      if (!data.offload_batch_id) {
+        throw new Error('Please select a milk offload batch');
+      }
       
       const submissionData = {
         fromager_identifier: data.fromager_identifier,
         cheese_type: data.cheese_type,
         batch_id: batchId || await generateBatchId(data.cheese_type),
         milk_volume: parseFloat(data.milk_volume),
-        start_time: data.start_time,
+        start_time: new Date().toISOString(),
         estimated_duration: parseFloat(data.estimated_duration),
         starter_culture: data.starter_culture,
         starter_quantity: parseFloat(data.starter_quantity),
@@ -200,18 +204,22 @@ const ProductionLineForm = ({ productionLine }) => {
 
       console.log('Submitting data to table:', tableName, submissionData);
 
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from(tableName)
-        .insert([submissionData]);
+        .insert([submissionData])
+        .select()
+        .single();
 
       if (error) {
         console.error('Error submitting form:', error);
         throw error;
       }
 
+      console.log('Successfully inserted data:', insertedData);
+
       toast({
         title: "Success",
-        description: "Production record added successfully",
+        description: `Production record added successfully with batch ID: ${submissionData.batch_id}`,
       });
 
       const usedBatchIds = await fetchUsedBatchIds();
