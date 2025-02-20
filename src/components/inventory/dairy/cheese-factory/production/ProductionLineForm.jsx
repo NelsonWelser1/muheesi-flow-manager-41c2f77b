@@ -62,14 +62,41 @@ const ProductionLineForm = ({ productionLine }) => {
     }
   });
 
-  useEffect(() => {
-    if (milkReceptionData) {
-      const offloads = milkReceptionData.filter(record => 
-        record.supplier_name.startsWith('Offload from') &&
-        ['Tank A', 'Tank B', 'Direct-Processing'].includes(record.tank_number)
-      );
-      setAvailableOffloads(offloads);
+  const fetchUsedBatchIds = async () => {
+    try {
+      const isInternational = productionLine.name.toLowerCase().includes('international');
+      const tableName = isInternational ? 'production_line_international' : 'production_line_local';
+      
+      const { data: usedBatches, error } = await supabase
+        .from(tableName)
+        .select('offload_batch_id')
+        .not('offload_batch_id', 'is', null);
+
+      if (error) throw error;
+
+      return usedBatches.map(batch => batch.offload_batch_id);
+    } catch (error) {
+      console.error('Error fetching used batch IDs:', error);
+      return [];
     }
+  };
+
+  useEffect(() => {
+    const updateAvailableOffloads = async () => {
+      if (milkReceptionData) {
+        const usedBatchIds = await fetchUsedBatchIds();
+        
+        const offloads = milkReceptionData.filter(record => 
+          record.supplier_name.startsWith('Offload from') &&
+          ['Tank A', 'Tank B', 'Direct-Processing'].includes(record.tank_number) &&
+          !usedBatchIds.includes(record.batch_id)
+        );
+        
+        setAvailableOffloads(offloads);
+      }
+    };
+
+    updateAvailableOffloads();
   }, [milkReceptionData]);
 
   useEffect(() => {
@@ -99,15 +126,12 @@ const ProductionLineForm = ({ productionLine }) => {
     try {
       console.log('Generating batch ID for cheese type:', cheeseType);
       
-      // Get current date/time components
       const now = new Date();
       const datePrefix = format(now, 'yyyyMMdd');
       const timeComponent = format(now, 'HHmmss');
       
-      // Determine line prefix based on production line name
       const linePrefix = productionLine.name.toLowerCase().includes('international') ? 'INT' : 'LCL';
       
-      // Determine cheese type prefix
       let typePrefix = 'CHE';
       if (cheeseType === 'Mozzarella') typePrefix = 'MOZ';
       else if (cheeseType === 'Gouda') typePrefix = 'GOU';
@@ -115,7 +139,6 @@ const ProductionLineForm = ({ productionLine }) => {
       else if (cheeseType === 'Swiss') typePrefix = 'SUI';
       else if (cheeseType === 'Blue Cheese') typePrefix = 'BLU';
       
-      // Construct the full batch ID
       const fullBatchId = `${linePrefix}${datePrefix}-${typePrefix}-${timeComponent}`;
       console.log('Generated batch ID:', fullBatchId);
       return fullBatchId;
@@ -148,12 +171,10 @@ const ProductionLineForm = ({ productionLine }) => {
     try {
       setIsSubmitting(true);
       
-      // Determine which table to use based on production line type
       const tableName = productionLine.name.toLowerCase().includes('international') 
         ? 'production_line_international' 
         : 'production_line_local';
       
-      // Create the data object for submission
       const submissionData = {
         fromager_identifier: data.fromager_identifier,
         cheese_type: data.cheese_type,
@@ -169,6 +190,7 @@ const ProductionLineForm = ({ productionLine }) => {
         processing_time: parseFloat(data.processing_time),
         expected_yield: parseFloat(data.expected_yield),
         notes: data.notes,
+        offload_batch_id: data.offload_batch_id,
         name: productionLine.name,
         manager: productionLine.manager,
         description: productionLine.description,
@@ -192,9 +214,16 @@ const ProductionLineForm = ({ productionLine }) => {
         description: "Production record added successfully",
       });
 
+      const usedBatchIds = await fetchUsedBatchIds();
+      const updatedOffloads = availableOffloads.filter(
+        offload => !usedBatchIds.includes(offload.batch_id)
+      );
+      setAvailableOffloads(updatedOffloads);
+
       reset();
       setSelectedCheeseType('');
       setBatchId('');
+      setSelectedOffload(null);
       
     } catch (error) {
       console.error('Error submitting form:', error);
