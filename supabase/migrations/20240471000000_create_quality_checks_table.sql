@@ -5,17 +5,37 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Drop existing quality_checks table if it exists
 DROP TABLE IF EXISTS quality_checks;
 
--- Create quality_checks table
+-- Create quality_checks table with all parameters in a single row
 CREATE TABLE IF NOT EXISTS quality_checks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     batch_id TEXT NOT NULL,
-    parameter TEXT NOT NULL,
-    actual_value TEXT NOT NULL,
-    standard_value TEXT NOT NULL,
-    status TEXT NOT NULL CHECK (status IN ('passed', 'failed')),
+    -- Temperature
+    temperature_value TEXT NOT NULL,
+    temperature_standard TEXT NOT NULL,
+    temperature_status TEXT NOT NULL CHECK (temperature_status IN ('passed', 'failed')),
+    -- pH Level
+    ph_level_value TEXT NOT NULL,
+    ph_level_standard TEXT NOT NULL,
+    ph_level_status TEXT NOT NULL CHECK (ph_level_status IN ('passed', 'failed')),
+    -- Moisture Content
+    moisture_content_value TEXT NOT NULL,
+    moisture_content_standard TEXT NOT NULL,
+    moisture_content_status TEXT NOT NULL CHECK (moisture_content_status IN ('passed', 'failed')),
+    -- Fat Content
+    fat_content_value TEXT NOT NULL,
+    fat_content_standard TEXT NOT NULL,
+    fat_content_status TEXT NOT NULL CHECK (fat_content_status IN ('passed', 'failed')),
+    -- Protein Content
+    protein_content_value TEXT NOT NULL,
+    protein_content_standard TEXT NOT NULL,
+    protein_content_status TEXT NOT NULL CHECK (protein_content_status IN ('passed', 'failed')),
+    -- Salt Content
+    salt_content_value TEXT NOT NULL,
+    salt_content_standard TEXT NOT NULL,
+    salt_content_status TEXT NOT NULL CHECK (salt_content_status IN ('passed', 'failed')),
+    -- Additional fields
     notes TEXT,
     checked_by UUID REFERENCES auth.users(id),
-    checked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
@@ -65,8 +66,7 @@ const QualityChecksDisplay = () => {
   });
 
   const filteredChecks = checks.filter(check =>
-    check.batch_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    check.parameter.toLowerCase().includes(searchQuery.toLowerCase())
+    check.batch_id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleRefresh = async () => {
@@ -105,18 +105,27 @@ const QualityChecksDisplay = () => {
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.autoTable({
-      head: [['Batch ID', 'Parameter', 'Value', 'Standard', 'Status', 'Date']],
+      head: [['Batch ID', 'Temperature', 'pH Level', 'Moisture', 'Fat', 'Protein', 'Salt', 'Notes', 'Date']],
       body: filteredChecks.map(check => [
         check.batch_id,
-        check.parameter,
-        check.actual_value,
-        check.standard_value,
-        check.status,
+        `${check.temperature_value} (${check.temperature_status})`,
+        `${check.ph_level_value} (${check.ph_level_status})`,
+        `${check.moisture_content_value} (${check.moisture_content_status})`,
+        `${check.fat_content_value} (${check.fat_content_status})`,
+        `${check.protein_content_value} (${check.protein_content_status})`,
+        `${check.salt_content_value} (${check.salt_content_status})`,
+        check.notes,
         format(new Date(check.created_at), 'PPp')
       ])
     });
     doc.save(`quality-checks-${timeRange}.pdf`);
   };
+
+  const renderStatusBadge = (status) => (
+    <Badge variant={status === 'passed' ? 'success' : 'destructive'}>
+      {status}
+    </Badge>
+  );
 
   return (
     <Card>
@@ -142,7 +151,7 @@ const QualityChecksDisplay = () => {
           <div className="flex-1 relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by batch ID or parameter..."
+              placeholder="Search by batch ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-8"
@@ -179,32 +188,62 @@ const QualityChecksDisplay = () => {
         ) : filteredChecks.length === 0 ? (
           <div className="text-center py-4">No records found</div>
         ) : (
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Batch ID</TableHead>
-                  <TableHead>Parameter</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead>Standard</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Checked By</TableHead>
+                  <TableHead className="text-center">Temperature</TableHead>
+                  <TableHead className="text-center">pH Level</TableHead>
+                  <TableHead className="text-center">Moisture Content</TableHead>
+                  <TableHead className="text-center">Fat Content</TableHead>
+                  <TableHead className="text-center">Protein Content</TableHead>
+                  <TableHead className="text-center">Salt Content</TableHead>
+                  <TableHead>Notes</TableHead>
                   <TableHead>Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredChecks.map((check) => (
-                  <TableRow key={`${check.batch_id}-${check.parameter}`}>
+                  <TableRow key={check.id}>
                     <TableCell className="font-medium">{check.batch_id}</TableCell>
-                    <TableCell>{check.parameter}</TableCell>
-                    <TableCell>{check.actual_value}</TableCell>
-                    <TableCell>{check.standard_value}</TableCell>
-                    <TableCell>
-                      <Badge variant={check.status === 'passed' ? 'success' : 'destructive'}>
-                        {check.status}
-                      </Badge>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div>{check.temperature_value}</div>
+                        {renderStatusBadge(check.temperature_status)}
+                      </div>
                     </TableCell>
-                    <TableCell>{check.checked_by?.email}</TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div>{check.ph_level_value}</div>
+                        {renderStatusBadge(check.ph_level_status)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div>{check.moisture_content_value}</div>
+                        {renderStatusBadge(check.moisture_content_status)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div>{check.fat_content_value}</div>
+                        {renderStatusBadge(check.fat_content_status)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div>{check.protein_content_value}</div>
+                        {renderStatusBadge(check.protein_content_status)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div>{check.salt_content_value}</div>
+                        {renderStatusBadge(check.salt_content_status)}
+                      </div>
+                    </TableCell>
+                    <TableCell>{check.notes}</TableCell>
                     <TableCell>{format(new Date(check.created_at), 'PPp')}</TableCell>
                   </TableRow>
                 ))}
