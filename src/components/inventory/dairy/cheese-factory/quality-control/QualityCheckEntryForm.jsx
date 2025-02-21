@@ -47,6 +47,7 @@ const QualityCheckEntryForm = () => {
   ];
 
   const handleBatchSelect = (batch) => {
+    console.log('Selected batch:', batch); // Added debug log
     setSelectedBatch(batch);
     setValue('batch_id', batch.batch_id);
     setOpen(false);
@@ -54,9 +55,10 @@ const QualityCheckEntryForm = () => {
   };
 
   const onSubmit = async (formData) => {
-    console.log('Form data:', formData);
+    console.log('Starting form submission with data:', formData); // Added debug log
 
     if (!selectedBatch?.batch_id) {
+      console.log('No batch selected, aborting submission'); // Added debug log
       toast({
         title: "Error",
         description: "Please select a batch ID",
@@ -67,42 +69,46 @@ const QualityCheckEntryForm = () => {
 
     try {
       setLoading(true);
+      console.log('Checking authentication...'); // Added debug log
       
-      // Get current user session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        console.error('Session error:', sessionError); // Added debug log
+        throw sessionError;
+      }
       
       if (!session?.user?.id) {
         throw new Error("No authenticated user found");
       }
 
-      // Create quality check object
+      console.log('Authentication successful, preparing quality check data...'); // Added debug log
+
       const qualityCheck = {
         batch_id: selectedBatch.batch_id,
-        temperature_value: formData.temperature_value,
-        temperature_standard: formData.temperature_standard,
+        temperature_value: parseFloat(formData.temperature_value),
+        temperature_standard: parseFloat(formData.temperature_standard),
         temperature_status: formData.temperature_status,
-        ph_level_value: formData.ph_level_value,
-        ph_level_standard: formData.ph_level_standard,
+        ph_level_value: parseFloat(formData.ph_level_value),
+        ph_level_standard: parseFloat(formData.ph_level_standard),
         ph_level_status: formData.ph_level_status,
-        moisture_content_value: formData.moisture_content_value,
-        moisture_content_standard: formData.moisture_content_standard,
+        moisture_content_value: parseFloat(formData.moisture_content_value),
+        moisture_content_standard: parseFloat(formData.moisture_content_standard),
         moisture_content_status: formData.moisture_content_status,
-        fat_content_value: formData.fat_content_value,
-        fat_content_standard: formData.fat_content_standard,
+        fat_content_value: parseFloat(formData.fat_content_value),
+        fat_content_standard: parseFloat(formData.fat_content_standard),
         fat_content_status: formData.fat_content_status,
-        protein_content_value: formData.protein_content_value,
-        protein_content_standard: formData.protein_content_standard,
+        protein_content_value: parseFloat(formData.protein_content_value),
+        protein_content_standard: parseFloat(formData.protein_content_standard),
         protein_content_status: formData.protein_content_status,
-        salt_content_value: formData.salt_content_value,
-        salt_content_standard: formData.salt_content_standard,
+        salt_content_value: parseFloat(formData.salt_content_value),
+        salt_content_standard: parseFloat(formData.salt_content_standard),
         salt_content_status: formData.salt_content_status,
         notes: formData.notes || '',
         checked_by: session.user.id
       };
 
-      console.log('Submitting quality check:', qualityCheck);
+      console.log('Submitting quality check to Supabase:', qualityCheck); // Added debug log
 
       const { error: insertError } = await supabase
         .from('quality_checks')
@@ -113,12 +119,13 @@ const QualityCheckEntryForm = () => {
         throw insertError;
       }
 
+      console.log('Quality check submitted successfully'); // Added debug log
+
       toast({
         title: "Success",
         description: "Quality check recorded successfully",
       });
 
-      // Reset form with default status values
       reset({
         temperature_status: 'failed',
         ph_level_status: 'failed',
