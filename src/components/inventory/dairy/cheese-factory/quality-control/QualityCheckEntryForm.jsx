@@ -17,11 +17,11 @@ const QualityCheckEntryForm = () => {
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     defaultValues: {
       temperature_status: 'failed',
-      ph_level_status: 'failed',
-      moisture_content_status: 'failed',
-      fat_content_status: 'failed',
-      protein_content_status: 'failed',
-      salt_content_status: 'failed',
+      ph_status: 'failed',
+      moisture_status: 'failed',
+      fat_status: 'failed',
+      protein_status: 'failed',
+      salt_status: 'failed',
     }
   });
   const { toast } = useToast();
@@ -38,12 +38,42 @@ const QualityCheckEntryForm = () => {
   } = useBatchOptions();
 
   const parameters = [
-    'Temperature',
-    'pH Level',
-    'Moisture Content',
-    'Fat Content',
-    'Protein Content',
-    'Salt Content'
+    {
+      name: 'Temperature',
+      actualKey: 'temperature_actual',
+      standardKey: 'temperature_standard',
+      statusKey: 'temperature_status'
+    },
+    {
+      name: 'pH Level',
+      actualKey: 'ph_actual',
+      standardKey: 'ph_standard',
+      statusKey: 'ph_status'
+    },
+    {
+      name: 'Moisture Content',
+      actualKey: 'moisture_actual',
+      standardKey: 'moisture_standard',
+      statusKey: 'moisture_status'
+    },
+    {
+      name: 'Fat Content',
+      actualKey: 'fat_actual',
+      standardKey: 'fat_standard',
+      statusKey: 'fat_status'
+    },
+    {
+      name: 'Protein Content',
+      actualKey: 'protein_actual',
+      standardKey: 'protein_standard',
+      statusKey: 'protein_status'
+    },
+    {
+      name: 'Salt Content',
+      actualKey: 'salt_actual',
+      standardKey: 'salt_standard',
+      statusKey: 'salt_status'
+    }
   ];
 
   const handleBatchSelect = (batch) => {
@@ -82,24 +112,24 @@ const QualityCheckEntryForm = () => {
 
       const qualityCheck = {
         batch_id: selectedBatch.batch_id,
-        temperature_value: formData.temperature_value.toString(),  // Convert to string as per table schema
-        temperature_standard: formData.temperature_standard.toString(),
+        temperature_actual: Number(formData.temperature_actual),
+        temperature_standard: Number(formData.temperature_standard),
         temperature_status: formData.temperature_status,
-        ph_level_value: formData.ph_level_value.toString(),
-        ph_level_standard: formData.ph_level_standard.toString(),
-        ph_level_status: formData.ph_level_status,
-        moisture_content_value: formData.moisture_content_value.toString(),
-        moisture_content_standard: formData.moisture_content_standard.toString(),
-        moisture_content_status: formData.moisture_content_status,
-        fat_content_value: formData.fat_content_value.toString(),
-        fat_content_standard: formData.fat_content_standard.toString(),
-        fat_content_status: formData.fat_content_status,
-        protein_content_value: formData.protein_content_value.toString(),
-        protein_content_standard: formData.protein_content_standard.toString(),
-        protein_content_status: formData.protein_content_status,
-        salt_content_value: formData.salt_content_value.toString(),
-        salt_content_standard: formData.salt_content_standard.toString(),
-        salt_content_status: formData.salt_content_status,
+        ph_actual: Number(formData.ph_actual),
+        ph_standard: Number(formData.ph_standard),
+        ph_status: formData.ph_status,
+        moisture_actual: Number(formData.moisture_actual),
+        moisture_standard: Number(formData.moisture_standard),
+        moisture_status: formData.moisture_status,
+        fat_actual: Number(formData.fat_actual),
+        fat_standard: Number(formData.fat_standard),
+        fat_status: formData.fat_status,
+        protein_actual: Number(formData.protein_actual),
+        protein_standard: Number(formData.protein_standard),
+        protein_status: formData.protein_status,
+        salt_actual: Number(formData.salt_actual),
+        salt_standard: Number(formData.salt_standard),
+        salt_status: formData.salt_status,
         notes: formData.notes || '',
         checked_by: session.user.id
       };
@@ -125,11 +155,11 @@ const QualityCheckEntryForm = () => {
 
       reset({
         temperature_status: 'failed',
-        ph_level_status: 'failed',
-        moisture_content_status: 'failed',
-        fat_content_status: 'failed',
-        protein_content_status: 'failed',
-        salt_content_status: 'failed',
+        ph_status: 'failed',
+        moisture_status: 'failed',
+        fat_status: 'failed',
+        protein_status: 'failed',
+        salt_status: 'failed',
       });
       setSelectedBatch(null);
       
@@ -170,7 +200,7 @@ const QualityCheckEntryForm = () => {
 
             {parameters.map((parameter) => (
               <ParameterInputGroup 
-                key={parameter} 
+                key={parameter.name} 
                 parameter={parameter}
                 register={register}
               />
