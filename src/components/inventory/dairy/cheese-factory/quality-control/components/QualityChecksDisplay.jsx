@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Search, FileDown, Printer } from "lucide-react";
+import { RefreshCw, Search, FileDown } from "lucide-react";
 import { format, subDays, subWeeks, subMonths, subYears } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -20,7 +20,12 @@ const QualityChecksDisplay = () => {
   const [timeRange, setTimeRange] = useState('all');
   const { toast } = useToast();
 
-  const { data: checks, isLoading, refetch } = useQuery({
+  const {
+    data: checks = [],
+    isLoading,
+    refetch,
+    isRefetching
+  } = useQuery({
     queryKey: ['qualityChecks', timeRange],
     queryFn: async () => {
       let query = supabase
@@ -54,14 +59,15 @@ const QualityChecksDisplay = () => {
 
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
-    }
+      return data || [];
+    },
+    refetchOnWindowFocus: false
   });
 
-  const filteredChecks = checks?.filter(check =>
+  const filteredChecks = checks.filter(check =>
     check.batch_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
     check.parameter.toLowerCase().includes(searchQuery.toLowerCase())
-  ) ?? [];
+  );
 
   const handleRefresh = async () => {
     try {
@@ -117,9 +123,17 @@ const QualityChecksDisplay = () => {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Quality Check Records</span>
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            disabled={isRefetching}
+          >
+            <RefreshCw className={cn(
+              "h-4 w-4 mr-2",
+              isRefetching && "animate-spin"
+            )} />
+            {isRefetching ? "Refreshing..." : "Refresh"}
           </Button>
         </CardTitle>
       </CardHeader>

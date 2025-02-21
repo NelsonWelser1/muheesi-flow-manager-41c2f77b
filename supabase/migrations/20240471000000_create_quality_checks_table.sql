@@ -1,5 +1,9 @@
+
 -- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Drop existing quality_checks table if it exists
+DROP TABLE IF EXISTS quality_checks;
 
 -- Create quality_checks table
 CREATE TABLE IF NOT EXISTS quality_checks (
@@ -49,10 +53,3 @@ CREATE TRIGGER update_quality_checks_timestamp
     BEFORE UPDATE ON quality_checks
     FOR EACH ROW
     EXECUTE FUNCTION update_quality_checks_updated_at();
-
--- Insert some standard parameters
-INSERT INTO quality_checks (batch_id, parameter, actual_value, standard_value, status, notes, checked_by)
-VALUES 
-    ('BATCH-001', 'Temperature', '72.5°C', '72.0°C - 73.0°C', 'passed', 'Within acceptable range', NULL),
-    ('BATCH-001', 'pH Level', '6.2', '6.0 - 6.4', 'passed', 'Optimal pH level', NULL)
-ON CONFLICT DO NOTHING;
