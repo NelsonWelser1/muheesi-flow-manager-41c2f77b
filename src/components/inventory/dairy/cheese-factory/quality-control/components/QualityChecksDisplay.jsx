@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
@@ -14,6 +13,7 @@ import { format, subDays, subWeeks, subMonths, subYears } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { cn } from "@/lib/utils";
 
 const QualityChecksDisplay = () => {
   const [searchQuery, setSearchQuery] = useState('');
