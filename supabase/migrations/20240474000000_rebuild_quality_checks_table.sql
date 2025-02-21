@@ -51,22 +51,12 @@ CREATE INDEX idx_quality_checks_created_at ON quality_checks(created_at);
 -- Enable Row Level Security (RLS)
 ALTER TABLE quality_checks ENABLE ROW LEVEL SECURITY;
 
--- Create policies for authenticated users
-CREATE POLICY "Users can view all quality checks"
-    ON quality_checks FOR SELECT
-    TO authenticated
-    USING (true);
-
-CREATE POLICY "Users can insert their own quality checks"
-    ON quality_checks FOR INSERT
-    TO authenticated
-    WITH CHECK (auth.uid() = checked_by);
-
-CREATE POLICY "Users can update their own quality checks"
-    ON quality_checks FOR UPDATE
-    TO authenticated
-    USING (auth.uid() = checked_by)
-    WITH CHECK (auth.uid() = checked_by);
+-- Create policies for public access (temporarily)
+CREATE POLICY "Allow public access to quality checks"
+    ON quality_checks
+    FOR ALL
+    USING (true)
+    WITH CHECK (true);
 
 -- Create trigger for updating updated_at timestamp
 CREATE OR REPLACE FUNCTION update_quality_checks_updated_at()
@@ -84,3 +74,6 @@ CREATE TRIGGER update_quality_checks_timestamp
 
 -- Add comment to table
 COMMENT ON TABLE quality_checks IS 'Stores quality control measurements for cheese production batches';
+
+-- Make checked_by column optional for now
+ALTER TABLE quality_checks ALTER COLUMN checked_by DROP NOT NULL;
