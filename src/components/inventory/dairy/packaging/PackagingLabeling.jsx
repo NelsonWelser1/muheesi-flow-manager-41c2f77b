@@ -23,12 +23,6 @@ const PackagingLabeling = () => {
 
   return (
     <div className="space-y-4">
-      <button 
-        onClick={() => navigate('/manage-inventory')}
-        className="mb-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-      >
-        ← Back to Main Dashboard
-      </button>
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle>Packaging & Labeling Management</CardTitle>
