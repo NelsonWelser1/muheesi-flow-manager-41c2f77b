@@ -25,7 +25,7 @@ const BatchSelector = ({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="batchId">Batch ID</Label>
+      <Label htmlFor="batchId">Production Batch IDs</Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -43,7 +43,7 @@ const BatchSelector = ({
             ) : selectedBatch ? (
               selectedBatch.label
             ) : (
-              "Select batch..."
+              "Select production batch..."
             )}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>

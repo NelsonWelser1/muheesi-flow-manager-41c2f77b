@@ -39,26 +39,29 @@ export const useBatchOptions = () => {
       if (internationalResponse.error) throw internationalResponse.error;
       if (localResponse.error) throw localResponse.error;
 
-      const internationalBatches = internationalResponse.data || [];
-      const localBatches = localResponse.data || [];
-
-      // Filter out batches that have already been checked
-      const combinedBatches = [...internationalBatches, ...localBatches]
-        .filter(batch => 
-          batch.batch_id && 
-          batch.cheese_type && 
-          !checkedBatchIds.has(batch.batch_id)
-        )
-        .map(batch => ({
+      // Combine and format batches, filtering out already checked ones
+      const combinedBatches = [
+        ...(internationalResponse.data || []).map(batch => ({
           ...batch,
-          label: `${batch.batch_id} (${batch.cheese_type})`
+          source: 'International Production Line'
+        })),
+        ...(localResponse.data || []).map(batch => ({
+          ...batch,
+          source: 'Local Production Line'
         }))
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      ]
+      .filter(batch => 
+        batch.batch_id && 
+        batch.cheese_type && 
+        !checkedBatchIds.has(batch.batch_id)
+      )
+      .map(batch => ({
+        ...batch,
+        label: `${batch.batch_id} (${batch.cheese_type} - ${batch.source})`
+      }))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       setBatchOptions(combinedBatches);
-      
-      // Log for debugging
-      console.log('Unchecked batches:', combinedBatches);
       
     } catch (error) {
       console.error('Error fetching batch IDs:', error);
@@ -80,19 +83,16 @@ export const useBatchOptions = () => {
     );
   }, [batchOptions, searchQuery]);
 
-  // Combine both initial fetch and interval refresh into a single useEffect
   useEffect(() => {
-    // Initial fetch
     fetchBatchIds();
-
+    
     // Set up interval for periodic refresh
     const interval = setInterval(() => {
       fetchBatchIds();
     }, 30000);
 
-    // Cleanup interval on component unmount
     return () => clearInterval(interval);
-  }, []); // Empty dependency array means this only runs once on mount
+  }, []);
 
   return {
     batchOptions,
