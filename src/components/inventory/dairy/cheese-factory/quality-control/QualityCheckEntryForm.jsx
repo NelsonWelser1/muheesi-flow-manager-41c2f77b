@@ -47,7 +47,7 @@ const QualityCheckEntryForm = () => {
   ];
 
   const handleBatchSelect = (batch) => {
-    console.log('Selected batch:', batch); // Added debug log
+    console.log('Selected batch:', batch);
     setSelectedBatch(batch);
     setValue('batch_id', batch.batch_id);
     setOpen(false);
@@ -55,10 +55,9 @@ const QualityCheckEntryForm = () => {
   };
 
   const onSubmit = async (formData) => {
-    console.log('Starting form submission with data:', formData); // Added debug log
+    console.log('Starting form submission with data:', formData);
 
     if (!selectedBatch?.batch_id) {
-      console.log('No batch selected, aborting submission'); // Added debug log
       toast({
         title: "Error",
         description: "Please select a batch ID",
@@ -69,12 +68,11 @@ const QualityCheckEntryForm = () => {
 
     try {
       setLoading(true);
-      console.log('Checking authentication...'); // Added debug log
       
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
-        console.error('Session error:', sessionError); // Added debug log
+        console.error('Session error:', sessionError);
         throw sessionError;
       }
       
@@ -82,44 +80,43 @@ const QualityCheckEntryForm = () => {
         throw new Error("No authenticated user found");
       }
 
-      console.log('Authentication successful, preparing quality check data...'); // Added debug log
-
       const qualityCheck = {
         batch_id: selectedBatch.batch_id,
-        temperature_value: parseFloat(formData.temperature_value),
-        temperature_standard: parseFloat(formData.temperature_standard),
+        temperature_value: formData.temperature_value.toString(),  // Convert to string as per table schema
+        temperature_standard: formData.temperature_standard.toString(),
         temperature_status: formData.temperature_status,
-        ph_level_value: parseFloat(formData.ph_level_value),
-        ph_level_standard: parseFloat(formData.ph_level_standard),
+        ph_level_value: formData.ph_level_value.toString(),
+        ph_level_standard: formData.ph_level_standard.toString(),
         ph_level_status: formData.ph_level_status,
-        moisture_content_value: parseFloat(formData.moisture_content_value),
-        moisture_content_standard: parseFloat(formData.moisture_content_standard),
+        moisture_content_value: formData.moisture_content_value.toString(),
+        moisture_content_standard: formData.moisture_content_standard.toString(),
         moisture_content_status: formData.moisture_content_status,
-        fat_content_value: parseFloat(formData.fat_content_value),
-        fat_content_standard: parseFloat(formData.fat_content_standard),
+        fat_content_value: formData.fat_content_value.toString(),
+        fat_content_standard: formData.fat_content_standard.toString(),
         fat_content_status: formData.fat_content_status,
-        protein_content_value: parseFloat(formData.protein_content_value),
-        protein_content_standard: parseFloat(formData.protein_content_standard),
+        protein_content_value: formData.protein_content_value.toString(),
+        protein_content_standard: formData.protein_content_standard.toString(),
         protein_content_status: formData.protein_content_status,
-        salt_content_value: parseFloat(formData.salt_content_value),
-        salt_content_standard: parseFloat(formData.salt_content_standard),
+        salt_content_value: formData.salt_content_value.toString(),
+        salt_content_standard: formData.salt_content_standard.toString(),
         salt_content_status: formData.salt_content_status,
         notes: formData.notes || '',
         checked_by: session.user.id
       };
 
-      console.log('Submitting quality check to Supabase:', qualityCheck); // Added debug log
+      console.log('Submitting quality check to Supabase:', qualityCheck);
 
-      const { error: insertError } = await supabase
+      const { data, error: insertError } = await supabase
         .from('quality_checks')
-        .insert([qualityCheck]);
+        .insert([qualityCheck])
+        .select();
 
       if (insertError) {
         console.error('Insert error:', insertError);
         throw insertError;
       }
 
-      console.log('Quality check submitted successfully'); // Added debug log
+      console.log('Quality check submitted successfully:', data);
 
       toast({
         title: "Success",
