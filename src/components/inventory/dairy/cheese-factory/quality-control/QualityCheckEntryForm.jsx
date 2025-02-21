@@ -14,22 +14,34 @@ import { useBatchOptions } from './hooks/useBatchOptions';
 import QualityChecksDisplay from './components/QualityChecksDisplay';
 
 const QualityCheckEntryForm = () => {
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
-    defaultValues: {
-      batch_id: '',
-      temperature_status: 'failed',
-      ph_status: 'failed',
-      moisture_status: 'failed',
-      fat_status: 'failed',
-      protein_status: 'failed',
-      salt_status: 'failed',
-    }
+  const [formData, setFormData] = useState({
+    batch_id: '',
+    temperature_actual: '',
+    temperature_standard: '',
+    temperature_status: 'Failed',
+    ph_level_actual: '',
+    ph_level_standard: '',
+    ph_level_status: 'Failed',
+    moisture_actual: '',
+    moisture_standard: '',
+    moisture_status: 'Failed',
+    fat_actual: '',
+    fat_standard: '',
+    fat_status: 'Failed',
+    protein_actual: '',
+    protein_standard: '',
+    protein_status: 'Failed',
+    salt_actual: '',
+    salt_standard: '',
+    salt_status: 'Failed',
+    notes: ''
   });
+
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState(null);
-  const [loading, setLoading] = useState(false);
-  
+
   const {
     fetchingBatches,
     searchQuery,
@@ -38,54 +50,20 @@ const QualityCheckEntryForm = () => {
     refetchBatches
   } = useBatchOptions();
 
-  const parameters = [
-    {
-      name: 'Temperature',
-      actualKey: 'temperature_actual',
-      standardKey: 'temperature_standard',
-      statusKey: 'temperature_status'
-    },
-    {
-      name: 'pH Level',
-      actualKey: 'ph_actual',
-      standardKey: 'ph_standard',
-      statusKey: 'ph_status'
-    },
-    {
-      name: 'Moisture Content',
-      actualKey: 'moisture_actual',
-      standardKey: 'moisture_standard',
-      statusKey: 'moisture_status'
-    },
-    {
-      name: 'Fat Content',
-      actualKey: 'fat_actual',
-      standardKey: 'fat_standard',
-      statusKey: 'fat_status'
-    },
-    {
-      name: 'Protein Content',
-      actualKey: 'protein_actual',
-      standardKey: 'protein_standard',
-      statusKey: 'protein_status'
-    },
-    {
-      name: 'Salt Content',
-      actualKey: 'salt_actual',
-      standardKey: 'salt_standard',
-      statusKey: 'salt_status'
-    }
-  ];
-
   const handleBatchSelect = (batch) => {
     console.log('Selected batch:', batch);
     setSelectedBatch(batch);
-    setValue('batch_id', batch.batch_id);
+    setFormData(prev => ({ ...prev, batch_id: batch.batch_id }));
     setOpen(false);
     setSearchQuery("");
   };
 
-  const onSubmit = async (formData) => {
+  const handleChange = (name, value) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     console.log('Starting form submission with data:', formData);
 
     if (!selectedBatch?.batch_id) {
@@ -116,9 +94,9 @@ const QualityCheckEntryForm = () => {
         temperature_actual: Number(formData.temperature_actual),
         temperature_standard: Number(formData.temperature_standard),
         temperature_status: formData.temperature_status,
-        ph_actual: Number(formData.ph_actual),
-        ph_standard: Number(formData.ph_standard),
-        ph_status: formData.ph_status,
+        ph_level_actual: Number(formData.ph_level_actual),
+        ph_level_standard: Number(formData.ph_level_standard),
+        ph_level_status: formData.ph_level_status,
         moisture_actual: Number(formData.moisture_actual),
         moisture_standard: Number(formData.moisture_standard),
         moisture_status: formData.moisture_status,
@@ -154,14 +132,28 @@ const QualityCheckEntryForm = () => {
         description: "Quality check recorded successfully",
       });
 
-      reset({
+      // Reset form
+      setFormData({
         batch_id: '',
-        temperature_status: 'failed',
-        ph_status: 'failed',
-        moisture_status: 'failed',
-        fat_status: 'failed',
-        protein_status: 'failed',
-        salt_status: 'failed',
+        temperature_actual: '',
+        temperature_standard: '',
+        temperature_status: 'Failed',
+        ph_level_actual: '',
+        ph_level_standard: '',
+        ph_level_status: 'Failed',
+        moisture_actual: '',
+        moisture_standard: '',
+        moisture_status: 'Failed',
+        fat_actual: '',
+        fat_standard: '',
+        fat_status: 'Failed',
+        protein_actual: '',
+        protein_standard: '',
+        protein_status: 'Failed',
+        salt_actual: '',
+        salt_standard: '',
+        salt_status: 'Failed',
+        notes: ''
       });
       setSelectedBatch(null);
       
@@ -177,8 +169,44 @@ const QualityCheckEntryForm = () => {
     }
   };
 
-  // Debug form values
-  console.log('Current form values:', watch());
+  const parameters = [
+    {
+      name: 'Temperature',
+      actualKey: 'temperature_actual',
+      standardKey: 'temperature_standard',
+      statusKey: 'temperature_status'
+    },
+    {
+      name: 'pH Level',
+      actualKey: 'ph_level_actual',
+      standardKey: 'ph_level_standard',
+      statusKey: 'ph_level_status'
+    },
+    {
+      name: 'Moisture Content',
+      actualKey: 'moisture_actual',
+      standardKey: 'moisture_standard',
+      statusKey: 'moisture_status'
+    },
+    {
+      name: 'Fat Content',
+      actualKey: 'fat_actual',
+      standardKey: 'fat_standard',
+      statusKey: 'fat_status'
+    },
+    {
+      name: 'Protein Content',
+      actualKey: 'protein_actual',
+      standardKey: 'protein_standard',
+      statusKey: 'protein_status'
+    },
+    {
+      name: 'Salt Content',
+      actualKey: 'salt_actual',
+      standardKey: 'salt_standard',
+      statusKey: 'salt_status'
+    }
+  ];
 
   return (
     <div className="space-y-6">
@@ -190,7 +218,7 @@ const QualityCheckEntryForm = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <BatchSelector
               fetchingBatches={fetchingBatches}
               selectedBatch={selectedBatch}
@@ -205,9 +233,10 @@ const QualityCheckEntryForm = () => {
 
             {parameters.map((parameter) => (
               <ParameterInputGroup 
-                key={parameter.name} 
+                key={parameter.name}
                 parameter={parameter}
-                register={register}
+                formData={formData}
+                onChange={handleChange}
               />
             ))}
 
@@ -215,7 +244,8 @@ const QualityCheckEntryForm = () => {
               <Label htmlFor="notes">Notes</Label>
               <Textarea
                 id="notes"
-                {...register('notes')}
+                value={formData.notes}
+                onChange={(e) => handleChange('notes', e.target.value)}
                 placeholder="Add any additional notes"
               />
             </div>
@@ -224,7 +254,6 @@ const QualityCheckEntryForm = () => {
               type="submit" 
               className="w-full" 
               disabled={loading || !selectedBatch}
-              onClick={() => console.log('Submit button clicked')}
             >
               {loading ? (
                 <div className="flex items-center gap-2">
