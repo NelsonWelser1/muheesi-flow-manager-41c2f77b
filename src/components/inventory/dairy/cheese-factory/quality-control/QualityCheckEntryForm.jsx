@@ -11,6 +11,7 @@ import { ClipboardCheck, Loader2 } from 'lucide-react';
 import BatchSelector from './components/BatchSelector';
 import ParameterInputGroup from './components/ParameterInputGroup';
 import { useBatchOptions } from './hooks/useBatchOptions';
+import QualityChecksDisplay from './components/QualityChecksDisplay';
 
 const QualityCheckEntryForm = () => {
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
@@ -108,57 +109,61 @@ const QualityCheckEntryForm = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ClipboardCheck className="h-5 w-5" />
-          New Quality Check
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <BatchSelector
-            fetchingBatches={fetchingBatches}
-            selectedBatch={selectedBatch}
-            open={open}
-            setOpen={setOpen}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            filteredBatches={filteredBatches}
-            onSelectBatch={handleBatchSelect}
-            refetchBatches={refetchBatches}
-          />
-
-          {parameters.map((parameter) => (
-            <ParameterInputGroup 
-              key={parameter} 
-              parameter={parameter}
-              register={register}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ClipboardCheck className="h-5 w-5" />
+            New Quality Check
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <BatchSelector
+              fetchingBatches={fetchingBatches}
+              selectedBatch={selectedBatch}
+              open={open}
+              setOpen={setOpen}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              filteredBatches={filteredBatches}
+              onSelectBatch={handleBatchSelect}
+              refetchBatches={refetchBatches}
             />
-          ))}
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              {...register('notes')}
-              placeholder="Add any additional notes"
-            />
-          </div>
+            {parameters.map((parameter) => (
+              <ParameterInputGroup 
+                key={parameter} 
+                parameter={parameter}
+                register={register}
+              />
+            ))}
 
-          <Button type="submit" className="w-full" disabled={loading || !selectedBatch}>
-            {loading ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Submitting...
-              </div>
-            ) : (
-              "Submit All Quality Checks"
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                {...register('notes')}
+                placeholder="Add any additional notes"
+              />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={loading || !selectedBatch}>
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Submitting...
+                </div>
+              ) : (
+                "Submit All Quality Checks"
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <QualityChecksDisplay />
+    </div>
   );
 };
 
