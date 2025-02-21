@@ -14,8 +14,9 @@ import { useBatchOptions } from './hooks/useBatchOptions';
 import QualityChecksDisplay from './components/QualityChecksDisplay';
 
 const QualityCheckEntryForm = () => {
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
+      batch_id: '',
       temperature_status: 'failed',
       ph_status: 'failed',
       moisture_status: 'failed',
@@ -154,6 +155,7 @@ const QualityCheckEntryForm = () => {
       });
 
       reset({
+        batch_id: '',
         temperature_status: 'failed',
         ph_status: 'failed',
         moisture_status: 'failed',
@@ -175,6 +177,9 @@ const QualityCheckEntryForm = () => {
     }
   };
 
+  // Debug form values
+  console.log('Current form values:', watch());
+
   return (
     <div className="space-y-6">
       <Card>
@@ -185,7 +190,7 @@ const QualityCheckEntryForm = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <BatchSelector
               fetchingBatches={fetchingBatches}
               selectedBatch={selectedBatch}
@@ -215,7 +220,12 @@ const QualityCheckEntryForm = () => {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading || !selectedBatch}>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading || !selectedBatch}
+              onClick={() => console.log('Submit button clicked')}
+            >
               {loading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
