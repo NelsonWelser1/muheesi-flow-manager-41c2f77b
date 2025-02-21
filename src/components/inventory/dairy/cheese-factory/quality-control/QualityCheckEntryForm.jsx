@@ -14,7 +14,7 @@ import { useBatchOptions } from './hooks/useBatchOptions';
 import QualityChecksDisplay from './components/QualityChecksDisplay';
 
 const QualityCheckEntryForm = () => {
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     defaultValues: {
       temperature_status: 'failed',
       ph_level_status: 'failed',
@@ -53,8 +53,8 @@ const QualityCheckEntryForm = () => {
     setSearchQuery("");
   };
 
-  const onSubmit = async (data) => {
-    console.log('Form data:', data);
+  const onSubmit = async (formData) => {
+    console.log('Form data:', formData);
 
     if (!selectedBatch?.batch_id) {
       toast({
@@ -68,40 +68,49 @@ const QualityCheckEntryForm = () => {
     try {
       setLoading(true);
       
-      const session = await supabase.auth.getSession();
-      console.log('Auth session:', session);
+      // Get current user session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) throw sessionError;
+      
+      if (!session?.user?.id) {
+        throw new Error("No authenticated user found");
+      }
 
+      // Create quality check object
       const qualityCheck = {
         batch_id: selectedBatch.batch_id,
-        temperature_value: data.temperature_value,
-        temperature_standard: data.temperature_standard,
-        temperature_status: data.temperature_status,
-        ph_level_value: data.ph_level_value,
-        ph_level_standard: data.ph_level_standard,
-        ph_level_status: data.ph_level_status,
-        moisture_content_value: data.moisture_content_value,
-        moisture_content_standard: data.moisture_content_standard,
-        moisture_content_status: data.moisture_content_status,
-        fat_content_value: data.fat_content_value,
-        fat_content_standard: data.fat_content_standard,
-        fat_content_status: data.fat_content_status,
-        protein_content_value: data.protein_content_value,
-        protein_content_standard: data.protein_content_standard,
-        protein_content_status: data.protein_content_status,
-        salt_content_value: data.salt_content_value,
-        salt_content_standard: data.salt_content_standard,
-        salt_content_status: data.salt_content_status,
-        notes: data.notes || '',
-        checked_by: session.data.session?.user?.id
+        temperature_value: formData.temperature_value,
+        temperature_standard: formData.temperature_standard,
+        temperature_status: formData.temperature_status,
+        ph_level_value: formData.ph_level_value,
+        ph_level_standard: formData.ph_level_standard,
+        ph_level_status: formData.ph_level_status,
+        moisture_content_value: formData.moisture_content_value,
+        moisture_content_standard: formData.moisture_content_standard,
+        moisture_content_status: formData.moisture_content_status,
+        fat_content_value: formData.fat_content_value,
+        fat_content_standard: formData.fat_content_standard,
+        fat_content_status: formData.fat_content_status,
+        protein_content_value: formData.protein_content_value,
+        protein_content_standard: formData.protein_content_standard,
+        protein_content_status: formData.protein_content_status,
+        salt_content_value: formData.salt_content_value,
+        salt_content_standard: formData.salt_content_standard,
+        salt_content_status: formData.salt_content_status,
+        notes: formData.notes || '',
+        checked_by: session.user.id
       };
 
-      const { error } = await supabase
+      console.log('Submitting quality check:', qualityCheck);
+
+      const { error: insertError } = await supabase
         .from('quality_checks')
         .insert([qualityCheck]);
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw insertError;
       }
 
       toast({
@@ -109,6 +118,7 @@ const QualityCheckEntryForm = () => {
         description: "Quality check recorded successfully",
       });
 
+      // Reset form with default status values
       reset({
         temperature_status: 'failed',
         ph_level_status: 'failed',
@@ -120,10 +130,10 @@ const QualityCheckEntryForm = () => {
       setSelectedBatch(null);
       
     } catch (error) {
-      console.error('Error submitting quality checks:', error);
+      console.error('Error submitting quality check:', error);
       toast({
         title: "Error",
-        description: "Failed to submit quality check: " + error.message,
+        description: error.message || "Failed to submit quality check",
         variant: "destructive"
       });
     } finally {

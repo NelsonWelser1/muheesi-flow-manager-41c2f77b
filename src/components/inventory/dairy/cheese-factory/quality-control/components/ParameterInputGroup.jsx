@@ -37,14 +37,19 @@ const ParameterInputGroup = ({ parameter, register }) => {
           <Label htmlFor={`${parameterKey}_status`}>
             Status
           </Label>
+          <Input
+            type="hidden"
+            {...register(`${parameterKey}_status`)}
+            defaultValue="failed"
+          />
           <Select 
+            defaultValue="failed"
             onValueChange={(value) => {
-              const event = { target: { value } };
+              const event = { target: { name: `${parameterKey}_status`, value } };
               register(`${parameterKey}_status`).onChange(event);
             }}
-            defaultValue="failed"
           >
-            <SelectTrigger id={`${parameterKey}_status`}>
+            <SelectTrigger>
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
@@ -52,11 +57,6 @@ const ParameterInputGroup = ({ parameter, register }) => {
               <SelectItem value="failed">Failed</SelectItem>
             </SelectContent>
           </Select>
-          <Input
-            type="hidden"
-            {...register(`${parameterKey}_status`, { required: true })}
-            defaultValue="failed"
-          />
         </div>
       </div>
     </div>
