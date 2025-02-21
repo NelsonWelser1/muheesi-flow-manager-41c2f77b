@@ -14,7 +14,7 @@ import { useBatchOptions } from './hooks/useBatchOptions';
 import QualityChecksDisplay from './components/QualityChecksDisplay';
 
 const QualityCheckEntryForm = () => {
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState(null);
@@ -45,6 +45,8 @@ const QualityCheckEntryForm = () => {
   };
 
   const onSubmit = async (data) => {
+    console.log('Form data:', data); // Debug log
+
     if (!selectedBatch?.batch_id) {
       toast({
         title: "Error",
@@ -58,6 +60,8 @@ const QualityCheckEntryForm = () => {
       setLoading(true);
       
       const session = await supabase.auth.getSession();
+      console.log('Auth session:', session); // Debug log
+
       if (!session.data.session?.user) {
         toast({
           title: "Authentication Error",
@@ -67,35 +71,44 @@ const QualityCheckEntryForm = () => {
         return;
       }
 
+      // Prepare the quality check data
       const qualityCheck = {
         batch_id: selectedBatch.batch_id,
-        temperature_value: data.temperature_value,
-        temperature_standard: data.temperature_standard,
-        temperature_status: data.temperature_status,
-        ph_level_value: data.ph_level_value,
-        ph_level_standard: data.ph_level_standard,
-        ph_level_status: data.ph_level_status,
-        moisture_content_value: data.moisture_content_value,
-        moisture_content_standard: data.moisture_content_standard,
-        moisture_content_status: data.moisture_content_status,
-        fat_content_value: data.fat_content_value,
-        fat_content_standard: data.fat_content_standard,
-        fat_content_status: data.fat_content_status,
-        protein_content_value: data.protein_content_value,
-        protein_content_standard: data.protein_content_standard,
-        protein_content_status: data.protein_content_status,
-        salt_content_value: data.salt_content_value,
-        salt_content_standard: data.salt_content_standard,
-        salt_content_status: data.salt_content_status,
-        notes: data.notes,
-        checked_by: session.data.session.user.id,
+        temperature_value: data.temperature_value || '',
+        temperature_standard: data.temperature_standard || '',
+        temperature_status: data.temperature_status || 'failed',
+        ph_level_value: data.ph_level_value || '',
+        ph_level_standard: data.ph_level_standard || '',
+        ph_level_status: data.ph_level_status || 'failed',
+        moisture_content_value: data.moisture_content_value || '',
+        moisture_content_standard: data.moisture_content_standard || '',
+        moisture_content_status: data.moisture_content_status || 'failed',
+        fat_content_value: data.fat_content_value || '',
+        fat_content_standard: data.fat_content_standard || '',
+        fat_content_status: data.fat_content_status || 'failed',
+        protein_content_value: data.protein_content_value || '',
+        protein_content_standard: data.protein_content_standard || '',
+        protein_content_status: data.protein_content_status || 'failed',
+        salt_content_value: data.salt_content_value || '',
+        salt_content_standard: data.salt_content_standard || '',
+        salt_content_status: data.salt_content_status || 'failed',
+        notes: data.notes || '',
+        checked_by: session.data.session.user.id
       };
 
-      const { error } = await supabase
-        .from('quality_checks')
-        .insert([qualityCheck]);
+      console.log('Submitting quality check:', qualityCheck); // Debug log
 
-      if (error) throw error;
+      const { data: insertedData, error } = await supabase
+        .from('quality_checks')
+        .insert([qualityCheck])
+        .select();
+
+      if (error) {
+        console.error('Supabase error:', error); // Debug log
+        throw error;
+      }
+
+      console.log('Successfully inserted data:', insertedData); // Debug log
 
       toast({
         title: "Success",

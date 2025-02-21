@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ParameterInputGroup = ({ parameter, register }) => {
-  const parameterKey = parameter.toLowerCase().replace(' ', '_');
+  const parameterKey = parameter.toLowerCase().replace(/ /g, '_');
 
   return (
     <div className="border p-4 rounded-lg space-y-4">
@@ -42,7 +42,7 @@ const ParameterInputGroup = ({ parameter, register }) => {
               const event = { target: { value } };
               register(`${parameterKey}_status`).onChange(event);
             }}
-            defaultValue=""
+            defaultValue="failed"
           >
             <SelectTrigger id={`${parameterKey}_status`}>
               <SelectValue placeholder="Select status" />
@@ -55,6 +55,7 @@ const ParameterInputGroup = ({ parameter, register }) => {
           <Input
             type="hidden"
             {...register(`${parameterKey}_status`, { required: true })}
+            defaultValue="failed"
           />
         </div>
       </div>
