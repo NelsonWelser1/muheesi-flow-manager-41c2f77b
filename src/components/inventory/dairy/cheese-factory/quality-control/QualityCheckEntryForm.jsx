@@ -11,10 +11,8 @@ import BatchSelector from './components/BatchSelector';
 import ParameterInputGroup from './components/ParameterInputGroup';
 import { useBatchOptions } from './hooks/useBatchOptions';
 import QualityChecksDisplay from './components/QualityChecksDisplay';
-import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const QualityCheckEntryForm = () => {
-  const { session } = useSupabaseAuth();
   const [formData, setFormData] = useState({
     batch_id: '',
     temperature_actual: '',
@@ -64,15 +62,6 @@ const QualityCheckEntryForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!session?.user?.id) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to submit quality checks",
-        variant: "destructive"
-      });
-      return;
-    }
 
     if (!selectedBatch?.batch_id) {
       toast({
@@ -88,7 +77,6 @@ const QualityCheckEntryForm = () => {
 
       const qualityCheck = {
         batch_id: selectedBatch.batch_id,
-        checked_by: session.user.id,
         temperature_actual: Number(formData.temperature_actual),
         temperature_standard: Number(formData.temperature_standard),
         temperature_status: formData.temperature_status,
@@ -242,15 +230,13 @@ const QualityCheckEntryForm = () => {
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={loading || !selectedBatch || !session?.user?.id}
+              disabled={loading || !selectedBatch}
             >
               {loading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Submitting...
                 </div>
-              ) : !session?.user?.id ? (
-                "Please log in to submit"
               ) : (
                 "Submit Quality Check"
               )}
