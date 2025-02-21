@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,8 +11,10 @@ import BatchSelector from './components/BatchSelector';
 import ParameterInputGroup from './components/ParameterInputGroup';
 import { useBatchOptions } from './hooks/useBatchOptions';
 import QualityChecksDisplay from './components/QualityChecksDisplay';
+import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const QualityCheckEntryForm = () => {
+  const { session } = useSupabaseAuth();
   const [formData, setFormData] = useState({
     batch_id: '',
     temperature_actual: '',
@@ -51,7 +52,6 @@ const QualityCheckEntryForm = () => {
   } = useBatchOptions();
 
   const handleBatchSelect = (batch) => {
-    console.log('Selected batch:', batch);
     setSelectedBatch(batch);
     setFormData(prev => ({ ...prev, batch_id: batch.batch_id }));
     setOpen(false);
@@ -64,7 +64,15 @@ const QualityCheckEntryForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Starting form submission with data:', formData);
+    
+    if (!session?.user?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to submit quality checks",
+        variant: "destructive"
+      });
+      return;
+    }
 
     if (!selectedBatch?.batch_id) {
       toast({
@@ -77,20 +85,10 @@ const QualityCheckEntryForm = () => {
 
     try {
       setLoading(true);
-      
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        throw sessionError;
-      }
-      
-      if (!session?.user?.id) {
-        throw new Error("No authenticated user found");
-      }
 
       const qualityCheck = {
         batch_id: selectedBatch.batch_id,
+        checked_by: session.user.id,
         temperature_actual: Number(formData.temperature_actual),
         temperature_standard: Number(formData.temperature_standard),
         temperature_status: formData.temperature_status,
@@ -109,23 +107,14 @@ const QualityCheckEntryForm = () => {
         salt_actual: Number(formData.salt_actual),
         salt_standard: Number(formData.salt_standard),
         salt_status: formData.salt_status,
-        notes: formData.notes || '',
-        checked_by: session.user.id
+        notes: formData.notes || ''
       };
 
-      console.log('Submitting quality check to Supabase:', qualityCheck);
-
-      const { data, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('quality_checks')
-        .insert([qualityCheck])
-        .select();
+        .insert([qualityCheck]);
 
-      if (insertError) {
-        console.error('Insert error:', insertError);
-        throw insertError;
-      }
-
-      console.log('Quality check submitted successfully:', data);
+      if (insertError) throw insertError;
 
       toast({
         title: "Success",
@@ -253,13 +242,15 @@ const QualityCheckEntryForm = () => {
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={loading || !selectedBatch}
+              disabled={loading || !selectedBatch || !session?.user?.id}
             >
               {loading ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Submitting...
                 </div>
+              ) : !session?.user?.id ? (
+                "Please log in to submit"
               ) : (
                 "Submit Quality Check"
               )}
