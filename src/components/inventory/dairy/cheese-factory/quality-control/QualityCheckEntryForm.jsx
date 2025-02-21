@@ -39,7 +39,7 @@ const QualityCheckEntryForm = () => {
 
   const handleBatchSelect = (batch) => {
     setSelectedBatch(batch);
-    setValue('batchId', batch.batch_id);
+    setValue('batch_id', batch.batch_id);
     setOpen(false);
     setSearchQuery("");
   };
@@ -67,21 +67,33 @@ const QualityCheckEntryForm = () => {
         return;
       }
 
-      const qualityChecks = parameters.map(parameter => ({
+      const qualityCheck = {
         batch_id: selectedBatch.batch_id,
-        parameter: parameter,
-        actual_value: data[`${parameter.toLowerCase().replace(' ', '_')}_value`],
-        standard_value: data[`${parameter.toLowerCase().replace(' ', '_')}_standard`],
-        status: data[`${parameter.toLowerCase().replace(' ', '_')}_status`],
+        temperature_value: data.temperature_value,
+        temperature_standard: data.temperature_standard,
+        temperature_status: data.temperature_status,
+        ph_level_value: data.ph_level_value,
+        ph_level_standard: data.ph_level_standard,
+        ph_level_status: data.ph_level_status,
+        moisture_content_value: data.moisture_content_value,
+        moisture_content_standard: data.moisture_content_standard,
+        moisture_content_status: data.moisture_content_status,
+        fat_content_value: data.fat_content_value,
+        fat_content_standard: data.fat_content_standard,
+        fat_content_status: data.fat_content_status,
+        protein_content_value: data.protein_content_value,
+        protein_content_standard: data.protein_content_standard,
+        protein_content_status: data.protein_content_status,
+        salt_content_value: data.salt_content_value,
+        salt_content_standard: data.salt_content_standard,
+        salt_content_status: data.salt_content_status,
         notes: data.notes,
         checked_by: session.data.session.user.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }));
+      };
 
       const { error } = await supabase
         .from('quality_checks')
-        .insert(qualityChecks);
+        .insert([qualityCheck]);
 
       if (error) throw error;
 
@@ -91,8 +103,6 @@ const QualityCheckEntryForm = () => {
         duration: 3000,
       });
 
-      // After successful submission, refresh the batch list and reset the form
-      await refetchBatches();
       reset();
       setSelectedBatch(null);
       
@@ -155,7 +165,7 @@ const QualityCheckEntryForm = () => {
                   Submitting...
                 </div>
               ) : (
-                "Submit All Quality Checks"
+                "Submit Quality Check"
               )}
             </Button>
           </form>
