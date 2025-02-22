@@ -7,7 +7,7 @@ import {
   Check, 
   Clock, 
   ThermometerSnowflake, 
-  Tool
+  Wrench
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
@@ -85,7 +85,7 @@ const EquipmentOverview = () => {
             <CardTitle className="text-sm font-medium">
               Pending Maintenance
             </CardTitle>
-            <Tool className="h-4 w-4 text-muted-foreground" />
+            <Wrench className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
