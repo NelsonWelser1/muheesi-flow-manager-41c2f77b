@@ -114,8 +114,6 @@ const QualityChecksDisplay = () => {
 
   return (
     <div className="space-y-6">
-      <QualityTrendsChart chartData={chartData} />
-
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -153,6 +151,8 @@ const QualityChecksDisplay = () => {
           </div>
         </CardContent>
       </Card>
+
+      <QualityTrendsChart chartData={chartData} />
     </div>
   );
 };
