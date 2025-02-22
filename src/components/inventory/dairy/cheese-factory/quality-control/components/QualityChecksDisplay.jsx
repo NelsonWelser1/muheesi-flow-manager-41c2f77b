@@ -15,6 +15,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { cn } from "@/lib/utils";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const QualityChecksDisplay = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,12 +32,8 @@ const QualityChecksDisplay = () => {
     queryFn: async () => {
       let query = supabase
         .from('quality_checks')
-        .select(`
-          *,
-          checked_by (
-            email
-          )
-        `);
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (timeRange !== 'all') {
         const now = new Date();
@@ -58,7 +55,7 @@ const QualityChecksDisplay = () => {
         query = query.gte('created_at', startDate.toISOString());
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -68,6 +65,41 @@ const QualityChecksDisplay = () => {
   const filteredChecks = checks.filter(check =>
     check.batch_id.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Prepare data for quality trends chart
+  const trendData = checks.reduce((acc, check) => {
+    const date = format(new Date(check.created_at), 'MM/dd/yyyy');
+    if (!acc[date]) {
+      acc[date] = {
+        date,
+        temperature: 0,
+        ph: 0,
+        moisture: 0,
+        fat: 0,
+        protein: 0,
+        salt: 0,
+        count: 0
+      };
+    }
+    acc[date].temperature += Number(check.temperature_actual);
+    acc[date].ph += Number(check.ph_level_actual);
+    acc[date].moisture += Number(check.moisture_actual);
+    acc[date].fat += Number(check.fat_actual);
+    acc[date].protein += Number(check.protein_actual);
+    acc[date].salt += Number(check.salt_actual);
+    acc[date].count += 1;
+    return acc;
+  }, {});
+
+  const chartData = Object.values(trendData).map(day => ({
+    date: day.date,
+    temperature: day.temperature / day.count,
+    ph: day.ph / day.count,
+    moisture: day.moisture / day.count,
+    fat: day.fat / day.count,
+    protein: day.protein / day.count,
+    salt: day.salt / day.count
+  }));
 
   const handleRefresh = async () => {
     try {
@@ -85,174 +117,175 @@ const QualityChecksDisplay = () => {
     }
   };
 
-  const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(filteredChecks);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Quality Checks");
-    XLSX.writeFile(wb, `quality-checks-${timeRange}.xlsx`);
-  };
-
-  const exportToCSV = () => {
-    const ws = XLSX.utils.json_to_sheet(filteredChecks);
-    const csv = XLSX.utils.sheet_to_csv(ws);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `quality-checks-${timeRange}.csv`;
-    link.click();
-  };
-
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.autoTable({
-      head: [['Batch ID', 'Temperature', 'pH Level', 'Moisture', 'Fat', 'Protein', 'Salt', 'Notes', 'Date']],
-      body: filteredChecks.map(check => [
-        check.batch_id,
-        `${check.temperature_value} (${check.temperature_status})`,
-        `${check.ph_level_value} (${check.ph_level_status})`,
-        `${check.moisture_content_value} (${check.moisture_content_status})`,
-        `${check.fat_content_value} (${check.fat_content_status})`,
-        `${check.protein_content_value} (${check.protein_content_status})`,
-        `${check.salt_content_value} (${check.salt_content_status})`,
-        check.notes,
-        format(new Date(check.created_at), 'PPp')
-      ])
-    });
-    doc.save(`quality-checks-${timeRange}.pdf`);
-  };
-
   const renderStatusBadge = (status) => (
-    <Badge variant={status === 'passed' ? 'success' : 'destructive'}>
+    <Badge variant={status === 'Passed' ? 'success' : 'destructive'}>
       {status}
     </Badge>
   );
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Quality Check Records</span>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRefresh}
-            disabled={isRefetching}
-          >
-            <RefreshCw className={cn(
-              "h-4 w-4 mr-2",
-              isRefetching && "animate-spin"
-            )} />
-            {isRefetching ? "Refreshing..." : "Refresh"}
-          </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-4 mb-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by batch ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8"
-            />
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Quality Trends</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="temperature" stroke="#8884d8" name="Temperature" />
+                <Line type="monotone" dataKey="ph" stroke="#82ca9d" name="pH Level" />
+                <Line type="monotone" dataKey="moisture" stroke="#ffc658" name="Moisture" />
+                <Line type="monotone" dataKey="fat" stroke="#ff7300" name="Fat" />
+                <Line type="monotone" dataKey="protein" stroke="#00C49F" name="Protein" />
+                <Line type="monotone" dataKey="salt" stroke="#FFBB28" name="Salt" />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select time range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="day">Last 24 Hours</SelectItem>
-              <SelectItem value="week">Last Week</SelectItem>
-              <SelectItem value="month">Last Month</SelectItem>
-              <SelectItem value="year">Last Year</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={exportToPDF}>
-            <FileDown className="h-4 w-4 mr-2" />
-            PDF
-          </Button>
-          <Button variant="outline" onClick={exportToExcel}>
-            <FileDown className="h-4 w-4 mr-2" />
-            Excel
-          </Button>
-          <Button variant="outline" onClick={exportToCSV}>
-            <FileDown className="h-4 w-4 mr-2" />
-            CSV
-          </Button>
-        </div>
+        </CardContent>
+      </Card>
 
-        {isLoading ? (
-          <div className="text-center py-4">Loading records...</div>
-        ) : filteredChecks.length === 0 ? (
-          <div className="text-center py-4">No records found</div>
-        ) : (
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Batch ID</TableHead>
-                  <TableHead className="text-center">Temperature</TableHead>
-                  <TableHead className="text-center">pH Level</TableHead>
-                  <TableHead className="text-center">Moisture Content</TableHead>
-                  <TableHead className="text-center">Fat Content</TableHead>
-                  <TableHead className="text-center">Protein Content</TableHead>
-                  <TableHead className="text-center">Salt Content</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredChecks.map((check) => (
-                  <TableRow key={check.id}>
-                    <TableCell className="font-medium">{check.batch_id}</TableCell>
-                    <TableCell className="text-center">
-                      <div className="space-y-1">
-                        <div>{check.temperature_value}</div>
-                        {renderStatusBadge(check.temperature_status)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="space-y-1">
-                        <div>{check.ph_level_value}</div>
-                        {renderStatusBadge(check.ph_level_status)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="space-y-1">
-                        <div>{check.moisture_content_value}</div>
-                        {renderStatusBadge(check.moisture_content_status)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="space-y-1">
-                        <div>{check.fat_content_value}</div>
-                        {renderStatusBadge(check.fat_content_status)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="space-y-1">
-                        <div>{check.protein_content_value}</div>
-                        {renderStatusBadge(check.protein_content_status)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="space-y-1">
-                        <div>{check.salt_content_value}</div>
-                        {renderStatusBadge(check.salt_content_status)}
-                      </div>
-                    </TableCell>
-                    <TableCell>{check.notes}</TableCell>
-                    <TableCell>{format(new Date(check.created_at), 'PPp')}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Quality Check Records</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh}
+              disabled={isRefetching}
+            >
+              <RefreshCw className={cn(
+                "h-4 w-4 mr-2",
+                isRefetching && "animate-spin"
+              )} />
+              {isRefetching ? "Refreshing..." : "Refresh"}
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by batch ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select time range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="day">Last 24 Hours</SelectItem>
+                  <SelectItem value="week">Last Week</SelectItem>
+                  <SelectItem value="month">Last Month</SelectItem>
+                  <SelectItem value="year">Last Year</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {isLoading ? (
+              <div className="text-center py-4">Loading records...</div>
+            ) : filteredChecks.length === 0 ? (
+              <div className="text-center py-4">No records found</div>
+            ) : (
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Batch ID</TableHead>
+                      <TableHead>Parameter</TableHead>
+                      <TableHead>Actual</TableHead>
+                      <TableHead>Standard</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredChecks.flatMap((check) => [
+                      {
+                        ...check,
+                        parameter: 'Temperature',
+                        actual: check.temperature_actual,
+                        standard: check.temperature_standard,
+                        status: check.temperature_status
+                      },
+                      {
+                        ...check,
+                        parameter: 'pH Level',
+                        actual: check.ph_level_actual,
+                        standard: check.ph_level_standard,
+                        status: check.ph_level_status
+                      },
+                      {
+                        ...check,
+                        parameter: 'Moisture',
+                        actual: check.moisture_actual,
+                        standard: check.moisture_standard,
+                        status: check.moisture_status
+                      },
+                      {
+                        ...check,
+                        parameter: 'Fat',
+                        actual: check.fat_actual,
+                        standard: check.fat_standard,
+                        status: check.fat_status
+                      },
+                      {
+                        ...check,
+                        parameter: 'Protein',
+                        actual: check.protein_actual,
+                        standard: check.protein_standard,
+                        status: check.protein_status
+                      },
+                      {
+                        ...check,
+                        parameter: 'Salt',
+                        actual: check.salt_actual,
+                        standard: check.salt_standard,
+                        status: check.salt_status
+                      }
+                    ]).map((row, index) => (
+                      <TableRow key={`${row.id}-${row.parameter}`}>
+                        {index % 6 === 0 && (
+                          <TableCell rowSpan={6} className="align-top">
+                            {format(new Date(row.created_at), 'PPp')}
+                          </TableCell>
+                        )}
+                        {index % 6 === 0 && (
+                          <TableCell rowSpan={6} className="align-top font-medium">
+                            {row.batch_id}
+                          </TableCell>
+                        )}
+                        <TableCell>{row.parameter}</TableCell>
+                        <TableCell>{row.actual}</TableCell>
+                        <TableCell>{row.standard}</TableCell>
+                        <TableCell>{renderStatusBadge(row.status)}</TableCell>
+                        {index % 6 === 0 && (
+                          <TableCell rowSpan={6} className="align-top">
+                            {row.notes}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
