@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
@@ -64,17 +65,28 @@ const ProductionLineForm = ({ productionLine }) => {
 
   const fetchUsedBatchIds = async () => {
     try {
-      const isInternational = productionLine.name.toLowerCase().includes('international');
-      const tableName = isInternational ? 'production_line_international' : 'production_line_local';
-      
-      const { data: usedBatches, error } = await supabase
-        .from(tableName)
-        .select('offload_batch_id')
-        .not('offload_batch_id', 'is', null);
+      // Fetch used batch IDs from both production lines
+      const [internationalRes, localRes] = await Promise.all([
+        supabase
+          .from('production_line_international')
+          .select('offload_batch_id')
+          .not('offload_batch_id', 'is', null),
+        supabase
+          .from('production_line_local')
+          .select('offload_batch_id')
+          .not('offload_batch_id', 'is', null)
+      ]);
 
-      if (error) throw error;
+      if (internationalRes.error) throw internationalRes.error;
+      if (localRes.error) throw localRes.error;
 
-      return usedBatches.map(batch => batch.offload_batch_id);
+      // Combine used batch IDs from both production lines
+      const usedBatchIds = [
+        ...(internationalRes.data || []).map(item => item.offload_batch_id),
+        ...(localRes.data || []).map(item => item.offload_batch_id)
+      ];
+
+      return usedBatchIds;
     } catch (error) {
       console.error('Error fetching used batch IDs:', error);
       return [];
