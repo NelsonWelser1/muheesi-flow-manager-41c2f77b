@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -8,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import MaintenanceEntryForm from '../../MaintenanceEntryForm';
 
 const MaintenanceHub = () => {
   const [selectedDate, setSelectedDate] = React.useState(new Date());
@@ -90,7 +90,7 @@ const MaintenanceHub = () => {
 
   return (
     <div className="space-y-6">
-      {/* Maintenance Overview */}
+      {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -160,25 +160,10 @@ const MaintenanceHub = () => {
         </Card>
       )}
 
-      {/* View Toggle */}
-      <div className="flex justify-end space-x-2">
-        <Button
-          variant={view === 'calendar' ? 'default' : 'outline'}
-          onClick={() => setView('calendar')}
-        >
-          <CalendarIcon className="h-4 w-4 mr-2" />
-          Calendar View
-        </Button>
-        <Button
-          variant={view === 'list' ? 'default' : 'outline'}
-          onClick={() => setView('list')}
-        >
-          <Clock className="h-4 w-4 mr-2" />
-          List View
-        </Button>
-      </div>
+      {/* Maintenance Entry Form */}
+      <MaintenanceEntryForm />
 
-      {/* Maintenance Schedule */}
+      {/* Calendar and Scheduled Maintenance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="lg:col-span-1">
           <CardHeader>
