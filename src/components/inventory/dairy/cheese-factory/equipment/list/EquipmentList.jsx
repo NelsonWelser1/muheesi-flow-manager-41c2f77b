@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Check, Clock, AlertOctagon, Search } from "lucide-react";
+import { AlertTriangle, Check, Clock, AlertOctagon, Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const EquipmentList = () => {
