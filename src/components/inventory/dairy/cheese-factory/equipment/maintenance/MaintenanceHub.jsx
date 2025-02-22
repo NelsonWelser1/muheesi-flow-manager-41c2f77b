@@ -1,16 +1,19 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { Bell, Calendar as CalendarIcon, Wrench, AlertTriangle } from "lucide-react";
+import { Bell, Calendar as CalendarIcon, Wrench, AlertTriangle, Check, Clock } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 const MaintenanceHub = () => {
-  const [date, setDate] = React.useState(new Date());
+  const [selectedDate, setSelectedDate] = React.useState(new Date());
+  const [view, setView] = useState('calendar'); // 'calendar' or 'list'
 
-  const { data: maintenanceData } = useQuery({
+  const { data: maintenanceData, isLoading } = useQuery({
     queryKey: ['maintenanceSchedule'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -18,15 +21,72 @@ const MaintenanceHub = () => {
         .select('*')
         .order('next_maintenance', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching maintenance data:', error);
+        throw error;
+      }
+      console.log('Fetched maintenance data:', data);
       return data;
     }
   });
 
+  const handleScheduleMaintenance = async (taskId) => {
+    try {
+      const { error } = await supabase
+        .from('equipment_maintenance')
+        .update({ status: 'scheduled' })
+        .eq('id', taskId);
+
+      if (error) throw error;
+      toast.success('Maintenance scheduled successfully');
+    } catch (error) {
+      console.error('Error scheduling maintenance:', error);
+      toast.error('Failed to schedule maintenance');
+    }
+  };
+
   const urgentTasks = maintenanceData?.filter(task => 
-    task.status === 'overdue' || 
-    (task.status === 'due' && new Date(task.next_maintenance) <= new Date())
+    task.status === 'critical' || 
+    (new Date(task.next_maintenance) <= new Date())
   ) || [];
+
+  const getMaintenanceStats = () => {
+    if (!maintenanceData) return { due: 0, upcoming: 0, completed: 0 };
+    return {
+      due: maintenanceData.filter(task => task.status === 'maintenance').length,
+      upcoming: maintenanceData.filter(task => task.status === 'operational').length,
+      completed: maintenanceData.filter(task => task.status === 'completed').length
+    };
+  };
+
+  const stats = getMaintenanceStats();
+
+  const getStatusBadge = (status) => {
+    const config = {
+      operational: { color: 'bg-green-100 text-green-800', icon: <Check className="h-4 w-4" /> },
+      maintenance: { color: 'bg-yellow-100 text-yellow-800', icon: <Clock className="h-4 w-4" /> },
+      critical: { color: 'bg-red-100 text-red-800', icon: <AlertTriangle className="h-4 w-4" /> },
+      completed: { color: 'bg-blue-100 text-blue-800', icon: <Check className="h-4 w-4" /> }
+    };
+
+    const defaultConfig = { color: 'bg-gray-100 text-gray-800', icon: <Clock className="h-4 w-4" /> };
+    return config[status] || defaultConfig;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-48">
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-[200px]"></div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="h-24 bg-gray-200 rounded col-span-1"></div>
+            <div className="h-24 bg-gray-200 rounded col-span-1"></div>
+            <div className="h-24 bg-gray-200 rounded col-span-1"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -38,9 +98,8 @@ const MaintenanceHub = () => {
             <Bell className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {maintenanceData?.filter(task => task.status === 'due').length || 0}
-            </div>
+            <div className="text-2xl font-bold">{stats.due}</div>
+            <p className="text-xs text-muted-foreground">Requiring attention</p>
           </CardContent>
         </Card>
 
@@ -50,9 +109,8 @@ const MaintenanceHub = () => {
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {maintenanceData?.filter(task => task.status === 'upcoming').length || 0}
-            </div>
+            <div className="text-2xl font-bold">{stats.upcoming}</div>
+            <p className="text-xs text-muted-foreground">Scheduled maintenance</p>
           </CardContent>
         </Card>
 
@@ -62,9 +120,8 @@ const MaintenanceHub = () => {
             <Wrench className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {maintenanceData?.filter(task => task.status === 'completed').length || 0}
-            </div>
+            <div className="text-2xl font-bold">{stats.completed}</div>
+            <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
         </Card>
       </div>
@@ -89,7 +146,11 @@ const MaintenanceHub = () => {
                       Due: {new Date(task.next_maintenance).toLocaleDateString()}
                     </p>
                   </div>
-                  <Button variant="secondary" size="sm">
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => handleScheduleMaintenance(task.id)}
+                  >
                     Schedule Now
                   </Button>
                 </div>
@@ -99,48 +160,88 @@ const MaintenanceHub = () => {
         </Card>
       )}
 
-      {/* Maintenance Calendar */}
+      {/* View Toggle */}
+      <div className="flex justify-end space-x-2">
+        <Button
+          variant={view === 'calendar' ? 'default' : 'outline'}
+          onClick={() => setView('calendar')}
+        >
+          <CalendarIcon className="h-4 w-4 mr-2" />
+          Calendar View
+        </Button>
+        <Button
+          variant={view === 'list' ? 'default' : 'outline'}
+          onClick={() => setView('list')}
+        >
+          <Clock className="h-4 w-4 mr-2" />
+          List View
+        </Button>
+      </div>
+
+      {/* Maintenance Schedule */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Maintenance Calendar</CardTitle>
           </CardHeader>
           <CardContent>
             <Calendar
               mode="single"
-              selected={date}
-              onSelect={setDate}
+              selected={selectedDate}
+              onSelect={setSelectedDate}
               className="rounded-md border shadow"
             />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Scheduled Maintenance</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {maintenanceData?.map((task) => (
-                <div
-                  key={task.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div>
-                    <h4 className="font-medium">{task.equipment_name}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(task.next_maintenance).toLocaleDateString()}
-                    </p>
+              {maintenanceData
+                ?.filter(task => {
+                  if (view === 'calendar') {
+                    const taskDate = new Date(task.next_maintenance);
+                    return (
+                      taskDate.getDate() === selectedDate.getDate() &&
+                      taskDate.getMonth() === selectedDate.getMonth() &&
+                      taskDate.getFullYear() === selectedDate.getFullYear()
+                    );
+                  }
+                  return true;
+                })
+                .map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
+                  >
+                    <div>
+                      <h4 className="font-medium">{task.equipment_name}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(task.next_maintenance).toLocaleDateString()}
+                      </p>
+                      {task.notes && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {task.notes}
+                        </p>
+                      )}
+                    </div>
+                    <Badge className={getStatusBadge(task.status).color}>
+                      <span className="flex items-center gap-1">
+                        {getStatusBadge(task.status).icon}
+                        {task.status}
+                      </span>
+                    </Badge>
                   </div>
-                  <span className={`text-sm font-medium px-2 py-1 rounded ${
-                    task.status === 'completed' ? 'bg-green-100 text-green-700' :
-                    task.status === 'upcoming' ? 'bg-blue-100 text-blue-700' :
-                    'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {task.status}
-                  </span>
+                ))}
+
+              {maintenanceData?.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No maintenance tasks scheduled</p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
