@@ -8,9 +8,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { RefreshCw } from "lucide-react";
 import { format, subDays, subWeeks, subMonths, subYears } from 'date-fns';
 import { cn } from "@/lib/utils";
-import QualityTrendsChart from './QualityTrendsChart';
 import QualityRecordsTable from './QualityRecordsTable';
 import QualityRecordsControls from './QualityRecordsControls';
+import QualityTrendsChart from './QualityTrendsChart';
 
 const QualityChecksDisplay = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -114,8 +114,6 @@ const QualityChecksDisplay = () => {
 
   return (
     <div className="space-y-6">
-      <QualityTrendsChart chartData={chartData} />
-
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -151,6 +149,15 @@ const QualityChecksDisplay = () => {
               <QualityRecordsTable checks={filteredChecks} />
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Quality Trends</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <QualityTrendsChart chartData={chartData} />
         </CardContent>
       </Card>
     </div>
