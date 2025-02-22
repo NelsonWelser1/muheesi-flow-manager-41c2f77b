@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, AlertOctagon, Search, Filter } from "lucide-react";
+import { AlertTriangle, Check, Clock, AlertOctagon, Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const EquipmentList = () => {
@@ -28,16 +28,6 @@ const EquipmentList = () => {
       return data;
     }
   });
-
-  const generateUniqueId = (equipment) => {
-    const prefix = equipment.type?.substring(0, 3).toUpperCase() || 'EQP';
-    const namePrefix = equipment.equipment_name.substring(0, 2).toUpperCase();
-    const existingIds = equipmentList
-      ?.filter(e => e.type === equipment.type)
-      .length || 0;
-    const sequenceNumber = (existingIds + 1).toString().padStart(3, '0');
-    return `${prefix}-${namePrefix}${sequenceNumber}`;
-  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -148,12 +138,6 @@ const EquipmentList = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Equipment ID</span>
-                  <Badge variant="outline">
-                    {generateUniqueId(equipment)}
-                  </Badge>
-                </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Status</span>
                   <Badge className={getStatusColor(equipment.status)}>

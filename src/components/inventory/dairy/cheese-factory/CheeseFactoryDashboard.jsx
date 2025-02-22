@@ -1,40 +1,40 @@
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CheeseProduction from './production/CheeseProduction';
+import QualityControlPanel from './QualityControlPanel';
+import RawMaterialsManagement from './RawMaterialsManagement';
 import EquipmentManagement from './EquipmentManagement';
 
 const CheeseFactoryDashboard = () => {
+  console.log('Rendering CheeseFactoryDashboard');
+  
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Cheese Factory Management</h1>
-      
-      <Tabs defaultValue="equipment" className="w-full">
-        <TabsList>
-          <TabsTrigger value="equipment">Equipment</TabsTrigger>
+    <div className="space-y-6">
+      <Tabs defaultValue="production" className="w-full">
+        <TabsList className="w-full justify-start">
           <TabsTrigger value="production">Production</TabsTrigger>
-          <TabsTrigger value="inventory">Inventory</TabsTrigger>
           <TabsTrigger value="quality">Quality Control</TabsTrigger>
+          <TabsTrigger value="materials">Raw Materials</TabsTrigger>
+          <TabsTrigger value="equipment">Equipment</TabsTrigger>
         </TabsList>
-        
+
+        <TabsContent value="production">
+          <CheeseProduction />
+        </TabsContent>
+
+        <TabsContent value="quality">
+          <QualityControlPanel />
+        </TabsContent>
+
+        <TabsContent value="materials">
+          <RawMaterialsManagement />
+        </TabsContent>
+
         <TabsContent value="equipment">
           <EquipmentManagement />
         </TabsContent>
-        
-        <TabsContent value="production">
-          {/* Production content */}
-        </TabsContent>
-        
-        <TabsContent value="inventory">
-          {/* Inventory content */}
-        </TabsContent>
-        
-        <TabsContent value="quality">
-          {/* Quality Control content */}
-        </TabsContent>
       </Tabs>
-      
-      <Outlet />
     </div>
   );
 };

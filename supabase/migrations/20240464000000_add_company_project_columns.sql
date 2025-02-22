@@ -1,4 +1,3 @@
-
 -- Add company and project columns to equipment_maintenance table
 ALTER TABLE equipment_maintenance
 ADD COLUMN IF NOT EXISTS company TEXT,
