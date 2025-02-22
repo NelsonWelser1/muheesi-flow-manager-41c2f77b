@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { ScrollArea } from "@/components/ui/scroll-area";
 import QualityCheckEntryForm from './quality-control/QualityCheckEntryForm';
 
 const QualityControlPanel = () => {
@@ -24,20 +24,6 @@ const QualityControlPanel = () => {
       }
 
       console.log('Quality control data:', data);
-      return data;
-    },
-  });
-
-  const { data: qualityTrends } = useQuery({
-    queryKey: ['qualityTrends'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quality_trends')
-        .select('*')
-        .order('date', { ascending: true })
-        .limit(7);
-
-      if (error) throw error;
       return data;
     },
   });
@@ -102,39 +88,43 @@ const QualityControlPanel = () => {
           {isLoading ? (
             <div>Loading quality control data...</div>
           ) : (
-            <div className="space-y-6">
-              {Object.entries(groupedChecks).map(([batchId, checks]) => (
-                <Card key={batchId} className="p-4">
-                  <h3 className="font-medium mb-4">Batch ID: {batchId}</h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Parameter</TableHead>
-                        <TableHead>Value</TableHead>
-                        <TableHead>Standard</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Time</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {checks.map((check) => (
-                        <TableRow key={check.id}>
-                          <TableCell className="font-medium">{check.parameter}</TableCell>
-                          <TableCell>{check.actual_value}</TableCell>
-                          <TableCell>{check.standard_value}</TableCell>
-                          <TableCell>
-                            <Badge className={check.status === 'passed' ? 'bg-green-500' : 'bg-red-500'}>
-                              {check.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{new Date(check.created_at).toLocaleTimeString()}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Card>
-              ))}
-            </div>
+            <ScrollArea className="h-[600px] pr-4">
+              <div className="space-y-6">
+                {Object.entries(groupedChecks).slice(0, 4).map(([batchId, checks]) => (
+                  <Card key={batchId} className="p-4">
+                    <h3 className="font-medium mb-4">Batch ID: {batchId}</h3>
+                    <ScrollArea className="h-[200px]">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Parameter</TableHead>
+                            <TableHead>Value</TableHead>
+                            <TableHead>Standard</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Time</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {checks.map((check) => (
+                            <TableRow key={check.id}>
+                              <TableCell className="font-medium">{check.parameter}</TableCell>
+                              <TableCell>{check.actual_value}</TableCell>
+                              <TableCell>{check.standard_value}</TableCell>
+                              <TableCell>
+                                <Badge className={check.status === 'passed' ? 'bg-green-500' : 'bg-red-500'}>
+                                  {check.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{new Date(check.created_at).toLocaleTimeString()}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
           )}
         </CardContent>
       </Card>
