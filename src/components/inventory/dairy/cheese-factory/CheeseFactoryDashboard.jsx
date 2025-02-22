@@ -1,8 +1,8 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CheeseProduction from './production/CheeseProduction';
 import QualityControlPanel from './QualityControlPanel';
-import MaintenanceTracker from './MaintenanceTracker';
 import RawMaterialsManagement from './RawMaterialsManagement';
 import EquipmentManagement from './EquipmentManagement';
 
@@ -15,7 +15,6 @@ const CheeseFactoryDashboard = () => {
         <TabsList className="w-full justify-start">
           <TabsTrigger value="production">Production</TabsTrigger>
           <TabsTrigger value="quality">Quality Control</TabsTrigger>
-          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
           <TabsTrigger value="materials">Raw Materials</TabsTrigger>
           <TabsTrigger value="equipment">Equipment</TabsTrigger>
         </TabsList>
@@ -26,10 +25,6 @@ const CheeseFactoryDashboard = () => {
 
         <TabsContent value="quality">
           <QualityControlPanel />
-        </TabsContent>
-
-        <TabsContent value="maintenance">
-          <MaintenanceTracker />
         </TabsContent>
 
         <TabsContent value="materials">

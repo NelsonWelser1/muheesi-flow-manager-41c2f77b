@@ -6,6 +6,7 @@ import { useMilkReception } from '@/hooks/useMilkReception';
 import AgingRoomForm from './forms/AgingRoomForm';
 import CheeseVatForm from './forms/CheeseVatForm';
 import PasteurizerForm from './forms/PasteurizerForm';
+import MaintenanceTracker from './MaintenanceTracker';
 
 const EquipmentManagement = () => {
   const { data: milkReceptionData } = useMilkReception();
@@ -109,6 +110,7 @@ const EquipmentManagement = () => {
           <TabsTrigger value="pasteurizer">Pasteurizers</TabsTrigger>
           <TabsTrigger value="vats">Cheese Vats</TabsTrigger>
           <TabsTrigger value="aging">Aging Rooms</TabsTrigger>
+          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="storage">
@@ -266,6 +268,10 @@ const EquipmentManagement = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="maintenance">
+          <MaintenanceTracker />
         </TabsContent>
       </Tabs>
     </div>
