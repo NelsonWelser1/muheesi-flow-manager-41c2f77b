@@ -1,3 +1,4 @@
+
 -- Drop existing policies if any
 DROP POLICY IF EXISTS "Allow authenticated read access on equipment_maintenance" ON equipment_maintenance;
 DROP POLICY IF EXISTS "Allow authenticated insert access on equipment_maintenance" ON equipment_maintenance;
