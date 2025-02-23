@@ -11,9 +11,12 @@ import { Calendar } from "@/components/ui/calendar";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { supabase } from '@/integrations/supabase/supabase';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 const EquipmentEntryForm = () => {
   const [date, setDate] = useState();
+  const queryClient = useQueryClient();
   
   const form = useForm({
     defaultValues: {
@@ -31,9 +34,45 @@ const EquipmentEntryForm = () => {
     }
   });
 
+  const { mutate: saveEquipment, isLoading } = useMutation({
+    mutationFn: async (formData) => {
+      console.log('Saving equipment with data:', formData);
+      
+      const { data, error } = await supabase
+        .from('equipment')
+        .insert([{
+          classification: formData.classification,
+          equipment_name: formData.name,
+          type: formData.type,
+          model: formData.model,
+          use_description: formData.useDescription,
+          purchase_date: formData.purchaseDate,
+          purchase_condition: formData.purchaseCondition,
+          current_condition: formData.currentCondition,
+          serial_number: formData.serialNumber,
+          manufacturer: formData.manufacturer,
+          notes: formData.notes
+        }])
+        .select();
+
+      if (error) {
+        console.error('Error saving equipment:', error);
+        throw error;
+      }
+
+      console.log('Equipment saved successfully:', data);
+      return data;
+    },
+    onSuccess: () => {
+      console.log('Equipment saved and cache invalidated');
+      queryClient.invalidateQueries(['equipment']);
+      form.reset();
+    }
+  });
+
   const onSubmit = (data) => {
-    console.log(data);
-    // TODO: Implement form submission logic
+    console.log('Form submitted with data:', data);
+    saveEquipment(data);
   };
 
   return (
@@ -59,6 +98,7 @@ const EquipmentEntryForm = () => {
                       <SelectItem value="machine">Machine</SelectItem>
                       <SelectItem value="tool">Tool</SelectItem>
                       <SelectItem value="gadget">Gadget</SelectItem>
+                      <SelectItem value="spare_part">Spare Part</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -272,7 +312,9 @@ const EquipmentEntryForm = () => {
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button type="submit">Save Equipment</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Saving...' : 'Save Equipment'}
+            </Button>
           </div>
         </form>
       </Form>

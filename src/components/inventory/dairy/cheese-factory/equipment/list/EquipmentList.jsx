@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ const EquipmentList = () => {
       const {
         data,
         error
-      } = await supabase.from('equipment_maintenance').select('*').order('equipment_name');
+      } = await supabase.from('equipment').select('*').order('equipment_name');
       if (error) {
         console.error('Error fetching equipment:', error);
         throw error;
