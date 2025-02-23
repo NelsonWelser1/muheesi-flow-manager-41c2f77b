@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Check, Clock, AlertOctagon, Search, Filter } from "lucide-react";
+import { AlertTriangle, Check, Clock, AlertOctagon, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import EquipmentEntryForm from '../form/EquipmentEntryForm';
+
 const EquipmentList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -27,6 +29,7 @@ const EquipmentList = () => {
       return data;
     }
   });
+
   const getStatusIcon = status => {
     switch (status) {
       case 'operational':
@@ -39,6 +42,7 @@ const EquipmentList = () => {
         return <AlertTriangle className="h-4 w-4 text-gray-500" />;
     }
   };
+
   const getStatusColor = status => {
     switch (status) {
       case 'operational':
@@ -51,11 +55,13 @@ const EquipmentList = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
   const filteredEquipment = equipmentList?.filter(equipment => {
     const matchesSearch = equipment.equipment_name.toLowerCase().includes(searchTerm.toLowerCase()) || equipment.type?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || equipment.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-48">
         <div className="animate-pulse space-y-4">
@@ -68,13 +74,13 @@ const EquipmentList = () => {
         </div>
       </div>;
   }
+
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Equipment List</h2>
-        <Button className="mx-0 my-[14px] py-0 px-[49px]">Add Equipment</Button>
+        <EquipmentEntryForm />
       </div>
 
-      {/* Search and Filter Section */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -96,7 +102,6 @@ const EquipmentList = () => {
         </div>
       </div>
 
-      {/* Equipment Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredEquipment?.map(equipment => <Card key={equipment.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -154,4 +159,5 @@ const EquipmentList = () => {
         </div>}
     </div>;
 };
+
 export default EquipmentList;
