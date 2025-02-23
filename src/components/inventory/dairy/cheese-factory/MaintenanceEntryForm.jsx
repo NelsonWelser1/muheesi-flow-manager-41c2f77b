@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,59 +9,47 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from 'date-fns';
 import { cn } from "@/lib/utils";
-import { Calendar as CalendarIcon, Printer, Mail, FileText } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const MaintenanceEntryForm = () => {
   const [formData, setFormData] = useState({
     equipment_name: '',
     maintenance_type: '',
-    status: 'pending',
+    status: 'due',
     last_maintenance: new Date(),
     next_maintenance: new Date(),
     health_score: 100,
-    notes: '',
-    company: 'Grand Berna Dairies',
-    project: 'Cheese Factory'
-  });
-
-  const [dateRange, setDateRange] = useState({
-    from: new Date(),
-    to: new Date()
+    notes: ''
   });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch existing maintenance records
+  const { data: maintenanceRecords, isLoading } = useQuery({
+    queryKey: ['maintenance'],
+    queryFn: async () => {
+      console.log('Fetching maintenance records...');
+      const { data, error } = await supabase
+        .from('equipment_maintenance')
+        .select('*')
+        .order('next_maintenance', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching maintenance records:', error);
+        throw error;
+      }
+
+      console.log('Fetched maintenance records:', data);
+      return data;
+    }
+  });
+
   const handleInputChange = (field, value) => {
-    // Add date validation
-    if (field === 'last_maintenance') {
-      const currentDate = new Date();
-      if (value > currentDate) {
-        toast({
-          title: "Invalid Date",
-          description: "Last maintenance date cannot exceed current date",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    if (field === 'next_maintenance') {
-      const currentDate = new Date();
-      if (value < currentDate) {
-        toast({
-          title: "Invalid Date",
-          description: "Next maintenance date cannot be before current date",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
+    console.log(`Updating ${field} with value:`, value);
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -69,291 +58,83 @@ const MaintenanceEntryForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Submitting form data:', formData);
+
     try {
-      console.log('Submitting maintenance record:', formData);
-      
-      // Validate dates before submission
-      const currentDate = new Date();
-      if (formData.last_maintenance > currentDate) {
-        toast({
-          title: "Invalid Date",
-          description: "Last maintenance date cannot exceed current date",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (formData.next_maintenance < currentDate) {
-        toast({
-          title: "Invalid Date",
-          description: "Next maintenance date cannot be before current date",
-          variant: "destructive",
-        });
-        return;
-      }
-
       // Format dates for database
       const formattedData = {
-        equipment_name: formData.equipment_name,
-        maintenance_type: formData.maintenance_type,
-        status: formData.status,
+        ...formData,
         last_maintenance: formData.last_maintenance.toISOString(),
-        next_maintenance: formData.next_maintenance.toISOString(),
-        health_score: formData.health_score,
-        notes: formData.notes,
-        company: formData.company,
-        project: formData.project
+        next_maintenance: formData.next_maintenance.toISOString()
       };
-      
+
       console.log('Formatted data for submission:', formattedData);
 
-      // Get the current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        throw sessionError;
-      }
-
-      if (!session) {
-        toast({
-          title: "Authentication Error",
-          description: "You must be logged in to perform this action",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Insert maintenance record with authentication
-      const { error: maintenanceError } = await supabase
+      // Insert maintenance record
+      const { data, error } = await supabase
         .from('equipment_maintenance')
         .insert([formattedData])
         .select();
 
-      if (maintenanceError) {
-        console.error('Maintenance insert error:', maintenanceError);
-        throw maintenanceError;
+      if (error) {
+        console.error('Error saving maintenance record:', error);
+        throw error;
       }
+
+      console.log('Maintenance record saved successfully:', data);
 
       // Update maintenance stats
       const { data: statsData, error: statsError } = await supabase
         .from('maintenance_stats')
         .select('*')
         .limit(1)
-        .maybeSingle();
+        .single();
 
-      if (statsError) throw statsError;
+      if (statsError) {
+        console.error('Error fetching stats:', statsError);
+        throw statsError;
+      }
 
       const updatedStats = {
-        completed_today: (statsData?.completed_today || 0) + (formData.status === 'completed' ? 1 : 0),
+        completed_today: statsData.completed_today + (formData.status === 'completed' ? 1 : 0),
         equipment_health: formData.health_score,
-        pending_maintenance: (statsData?.pending_maintenance || 0) + (formData.status === 'pending' ? 1 : 0)
+        pending_maintenance: statsData.pending_maintenance + (formData.status === 'due' ? 1 : 0)
       };
 
-      const { error: updateStatsError } = await supabase
+      const { error: updateError } = await supabase
         .from('maintenance_stats')
-        .upsert([{ id: statsData?.id || undefined, ...updatedStats }]);
+        .update(updatedStats)
+        .eq('id', statsData.id);
 
-      if (updateStatsError) throw updateStatsError;
+      if (updateError) {
+        console.error('Error updating stats:', updateError);
+        throw updateError;
+      }
 
-      // Invalidate queries to refresh data
+      // Refresh data
       queryClient.invalidateQueries(['maintenance']);
-      queryClient.invalidateQueries(['maintenanceStats']);
-
+      
       toast({
         title: "Success",
-        description: "Maintenance record added successfully",
+        description: "Maintenance record saved successfully",
       });
 
       // Reset form
       setFormData({
         equipment_name: '',
         maintenance_type: '',
-        status: 'pending',
+        status: 'due',
         last_maintenance: new Date(),
         next_maintenance: new Date(),
         health_score: 100,
-        notes: '',
-        company: 'Grand Berna Dairies',
-        project: 'Cheese Factory'
+        notes: ''
       });
 
     } catch (error) {
-      console.error('Error saving maintenance record:', error);
+      console.error('Error in form submission:', error);
       toast({
         title: "Error",
         description: "Failed to save maintenance record",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const generateReport = async (dateRange) => {
-    try {
-      console.log('Generating report for date range:', dateRange);
-      
-      // Save report configuration
-      const { error: configError } = await supabase
-        .from('report_configurations')
-        .insert([{
-          report_type: 'maintenance',
-          start_date: dateRange.from.toISOString(),
-          end_date: dateRange.to.toISOString()
-        }]);
-
-      if (configError) throw configError;
-      
-      const { data: maintenanceData, error: maintenanceError } = await supabase
-        .from('equipment_maintenance')
-        .select('*')
-        .gte('created_at', dateRange.from.toISOString())
-        .lte('created_at', dateRange.to.toISOString())
-        .order('next_maintenance', { ascending: true });
-
-      if (maintenanceError) throw maintenanceError;
-
-      const { data: statsData, error: statsError } = await supabase
-        .from('maintenance_stats')
-        .select('*')
-        .limit(1)
-        .maybeSingle();
-
-      if (statsError) throw statsError;
-
-      return `
-        Maintenance Report
-        Generated on: ${format(new Date(), 'PPpp')}
-        Report Period: ${format(dateRange.from, 'PP')} to ${format(dateRange.to, 'PP')}
-        
-        Summary:
-        - Completed Today: ${statsData?.completed_today || 0}
-        - Equipment Health: ${statsData?.equipment_health || 0}%
-        - Pending Maintenance: ${statsData?.pending_maintenance || 0}
-        
-        Equipment Maintenance Schedule:
-        ${maintenanceData?.map(item => `
-          * ${item.equipment_name}
-            - Type: ${item.maintenance_type}
-            - Status: ${item.status}
-            - Next Maintenance: ${format(new Date(item.next_maintenance), 'PP')}
-            - Health Score: ${item.health_score}%
-            - Notes: ${item.notes}
-        `).join('\n')}
-      `;
-    } catch (error) {
-      console.error('Error generating report:', error);
-      throw error;
-    }
-  };
-
-  const ReportDialog = ({ children, onPrint }) => {
-    const [localDateRange, setLocalDateRange] = useState({
-      from: new Date(),
-      to: new Date()
-    });
-
-    return (
-      <Dialog>
-        <DialogTrigger asChild>
-          {children}
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Select Report Date Range</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Start Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {localDateRange.from ? format(localDateRange.from, 'PP') : 'Pick start date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={localDateRange.from}
-                      onSelect={(date) => setLocalDateRange(prev => ({ ...prev, from: date }))}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div>
-                <Label>End Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {localDateRange.to ? format(localDateRange.to, 'PP') : 'Pick end date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={localDateRange.to}
-                      onSelect={(date) => setLocalDateRange(prev => ({ ...prev, to: date }))}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-            <Button 
-              className="w-full" 
-              onClick={() => onPrint(localDateRange)}
-            >
-              Generate Report
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  };
-
-  const printReport = async (dateRange) => {
-    try {
-      const reportContent = await generateReport(dateRange);
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Maintenance Report</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              h1 { color: #333; }
-              .section { margin: 20px 0; }
-              .item { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
-            </style>
-          </head>
-          <body>
-            <pre>${reportContent}</pre>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to print report",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const emailReport = async (dateRange) => {
-    try {
-      const reportContent = await generateReport(dateRange);
-      const emailUrl = `mailto:?subject=Maintenance Report - ${format(new Date(), 'PP')}&body=${encodeURIComponent(reportContent)}`;
-      window.location.href = emailUrl;
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to email report",
         variant: "destructive",
       });
     }
@@ -366,7 +147,7 @@ const MaintenanceEntryForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="equipment_name">Equipment Name</Label>
               <Input
@@ -457,10 +238,10 @@ const MaintenanceEntryForm = () => {
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="due">Due</SelectItem>
+                  <SelectItem value="upcoming">Upcoming</SelectItem>
                   <SelectItem value="overdue">Overdue</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -489,25 +270,7 @@ const MaintenanceEntryForm = () => {
             />
           </div>
 
-          <div className="flex justify-between">
-            <div className="space-x-2">
-              <ReportDialog onPrint={printReport}>
-                <Button type="button" variant="outline">
-                  <Printer className="mr-2 h-4 w-4" />
-                  Print Report
-                </Button>
-              </ReportDialog>
-              <ReportDialog onPrint={emailReport}>
-                <Button type="button" variant="outline">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Email Report
-                </Button>
-              </ReportDialog>
-              <Button type="button" variant="outline" onClick={() => window.open('/reports', '_blank')}>
-                <FileText className="mr-2 h-4 w-4" />
-                View All Reports
-              </Button>
-            </div>
+          <div className="flex justify-end">
             <Button type="submit">Save Maintenance Record</Button>
           </div>
         </form>
