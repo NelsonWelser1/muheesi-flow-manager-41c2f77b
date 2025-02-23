@@ -11,6 +11,8 @@ import EquipmentEntryForm from '../form/EquipmentEntryForm';
 const EquipmentList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showForm, setShowForm] = useState(false);
+
   const {
     data: equipmentList,
     isLoading
@@ -78,25 +80,49 @@ const EquipmentList = () => {
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Equipment List</h2>
-        <EquipmentEntryForm />
+        <Button onClick={() => setShowForm(!showForm)}>
+          {showForm ? 'Hide Form' : 'Add Equipment'}
+        </Button>
       </div>
+
+      {showForm && <EquipmentEntryForm />}
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search equipment..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+          <Input
+            placeholder="Search equipment..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
         <div className="flex gap-2">
-          <Button variant={statusFilter === 'all' ? 'default' : 'outline'} onClick={() => setStatusFilter('all')}>
+          <Button
+            variant={statusFilter === 'all' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('all')}
+          >
             All
           </Button>
-          <Button variant={statusFilter === 'operational' ? 'default' : 'outline'} onClick={() => setStatusFilter('operational')} className="text-green-600">
+          <Button
+            variant={statusFilter === 'operational' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('operational')}
+            className="text-green-600"
+          >
             Operational
           </Button>
-          <Button variant={statusFilter === 'maintenance' ? 'default' : 'outline'} onClick={() => setStatusFilter('maintenance')} className="text-yellow-600">
+          <Button
+            variant={statusFilter === 'maintenance' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('maintenance')}
+            className="text-yellow-600"
+          >
             Maintenance
           </Button>
-          <Button variant={statusFilter === 'critical' ? 'default' : 'outline'} onClick={() => setStatusFilter('critical')} className="text-red-600">
+          <Button
+            variant={statusFilter === 'critical' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('critical')}
+            className="text-red-600"
+          >
             Critical
           </Button>
         </div>
