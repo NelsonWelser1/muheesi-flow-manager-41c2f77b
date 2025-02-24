@@ -12,10 +12,17 @@ BEGIN
 END $$;
 
 -- Then ensure urgency has proper constraints
-ALTER TABLE inventory_items 
-  ALTER COLUMN urgency SET DEFAULT 'medium',
-  ADD CONSTRAINT IF NOT EXISTS check_valid_urgency 
-    CHECK (urgency IN ('critical', 'high', 'medium', 'medium-low', 'low'));
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'check_valid_urgency'
+    ) THEN
+        ALTER TABLE inventory_items 
+        ADD CONSTRAINT check_valid_urgency 
+        CHECK (urgency IN ('critical', 'high', 'medium', 'medium-low', 'low'));
+    END IF;
+END $$;
 
 -- Update any null or invalid urgency values to 'medium'
 UPDATE inventory_items 
