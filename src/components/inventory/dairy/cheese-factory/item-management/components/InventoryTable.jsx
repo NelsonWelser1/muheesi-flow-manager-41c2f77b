@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { useInventoryItems } from "@/hooks/useInventoryItems";
+import { toast } from "sonner";
 
 const urgencyLevels = {
   'critical': 'Critical',
@@ -139,9 +140,15 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
     </div>
   );
 
-  const handleUrgencyChange = (id, urgency) => {
-    console.log('Updating urgency:', { id, urgency });
-    updateItemUrgency({ id, urgency });
+  const handleUrgencyChange = async (id, urgency) => {
+    try {
+      console.log('Updating urgency:', { id, urgency });
+      await updateItemUrgency({ id, urgency });
+      toast.success('Urgency updated successfully');
+    } catch (error) {
+      console.error('Error updating urgency:', error);
+      toast.error('Failed to update urgency');
+    }
   };
 
   return (
@@ -207,71 +214,71 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
                       )}
                     </div>
                   </TableCell>
-                <TableCell>{item.section}</TableCell>
-                <TableCell>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="ghost" className="hover:bg-gray-100">
-                        {item.quantity}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Serial Numbers for {item.item_name}</DialogTitle>
-                      </DialogHeader>
-                      <div className="grid gap-2">
-                        {generateSerialNumbers(item, index).map((serial, idx) => (
-                          <div key={serial} className="p-2 bg-gray-50 rounded flex justify-between">
-                            <span className="font-medium">Serial Number {idx + 1}:</span>
-                            <span>{serial}</span>
-                          </div>
+                  <TableCell>{item.section}</TableCell>
+                  <TableCell>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="ghost" className="hover:bg-gray-100">
+                          {item.quantity}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Serial Numbers for {item.item_name}</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-2">
+                          {generateSerialNumbers(item, index).map((serial, idx) => (
+                            <div key={serial} className="p-2 bg-gray-50 rounded flex justify-between">
+                              <span className="font-medium">Serial Number {idx + 1}:</span>
+                              <span>{serial}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </TableCell>
+                  <TableCell>{formatCurrency(item.unit_cost)}</TableCell>
+                  <TableCell>{formatCurrency(item.total_cost)}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(item.urgency)}`}>
+                          {urgencyLevels[item.urgency] || 'Medium'}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-white z-50">
+                        {Object.entries(urgencyLevels).map(([key, label]) => (
+                          <DropdownMenuItem
+                            key={key}
+                            onClick={() => handleUrgencyChange(item.id, key)}
+                            className="cursor-pointer hover:bg-gray-100"
+                          >
+                            {label}
+                          </DropdownMenuItem>
                         ))}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </TableCell>
-                <TableCell>{formatCurrency(item.unit_cost)}</TableCell>
-                <TableCell>{formatCurrency(item.total_cost)}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className={`px-2 py-1 rounded-full text-xs font-medium ${getUrgencyColor(item.urgency)}`}>
-                        {urgencyLevels[item.urgency] || 'Medium'}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-white">
-                      {Object.entries(urgencyLevels).map(([key, label]) => (
-                        <DropdownMenuItem
-                          key={key}
-                          onClick={() => handleUrgencyChange(item.id, key)}
-                          className="cursor-pointer"
-                        >
-                          {label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
-                        {itemStatuses[item.status]}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-white">
-                      {Object.entries(itemStatuses).map(([key, label]) => (
-                        <DropdownMenuItem
-                          key={key}
-                          onClick={() => handleStatusChange(item.id, key)}
-                          className="cursor-pointer"
-                        >
-                          {label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                          {itemStatuses[item.status]}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-white z-50">
+                        {Object.entries(itemStatuses).map(([key, label]) => (
+                          <DropdownMenuItem
+                            key={key}
+                            onClick={() => handleStatusChange(item.id, key)}
+                            className="cursor-pointer hover:bg-gray-100"
+                          >
+                            {label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                   <TableCell>
                     <Button variant="ghost" className="hover:bg-gray-100">
                       {new Date(item.created_at).toLocaleDateString()}
