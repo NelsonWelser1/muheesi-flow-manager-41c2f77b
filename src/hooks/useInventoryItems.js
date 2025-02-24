@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 
@@ -55,6 +56,24 @@ export const useInventoryItems = () => {
     return data;
   };
 
+  const updateItemUrgency = async ({ id, urgency }) => {
+    console.log('Updating item urgency:', { id, urgency });
+    const { data, error } = await supabase
+      .from('inventory_items')
+      .update({ urgency, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating item urgency:', error);
+      throw error;
+    }
+
+    console.log('Successfully updated item urgency:', data);
+    return data;
+  };
+
   const { data: items, isLoading } = useQuery({
     queryKey: ['inventoryItems'],
     queryFn: fetchItems,
@@ -74,10 +93,18 @@ export const useInventoryItems = () => {
     },
   });
 
+  const updateUrgencyMutation = useMutation({
+    mutationFn: updateItemUrgency,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['inventoryItems']);
+    },
+  });
+
   return {
     items,
     isLoading,
     addItem: addItemMutation.mutate,
     updateItemStatus: updateStatusMutation.mutate,
+    updateItemUrgency: updateUrgencyMutation.mutate,
   };
 };

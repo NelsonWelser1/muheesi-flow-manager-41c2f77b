@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
+import { useInventoryItems } from "@/hooks/useInventoryItems";
 
 const urgencyLevels = {
   'critical': 'Critical',
@@ -137,6 +138,13 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
     </div>
   );
 
+  const { updateItemUrgency } = useInventoryItems();
+
+  const handleUrgencyChange = (id, urgency) => {
+    console.log('Updating urgency:', { id, urgency });
+    updateItemUrgency({ id, urgency });
+  };
+
   return (
     <div className="rounded-md border inventory-table">
       <Table>
@@ -236,7 +244,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
                       {Object.entries(urgencyLevels).map(([key, label]) => (
                         <DropdownMenuItem
                           key={key}
-                          onClick={() => handleStatusChange(item.id, key)}
+                          onClick={() => handleUrgencyChange(item.id, key)}
                           className="cursor-pointer"
                         >
                           {label}
