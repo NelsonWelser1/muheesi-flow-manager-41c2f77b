@@ -138,7 +138,9 @@ const MaintenanceEntryForm = () => {
       const formattedData = {
         ...formData,
         last_maintenance: formData.last_maintenance.toISOString(),
-        next_maintenance: formData.next_maintenance.toISOString()
+        next_maintenance: formData.next_maintenance.toISOString(),
+        health_score: parseInt(formData.health_score),
+        status: formData.status || 'due'
       };
 
       console.log('Formatted data for submission:', formattedData);
@@ -154,35 +156,6 @@ const MaintenanceEntryForm = () => {
       }
 
       console.log('Maintenance record saved successfully:', data);
-
-      const { data: statsData, error: statsError } = await supabase
-        .from('maintenance_stats')
-        .select('*')
-        .limit(1)
-        .single();
-
-      if (statsError) {
-        console.error('Error fetching stats:', statsError);
-        throw statsError;
-      }
-
-      const updatedStats = {
-        completed_today: statsData.completed_today + (formData.status === 'completed' ? 1 : 0),
-        equipment_health: formData.health_score,
-        pending_maintenance: statsData.pending_maintenance + (formData.status === 'due' ? 1 : 0)
-      };
-
-      const { error: updateError } = await supabase
-        .from('maintenance_stats')
-        .update(updatedStats)
-        .eq('id', statsData.id);
-
-      if (updateError) {
-        console.error('Error updating stats:', updateError);
-        throw updateError;
-      }
-
-      queryClient.invalidateQueries(['maintenance']);
       
       toast({
         title: "Success",
@@ -201,11 +174,13 @@ const MaintenanceEntryForm = () => {
         project: 'Cheese Factory'
       });
 
+      queryClient.invalidateQueries(['maintenance']);
+
     } catch (error) {
       console.error('Error in form submission:', error);
       toast({
         title: "Error",
-        description: "Failed to save maintenance record",
+        description: error.message || "Failed to save maintenance record",
         variant: "destructive",
       });
     }
