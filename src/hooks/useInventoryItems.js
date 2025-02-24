@@ -42,7 +42,7 @@ export const useInventoryItems = () => {
     console.log('Updating item status:', { id, status });
     const { data, error } = await supabase
       .from('inventory_items')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update({ status })
       .eq('id', id)
       .select()
       .single();
@@ -58,6 +58,13 @@ export const useInventoryItems = () => {
 
   const updateItemUrgency = async ({ id, urgency }) => {
     console.log('Attempting to update item urgency:', { id, urgency });
+    
+    // Validate urgency value
+    const validUrgencies = ['critical', 'high', 'medium', 'medium-low', 'low'];
+    if (!validUrgencies.includes(urgency)) {
+      throw new Error('Invalid urgency level');
+    }
+
     const { data, error } = await supabase
       .from('inventory_items')
       .update({ urgency })
@@ -95,9 +102,14 @@ export const useInventoryItems = () => {
 
   const updateUrgencyMutation = useMutation({
     mutationFn: updateItemUrgency,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Urgency mutation succeeded:', data);
       queryClient.invalidateQueries(['inventoryItems']);
     },
+    onError: (error) => {
+      console.error('Urgency mutation failed:', error);
+      throw error;
+    }
   });
 
   return {
