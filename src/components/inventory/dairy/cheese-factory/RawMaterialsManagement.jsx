@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,45 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useDairyCoolerData } from '@/hooks/useDairyCoolerData';
 import InventoryDashboard from './dashboard/InventoryDashboard';
 import ItemManagementPanel from './item-management/ItemManagementPanel';
-
-const mockData = {
-  milkInventory: [
-    { type: 'Cow', quantity: 1000, protein: 3.5, fat: 4.0 },
-    { type: 'Goat', quantity: 500, protein: 3.2, fat: 3.8 },
-    { type: 'Sheep', quantity: 300, protein: 5.5, fat: 6.0 },
-  ],
-  starterCultures: [
-    { type: 'Mesophilic', quantity: 50, expiryDate: '2024-05-01' },
-    { type: 'Thermophilic', quantity: 30, expiryDate: '2024-04-15' },
-  ],
-  rennet: [
-    { type: 'Animal-based', form: 'Liquid', quantity: 20 },
-    { type: 'Microbial', form: 'Powder', quantity: 15 },
-  ],
-  additives: [
-    { name: 'Non-iodized Salt', quantity: 500 },
-    { name: 'Calcium Chloride', quantity: 100 },
-    { name: 'Herbs Mix', quantity: 50 },
-  ]
-};
-
-const historicalMilkData = {
-  daily: [
-    { date: '2024-04-01', type: 'Cow', quantity: 1000, protein: 3.5, fat: 4.0 },
-    { date: '2024-04-01', type: 'Goat', quantity: 500, protein: 3.2, fat: 3.8 },
-    { date: '2024-04-01', type: 'Sheep', quantity: 300, protein: 5.5, fat: 6.0 },
-  ],
-  monthly: [
-    { date: '2024-03', type: 'Cow', quantity: 30000, protein: 3.5, fat: 4.0 },
-    { date: '2024-03', type: 'Goat', quantity: 15000, protein: 3.2, fat: 3.8 },
-    { date: '2024-03', type: 'Sheep', quantity: 9000, protein: 5.5, fat: 6.0 },
-  ],
-  yearly: [
-    { date: '2024', type: 'Cow', quantity: 360000, protein: 3.5, fat: 4.0 },
-    { date: '2024', type: 'Goat', quantity: 180000, protein: 3.2, fat: 3.8 },
-    { date: '2024', type: 'Sheep', quantity: 108000, protein: 5.5, fat: 6.0 },
-  ],
-};
 
 const RawMaterialsManagement = () => {
   const [timeRange, setTimeRange] = useState('daily');
@@ -67,29 +29,20 @@ const RawMaterialsManagement = () => {
     setFilteredData(data);
   }, [timeRange, selectedMilkType, coolerData]);
 
-  const handleTimeRangeChange = (value) => {
-    setTimeRange(value);
-  };
-
-  const handleMilkTypeChange = (value) => {
-    setSelectedMilkType(value);
-  };
-
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="milk" className="space-y-4">
+      <Tabs defaultValue="dashboard" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="milk">Milk Inventory</TabsTrigger>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="management">Item Management</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="milk">
+        <TabsContent value="dashboard">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
               <CardTitle>Milk Quality Parameters</CardTitle>
               <div className="flex gap-4">
-                <Select value={selectedMilkType} onValueChange={handleMilkTypeChange}>
+                <Select value={selectedMilkType} onValueChange={e => setSelectedMilkType(e)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Select milk type" />
                   </SelectTrigger>
@@ -100,7 +53,7 @@ const RawMaterialsManagement = () => {
                     <SelectItem value="Sheep">Sheep Milk</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={timeRange} onValueChange={handleTimeRangeChange}>
+                <Select value={timeRange} onValueChange={e => setTimeRange(e)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Select time range" />
                   </SelectTrigger>
@@ -151,9 +104,6 @@ const RawMaterialsManagement = () => {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="dashboard">
           <InventoryDashboard />
         </TabsContent>
 
