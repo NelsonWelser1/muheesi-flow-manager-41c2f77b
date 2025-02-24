@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,13 +21,14 @@ const MaintenanceEntryForm = () => {
     last_maintenance: new Date(),
     next_maintenance: new Date(),
     health_score: 100,
-    notes: ''
+    notes: '',
+    company: 'Grand Berna Dairies',
+    project: 'Cheese Factory'
   });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch existing maintenance records
   const { data: maintenanceRecords, isLoading } = useQuery({
     queryKey: ['maintenance'],
     queryFn: async () => {
@@ -61,7 +61,6 @@ const MaintenanceEntryForm = () => {
     console.log('Submitting form data:', formData);
 
     try {
-      // Format dates for database
       const formattedData = {
         ...formData,
         last_maintenance: formData.last_maintenance.toISOString(),
@@ -70,7 +69,6 @@ const MaintenanceEntryForm = () => {
 
       console.log('Formatted data for submission:', formattedData);
 
-      // Insert maintenance record
       const { data, error } = await supabase
         .from('equipment_maintenance')
         .insert([formattedData])
@@ -83,7 +81,6 @@ const MaintenanceEntryForm = () => {
 
       console.log('Maintenance record saved successfully:', data);
 
-      // Update maintenance stats
       const { data: statsData, error: statsError } = await supabase
         .from('maintenance_stats')
         .select('*')
@@ -111,7 +108,6 @@ const MaintenanceEntryForm = () => {
         throw updateError;
       }
 
-      // Refresh data
       queryClient.invalidateQueries(['maintenance']);
       
       toast({
@@ -119,7 +115,6 @@ const MaintenanceEntryForm = () => {
         description: "Maintenance record saved successfully",
       });
 
-      // Reset form
       setFormData({
         equipment_name: '',
         maintenance_type: '',
@@ -127,7 +122,9 @@ const MaintenanceEntryForm = () => {
         last_maintenance: new Date(),
         next_maintenance: new Date(),
         health_score: 100,
-        notes: ''
+        notes: '',
+        company: 'Grand Berna Dairies',
+        project: 'Cheese Factory'
       });
 
     } catch (error) {
