@@ -19,6 +19,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
   const [selectedItem, setSelectedItem] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [expandedItems, setExpandedItems] = useState(new Set());
+  const { updateItemUrgency } = useInventoryItems();
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-UG', {
@@ -137,8 +138,6 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
       </div>
     </div>
   );
-
-  const { updateItemUrgency } = useInventoryItems();
 
   const handleUrgencyChange = (id, urgency) => {
     console.log('Updating urgency:', { id, urgency });
