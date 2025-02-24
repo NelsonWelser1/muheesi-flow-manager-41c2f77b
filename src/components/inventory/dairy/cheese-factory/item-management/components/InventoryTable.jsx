@@ -20,7 +20,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
   const [selectedItem, setSelectedItem] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [expandedItems, setExpandedItems] = useState(new Set());
-  const { updateItemUrgency } = useInventoryItems();
+  const { updateItemUrgency, refetch } = useInventoryItems();
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-UG', {
@@ -144,6 +144,7 @@ const InventoryTable = ({ items, itemStatuses, getStatusColor, handleStatusChang
     try {
       console.log('Updating urgency:', { id, urgency });
       await updateItemUrgency({ id, urgency });
+      await refetch();
       toast.success('Urgency updated successfully');
     } catch (error) {
       console.error('Error updating urgency:', error);

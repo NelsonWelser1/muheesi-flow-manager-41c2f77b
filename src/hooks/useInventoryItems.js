@@ -57,10 +57,10 @@ export const useInventoryItems = () => {
   };
 
   const updateItemUrgency = async ({ id, urgency }) => {
-    console.log('Updating item urgency:', { id, urgency });
+    console.log('Attempting to update item urgency:', { id, urgency });
     const { data, error } = await supabase
       .from('inventory_items')
-      .update({ urgency, updated_at: new Date().toISOString() })
+      .update({ urgency })
       .eq('id', id)
       .select()
       .single();
@@ -74,7 +74,7 @@ export const useInventoryItems = () => {
     return data;
   };
 
-  const { data: items, isLoading } = useQuery({
+  const { data: items, isLoading, refetch } = useQuery({
     queryKey: ['inventoryItems'],
     queryFn: fetchItems,
   });
@@ -103,6 +103,7 @@ export const useInventoryItems = () => {
   return {
     items,
     isLoading,
+    refetch,
     addItem: addItemMutation.mutate,
     updateItemStatus: updateStatusMutation.mutate,
     updateItemUrgency: updateUrgencyMutation.mutate,
