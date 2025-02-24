@@ -8,6 +8,8 @@ import { subDays, subWeeks, subMonths, subYears } from 'date-fns';
 import ProductionControls from './components/ProductionControls';
 import ProductionTable from './components/ProductionTable';
 import { exportToCsv, printRecords } from './utils/exportUtils';
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 const ProductionLineDataDisplay = ({ productionLine }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,7 +20,7 @@ const ProductionLineDataDisplay = ({ productionLine }) => {
     ? 'production_line_international' 
     : 'production_line_local';
 
-  const { data: records, isLoading } = useQuery({
+  const { data: records, isLoading, refetch } = useQuery({
     queryKey: [tableName, searchTerm, timeRange],
     queryFn: async () => {
       let query = supabase.from(tableName).select('*');
@@ -73,12 +75,39 @@ const ProductionLineDataDisplay = ({ productionLine }) => {
     }
   };
 
+  const handleRefresh = async () => {
+    try {
+      await refetch();
+      toast({
+        title: "Success",
+        description: "Records refreshed successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to refresh records",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>
-          <span>{productionLine.name} Records</span>
-        </CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>
+            <span>{productionLine.name} Records</span>
+          </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            className="ml-4"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
         <ProductionControls
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -99,3 +128,4 @@ const ProductionLineDataDisplay = ({ productionLine }) => {
 };
 
 export default ProductionLineDataDisplay;
+
