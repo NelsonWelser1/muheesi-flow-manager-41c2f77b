@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductionSchedule from './factory/ProductionSchedule';
@@ -58,7 +59,7 @@ const CheeseFactoryDashboard = () => {
         </TabsList>
 
         <TabsContent value="schedule">
-          <ProductionSchedule />
+          <ProductionSchedule batches={batches} />
         </TabsContent>
 
         <TabsContent value="inventory">
