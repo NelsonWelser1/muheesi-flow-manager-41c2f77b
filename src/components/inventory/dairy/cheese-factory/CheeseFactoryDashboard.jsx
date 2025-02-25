@@ -63,7 +63,7 @@ const CheeseFactoryDashboard = () => {
         </TabsContent>
 
         <TabsContent value="inventory">
-          <InventoryStatus />
+          <InventoryStatus inventory={inventory} />
         </TabsContent>
 
         <TabsContent value="quality">
