@@ -1,176 +1,130 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Truck, Package, Clock, AlertTriangle } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Truck, Package, Clock, AlertCircle } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/supabase";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const LogisticsDashboard = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("overview");
-
-  // Fetch active deliveries
-  const { data: activeDeliveries = 0 } = useQuery({
-    queryKey: ['activeDeliveries'],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from('logistics_delivery_management')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'In Transit');
-      return count || 0;
-    }
-  });
-
-  // Fetch pending orders
-  const { data: pendingOrders = 0 } = useQuery({
-    queryKey: ['pendingOrders'],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from('logistics_order_entries')
-        .select('*', { count: 'exact', head: true })
-        .eq('order_status', 'Pending');
-      return count || 0;
-    }
-  });
-
-  // Fetch average delivery time
-  const { data: avgDeliveryTime = '0' } = useQuery({
-    queryKey: ['avgDeliveryTime'],
+  const { data: deliveryStats = {} } = useQuery({
+    queryKey: ['deliveryStats'],
     queryFn: async () => {
       const { data } = await supabase
-        .from('logistics_delivery_performance')
-        .select('delivery_time')
-        .limit(100);
-      if (!data?.length) return '0';
-      const avg = data.reduce((acc, curr) => acc + curr.delivery_time, 0) / data.length;
-      return Math.round(avg).toString();
-    }
-  });
-
-  // Fetch delayed deliveries
-  const { data: delayedDeliveries = 0 } = useQuery({
-    queryKey: ['delayedDeliveries'],
-    queryFn: async () => {
-      const { count } = await supabase
         .from('logistics_delivery_management')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'Delayed');
-      return count || 0;
+        .select('*');
+      
+      return {
+        active: data?.filter(d => d.status === 'Active').length || 0,
+        completed: data?.filter(d => d.status === 'Completed').length || 0,
+        pending: data?.filter(d => d.status === 'Pending').length || 0,
+        delayed: data?.filter(d => d.status === 'Delayed').length || 0
+      };
     }
   });
 
   return (
     <div className="space-y-6">
-      <Button 
-        variant="outline" 
-        onClick={() => navigate('/manage-inventory')}
-        className="mb-4"
-      >
-        ← Back to Inventory
-      </Button>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Active Deliveries</CardTitle>
             <Truck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeDeliveries}</div>
-            <p className="text-xs text-muted-foreground">{Math.round(activeDeliveries * 0.7)} in transit</p>
+            <div className="text-2xl font-bold">{deliveryStats.active}</div>
+            <p className="text-xs text-muted-foreground">In transit</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Completed</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingOrders}</div>
-            <p className="text-xs text-muted-foreground">Awaiting processing</p>
+            <div className="text-2xl font-bold">{deliveryStats.completed}</div>
+            <p className="text-xs text-muted-foreground">Successfully delivered</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Delivery Time</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Pending</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{avgDeliveryTime}m</div>
-            <p className="text-xs text-muted-foreground">Based on last 100 deliveries</p>
+            <div className="text-2xl font-bold">{deliveryStats.pending}</div>
+            <p className="text-xs text-muted-foreground">Awaiting dispatch</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Delayed Deliveries</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Delayed</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{delayedDeliveries}</div>
-            <p className="text-xs text-muted-foreground">
-              {delayedDeliveries > 0 ? 'Action required' : 'No delays'}
-            </p>
+            <div className="text-2xl font-bold">{deliveryStats.delayed}</div>
+            <p className="text-xs text-muted-foreground">Requires attention</p>
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Logistics & Distribution Management</CardTitle>
+          <CardTitle>Delivery Performance</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="overview" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4 mb-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="deliveries">Deliveries</TabsTrigger>
-              <TabsTrigger value="orders">Orders</TabsTrigger>
-              <TabsTrigger value="performance">Performance</TabsTrigger>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={[
+                  { date: 'Mon', deliveries: 12 },
+                  { date: 'Tue', deliveries: 15 },
+                  { date: 'Wed', deliveries: 18 },
+                  { date: 'Thu', deliveries: 14 },
+                  { date: 'Fri', deliveries: 20 },
+                  { date: 'Sat', deliveries: 16 },
+                  { date: 'Sun', deliveries: 10 },
+                ]}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="deliveries" stroke="#8884d8" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6">
+          <Tabs defaultValue="active" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="active">Active Deliveries</TabsTrigger>
+              <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview">
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={[
-                    { date: '2024-03-01', deliveries: 24 },
-                    { date: '2024-03-02', deliveries: 31 },
-                    { date: '2024-03-03', deliveries: 28 },
-                    { date: '2024-03-04', deliveries: 35 },
-                    { date: '2024-03-05', deliveries: 29 },
-                  ]}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="deliveries" stroke="#8884d8" />
-                  </LineChart>
-                </ResponsiveContainer>
+            <TabsContent value="active">
+              <div className="text-center text-gray-500 py-4">
+                Active deliveries will be displayed here
               </div>
             </TabsContent>
 
-            <TabsContent value="deliveries">
-              <div className="text-center text-muted-foreground">
-                Delivery management module coming soon...
+            <TabsContent value="scheduled">
+              <div className="text-center text-gray-500 py-4">
+                Scheduled deliveries will be displayed here
               </div>
             </TabsContent>
 
-            <TabsContent value="orders">
-              <div className="text-center text-muted-foreground">
-                Order management module coming soon...
-              </div>
-            </TabsContent>
-
-            <TabsContent value="performance">
-              <div className="text-center text-muted-foreground">
-                Performance analytics module coming soon...
+            <TabsContent value="history">
+              <div className="text-center text-gray-500 py-4">
+                Delivery history will be displayed here
               </div>
             </TabsContent>
           </Tabs>
