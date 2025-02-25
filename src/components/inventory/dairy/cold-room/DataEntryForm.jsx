@@ -326,27 +326,9 @@ const DataEntryForm = ({ userId, username }) => {
         </div>
       </div>
 
-      {/* Debug button - logs form data to console without submitting */}
-      <div className="flex justify-end mb-4">
-        <Button 
-          type="button" 
-          variant="outline"
-          onClick={() => {
-            const formData = new FormData(document.querySelector('form'));
-            const data = Object.fromEntries(formData.entries());
-            console.log('Debug - Form Values:', { 
-              ...data, 
-              product_category: productCategory
-            });
-          }}
-          className="mr-2"
-        >
-          Debug
-        </Button>
-        <Button type="submit" className="w-full">
-          Submit
-        </Button>
-      </div>
+      <Button type="submit" className="w-full">
+        Submit
+      </Button>
     </form>
   );
 };
