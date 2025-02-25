@@ -13,7 +13,7 @@ const ColdRoomTabs = ({ userId, username }) => {
         <TabsTrigger value="monitoring">Real-Time Monitoring</TabsTrigger>
         <TabsTrigger value="inventory">Inventory Summary</TabsTrigger>
         <TabsTrigger value="movement">Movement Tracking</TabsTrigger>
-        <TabsTrigger value="data-entry">Data Entry</TabsTrigger>
+        <TabsTrigger value="data-entry">Cold Room Data Entry Form</TabsTrigger>
       </TabsList>
 
       <TabsContent value="monitoring">
@@ -52,7 +52,7 @@ const ColdRoomTabs = ({ userId, username }) => {
       <TabsContent value="data-entry">
         <Card>
           <CardHeader>
-            <CardTitle>Data Entry Form</CardTitle>
+            <CardTitle>Cold Room Data Entry Form</CardTitle>
           </CardHeader>
           <CardContent>
             <DataEntryForm userId={userId} username={username} />
@@ -64,4 +64,3 @@ const ColdRoomTabs = ({ userId, username }) => {
 };
 
 export default ColdRoomTabs;
-

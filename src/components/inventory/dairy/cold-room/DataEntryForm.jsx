@@ -143,10 +143,19 @@ const DataEntryForm = ({ userId, username }) => {
         console.log('Proceeding without authentication for testing');
       }
 
+      // Debug log to verify data being sent to Supabase
+      console.log('Submitting data to Supabase:', {
+        ...data,
+        product_category: productCategory,
+        operator_id: session?.user?.id || 'test-user',
+        storage_date_time: new Date().toISOString()
+      });
+
       const { error } = await supabase
         .from('cold_room_inventory')
         .insert([{
           ...data,
+          product_category: productCategory,
           operator_id: session?.user?.id || 'test-user',
           storage_date_time: new Date().toISOString()
         }]);
@@ -296,7 +305,7 @@ const DataEntryForm = ({ userId, username }) => {
 
         <div className="space-y-2">
           <Label htmlFor="movement_action">Movement Action</Label>
-          <Select onValueChange={(value) => register('movement_action').onChange({ target: { value } })}>
+          <Select onValueChange={(value) => setValue('movement_action', value)}>
             <SelectTrigger>
               <SelectValue placeholder="Select action" />
             </SelectTrigger>
@@ -317,9 +326,27 @@ const DataEntryForm = ({ userId, username }) => {
         </div>
       </div>
 
-      <Button type="submit" className="w-full">
-        Submit
-      </Button>
+      {/* Debug button - logs form data to console without submitting */}
+      <div className="flex justify-end mb-4">
+        <Button 
+          type="button" 
+          variant="outline"
+          onClick={() => {
+            const formData = new FormData(document.querySelector('form'));
+            const data = Object.fromEntries(formData.entries());
+            console.log('Debug - Form Values:', { 
+              ...data, 
+              product_category: productCategory
+            });
+          }}
+          className="mr-2"
+        >
+          Debug
+        </Button>
+        <Button type="submit" className="w-full">
+          Submit
+        </Button>
+      </div>
     </form>
   );
 };
