@@ -17,7 +17,6 @@ const GoodsReceiptForm = ({ userId, username }) => {
   const { session } = useSupabaseAuth();
   const [productType, setProductType] = useState('');
   const [productCategory, setProductCategory] = useState('');
-  const [availableProductTypes, setAvailableProductTypes] = useState([]);
   const [availableProductionBatches, setAvailableProductionBatches] = useState([]);
   const [selectedColdRoom, setSelectedColdRoom] = useState('');
 
@@ -27,7 +26,7 @@ const GoodsReceiptForm = ({ userId, username }) => {
     { id: 'KAMPALA-RTL', name: 'Kampala Retail' }
   ];
 
-  // Product type options
+  // Product type options for reference when generating batch IDs
   const cheeseTypes = [
     { value: 'Mozzarella', prefix: 'MOZ' },
     { value: 'Gouda', prefix: 'GOU' },
@@ -96,19 +95,6 @@ const GoodsReceiptForm = ({ userId, username }) => {
     fetchProductionBatchIds();
   }, []);
 
-  useEffect(() => {
-    // Update available product types based on category
-    if (productCategory === 'cheese') {
-      setAvailableProductTypes(cheeseTypes);
-      fetchProductionBatchIds('cheese');
-    } else if (productCategory === 'yogurt') {
-      setAvailableProductTypes(yogurtTypes);
-      fetchProductionBatchIds('yogurt');
-    } else {
-      setAvailableProductTypes([]);
-    }
-  }, [productCategory]);
-
   const generateBatchId = (type, coldRoomId) => {
     const now = new Date();
     const datePrefix = format(now, 'yyyyMMdd');
@@ -118,7 +104,8 @@ const GoodsReceiptForm = ({ userId, username }) => {
     const roomPrefix = 'CLD';
     
     // Get product type prefix
-    const selectedType = [...cheeseTypes, ...yogurtTypes].find(t => t.value === type);
+    const allProductTypes = [...cheeseTypes, ...yogurtTypes];
+    const selectedType = allProductTypes.find(t => t.value.toLowerCase() === type.toLowerCase());
     const typePrefix = selectedType?.prefix || 'GEN';
     
     // Combine all components
@@ -150,6 +137,7 @@ const GoodsReceiptForm = ({ userId, username }) => {
       
       // Set product category
       setProductCategory(category);
+      setValue('product_category', category);
       
       // Set product type
       setProductType(selectedBatch.cheese_type);
@@ -179,17 +167,16 @@ const GoodsReceiptForm = ({ userId, username }) => {
     }
   };
 
-  const handleProductCategoryChange = (category) => {
+  const handleProductCategoryChange = (e) => {
+    const category = e.target.value;
     console.log('Product category changed:', category);
     setProductCategory(category);
-    setProductType('');
-    setValue('product_type', '');
   };
 
-  const handleProductTypeChange = (type) => {
+  const handleProductTypeChange = (e) => {
+    const type = e.target.value;
     console.log('Product type changed:', type);
     setProductType(type);
-    setValue('product_type', type);
     
     // Generate batch ID if we have cold room selected
     if (selectedColdRoom) {
@@ -212,7 +199,7 @@ const GoodsReceiptForm = ({ userId, username }) => {
       // Debug log to verify data being sent to Supabase
       console.log('Submitting goods receipt data to Supabase:', {
         ...data,
-        product_category: productCategory,
+        product_category: productCategory || data.product_category,
         operator_id: session?.user?.id || 'test-user',
         storage_date_time: new Date().toISOString(),
         movement_action: 'In' // Hardcoded to "In" for Goods Receipt
@@ -222,7 +209,7 @@ const GoodsReceiptForm = ({ userId, username }) => {
         .from('cold_room_inventory')
         .insert([{
           ...data,
-          product_category: productCategory,
+          product_category: productCategory || data.product_category,
           operator_id: session?.user?.id || 'test-user',
           storage_date_time: new Date().toISOString(),
           movement_action: 'In' // Always "In" for goods receipt
@@ -299,31 +286,24 @@ const GoodsReceiptForm = ({ userId, username }) => {
 
         <div className="space-y-2">
           <Label htmlFor="product_category">Product Category</Label>
-          <Select onValueChange={handleProductCategoryChange} value={productCategory}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select product category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="cheese">Cheese</SelectItem>
-              <SelectItem value="yogurt">Yogurt</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            id="product_category"
+            {...register('product_category', { required: true })}
+            placeholder="Enter product category or select batch ID"
+            value={productCategory}
+            onChange={handleProductCategoryChange}
+          />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="product_type">Product Type</Label>
-          <Select onValueChange={handleProductTypeChange} value={productType}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select product type" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableProductTypes.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            id="product_type"
+            {...register('product_type', { required: true })}
+            placeholder="Enter product type or select batch ID"
+            value={productType}
+            onChange={handleProductTypeChange}
+          />
         </div>
 
         <div className="space-y-2">
