@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -10,7 +10,7 @@ export const useColdRoomInventory = () => {
   const { toast } = useToast();
 
   // Function to fetch all inventory items
-  const fetchInventory = async () => {
+  const fetchInventory = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -21,6 +21,7 @@ export const useColdRoomInventory = () => {
       if (error) throw error;
       
       setInventoryItems(data || []);
+      setError(null);
       return data;
     } catch (err) {
       console.error('Error fetching cold room inventory:', err);
@@ -34,12 +35,16 @@ export const useColdRoomInventory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   // Function to get current stock levels by batch ID
-  const getStockLevelsByBatch = async () => {
+  const getStockLevelsByBatch = useCallback(async () => {
     try {
       const inventory = await fetchInventory();
+      
+      if (!inventory || inventory.length === 0) {
+        return {};
+      }
       
       // Group by batch_id
       const stockByBatch = {};
@@ -84,6 +89,7 @@ export const useColdRoomInventory = () => {
       return stockByBatch;
     } catch (err) {
       console.error('Error calculating stock levels:', err);
+      setError(err.message);
       toast({
         title: "Error",
         description: "Failed to calculate stock levels",
@@ -91,12 +97,17 @@ export const useColdRoomInventory = () => {
       });
       return {};
     }
-  };
+  }, [fetchInventory, toast]);
 
   // Fetch inventory on mount
   useEffect(() => {
     fetchInventory();
-  }, []);
+    
+    // Set up interval for periodic refresh
+    const intervalId = setInterval(fetchInventory, 30000); // 30 seconds
+    
+    return () => clearInterval(intervalId);
+  }, [fetchInventory]);
 
   return {
     inventoryItems,

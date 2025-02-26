@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
@@ -18,7 +17,9 @@ const GoodsReceiptForm = ({ userId, username }) => {
   const [productType, setProductType] = useState('');
   const [productCategory, setProductCategory] = useState('');
   const [availableProductionBatches, setAvailableProductionBatches] = useState([]);
+  const [usedProductionBatchIds, setUsedProductionBatchIds] = useState(new Set());
   const [selectedColdRoom, setSelectedColdRoom] = useState('');
+  const [loading, setLoading] = useState(true);
 
   // Cold Room options
   const coldRoomOptions = [
@@ -43,8 +44,33 @@ const GoodsReceiptForm = ({ userId, username }) => {
     { value: 'Probiotic Yogurt', prefix: 'PRY' }
   ];
 
+  // Fetch already used production batch IDs to exclude them from the dropdown
+  const fetchUsedProductionBatchIds = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cold_room_inventory')
+        .select('production_batch_id')
+        .not('production_batch_id', 'is', null);
+
+      if (error) throw error;
+
+      // Create a Set of used batch IDs for efficient lookup
+      const batchIdSet = new Set(data.map(item => item.production_batch_id));
+      console.log('Used production batch IDs:', batchIdSet);
+      setUsedProductionBatchIds(batchIdSet);
+    } catch (error) {
+      console.error('Error fetching used production batch IDs:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch used production batch IDs",
+        variant: "destructive",
+      });
+    }
+  };
+
   const fetchProductionBatchIds = async (category) => {
     console.log('Fetching production batch IDs for category:', category);
+    setLoading(true);
     try {
       // Fetch from international production line
       const { data: internationalBatches, error: intError } = await supabase
@@ -79,8 +105,11 @@ const GoodsReceiptForm = ({ userId, username }) => {
         }
       }
 
-      console.log('Fetched production batches:', allBatches);
-      setAvailableProductionBatches(allBatches);
+      // Filter out already used production batch IDs
+      const filteredBatches = allBatches.filter(batch => !usedProductionBatchIds.has(batch.batch_id));
+
+      console.log('Fetched production batches:', filteredBatches);
+      setAvailableProductionBatches(filteredBatches);
     } catch (error) {
       console.error('Error fetching production batch IDs:', error);
       toast({
@@ -88,12 +117,31 @@ const GoodsReceiptForm = ({ userId, username }) => {
         description: "Failed to fetch production batch IDs",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProductionBatchIds();
+    const initializeForm = async () => {
+      await fetchUsedProductionBatchIds();
+      fetchProductionBatchIds();
+    };
+    
+    initializeForm();
+    
+    // Set up a refresh interval to keep the list of used batch IDs up to date
+    const intervalId = setInterval(fetchUsedProductionBatchIds, 30000); // 30 seconds
+    
+    return () => clearInterval(intervalId);
   }, []);
+
+  // Re-fetch production batch IDs when usedProductionBatchIds changes
+  useEffect(() => {
+    if (usedProductionBatchIds.size > 0) {
+      fetchProductionBatchIds(productCategory);
+    }
+  }, [usedProductionBatchIds, productCategory]);
 
   const generateBatchId = (type, coldRoomId) => {
     const now = new Date();
@@ -220,6 +268,13 @@ const GoodsReceiptForm = ({ userId, username }) => {
         throw error;
       }
 
+      // Update local state of used batch IDs to immediately reflect this change
+      setUsedProductionBatchIds(prev => {
+        const updated = new Set(prev);
+        updated.add(data.production_batch_id);
+        return updated;
+      });
+
       toast({
         title: "Success",
         description: "Goods receipt has been successfully recorded",
@@ -262,14 +317,20 @@ const GoodsReceiptForm = ({ userId, username }) => {
           <Label htmlFor="production_batch_id">Production Batch ID</Label>
           <Select onValueChange={handleProductionBatchSelect}>
             <SelectTrigger>
-              <SelectValue placeholder="Select production batch" />
+              <SelectValue placeholder={loading ? "Loading batches..." : "Select production batch"} />
             </SelectTrigger>
             <SelectContent>
-              {availableProductionBatches.map((batch) => (
-                <SelectItem key={batch.batch_id} value={batch.batch_id}>
-                  {`${batch.line} - ${batch.batch_id} (${batch.cheese_type})`}
+              {availableProductionBatches.length > 0 ? (
+                availableProductionBatches.map((batch) => (
+                  <SelectItem key={batch.batch_id} value={batch.batch_id}>
+                    {`${batch.line} - ${batch.batch_id} (${batch.cheese_type})`}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-batches" disabled>
+                  {loading ? "Loading..." : "No available production batches"}
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
         </div>
