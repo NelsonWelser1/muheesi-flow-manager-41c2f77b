@@ -19,6 +19,13 @@ const GoodsReceiptForm = ({ userId, username }) => {
   const [productCategory, setProductCategory] = useState('');
   const [availableProductTypes, setAvailableProductTypes] = useState([]);
   const [availableProductionBatches, setAvailableProductionBatches] = useState([]);
+  const [selectedProductionBatch, setSelectedProductionBatch] = useState(null);
+
+  // Cold Room options
+  const coldRoomOptions = [
+    { id: 'FACTORY-CR1', name: 'Factory Cold Room' },
+    { id: 'KAMPALA-RTL', name: 'Kampala Retail' }
+  ];
 
   // Product type options
   const cheeseTypes = [
@@ -43,7 +50,7 @@ const GoodsReceiptForm = ({ userId, username }) => {
       // Fetch from international production line
       const { data: internationalBatches, error: intError } = await supabase
         .from('production_line_international')
-        .select('batch_id, cheese_type, created_at')
+        .select('batch_id, cheese_type, created_at, unit_weight, unit_quantity')
         .order('created_at', { ascending: false });
 
       if (intError) throw intError;
@@ -51,7 +58,7 @@ const GoodsReceiptForm = ({ userId, username }) => {
       // Fetch from local production line
       const { data: localBatches, error: localError } = await supabase
         .from('production_line_local')
-        .select('batch_id, cheese_type, created_at')
+        .select('batch_id, cheese_type, created_at, unit_weight, unit_quantity')
         .order('created_at', { ascending: false });
 
       if (localError) throw localError;
@@ -102,7 +109,7 @@ const GoodsReceiptForm = ({ userId, username }) => {
     }
   }, [productCategory]);
 
-  const generateBatchId = async (type) => {
+  const generateBatchId = (type, coldRoomId) => {
     const now = new Date();
     const datePrefix = format(now, 'yyyyMMdd');
     const timeComponent = format(now, 'HHmmss');
@@ -114,8 +121,27 @@ const GoodsReceiptForm = ({ userId, username }) => {
     const selectedType = [...cheeseTypes, ...yogurtTypes].find(t => t.value === type);
     const typePrefix = selectedType?.prefix || 'GEN';
     
+    // Get cold room specific prefix
+    const coldRoomPrefix = coldRoomId.includes('FACTORY') ? 'F' : 'K';
+    
     // Combine all components
-    return `${roomPrefix}${datePrefix}-${typePrefix}-${timeComponent}`;
+    return `${roomPrefix}${datePrefix}-${typePrefix}${coldRoomPrefix}-${timeComponent}`;
+  };
+
+  const handleColdRoomChange = (coldRoomId) => {
+    console.log('Cold Room ID changed:', coldRoomId);
+    setValue('cold_room_id', coldRoomId);
+    
+    // If we already have a product type, regenerate the batch ID
+    if (productType) {
+      const newBatchId = generateBatchId(productType, coldRoomId);
+      setValue('batch_id', newBatchId);
+      
+      toast({
+        title: "Batch ID Updated",
+        description: `New batch ID: ${newBatchId}`,
+      });
+    }
   };
 
   const handleProductCategoryChange = (category) => {
@@ -125,24 +151,67 @@ const GoodsReceiptForm = ({ userId, username }) => {
     setValue('product_type', '');
   };
 
-  const handleProductTypeChange = async (type) => {
+  const handleProductTypeChange = (type) => {
     console.log('Product type changed:', type);
     setProductType(type);
-    const newBatchId = await generateBatchId(type);
-    setValue('batch_id', newBatchId);
-    setValue('product_type', type);
     
-    toast({
-      title: "Batch ID Generated",
-      description: `New batch ID: ${newBatchId}`,
-    });
+    // Get the current cold room ID value
+    const coldRoomId = document.getElementById('cold_room_id').value;
+    
+    if (coldRoomId) {
+      const newBatchId = generateBatchId(type, coldRoomId);
+      setValue('batch_id', newBatchId);
+      setValue('product_type', type);
+      
+      toast({
+        title: "Batch ID Generated",
+        description: `New batch ID: ${newBatchId}`,
+      });
+    } else {
+      toast({
+        title: "Warning",
+        description: "Please select a Cold Room ID first",
+        variant: "warning",
+      });
+    }
   };
 
   const handleProductionBatchSelect = (batchId) => {
     console.log('Production batch selected:', batchId);
     const selectedBatch = availableProductionBatches.find(b => b.batch_id === batchId);
+    
     if (selectedBatch) {
+      setSelectedProductionBatch(selectedBatch);
+      
       setValue('production_batch_id', batchId);
+      
+      // Automatically fill product type if not already set
+      if (!productType) {
+        setProductType(selectedBatch.cheese_type);
+        setValue('product_type', selectedBatch.cheese_type);
+        
+        // Try to find matching product category
+        const isYogurt = selectedBatch.cheese_type.toLowerCase().includes('yogurt');
+        const category = isYogurt ? 'yogurt' : 'cheese';
+        setProductCategory(category);
+      }
+      
+      // Automatically fill unit weight and quantity
+      if (selectedBatch.unit_weight) {
+        setValue('unit_weight', selectedBatch.unit_weight);
+      }
+      
+      if (selectedBatch.unit_quantity) {
+        setValue('unit_quantity', selectedBatch.unit_quantity);
+      }
+      
+      // Generate batch ID if we have the cold room ID selected
+      const coldRoomId = document.getElementById('cold_room_id').value;
+      if (coldRoomId && productType) {
+        const newBatchId = generateBatchId(productType, coldRoomId);
+        setValue('batch_id', newBatchId);
+      }
+      
       toast({
         title: "Production Batch Selected",
         description: `Selected batch: ${batchId} from ${selectedBatch.line} line`,
@@ -188,6 +257,7 @@ const GoodsReceiptForm = ({ userId, username }) => {
       reset();
       setProductType('');
       setProductCategory('');
+      setSelectedProductionBatch(null);
     } catch (error) {
       console.error('Error submitting data:', error);
       toast({
@@ -203,16 +273,39 @@ const GoodsReceiptForm = ({ userId, username }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="cold_room_id">Cold Room ID</Label>
-          <Input
-            id="cold_room_id"
-            {...register('cold_room_id', { required: true })}
-            placeholder="Enter Cold Room ID"
-          />
+          <Select onValueChange={handleColdRoomChange}>
+            <SelectTrigger id="cold_room_id">
+              <SelectValue placeholder="Select Cold Room" />
+            </SelectTrigger>
+            <SelectContent>
+              {coldRoomOptions.map((room) => (
+                <SelectItem key={room.id} value={room.id}>
+                  {room.name} ({room.id})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="production_batch_id">Production Batch ID</Label>
+          <Select onValueChange={handleProductionBatchSelect}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select production batch" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableProductionBatches.map((batch) => (
+                <SelectItem key={batch.batch_id} value={batch.batch_id}>
+                  {`${batch.line} - ${batch.batch_id} (${batch.cheese_type})`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="product_category">Product Category</Label>
-          <Select onValueChange={handleProductCategoryChange}>
+          <Select onValueChange={handleProductCategoryChange} value={productCategory}>
             <SelectTrigger>
               <SelectValue placeholder="Select product category" />
             </SelectTrigger>
@@ -225,7 +318,7 @@ const GoodsReceiptForm = ({ userId, username }) => {
 
         <div className="space-y-2">
           <Label htmlFor="product_type">Product Type</Label>
-          <Select onValueChange={handleProductTypeChange}>
+          <Select onValueChange={handleProductTypeChange} value={productType}>
             <SelectTrigger>
               <SelectValue placeholder="Select product type" />
             </SelectTrigger>
@@ -247,22 +340,6 @@ const GoodsReceiptForm = ({ userId, username }) => {
             placeholder="Batch ID will be generated automatically"
             readOnly
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="production_batch_id">Production Batch ID</Label>
-          <Select onValueChange={handleProductionBatchSelect}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select production batch" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableProductionBatches.map((batch) => (
-                <SelectItem key={batch.batch_id} value={batch.batch_id}>
-                  {`${batch.line} - ${batch.batch_id} (${batch.cheese_type})`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="space-y-2">

@@ -16,10 +16,17 @@ const GoodsIssueForm = ({ userId, username }) => {
   const { session } = useSupabaseAuth();
 
   const [productCategory, setProductCategory] = useState('');
+  const [selectedColdRoom, setSelectedColdRoom] = useState('');
   const [availableBatches, setAvailableBatches] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [availableProductCategories, setAvailableProductCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Cold Room options
+  const coldRoomOptions = [
+    { id: 'FACTORY-CR1', name: 'Factory Cold Room' },
+    { id: 'KAMPALA-RTL', name: 'Kampala Retail' }
+  ];
 
   // Fetch available product categories from stored inventory
   const fetchAvailableCategories = async () => {
@@ -46,18 +53,19 @@ const GoodsIssueForm = ({ userId, username }) => {
     }
   };
 
-  // Fetch available batches based on selected product category
-  const fetchAvailableBatches = async (category) => {
+  // Fetch available batches based on selected product category and cold room
+  const fetchAvailableBatches = async () => {
     setIsLoading(true);
     try {
-      if (!category) return;
+      if (!productCategory || !selectedColdRoom) return;
 
-      console.log('Fetching available batches for category:', category);
+      console.log('Fetching available batches for category:', productCategory, 'and cold room:', selectedColdRoom);
       
       const { data, error } = await supabase
         .from('cold_room_inventory')
         .select('*')
-        .eq('product_category', category)
+        .eq('product_category', productCategory)
+        .eq('cold_room_id', selectedColdRoom)
         .eq('movement_action', 'In') // Only consider items that were received
         .order('storage_date_time', { ascending: false });
 
@@ -84,12 +92,20 @@ const GoodsIssueForm = ({ userId, username }) => {
   }, []);
 
   useEffect(() => {
-    if (productCategory) {
-      fetchAvailableBatches(productCategory);
-    } else {
-      setAvailableBatches([]);
-    }
-  }, [productCategory]);
+    fetchAvailableBatches();
+  }, [productCategory, selectedColdRoom]);
+
+  const handleColdRoomChange = (coldRoomId) => {
+    console.log('Cold Room changed:', coldRoomId);
+    setSelectedColdRoom(coldRoomId);
+    setValue('cold_room_id', coldRoomId);
+    setSelectedBatch(null);
+    setValue('batch_id', '');
+    setValue('production_batch_id', '');
+    setValue('product_type', '');
+    setValue('unit_weight', '');
+    setValue('unit_quantity', '');
+  };
 
   const handleProductCategoryChange = (category) => {
     console.log('Product category changed:', category);
@@ -188,10 +204,26 @@ const GoodsIssueForm = ({ userId, username }) => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="product_category">Product Category</Label>
-          <Select onValueChange={handleProductCategoryChange}>
+          <Label htmlFor="cold_room_id">Cold Room ID</Label>
+          <Select onValueChange={handleColdRoomChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Select product category" />
+              <SelectValue placeholder="Select Cold Room" />
+            </SelectTrigger>
+            <SelectContent>
+              {coldRoomOptions.map((room) => (
+                <SelectItem key={room.id} value={room.id}>
+                  {room.name} ({room.id})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="product_category">Product Category</Label>
+          <Select onValueChange={handleProductCategoryChange} disabled={!selectedColdRoom}>
+            <SelectTrigger>
+              <SelectValue placeholder={!selectedColdRoom ? "Select Cold Room first" : "Select product category"} />
             </SelectTrigger>
             <SelectContent>
               {availableProductCategories.map((category) => (
@@ -207,7 +239,7 @@ const GoodsIssueForm = ({ userId, username }) => {
           <Label htmlFor="batch_selection">Select Batch</Label>
           <Select 
             onValueChange={handleBatchSelect}
-            disabled={!productCategory || isLoading}
+            disabled={!productCategory || !selectedColdRoom || isLoading}
           >
             <SelectTrigger>
               <SelectValue placeholder={isLoading ? "Loading batches..." : "Select a batch"} />
@@ -220,16 +252,6 @@ const GoodsIssueForm = ({ userId, username }) => {
               ))}
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="cold_room_id">Cold Room ID</Label>
-          <Input
-            id="cold_room_id"
-            {...register('cold_room_id', { required: true })}
-            placeholder="Cold Room ID will be auto-filled"
-            readOnly
-          />
         </div>
 
         <div className="space-y-2">
