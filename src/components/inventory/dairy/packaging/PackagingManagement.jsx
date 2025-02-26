@@ -1,19 +1,43 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Barcode, ArrowLeft } from "lucide-react";
 import PackagingForm from './PackagingForm';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
 
 const PackagingManagement = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [packagingData, setPackagingData] = useState([]);
   const [showScanner, setShowScanner] = useState(false);
+  const [batchIds, setBatchIds] = useState([]);
   const { toast } = useToast();
+
+  // Fetch batch IDs from cold room inventory (Movement History)
+  useEffect(() => {
+    const fetchBatchIds = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('cold_room_inventory')
+          .select('batch_id')
+          .order('storage_date_time', { ascending: false });
+
+        if (error) throw error;
+        
+        // Extract unique batch IDs
+        const uniqueBatchIds = [...new Set(data.map(item => item.batch_id))];
+        setBatchIds(uniqueBatchIds);
+      } catch (error) {
+        console.error('Error fetching batch IDs:', error);
+      }
+    };
+
+    fetchBatchIds();
+  }, []);
 
   const handlePackagingSubmit = async (data) => {
     try {
@@ -82,11 +106,18 @@ const PackagingManagement = () => {
     fetchPackagingRecords();
   }, [toast]);
 
+  // Handle back button navigation with state
+  const handleBackToPackagingLabeling = () => {
+    navigate("/manage-inventory/grand-berna-dairies/packaging-and-labeling", { 
+      state: { selectedTab: "packaging" } 
+    });
+  };
+
   return (
     <div className="space-y-6 container mx-auto py-6">
       <Button 
         variant="outline"
-        onClick={() => navigate("/manage-inventory/grand-berna-dairies/packaging-and-labeling")}
+        onClick={handleBackToPackagingLabeling}
         className="flex items-center gap-2 mb-4"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -112,7 +143,7 @@ const PackagingManagement = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <PackagingForm onSubmit={handlePackagingSubmit} />
+            <PackagingForm onSubmit={handlePackagingSubmit} batchIds={batchIds} />
           </CardContent>
         </Card>
 

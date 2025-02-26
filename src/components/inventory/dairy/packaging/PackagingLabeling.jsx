@@ -1,24 +1,35 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package2, Tags, Barcode, QrCode } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const PackagingLabeling = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState('packaging'); // Default to packaging tab
+  
+  useEffect(() => {
+    // Check if we have state from navigation and update the active tab
+    if (location.state && location.state.selectedTab) {
+      setActiveTab(location.state.selectedTab);
+    }
+  }, [location.state]);
   
   const tiles = [{
     title: "Packaging",
     description: "Manage product packaging details",
     icon: <Package2 className="h-6 w-6" />,
     path: "packaging-management",
-    secondaryIcon: <Barcode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />
+    secondaryIcon: <Barcode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />,
+    id: "packaging"
   }, {
     title: "Labeling",
     description: "Configure product labels",
     icon: <Tags className="h-6 w-6" />,
     path: "labeling-management",
-    secondaryIcon: <QrCode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />
+    secondaryIcon: <QrCode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />,
+    id: "labeling"
   }];
 
   return (
@@ -33,7 +44,12 @@ const PackagingLabeling = () => {
               <button 
                 key={tile.title} 
                 onClick={() => navigate(tile.path)} 
-                className="group relative p-6 rounded-lg border border-border hover:border-primary transition-all duration-300 bg-card hover:shadow-lg text-orange-800 bg-cyan-50 px-[24px]"
+                className={`group relative p-6 rounded-lg border ${
+                  activeTab === tile.id 
+                    ? 'border-primary bg-primary/10' 
+                    : 'border-border hover:border-primary'
+                } transition-all duration-300 bg-card hover:shadow-lg text-orange-800 bg-cyan-50 px-[24px]`}
+                data-tab-id={tile.id}
               >
                 <div className="flex flex-col items-center justify-center gap-2 h-24">
                   {tile.icon}
