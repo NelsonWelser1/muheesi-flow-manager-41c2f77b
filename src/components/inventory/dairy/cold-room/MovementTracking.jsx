@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useColdRoomInventory } from './hooks/useColdRoomInventory';
 import { Card, CardContent } from "@/components/ui/card";

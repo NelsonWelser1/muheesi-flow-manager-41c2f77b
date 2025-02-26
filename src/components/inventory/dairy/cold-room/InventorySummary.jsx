@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useColdRoomInventory } from './hooks/useColdRoomInventory';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -125,7 +126,10 @@ const InventorySummary = () => {
         <CardContent>
           <SearchToolbar
             onSearch={handleSearch}
-            onRefresh={fetchStockLevels}
+            onRefresh={() => getStockLevelsByBatch().then(stockData => {
+              setStockByBatch(stockData);
+              setStockList(Object.values(stockData).filter(item => item.current > 0));
+            })}
             onDateRangeChange={handleDateRangeChange}
             data={filteredAndSortedData}
             columns={columns}
