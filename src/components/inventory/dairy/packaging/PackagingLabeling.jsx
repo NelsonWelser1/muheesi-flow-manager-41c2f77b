@@ -11,13 +11,13 @@ const PackagingLabeling = () => {
     title: "Packaging",
     description: "Manage product packaging details",
     icon: <Package2 className="h-6 w-6" />,
-    path: "/manage-inventory/packaging-management",
+    path: "packaging-management",
     secondaryIcon: <Barcode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />
   }, {
     title: "Labeling",
     description: "Configure product labels",
     icon: <Tags className="h-6 w-6" />,
-    path: "/manage-inventory/labeling-management",
+    path: "labeling-management",
     secondaryIcon: <QrCode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />
   }];
 
@@ -28,7 +28,7 @@ const PackagingLabeling = () => {
           <CardTitle>Packaging & Labeling Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {tiles.map(tile => (
               <button 
                 key={tile.title} 

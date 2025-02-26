@@ -18,7 +18,6 @@ import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDair
 import SmartProductionDashboard from "./components/inventory/dairy/production/SmartProductionDashboard";
 import PackagingManagement from "./components/inventory/dairy/packaging/PackagingManagement";
 import LabelingManagement from "./components/inventory/dairy/packaging/LabelingManagement";
-import PackagingLabeling from "./components/inventory/dairy/packaging/PackagingLabeling";
 
 const queryClient = new QueryClient();
 
@@ -41,7 +40,6 @@ const App = () => (
               <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
               <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
               <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
-              <Route path="/manage-inventory/grand-berna-dairies/packaging-and-labeling" element={<PackagingLabeling />} />
               <Route path="/manage-inventory/packaging-management" element={<PackagingManagement />} />
               <Route path="/manage-inventory/labeling-management" element={<LabelingManagement />} />
             </Routes>
