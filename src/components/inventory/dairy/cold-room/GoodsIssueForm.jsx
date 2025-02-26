@@ -20,6 +20,68 @@ const GoodsIssueForm = ({ userId, username }) => {
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [availableProductCategories, setAvailableProductCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [usedBatchIds, setUsedBatchIds] = useState(new Set());
+  const [currentStock, setCurrentStock] = useState(0);
+
+  // Fetch batches that have already been completely issued
+  const fetchUsedBatchIds = async () => {
+    try {
+      // Get all batches that have been fully issued (Out movement)
+      const { data, error } = await supabase
+        .from('cold_room_inventory')
+        .select('batch_id, unit_quantity, movement_action')
+        .eq('movement_action', 'Out');
+
+      if (error) throw error;
+
+      // Map of batch_id to total issued quantity
+      const issuedQuantities = {};
+      data.forEach(item => {
+        if (!issuedQuantities[item.batch_id]) {
+          issuedQuantities[item.batch_id] = 0;
+        }
+        issuedQuantities[item.batch_id] += item.unit_quantity;
+      });
+
+      // Get the "In" movements to compare quantities
+      const { data: inData, error: inError } = await supabase
+        .from('cold_room_inventory')
+        .select('batch_id, unit_quantity')
+        .eq('movement_action', 'In');
+
+      if (inError) throw inError;
+
+      // Map of batch_id to total received quantity
+      const receivedQuantities = {};
+      inData.forEach(item => {
+        if (!receivedQuantities[item.batch_id]) {
+          receivedQuantities[item.batch_id] = 0;
+        }
+        receivedQuantities[item.batch_id] += item.unit_quantity;
+      });
+
+      // Identify fully issued batches (where issued quantity equals or exceeds received quantity)
+      const fullyIssuedBatches = new Set();
+      Object.keys(issuedQuantities).forEach(batchId => {
+        if (issuedQuantities[batchId] >= (receivedQuantities[batchId] || 0)) {
+          fullyIssuedBatches.add(batchId);
+        }
+      });
+
+      console.log('Fully issued batches:', fullyIssuedBatches);
+      setUsedBatchIds(fullyIssuedBatches);
+      
+      return fullyIssuedBatches;
+    } catch (error) {
+      console.error('Error fetching used batch IDs:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch used batch IDs",
+        variant: "destructive",
+      });
+      return new Set();
+    }
+  };
 
   // Fetch available product categories from stored inventory
   const fetchAvailableCategories = async () => {
@@ -54,19 +116,58 @@ const GoodsIssueForm = ({ userId, username }) => {
 
       console.log('Fetching available batches for category:', category);
       
-      const { data, error } = await supabase
+      // First, get all the batches stored (In movements)
+      const { data: inData, error: inError } = await supabase
         .from('cold_room_inventory')
         .select('*')
         .eq('product_category', category)
         .eq('movement_action', 'In') // Only consider items that were received
         .order('storage_date_time', { ascending: false });
 
-      if (error) throw error;
+      if (inError) throw inError;
 
-      // Check current stock levels - you might need to implement a more sophisticated inventory tracking system
-      // For now, we'll assume all received items are available for issue
-      console.log('Available batches:', data);
-      setAvailableBatches(data || []);
+      // Next, get all the issues (Out movements)
+      const { data: outData, error: outError } = await supabase
+        .from('cold_room_inventory')
+        .select('batch_id, unit_quantity')
+        .eq('product_category', category)
+        .eq('movement_action', 'Out')
+        .order('storage_date_time', { ascending: false });
+
+      if (outError) throw outError;
+
+      // Create a map of batch_id to total issued quantity
+      const issuedQuantities = {};
+      (outData || []).forEach(item => {
+        if (!issuedQuantities[item.batch_id]) {
+          issuedQuantities[item.batch_id] = 0;
+        }
+        issuedQuantities[item.batch_id] += item.unit_quantity;
+      });
+
+      // Create a map to track unique batches and their current stock levels
+      const batchMap = {};
+      
+      (inData || []).forEach(item => {
+        if (!batchMap[item.batch_id]) {
+          batchMap[item.batch_id] = {
+            ...item,
+            current_stock: item.unit_quantity - (issuedQuantities[item.batch_id] || 0)
+          };
+        } else {
+          // If there are multiple receipts for the same batch, add the quantities
+          batchMap[item.batch_id].unit_quantity += item.unit_quantity;
+          batchMap[item.batch_id].current_stock += item.unit_quantity - (issuedQuantities[item.batch_id] || 0);
+        }
+      });
+
+      // Convert to array and filter out batches with no remaining stock
+      let availableBatchesArray = Object.values(batchMap)
+        .filter(batch => batch.current_stock > 0)
+        .filter(batch => !usedBatchIds.has(batch.batch_id));
+      
+      console.log('Available batches:', availableBatchesArray);
+      setAvailableBatches(availableBatchesArray);
     } catch (error) {
       console.error('Error fetching available batches:', error);
       toast({
@@ -80,7 +181,17 @@ const GoodsIssueForm = ({ userId, username }) => {
   };
 
   useEffect(() => {
-    fetchAvailableCategories();
+    const initializeData = async () => {
+      await fetchUsedBatchIds();
+      await fetchAvailableCategories();
+    };
+    
+    initializeData();
+    
+    // Set up a refresh interval
+    const intervalId = setInterval(fetchUsedBatchIds, 30000); // 30 seconds
+    
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -89,7 +200,7 @@ const GoodsIssueForm = ({ userId, username }) => {
     } else {
       setAvailableBatches([]);
     }
-  }, [productCategory]);
+  }, [productCategory, usedBatchIds]);
 
   const handleProductCategoryChange = (category) => {
     console.log('Product category changed:', category);
@@ -115,9 +226,12 @@ const GoodsIssueForm = ({ userId, username }) => {
       setValue('product_type', selected.product_type);
       setValue('unit_weight', selected.unit_weight);
       
-      // Default issue quantity to the stored quantity
-      // In a real app, you might want to allow partial issues
-      setValue('unit_quantity', selected.unit_quantity);
+      // Calculate current stock level by subtracting issued quantity
+      const currentStock = selected.current_stock || 0;
+      setCurrentStock(currentStock);
+      
+      // Default issue quantity to 1 or the available stock if less than 1
+      setValue('unit_quantity', Math.min(1, currentStock));
       setValue('cold_room_id', selected.cold_room_id);
       
       toast({
@@ -134,7 +248,7 @@ const GoodsIssueForm = ({ userId, username }) => {
       }
 
       // Validate the issue quantity doesn't exceed the available quantity
-      if (data.unit_quantity > selectedBatch.unit_quantity) {
+      if (parseInt(data.unit_quantity) > currentStock) {
         toast({
           title: "Error",
           description: "Issue quantity cannot exceed available quantity",
@@ -165,6 +279,16 @@ const GoodsIssueForm = ({ userId, username }) => {
       if (error) {
         console.error('Supabase error:', error);
         throw error;
+      }
+
+      // Check if this batch is now fully issued and update local state
+      const newRemainingStock = currentStock - parseInt(data.unit_quantity);
+      if (newRemainingStock <= 0) {
+        setUsedBatchIds(prev => {
+          const updated = new Set(prev);
+          updated.add(data.batch_id);
+          return updated;
+        });
       }
 
       toast({
@@ -215,7 +339,7 @@ const GoodsIssueForm = ({ userId, username }) => {
             <SelectContent>
               {availableBatches.map((batch) => (
                 <SelectItem key={batch.id} value={batch.batch_id}>
-                  {`${batch.batch_id} - ${batch.product_type} (${batch.unit_quantity} units)`}
+                  {`${batch.batch_id} - ${batch.product_type} (${batch.current_stock} units available)`}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -229,6 +353,7 @@ const GoodsIssueForm = ({ userId, username }) => {
             {...register('cold_room_id', { required: true })}
             placeholder="Cold Room ID will be auto-filled"
             readOnly
+            className="bg-gray-100"
           />
         </div>
 
@@ -239,6 +364,7 @@ const GoodsIssueForm = ({ userId, username }) => {
             {...register('batch_id', { required: true })}
             placeholder="Batch ID will be auto-filled"
             readOnly
+            className="bg-gray-100"
           />
         </div>
 
@@ -249,6 +375,7 @@ const GoodsIssueForm = ({ userId, username }) => {
             {...register('production_batch_id', { required: true })}
             placeholder="Production batch ID will be auto-filled"
             readOnly
+            className="bg-gray-100"
           />
         </div>
 
@@ -259,11 +386,12 @@ const GoodsIssueForm = ({ userId, username }) => {
             {...register('product_type', { required: true })}
             placeholder="Product type will be auto-filled"
             readOnly
+            className="bg-gray-100"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="unit_weight">Unit Weight (kg)</Label>
+          <Label htmlFor="unit_weight">Unit Weight (g)</Label>
           <Input
             id="unit_weight"
             type="number"
@@ -274,6 +402,7 @@ const GoodsIssueForm = ({ userId, username }) => {
             })}
             placeholder="Unit weight will be auto-filled"
             readOnly
+            className="bg-gray-100"
           />
         </div>
 
@@ -285,12 +414,12 @@ const GoodsIssueForm = ({ userId, username }) => {
             {...register('unit_quantity', { 
               required: true,
               min: 1,
-              max: selectedBatch?.unit_quantity || 999999
+              max: currentStock
             })}
           />
           {selectedBatch && (
             <p className="text-sm text-muted-foreground mt-1">
-              Available: {selectedBatch.unit_quantity} units
+              Available: {currentStock} units
             </p>
           )}
         </div>
