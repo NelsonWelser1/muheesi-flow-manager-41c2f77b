@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Barcode } from "lucide-react";
+import { Barcode, ArrowLeft } from "lucide-react";
 import PackagingForm from './PackagingForm';
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/supabase";
@@ -84,6 +84,15 @@ const PackagingManagement = () => {
 
   return (
     <div className="space-y-6 container mx-auto py-6">
+      <Button 
+        variant="outline"
+        onClick={() => navigate("/manage-inventory/grand-berna-dairies/packaging-and-labeling")}
+        className="flex items-center gap-2 mb-4"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Packaging & Labeling
+      </Button>
+      
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Packaging Management</h2>
       </div>
