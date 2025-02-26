@@ -1,89 +1,119 @@
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/supabase';
+import React, { useEffect, useState } from 'react';
+import { useColdRoomInventory } from './hooks/useColdRoomInventory';
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { format } from 'date-fns';
 
 const MovementTracking = () => {
-  const [dateFilter, setDateFilter] = React.useState('');
+  const { inventoryItems, loading, error, fetchInventory } = useColdRoomInventory();
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [filter, setFilter] = useState('all'); // 'all', 'in', 'out'
 
-  const { data: movements, isLoading } = useQuery({
-    queryKey: ['coldRoomMovements'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cold_room_inventory')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
+  useEffect(() => {
+    fetchInventory();
+  }, [fetchInventory]);
+
+  useEffect(() => {
+    if (filter === 'all') {
+      setFilteredItems(inventoryItems);
+    } else {
+      setFilteredItems(
+        inventoryItems.filter(item => 
+          item.movement_action.toLowerCase() === filter
+        )
+      );
     }
-  });
+  }, [inventoryItems, filter]);
 
-  const filteredMovements = React.useMemo(() => {
-    if (!movements) return [];
-    if (!dateFilter) return movements;
-    
-    const filterDate = new Date(dateFilter);
-    return movements.filter(movement => {
-      const movementDate = new Date(movement.created_at);
-      return movementDate.toDateString() === filterDate.toDateString();
-    });
-  }, [movements, dateFilter]);
-
-  if (isLoading) {
-    return <div>Loading movement data...</div>;
-  }
+  if (loading) return <div>Loading movement data...</div>;
+  if (error) return <div>Error loading movements: {error}</div>;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-4">
-        <div className="grid w-full max-w-sm items-center gap-1.5">
-          <Label htmlFor="dateFilter">Filter by Date</Label>
-          <Input
-            id="dateFilter"
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-          />
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold">Movement History</h2>
+        <div className="flex space-x-2">
+          <Badge 
+            className={`cursor-pointer ${filter === 'all' ? 'bg-primary' : 'bg-secondary'}`}
+            onClick={() => setFilter('all')}
+          >
+            All
+          </Badge>
+          <Badge 
+            className={`cursor-pointer ${filter === 'in' ? 'bg-green-600' : 'bg-secondary'}`}
+            onClick={() => setFilter('in')}
+          >
+            Goods Receipt
+          </Badge>
+          <Badge 
+            className={`cursor-pointer ${filter === 'out' ? 'bg-amber-600' : 'bg-secondary'}`}
+            onClick={() => setFilter('out')}
+          >
+            Goods Issue
+          </Badge>
         </div>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Movement History</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Date & Time</TableHead>
-                <TableHead>Batch ID</TableHead>
                 <TableHead>Action</TableHead>
-                <TableHead>Quantity</TableHead>
+                <TableHead>Product</TableHead>
+                <TableHead>Batch ID</TableHead>
+                <TableHead>Cold Room</TableHead>
+                <TableHead className="text-right">Quantity</TableHead>
                 <TableHead>Operator</TableHead>
-                <TableHead>Remarks</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredMovements.map((movement) => (
-                <TableRow key={movement.id}>
-                  <TableCell>{new Date(movement.created_at).toLocaleString()}</TableCell>
-                  <TableCell>{movement.batch_id}</TableCell>
-                  <TableCell>
-                    <Badge variant={movement.movement_action === 'In' ? 'default' : 'secondary'}>
-                      {movement.movement_action}
-                    </Badge>
+              {filteredItems.length > 0 ? (
+                filteredItems.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{format(new Date(item.storage_date_time), 'PPp')}</TableCell>
+                    <TableCell>
+                      <Badge 
+                        className={
+                          item.movement_action.toLowerCase() === 'in' 
+                            ? 'bg-green-600' 
+                            : 'bg-amber-600'
+                        }
+                      >
+                        {item.movement_action.toLowerCase() === 'in' ? 'Goods Receipt' : 'Goods Issue'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {item.product_type}
+                      <span className="block text-xs text-muted-foreground capitalize">
+                        {item.product_category}
+                      </span>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {item.batch_id}
+                      {item.production_batch_id && (
+                        <span className="block text-xs text-muted-foreground">
+                          Prod: {item.production_batch_id}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>{item.cold_room_id}</TableCell>
+                    <TableCell className="text-right">
+                      {item.unit_quantity} × {item.unit_weight}kg
+                    </TableCell>
+                    <TableCell>{item.operator_id}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-4">
+                    No movement records found
                   </TableCell>
-                  <TableCell>{movement.quantity_stored}</TableCell>
-                  <TableCell>{movement.operator_id}</TableCell>
-                  <TableCell>{movement.remarks}</TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -93,4 +123,3 @@ const MovementTracking = () => {
 };
 
 export default MovementTracking;
-

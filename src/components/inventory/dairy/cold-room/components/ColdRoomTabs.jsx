@@ -4,16 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import RealTimeMonitoring from '../RealTimeMonitoring';
 import InventorySummary from '../InventorySummary';
 import MovementTracking from '../MovementTracking';
-import DataEntryForm from '../DataEntryForm';
+import GoodsReceiptForm from '../GoodsReceiptForm';
+import GoodsIssueForm from '../GoodsIssueForm';
 
 const ColdRoomTabs = ({ userId, username }) => {
   return (
     <Tabs defaultValue="monitoring" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="monitoring">Real-Time Monitoring</TabsTrigger>
         <TabsTrigger value="inventory">Inventory Summary</TabsTrigger>
         <TabsTrigger value="movement">Movement Tracking</TabsTrigger>
-        <TabsTrigger value="data-entry">Cold Room Data Entry Form</TabsTrigger>
+        <TabsTrigger value="goods-receipt">Goods Receipt</TabsTrigger>
+        <TabsTrigger value="goods-issue">Goods Issue</TabsTrigger>
       </TabsList>
 
       <TabsContent value="monitoring">
@@ -49,13 +51,24 @@ const ColdRoomTabs = ({ userId, username }) => {
         </Card>
       </TabsContent>
 
-      <TabsContent value="data-entry">
+      <TabsContent value="goods-receipt">
         <Card>
           <CardHeader>
-            <CardTitle>Cold Room Data Entry Form</CardTitle>
+            <CardTitle>Cold Room Goods Receipt</CardTitle>
           </CardHeader>
           <CardContent>
-            <DataEntryForm userId={userId} username={username} />
+            <GoodsReceiptForm userId={userId} username={username} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="goods-issue">
+        <Card>
+          <CardHeader>
+            <CardTitle>Cold Room Goods Issue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <GoodsIssueForm userId={userId} username={username} />
           </CardContent>
         </Card>
       </TabsContent>
