@@ -11,13 +11,13 @@ const PackagingLabeling = () => {
     title: "Packaging",
     description: "Manage product packaging details",
     icon: <Package2 className="h-6 w-6" />,
-    path: "packaging-management",
+    path: "/manage-inventory/packaging-management",
     secondaryIcon: <Barcode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />
   }, {
     title: "Labeling",
     description: "Configure product labels",
     icon: <Tags className="h-6 w-6" />,
-    path: "labeling-management",
+    path: "/manage-inventory/labeling-management",
     secondaryIcon: <QrCode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />
   }];
 
