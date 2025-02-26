@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
@@ -33,7 +34,8 @@ const GoodsReceiptForm = ({ userId, username }) => {
     { value: 'Gouda', prefix: 'GOU' },
     { value: 'Parmesan', prefix: 'PAR' },
     { value: 'Swiss', prefix: 'SUI' },
-    { value: 'Blue Cheese', prefix: 'BLU' }
+    { value: 'Blue Cheese', prefix: 'BLU' },
+    { value: 'Cheddar', prefix: 'CHE' } // Fixed: Added specific prefix for Cheddar
   ];
 
   const yogurtTypes = [
@@ -148,8 +150,13 @@ const GoodsReceiptForm = ({ userId, username }) => {
     const datePrefix = format(now, 'yyyyMMdd');
     const timeComponent = format(now, 'HHmmss');
     
-    // Cold room prefix is "CLD"
-    const roomPrefix = 'CLD';
+    // Get room prefix based on selected cold room
+    let roomPrefix = 'CLD'; // Default
+    if (coldRoomId === 'KAMPALA-RTL') {
+      roomPrefix = 'RTL';
+    } else if (coldRoomId === 'FACTORY-CR1') {
+      roomPrefix = 'CLD';
+    }
     
     // Get product type prefix
     const allProductTypes = [...cheeseTypes, ...yogurtTypes];
