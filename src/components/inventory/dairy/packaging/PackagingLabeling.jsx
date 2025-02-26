@@ -28,7 +28,7 @@ const PackagingLabeling = () => {
           <CardTitle>Packaging & Labeling Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {tiles.map(tile => (
               <button 
                 key={tile.title} 

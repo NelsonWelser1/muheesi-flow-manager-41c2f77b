@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -95,7 +96,7 @@ const LabelingManagement = () => {
     <div className="space-y-6 container mx-auto py-6">
       <Button 
         variant="outline"
-        onClick={() => navigate(-1)}
+        onClick={() => navigate('/manage-inventory/grand-berna-dairies/packaging-and-labeling')}
         className="flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
