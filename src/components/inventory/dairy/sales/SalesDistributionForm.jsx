@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,10 +20,8 @@ const SalesDistributionForm = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const { autoFillData, updateAutoFillData } = useAutoFill();
 
-  // Function to get already used batch IDs from sales_records
   const getUsedBatchIds = async () => {
     try {
-      // First, check if the batch_id column exists
       const { data: columns, error: columnsError } = await supabase
         .from('sales_records')
         .select('*')
@@ -35,7 +32,6 @@ const SalesDistributionForm = ({ onBack }) => {
         return new Set();
       }
       
-      // If we have columns and batch_id exists
       if (columns && columns.length > 0 && 'batch_id' in columns[0]) {
         const { data, error } = await supabase
           .from('sales_records')
@@ -54,82 +50,58 @@ const SalesDistributionForm = ({ onBack }) => {
     }
   };
 
-  // Fetch available batch IDs from cold room inventory
   useEffect(() => {
     const fetchBatchIds = async () => {
       setLoading(true);
       try {
         console.log("Fetching inventory data for batch selection...");
         
-        // Get already used batch IDs
         const usedBatchIds = await getUsedBatchIds();
         console.log("Used batch IDs:", usedBatchIds);
 
-        // Modify the query to fetch any inventory data to work with
         const { data: movementData, error: movementError } = await supabase
           .from('cold_room_inventory')
           .select('batch_id, product_type, unit_quantity')
+          .eq('movement_action', 'Goods Issue')
           .order('batch_id', { ascending: true });
 
         if (movementError) throw movementError;
         console.log("Fetched inventory data:", movementData);
 
         if (!movementData || movementData.length === 0) {
-          // If no data found, try to add sample data for testing
-          console.log("No inventory data found, adding sample data for testing");
-          setBatchOptions([
-            {
-              id: "CLD20250226-CHE-232847",
-              productType: "Cheese",
-              quantity: 100
-            },
-            {
-              id: "CLD20250225-MIL-128765",
-              productType: "Milk",
-              quantity: 50
-            }
-          ]);
+          console.log("No Goods Issue data found");
+          setBatchOptions([]);
           setLoading(false);
           return;
         }
 
-        // Filter out used batch IDs and create unique batch options
         const availableBatches = movementData
           .filter(item => !usedBatchIds.has(item.batch_id))
           .reduce((unique, item) => {
             const exists = unique.find(u => u.id === item.batch_id);
-            if (!exists) {
+            if (!exists && item.unit_quantity > 0) {
               unique.push({
                 id: item.batch_id,
                 productType: item.product_type || "Unknown",
-                quantity: item.unit_quantity || 0
+                quantity: item.unit_quantity
               });
             }
             return unique;
           }, []);
 
-        // Sort the available batches by ID
         availableBatches.sort((a, b) => a.id.localeCompare(b.id));
 
-        console.log("Available batches (sorted):", availableBatches);
+        console.log("Available Goods Issue batches (sorted):", availableBatches);
         setBatchOptions(availableBatches);
 
       } catch (error) {
-        console.error('Error fetching batch IDs:', error);
-        // Add fallback data for testing
-        console.log("Error occurred, adding fallback data");
-        setBatchOptions([
-          {
-            id: "CLD20250226-CHE-232847",
-            productType: "Cheese",
-            quantity: 100
-          },
-          {
-            id: "CLD20250225-MIL-128765",
-            productType: "Milk",
-            quantity: 50
-          }
-        ]);
+        console.error('Error fetching Goods Issue batch IDs:', error);
+        setBatchOptions([]);
+        toast({
+          title: "Error",
+          description: "Failed to load Goods Issue batch IDs",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
@@ -147,7 +119,6 @@ const SalesDistributionForm = ({ onBack }) => {
       setValue('product_type', selectedBatch.productType);
       setValue('quantity', selectedBatch.quantity);
       
-      // Store in context for potential use in other components
       updateAutoFillData('selectedBatch', selectedBatch);
     }
   };
@@ -165,12 +136,11 @@ const SalesDistributionForm = ({ onBack }) => {
         return;
       }
 
-      // Add batch_id to the sales record
       const { error } = await supabase
         .from('sales_records')
         .insert([{
           ...data,
-          batch_id: data.batch_id, // Include batch_id in the record
+          batch_id: data.batch_id,
           created_by: user.id,
           date_time: new Date().toISOString(),
         }]);
@@ -182,17 +152,14 @@ const SalesDistributionForm = ({ onBack }) => {
         description: "Sales record saved successfully",
       });
       
-      // After successful save, refresh the batch options to exclude the used batch
       const fetchBatchIds = async () => {
         setLoading(true);
         try {
           console.log("Fetching movement history for Goods Issue...");
           
-          // Get already used batch IDs
           const usedBatchIds = await getUsedBatchIds();
           console.log("Used batch IDs:", usedBatchIds);
 
-          // Fetch movement history with "out" action
           const { data: movementData, error: movementError } = await supabase
             .from('cold_room_inventory')
             .select('batch_id, product_type, unit_quantity')
@@ -202,7 +169,6 @@ const SalesDistributionForm = ({ onBack }) => {
           if (movementError) throw movementError;
           console.log("Fetched movement data:", movementData);
 
-          // Filter out used batch IDs and create unique batch options
           const availableBatches = movementData
             .filter(item => !usedBatchIds.has(item.batch_id))
             .reduce((unique, item) => {
