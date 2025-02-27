@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,14 +10,69 @@ import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/supabase";
 import QRCodeGenerator from '../qr/QRCodeGenerator';
+import { useAutoFill } from '@/contexts/AutoFillContext';
 
 const PRODUCT_TYPES = ["Cheese", "Yogurt", "Milk", "Butter"];
 
 const SalesDistributionForm = ({ onBack }) => {
-  const { register, handleSubmit, reset, watch } = useForm();
+  const { register, handleSubmit, reset, watch, setValue } = useForm();
   const { toast } = useToast();
-  const [showQR, setShowQR] = React.useState(false);
+  const [showQR, setShowQR] = useState(false);
   const formData = watch();
+  const [batchOptions, setBatchOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { autoFillData, updateAutoFillData } = useAutoFill();
+
+  // Fetch batch IDs from cold room inventory with "out" movement
+  useEffect(() => {
+    const fetchBatchIds = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('cold_room_inventory')
+          .select('batch_id, product_type, unit_quantity')
+          .eq('movement_action', 'out')
+          .order('storage_date_time', { ascending: false });
+        
+        if (error) throw error;
+        
+        // Create unique batch options
+        const uniqueBatches = Array.from(new Set(data.map(item => item.batch_id)))
+          .map(batchId => {
+            const item = data.find(d => d.batch_id === batchId);
+            return {
+              id: batchId,
+              productType: item.product_type,
+              quantity: item.unit_quantity
+            };
+          });
+        
+        setBatchOptions(uniqueBatches);
+      } catch (error) {
+        console.error('Error fetching batch IDs:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load batch IDs",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBatchIds();
+  }, [toast]);
+
+  const handleBatchSelect = (batchId) => {
+    const selectedBatch = batchOptions.find(batch => batch.id === batchId);
+    if (selectedBatch) {
+      setValue('product_type', selectedBatch.productType.toLowerCase());
+      setValue('quantity', selectedBatch.quantity);
+      
+      // Store in context for potential use in other components
+      updateAutoFillData('selectedBatch', selectedBatch);
+    }
+  };
 
   const handleFormSubmit = async (data) => {
     try {
@@ -94,6 +149,26 @@ const SalesDistributionForm = ({ onBack }) => {
               <div className="space-y-2">
                 <Label>Customer Name/ID</Label>
                 <Input {...register("customer_name", { required: true })} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Product Batch ID</Label>
+                <Select onValueChange={handleBatchSelect}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a batch from goods issues" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {loading ? (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    ) : (
+                      batchOptions.map((batch) => (
+                        <SelectItem key={batch.id} value={batch.id}>
+                          {batch.id} - {batch.productType}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
