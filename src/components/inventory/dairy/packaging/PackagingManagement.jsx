@@ -136,7 +136,7 @@ const PackagingManagement = () => {
             className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Companies
+            Back to Packaging & Labeling
           </Button>
           <h1 className="text-3xl font-bold">Grand Berna Dairies</h1>
         </div>
