@@ -20,20 +20,20 @@ const PackagingLabeling = () => {
     title: "Packaging",
     description: "Manage product packaging details",
     icon: <Package2 className="h-6 w-6" />,
-    path: "packaging-management",
+    path: "/manage-inventory/grand-berna-dairies/packaging-and-labeling/packaging-management",
     secondaryIcon: <Barcode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />,
     id: "packaging"
   }, {
     title: "Labeling",
     description: "Configure product labels",
     icon: <Tags className="h-6 w-6" />,
-    path: "labeling-management",
+    path: "/manage-inventory/grand-berna-dairies/packaging-and-labeling/labeling-management",
     secondaryIcon: <QrCode className="absolute bottom-2 right-2 h-4 w-4 text-muted-foreground/50" />,
     id: "labeling"
   }];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 container mx-auto py-6">
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle>Packaging & Labeling Management</CardTitle>

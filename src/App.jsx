@@ -1,53 +1,65 @@
 
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AutoFillProvider } from "./contexts/AutoFillContext";
-import { SupabaseAuthProvider } from "./integrations/supabase/auth";
-import Navigation from "./components/Navigation";
+import React from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import ManageInventory from "./pages/ManageInventory";
+import Accounts from "./pages/Accounts";
+import ManageAccounts from "./pages/ManageAccounts";
 import ManageCompanies from "./pages/ManageCompanies";
+import Sales from "./pages/Sales";
 import Feedback from "./pages/Feedback";
-import ExportManagementDashboard from "./components/inventory/kajon/export-business/ExportManagementDashboard";
-import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-business/CoffeeExportManagerDashboard";
-import KashariFarmDashboard from "./components/inventory/kashari/KashariFarmDashboard";
-import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDairyDashboard";
-import SmartProductionDashboard from "./components/inventory/dairy/production/SmartProductionDashboard";
+import Contact from "./pages/Contact";
+import Companies from "./pages/Companies";
+import Inventory from "./pages/Inventory";
+import { Toaster } from "@/components/ui/toaster";
+import { AutoFillProvider } from "./contexts/AutoFillContext";
+import { SupabaseAuthProvider } from "./integrations/supabase/auth";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
+// Import Packaging & Labeling components
+import PackagingLabeling from "./components/inventory/dairy/packaging/PackagingLabeling";
 import PackagingManagement from "./components/inventory/dairy/packaging/PackagingManagement";
 import LabelingManagement from "./components/inventory/dairy/packaging/LabelingManagement";
 
+// Create a query client
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AutoFillProvider>
-      <SupabaseAuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
-            <Navigation />
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/manage-inventory" element={<ManageInventory />} />
-              <Route path="/manage-companies" element={<ManageCompanies />} />
-              <Route path="/feedback" element={<Feedback />} />
-              <Route path="/manage-inventory/kajon-export" element={<ExportManagementDashboard />} />
-              <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
-              <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
-              <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
-              <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
-              <Route path="/manage-inventory/packaging-management" element={<PackagingManagement />} />
-              <Route path="/manage-inventory/labeling-management" element={<LabelingManagement />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </SupabaseAuthProvider>
-    </AutoFillProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AutoFillProvider>
+        <SupabaseAuthProvider>
+          <TooltipProvider>
+            <Router>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/manage-inventory" element={<ManageInventory />} />
+                <Route path="/accounts" element={<Accounts />} />
+                <Route path="/manage-accounts" element={<ManageAccounts />} />
+                <Route path="/manage-companies" element={<ManageCompanies />} />
+                <Route path="/sales" element={<Sales />} />
+                <Route path="/feedback" element={<Feedback />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/companies" element={<Companies />} />
+                <Route path="/inventory" element={<Inventory />} />
+                
+                {/* Packaging & Labeling Routes */}
+                <Route path="/manage-inventory/grand-berna-dairies/packaging-and-labeling" element={<PackagingLabeling />} />
+                <Route path="/manage-inventory/grand-berna-dairies/packaging-and-labeling/packaging-management" element={<PackagingManagement />} />
+                <Route path="/manage-inventory/grand-berna-dairies/packaging-and-labeling/labeling-management" element={<LabelingManagement />} />
+              
+                {/* Add more routes as needed */}
+              </Routes>
+            </Router>
+          </TooltipProvider>
+        </SupabaseAuthProvider>
+      </AutoFillProvider>
+      <Toaster />
+    </QueryClientProvider>
+  );
+}
 
 export default App;
