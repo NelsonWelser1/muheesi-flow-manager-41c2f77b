@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package2, Tags, Barcode, QrCode } from "lucide-react";
+import { Package2, Tags, Barcode, QrCode, ArrowLeft } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const PackagingLabeling = () => {
   const navigate = useNavigate();
@@ -32,11 +33,29 @@ const PackagingLabeling = () => {
     id: "labeling"
   }];
 
+  const handleBack = () => {
+    navigate("/manage-inventory");
+  };
+
   return (
     <div className="space-y-4 container mx-auto py-6">
+      <div className="flex items-center justify-between mb-4">
+        <Button 
+          variant="ghost" 
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+          onClick={handleBack}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Inventory Management
+        </Button>
+      </div>
+      
       <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Packaging & Labeling Management</CardTitle>
+          <div className="text-sm text-muted-foreground">
+            Grand Berna Dairies | Processing Division
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
@@ -62,6 +81,13 @@ const PackagingLabeling = () => {
           </div>
         </CardContent>
       </Card>
+      
+      <div className="w-full max-w-4xl mx-auto mt-6">
+        <div className="text-sm text-muted-foreground">
+          <p>Use the packaging and labeling management system to track all product packaging operations and label generation in compliance with regulatory requirements.</p>
+          <p className="mt-2">All entries are logged and can be audited by quality control.</p>
+        </div>
+      </div>
     </div>
   );
 };
