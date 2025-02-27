@@ -1,56 +1,20 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Barcode, ArrowLeft, Home, LogOut, Clock } from "lucide-react";
+import { Barcode } from "lucide-react";
 import PackagingForm from './PackagingForm';
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from 'date-fns';
+import { ArrowLeft } from "lucide-react";
 
 const PackagingManagement = () => {
   const navigate = useNavigate();
   const [packagingData, setPackagingData] = useState([]);
   const [showScanner, setShowScanner] = useState(false);
-  const [batchIds, setBatchIds] = useState([]);
   const { toast } = useToast();
-  
-  // Mock user data - in a real app, this would come from an auth context
-  const currentUser = {
-    name: "John Doe",
-    role: "Inventory Manager"
-  };
 
-  // Fetch batch IDs from cold room inventory
-  useEffect(() => {
-    const fetchBatchIds = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('cold_room_inventory')
-          .select('batch_id')
-          .order('storage_date_time', { ascending: false });
-
-        if (error) throw error;
-        
-        // Extract unique batch IDs
-        const uniqueBatchIds = [...new Set(data.map(item => item.batch_id))];
-        setBatchIds(uniqueBatchIds);
-      } catch (error) {
-        console.error('Error fetching batch IDs:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch batch IDs",
-          variant: "destructive"
-        });
-      }
-    };
-
-    fetchBatchIds();
-  }, [toast]);
-
-  // Handle form submission
   const handlePackagingSubmit = async (data) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -59,7 +23,7 @@ const PackagingManagement = () => {
         toast({
           title: "Error",
           description: "You must be logged in to submit records",
-          variant: "destructive"
+          variant: "destructive",
         });
         return;
       }
@@ -83,20 +47,19 @@ const PackagingManagement = () => {
       
       toast({
         title: "Success",
-        description: "Packaging record saved successfully"
+        description: "Packaging record saved successfully",
       });
     } catch (error) {
       console.error('Error saving packaging record:', error);
       toast({
         title: "Error",
         description: "Failed to save packaging record",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
 
-  // Fetch packaging records
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchPackagingRecords = async () => {
       try {
         const { data, error } = await supabase
@@ -111,7 +74,7 @@ const PackagingManagement = () => {
         toast({
           title: "Error",
           description: "Failed to fetch packaging records",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     };
@@ -119,49 +82,20 @@ const PackagingManagement = () => {
     fetchPackagingRecords();
   }, [toast]);
 
-  // Navigate back to main packaging & labeling page
-  const handleBack = () => {
-    navigate("/manage-inventory/grand-berna-dairies/packaging-and-labeling", {
-      state: { selectedTab: "packaging" }
-    });
-  };
-
   return (
     <div className="space-y-6 container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
-          <Button 
-            variant="ghost"
-            onClick={handleBack}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Packaging & Labeling
-          </Button>
-          <h1 className="text-3xl font-bold">Grand Berna Dairies</h1>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-gray-600">
-            <div>{currentUser.name}</div>
-            <div>{currentUser.role}</div>
-          </div>
-          <div className="text-sm text-gray-600">
-            <Clock className="inline mr-2" />
-            {format(new Date(), 'MMM dd, yyyy, h:mm:ss a')}
-          </div>
-          <Button variant="outline" onClick={() => navigate('/home')}>
-            <Home className="h-4 w-4 mr-2" />
-            Home
-          </Button>
-          <Button variant="outline" onClick={() => navigate('/logout')}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Log Out
-          </Button>
-        </div>
-      </div>
+      <Button 
+        variant="outline"
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Packaging & Labeling
+      </Button>
 
-      <h2 className="text-2xl font-bold mb-6">Packaging Management</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Packaging Management</h2>
+      </div>
 
       <div className="space-y-6">
         <Card>
@@ -178,7 +112,7 @@ const PackagingManagement = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <PackagingForm onSubmit={handlePackagingSubmit} batchIds={batchIds} />
+            <PackagingForm onSubmit={handlePackagingSubmit} />
           </CardContent>
         </Card>
 
