@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,26 +7,28 @@ import PackagingForm from './PackagingForm';
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
-
 const PackagingManagement = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [packagingData, setPackagingData] = useState([]);
   const [showScanner, setShowScanner] = useState(false);
   const [batchIds, setBatchIds] = useState([]);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
 
   // Fetch batch IDs from cold room inventory (Movement History)
   useEffect(() => {
     const fetchBatchIds = async () => {
       try {
-        const { data, error } = await supabase
-          .from('cold_room_inventory')
-          .select('batch_id')
-          .order('storage_date_time', { ascending: false });
-
+        const {
+          data,
+          error
+        } = await supabase.from('cold_room_inventory').select('batch_id').order('storage_date_time', {
+          ascending: false
+        });
         if (error) throw error;
-        
+
         // Extract unique batch IDs
         const uniqueBatchIds = [...new Set(data.map(item => item.batch_id))];
         setBatchIds(uniqueBatchIds);
@@ -35,62 +36,62 @@ const PackagingManagement = () => {
         console.error('Error fetching batch IDs:', error);
       }
     };
-
     fetchBatchIds();
   }, []);
-
-  const handlePackagingSubmit = async (data) => {
+  const handlePackagingSubmit = async data => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         toast({
           title: "Error",
           description: "You must be logged in to submit records",
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
-
-      const { error } = await supabase
-        .from('packaging_records')
-        .insert([{
-          batch_id: data.batchId,
-          cheese_type: data.cheeseType,
-          package_size: data.packageSize,
-          quantity: data.quantity,
-          package_material: data.packageMaterial,
-          package_weight: data.packageWeight,
-          created_by: user.id,
-          created_at: new Date().toISOString()
-        }]);
-
+      const {
+        error
+      } = await supabase.from('packaging_records').insert([{
+        batch_id: data.batchId,
+        cheese_type: data.cheeseType,
+        package_size: data.packageSize,
+        quantity: data.quantity,
+        package_material: data.packageMaterial,
+        package_weight: data.packageWeight,
+        created_by: user.id,
+        created_at: new Date().toISOString()
+      }]);
       if (error) throw error;
-
-      setPackagingData([...packagingData, { ...data, id: Date.now() }]);
-      
+      setPackagingData([...packagingData, {
+        ...data,
+        id: Date.now()
+      }]);
       toast({
         title: "Success",
-        description: "Packaging record saved successfully",
+        description: "Packaging record saved successfully"
       });
     } catch (error) {
       console.error('Error saving packaging record:', error);
       toast({
         title: "Error",
         description: "Failed to save packaging record",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   React.useEffect(() => {
     const fetchPackagingRecords = async () => {
       try {
-        const { data, error } = await supabase
-          .from('packaging_records')
-          .select('*')
-          .order('created_at', { ascending: false });
-
+        const {
+          data,
+          error
+        } = await supabase.from('packaging_records').select('*').order('created_at', {
+          ascending: false
+        });
         if (error) throw error;
         setPackagingData(data);
       } catch (error) {
@@ -98,32 +99,24 @@ const PackagingManagement = () => {
         toast({
           title: "Error",
           description: "Failed to fetch packaging records",
-          variant: "destructive",
+          variant: "destructive"
         });
       }
     };
-
     fetchPackagingRecords();
   }, [toast]);
 
   // Handle back button navigation with state
   const handleBackToPackagingLabeling = () => {
-    navigate("/manage-inventory/grand-berna-dairies/packaging-and-labeling", { 
-      state: { selectedTab: "packaging" } 
+    navigate("/manage-inventory/grand-berna-dairies/packaging-and-labeling", {
+      state: {
+        selectedTab: "packaging"
+      }
     });
   };
-
-  return (
-    <div className="space-y-6 container mx-auto py-6">
+  return <div className="space-y-6 container mx-auto py-6">
       <div className="flex items-center justify-between mb-4">
-        <Button 
-          variant="outline"
-          onClick={handleBackToPackagingLabeling}
-          className="flex items-center gap-2 text-sm font-medium"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Packaging & Labeling
-        </Button>
+        
       </div>
       
       <div className="flex items-center justify-between">
@@ -135,11 +128,7 @@ const PackagingManagement = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>New Packaging Entry</CardTitle>
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => setShowScanner(!showScanner)}
-              >
+              <Button variant="outline" size="icon" onClick={() => setShowScanner(!showScanner)}>
                 <Barcode className="h-4 w-4" />
               </Button>
             </div>
@@ -167,24 +156,20 @@ const PackagingManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {packagingData.map((item) => (
-                    <TableRow key={item.id}>
+                  {packagingData.map(item => <TableRow key={item.id}>
                       <TableCell>{item.batch_id}</TableCell>
                       <TableCell>{item.cheese_type}</TableCell>
                       <TableCell>{item.package_size}</TableCell>
                       <TableCell>{item.quantity}</TableCell>
                       <TableCell>{item.package_material}</TableCell>
                       <TableCell>{item.package_weight}</TableCell>
-                    </TableRow>
-                  ))}
+                    </TableRow>)}
                 </TableBody>
               </Table>
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default PackagingManagement;
