@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
-import AccountList from './accounts/AccountList';
-import AddAccountForm from './accounts/AddAccountForm';
-import CompanyAccounts from './accounts/CompanyAccounts';
-import AccountsChart from './accounts/AccountsChart';
+import AccountList from '../components/accounts/AccountList';
+import AddAccountForm from '../components/accounts/AddAccountForm';
+import CompanyAccounts from '../components/accounts/CompanyAccounts';
+import AccountsChart from '../components/accounts/AccountsChart';
 
 const initialAccounts = [
   {
