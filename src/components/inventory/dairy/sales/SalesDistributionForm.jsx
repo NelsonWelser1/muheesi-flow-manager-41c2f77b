@@ -48,12 +48,12 @@ const SalesDistributionForm = ({ onBack }) => {
         const usedBatchIds = await getUsedBatchIds();
         console.log("Used batch IDs:", usedBatchIds);
 
-        // Fetch movement history with "out" action
+        // Fetch movement history with "out" action and sort by batch_id
         const { data: movementData, error: movementError } = await supabase
           .from('cold_room_inventory')
           .select('batch_id, product_type, unit_quantity')
           .eq('movement_action', 'out')
-          .order('storage_date_time', { ascending: false });
+          .order('batch_id', { ascending: true }); // Sort by batch_id in ascending order
 
         if (movementError) throw movementError;
         console.log("Fetched movement data:", movementData);
@@ -73,7 +73,10 @@ const SalesDistributionForm = ({ onBack }) => {
             return unique;
           }, []);
 
-        console.log("Available batches:", availableBatches);
+        // Sort the available batches by ID
+        availableBatches.sort((a, b) => a.id.localeCompare(b.id));
+
+        console.log("Available batches (sorted):", availableBatches);
         setBatchOptions(availableBatches);
 
       } catch (error) {
