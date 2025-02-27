@@ -121,7 +121,9 @@ const PackagingManagement = () => {
 
   // Navigate back to main packaging & labeling page
   const handleBack = () => {
-    navigate("/manage-inventory/grand-berna-dairies/packaging-and-labeling");
+    navigate("/manage-inventory/grand-berna-dairies/packaging-and-labeling", {
+      state: { selectedTab: "packaging" }
+    });
   };
 
   return (
