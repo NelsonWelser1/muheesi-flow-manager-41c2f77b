@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,15 +8,14 @@ import PackagingForm from './PackagingForm';
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
+
 const PackagingManagement = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [packagingData, setPackagingData] = useState([]);
   const [showScanner, setShowScanner] = useState(false);
   const [batchIds, setBatchIds] = useState([]);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
 
   // Fetch batch IDs from cold room inventory (Movement History)
   useEffect(() => {
@@ -38,6 +38,7 @@ const PackagingManagement = () => {
     };
     fetchBatchIds();
   }, []);
+
   const handlePackagingSubmit = async data => {
     try {
       const {
@@ -83,6 +84,7 @@ const PackagingManagement = () => {
       });
     }
   };
+
   React.useEffect(() => {
     const fetchPackagingRecords = async () => {
       try {
@@ -114,9 +116,15 @@ const PackagingManagement = () => {
       }
     });
   };
+
   return <div className="space-y-6 container mx-auto py-6">
       <div className="flex items-center justify-between mb-4">
-        
+        <button 
+          onClick={handleBackToPackagingLabeling}
+          className="mb-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+        >
+          ← Back to Packaging & Labeling
+        </button>
       </div>
       
       <div className="flex items-center justify-between">

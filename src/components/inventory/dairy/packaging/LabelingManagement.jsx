@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,13 +9,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft } from "lucide-react";
+
 const LabelingManagement = () => {
   const navigate = useNavigate();
   const [labelingData, setLabelingData] = useState([]);
   const [showScanner, setShowScanner] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   const handleLabelingSubmit = async data => {
     try {
       const {
@@ -59,6 +60,7 @@ const LabelingManagement = () => {
       });
     }
   };
+
   const fetchLabelingRecords = async () => {
     try {
       const {
@@ -87,12 +89,21 @@ const LabelingManagement = () => {
       });
     }
   };
+
   React.useEffect(() => {
     fetchLabelingRecords();
   }, []);
+
   return <div className="space-y-6 container mx-auto py-6">
       <div className="flex items-center justify-between mb-4">
-        
+        <button 
+          onClick={() => navigate("/manage-inventory/grand-berna-dairies/packaging-and-labeling", { 
+            state: { selectedTab: "labeling" } 
+          })}
+          className="mb-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+        >
+          ← Back to Packaging & Labeling
+        </button>
       </div>
 
       <div className="flex items-center justify-between">
