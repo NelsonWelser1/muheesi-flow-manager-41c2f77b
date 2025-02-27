@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,35 +20,61 @@ const SalesDistributionForm = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const { autoFillData, updateAutoFillData } = useAutoFill();
 
-  // Fetch batch IDs from cold room inventory with "out" movement
+  // Function to get already used batch IDs from sales_records
+  const getUsedBatchIds = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sales_records')
+        .select('batch_id')
+        .not('batch_id', 'is', null);
+
+      if (error) throw error;
+      return new Set(data.map(record => record.batch_id));
+    } catch (error) {
+      console.error('Error fetching used batch IDs:', error);
+      return new Set();
+    }
+  };
+
+  // Fetch available batch IDs from cold room inventory
   useEffect(() => {
     const fetchBatchIds = async () => {
       setLoading(true);
       try {
-        console.log("Fetching batch IDs from cold room inventory...");
-        const { data, error } = await supabase
+        console.log("Fetching movement history for Goods Issue...");
+        
+        // Get already used batch IDs
+        const usedBatchIds = await getUsedBatchIds();
+        console.log("Used batch IDs:", usedBatchIds);
+
+        // Fetch movement history with "out" action
+        const { data: movementData, error: movementError } = await supabase
           .from('cold_room_inventory')
           .select('batch_id, product_type, unit_quantity')
           .eq('movement_action', 'out')
           .order('storage_date_time', { ascending: false });
-        
-        if (error) throw error;
-        
-        console.log("Fetched data:", data);
-        
-        // Create unique batch options
-        const uniqueBatches = Array.from(new Set(data.map(item => item.batch_id)))
-          .map(batchId => {
-            const item = data.find(d => d.batch_id === batchId);
-            return {
-              id: batchId,
-              productType: item.product_type,
-              quantity: item.unit_quantity
-            };
-          });
-        
-        console.log("Unique batches:", uniqueBatches);
-        setBatchOptions(uniqueBatches);
+
+        if (movementError) throw movementError;
+        console.log("Fetched movement data:", movementData);
+
+        // Filter out used batch IDs and create unique batch options
+        const availableBatches = movementData
+          .filter(item => !usedBatchIds.has(item.batch_id))
+          .reduce((unique, item) => {
+            const exists = unique.find(u => u.id === item.batch_id);
+            if (!exists) {
+              unique.push({
+                id: item.batch_id,
+                productType: item.product_type,
+                quantity: item.unit_quantity
+              });
+            }
+            return unique;
+          }, []);
+
+        console.log("Available batches:", availableBatches);
+        setBatchOptions(availableBatches);
+
       } catch (error) {
         console.error('Error fetching batch IDs:', error);
         toast({
@@ -69,7 +94,8 @@ const SalesDistributionForm = ({ onBack }) => {
     console.log("Selected batch ID:", batchId);
     const selectedBatch = batchOptions.find(batch => batch.id === batchId);
     if (selectedBatch) {
-      console.log("Found batch:", selectedBatch);
+      console.log("Auto-filling with batch data:", selectedBatch);
+      setValue('batch_id', selectedBatch.id);
       setValue('product_type', selectedBatch.productType);
       setValue('quantity', selectedBatch.quantity);
       
@@ -91,10 +117,12 @@ const SalesDistributionForm = ({ onBack }) => {
         return;
       }
 
+      // Add batch_id to the sales record
       const { error } = await supabase
         .from('sales_records')
         .insert([{
           ...data,
+          batch_id: data.batch_id, // Include batch_id in the record
           created_by: user.id,
           date_time: new Date().toISOString(),
         }]);
@@ -105,6 +133,58 @@ const SalesDistributionForm = ({ onBack }) => {
         title: "Success",
         description: "Sales record saved successfully",
       });
+      
+      // After successful save, refresh the batch options to exclude the used batch
+      const fetchBatchIds = async () => {
+        setLoading(true);
+        try {
+          console.log("Fetching movement history for Goods Issue...");
+          
+          // Get already used batch IDs
+          const usedBatchIds = await getUsedBatchIds();
+          console.log("Used batch IDs:", usedBatchIds);
+
+          // Fetch movement history with "out" action
+          const { data: movementData, error: movementError } = await supabase
+            .from('cold_room_inventory')
+            .select('batch_id, product_type, unit_quantity')
+            .eq('movement_action', 'out')
+            .order('storage_date_time', { ascending: false });
+
+          if (movementError) throw movementError;
+          console.log("Fetched movement data:", movementData);
+
+          // Filter out used batch IDs and create unique batch options
+          const availableBatches = movementData
+            .filter(item => !usedBatchIds.has(item.batch_id))
+            .reduce((unique, item) => {
+              const exists = unique.find(u => u.id === item.batch_id);
+              if (!exists) {
+                unique.push({
+                  id: item.batch_id,
+                  productType: item.product_type,
+                  quantity: item.unit_quantity
+                });
+              }
+              return unique;
+            }, []);
+
+          console.log("Available batches:", availableBatches);
+          setBatchOptions(availableBatches);
+
+        } catch (error) {
+          console.error('Error fetching batch IDs:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load batch IDs: " + error.message,
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchBatchIds();
+      
       reset();
     } catch (error) {
       console.error('Error saving sales record:', error);
@@ -171,20 +251,21 @@ const SalesDistributionForm = ({ onBack }) => {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="no-batches" disabled>No batch IDs found</SelectItem>
+                      <SelectItem value="no-batches" disabled>No available batch IDs found</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
+                <Input type="hidden" {...register("batch_id")} />
               </div>
 
               <div className="space-y-2">
                 <Label>Product Type</Label>
-                <Input {...register("product_type", { required: true })} />
+                <Input {...register("product_type", { required: true })} readOnly />
               </div>
 
               <div className="space-y-2">
                 <Label>Quantity Sold</Label>
-                <Input type="number" {...register("quantity", { required: true, min: 1 })} />
+                <Input type="number" {...register("quantity", { required: true, min: 1 })} readOnly />
               </div>
 
               <div className="space-y-2">
