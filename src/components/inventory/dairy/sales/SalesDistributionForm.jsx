@@ -12,8 +12,6 @@ import { supabase } from "@/integrations/supabase/supabase";
 import QRCodeGenerator from '../qr/QRCodeGenerator';
 import { useAutoFill } from '@/contexts/AutoFillContext';
 
-const PRODUCT_TYPES = ["Cheese", "Yogurt", "Milk", "Butter"];
-
 const SalesDistributionForm = ({ onBack }) => {
   const { register, handleSubmit, reset, watch, setValue } = useForm();
   const { toast } = useToast();
@@ -28,6 +26,7 @@ const SalesDistributionForm = ({ onBack }) => {
     const fetchBatchIds = async () => {
       setLoading(true);
       try {
+        console.log("Fetching batch IDs from cold room inventory...");
         const { data, error } = await supabase
           .from('cold_room_inventory')
           .select('batch_id, product_type, unit_quantity')
@@ -35,6 +34,8 @@ const SalesDistributionForm = ({ onBack }) => {
           .order('storage_date_time', { ascending: false });
         
         if (error) throw error;
+        
+        console.log("Fetched data:", data);
         
         // Create unique batch options
         const uniqueBatches = Array.from(new Set(data.map(item => item.batch_id)))
@@ -47,12 +48,13 @@ const SalesDistributionForm = ({ onBack }) => {
             };
           });
         
+        console.log("Unique batches:", uniqueBatches);
         setBatchOptions(uniqueBatches);
       } catch (error) {
         console.error('Error fetching batch IDs:', error);
         toast({
           title: "Error",
-          description: "Failed to load batch IDs",
+          description: "Failed to load batch IDs: " + error.message,
           variant: "destructive",
         });
       } finally {
@@ -64,9 +66,11 @@ const SalesDistributionForm = ({ onBack }) => {
   }, [toast]);
 
   const handleBatchSelect = (batchId) => {
+    console.log("Selected batch ID:", batchId);
     const selectedBatch = batchOptions.find(batch => batch.id === batchId);
     if (selectedBatch) {
-      setValue('product_type', selectedBatch.productType.toLowerCase());
+      console.log("Found batch:", selectedBatch);
+      setValue('product_type', selectedBatch.productType);
       setValue('quantity', selectedBatch.quantity);
       
       // Store in context for potential use in other components
@@ -160,12 +164,14 @@ const SalesDistributionForm = ({ onBack }) => {
                   <SelectContent>
                     {loading ? (
                       <SelectItem value="loading" disabled>Loading...</SelectItem>
-                    ) : (
+                    ) : batchOptions.length > 0 ? (
                       batchOptions.map((batch) => (
                         <SelectItem key={batch.id} value={batch.id}>
                           {batch.id} - {batch.productType}
                         </SelectItem>
                       ))
+                    ) : (
+                      <SelectItem value="no-batches" disabled>No batch IDs found</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -173,16 +179,7 @@ const SalesDistributionForm = ({ onBack }) => {
 
               <div className="space-y-2">
                 <Label>Product Type</Label>
-                <Select onValueChange={(value) => register("product_type").onChange({ target: { value } })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select product type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PRODUCT_TYPES.map((type) => (
-                      <SelectItem key={type} value={type.toLowerCase()}>{type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input {...register("product_type", { required: true })} />
               </div>
 
               <div className="space-y-2">
