@@ -8,7 +8,6 @@ import YogurtProcessing from '../YogurtProcessing';
 import SlaughterhouseStock from '../SlaughterhouseStock';
 import SalesMarketing from '../SalesMarketing';
 import CheeseFactoryDashboard from '../cheese-factory/CheeseFactoryDashboard';
-import PackagingLabeling from '../packaging/PackagingLabeling';
 import LogisticsDashboard from '../logistics/LogisticsDashboard';
 import PersonnelDashboard from '../personnel/PersonnelDashboard';
 import ReportsDashboard from '../reports/ReportsDashboard';
@@ -50,15 +49,6 @@ export const dairySections = [
     group: 'Cheese Factory',
     notifications: 3,
     status: 'attention'
-  },
-  { 
-    id: 'packaging', 
-    title: 'Packaging & Labeling', 
-    icon: Package, 
-    component: PackagingLabeling,
-    group: 'Cheese Factory',
-    notifications: 0,
-    status: 'operational'
   },
   { 
     id: 'sales', 
