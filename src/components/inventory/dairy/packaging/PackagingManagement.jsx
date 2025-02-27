@@ -115,14 +115,16 @@ const PackagingManagement = () => {
 
   return (
     <div className="space-y-6 container mx-auto py-6">
-      <Button 
-        variant="outline"
-        onClick={handleBackToPackagingLabeling}
-        className="flex items-center gap-2 mb-4"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Packaging & Labeling
-      </Button>
+      <div className="flex items-center justify-between mb-4">
+        <Button 
+          variant="outline"
+          onClick={handleBackToPackagingLabeling}
+          className="flex items-center gap-2 text-sm font-medium"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Packaging & Labeling
+        </Button>
+      </div>
       
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Packaging Management</h2>
