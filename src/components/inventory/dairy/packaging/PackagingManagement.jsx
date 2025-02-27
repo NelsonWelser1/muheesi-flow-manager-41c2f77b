@@ -121,7 +121,7 @@ const PackagingManagement = () => {
 
   return (
     <div className="space-y-6 container mx-auto py-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex justify-between items-center mb-6">
         <Button 
           variant="ghost"
           onClick={handleBack}
@@ -130,9 +130,7 @@ const PackagingManagement = () => {
           <ArrowLeft className="h-4 w-4" />
           Back to Packaging & Labeling
         </Button>
-      </div>
-      
-      <div className="flex items-center justify-between">
+        
         <h2 className="text-2xl font-bold">Packaging Management</h2>
       </div>
 
