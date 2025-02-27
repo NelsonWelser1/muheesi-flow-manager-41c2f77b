@@ -3,17 +3,24 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { QrCode, ArrowLeft } from "lucide-react";
+import { QrCode, ArrowLeft, Home, LogOut, Clock } from "lucide-react";
 import LabelingForm from './LabelingForm';
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { format } from 'date-fns';
 
 const LabelingManagement = () => {
   const navigate = useNavigate();
   const [labelingData, setLabelingData] = useState([]);
   const [showScanner, setShowScanner] = useState(false);
   const { toast } = useToast();
+  
+  // Mock user data - in a real app, this would come from an auth context
+  const currentUser = {
+    name: "John Doe",
+    role: "Inventory Manager"
+  };
 
   // Handle form submission
   const handleLabelingSubmit = async (data) => {
@@ -104,17 +111,39 @@ const LabelingManagement = () => {
   return (
     <div className="space-y-6 container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <Button 
-          variant="ghost"
-          onClick={handleBack}
-          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Packaging & Labeling
-        </Button>
+        <div className="flex items-center space-x-4">
+          <Button 
+            variant="ghost"
+            onClick={handleBack}
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Companies
+          </Button>
+          <h1 className="text-3xl font-bold">Grand Berna Dairies</h1>
+        </div>
         
-        <h2 className="text-2xl font-bold">Labeling Management</h2>
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-600">
+            <div>{currentUser.name}</div>
+            <div>{currentUser.role}</div>
+          </div>
+          <div className="text-sm text-gray-600">
+            <Clock className="inline mr-2" />
+            {format(new Date(), 'MMM dd, yyyy, h:mm:ss a')}
+          </div>
+          <Button variant="outline" onClick={() => navigate('/home')}>
+            <Home className="h-4 w-4 mr-2" />
+            Home
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/logout')}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Log Out
+          </Button>
+        </div>
       </div>
+
+      <h2 className="text-2xl font-bold mb-6">Labeling Management</h2>
 
       <div className="space-y-6">
         <Card>
