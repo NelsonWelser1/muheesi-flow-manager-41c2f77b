@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { QrCode } from "lucide-react";
+import { QrCode, ArrowLeft } from "lucide-react";
 import LabelingForm from './LabelingForm';
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/supabase";
@@ -104,12 +104,14 @@ const LabelingManagement = () => {
   return (
     <div className="space-y-6 container mx-auto py-6">
       <div className="flex items-center justify-between mb-4">
-        <button 
+        <Button 
+          variant="ghost"
           onClick={handleBack}
-          className="mb-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
         >
-          ← Back to Packaging & Labeling
-        </button>
+          <ArrowLeft className="h-4 w-4" />
+          Back to Packaging & Labeling
+        </Button>
       </div>
 
       <div className="flex items-center justify-between">
