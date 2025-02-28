@@ -20,18 +20,57 @@ const SalesDistributionForm = ({ onBack }) => {
   const [batchEntries, setBatchEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const { autoFillData, updateAutoFillData } = useAutoFill();
+  const [batchSelected, setBatchSelected] = useState(false);
+  const [currency, setCurrency] = useState('UGX');
 
   // Watch changes to quantity and price per unit to calculate total price
   const quantity = watch('quantity');
   const pricePerUnit = watch('price_per_unit');
 
+  // Format number with currency symbol and commas
+  const formatCurrency = (value) => {
+    if (!value) return '';
+    // Remove any non-numeric characters except decimal point
+    const numericValue = value.toString().replace(/[^0-9.]/g, '');
+    const number = parseFloat(numericValue);
+    if (isNaN(number)) return '';
+    
+    // Format with commas
+    const parts = number.toFixed(2).toString().split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    
+    // Add currency symbol
+    return currency === 'USD' ? `$${parts.join('.')}` : `UGX ${parts.join('.')}`;
+  };
+
+  // Parse currency string back to number
+  const parseCurrency = (value) => {
+    if (!value) return '';
+    return value.toString().replace(/[^0-9.]/g, '');
+  };
+
   // Auto-calculate total price whenever quantity or pricePerUnit changes
   useEffect(() => {
     if (quantity && pricePerUnit) {
-      const totalPrice = Number(quantity) * Number(pricePerUnit);
-      setValue('total_price', totalPrice.toFixed(2));
+      const numericPrice = parseCurrency(pricePerUnit);
+      const totalPrice = Number(quantity) * Number(numericPrice);
+      setValue('total_price', formatCurrency(totalPrice));
     }
-  }, [quantity, pricePerUnit, setValue]);
+  }, [quantity, pricePerUnit, setValue, currency]);
+
+  // Update price format when currency changes
+  useEffect(() => {
+    const currentPrice = getValues('price_per_unit');
+    const currentTotal = getValues('total_price');
+    
+    if (currentPrice) {
+      setValue('price_per_unit', formatCurrency(parseCurrency(currentPrice)));
+    }
+    
+    if (currentTotal) {
+      setValue('total_price', formatCurrency(parseCurrency(currentTotal)));
+    }
+  }, [currency, setValue, getValues]);
 
   const getUsedBatchIds = async () => {
     try {
@@ -201,14 +240,27 @@ const SalesDistributionForm = ({ onBack }) => {
       setValue('quantity', selectedEntry.unit_quantity);
       setValue('unit_weight', selectedEntry.unit_weight);
       
+      // Mark that a batch has been selected to make fields read-only
+      setBatchSelected(true);
+      
       // If price_per_unit is already set, calculate total_price
       const currentPricePerUnit = getValues('price_per_unit');
       if (currentPricePerUnit) {
-        const totalPrice = Number(selectedEntry.unit_quantity) * Number(currentPricePerUnit);
-        setValue('total_price', totalPrice.toFixed(2));
+        const numericPrice = parseCurrency(currentPricePerUnit);
+        const totalPrice = Number(selectedEntry.unit_quantity) * Number(numericPrice);
+        setValue('total_price', formatCurrency(totalPrice));
       }
       
       updateAutoFillData('selectedBatch', selectedEntry);
+    }
+  };
+
+  // Handler for price per unit input to format as currency
+  const handlePricePerUnitChange = (e) => {
+    const input = e.target.value;
+    const numericValue = parseCurrency(input);
+    if (numericValue === '' || !isNaN(numericValue)) {
+      setValue('price_per_unit', formatCurrency(numericValue));
     }
   };
 
@@ -225,14 +277,19 @@ const SalesDistributionForm = ({ onBack }) => {
         return;
       }
 
+      // Parse currency values to numbers before saving
+      const dataToSubmit = {
+        ...data,
+        price_per_unit: parseFloat(parseCurrency(data.price_per_unit)),
+        total_price: parseFloat(parseCurrency(data.total_price)),
+        batch_id: data.batch_id,
+        created_by: user.id,
+        date_time: new Date().toISOString(),
+      };
+
       const { error } = await supabase
         .from('sales_records')
-        .insert([{
-          ...data,
-          batch_id: data.batch_id,
-          created_by: user.id,
-          date_time: new Date().toISOString(),
-        }]);
+        .insert([dataToSubmit]);
 
       if (error) throw error;
 
@@ -244,7 +301,9 @@ const SalesDistributionForm = ({ onBack }) => {
       // Refresh batch options after submission to reflect the newly used batch
       fetchBatchEntries();
       
+      // Reset form and batch selection state
       reset();
+      setBatchSelected(false);
     } catch (error) {
       console.error('Error saving sales record:', error);
       toast({
@@ -319,7 +378,11 @@ const SalesDistributionForm = ({ onBack }) => {
 
               <div className="space-y-2">
                 <Label>Product Type</Label>
-                <Input {...register("product_type", { required: true })} readOnly />
+                <Input 
+                  {...register("product_type", { required: true })} 
+                  readOnly={batchSelected}
+                  className={batchSelected ? "bg-gray-100" : ""}
+                />
               </div>
 
               <div className="space-y-2">
@@ -331,6 +394,8 @@ const SalesDistributionForm = ({ onBack }) => {
                     min: 1,
                     valueAsNumber: true 
                   })} 
+                  readOnly={batchSelected}
+                  className={batchSelected ? "bg-gray-100" : ""}
                 />
               </div>
               
@@ -344,30 +409,43 @@ const SalesDistributionForm = ({ onBack }) => {
                     min: 0,
                     valueAsNumber: true 
                   })} 
+                  readOnly={batchSelected}
+                  className={batchSelected ? "bg-gray-100" : ""}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Currency</Label>
+                <Select 
+                  value={currency}
+                  onValueChange={setCurrency}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD ($)</SelectItem>
+                    <SelectItem value="UGX">UGX (Shilling)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
                 <Label>Price Per Unit</Label>
                 <Input 
-                  type="number" 
-                  step="0.01" 
-                  {...register("price_per_unit", { 
-                    required: true, 
-                    min: 0,
-                    valueAsNumber: true 
-                  })} 
+                  {...register("price_per_unit", { required: true })} 
+                  onChange={handlePricePerUnitChange}
+                  placeholder={currency === 'USD' ? '$0.00' : 'UGX 0'}
                 />
               </div>
               
               <div className="space-y-2">
                 <Label>Total Price</Label>
                 <Input 
-                  type="number" 
-                  step="0.01" 
                   {...register("total_price")} 
                   readOnly 
                   className="bg-gray-50"
+                  placeholder={currency === 'USD' ? '$0.00' : 'UGX 0'}
                 />
               </div>
 
