@@ -60,26 +60,43 @@ const SalesDistributionForm = ({ onBack }) => {
         const usedBatchIds = await getUsedBatchIds();
         console.log("Used batch IDs:", usedBatchIds);
 
-        // Try with "Out" movement_action first (uppercase)
+        // Try with "Goods Issue" movement_action first
         let { data: movementData, error: movementError } = await supabase
           .from('cold_room_inventory')
           .select('batch_id, product_type, unit_quantity')
-          .eq('movement_action', 'Out')
+          .eq('movement_action', 'Goods Issue')
           .order('batch_id', { ascending: true });
 
         if (movementError) throw movementError;
         
-        // If no data with "Out", try with lowercase "out"
+        // Check if we got results with "Goods Issue"
         if (!movementData || movementData.length === 0) {
-          console.log("No 'Out' data found, trying with lowercase 'out'");
-          const { data: lowerCaseData, error: lowerCaseError } = await supabase
-            .from('cold_room_inventory')
-            .select('batch_id, product_type, unit_quantity')
-            .eq('movement_action', 'out')
-            .order('batch_id', { ascending: true });
+          console.log("No 'Goods Issue' data found, trying with different cases");
+          
+          // Try with other possible variations of "Goods Issue"
+          const variationQueries = [
+            { movement_action: 'goods issue' },
+            { movement_action: 'GOODS ISSUE' },
+            { movement_action: 'Out' },
+            { movement_action: 'out' },
+            { movement_action: 'Goods_Issue' }
+          ];
+          
+          for (const query of variationQueries) {
+            const { data, error } = await supabase
+              .from('cold_room_inventory')
+              .select('batch_id, product_type, unit_quantity')
+              .eq('movement_action', query.movement_action)
+              .order('batch_id', { ascending: true });
+              
+            if (error) continue;
             
-          if (lowerCaseError) throw lowerCaseError;
-          movementData = lowerCaseData;
+            if (data && data.length > 0) {
+              console.log(`Found data with movement_action '${query.movement_action}'`);
+              movementData = data;
+              break;
+            }
+          }
         }
 
         console.log("Fetched inventory data:", movementData);
@@ -103,15 +120,20 @@ const SalesDistributionForm = ({ onBack }) => {
           return;
         }
 
+        // Process all unique batch IDs from the data
+        // We're going to be more inclusive now to show all batch IDs
         const availableBatches = movementData
           .filter(item => !usedBatchIds.has(item.batch_id))
           .reduce((unique, item) => {
+            // Use batch_id as the unique identifier
             const exists = unique.find(u => u.id === item.batch_id);
-            if (!exists && item.unit_quantity > 0) {
+            
+            // Include all batch IDs, even with zero quantity
+            if (!exists) {
               unique.push({
                 id: item.batch_id,
                 productType: item.product_type || "Unknown",
-                quantity: item.unit_quantity
+                quantity: item.unit_quantity || 0
               });
             }
             return unique;
@@ -192,22 +214,23 @@ const SalesDistributionForm = ({ onBack }) => {
         description: "Sales record saved successfully",
       });
       
+      // Reload batch options to reflect the newly used batch
       const fetchBatchIds = async () => {
         setLoading(true);
         try {
-          console.log("Fetching inventory data for batch selection...");
+          console.log("Refreshing inventory data after submission...");
           
           const usedBatchIds = await getUsedBatchIds();
-          console.log("Used batch IDs:", usedBatchIds);
+          console.log("Updated used batch IDs:", usedBatchIds);
 
           const { data: movementData, error: movementError } = await supabase
             .from('cold_room_inventory')
             .select('batch_id, product_type, unit_quantity')
-            .eq('movement_action', 'Out')
+            .eq('movement_action', 'Goods Issue')
             .order('storage_date_time', { ascending: false });
 
           if (movementError) throw movementError;
-          console.log("Fetched movement data:", movementData);
+          console.log("Fetched updated movement data:", movementData);
 
           const availableBatches = movementData
             .filter(item => !usedBatchIds.has(item.batch_id))
@@ -223,15 +246,14 @@ const SalesDistributionForm = ({ onBack }) => {
               return unique;
             }, []);
 
-          console.log("Available batches:", availableBatches);
+          console.log("Updated available batches:", availableBatches);
           setBatchOptions(availableBatches);
 
         } catch (error) {
-          console.error('Error fetching batch IDs:', error);
-          setBatchOptions([]);
+          console.error('Error refreshing batch IDs:', error);
           toast({
             title: "Error",
-            description: "Failed to load batch IDs: " + error.message,
+            description: "Failed to refresh batch IDs: " + error.message,
             variant: "destructive",
           });
         } finally {
