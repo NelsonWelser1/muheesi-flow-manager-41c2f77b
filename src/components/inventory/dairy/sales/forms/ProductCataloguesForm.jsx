@@ -21,8 +21,8 @@ const ProductCataloguesForm = ({ onBack }) => {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            This form will allow you to create and manage product catalogues and brochures.
-            It will include fields for product details, images, descriptions, pricing, and more.
+            This form will allow you to create comprehensive catalogues or brochures listing product features, 
+            benefits, images, and associated data.
           </p>
           <p className="mt-4 text-muted-foreground">
             Coming soon...

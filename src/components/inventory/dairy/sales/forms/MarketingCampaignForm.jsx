@@ -21,9 +21,8 @@ const MarketingCampaignForm = ({ onBack }) => {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            This form will allow you to create and manage marketing campaign plans.
-            It will include fields for campaign objectives, target audiences, strategies, 
-            budgets, KPIs, and timelines.
+            This form will allow you to record campaign objectives, target audiences, strategies, 
+            budgets, KPIs, and related timelines.
           </p>
           <p className="mt-4 text-muted-foreground">
             Coming soon...

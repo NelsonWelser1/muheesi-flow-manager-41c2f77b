@@ -8,7 +8,7 @@ import {
   Users, 
   TrendingUp, 
   DollarSign, 
-  FileContract, 
+  FileText as FileContract, // Changed from FileContract to FileText as FileContract doesn't exist
   ClipboardList,
   Menu
 } from 'lucide-react';
