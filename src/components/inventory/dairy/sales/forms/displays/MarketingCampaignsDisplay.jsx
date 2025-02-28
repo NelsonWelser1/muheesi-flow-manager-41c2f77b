@@ -7,11 +7,13 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Search, Plus, Minus } from "lucide-react";
+import { ArrowLeft, Download, Search, Plus, Minus, Calendar } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const MarketingCampaignsDisplay = ({ onBack }) => {
   const { toast } = useToast();
@@ -20,10 +22,16 @@ const MarketingCampaignsDisplay = ({ onBack }) => {
   const [filteredCampaigns, setFilteredCampaigns] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [timeRange, setTimeRange] = useState("week"); // day, week, month, year
+  const [dateRange, setDateRange] = useState(null);
+  const [filterMode, setFilterMode] = useState("preset"); // preset or custom
 
   useEffect(() => {
-    fetchCampaigns();
-  }, [timeRange]);
+    if (filterMode === "preset") {
+      fetchCampaignsByPreset();
+    } else {
+      fetchCampaignsByDateRange();
+    }
+  }, [timeRange, filterMode, dateRange]);
 
   useEffect(() => {
     if (campaigns.length > 0) {
@@ -31,7 +39,7 @@ const MarketingCampaignsDisplay = ({ onBack }) => {
     }
   }, [searchQuery, campaigns]);
 
-  const fetchCampaigns = async () => {
+  const fetchCampaignsByPreset = async () => {
     setLoading(true);
     try {
       // Determine date range based on timeRange
@@ -70,6 +78,46 @@ const MarketingCampaignsDisplay = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Error fetching campaigns:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load campaigns: " + error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCampaignsByDateRange = async () => {
+    if (!dateRange?.from) return;
+    
+    setLoading(true);
+    try {
+      let query = supabase
+        .from('marketing_campaigns')
+        .select('*')
+        .gte('created_at', dateRange.from.toISOString());
+      
+      if (dateRange.to) {
+        // Add one day to include the end date fully
+        const endDate = new Date(dateRange.to);
+        endDate.setDate(endDate.getDate() + 1);
+        query = query.lt('created_at', endDate.toISOString());
+      }
+      
+      query = query.order('created_at', { ascending: false });
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      if (data) {
+        console.log('Campaigns fetched by date range:', data);
+        setCampaigns(data);
+        setFilteredCampaigns(data);
+      }
+    } catch (error) {
+      console.error('Error fetching campaigns by date range:', error);
       toast({
         title: "Error",
         description: "Failed to load campaigns: " + error.message,
@@ -217,25 +265,39 @@ const MarketingCampaignsDisplay = ({ onBack }) => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Marketing Campaigns</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={decreaseTimeRange}
-              disabled={timeRange === "day"}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium capitalize">{timeRange}</span>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={increaseTimeRange}
-              disabled={timeRange === "year"}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
+          <Tabs value={filterMode} onValueChange={setFilterMode} className="w-[400px]">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="preset">Preset Ranges</TabsTrigger>
+              <TabsTrigger value="custom">Custom Range</TabsTrigger>
+            </TabsList>
+            <TabsContent value="preset" className="mt-2">
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={decreaseTimeRange}
+                  disabled={timeRange === "day"}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-medium capitalize">{timeRange}</span>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={increaseTimeRange}
+                  disabled={timeRange === "year"}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </TabsContent>
+            <TabsContent value="custom" className="mt-2">
+              <DateRangePicker 
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+              />
+            </TabsContent>
+          </Tabs>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex flex-col sm:flex-row gap-4 justify-between">
