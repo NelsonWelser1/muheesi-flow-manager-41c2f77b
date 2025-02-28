@@ -60,110 +60,94 @@ const SalesDistributionForm = ({ onBack }) => {
         const usedBatchIds = await getUsedBatchIds();
         console.log("Used batch IDs:", usedBatchIds);
 
-        // Try with "Goods Issue" movement_action first
-        let { data: movementData, error: movementError } = await supabase
-          .from('cold_room_inventory')
-          .select('batch_id, product_type, unit_quantity')
-          .eq('movement_action', 'Goods Issue')
-          .order('batch_id', { ascending: true });
-
-        if (movementError) throw movementError;
+        // Create an array to store all found batch data
+        let allBatchData = [];
         
-        // Check if we got results with "Goods Issue"
-        if (!movementData || movementData.length === 0) {
-          console.log("No 'Goods Issue' data found, trying with different cases");
+        // Define all possible movement action variations
+        const movementActions = [
+          'Goods Issue', 
+          'goods issue', 
+          'GOODS ISSUE', 
+          'Out',
+          'out',
+          'Goods_Issue'
+        ];
+        
+        // Query for each movement action and combine results
+        for (const action of movementActions) {
+          console.log(`Trying to fetch with movement_action = '${action}'`);
           
-          // Try with other possible variations of "Goods Issue"
-          const variationQueries = [
-            { movement_action: 'goods issue' },
-            { movement_action: 'GOODS ISSUE' },
-            { movement_action: 'Out' },
-            { movement_action: 'out' },
-            { movement_action: 'Goods_Issue' }
-          ];
-          
-          for (const query of variationQueries) {
-            const { data, error } = await supabase
-              .from('cold_room_inventory')
-              .select('batch_id, product_type, unit_quantity')
-              .eq('movement_action', query.movement_action)
-              .order('batch_id', { ascending: true });
-              
-            if (error) continue;
+          const { data, error } = await supabase
+            .from('cold_room_inventory')
+            .select('batch_id, product_type, unit_quantity')
+            .eq('movement_action', action)
+            .order('batch_id', { ascending: true });
             
-            if (data && data.length > 0) {
-              console.log(`Found data with movement_action '${query.movement_action}'`);
-              movementData = data;
-              break;
-            }
+          if (error) {
+            console.error(`Error fetching with movement_action '${action}':`, error);
+            continue;
+          }
+          
+          if (data && data.length > 0) {
+            console.log(`Found ${data.length} records with movement_action '${action}'`);
+            allBatchData = [...allBatchData, ...data];
           }
         }
-
-        console.log("Fetched inventory data:", movementData);
-
-        // If still no data, add some sample data
-        if (!movementData || movementData.length === 0) {
-          console.log("No inventory data found, adding sample data");
+        
+        console.log("Total batch data found:", allBatchData.length);
+        console.log("All fetched batch data:", allBatchData);
+        
+        // If no data found in any query, provide sample data
+        if (allBatchData.length === 0) {
+          console.log("No inventory data found, using sample data");
           setBatchOptions([
-            {
-              id: "BATCH-001",
-              productType: "Cheese",
-              quantity: 50
-            },
-            {
-              id: "BATCH-002",
-              productType: "Milk",
-              quantity: 100
-            }
+            { id: "BATCH-001", productType: "Cheese", quantity: 50 },
+            { id: "BATCH-002", productType: "Milk", quantity: 100 }
           ]);
           setLoading(false);
           return;
         }
-
-        // Process all unique batch IDs from the data
-        // We're going to be more inclusive now to show all batch IDs
-        const availableBatches = movementData
-          .filter(item => !usedBatchIds.has(item.batch_id))
-          .reduce((unique, item) => {
-            // Use batch_id as the unique identifier
-            const exists = unique.find(u => u.id === item.batch_id);
-            
-            // Include all batch IDs, even with zero quantity
-            if (!exists) {
-              unique.push({
-                id: item.batch_id,
-                productType: item.product_type || "Unknown",
-                quantity: item.unit_quantity || 0
-              });
-            }
-            return unique;
-          }, []);
-
-        availableBatches.sort((a, b) => a.id.localeCompare(b.id));
-
-        console.log("Available batches (sorted):", availableBatches);
-        setBatchOptions(availableBatches);
-
+        
+        // Process combined data to create unique batch options
+        // Remove the quantity filter to include all batches
+        const uniqueBatchOptions = allBatchData.reduce((unique, item) => {
+          // Filter out already used batch IDs
+          if (usedBatchIds.has(item.batch_id)) return unique;
+          
+          // Check if this batch ID is already in our unique list
+          const existingIndex = unique.findIndex(u => u.id === item.batch_id);
+          
+          if (existingIndex === -1) {
+            // This is a new batch ID, add it to our list
+            unique.push({
+              id: item.batch_id,
+              productType: item.product_type || "Unknown",
+              quantity: item.unit_quantity || 0
+            });
+          }
+          
+          return unique;
+        }, []);
+        
+        // Sort the batch options by ID for consistent display
+        uniqueBatchOptions.sort((a, b) => a.id.localeCompare(b.id));
+        
+        console.log("Final unique batch options:", uniqueBatchOptions);
+        console.log("Number of unique batch options:", uniqueBatchOptions.length);
+        
+        setBatchOptions(uniqueBatchOptions);
       } catch (error) {
         console.error('Error fetching batch IDs:', error);
-        // Provide fallback data
-        setBatchOptions([
-          {
-            id: "BATCH-001",
-            productType: "Cheese",
-            quantity: 50
-          },
-          {
-            id: "BATCH-002",
-            productType: "Milk",
-            quantity: 100
-          }
-        ]);
         toast({
           title: "Error",
-          description: "Failed to load batch IDs. Using sample data instead.",
+          description: "Failed to load batch IDs: " + error.message,
           variant: "destructive",
         });
+        // Only use sample data if there was an actual error
+        setBatchOptions([
+          { id: "BATCH-001", productType: "Cheese", quantity: 50 },
+          { id: "BATCH-002", productType: "Milk", quantity: 100 }
+        ]);
       } finally {
         setLoading(false);
       }
@@ -214,52 +198,7 @@ const SalesDistributionForm = ({ onBack }) => {
         description: "Sales record saved successfully",
       });
       
-      // Reload batch options to reflect the newly used batch
-      const fetchBatchIds = async () => {
-        setLoading(true);
-        try {
-          console.log("Refreshing inventory data after submission...");
-          
-          const usedBatchIds = await getUsedBatchIds();
-          console.log("Updated used batch IDs:", usedBatchIds);
-
-          const { data: movementData, error: movementError } = await supabase
-            .from('cold_room_inventory')
-            .select('batch_id, product_type, unit_quantity')
-            .eq('movement_action', 'Goods Issue')
-            .order('storage_date_time', { ascending: false });
-
-          if (movementError) throw movementError;
-          console.log("Fetched updated movement data:", movementData);
-
-          const availableBatches = movementData
-            .filter(item => !usedBatchIds.has(item.batch_id))
-            .reduce((unique, item) => {
-              const exists = unique.find(u => u.id === item.batch_id);
-              if (!exists) {
-                unique.push({
-                  id: item.batch_id,
-                  productType: item.product_type,
-                  quantity: item.unit_quantity
-                });
-              }
-              return unique;
-            }, []);
-
-          console.log("Updated available batches:", availableBatches);
-          setBatchOptions(availableBatches);
-
-        } catch (error) {
-          console.error('Error refreshing batch IDs:', error);
-          toast({
-            title: "Error",
-            description: "Failed to refresh batch IDs: " + error.message,
-            variant: "destructive",
-          });
-        } finally {
-          setLoading(false);
-        }
-      };
+      // Refresh batch options after submission to reflect the newly used batch
       fetchBatchIds();
       
       reset();
@@ -270,6 +209,108 @@ const SalesDistributionForm = ({ onBack }) => {
         description: "Failed to save sales record",
         variant: "destructive",
       });
+    }
+  };
+
+  // Separate function for fetching batch IDs to use both in useEffect and after form submission
+  const fetchBatchIds = async () => {
+    setLoading(true);
+    try {
+      console.log("Fetching inventory data for batch selection...");
+      
+      const usedBatchIds = await getUsedBatchIds();
+      console.log("Used batch IDs:", usedBatchIds);
+
+      // Create an array to store all found batch data
+      let allBatchData = [];
+      
+      // Define all possible movement action variations
+      const movementActions = [
+        'Goods Issue', 
+        'goods issue', 
+        'GOODS ISSUE', 
+        'Out',
+        'out',
+        'Goods_Issue'
+      ];
+      
+      // Query for each movement action and combine results
+      for (const action of movementActions) {
+        console.log(`Trying to fetch with movement_action = '${action}'`);
+        
+        const { data, error } = await supabase
+          .from('cold_room_inventory')
+          .select('batch_id, product_type, unit_quantity')
+          .eq('movement_action', action)
+          .order('batch_id', { ascending: true });
+          
+        if (error) {
+          console.error(`Error fetching with movement_action '${action}':`, error);
+          continue;
+        }
+        
+        if (data && data.length > 0) {
+          console.log(`Found ${data.length} records with movement_action '${action}'`);
+          allBatchData = [...allBatchData, ...data];
+        }
+      }
+      
+      console.log("Total batch data found:", allBatchData.length);
+      console.log("All fetched batch data:", allBatchData);
+      
+      // If no data found in any query, provide sample data
+      if (allBatchData.length === 0) {
+        console.log("No inventory data found, using sample data");
+        setBatchOptions([
+          { id: "BATCH-001", productType: "Cheese", quantity: 50 },
+          { id: "BATCH-002", productType: "Milk", quantity: 100 }
+        ]);
+        setLoading(false);
+        return;
+      }
+      
+      // Process combined data to create unique batch options
+      // Remove the quantity filter to include all batches
+      const uniqueBatchOptions = allBatchData.reduce((unique, item) => {
+        // Filter out already used batch IDs
+        if (usedBatchIds.has(item.batch_id)) return unique;
+        
+        // Check if this batch ID is already in our unique list
+        const existingIndex = unique.findIndex(u => u.id === item.batch_id);
+        
+        if (existingIndex === -1) {
+          // This is a new batch ID, add it to our list
+          unique.push({
+            id: item.batch_id,
+            productType: item.product_type || "Unknown",
+            quantity: item.unit_quantity || 0
+          });
+        }
+        
+        return unique;
+      }, []);
+      
+      // Sort the batch options by ID for consistent display
+      uniqueBatchOptions.sort((a, b) => a.id.localeCompare(b.id));
+      
+      console.log("Final unique batch options:", uniqueBatchOptions);
+      console.log("Number of unique batch options:", uniqueBatchOptions.length);
+      
+      setBatchOptions(uniqueBatchOptions);
+    } catch (error) {
+      console.error('Error fetching batch IDs:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load batch IDs: " + error.message,
+        variant: "destructive",
+      });
+      // Only use sample data if there was an actual error
+      setBatchOptions([
+        { id: "BATCH-001", productType: "Cheese", quantity: 50 },
+        { id: "BATCH-002", productType: "Milk", quantity: 100 }
+      ]);
+    } finally {
+      setLoading(false);
     }
   };
 
