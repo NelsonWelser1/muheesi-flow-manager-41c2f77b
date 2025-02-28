@@ -7,7 +7,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Search, Eye, FileText } from "lucide-react";
+import { ArrowLeft, Download, Search, Eye, FileText, Calendar } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,8 @@ const SalesContractsDisplay = ({ onBack, onViewContract }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateRange, setDateRange] = useState(null);
+  const [sortField, setSortField] = useState("created_at");
+  const [sortDirection, setSortDirection] = useState("desc");
 
   useEffect(() => {
     fetchContracts();
@@ -33,7 +35,7 @@ const SalesContractsDisplay = ({ onBack, onViewContract }) => {
     if (contracts.length > 0) {
       filterContracts();
     }
-  }, [searchQuery, contracts, statusFilter]);
+  }, [searchQuery, contracts, statusFilter, sortField, sortDirection]);
 
   const fetchContracts = async () => {
     setLoading(true);
@@ -54,7 +56,7 @@ const SalesContractsDisplay = ({ onBack, onViewContract }) => {
         }
       }
       
-      query = query.order('created_at', { ascending: false });
+      query = query.order(sortField, { ascending: sortDirection === 'asc' });
       
       const { data, error } = await query;
       
@@ -89,13 +91,48 @@ const SalesContractsDisplay = ({ onBack, onViewContract }) => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(contract => 
-        contract.customer_name.toLowerCase().includes(query) || 
-        contract.product_category.toLowerCase().includes(query) ||
+        contract.customer_name?.toLowerCase().includes(query) || 
+        contract.product_category?.toLowerCase().includes(query) ||
         (contract.description && contract.description.toLowerCase().includes(query))
       );
     }
     
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let valueA = a[sortField];
+      let valueB = b[sortField];
+      
+      // Handle dates
+      if (sortField.includes('date')) {
+        valueA = new Date(valueA || 0).getTime();
+        valueB = new Date(valueB || 0).getTime();
+      }
+      
+      // Handle numbers
+      if (sortField === 'contract_value') {
+        valueA = parseFloat(valueA || 0);
+        valueB = parseFloat(valueB || 0);
+      }
+      
+      if (sortDirection === 'asc') {
+        return valueA > valueB ? 1 : -1;
+      } else {
+        return valueA < valueB ? 1 : -1;
+      }
+    });
+    
     setFilteredContracts(filtered);
+  };
+
+  const handleSort = (field) => {
+    if (field === sortField) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New field, default to descending
+      setSortField(field);
+      setSortDirection('desc');
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -209,6 +246,14 @@ const SalesContractsDisplay = ({ onBack, onViewContract }) => {
     }
   };
 
+  const clearFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setDateRange(null);
+    setSortField("created_at");
+    setSortDirection("desc");
+  };
+
   return (
     <div className="space-y-4">
       <Button 
@@ -222,11 +267,21 @@ const SalesContractsDisplay = ({ onBack, onViewContract }) => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
           <CardTitle>Sales Contracts</CardTitle>
-          <DateRangePicker
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            className="w-[300px]"
-          />
+          <div className="flex items-center gap-2">
+            <DateRangePicker
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              className="w-[300px]"
+            />
+            <Button 
+              variant="ghost" 
+              onClick={clearFilters}
+              title="Clear all filters"
+              className="flex items-center gap-1"
+            >
+              Reset
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex flex-col sm:flex-row gap-4 justify-between">
@@ -272,10 +327,22 @@ const SalesContractsDisplay = ({ onBack, onViewContract }) => {
           </div>
 
           {loading ? (
-            <p className="text-center py-4">Loading contracts...</p>
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
           ) : filteredContracts.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No contracts found. {searchQuery || statusFilter !== "all" ? "Try different search criteria." : "Create your first sales contract."}</p>
+              <Calendar className="h-12 w-12 mx-auto text-muted-foreground" />
+              <p className="text-muted-foreground mt-4">No contracts found. {searchQuery || statusFilter !== "all" || dateRange ? "Try different search criteria." : "Create your first sales contract."}</p>
+              {(searchQuery || statusFilter !== "all" || dateRange) && (
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={clearFilters}
+                >
+                  Clear Filters
+                </Button>
+              )}
             </div>
           ) : (
             <div className="rounded-md border">
@@ -283,18 +350,30 @@ const SalesContractsDisplay = ({ onBack, onViewContract }) => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/50 font-medium">
-                      <th className="p-3 text-left">Customer</th>
-                      <th className="p-3 text-left">Product Category</th>
-                      <th className="p-3 text-left">Start Date</th>
-                      <th className="p-3 text-left">End Date</th>
-                      <th className="p-3 text-left">Value</th>
-                      <th className="p-3 text-left">Status</th>
+                      <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('customer_name')}>
+                        Customer {sortField === 'customer_name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('product_category')}>
+                        Product Category {sortField === 'product_category' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('start_date')}>
+                        Start Date {sortField === 'start_date' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('end_date')}>
+                        End Date {sortField === 'end_date' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('contract_value')}>
+                        Value {sortField === 'contract_value' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('contract_status')}>
+                        Status {sortField === 'contract_status' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
                       <th className="p-3 text-left">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredContracts.map((contract) => (
-                      <tr key={contract.id} className="border-b">
+                      <tr key={contract.id} className="border-b hover:bg-muted/30">
                         <td className="p-3">{contract.customer_name}</td>
                         <td className="p-3 capitalize">{contract.product_category || "—"}</td>
                         <td className="p-3">{contract.start_date ? format(new Date(contract.start_date), "MMM d, yyyy") : "—"}</td>

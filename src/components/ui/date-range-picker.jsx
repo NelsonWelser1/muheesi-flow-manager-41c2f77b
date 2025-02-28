@@ -17,6 +17,21 @@ export function DateRangePicker({
   dateRange,
   onDateRangeChange,
 }) {
+  const [date, setDate] = React.useState(dateRange);
+
+  // Update local state when prop changes
+  React.useEffect(() => {
+    setDate(dateRange);
+  }, [dateRange]);
+
+  // Handle date selection and propagate to parent
+  const handleDateSelect = (selectedDateRange) => {
+    setDate(selectedDateRange);
+    if (onDateRangeChange) {
+      onDateRangeChange(selectedDateRange);
+    }
+  };
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -26,18 +41,18 @@ export function DateRangePicker({
             variant={"outline"}
             className={cn(
               "w-full justify-start text-left font-normal",
-              !dateRange && "text-muted-foreground"
+              !date && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateRange?.from ? (
-              dateRange.to ? (
+            {date?.from ? (
+              date.to ? (
                 <>
-                  {format(dateRange.from, "LLL dd, y")} -{" "}
-                  {format(dateRange.to, "LLL dd, y")}
+                  {format(date.from, "LLL dd, y")} -{" "}
+                  {format(date.to, "LLL dd, y")}
                 </>
               ) : (
-                format(dateRange.from, "LLL dd, y")
+                format(date.from, "LLL dd, y")
               )
             ) : (
               <span>Select date range</span>
@@ -48,9 +63,9 @@ export function DateRangePicker({
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={dateRange?.from}
-            selected={dateRange}
-            onSelect={onDateRangeChange}
+            defaultMonth={date?.from}
+            selected={date}
+            onSelect={handleDateSelect}
             numberOfMonths={2}
           />
         </PopoverContent>
