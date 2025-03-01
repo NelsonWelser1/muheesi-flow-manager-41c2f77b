@@ -1,151 +1,153 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { 
-  FileText, 
-  BookOpen, 
-  Target, 
-  Users, 
-  TrendingUp, 
-  DollarSign, 
-  FileText as FileContract, // Changed from FileContract to FileText as FileContract doesn't exist
-  ClipboardList,
-  Menu
-} from 'lucide-react';
-import SalesProposalsForm from './forms/SalesProposalsForm';
-import ProductCataloguesForm from './forms/ProductCataloguesForm';
-import MarketingCampaignForm from './forms/MarketingCampaignForm';
+import { ArrowLeft } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ProductCatalogForm from './forms/ProductCatalogForm';
+import PricingSheetsForm from './forms/PricingSheetsForm';
+import SalesProposalForm from './forms/SalesProposalForm';
+import CustomerFeedbackForm from './forms/CustomerFeedbackForm';
 import CRMReportsForm from './forms/CRMReportsForm';
 import AdvertisingPromotionForm from './forms/AdvertisingPromotionForm';
-import PricingSheetsForm from './forms/PricingSheetsForm';
 import SalesContractsForm from './forms/SalesContractsForm';
-import CustomerFeedbackForm from './forms/CustomerFeedbackForm';
-import SalesDistributionForm from './SalesDistributionForm';
+import ProductCataloguesDisplay from './forms/displays/ProductCataloguesDisplay';
+import MarketingCampaignsDisplay from './forms/displays/MarketingCampaignsDisplay';
+import SalesContractsDisplay from './forms/displays/SalesContractsDisplay';
 
 const SalesMarketingLayout = ({ onBack }) => {
-  const [activeForm, setActiveForm] = useState('sales-distribution');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeView, setActiveView] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('forms');
 
-  const forms = [
-    { 
-      id: 'sales-distribution', 
-      name: 'Sales & Distribution',
-      icon: <TrendingUp className="w-4 h-4 mr-2" />
-    },
-    { 
-      id: 'sales-proposals', 
-      name: 'Sales Proposals/Quotations',
-      icon: <FileText className="w-4 h-4 mr-2" />
-    },
-    { 
-      id: 'product-catalogues', 
-      name: 'Product Catalogues',
-      icon: <BookOpen className="w-4 h-4 mr-2" />
-    },
-    { 
-      id: 'marketing-campaigns', 
-      name: 'Marketing Campaigns',
-      icon: <Target className="w-4 h-4 mr-2" />
-    },
-    { 
-      id: 'crm-reports', 
-      name: 'CRM Reports',
-      icon: <Users className="w-4 h-4 mr-2" />
-    },
-    { 
-      id: 'advertising-promotion', 
-      name: 'Advertising & Promotion',
-      icon: <TrendingUp className="w-4 h-4 mr-2" />
-    },
-    { 
-      id: 'pricing-sheets', 
-      name: 'Pricing Sheets',
-      icon: <DollarSign className="w-4 h-4 mr-2" />
-    },
-    { 
-      id: 'sales-contracts', 
-      name: 'Sales Contracts',
-      icon: <FileContract className="w-4 h-4 mr-2" />
-    },
-    { 
-      id: 'customer-feedback', 
-      name: 'Customer Feedback',
-      icon: <ClipboardList className="w-4 h-4 mr-2" />
-    }
-  ];
+  const handleBackToMenu = () => {
+    setActiveView('dashboard');
+  };
 
-  const renderActiveForm = () => {
-    switch (activeForm) {
-      case 'sales-distribution':
-        return <SalesDistributionForm onBack={onBack} />;
-      case 'sales-proposals':
-        return <SalesProposalsForm onBack={() => setActiveForm('sales-distribution')} />;
-      case 'product-catalogues':
-        return <ProductCataloguesForm onBack={() => setActiveForm('sales-distribution')} />;
-      case 'marketing-campaigns':
-        return <MarketingCampaignForm onBack={() => setActiveForm('sales-distribution')} />;
-      case 'crm-reports':
-        return <CRMReportsForm onBack={() => setActiveForm('sales-distribution')} />;
-      case 'advertising-promotion':
-        return <AdvertisingPromotionForm onBack={() => setActiveForm('sales-distribution')} />;
+  const renderContent = () => {
+    switch (activeView) {
+      case 'product-catalog':
+        return <ProductCatalogForm onBack={handleBackToMenu} />;
       case 'pricing-sheets':
-        return <PricingSheetsForm onBack={() => setActiveForm('sales-distribution')} />;
-      case 'sales-contracts':
-        return <SalesContractsForm onBack={() => setActiveForm('sales-distribution')} />;
+        return <PricingSheetsForm onBack={handleBackToMenu} />;
+      case 'sales-proposal':
+        return <SalesProposalForm onBack={handleBackToMenu} />;
       case 'customer-feedback':
-        return <CustomerFeedbackForm onBack={() => setActiveForm('sales-distribution')} />;
+        return <CustomerFeedbackForm onBack={handleBackToMenu} />;
+      case 'crm-reports':
+        return <CRMReportsForm onBack={handleBackToMenu} />;
+      case 'advertising-promotion':
+        return <AdvertisingPromotionForm onBack={handleBackToMenu} />;
+      case 'sales-contracts':
+        return <SalesContractsForm onBack={handleBackToMenu} />;
+      case 'view-product-catalogues':
+        return <ProductCataloguesDisplay onBack={handleBackToMenu} />;
+      case 'view-marketing-campaigns':
+        return <MarketingCampaignsDisplay onBack={handleBackToMenu} />;
+      case 'view-sales-contracts':
+        return <SalesContractsDisplay onBack={handleBackToMenu} />;
+      case 'dashboard':
       default:
-        return <SalesDistributionForm onBack={onBack} />;
+        return (
+          <div className="grid gap-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="forms">Create Forms</TabsTrigger>
+                <TabsTrigger value="reports">View Reports</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="forms" className="space-y-4 pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <MenuCard 
+                    title="Product Catalogues" 
+                    description="Create detailed product catalogues to showcase your dairy products"
+                    onClick={() => setActiveView('product-catalog')}
+                  />
+                  <MenuCard 
+                    title="Pricing Sheets" 
+                    description="Create and manage pricing sheets for different products and customers"
+                    onClick={() => setActiveView('pricing-sheets')}
+                  />
+                  <MenuCard 
+                    title="Sales Proposals" 
+                    description="Generate customized sales proposals for potential customers"
+                    onClick={() => setActiveView('sales-proposal')}
+                  />
+                  <MenuCard 
+                    title="Customer Feedback" 
+                    description="Record and track customer feedback and satisfaction ratings"
+                    onClick={() => setActiveView('customer-feedback')}
+                  />
+                  <MenuCard 
+                    title="CRM Reports" 
+                    description="Create and manage customer relationship reports and interactions"
+                    onClick={() => setActiveView('crm-reports')}
+                  />
+                  <MenuCard 
+                    title="Advertising & Promotion" 
+                    description="Manage advertising assets and promotional campaigns"
+                    onClick={() => setActiveView('advertising-promotion')}
+                  />
+                  <MenuCard 
+                    title="Sales Contracts" 
+                    description="Create and manage sales contracts and agreements"
+                    onClick={() => setActiveView('sales-contracts')}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="reports" className="space-y-4 pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <MenuCard 
+                    title="View Product Catalogues" 
+                    description="Browse and search through all product catalogues"
+                    onClick={() => setActiveView('view-product-catalogues')}
+                  />
+                  <MenuCard 
+                    title="View Marketing Campaigns" 
+                    description="Browse and analyze all marketing campaigns and their performance"
+                    onClick={() => setActiveView('view-marketing-campaigns')}
+                  />
+                  <MenuCard 
+                    title="View Sales Contracts" 
+                    description="Browse and manage all sales contracts and their status"
+                    onClick={() => setActiveView('view-sales-contracts')}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        );
     }
   };
 
   return (
-    <div className="flex h-full">
-      {/* Sidebar toggle for mobile */}
-      <div className="absolute top-4 left-4 md:hidden z-10">
+    <div className="space-y-4">
+      {activeView === 'dashboard' && (
         <Button 
           variant="outline" 
-          size="icon"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
+          onClick={onBack}
+          className="flex items-center gap-2"
         >
-          <Menu className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" /> Back to Dashboard
         </Button>
-      </div>
+      )}
 
-      {/* Sidebar */}
-      <div className={`
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-        transition-transform duration-300 ease-in-out
-        fixed md:static top-0 left-0 h-full w-64 bg-white border-r shadow-sm z-20 md:translate-x-0
-      `}>
-        <div className="p-4 border-b">
-          <h2 className="text-xl font-bold">Sales & Marketing</h2>
-        </div>
-        <div className="p-2 overflow-y-auto h-[calc(100%-60px)]">
-          {forms.map((form) => (
-            <Button
-              key={form.id}
-              variant={activeForm === form.id ? "secondary" : "ghost"}
-              className="w-full justify-start mb-1"
-              onClick={() => {
-                setActiveForm(form.id);
-                // Close sidebar on mobile after selection
-                if (window.innerWidth < 768) {
-                  setSidebarOpen(false);
-                }
-              }}
-            >
-              {form.icon}
-              {form.name}
-            </Button>
-          ))}
-        </div>
-      </div>
+      {renderContent()}
+    </div>
+  );
+};
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-4 w-full">
-        {renderActiveForm()}
+// Helper component for menu cards
+const MenuCard = ({ title, description, onClick }) => {
+  return (
+    <div 
+      className="border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer bg-white flex flex-col justify-between"
+      onClick={onClick}
+    >
+      <div>
+        <h3 className="text-lg font-medium mb-2">{title}</h3>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
+      <Button className="mt-4 w-full">Open</Button>
     </div>
   );
 };

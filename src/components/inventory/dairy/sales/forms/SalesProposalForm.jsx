@@ -18,16 +18,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { CalendarIcon, ArrowLeft, Plus, X, Calculator } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowLeft, Plus, X, Calculator } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const SalesContractsForm = ({ onBack }) => {
+const SalesProposalForm = ({ onBack }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [products, setProducts] = useState([
@@ -37,12 +33,10 @@ const SalesContractsForm = ({ onBack }) => {
   const form = useForm({
     defaultValues: {
       customer_name: '',
-      customer_id: '',
-      contract_type: 'standard',
-      start_date: new Date(),
-      end_date: null,
-      terms: '',
-      status: 'draft'
+      contact_email: '',
+      contact_phone: '',
+      validity_period: '30',
+      terms_conditions: 'Payment due within 30 days of invoice date.\nDelivery within 7 working days of order confirmation.\nPrices subject to change without notice.',
     }
   });
 
@@ -55,7 +49,7 @@ const SalesContractsForm = ({ onBack }) => {
       const newProducts = [...products];
       newProducts.splice(index, 1);
       setProducts(newProducts);
-      calculateTotalValue(newProducts);
+      calculateGrandTotal(newProducts);
     } else {
       toast({
         title: "Cannot Remove",
@@ -77,60 +71,58 @@ const SalesContractsForm = ({ onBack }) => {
     }
     
     setProducts(newProducts);
-    calculateTotalValue(newProducts);
+    calculateGrandTotal(newProducts);
   };
 
-  const [totalValue, setTotalValue] = useState('0.00');
+  const [grandTotal, setGrandTotal] = useState('0.00');
   
-  const calculateTotalValue = (productsList) => {
+  const calculateGrandTotal = (productsList) => {
     const total = productsList.reduce((sum, product) => {
       return sum + (parseFloat(product.total) || 0);
     }, 0);
-    setTotalValue(total.toFixed(2));
+    setGrandTotal(total.toFixed(2));
   };
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      // Generate a contract ID
-      const contractId = `CON-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+      // Generate a proposal ID
+      const proposalId = `PRO-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
       
       const { data: userData } = await supabase.auth.getUser();
       
       const formattedData = {
-        contract_id: contractId,
+        proposal_id: proposalId,
         customer_name: data.customer_name,
-        customer_id: data.customer_id || null,
-        contract_type: data.contract_type,
-        start_date: data.start_date.toISOString(),
-        end_date: data.end_date ? data.end_date.toISOString() : null,
+        contact_email: data.contact_email,
+        contact_phone: data.contact_phone,
         products: JSON.stringify(products),
-        terms: data.terms,
-        total_value: parseFloat(totalValue),
-        status: data.status,
+        validity_period: parseInt(data.validity_period),
+        terms_conditions: data.terms_conditions,
+        grand_total: grandTotal,
         created_by: userData?.user?.id || null
       };
 
       const { error } = await supabase
-        .from('sales_contracts')
+        .from('sales_proposals')
         .insert([formattedData]);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Sales contract created successfully"
+        description: "Sales proposal created successfully"
       });
 
       // Reset form
       form.reset();
       setProducts([{ name: '', quantity: '', unit_price: '', total: '0.00' }]);
-      setTotalValue('0.00');
+      setGrandTotal('0.00');
     } catch (error) {
-      console.error('Error creating sales contract:', error);
+      console.error('Error creating sales proposal:', error);
       toast({
         title: "Error",
-        description: "Failed to create sales contract: " + error.message,
+        description: "Failed to create sales proposal: " + error.message,
         variant: "destructive",
       });
     } finally {
@@ -148,28 +140,28 @@ const SalesContractsForm = ({ onBack }) => {
     });
     
     setProducts(newProducts);
-    calculateTotalValue(newProducts);
+    calculateGrandTotal(newProducts);
   };
 
   const autoPopulateProducts = () => {
     setProducts([
       { 
-        name: 'Fresh Milk (Monthly Supply)', 
-        quantity: '1000', 
+        name: 'Fresh Milk (1L)', 
+        quantity: '100', 
         unit_price: '2.50', 
-        total: '2500.00' 
+        total: '250.00' 
       },
       { 
-        name: 'Yogurt Variety Pack', 
-        quantity: '300', 
+        name: 'Yogurt (500g)', 
+        quantity: '50', 
         unit_price: '3.75', 
-        total: '1125.00' 
+        total: '187.50' 
       },
       { 
-        name: 'Cheese Assortment', 
-        quantity: '150', 
+        name: 'Cheese (250g)', 
+        quantity: '25', 
         unit_price: '4.99', 
-        total: '748.50' 
+        total: '124.75' 
       }
     ]);
     
@@ -198,7 +190,7 @@ const SalesContractsForm = ({ onBack }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Create Sales Contract</CardTitle>
+          <CardTitle>Create Sales Proposal</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -220,12 +212,12 @@ const SalesContractsForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="customer_id"
+                  name="contact_email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer ID (Optional)</FormLabel>
+                      <FormLabel>Contact Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter customer ID if available" {...field} />
+                        <Input type="email" placeholder="customer@example.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -234,127 +226,38 @@ const SalesContractsForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="contract_type"
+                  name="contact_phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contract Type</FormLabel>
+                      <FormLabel>Contact Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+1 234 567 8900" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="validity_period"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Validity Period (Days)</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select contract type" />
+                            <SelectValue placeholder="Select validity" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="standard">Standard</SelectItem>
-                          <SelectItem value="distributor">Distributor Agreement</SelectItem>
-                          <SelectItem value="retail">Retail Agreement</SelectItem>
-                          <SelectItem value="wholesale">Wholesale Contract</SelectItem>
-                          <SelectItem value="custom">Custom Agreement</SelectItem>
+                          <SelectItem value="15">15 days</SelectItem>
+                          <SelectItem value="30">30 days</SelectItem>
+                          <SelectItem value="45">45 days</SelectItem>
+                          <SelectItem value="60">60 days</SelectItem>
+                          <SelectItem value="90">90 days</SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="pending_approval">Pending Approval</SelectItem>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="terminated">Terminated</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="start_date"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Start Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Select date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="end_date"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>End Date (Optional)</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Select date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -426,8 +329,8 @@ const SalesContractsForm = ({ onBack }) => {
                         </tr>
                       ))}
                       <tr className="font-bold bg-muted/20">
-                        <td colSpan="3" className="p-2 text-right">Contract Value:</td>
-                        <td className="p-2 text-right">${totalValue}</td>
+                        <td colSpan="3" className="p-2 text-right">Grand Total:</td>
+                        <td className="p-2 text-right">${grandTotal}</td>
                         <td></td>
                       </tr>
                     </tbody>
@@ -445,14 +348,14 @@ const SalesContractsForm = ({ onBack }) => {
 
               <FormField
                 control={form.control}
-                name="terms"
+                name="terms_conditions"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Contract Terms & Conditions</FormLabel>
+                    <FormLabel>Terms & Conditions</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter contract terms and conditions"
-                        className="min-h-[150px]"
+                        placeholder="Enter terms and conditions"
+                        className="min-h-[120px]"
                         {...field}
                       />
                     </FormControl>
@@ -466,7 +369,7 @@ const SalesContractsForm = ({ onBack }) => {
                   type="submit"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Creating..." : "Create Contract"}
+                  {isSubmitting ? "Creating..." : "Create Proposal"}
                 </Button>
               </div>
             </form>
@@ -477,4 +380,4 @@ const SalesContractsForm = ({ onBack }) => {
   );
 };
 
-export default SalesContractsForm;
+export default SalesProposalForm;
