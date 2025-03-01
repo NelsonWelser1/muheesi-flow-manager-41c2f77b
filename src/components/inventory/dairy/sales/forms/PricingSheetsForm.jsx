@@ -1,85 +1,68 @@
 
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { CalendarIcon, ArrowLeft, PlusCircle, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowLeft, Plus, Trash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 const PricingSheetsForm = ({ onBack }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [products, setProducts] = useState([
-    { name: '', category: '', unit_price: '', discount: '', bulk_price: '', effective_date: new Date() }
-  ]);
-  
+  const [pricingItems, setPricingItems] = useState([{ 
+    product_name: '', 
+    standard_price: '', 
+    wholesale_price: '',
+    min_order_qty: '1',
+    discount_percentage: '0',
+    currency: 'USD'
+  }]);
+
   const form = useForm({
     defaultValues: {
-      title: '',
-      description: '',
-      currency: 'USD',
-      effective_date: new Date(),
-      expiry_date: new Date(new Date().setMonth(new Date().getMonth() + 3)),
+      pricing_sheet_name: '',
+      pricing_sheet_description: '',
+      effective_date: '',
+      expiry_date: '',
+      region: 'global',
+      customer_category: 'all',
       status: 'draft'
     }
   });
 
-  const addProduct = () => {
-    setProducts([...products, { 
-      name: '', 
-      category: '', 
-      unit_price: '', 
-      discount: '', 
-      bulk_price: '', 
-      effective_date: new Date() 
+  const addPricingItem = () => {
+    setPricingItems([...pricingItems, { 
+      product_name: '', 
+      standard_price: '', 
+      wholesale_price: '',
+      min_order_qty: '1',
+      discount_percentage: '0',
+      currency: 'USD'
     }]);
   };
 
-  const removeProduct = (index) => {
-    const updatedProducts = [...products];
-    updatedProducts.splice(index, 1);
-    setProducts(updatedProducts);
+  const removePricingItem = (index) => {
+    if (pricingItems.length > 1) {
+      const newPricingItems = [...pricingItems];
+      newPricingItems.splice(index, 1);
+      setPricingItems(newPricingItems);
+    }
   };
 
-  const handleProductChange = (index, field, value) => {
-    const updatedProducts = [...products];
-    updatedProducts[index][field] = value;
-    setProducts(updatedProducts);
+  const handlePricingItemChange = (index, field, value) => {
+    const newPricingItems = [...pricingItems];
+    newPricingItems[index][field] = value;
+    setPricingItems(newPricingItems);
   };
 
   const onSubmit = async (data) => {
-    // Validate products
-    if (products.length === 0 || !products.some(p => p.name.trim() !== '')) {
-      toast({
-        title: "Validation Error",
-        description: "At least one product must be added to the pricing sheet",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setIsSubmitting(true);
     try {
       // Generate a pricing sheet ID
@@ -87,40 +70,50 @@ const PricingSheetsForm = ({ onBack }) => {
       
       const { data: userData } = await supabase.auth.getUser();
       
-      // Format data for Supabase
-      const formattedData = {
+      // Format pricing sheet data for Supabase
+      const pricingSheetData = {
         pricing_sheet_id: pricingSheetId,
-        title: data.title,
-        description: data.description,
-        products: JSON.stringify(products),
-        currency: data.currency,
-        effective_date: data.effective_date.toISOString(),
-        expiry_date: data.expiry_date.toISOString(),
+        pricing_sheet_name: data.pricing_sheet_name,
+        pricing_sheet_description: data.pricing_sheet_description,
+        effective_date: data.effective_date,
+        expiry_date: data.expiry_date || null,
+        region: data.region,
+        customer_category: data.customer_category,
         status: data.status,
-        created_by: userData?.user?.id || null
+        created_at: new Date().toISOString(),
+        created_by: userData?.user?.id || null,
+        pricing_items: pricingItems
       };
 
       const { error } = await supabase
         .from('pricing_sheets')
-        .insert([formattedData]);
+        .insert([pricingSheetData]);
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Pricing sheet created successfully"
-      });
+      showSuccessToast(toast, "Pricing sheet created successfully");
 
       // Reset form
-      form.reset();
-      setProducts([{ name: '', category: '', unit_price: '', discount: '', bulk_price: '', effective_date: new Date() }]);
+      form.reset({
+        pricing_sheet_name: '',
+        pricing_sheet_description: '',
+        effective_date: '',
+        expiry_date: '',
+        region: 'global',
+        customer_category: 'all',
+        status: 'draft'
+      });
+      setPricingItems([{ 
+        product_name: '', 
+        standard_price: '', 
+        wholesale_price: '',
+        min_order_qty: '1',
+        discount_percentage: '0',
+        currency: 'USD'
+      }]);
     } catch (error) {
       console.error('Error creating pricing sheet:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create pricing sheet: " + error.message,
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Failed to create pricing sheet: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -138,7 +131,7 @@ const PricingSheetsForm = ({ onBack }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Create Pricing Sheet</CardTitle>
+          <CardTitle>Pricing Sheet Form</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -146,12 +139,12 @@ const PricingSheetsForm = ({ onBack }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="title"
+                  name="pricing_sheet_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Pricing Sheet Title</FormLabel>
+                      <FormLabel>Pricing Sheet Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter pricing sheet title" {...field} />
+                        <Input placeholder="Enter pricing sheet name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -160,24 +153,38 @@ const PricingSheetsForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="currency"
+                  name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Currency</FormLabel>
+                      <FormLabel>Status</FormLabel>
                       <Select 
                         defaultValue={field.value} 
                         onValueChange={field.onChange}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select currency" />
+                            <SelectValue placeholder="Select status" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="USD">USD ($)</SelectItem>
-                          <SelectItem value="EUR">EUR (€)</SelectItem>
-                          <SelectItem value="GBP">GBP (£)</SelectItem>
-                          <SelectItem value="UGX">UGX (USh)</SelectItem>
+                          <SelectItem value="draft">
+                            <div className="flex items-center">
+                              <span>Draft</span>
+                              <Badge variant="secondary" className="ml-2">Draft</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="active">
+                            <div className="flex items-center">
+                              <span>Active</span>
+                              <Badge variant="success" className="ml-2">Active</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="expired">
+                            <div className="flex items-center">
+                              <span>Expired</span>
+                              <Badge variant="destructive" className="ml-2">Expired</Badge>
+                            </div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -189,36 +196,11 @@ const PricingSheetsForm = ({ onBack }) => {
                   control={form.control}
                   name="effective_date"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                       <FormLabel>Effective Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Select date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -228,36 +210,70 @@ const PricingSheetsForm = ({ onBack }) => {
                   control={form.control}
                   name="expiry_date"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Expiry Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Select date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                    <FormItem>
+                      <FormLabel>Expiry Date (Optional)</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="region"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Region</FormLabel>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select region" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="global">Global</SelectItem>
+                          <SelectItem value="africa">Africa</SelectItem>
+                          <SelectItem value="europe">Europe</SelectItem>
+                          <SelectItem value="asia">Asia</SelectItem>
+                          <SelectItem value="north_america">North America</SelectItem>
+                          <SelectItem value="south_america">South America</SelectItem>
+                          <SelectItem value="oceania">Oceania</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="customer_category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Customer Category</FormLabel>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select customer category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="all">All Customers</SelectItem>
+                          <SelectItem value="retail">Retail</SelectItem>
+                          <SelectItem value="wholesale">Wholesale</SelectItem>
+                          <SelectItem value="distributor">Distributor</SelectItem>
+                          <SelectItem value="preferred">Preferred</SelectItem>
+                          <SelectItem value="vip">VIP</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -266,54 +282,7 @@ const PricingSheetsForm = ({ onBack }) => {
 
               <FormField
                 control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select 
-                      defaultValue={field.value} 
-                      onValueChange={field.onChange}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="draft">
-                          <div className="flex items-center">
-                            <span>Draft</span>
-                            <Badge variant="info" className="ml-2">Draft</Badge>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="active">
-                          <div className="flex items-center">
-                            <span>Active</span>
-                            <Badge variant="success" className="ml-2">Active</Badge>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="expired">
-                          <div className="flex items-center">
-                            <span>Expired</span>
-                            <Badge variant="destructive" className="ml-2">Expired</Badge>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="pending_approval">
-                          <div className="flex items-center">
-                            <span>Pending Approval</span>
-                            <Badge variant="warning" className="ml-2">Pending</Badge>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
+                name="pricing_sheet_description"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Description</FormLabel>
@@ -329,88 +298,104 @@ const PricingSheetsForm = ({ onBack }) => {
                 )}
               />
 
-              <div>
-                <h3 className="text-lg font-medium mb-4">Products</h3>
-                
-                {products.map((product, index) => (
-                  <div key={index} className="p-4 border rounded-md mb-4">
-                    <div className="flex justify-between mb-2">
-                      <h4 className="font-medium">Product {index + 1}</h4>
-                      {products.length > 1 && (
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => removeProduct(index)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      )}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Pricing Items</h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addPricingItem}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" /> Add Item
+                  </Button>
+                </div>
+
+                {pricingItems.map((item, index) => (
+                  <Card key={index} className="p-4">
+                    <div className="flex justify-between items-start mb-4">
+                      <h4 className="font-medium">Price Item {index + 1}</h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removePricingItem(index)}
+                        disabled={pricingItems.length <= 1}
+                      >
+                        <Trash className="h-4 w-4 text-destructive" />
+                      </Button>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2 md:col-span-3">
                         <FormLabel>Product Name</FormLabel>
-                        <Input 
-                          value={product.name} 
-                          onChange={(e) => handleProductChange(index, 'name', e.target.value)}
+                        <Input
                           placeholder="Enter product name"
+                          value={item.product_name}
+                          onChange={(e) => handlePricingItemChange(index, 'product_name', e.target.value)}
                         />
                       </div>
-                      
-                      <div>
-                        <FormLabel>Category</FormLabel>
-                        <Input 
-                          value={product.category} 
-                          onChange={(e) => handleProductChange(index, 'category', e.target.value)}
-                          placeholder="E.g. Cheese, Milk, Yogurt"
-                        />
-                      </div>
-                      
-                      <div>
-                        <FormLabel>Unit Price</FormLabel>
-                        <Input 
-                          value={product.unit_price} 
-                          onChange={(e) => handleProductChange(index, 'unit_price', e.target.value)}
-                          placeholder="Enter unit price"
+                      <div className="space-y-2">
+                        <FormLabel>Standard Price</FormLabel>
+                        <Input
                           type="number"
                           step="0.01"
+                          placeholder="Enter standard price"
+                          value={item.standard_price}
+                          onChange={(e) => handlePricingItemChange(index, 'standard_price', e.target.value)}
                         />
                       </div>
-                      
-                      <div>
-                        <FormLabel>Discount (%)</FormLabel>
-                        <Input 
-                          value={product.discount} 
-                          onChange={(e) => handleProductChange(index, 'discount', e.target.value)}
+                      <div className="space-y-2">
+                        <FormLabel>Wholesale Price</FormLabel>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Enter wholesale price"
+                          value={item.wholesale_price}
+                          onChange={(e) => handlePricingItemChange(index, 'wholesale_price', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormLabel>Currency</FormLabel>
+                        <Select
+                          value={item.currency}
+                          onValueChange={(value) => handlePricingItemChange(index, 'currency', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="USD">USD ($)</SelectItem>
+                            <SelectItem value="EUR">EUR (€)</SelectItem>
+                            <SelectItem value="GBP">GBP (£)</SelectItem>
+                            <SelectItem value="UGX">UGX (USh)</SelectItem>
+                            <SelectItem value="KES">KES (KSh)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <FormLabel>Min. Order Quantity</FormLabel>
+                        <Input
+                          type="number"
+                          placeholder="Enter minimum order quantity"
+                          value={item.min_order_qty}
+                          onChange={(e) => handlePricingItemChange(index, 'min_order_qty', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormLabel>Discount %</FormLabel>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
                           placeholder="Enter discount percentage"
-                          type="number"
-                          step="0.1"
-                        />
-                      </div>
-                      
-                      <div>
-                        <FormLabel>Bulk Price (per unit)</FormLabel>
-                        <Input 
-                          value={product.bulk_price} 
-                          onChange={(e) => handleProductChange(index, 'bulk_price', e.target.value)}
-                          placeholder="Enter bulk price per unit"
-                          type="number"
-                          step="0.01"
+                          value={item.discount_percentage}
+                          onChange={(e) => handlePricingItemChange(index, 'discount_percentage', e.target.value)}
                         />
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 ))}
-                
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addProduct}
-                  className="flex items-center gap-2"
-                >
-                  <PlusCircle className="h-4 w-4" /> Add Product
-                </Button>
               </div>
 
               <div className="flex justify-end">
@@ -418,7 +403,7 @@ const PricingSheetsForm = ({ onBack }) => {
                   type="submit"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Creating..." : "Create Pricing Sheet"}
+                  {isSubmitting ? "Submitting..." : "Create Pricing Sheet"}
                 </Button>
               </div>
             </form>
