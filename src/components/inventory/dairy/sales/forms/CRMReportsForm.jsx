@@ -23,32 +23,59 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { CalendarIcon, ArrowLeft } from "lucide-react";
+import { CalendarIcon, ArrowLeft, PlusCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 
 const CRMReportsForm = ({ onBack }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [metrics, setMetrics] = useState([
+    { name: '', value: '', trend: 'stable', notes: '' }
+  ]);
   
   const form = useForm({
     defaultValues: {
-      report_type: 'customer_interaction',
-      customer_name: '',
-      customer_id: '',
-      interaction_date: new Date(),
-      interaction_type: 'meeting',
-      details: '',
-      follow_up_required: false,
-      follow_up_date: null,
-      status: 'new',
+      report_title: '',
+      report_type: 'customer_acquisition',
+      time_period: 'monthly',
+      period_start: new Date(new Date().setDate(1)), // First day of current month
+      period_end: new Date(),
+      summary: '',
+      recommendations: '',
+      author: '',
+      status: 'draft'
     }
   });
 
-  const watchFollowUpRequired = form.watch("follow_up_required");
+  const addMetric = () => {
+    setMetrics([...metrics, { name: '', value: '', trend: 'stable', notes: '' }]);
+  };
+
+  const removeMetric = (index) => {
+    const updatedMetrics = [...metrics];
+    updatedMetrics.splice(index, 1);
+    setMetrics(updatedMetrics);
+  };
+
+  const handleMetricChange = (index, field, value) => {
+    const updatedMetrics = [...metrics];
+    updatedMetrics[index][field] = value;
+    setMetrics(updatedMetrics);
+  };
 
   const onSubmit = async (data) => {
+    // Validate metrics
+    if (metrics.length === 0 || !metrics.some(m => m.name.trim() !== '')) {
+      toast({
+        title: "Validation Error",
+        description: "At least one metric must be added to the report",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       // Generate a report ID
@@ -59,15 +86,17 @@ const CRMReportsForm = ({ onBack }) => {
       // Format data for Supabase
       const formattedData = {
         report_id: reportId,
+        report_title: data.report_title,
         report_type: data.report_type,
-        customer_id: data.customer_id || null,
-        customer_name: data.customer_name,
-        interaction_date: data.interaction_date.toISOString(),
-        interaction_type: data.interaction_type,
-        details: data.details,
-        follow_up_required: data.follow_up_required,
-        follow_up_date: data.follow_up_date ? data.follow_up_date.toISOString() : null,
+        time_period: data.time_period,
+        period_start: data.period_start.toISOString(),
+        period_end: data.period_end.toISOString(),
+        metrics: JSON.stringify(metrics),
+        summary: data.summary,
+        recommendations: data.recommendations,
+        author: data.author,
         status: data.status,
+        created_at: new Date().toISOString(),
         created_by: userData?.user?.id || null
       };
 
@@ -83,17 +112,8 @@ const CRMReportsForm = ({ onBack }) => {
       });
 
       // Reset form
-      form.reset({
-        report_type: 'customer_interaction',
-        customer_name: '',
-        customer_id: '',
-        interaction_date: new Date(),
-        interaction_type: 'meeting',
-        details: '',
-        follow_up_required: false,
-        follow_up_date: null,
-        status: 'new',
-      });
+      form.reset();
+      setMetrics([{ name: '', value: '', trend: 'stable', notes: '' }]);
     } catch (error) {
       console.error('Error creating CRM report:', error);
       toast({
@@ -126,22 +146,40 @@ const CRMReportsForm = ({ onBack }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
+                  name="report_title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Report Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter report title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="report_type"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Report Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select report type" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="customer_interaction">Customer Interaction</SelectItem>
-                          <SelectItem value="customer_feedback">Customer Feedback</SelectItem>
-                          <SelectItem value="sales_opportunity">Sales Opportunity</SelectItem>
-                          <SelectItem value="customer_complaint">Customer Complaint</SelectItem>
-                          <SelectItem value="market_research">Market Research</SelectItem>
+                          <SelectItem value="customer_acquisition">Customer Acquisition</SelectItem>
+                          <SelectItem value="customer_retention">Customer Retention</SelectItem>
+                          <SelectItem value="sales_performance">Sales Performance</SelectItem>
+                          <SelectItem value="customer_satisfaction">Customer Satisfaction</SelectItem>
+                          <SelectItem value="market_analysis">Market Analysis</SelectItem>
+                          <SelectItem value="product_performance">Product Performance</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -151,23 +189,25 @@ const CRMReportsForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="interaction_type"
+                  name="time_period"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Interaction Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormLabel>Time Period</FormLabel>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select interaction type" />
+                            <SelectValue placeholder="Select time period" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="meeting">Meeting</SelectItem>
-                          <SelectItem value="call">Phone Call</SelectItem>
-                          <SelectItem value="email">Email</SelectItem>
-                          <SelectItem value="visit">Site Visit</SelectItem>
-                          <SelectItem value="event">Event</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                          <SelectItem value="quarterly">Quarterly</SelectItem>
+                          <SelectItem value="annually">Annually</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -177,38 +217,26 @@ const CRMReportsForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="customer_name"
+                  name="author"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer Name</FormLabel>
+                      <FormLabel>Author</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter customer name" {...field} />
+                        <Input placeholder="Enter author name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="customer_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Customer ID (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter customer ID if available" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="interaction_date"
+                  name="period_start"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Interaction Date</FormLabel>
+                      <FormLabel>Period Start Date</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -244,24 +272,38 @@ const CRMReportsForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="period_end"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="new">New</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="on_hold">On Hold</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Period End Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Select date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -270,85 +312,180 @@ const CRMReportsForm = ({ onBack }) => {
 
               <FormField
                 control={form.control}
-                name="details"
+                name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Interaction Details</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter details of the interaction"
-                        className="min-h-[120px]"
-                        {...field}
-                      />
-                    </FormControl>
+                    <FormLabel>Status</FormLabel>
+                    <Select 
+                      defaultValue={field.value} 
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="draft">
+                          <div className="flex items-center">
+                            <span>Draft</span>
+                            <Badge variant="info" className="ml-2">Draft</Badge>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="under_review">
+                          <div className="flex items-center">
+                            <span>Under Review</span>
+                            <Badge variant="warning" className="ml-2">Under Review</Badge>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="published">
+                          <div className="flex items-center">
+                            <span>Published</span>
+                            <Badge variant="success" className="ml-2">Published</Badge>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="archived">
+                          <div className="flex items-center">
+                            <span>Archived</span>
+                            <Badge className="ml-2">Archived</Badge>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="follow_up_required"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Follow-up Required
-                      </FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        Check if this interaction requires a follow-up
-                      </p>
+              <div>
+                <h3 className="text-lg font-medium mb-4">Key Metrics</h3>
+                
+                {metrics.map((metric, index) => (
+                  <div key={index} className="p-4 border rounded-md mb-4">
+                    <div className="flex justify-between mb-2">
+                      <h4 className="font-medium">Metric {index + 1}</h4>
+                      {metrics.length > 1 && (
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => removeMetric(index)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      )}
                     </div>
-                  </FormItem>
-                )}
-              />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <FormLabel>Metric Name</FormLabel>
+                        <Input 
+                          value={metric.name} 
+                          onChange={(e) => handleMetricChange(index, 'name', e.target.value)}
+                          placeholder="E.g., New Customers, Retention Rate"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Value</FormLabel>
+                        <Input 
+                          value={metric.value} 
+                          onChange={(e) => handleMetricChange(index, 'value', e.target.value)}
+                          placeholder="E.g., 123, 45.6%, 7.8"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Trend</FormLabel>
+                        <Select 
+                          value={metric.trend} 
+                          onValueChange={(value) => handleMetricChange(index, 'trend', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select trend" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="increasing">
+                              <div className="flex items-center">
+                                <span>Increasing</span>
+                                <Badge variant="success" className="ml-2">↑</Badge>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="decreasing">
+                              <div className="flex items-center">
+                                <span>Decreasing</span>
+                                <Badge variant="destructive" className="ml-2">↓</Badge>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="stable">
+                              <div className="flex items-center">
+                                <span>Stable</span>
+                                <Badge variant="secondary" className="ml-2">→</Badge>
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Notes</FormLabel>
+                        <Input 
+                          value={metric.notes} 
+                          onChange={(e) => handleMetricChange(index, 'notes', e.target.value)}
+                          placeholder="Brief explanation of the metric"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addMetric}
+                  className="flex items-center gap-2"
+                >
+                  <PlusCircle className="h-4 w-4" /> Add Metric
+                </Button>
+              </div>
 
-              {watchFollowUpRequired && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="follow_up_date"
+                  name="summary"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Follow-up Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Select date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                    <FormItem>
+                      <FormLabel>Summary</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter report summary"
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
+
+                <FormField
+                  control={form.control}
+                  name="recommendations"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Recommendations</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter recommendations based on findings"
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="flex justify-end">
                 <Button

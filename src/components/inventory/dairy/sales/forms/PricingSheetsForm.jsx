@@ -25,28 +25,36 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
 import { CalendarIcon, ArrowLeft, PlusCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PricingSheetsForm = ({ onBack }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [products, setProducts] = useState([
-    { product_name: '', unit_price: '', min_order: '', discount_quantity: '', discount_percent: '0' }
+    { name: '', category: '', unit_price: '', discount: '', bulk_price: '', effective_date: new Date() }
   ]);
   
   const form = useForm({
     defaultValues: {
       title: '',
+      description: '',
+      currency: 'USD',
       effective_date: new Date(),
-      expiry_date: null,
-      pricing_strategy: 'standard',
-      notes: '',
-      status: 'draft',
+      expiry_date: new Date(new Date().setMonth(new Date().getMonth() + 3)),
+      status: 'draft'
     }
   });
 
   const addProduct = () => {
-    setProducts([...products, { product_name: '', unit_price: '', min_order: '', discount_quantity: '', discount_percent: '0' }]);
+    setProducts([...products, { 
+      name: '', 
+      category: '', 
+      unit_price: '', 
+      discount: '', 
+      bulk_price: '', 
+      effective_date: new Date() 
+    }]);
   };
 
   const removeProduct = (index) => {
@@ -63,7 +71,7 @@ const PricingSheetsForm = ({ onBack }) => {
 
   const onSubmit = async (data) => {
     // Validate products
-    if (products.length === 0 || !products.some(p => p.product_name.trim() !== '')) {
+    if (products.length === 0 || !products.some(p => p.name.trim() !== '')) {
       toast({
         title: "Validation Error",
         description: "At least one product must be added to the pricing sheet",
@@ -74,20 +82,20 @@ const PricingSheetsForm = ({ onBack }) => {
     
     setIsSubmitting(true);
     try {
-      // Generate a sheet ID
-      const sheetId = `PRC-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+      // Generate a pricing sheet ID
+      const pricingSheetId = `PRC-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
       
       const { data: userData } = await supabase.auth.getUser();
       
       // Format data for Supabase
       const formattedData = {
-        sheet_id: sheetId,
+        pricing_sheet_id: pricingSheetId,
         title: data.title,
-        effective_date: data.effective_date.toISOString(),
-        expiry_date: data.expiry_date ? data.expiry_date.toISOString() : null,
+        description: data.description,
         products: JSON.stringify(products),
-        pricing_strategy: data.pricing_strategy,
-        notes: data.notes,
+        currency: data.currency,
+        effective_date: data.effective_date.toISOString(),
+        expiry_date: data.expiry_date.toISOString(),
         status: data.status,
         created_by: userData?.user?.id || null
       };
@@ -105,7 +113,7 @@ const PricingSheetsForm = ({ onBack }) => {
 
       // Reset form
       form.reset();
-      setProducts([{ product_name: '', unit_price: '', min_order: '', discount_quantity: '', discount_percent: '0' }]);
+      setProducts([{ name: '', category: '', unit_price: '', discount: '', bulk_price: '', effective_date: new Date() }]);
     } catch (error) {
       console.error('Error creating pricing sheet:', error);
       toast({
@@ -152,23 +160,24 @@ const PricingSheetsForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="pricing_strategy"
+                  name="currency"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Pricing Strategy</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormLabel>Currency</FormLabel>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select strategy" />
+                            <SelectValue placeholder="Select currency" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="standard">Standard</SelectItem>
-                          <SelectItem value="volume">Volume-based</SelectItem>
-                          <SelectItem value="seasonal">Seasonal</SelectItem>
-                          <SelectItem value="promotional">Promotional</SelectItem>
-                          <SelectItem value="tiered">Tiered</SelectItem>
-                          <SelectItem value="custom">Custom</SelectItem>
+                          <SelectItem value="USD">USD ($)</SelectItem>
+                          <SelectItem value="EUR">EUR (€)</SelectItem>
+                          <SelectItem value="GBP">GBP (£)</SelectItem>
+                          <SelectItem value="UGX">UGX (USh)</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -220,7 +229,7 @@ const PricingSheetsForm = ({ onBack }) => {
                   name="expiry_date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Expiry Date (Optional)</FormLabel>
+                      <FormLabel>Expiry Date</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -253,41 +262,64 @@ const PricingSheetsForm = ({ onBack }) => {
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="expired">Expired</SelectItem>
-                          <SelectItem value="archived">Archived</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
               <FormField
                 control={form.control}
-                name="notes"
+                name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notes</FormLabel>
+                    <FormLabel>Status</FormLabel>
+                    <Select 
+                      defaultValue={field.value} 
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="draft">
+                          <div className="flex items-center">
+                            <span>Draft</span>
+                            <Badge variant="info" className="ml-2">Draft</Badge>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="active">
+                          <div className="flex items-center">
+                            <span>Active</span>
+                            <Badge variant="success" className="ml-2">Active</Badge>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="expired">
+                          <div className="flex items-center">
+                            <span>Expired</span>
+                            <Badge variant="destructive" className="ml-2">Expired</Badge>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="pending_approval">
+                          <div className="flex items-center">
+                            <span>Pending Approval</span>
+                            <Badge variant="warning" className="ml-2">Pending</Badge>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter additional notes"
+                        placeholder="Enter pricing sheet description"
                         className="min-h-[100px]"
                         {...field}
                       />
@@ -298,7 +330,7 @@ const PricingSheetsForm = ({ onBack }) => {
               />
 
               <div>
-                <h3 className="text-lg font-medium mb-4">Products and Pricing</h3>
+                <h3 className="text-lg font-medium mb-4">Products</h3>
                 
                 {products.map((product, index) => (
                   <div key={index} className="p-4 border rounded-md mb-4">
@@ -320,9 +352,18 @@ const PricingSheetsForm = ({ onBack }) => {
                       <div>
                         <FormLabel>Product Name</FormLabel>
                         <Input 
-                          value={product.product_name} 
-                          onChange={(e) => handleProductChange(index, 'product_name', e.target.value)}
+                          value={product.name} 
+                          onChange={(e) => handleProductChange(index, 'name', e.target.value)}
                           placeholder="Enter product name"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Category</FormLabel>
+                        <Input 
+                          value={product.category} 
+                          onChange={(e) => handleProductChange(index, 'category', e.target.value)}
+                          placeholder="E.g. Cheese, Milk, Yogurt"
                         />
                       </div>
                       
@@ -338,35 +379,24 @@ const PricingSheetsForm = ({ onBack }) => {
                       </div>
                       
                       <div>
-                        <FormLabel>Minimum Order</FormLabel>
+                        <FormLabel>Discount (%)</FormLabel>
                         <Input 
-                          value={product.min_order} 
-                          onChange={(e) => handleProductChange(index, 'min_order', e.target.value)}
-                          placeholder="Enter minimum order quantity"
-                          type="number"
-                        />
-                      </div>
-                      
-                      <div>
-                        <FormLabel>Discount Quantity</FormLabel>
-                        <Input 
-                          value={product.discount_quantity} 
-                          onChange={(e) => handleProductChange(index, 'discount_quantity', e.target.value)}
-                          placeholder="Enter quantity for discount"
-                          type="number"
-                        />
-                      </div>
-                      
-                      <div>
-                        <FormLabel>Discount Percentage</FormLabel>
-                        <Input 
-                          value={product.discount_percent} 
-                          onChange={(e) => handleProductChange(index, 'discount_percent', e.target.value)}
+                          value={product.discount} 
+                          onChange={(e) => handleProductChange(index, 'discount', e.target.value)}
                           placeholder="Enter discount percentage"
                           type="number"
                           step="0.1"
-                          min="0"
-                          max="100"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Bulk Price (per unit)</FormLabel>
+                        <Input 
+                          value={product.bulk_price} 
+                          onChange={(e) => handleProductChange(index, 'bulk_price', e.target.value)}
+                          placeholder="Enter bulk price per unit"
+                          type="number"
+                          step="0.01"
                         />
                       </div>
                     </div>

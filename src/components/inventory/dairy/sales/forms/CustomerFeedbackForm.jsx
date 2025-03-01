@@ -18,84 +18,57 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { CalendarIcon, ArrowLeft, Star } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-
-const StarRating = ({ rating, setRating }) => {
-  const stars = [1, 2, 3, 4, 5];
-  
-  return (
-    <div className="flex gap-1">
-      {stars.map((star) => (
-        <button
-          key={star}
-          type="button"
-          className={`p-1 focus:outline-none ${
-            star <= rating ? "text-yellow-500" : "text-gray-300"
-          }`}
-          onClick={() => setRating(star)}
-        >
-          <Star className="h-5 w-5 fill-current" />
-        </button>
-      ))}
-    </div>
-  );
-};
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 const CustomerFeedbackForm = ({ onBack }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [rating, setRating] = useState(0);
   
   const form = useForm({
     defaultValues: {
       customer_name: '',
-      customer_id: '',
-      feedback_date: new Date(),
+      customer_email: '',
+      customer_phone: '',
       product_name: '',
+      rating: '5',
+      feedback_type: 'general',
       feedback_text: '',
-      suggestions: '',
-      action_required: false,
-      action_taken: '',
+      action_required: 'no',
+      action_assigned_to: '',
+      status: 'new'
     }
   });
 
+  const watchFeedbackType = form.watch('feedback_type');
+  const watchActionRequired = form.watch('action_required');
+
   const onSubmit = async (data) => {
-    if (rating === 0) {
-      toast({
-        title: "Rating Required",
-        description: "Please provide a rating before submitting",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setIsSubmitting(true);
     try {
       // Generate a feedback ID
-      const feedbackId = `FDB-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+      const feedbackId = `FB-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
       
       const { data: userData } = await supabase.auth.getUser();
       
-      // Format dates for Supabase
+      // Format data for Supabase
       const formattedData = {
         feedback_id: feedbackId,
         customer_name: data.customer_name,
-        customer_id: data.customer_id || null,
-        feedback_date: data.feedback_date.toISOString(),
+        customer_email: data.customer_email,
+        customer_phone: data.customer_phone,
         product_name: data.product_name,
-        rating: rating,
+        rating: parseInt(data.rating),
+        feedback_type: data.feedback_type,
         feedback_text: data.feedback_text,
-        suggestions: data.suggestions,
-        action_required: data.action_required,
-        action_taken: data.action_taken,
+        action_required: data.action_required === 'yes',
+        action_assigned_to: data.action_assigned_to || null,
+        status: data.status,
+        created_at: new Date().toISOString(),
         created_by: userData?.user?.id || null
       };
 
@@ -105,21 +78,24 @@ const CustomerFeedbackForm = ({ onBack }) => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Customer feedback recorded successfully"
-      });
+      showSuccessToast(toast, "Customer feedback recorded successfully");
 
       // Reset form
-      form.reset();
-      setRating(0);
-    } catch (error) {
-      console.error('Error recording customer feedback:', error);
-      toast({
-        title: "Error",
-        description: "Failed to record customer feedback: " + error.message,
-        variant: "destructive",
+      form.reset({
+        customer_name: '',
+        customer_email: '',
+        customer_phone: '',
+        product_name: '',
+        rating: '5',
+        feedback_type: 'general',
+        feedback_text: '',
+        action_required: 'no',
+        action_assigned_to: '',
+        status: 'new'
       });
+    } catch (error) {
+      console.error('Error recording feedback:', error);
+      showErrorToast(toast, "Failed to record feedback: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -159,12 +135,12 @@ const CustomerFeedbackForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="customer_id"
+                  name="customer_email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer ID (Optional)</FormLabel>
+                      <FormLabel>Email Address</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter customer ID if available" {...field} />
+                        <Input placeholder="Enter email address" type="email" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -173,38 +149,13 @@ const CustomerFeedbackForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="feedback_date"
+                  name="customer_phone"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Feedback Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Select date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter phone number" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -216,20 +167,64 @@ const CustomerFeedbackForm = ({ onBack }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Product Name</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <Input placeholder="Enter product name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="rating"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rating (1-5)</FormLabel>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select product" />
+                            <SelectValue placeholder="Select rating" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Fresh Milk">Fresh Milk</SelectItem>
-                          <SelectItem value="Yogurt">Yogurt</SelectItem>
-                          <SelectItem value="Cheese">Cheese</SelectItem>
-                          <SelectItem value="Butter">Butter</SelectItem>
-                          <SelectItem value="Ice Cream">Ice Cream</SelectItem>
-                          <SelectItem value="Meat Products">Meat Products</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
+                          <SelectItem value="1">★ (Poor)</SelectItem>
+                          <SelectItem value="2">★★ (Fair)</SelectItem>
+                          <SelectItem value="3">★★★ (Good)</SelectItem>
+                          <SelectItem value="4">★★★★ (Very Good)</SelectItem>
+                          <SelectItem value="5">★★★★★ (Excellent)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="feedback_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Feedback Type</FormLabel>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select feedback type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="product_quality">Product Quality</SelectItem>
+                          <SelectItem value="delivery">Delivery</SelectItem>
+                          <SelectItem value="customer_service">Customer Service</SelectItem>
+                          <SelectItem value="complaint">Complaint</SelectItem>
+                          <SelectItem value="suggestion">Suggestion</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -238,23 +233,15 @@ const CustomerFeedbackForm = ({ onBack }) => {
                 />
               </div>
 
-              <div className="space-y-3">
-                <FormLabel>Rating</FormLabel>
-                <StarRating rating={rating} setRating={setRating} />
-                {rating === 0 && (
-                  <p className="text-sm text-destructive">Please provide a rating</p>
-                )}
-              </div>
-
               <FormField
                 control={form.control}
                 name="feedback_text"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Feedback</FormLabel>
+                    <FormLabel>Feedback Details</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter customer feedback"
+                        placeholder="Enter detailed feedback"
                         className="min-h-[100px]"
                         {...field}
                       />
@@ -264,65 +251,95 @@ const CustomerFeedbackForm = ({ onBack }) => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="suggestions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Suggestions for Improvement</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter customer suggestions"
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="action_required"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Action Required?</FormLabel>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select option" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="no">No</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="action_required"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Action Required
-                      </FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        Check if this feedback requires follow-up action
-                      </p>
-                    </div>
-                  </FormItem>
+                {watchActionRequired === 'yes' && (
+                  <FormField
+                    control={form.control}
+                    name="action_assigned_to"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Assign Action To</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter name or department" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
 
-              <FormField
-                control={form.control}
-                name="action_taken"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Action Taken/To Be Taken</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Describe action taken or planned"
-                        className="min-h-[80px]"
-                        disabled={!form.watch("action_required")}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="new">
+                            <div className="flex items-center">
+                              <span>New</span>
+                              <Badge variant="info" className="ml-2">New</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="in_progress">
+                            <div className="flex items-center">
+                              <span>In Progress</span>
+                              <Badge variant="pending" className="ml-2">In Progress</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="resolved">
+                            <div className="flex items-center">
+                              <span>Resolved</span>
+                              <Badge variant="success" className="ml-2">Resolved</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="closed">
+                            <div className="flex items-center">
+                              <span>Closed</span>
+                              <Badge className="ml-2">Closed</Badge>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="flex justify-end">
                 <Button
