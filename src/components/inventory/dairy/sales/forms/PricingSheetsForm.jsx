@@ -23,16 +23,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { CalendarIcon, ArrowLeft, Plus, X, Copy } from "lucide-react";
+import { CalendarIcon, ArrowLeft, PlusCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const PricingSheetsForm = ({ onBack }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [products, setProducts] = useState([
-    { name: '', base_price: '', bulk_price: '', wholesale_price: '', retail_price: '' }
+    { product_name: '', unit_price: '', min_order: '', discount_quantity: '', discount_percent: '0' }
   ]);
   
   const form = useForm({
@@ -42,56 +41,37 @@ const PricingSheetsForm = ({ onBack }) => {
       expiry_date: null,
       pricing_strategy: 'standard',
       notes: '',
-      status: 'active'
+      status: 'draft',
     }
   });
 
   const addProduct = () => {
-    setProducts([...products, { name: '', base_price: '', bulk_price: '', wholesale_price: '', retail_price: '' }]);
+    setProducts([...products, { product_name: '', unit_price: '', min_order: '', discount_quantity: '', discount_percent: '0' }]);
   };
 
   const removeProduct = (index) => {
-    if (products.length > 1) {
-      const newProducts = [...products];
-      newProducts.splice(index, 1);
-      setProducts(newProducts);
-    } else {
-      toast({
-        title: "Cannot Remove",
-        description: "At least one product is required",
-        variant: "destructive",
-      });
-    }
+    const updatedProducts = [...products];
+    updatedProducts.splice(index, 1);
+    setProducts(updatedProducts);
   };
 
-  const updateProduct = (index, field, value) => {
-    const newProducts = [...products];
-    newProducts[index] = { ...newProducts[index], [field]: value };
-    setProducts(newProducts);
-  };
-
-  const cloneRow = (index) => {
-    const productToCopy = { ...products[index] };
-    setProducts([...products, productToCopy]);
-  };
-
-  const calculateRetailPrice = (index) => {
-    const product = products[index];
-    if (product.base_price) {
-      const basePrice = parseFloat(product.base_price);
-      if (!isNaN(basePrice)) {
-        // Apply a standard markup (30% for retail)
-        const retailPrice = (basePrice * 1.3).toFixed(2);
-        updateProduct(index, 'retail_price', retailPrice);
-        
-        // Calculate other prices as well
-        updateProduct(index, 'bulk_price', (basePrice * 1.1).toFixed(2));
-        updateProduct(index, 'wholesale_price', (basePrice * 1.2).toFixed(2));
-      }
-    }
+  const handleProductChange = (index, field, value) => {
+    const updatedProducts = [...products];
+    updatedProducts[index][field] = value;
+    setProducts(updatedProducts);
   };
 
   const onSubmit = async (data) => {
+    // Validate products
+    if (products.length === 0 || !products.some(p => p.product_name.trim() !== '')) {
+      toast({
+        title: "Validation Error",
+        description: "At least one product must be added to the pricing sheet",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       // Generate a sheet ID
@@ -99,7 +79,7 @@ const PricingSheetsForm = ({ onBack }) => {
       
       const { data: userData } = await supabase.auth.getUser();
       
-      // Format dates for Supabase
+      // Format data for Supabase
       const formattedData = {
         sheet_id: sheetId,
         title: data.title,
@@ -125,7 +105,7 @@ const PricingSheetsForm = ({ onBack }) => {
 
       // Reset form
       form.reset();
-      setProducts([{ name: '', base_price: '', bulk_price: '', wholesale_price: '', retail_price: '' }]);
+      setProducts([{ product_name: '', unit_price: '', min_order: '', discount_quantity: '', discount_percent: '0' }]);
     } catch (error) {
       console.error('Error creating pricing sheet:', error);
       toast({
@@ -161,10 +141,36 @@ const PricingSheetsForm = ({ onBack }) => {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>Pricing Sheet Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="Q2 2024 Pricing" {...field} />
+                        <Input placeholder="Enter pricing sheet title" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="pricing_strategy"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pricing Strategy</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select strategy" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="volume">Volume-based</SelectItem>
+                          <SelectItem value="seasonal">Seasonal</SelectItem>
+                          <SelectItem value="promotional">Promotional</SelectItem>
+                          <SelectItem value="tiered">Tiered</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -264,174 +270,116 @@ const PricingSheetsForm = ({ onBack }) => {
                           <SelectItem value="draft">Draft</SelectItem>
                           <SelectItem value="active">Active</SelectItem>
                           <SelectItem value="expired">Expired</SelectItem>
+                          <SelectItem value="archived">Archived</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="pricing_strategy"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>Pricing Strategy</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex flex-col space-y-1"
-                        >
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="standard" />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              Standard
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="promotional" />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              Promotional
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="seasonal" />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              Seasonal
-                            </FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem className="col-span-1 md:col-span-2">
-                      <FormLabel>Notes</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Additional notes about this pricing sheet"
-                          className="min-h-[100px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter additional notes"
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div>
-                <h3 className="text-lg font-medium mb-4">Product Pricing</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-muted/50">
-                        <th className="p-2 text-left">Product Name</th>
-                        <th className="p-2 text-left">Base Price (USD)</th>
-                        <th className="p-2 text-left">Bulk Price (USD)</th>
-                        <th className="p-2 text-left">Wholesale Price (USD)</th>
-                        <th className="p-2 text-left">Retail Price (USD)</th>
-                        <th className="p-2 text-left">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {products.map((product, index) => (
-                        <tr key={index} className="border-b">
-                          <td className="p-2">
-                            <Input
-                              value={product.name}
-                              onChange={(e) => updateProduct(index, 'name', e.target.value)}
-                              placeholder="Product name"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={product.base_price}
-                              onChange={(e) => updateProduct(index, 'base_price', e.target.value)}
-                              onBlur={() => calculateRetailPrice(index)}
-                              placeholder="0.00"
-                              step="0.01"
-                              min="0"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={product.bulk_price}
-                              onChange={(e) => updateProduct(index, 'bulk_price', e.target.value)}
-                              placeholder="0.00"
-                              step="0.01"
-                              min="0"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={product.wholesale_price}
-                              onChange={(e) => updateProduct(index, 'wholesale_price', e.target.value)}
-                              placeholder="0.00"
-                              step="0.01"
-                              min="0"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={product.retail_price}
-                              onChange={(e) => updateProduct(index, 'retail_price', e.target.value)}
-                              placeholder="0.00"
-                              step="0.01"
-                              min="0"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <div className="flex gap-1">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => cloneRow(index)}
-                                title="Clone row"
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeProduct(index)}
-                                title="Remove row"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <h3 className="text-lg font-medium mb-4">Products and Pricing</h3>
+                
+                {products.map((product, index) => (
+                  <div key={index} className="p-4 border rounded-md mb-4">
+                    <div className="flex justify-between mb-2">
+                      <h4 className="font-medium">Product {index + 1}</h4>
+                      {products.length > 1 && (
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => removeProduct(index)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <FormLabel>Product Name</FormLabel>
+                        <Input 
+                          value={product.product_name} 
+                          onChange={(e) => handleProductChange(index, 'product_name', e.target.value)}
+                          placeholder="Enter product name"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Unit Price</FormLabel>
+                        <Input 
+                          value={product.unit_price} 
+                          onChange={(e) => handleProductChange(index, 'unit_price', e.target.value)}
+                          placeholder="Enter unit price"
+                          type="number"
+                          step="0.01"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Minimum Order</FormLabel>
+                        <Input 
+                          value={product.min_order} 
+                          onChange={(e) => handleProductChange(index, 'min_order', e.target.value)}
+                          placeholder="Enter minimum order quantity"
+                          type="number"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Discount Quantity</FormLabel>
+                        <Input 
+                          value={product.discount_quantity} 
+                          onChange={(e) => handleProductChange(index, 'discount_quantity', e.target.value)}
+                          placeholder="Enter quantity for discount"
+                          type="number"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Discount Percentage</FormLabel>
+                        <Input 
+                          value={product.discount_percent} 
+                          onChange={(e) => handleProductChange(index, 'discount_percent', e.target.value)}
+                          placeholder="Enter discount percentage"
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          max="100"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
                 <Button
                   type="button"
                   variant="outline"
                   onClick={addProduct}
-                  className="flex items-center gap-2 mt-4"
+                  className="flex items-center gap-2"
                 >
-                  <Plus className="h-4 w-4" /> Add Product
+                  <PlusCircle className="h-4 w-4" /> Add Product
                 </Button>
               </div>
 

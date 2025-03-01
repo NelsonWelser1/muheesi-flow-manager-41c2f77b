@@ -18,16 +18,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { ArrowLeft, Plus, X, Calculator } from "lucide-react";
+import { CalendarIcon, ArrowLeft, PlusCircle, Trash2, Calculator } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SalesProposalForm = ({ onBack }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [products, setProducts] = useState([
-    { name: '', quantity: '', unit_price: '', total: '0.00' }
+    { name: '', quantity: '1', unit_price: '0', total: '0' }
   ]);
   
   const form = useForm({
@@ -36,61 +40,85 @@ const SalesProposalForm = ({ onBack }) => {
       contact_email: '',
       contact_phone: '',
       validity_period: '30',
-      terms_conditions: 'Payment due within 30 days of invoice date.\nDelivery within 7 working days of order confirmation.\nPrices subject to change without notice.',
+      terms_conditions: 'Payment due within 30 days of invoice date.\nPrices valid for the duration specified in this proposal.\nDelivery terms to be agreed upon acceptance.',
     }
   });
 
   const addProduct = () => {
-    setProducts([...products, { name: '', quantity: '', unit_price: '', total: '0.00' }]);
+    setProducts([...products, { name: '', quantity: '1', unit_price: '0', total: '0' }]);
   };
 
   const removeProduct = (index) => {
-    if (products.length > 1) {
-      const newProducts = [...products];
-      newProducts.splice(index, 1);
-      setProducts(newProducts);
-      calculateGrandTotal(newProducts);
-    } else {
-      toast({
-        title: "Cannot Remove",
-        description: "At least one product is required",
-        variant: "destructive",
-      });
-    }
+    const updatedProducts = [...products];
+    updatedProducts.splice(index, 1);
+    setProducts(updatedProducts);
+    calculateTotals(updatedProducts);
   };
 
-  const updateProduct = (index, field, value) => {
-    const newProducts = [...products];
-    newProducts[index] = { ...newProducts[index], [field]: value };
+  const handleProductChange = (index, field, value) => {
+    const updatedProducts = [...products];
+    updatedProducts[index][field] = value;
     
-    // Calculate total for this product
+    // Recalculate total for this product
     if (field === 'quantity' || field === 'unit_price') {
-      const quantity = parseFloat(newProducts[index].quantity) || 0;
-      const price = parseFloat(newProducts[index].unit_price) || 0;
-      newProducts[index].total = (quantity * price).toFixed(2);
+      const quantity = parseFloat(updatedProducts[index].quantity) || 0;
+      const unitPrice = parseFloat(updatedProducts[index].unit_price) || 0;
+      updatedProducts[index].total = (quantity * unitPrice).toFixed(2);
     }
     
-    setProducts(newProducts);
-    calculateGrandTotal(newProducts);
+    setProducts(updatedProducts);
+    calculateTotals(updatedProducts);
   };
 
+  const [subTotal, setSubTotal] = useState('0.00');
+  const [taxRate, setTaxRate] = useState('18');
+  const [taxAmount, setTaxAmount] = useState('0.00');
   const [grandTotal, setGrandTotal] = useState('0.00');
-  
-  const calculateGrandTotal = (productsList) => {
-    const total = productsList.reduce((sum, product) => {
+
+  const calculateTotals = (productList) => {
+    const subtotal = productList.reduce((sum, product) => {
       return sum + (parseFloat(product.total) || 0);
     }, 0);
+    
+    const tax = (subtotal * parseFloat(taxRate || 0)) / 100;
+    const total = subtotal + tax;
+    
+    setSubTotal(subtotal.toFixed(2));
+    setTaxAmount(tax.toFixed(2));
+    setGrandTotal(total.toFixed(2));
+  };
+
+  const handleTaxRateChange = (e) => {
+    const newTaxRate = e.target.value;
+    setTaxRate(newTaxRate);
+    
+    const subtotal = parseFloat(subTotal);
+    const tax = (subtotal * parseFloat(newTaxRate || 0)) / 100;
+    const total = subtotal + tax;
+    
+    setTaxAmount(tax.toFixed(2));
     setGrandTotal(total.toFixed(2));
   };
 
   const onSubmit = async (data) => {
+    // Validate products
+    if (products.length === 0 || !products.some(p => p.name.trim() !== '')) {
+      toast({
+        title: "Validation Error",
+        description: "At least one product must be added to the proposal",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       // Generate a proposal ID
-      const proposalId = `PRO-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+      const proposalId = `PROP-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
       
       const { data: userData } = await supabase.auth.getUser();
       
+      // Format data for Supabase
       const formattedData = {
         proposal_id: proposalId,
         customer_name: data.customer_name,
@@ -100,6 +128,9 @@ const SalesProposalForm = ({ onBack }) => {
         validity_period: parseInt(data.validity_period),
         terms_conditions: data.terms_conditions,
         grand_total: grandTotal,
+        tax_amount: taxAmount,
+        sub_total: subTotal,
+        tax_rate: taxRate,
         created_by: userData?.user?.id || null
       };
 
@@ -116,7 +147,9 @@ const SalesProposalForm = ({ onBack }) => {
 
       // Reset form
       form.reset();
-      setProducts([{ name: '', quantity: '', unit_price: '', total: '0.00' }]);
+      setProducts([{ name: '', quantity: '1', unit_price: '0', total: '0' }]);
+      setSubTotal('0.00');
+      setTaxAmount('0.00');
       setGrandTotal('0.00');
     } catch (error) {
       console.error('Error creating sales proposal:', error);
@@ -130,63 +163,15 @@ const SalesProposalForm = ({ onBack }) => {
     }
   };
 
-  const calculateAllTotals = () => {
-    const newProducts = [...products];
-    
-    newProducts.forEach((product, index) => {
-      const quantity = parseFloat(product.quantity) || 0;
-      const price = parseFloat(product.unit_price) || 0;
-      newProducts[index].total = (quantity * price).toFixed(2);
-    });
-    
-    setProducts(newProducts);
-    calculateGrandTotal(newProducts);
-  };
-
-  const autoPopulateProducts = () => {
-    setProducts([
-      { 
-        name: 'Fresh Milk (1L)', 
-        quantity: '100', 
-        unit_price: '2.50', 
-        total: '250.00' 
-      },
-      { 
-        name: 'Yogurt (500g)', 
-        quantity: '50', 
-        unit_price: '3.75', 
-        total: '187.50' 
-      },
-      { 
-        name: 'Cheese (250g)', 
-        quantity: '25', 
-        unit_price: '4.99', 
-        total: '124.75' 
-      }
-    ]);
-    
-    calculateAllTotals();
-  };
-
   return (
     <div className="space-y-4">
-      <div className="flex justify-between">
-        <Button 
-          variant="outline" 
-          onClick={onBack}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          onClick={autoPopulateProducts}
-          className="flex items-center gap-2"
-        >
-          <Calculator className="h-4 w-4" /> Auto-fill Sample
-        </Button>
-      </div>
+      <Button 
+        variant="outline" 
+        onClick={onBack}
+        className="flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" /> Back
+      </Button>
 
       <Card>
         <CardHeader>
@@ -212,12 +197,26 @@ const SalesProposalForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
+                  name="validity_period"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Validity Period (Days)</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="contact_email"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Contact Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="customer@example.com" {...field} />
+                        <Input type="email" placeholder="Enter contact email" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -231,33 +230,8 @@ const SalesProposalForm = ({ onBack }) => {
                     <FormItem>
                       <FormLabel>Contact Phone</FormLabel>
                       <FormControl>
-                        <Input placeholder="+1 234 567 8900" {...field} />
+                        <Input placeholder="Enter contact phone" {...field} />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="validity_period"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Validity Period (Days)</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select validity" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="15">15 days</SelectItem>
-                          <SelectItem value="30">30 days</SelectItem>
-                          <SelectItem value="45">45 days</SelectItem>
-                          <SelectItem value="60">60 days</SelectItem>
-                          <SelectItem value="90">90 days</SelectItem>
-                        </SelectContent>
-                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -265,85 +239,111 @@ const SalesProposalForm = ({ onBack }) => {
               </div>
 
               <div>
-                <h3 className="text-lg font-medium mb-4">Products & Services</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-muted/50">
-                        <th className="p-2 text-left">Product Name</th>
-                        <th className="p-2 text-right">Quantity</th>
-                        <th className="p-2 text-right">Unit Price (USD)</th>
-                        <th className="p-2 text-right">Total (USD)</th>
-                        <th className="p-2 text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {products.map((product, index) => (
-                        <tr key={index} className="border-b">
-                          <td className="p-2">
-                            <Input
-                              value={product.name}
-                              onChange={(e) => updateProduct(index, 'name', e.target.value)}
-                              placeholder="Product name"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={product.quantity}
-                              onChange={(e) => updateProduct(index, 'quantity', e.target.value)}
-                              placeholder="0"
-                              min="0"
-                              className="text-right"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={product.unit_price}
-                              onChange={(e) => updateProduct(index, 'unit_price', e.target.value)}
-                              placeholder="0.00"
-                              step="0.01"
-                              min="0"
-                              className="text-right"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              readOnly
-                              value={product.total}
-                              className="bg-muted/30 text-right"
-                            />
-                          </td>
-                          <td className="p-2 text-center">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeProduct(index)}
-                              title="Remove row"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                      <tr className="font-bold bg-muted/20">
-                        <td colSpan="3" className="p-2 text-right">Grand Total:</td>
-                        <td className="p-2 text-right">${grandTotal}</td>
-                        <td></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                <h3 className="text-lg font-medium mb-4">Products</h3>
+                
+                {products.map((product, index) => (
+                  <div key={index} className="p-4 border rounded-md mb-4">
+                    <div className="flex justify-between mb-2">
+                      <h4 className="font-medium">Product {index + 1}</h4>
+                      {products.length > 1 && (
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => removeProduct(index)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                      <div className="md:col-span-2">
+                        <FormLabel>Product Name</FormLabel>
+                        <Input 
+                          value={product.name} 
+                          onChange={(e) => handleProductChange(index, 'name', e.target.value)}
+                          placeholder="Enter product name"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Quantity</FormLabel>
+                        <Input 
+                          value={product.quantity} 
+                          onChange={(e) => handleProductChange(index, 'quantity', e.target.value)}
+                          placeholder="Quantity"
+                          type="number"
+                          min="1"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Unit Price</FormLabel>
+                        <Input 
+                          value={product.unit_price} 
+                          onChange={(e) => handleProductChange(index, 'unit_price', e.target.value)}
+                          placeholder="Enter unit price"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                        />
+                      </div>
+                      
+                      <div className="md:col-span-2">
+                        <FormLabel>Line Total</FormLabel>
+                        <div className="flex items-center">
+                          <Input 
+                            value={product.total} 
+                            readOnly 
+                            className="bg-gray-50"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
                 <Button
                   type="button"
                   variant="outline"
                   onClick={addProduct}
-                  className="flex items-center gap-2 mt-4"
+                  className="flex items-center gap-2"
                 >
-                  <Plus className="h-4 w-4" /> Add Product
+                  <PlusCircle className="h-4 w-4" /> Add Product
                 </Button>
+              </div>
+
+              <div className="border rounded-md p-4">
+                <h3 className="text-lg font-medium mb-4">Pricing Summary</h3>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>${subTotal}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span>Tax Rate (%):</span>
+                      <Input 
+                        value={taxRate}
+                        onChange={handleTaxRateChange}
+                        className="w-20"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                      />
+                    </div>
+                    <span>${taxAmount}</span>
+                  </div>
+                  
+                  <div className="flex justify-between font-bold text-lg border-t pt-2">
+                    <span>Grand Total:</span>
+                    <span>${grandTotal}</span>
+                  </div>
+                </div>
               </div>
 
               <FormField
@@ -351,7 +351,7 @@ const SalesProposalForm = ({ onBack }) => {
                 name="terms_conditions"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Terms & Conditions</FormLabel>
+                    <FormLabel>Terms and Conditions</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Enter terms and conditions"

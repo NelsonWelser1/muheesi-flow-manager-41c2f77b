@@ -23,51 +23,52 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { CalendarIcon, ArrowLeft, Plus, X } from "lucide-react";
+import { CalendarIcon, ArrowLeft, PlusCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ProductCatalogForm = ({ onBack }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [products, setProducts] = useState([{ name: '', description: '', price: '' }]);
+  const [products, setProducts] = useState([
+    { name: '', description: '', category: '', price: '', unit: '', image_url: '' }
+  ]);
   
   const form = useForm({
     defaultValues: {
-      catalogue_name: '',
-      product_category: '',
-      publication_date: new Date(),
-      version: '1.0',
+      title: '',
       description: '',
-      digital_url: ''
+      published_date: new Date(),
+      version: '1.0',
     }
   });
 
   const addProduct = () => {
-    setProducts([...products, { name: '', description: '', price: '' }]);
+    setProducts([...products, { name: '', description: '', category: '', price: '', unit: '', image_url: '' }]);
   };
 
   const removeProduct = (index) => {
-    if (products.length > 1) {
-      const newProducts = [...products];
-      newProducts.splice(index, 1);
-      setProducts(newProducts);
-    } else {
-      toast({
-        title: "Cannot Remove",
-        description: "At least one product is required",
-        variant: "destructive",
-      });
-    }
+    const updatedProducts = [...products];
+    updatedProducts.splice(index, 1);
+    setProducts(updatedProducts);
   };
 
-  const updateProduct = (index, field, value) => {
-    const newProducts = [...products];
-    newProducts[index] = { ...newProducts[index], [field]: value };
-    setProducts(newProducts);
+  const handleProductChange = (index, field, value) => {
+    const updatedProducts = [...products];
+    updatedProducts[index][field] = value;
+    setProducts(updatedProducts);
   };
 
   const onSubmit = async (data) => {
+    // Validate products
+    if (products.length === 0 || !products.some(p => p.name.trim() !== '')) {
+      toast({
+        title: "Validation Error",
+        description: "At least one product must be added to the catalogue",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       // Generate a catalogue ID
@@ -75,16 +76,14 @@ const ProductCatalogForm = ({ onBack }) => {
       
       const { data: userData } = await supabase.auth.getUser();
       
-      // Format date for Supabase
+      // Format data for Supabase
       const formattedData = {
         catalogue_id: catalogueId,
-        title: data.catalogue_name,
-        product_category: data.product_category,
+        title: data.title,
         description: data.description,
         products: JSON.stringify(products),
-        published_date: data.publication_date.toISOString(),
+        published_date: data.published_date.toISOString(),
         version: data.version,
-        digital_url: data.digital_url,
         created_by: userData?.user?.id || null
       };
 
@@ -101,7 +100,7 @@ const ProductCatalogForm = ({ onBack }) => {
 
       // Reset form
       form.reset();
-      setProducts([{ name: '', description: '', price: '' }]);
+      setProducts([{ name: '', description: '', category: '', price: '', unit: '', image_url: '' }]);
     } catch (error) {
       console.error('Error creating product catalogue:', error);
       toast({
@@ -134,12 +133,12 @@ const ProductCatalogForm = ({ onBack }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="catalogue_name"
+                  name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Catalogue Name</FormLabel>
+                      <FormLabel>Catalogue Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter catalogue name" {...field} />
+                        <Input placeholder="Enter catalogue title" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -148,24 +147,13 @@ const ProductCatalogForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="product_category"
+                  name="version"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Product Category</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="dairy">Dairy Products</SelectItem>
-                          <SelectItem value="cheese">Cheese</SelectItem>
-                          <SelectItem value="yogurt">Yogurt</SelectItem>
-                          <SelectItem value="milk">Milk</SelectItem>
-                          <SelectItem value="meat">Meat Products</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Version</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 1.0" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -173,7 +161,7 @@ const ProductCatalogForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="publication_date"
+                  name="published_date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Publication Date</FormLabel>
@@ -209,105 +197,113 @@ const ProductCatalogForm = ({ onBack }) => {
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="version"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Version</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., 1.0" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="digital_url"
-                  render={({ field }) => (
-                    <FormItem className="col-span-1 md:col-span-2">
-                      <FormLabel>Digital URL (Optional)</FormLabel>
-                      <FormControl>
-                        <Input type="url" placeholder="https://example.com/catalogue" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem className="col-span-1 md:col-span-2">
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter catalogue description"
-                          className="min-h-[100px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Catalogue Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter catalogue description"
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div>
-                <h3 className="text-lg font-medium mb-4">Products in Catalogue</h3>
+                <h3 className="text-lg font-medium mb-4">Products</h3>
+                
                 {products.map((product, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg mb-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Product Name</label>
-                      <Input
-                        value={product.name}
-                        onChange={(e) => updateProduct(index, 'name', e.target.value)}
-                        placeholder="Product name"
-                      />
+                  <div key={index} className="p-4 border rounded-md mb-4">
+                    <div className="flex justify-between mb-2">
+                      <h4 className="font-medium">Product {index + 1}</h4>
+                      {products.length > 1 && (
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => removeProduct(index)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      )}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Description</label>
-                      <Input
-                        value={product.description}
-                        onChange={(e) => updateProduct(index, 'description', e.target.value)}
-                        placeholder="Brief description"
-                      />
-                    </div>
-                    <div className="flex items-end gap-2">
-                      <div className="flex-1">
-                        <label className="block text-sm font-medium mb-1">Price (USD)</label>
-                        <Input
-                          type="number"
-                          value={product.price}
-                          onChange={(e) => updateProduct(index, 'price', e.target.value)}
-                          placeholder="0.00"
-                          step="0.01"
-                          min="0"
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <FormLabel>Product Name</FormLabel>
+                        <Input 
+                          value={product.name} 
+                          onChange={(e) => handleProductChange(index, 'name', e.target.value)}
+                          placeholder="Enter product name"
                         />
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeProduct(index)}
-                        className="mb-0.5"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      
+                      <div>
+                        <FormLabel>Category</FormLabel>
+                        <Input 
+                          value={product.category} 
+                          onChange={(e) => handleProductChange(index, 'category', e.target.value)}
+                          placeholder="E.g. Cheese, Milk, Yogurt"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Price</FormLabel>
+                        <Input 
+                          value={product.price} 
+                          onChange={(e) => handleProductChange(index, 'price', e.target.value)}
+                          placeholder="Enter price"
+                          type="number"
+                          step="0.01"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Unit</FormLabel>
+                        <Input 
+                          value={product.unit} 
+                          onChange={(e) => handleProductChange(index, 'unit', e.target.value)}
+                          placeholder="E.g. kg, L, piece"
+                        />
+                      </div>
+                      
+                      <div className="md:col-span-2">
+                        <FormLabel>Image URL (optional)</FormLabel>
+                        <Input 
+                          value={product.image_url} 
+                          onChange={(e) => handleProductChange(index, 'image_url', e.target.value)}
+                          placeholder="Enter image URL"
+                        />
+                      </div>
+                      
+                      <div className="md:col-span-2">
+                        <FormLabel>Description</FormLabel>
+                        <Textarea 
+                          value={product.description} 
+                          onChange={(e) => handleProductChange(index, 'description', e.target.value)}
+                          placeholder="Enter product description"
+                          rows={2}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
+                
                 <Button
                   type="button"
                   variant="outline"
                   onClick={addProduct}
                   className="flex items-center gap-2"
                 >
-                  <Plus className="h-4 w-4" /> Add Product
+                  <PlusCircle className="h-4 w-4" /> Add Product
                 </Button>
               </div>
 

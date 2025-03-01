@@ -23,49 +23,43 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { CalendarIcon, ArrowLeft, Plus, X, Link2, Upload } from "lucide-react";
+import { CalendarIcon, ArrowLeft, PlusCircle, Trash2, ImageIcon, LinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const AdvertisingPromotionForm = ({ onBack }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [assets, setAssets] = useState([{ name: '', url: '', type: 'image' }]);
+  const [assets, setAssets] = useState([
+    { name: '', type: 'image', url: '' }
+  ]);
   
   const form = useForm({
     defaultValues: {
       title: '',
-      material_type: 'flyer',
+      material_type: 'print_ad',
       target_audience: '',
       start_date: new Date(),
       end_date: null,
       details: '',
-      status: 'planning',
+      status: 'draft',
     }
   });
 
   const addAsset = () => {
-    setAssets([...assets, { name: '', url: '', type: 'image' }]);
+    setAssets([...assets, { name: '', type: 'image', url: '' }]);
   };
 
   const removeAsset = (index) => {
-    if (assets.length > 1) {
-      const newAssets = [...assets];
-      newAssets.splice(index, 1);
-      setAssets(newAssets);
-    } else {
-      toast({
-        title: "Cannot Remove",
-        description: "At least one asset is required",
-        variant: "destructive",
-      });
-    }
+    const updatedAssets = [...assets];
+    updatedAssets.splice(index, 1);
+    setAssets(updatedAssets);
   };
 
-  const updateAsset = (index, field, value) => {
-    const newAssets = [...assets];
-    newAssets[index] = { ...newAssets[index], [field]: value };
-    setAssets(newAssets);
+  const handleAssetChange = (index, field, value) => {
+    const updatedAssets = [...assets];
+    updatedAssets[index][field] = value;
+    setAssets(updatedAssets);
   };
 
   const onSubmit = async (data) => {
@@ -76,7 +70,7 @@ const AdvertisingPromotionForm = ({ onBack }) => {
       
       const { data: userData } = await supabase.auth.getUser();
       
-      // Format dates for Supabase
+      // Format data for Supabase
       const formattedData = {
         promotion_id: promotionId,
         title: data.title,
@@ -98,17 +92,17 @@ const AdvertisingPromotionForm = ({ onBack }) => {
 
       toast({
         title: "Success",
-        description: "Advertising/Promotion material created successfully"
+        description: "Advertising promotion created successfully"
       });
 
       // Reset form
       form.reset();
-      setAssets([{ name: '', url: '', type: 'image' }]);
+      setAssets([{ name: '', type: 'image', url: '' }]);
     } catch (error) {
-      console.error('Error creating advertising/promotion:', error);
+      console.error('Error creating advertising promotion:', error);
       toast({
         title: "Error",
-        description: "Failed to create advertising/promotion: " + error.message,
+        description: "Failed to create advertising promotion: " + error.message,
         variant: "destructive",
       });
     } finally {
@@ -128,7 +122,7 @@ const AdvertisingPromotionForm = ({ onBack }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Advertising & Promotional Materials</CardTitle>
+          <CardTitle>Create Advertising & Promotion</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -139,9 +133,9 @@ const AdvertisingPromotionForm = ({ onBack }) => {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>Promotion Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter title" {...field} />
+                        <Input placeholder="Enter promotion title" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -161,14 +155,15 @@ const AdvertisingPromotionForm = ({ onBack }) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="flyer">Flyer</SelectItem>
-                          <SelectItem value="social_post">Social Media Post</SelectItem>
+                          <SelectItem value="print_ad">Print Advertisement</SelectItem>
+                          <SelectItem value="digital_ad">Digital Advertisement</SelectItem>
+                          <SelectItem value="social_media">Social Media Post</SelectItem>
+                          <SelectItem value="video">Video Content</SelectItem>
                           <SelectItem value="banner">Banner</SelectItem>
+                          <SelectItem value="flyer">Flyer</SelectItem>
                           <SelectItem value="brochure">Brochure</SelectItem>
-                          <SelectItem value="video">Video</SelectItem>
-                          <SelectItem value="email_template">Email Template</SelectItem>
-                          <SelectItem value="press_release">Press Release</SelectItem>
-                          <SelectItem value="advertisement">Advertisement</SelectItem>
+                          <SelectItem value="email_campaign">Email Campaign</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -183,7 +178,7 @@ const AdvertisingPromotionForm = ({ onBack }) => {
                     <FormItem>
                       <FormLabel>Target Audience</FormLabel>
                       <FormControl>
-                        <Input placeholder="E.g., Retailers, Consumers, etc." {...field} />
+                        <Input placeholder="Enter target audience" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -203,11 +198,11 @@ const AdvertisingPromotionForm = ({ onBack }) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="planning">Planning</SelectItem>
-                          <SelectItem value="in_design">In Design</SelectItem>
-                          <SelectItem value="ready">Ready for Distribution</SelectItem>
+                          <SelectItem value="draft">Draft</SelectItem>
+                          <SelectItem value="pending_approval">Pending Approval</SelectItem>
                           <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="expired">Expired</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -259,7 +254,7 @@ const AdvertisingPromotionForm = ({ onBack }) => {
                   name="end_date"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>End Date (Optional)</FormLabel>
+                      <FormLabel>End Date</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -299,10 +294,10 @@ const AdvertisingPromotionForm = ({ onBack }) => {
                 name="details"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Details</FormLabel>
+                    <FormLabel>Promotion Details</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter details about this promotional material"
+                        placeholder="Enter details about the promotion"
                         className="min-h-[120px]"
                         {...field}
                       />
@@ -313,76 +308,80 @@ const AdvertisingPromotionForm = ({ onBack }) => {
               />
 
               <div>
-                <h3 className="text-lg font-medium mb-4">Promotional Assets</h3>
+                <h3 className="text-lg font-medium mb-4">Promotion Assets</h3>
+                
                 {assets.map((asset, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg mb-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Asset Name</label>
-                      <Input
-                        value={asset.name}
-                        onChange={(e) => updateAsset(index, 'name', e.target.value)}
-                        placeholder="E.g., Main Banner"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium mb-1">URL/Link</label>
-                      <div className="flex">
-                        <Input
-                          value={asset.url}
-                          onChange={(e) => updateAsset(index, 'url', e.target.value)}
-                          placeholder="https://example.com/assets/image.jpg"
-                          className="rounded-r-none"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="rounded-l-none border-l-0"
-                          title="Upload file"
-                          disabled
+                  <div key={index} className="p-4 border rounded-md mb-4">
+                    <div className="flex justify-between mb-2">
+                      <h4 className="font-medium">Asset {index + 1}</h4>
+                      {assets.length > 1 && (
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => removeAsset(index)}
                         >
-                          <Upload className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
-                      </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <label className="block text-sm font-medium mb-1">Type</label>
-                        <Select 
-                          value={asset.type} 
-                          onValueChange={(value) => updateAsset(index, 'type', value)}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <FormLabel>Asset Name</FormLabel>
+                        <Input 
+                          value={asset.name} 
+                          onChange={(e) => handleAssetChange(index, 'name', e.target.value)}
+                          placeholder="Enter asset name"
+                        />
+                      </div>
+                      
+                      <div>
+                        <FormLabel>Asset Type</FormLabel>
+                        <Select
+                          value={asset.type}
+                          onValueChange={(value) => handleAssetChange(index, 'type', value)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
+                            <SelectValue placeholder="Select asset type" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="image">Image</SelectItem>
                             <SelectItem value="video">Video</SelectItem>
                             <SelectItem value="document">Document</SelectItem>
                             <SelectItem value="audio">Audio</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="flex items-end">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeAsset(index)}
-                          className="mb-0.5"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                      
+                      <div className="md:col-span-2">
+                        <FormLabel>URL/Link</FormLabel>
+                        <div className="flex items-center space-x-2">
+                          <Input 
+                            value={asset.url} 
+                            onChange={(e) => handleAssetChange(index, 'url', e.target.value)}
+                            placeholder="Enter asset URL or link"
+                            className="flex-1"
+                          />
+                          {asset.type === 'image' ? (
+                            <ImageIcon className="h-5 w-5 text-gray-400" />
+                          ) : (
+                            <LinkIcon className="h-5 w-5 text-gray-400" />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
+                
                 <Button
                   type="button"
                   variant="outline"
                   onClick={addAsset}
                   className="flex items-center gap-2"
                 >
-                  <Plus className="h-4 w-4" /> Add Asset
+                  <PlusCircle className="h-4 w-4" /> Add Asset
                 </Button>
               </div>
 
@@ -391,7 +390,7 @@ const AdvertisingPromotionForm = ({ onBack }) => {
                   type="submit"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Creating..." : "Create Promotional Material"}
+                  {isSubmitting ? "Creating..." : "Create Promotion"}
                 </Button>
               </div>
             </form>

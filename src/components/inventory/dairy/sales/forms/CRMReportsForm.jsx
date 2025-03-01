@@ -38,13 +38,15 @@ const CRMReportsForm = ({ onBack }) => {
       customer_name: '',
       customer_id: '',
       interaction_date: new Date(),
-      interaction_type: 'call',
+      interaction_type: 'meeting',
       details: '',
       follow_up_required: false,
       follow_up_date: null,
-      status: 'pending',
+      status: 'new',
     }
   });
+
+  const watchFollowUpRequired = form.watch("follow_up_required");
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
@@ -54,7 +56,7 @@ const CRMReportsForm = ({ onBack }) => {
       
       const { data: userData } = await supabase.auth.getUser();
       
-      // Format dates for Supabase
+      // Format data for Supabase
       const formattedData = {
         report_id: reportId,
         report_type: data.report_type,
@@ -81,7 +83,17 @@ const CRMReportsForm = ({ onBack }) => {
       });
 
       // Reset form
-      form.reset();
+      form.reset({
+        report_type: 'customer_interaction',
+        customer_name: '',
+        customer_id: '',
+        interaction_date: new Date(),
+        interaction_type: 'meeting',
+        details: '',
+        follow_up_required: false,
+        follow_up_date: null,
+        status: 'new',
+      });
     } catch (error) {
       console.error('Error creating CRM report:', error);
       toast({
@@ -106,7 +118,7 @@ const CRMReportsForm = ({ onBack }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>CRM Report Form</CardTitle>
+          <CardTitle>Create CRM Report</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -126,10 +138,10 @@ const CRMReportsForm = ({ onBack }) => {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="customer_interaction">Customer Interaction</SelectItem>
-                          <SelectItem value="lead_generation">Lead Generation</SelectItem>
-                          <SelectItem value="customer_complaint">Customer Complaint</SelectItem>
+                          <SelectItem value="customer_feedback">Customer Feedback</SelectItem>
                           <SelectItem value="sales_opportunity">Sales Opportunity</SelectItem>
-                          <SelectItem value="customer_inquiry">Customer Inquiry</SelectItem>
+                          <SelectItem value="customer_complaint">Customer Complaint</SelectItem>
+                          <SelectItem value="market_research">Market Research</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -150,10 +162,10 @@ const CRMReportsForm = ({ onBack }) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="meeting">Meeting</SelectItem>
                           <SelectItem value="call">Phone Call</SelectItem>
                           <SelectItem value="email">Email</SelectItem>
-                          <SelectItem value="meeting">In-person Meeting</SelectItem>
-                          <SelectItem value="social">Social Media</SelectItem>
+                          <SelectItem value="visit">Site Visit</SelectItem>
                           <SelectItem value="event">Event</SelectItem>
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
@@ -168,9 +180,9 @@ const CRMReportsForm = ({ onBack }) => {
                   name="customer_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer/Lead Name</FormLabel>
+                      <FormLabel>Customer Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter name" {...field} />
+                        <Input placeholder="Enter customer name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -243,7 +255,7 @@ const CRMReportsForm = ({ onBack }) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="new">New</SelectItem>
                           <SelectItem value="in_progress">In Progress</SelectItem>
                           <SelectItem value="completed">Completed</SelectItem>
                           <SelectItem value="on_hold">On Hold</SelectItem>
@@ -290,14 +302,14 @@ const CRMReportsForm = ({ onBack }) => {
                         Follow-up Required
                       </FormLabel>
                       <p className="text-sm text-muted-foreground">
-                        Check if this interaction requires follow-up
+                        Check if this interaction requires a follow-up
                       </p>
                     </div>
                   </FormItem>
                 )}
               />
 
-              {form.watch("follow_up_required") && (
+              {watchFollowUpRequired && (
                 <FormField
                   control={form.control}
                   name="follow_up_date"
@@ -317,7 +329,7 @@ const CRMReportsForm = ({ onBack }) => {
                               {field.value ? (
                                 format(field.value, "PPP")
                               ) : (
-                                <span>Select follow-up date</span>
+                                <span>Select date</span>
                               )}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -329,7 +341,6 @@ const CRMReportsForm = ({ onBack }) => {
                             selected={field.value}
                             onSelect={field.onChange}
                             initialFocus
-                            disabled={(date) => date < new Date()}
                           />
                         </PopoverContent>
                       </Popover>
@@ -344,7 +355,7 @@ const CRMReportsForm = ({ onBack }) => {
                   type="submit"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Submitting..." : "Submit Report"}
+                  {isSubmitting ? "Creating..." : "Create Report"}
                 </Button>
               </div>
             </form>
