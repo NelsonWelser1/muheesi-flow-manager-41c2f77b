@@ -1,119 +1,92 @@
 
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { CalendarIcon, ArrowLeft, PlusCircle, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowLeft, Plus, Trash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 const SalesProposalForm = ({ onBack }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [products, setProducts] = useState([
-    { name: '', quantity: '', unit_price: '', total: '' }
-  ]);
-  
+  const [products, setProducts] = useState([{ name: '', description: '', quantity: '1', price: '', total: '0' }]);
+
   const form = useForm({
     defaultValues: {
-      proposal_title: '',
-      client_name: '',
-      client_contact: '',
-      client_email: '',
-      proposal_date: new Date(),
-      expiry_date: new Date(new Date().setMonth(new Date().getMonth() + 1)),
-      status: 'draft',
-      terms_conditions: 'Payment due within 30 days of delivery.',
-      notes: ''
+      customer_name: '',
+      customer_email: '',
+      customer_phone: '',
+      proposal_date: new Date().toISOString().split('T')[0],
+      validity_period: '30',
+      terms_conditions: 'Payment due within 30 days of invoice date.\nPrices are subject to change based on market conditions.\nDelivery will be arranged upon confirmation of order.',
+      grand_total: '0'
     }
   });
 
   const addProduct = () => {
-    setProducts([...products, { name: '', quantity: '', unit_price: '', total: '' }]);
+    setProducts([...products, { name: '', description: '', quantity: '1', price: '', total: '0' }]);
   };
 
   const removeProduct = (index) => {
-    const updatedProducts = [...products];
-    updatedProducts.splice(index, 1);
-    setProducts(updatedProducts);
+    if (products.length > 1) {
+      const newProducts = [...products];
+      newProducts.splice(index, 1);
+      setProducts(newProducts);
+      updateGrandTotal(newProducts);
+    }
   };
 
   const handleProductChange = (index, field, value) => {
-    const updatedProducts = [...products];
-    updatedProducts[index][field] = value;
+    const newProducts = [...products];
+    newProducts[index][field] = value;
     
-    // Calculate total if quantity or unit_price changes
-    if (field === 'quantity' || field === 'unit_price') {
-      const quantity = field === 'quantity' ? parseFloat(value) || 0 : 
-        parseFloat(updatedProducts[index].quantity) || 0;
-      const unitPrice = field === 'unit_price' ? parseFloat(value) || 0 : 
-        parseFloat(updatedProducts[index].unit_price) || 0;
-      
-      updatedProducts[index].total = (quantity * unitPrice).toFixed(2);
+    // Calculate total for the product
+    if (field === 'quantity' || field === 'price') {
+      const quantity = parseFloat(newProducts[index].quantity) || 0;
+      const price = parseFloat(newProducts[index].price) || 0;
+      newProducts[index].total = (quantity * price).toFixed(2);
     }
     
-    setProducts(updatedProducts);
+    setProducts(newProducts);
+    updateGrandTotal(newProducts);
   };
 
-  const calculateTotal = () => {
-    return products.reduce((sum, product) => {
+  const updateGrandTotal = (productsList) => {
+    const total = productsList.reduce((sum, product) => {
       return sum + (parseFloat(product.total) || 0);
-    }, 0).toFixed(2);
+    }, 0);
+    
+    form.setValue('grand_total', total.toFixed(2));
   };
 
   const onSubmit = async (data) => {
-    // Validate products
-    if (products.length === 0 || !products.some(p => p.name.trim() !== '')) {
-      toast({
-        title: "Validation Error",
-        description: "At least one product must be added to the proposal",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setIsSubmitting(true);
     try {
       // Generate a proposal ID
-      const proposalId = `SP-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+      const proposalId = `PRO-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
       
       const { data: userData } = await supabase.auth.getUser();
       
       // Format data for Supabase
       const formattedData = {
         proposal_id: proposalId,
-        proposal_title: data.proposal_title,
-        client_name: data.client_name,
-        client_contact: data.client_contact,
-        client_email: data.client_email,
-        products: JSON.stringify(products),
-        total_amount: calculateTotal(),
-        proposal_date: data.proposal_date.toISOString(),
-        expiry_date: data.expiry_date.toISOString(),
-        status: data.status,
+        customer_name: data.customer_name,
+        customer_email: data.customer_email,
+        customer_phone: data.customer_phone,
+        proposal_date: data.proposal_date,
+        validity_period: parseInt(data.validity_period),
         terms_conditions: data.terms_conditions,
-        notes: data.notes,
+        products: products,
+        grand_total: data.grand_total,
+        status: 'draft',
+        created_at: new Date().toISOString(),
         created_by: userData?.user?.id || null
       };
 
@@ -123,21 +96,22 @@ const SalesProposalForm = ({ onBack }) => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Sales proposal created successfully"
-      });
+      showSuccessToast(toast, "Sales proposal created successfully");
 
       // Reset form
-      form.reset();
-      setProducts([{ name: '', quantity: '', unit_price: '', total: '' }]);
+      form.reset({
+        customer_name: '',
+        customer_email: '',
+        customer_phone: '',
+        proposal_date: new Date().toISOString().split('T')[0],
+        validity_period: '30',
+        terms_conditions: 'Payment due within 30 days of invoice date.\nPrices are subject to change based on market conditions.\nDelivery will be arranged upon confirmation of order.',
+        grand_total: '0'
+      });
+      setProducts([{ name: '', description: '', quantity: '1', price: '', total: '0' }]);
     } catch (error) {
       console.error('Error creating sales proposal:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create sales proposal: " + error.message,
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Failed to create sales proposal: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -155,7 +129,7 @@ const SalesProposalForm = ({ onBack }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Create Sales Proposal</CardTitle>
+          <CardTitle>Sales Proposal Form</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -163,12 +137,12 @@ const SalesProposalForm = ({ onBack }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="proposal_title"
+                  name="customer_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Proposal Title</FormLabel>
+                      <FormLabel>Customer Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter proposal title" {...field} />
+                        <Input placeholder="Enter customer name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -177,310 +151,177 @@ const SalesProposalForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="customer_email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select 
-                        defaultValue={field.value} 
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="draft">
-                            <div className="flex items-center">
-                              <span>Draft</span>
-                              <Badge variant="info" className="ml-2">Draft</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="sent">
-                            <div className="flex items-center">
-                              <span>Sent</span>
-                              <Badge variant="pending" className="ml-2">Sent</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="accepted">
-                            <div className="flex items-center">
-                              <span>Accepted</span>
-                              <Badge variant="success" className="ml-2">Accepted</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="rejected">
-                            <div className="flex items-center">
-                              <span>Rejected</span>
-                              <Badge variant="destructive" className="ml-2">Rejected</Badge>
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Customer Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter email address" type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="customer_phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Customer Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter phone number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="proposal_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Proposal Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="validity_period"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Validity Period (Days)</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="grand_total"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Grand Total</FormLabel>
+                      <FormControl>
+                        <Input readOnly className="bg-gray-100" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Client Information</h3>
-                  
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="client_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Client Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter client name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="client_contact"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contact Number</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter contact number" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="client_email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email Address</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter email address" type="email" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Proposal Dates</h3>
-                  
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="proposal_date"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>Proposal Date</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "w-full pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "PPP")
-                                  ) : (
-                                    <span>Select date</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="expiry_date"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>Expiry Date</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "w-full pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "PPP")
-                                  ) : (
-                                    <span>Select date</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium mb-4">Products</h3>
-                
-                {products.map((product, index) => (
-                  <div key={index} className="p-4 border rounded-md mb-4">
-                    <div className="flex justify-between mb-2">
-                      <h4 className="font-medium">Product {index + 1}</h4>
-                      {products.length > 1 && (
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => removeProduct(index)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      )}
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                      <div>
-                        <FormLabel>Product Name</FormLabel>
-                        <Input 
-                          value={product.name} 
-                          onChange={(e) => handleProductChange(index, 'name', e.target.value)}
-                          placeholder="Enter product name"
-                        />
-                      </div>
-                      
-                      <div>
-                        <FormLabel>Quantity</FormLabel>
-                        <Input 
-                          value={product.quantity} 
-                          onChange={(e) => handleProductChange(index, 'quantity', e.target.value)}
-                          placeholder="Enter quantity"
-                          type="number"
-                          min="1"
-                        />
-                      </div>
-                      
-                      <div>
-                        <FormLabel>Unit Price</FormLabel>
-                        <Input 
-                          value={product.unit_price} 
-                          onChange={(e) => handleProductChange(index, 'unit_price', e.target.value)}
-                          placeholder="Enter unit price"
-                          type="number"
-                          step="0.01"
-                        />
-                      </div>
-                      
-                      <div>
-                        <FormLabel>Total</FormLabel>
-                        <Input 
-                          value={product.total} 
-                          readOnly
-                          className="bg-gray-50"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                <div className="flex justify-between items-center">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Products</h3>
                   <Button
                     type="button"
                     variant="outline"
+                    size="sm"
                     onClick={addProduct}
                     className="flex items-center gap-2"
                   >
-                    <PlusCircle className="h-4 w-4" /> Add Product
+                    <Plus className="h-4 w-4" /> Add Product
                   </Button>
-                  
-                  <div className="text-right">
-                    <p className="text-sm text-gray-500">Total Amount</p>
-                    <p className="text-2xl font-bold">${calculateTotal()}</p>
-                  </div>
                 </div>
+
+                {products.map((product, index) => (
+                  <Card key={index} className="p-4">
+                    <div className="flex justify-between items-start mb-4">
+                      <h4 className="font-medium">Product {index + 1}</h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeProduct(index)}
+                        disabled={products.length <= 1}
+                      >
+                        <Trash className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2 md:col-span-2">
+                        <FormLabel>Product Name</FormLabel>
+                        <Input
+                          placeholder="Enter product name"
+                          value={product.name}
+                          onChange={(e) => handleProductChange(index, 'name', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <FormLabel>Description</FormLabel>
+                        <Textarea
+                          placeholder="Enter product description"
+                          value={product.description}
+                          onChange={(e) => handleProductChange(index, 'description', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormLabel>Quantity</FormLabel>
+                        <Input
+                          type="number"
+                          min="1"
+                          placeholder="Enter quantity"
+                          value={product.quantity}
+                          onChange={(e) => handleProductChange(index, 'quantity', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormLabel>Unit Price</FormLabel>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Enter unit price"
+                          value={product.price}
+                          onChange={(e) => handleProductChange(index, 'price', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormLabel>Total</FormLabel>
+                        <Input
+                          readOnly
+                          className="bg-gray-100"
+                          value={product.total}
+                        />
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="terms_conditions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Terms & Conditions</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter terms and conditions"
-                          className="min-h-[100px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter additional notes"
-                          className="min-h-[100px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="terms_conditions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Terms & Conditions</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter terms and conditions"
+                        className="min-h-[150px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="flex justify-end">
                 <Button
                   type="submit"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Creating..." : "Create Sales Proposal"}
+                  {isSubmitting ? "Submitting..." : "Create Sales Proposal"}
                 </Button>
               </div>
             </form>

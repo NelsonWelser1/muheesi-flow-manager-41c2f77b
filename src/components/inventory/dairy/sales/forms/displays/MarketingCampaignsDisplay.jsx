@@ -1,81 +1,73 @@
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Search, Plus, Minus, Calendar } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { Input } from "@/components/ui/input";
+import { 
+  ArrowLeft, 
+  Search, 
+  ChevronRight, 
+  Filter, 
+  Calendar, 
+  Target, 
+  Users, 
+  DollarSign 
+} from "lucide-react";
 import { format } from "date-fns";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const MarketingCampaignsDisplay = ({ onBack }) => {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState([]);
-  const [filteredCampaigns, setFilteredCampaigns] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [timeRange, setTimeRange] = useState("week"); // day, week, month, year
-  const [dateRange, setDateRange] = useState(null);
-  const [filterMode, setFilterMode] = useState("preset"); // preset or custom
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [openCampaignDetails, setOpenCampaignDetails] = useState(false);
 
+  // Fetch campaigns on component mount
   useEffect(() => {
-    if (filterMode === "preset") {
-      fetchCampaignsByPreset();
-    } else {
-      fetchCampaignsByDateRange();
-    }
-  }, [timeRange, filterMode, dateRange]);
+    fetchCampaigns();
+  }, []);
 
-  useEffect(() => {
-    if (campaigns.length > 0) {
-      filterCampaigns();
-    }
-  }, [searchQuery, campaigns]);
-
-  const fetchCampaignsByPreset = async () => {
+  const fetchCampaigns = async () => {
     setLoading(true);
     try {
-      // Determine date range based on timeRange
-      const now = new Date();
-      let startDate = new Date();
-      
-      switch (timeRange) {
-        case "day":
-          startDate.setDate(now.getDate() - 1);
-          break;
-        case "week":
-          startDate.setDate(now.getDate() - 7);
-          break;
-        case "month":
-          startDate.setMonth(now.getMonth() - 1);
-          break;
-        case "year":
-          startDate.setFullYear(now.getFullYear() - 1);
-          break;
-        default:
-          startDate.setDate(now.getDate() - 7); // Default to week
-      }
-
       const { data, error } = await supabase
         .from('marketing_campaigns')
         .select('*')
-        .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       
-      if (data) {
-        console.log('Campaigns fetched:', data);
-        setCampaigns(data);
-        setFilteredCampaigns(data);
-      }
+      console.log('Campaigns fetched:', data);
+      setCampaigns(data || []);
     } catch (error) {
       console.error('Error fetching campaigns:', error);
       toast({
@@ -88,168 +80,49 @@ const MarketingCampaignsDisplay = ({ onBack }) => {
     }
   };
 
-  const fetchCampaignsByDateRange = async () => {
-    if (!dateRange?.from) return;
-    
-    setLoading(true);
-    try {
-      let query = supabase
-        .from('marketing_campaigns')
-        .select('*')
-        .gte('created_at', dateRange.from.toISOString());
-      
-      if (dateRange.to) {
-        // Add one day to include the end date fully
-        const endDate = new Date(dateRange.to);
-        endDate.setDate(endDate.getDate() + 1);
-        query = query.lt('created_at', endDate.toISOString());
-      }
-      
-      query = query.order('created_at', { ascending: false });
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      
-      if (data) {
-        console.log('Campaigns fetched by date range:', data);
-        setCampaigns(data);
-        setFilteredCampaigns(data);
-      }
-    } catch (error) {
-      console.error('Error fetching campaigns by date range:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load campaigns: " + error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+  const getStatusBadgeVariant = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'planned':
+        return 'secondary';
+      case 'active':
+        return 'success';
+      case 'completed':
+        return 'default';
+      case 'cancelled':
+        return 'destructive';
+      default:
+        return 'default';
     }
   };
 
-  const filterCampaigns = () => {
-    if (!searchQuery.trim()) {
-      setFilteredCampaigns(campaigns);
-      return;
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      return format(new Date(dateString), 'dd MMM yyyy');
+    } catch (error) {
+      return dateString;
     }
+  };
 
-    const query = searchQuery.toLowerCase();
-    const filtered = campaigns.filter(campaign => 
-      campaign.campaign_name.toLowerCase().includes(query) || 
-      (campaign.platform && campaign.platform.toLowerCase().includes(query)) ||
-      (campaign.engagement_metrics && campaign.engagement_metrics.toLowerCase().includes(query))
+  const filteredCampaigns = campaigns.filter(campaign => {
+    // Apply status filter
+    if (statusFilter !== 'all' && campaign.progress_status?.toLowerCase() !== statusFilter) {
+      return false;
+    }
+    
+    // Apply search filter
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      campaign.campaign_name?.toLowerCase().includes(searchLower) ||
+      campaign.campaign_id?.toLowerCase().includes(searchLower) ||
+      campaign.objectives?.toLowerCase().includes(searchLower) ||
+      campaign.target_audience?.toLowerCase().includes(searchLower)
     );
-    
-    setFilteredCampaigns(filtered);
-  };
+  });
 
-  const increaseTimeRange = () => {
-    switch (timeRange) {
-      case "day":
-        setTimeRange("week");
-        break;
-      case "week":
-        setTimeRange("month");
-        break;
-      case "month":
-        setTimeRange("year");
-        break;
-      case "year":
-        // Already at max range
-        break;
-    }
-  };
-
-  const decreaseTimeRange = () => {
-    switch (timeRange) {
-      case "year":
-        setTimeRange("month");
-        break;
-      case "month":
-        setTimeRange("week");
-        break;
-      case "week":
-        setTimeRange("day");
-        break;
-      case "day":
-        // Already at min range
-        break;
-    }
-  };
-
-  const handleExport = (format) => {
-    try {
-      if (filteredCampaigns.length === 0) {
-        toast({
-          title: "Export Failed",
-          description: "No data to export",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Convert campaigns data to CSV format
-      let exportData;
-      
-      if (format === 'csv' || format === 'excel') {
-        // CSV/Excel format
-        const csvData = [
-          // Header row
-          ["ID", "Campaign Name", "Platform", "Start Date", "End Date", "Budget", "Engagement Metrics", "Created At"],
-          // Data rows
-          ...filteredCampaigns.map(campaign => [
-            campaign.id,
-            campaign.campaign_name,
-            campaign.platform || "",
-            campaign.start_date || "",
-            campaign.end_date || "",
-            campaign.budget || "",
-            campaign.engagement_metrics || "",
-            campaign.created_at || ""
-          ])
-        ];
-        
-        // Convert to CSV string
-        exportData = csvData.map(row => row.map(cell => 
-          typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell
-        ).join(',')).join('\n');
-      } else if (format === 'pdf') {
-        // For PDF, we'll just prepare the data
-        // In a real app, you would use a library like jsPDF
-        exportData = JSON.stringify(filteredCampaigns, null, 2);
-        console.log("PDF export data prepared:", exportData);
-        
-        toast({
-          title: "PDF Export",
-          description: "PDF export functionality would be implemented with a library like jsPDF",
-        });
-        return;
-      }
-
-      // Create download
-      const blob = new Blob([exportData], { type: format === 'excel' ? 'application/vnd.ms-excel' : 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.setAttribute('hidden', '');
-      a.setAttribute('href', url);
-      a.setAttribute('download', `marketing-campaigns-${new Date().toISOString()}.${format === 'excel' ? 'xlsx' : format}`);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      toast({
-        title: "Export Successful",
-        description: `Data exported as ${format.toUpperCase()}`,
-      });
-    } catch (error) {
-      console.error('Export error:', error);
-      toast({
-        title: "Export Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  const openDetails = (campaign) => {
+    setSelectedCampaign(campaign);
+    setOpenCampaignDetails(true);
   };
 
   return (
@@ -261,47 +134,14 @@ const MarketingCampaignsDisplay = ({ onBack }) => {
       >
         <ArrowLeft className="h-4 w-4" /> Back
       </Button>
-      
+
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle>Marketing Campaigns</CardTitle>
-          <Tabs value={filterMode} onValueChange={setFilterMode} className="w-[400px]">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="preset">Preset Ranges</TabsTrigger>
-              <TabsTrigger value="custom">Custom Range</TabsTrigger>
-            </TabsList>
-            <TabsContent value="preset" className="mt-2">
-              <div className="flex items-center space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={decreaseTimeRange}
-                  disabled={timeRange === "day"}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="text-sm font-medium capitalize">{timeRange}</span>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={increaseTimeRange}
-                  disabled={timeRange === "year"}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </TabsContent>
-            <TabsContent value="custom" className="mt-2">
-              <DateRangePicker 
-                dateRange={dateRange}
-                onDateRangeChange={setDateRange}
-              />
-            </TabsContent>
-          </Tabs>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 flex flex-col sm:flex-row gap-4 justify-between">
-            <div className="relative flex-grow max-w-md">
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search campaigns..."
@@ -310,57 +150,212 @@ const MarketingCampaignsDisplay = ({ onBack }) => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleExport('csv')}>
-                <Download className="mr-2 h-4 w-4" /> CSV
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleExport('excel')}>
-                <Download className="mr-2 h-4 w-4" /> Excel
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleExport('pdf')}>
-                <Download className="mr-2 h-4 w-4" /> PDF
-              </Button>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select
+                value={statusFilter}
+                onValueChange={setStatusFilter}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="planned">Planned</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           {loading ? (
-            <p className="text-center py-4">Loading campaigns...</p>
+            <div className="text-center py-8">Loading campaigns...</div>
           ) : filteredCampaigns.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No campaigns found. {searchQuery ? "Try a different search term." : "Create your first marketing campaign."}</p>
+            <div className="text-center py-8 text-muted-foreground">
+              No marketing campaigns found.
             </div>
           ) : (
-            <div className="rounded-md border">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/50 font-medium">
-                      <th className="p-3 text-left">Campaign Name</th>
-                      <th className="p-3 text-left">Platform</th>
-                      <th className="p-3 text-left">Start Date</th>
-                      <th className="p-3 text-left">End Date</th>
-                      <th className="p-3 text-left">Budget</th>
-                      <th className="p-3 text-left">Engagement Metrics</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCampaigns.map((campaign) => (
-                      <tr key={campaign.id} className="border-b">
-                        <td className="p-3">{campaign.campaign_name}</td>
-                        <td className="p-3">{campaign.platform || "—"}</td>
-                        <td className="p-3">{campaign.start_date ? format(new Date(campaign.start_date), "MMM d, yyyy") : "—"}</td>
-                        <td className="p-3">{campaign.end_date ? format(new Date(campaign.end_date), "MMM d, yyyy") : "—"}</td>
-                        <td className="p-3">{campaign.budget ? `$${campaign.budget}` : "—"}</td>
-                        <td className="p-3">{campaign.engagement_metrics || "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Campaign</TableHead>
+                    <TableHead>Timeline</TableHead>
+                    <TableHead>Budget</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Details</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCampaigns.map((campaign) => (
+                    <TableRow key={campaign.id}>
+                      <TableCell>
+                        <div className="font-medium">{campaign.campaign_name}</div>
+                        <div className="text-sm text-muted-foreground">{campaign.campaign_id}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
+                          <span>{formatDate(campaign.start_date)} - {formatDate(campaign.end_date)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <DollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
+                          <span>{campaign.budget ? `${campaign.budget}` : 'N/A'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(campaign.progress_status)}>
+                          {campaign.progress_status || 'Unknown'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openDetails(campaign)}
+                        >
+                          <span className="sr-only">View details</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Campaign Details Dialog */}
+      {selectedCampaign && (
+        <Dialog open={openCampaignDetails} onOpenChange={setOpenCampaignDetails}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selectedCampaign.campaign_name}</DialogTitle>
+              <DialogDescription>
+                Campaign ID: {selectedCampaign.campaign_id}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Timeline</div>
+                <div className="flex items-center text-sm">
+                  <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span>{formatDate(selectedCampaign.start_date)} - {formatDate(selectedCampaign.end_date)}</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Status</div>
+                <Badge variant={getStatusBadgeVariant(selectedCampaign.progress_status)}>
+                  {selectedCampaign.progress_status || 'Unknown'}
+                </Badge>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Budget</div>
+                <div className="flex items-center text-sm">
+                  <DollarSign className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span>{selectedCampaign.budget || 'Not specified'}</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Created</div>
+                <div className="text-sm">
+                  {formatDate(selectedCampaign.created_at)}
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4 mt-6">
+              <div>
+                <h3 className="text-base font-medium flex items-center mb-2">
+                  <Target className="h-4 w-4 mr-2" /> Objectives
+                </h3>
+                <div className="text-sm bg-gray-50 p-3 rounded-md">
+                  {selectedCampaign.objectives || 'No objectives specified'}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-base font-medium flex items-center mb-2">
+                  <Users className="h-4 w-4 mr-2" /> Target Audience
+                </h3>
+                <div className="text-sm bg-gray-50 p-3 rounded-md">
+                  {selectedCampaign.target_audience || 'No target audience specified'}
+                </div>
+              </div>
+              
+              {selectedCampaign.strategies && selectedCampaign.strategies.length > 0 && (
+                <div>
+                  <h3 className="text-base font-medium mb-2">Marketing Strategies</h3>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Strategy</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="text-right">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {selectedCampaign.strategies.map((strategy, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{strategy.name}</TableCell>
+                            <TableCell>{strategy.description}</TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant={strategy.status ? 'success' : 'secondary'}>
+                                {strategy.status ? 'Completed' : 'Pending'}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+              
+              {selectedCampaign.kpis && selectedCampaign.kpis.length > 0 && (
+                <div>
+                  <h3 className="text-base font-medium mb-2">Key Performance Indicators</h3>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>KPI</TableHead>
+                          <TableHead>Target</TableHead>
+                          <TableHead className="text-right">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {selectedCampaign.kpis.map((kpi, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{kpi.name}</TableCell>
+                            <TableCell>{kpi.target} {kpi.unit}</TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant={kpi.status ? 'success' : 'secondary'}>
+                                {kpi.status ? 'Achieved' : 'Pending'}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

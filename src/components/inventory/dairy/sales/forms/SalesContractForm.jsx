@@ -1,110 +1,131 @@
 
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowLeft, Plus, Trash, FileText } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
-const SalesContractForm = ({ onSubmit, onBack }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const SalesContractForm = ({ onBack }) => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [products, setProducts] = useState([{ name: '', quantity: '', unit_price: '', total: '0' }]);
   
   const form = useForm({
     defaultValues: {
-      customerName: '',
-      customerType: 'distributor',
-      startDate: '',
-      endDate: '',
-      paymentTerms: 'net_30',
-      deliveryTerms: '',
-      productCategory: 'dairy',
-      contractValue: '',
-      description: '',
-      contractStatus: 'draft'
+      customer_name: '',
+      customer_email: '',
+      customer_phone: '',
+      contract_type: 'standard',
+      start_date: '',
+      end_date: '',
+      delivery_terms: 'Standard delivery within 7 working days from order confirmation.',
+      payment_terms: 'Payment due within 30 days of invoice date.',
+      special_clauses: '',
+      total_value: '0',
+      status: 'draft',
+      signed_date: ''
     }
   });
 
-  const onFormSubmit = async (data) => {
+  const addProduct = () => {
+    setProducts([...products, { name: '', quantity: '', unit_price: '', total: '0' }]);
+  };
+
+  const removeProduct = (index) => {
+    if (products.length > 1) {
+      const newProducts = [...products];
+      newProducts.splice(index, 1);
+      setProducts(newProducts);
+      updateTotalValue(newProducts);
+    }
+  };
+
+  const handleProductChange = (index, field, value) => {
+    const newProducts = [...products];
+    newProducts[index][field] = value;
+    
+    // Calculate total for the product
+    if (field === 'quantity' || field === 'unit_price') {
+      const quantity = parseFloat(newProducts[index].quantity) || 0;
+      const price = parseFloat(newProducts[index].unit_price) || 0;
+      newProducts[index].total = (quantity * price).toFixed(2);
+    }
+    
+    setProducts(newProducts);
+    updateTotalValue(newProducts);
+  };
+
+  const updateTotalValue = (productsList) => {
+    const total = productsList.reduce((sum, product) => {
+      return sum + (parseFloat(product.total) || 0);
+    }, 0);
+    
+    form.setValue('total_value', total.toFixed(2));
+  };
+
+  const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      // Format dates for Supabase
+      // Generate a contract ID
+      const contractId = `CONT-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+      
+      const { data: userData } = await supabase.auth.getUser();
+      
+      // Format data for Supabase
       const formattedData = {
-        ...data,
+        contract_id: contractId,
+        customer_name: data.customer_name,
+        customer_email: data.customer_email,
+        customer_phone: data.customer_phone,
+        contract_type: data.contract_type,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        delivery_terms: data.delivery_terms,
+        payment_terms: data.payment_terms,
+        special_clauses: data.special_clauses,
+        products: products,
+        total_value: parseFloat(data.total_value),
+        status: data.status,
+        signed_date: data.signed_date || null,
         created_at: new Date().toISOString(),
-        contract_status: data.contractStatus,
-        customer_name: data.customerName,
-        customer_type: data.customerType,
-        start_date: data.startDate ? data.startDate.toISOString() : null,
-        end_date: data.endDate ? data.endDate.toISOString() : null,
-        payment_terms: data.paymentTerms,
-        delivery_terms: data.deliveryTerms,
-        product_category: data.productCategory,
-        contract_value: parseFloat(data.contractValue) || 0,
+        created_by: userData?.user?.id || null
       };
 
-      // Remove form field names that don't match the database columns
-      delete formattedData.customerName;
-      delete formattedData.customerType;
-      delete formattedData.startDate;
-      delete formattedData.endDate;
-      delete formattedData.paymentTerms;
-      delete formattedData.deliveryTerms;
-      delete formattedData.productCategory;
-      delete formattedData.contractValue;
-      delete formattedData.contractStatus;
-
-      const { data: newContract, error } = await supabase
+      const { error } = await supabase
         .from('sales_contracts')
-        .insert([formattedData])
-        .select();
+        .insert([formattedData]);
 
       if (error) throw error;
 
-      toast({
-        title: "Contract Saved",
-        description: "Sales contract has been successfully saved",
-      });
+      showSuccessToast(toast, "Sales contract created successfully");
 
-      form.reset();
-      
-      if (onSubmit) {
-        onSubmit(newContract[0]);
-      }
-    } catch (error) {
-      console.error('Error submitting contract:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save sales contract: " + error.message,
-        variant: "destructive",
+      // Reset form
+      form.reset({
+        customer_name: '',
+        customer_email: '',
+        customer_phone: '',
+        contract_type: 'standard',
+        start_date: '',
+        end_date: '',
+        delivery_terms: 'Standard delivery within 7 working days from order confirmation.',
+        payment_terms: 'Payment due within 30 days of invoice date.',
+        special_clauses: '',
+        total_value: '0',
+        status: 'draft',
+        signed_date: ''
       });
+      setProducts([{ name: '', quantity: '', unit_price: '', total: '0' }]);
+    } catch (error) {
+      console.error('Error creating sales contract:', error);
+      showErrorToast(toast, "Failed to create sales contract: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -112,27 +133,28 @@ const SalesContractForm = ({ onSubmit, onBack }) => {
 
   return (
     <div className="space-y-4">
-      {onBack && (
-        <Button 
-          variant="outline" 
-          onClick={onBack}
-          className="mb-4"
-        >
-          Back
-        </Button>
-      )}
+      <Button 
+        variant="outline" 
+        onClick={onBack}
+        className="flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" /> Back
+      </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle>Create Sales Contract</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Sales Contract Form
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="customerName"
+                  name="customer_name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Customer Name</FormLabel>
@@ -146,175 +168,12 @@ const SalesContractForm = ({ onSubmit, onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="customerType"
+                  name="customer_email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Customer Type</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select customer type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="distributor">Distributor</SelectItem>
-                          <SelectItem value="retailer">Retailer</SelectItem>
-                          <SelectItem value="wholesaler">Wholesaler</SelectItem>
-                          <SelectItem value="direct_consumer">Direct Consumer</SelectItem>
-                          <SelectItem value="institution">Institution</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Start Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Select date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>End Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Select date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="paymentTerms"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Payment Terms</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select payment terms" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="net_15">Net 15</SelectItem>
-                          <SelectItem value="net_30">Net 30</SelectItem>
-                          <SelectItem value="net_45">Net 45</SelectItem>
-                          <SelectItem value="net_60">Net 60</SelectItem>
-                          <SelectItem value="cod">Cash on Delivery</SelectItem>
-                          <SelectItem value="advance">Advance Payment</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="productCategory"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Product Category</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select product category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="dairy">Dairy Products</SelectItem>
-                          <SelectItem value="cheese">Cheese</SelectItem>
-                          <SelectItem value="yogurt">Yogurt</SelectItem>
-                          <SelectItem value="milk">Milk</SelectItem>
-                          <SelectItem value="meat">Meat Products</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="contractValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contract Value (USD)</FormLabel>
+                      <FormLabel>Customer Email</FormLabel>
                       <FormControl>
-                        <Input type="number" min="0" step="0.01" placeholder="Enter contract value" {...field} />
+                        <Input placeholder="Enter email address" type="email" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -323,27 +182,180 @@ const SalesContractForm = ({ onSubmit, onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="contractStatus"
+                  name="customer_phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contract Status</FormLabel>
+                      <FormLabel>Customer Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter phone number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="contract_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contract Type</FormLabel>
                       <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select contract status" />
+                            <SelectValue placeholder="Select contract type" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="pending_approval">Pending Approval</SelectItem>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="terminated">Terminated</SelectItem>
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="premium">Premium</SelectItem>
+                          <SelectItem value="volume_based">Volume Based</SelectItem>
+                          <SelectItem value="long_term">Long Term</SelectItem>
+                          <SelectItem value="exclusive">Exclusive</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="start_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="end_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="draft">
+                            <div className="flex items-center">
+                              <span>Draft</span>
+                              <Badge variant="secondary" className="ml-2">Draft</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="pending_approval">
+                            <div className="flex items-center">
+                              <span>Pending Approval</span>
+                              <Badge variant="warning" className="ml-2">Pending</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="approved">
+                            <div className="flex items-center">
+                              <span>Approved</span>
+                              <Badge variant="success" className="ml-2">Approved</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="active">
+                            <div className="flex items-center">
+                              <span>Active</span>
+                              <Badge variant="info" className="ml-2">Active</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="completed">
+                            <div className="flex items-center">
+                              <span>Completed</span>
+                              <Badge className="ml-2">Completed</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="terminated">
+                            <div className="flex items-center">
+                              <span>Terminated</span>
+                              <Badge variant="destructive" className="ml-2">Terminated</Badge>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="signed_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Signed Date (if applicable)</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="payment_terms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Payment Terms</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter payment terms"
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="delivery_terms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Delivery Terms</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter delivery terms"
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -352,14 +364,14 @@ const SalesContractForm = ({ onSubmit, onBack }) => {
 
               <FormField
                 control={form.control}
-                name="deliveryTerms"
+                name="special_clauses"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Delivery Terms</FormLabel>
+                    <FormLabel>Special Clauses (Optional)</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter delivery terms and conditions"
-                        className="min-h-[80px]"
+                        placeholder="Enter any special clauses or conditions"
+                        className="min-h-[100px]"
                         {...field}
                       />
                     </FormControl>
@@ -367,31 +379,97 @@ const SalesContractForm = ({ onSubmit, onBack }) => {
                   </FormItem>
                 )}
               />
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Products</h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addProduct}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" /> Add Product
+                  </Button>
+                </div>
+
+                {products.map((product, index) => (
+                  <Card key={index} className="p-4">
+                    <div className="flex justify-between items-start mb-4">
+                      <h4 className="font-medium">Product {index + 1}</h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeProduct(index)}
+                        disabled={products.length <= 1}
+                      >
+                        <Trash className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2 md:col-span-2">
+                        <FormLabel>Product Name</FormLabel>
+                        <Input
+                          placeholder="Enter product name"
+                          value={product.name}
+                          onChange={(e) => handleProductChange(index, 'name', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormLabel>Quantity</FormLabel>
+                        <Input
+                          type="number"
+                          min="1"
+                          placeholder="Enter quantity"
+                          value={product.quantity}
+                          onChange={(e) => handleProductChange(index, 'quantity', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormLabel>Unit Price</FormLabel>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Enter unit price"
+                          value={product.unit_price}
+                          onChange={(e) => handleProductChange(index, 'unit_price', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FormLabel>Total</FormLabel>
+                        <Input
+                          readOnly
+                          className="bg-gray-100"
+                          value={product.total}
+                        />
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
 
               <FormField
                 control={form.control}
-                name="description"
+                name="total_value"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Contract Description</FormLabel>
+                    <FormLabel>Contract Total Value</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Enter contract description and special terms"
-                        className="min-h-[120px]"
-                        {...field}
-                      />
+                      <Input readOnly className="bg-gray-100 font-bold" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="flex justify-end space-x-2">
-                <Button 
-                  type="submit" 
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Saving..." : "Save Contract"}
+                  {isSubmitting ? "Submitting..." : "Create Sales Contract"}
                 </Button>
               </div>
             </form>
