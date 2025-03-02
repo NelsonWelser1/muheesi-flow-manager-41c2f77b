@@ -18,6 +18,12 @@ const Navigation = () => {
     { to: "/feedback", label: "Feedback" },
   ];
 
+  // Handle navigation without page reload
+  const handleNavigation = (e) => {
+    // Let React Router handle the navigation
+    // No need to prevent default as Link component handles this
+  };
+
   return (
     <nav className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
@@ -29,7 +35,12 @@ const Navigation = () => {
         </Link>
         <div className="hidden md:flex space-x-4">
           {navItems.map((item) => (
-            <Button key={item.to} asChild className="bg-[#9b87f5] hover:bg-[#9b87f5] text-white font-bold">
+            <Button 
+              key={item.to} 
+              asChild 
+              className="bg-[#9b87f5] hover:bg-[#9b87f5] text-white font-bold"
+              onClick={handleNavigation}
+            >
               <Link to={item.to}>{item.label}</Link>
             </Button>
           ))}
@@ -42,7 +53,7 @@ const Navigation = () => {
             <DropdownMenuContent>
               {navItems.map((item) => (
                 <DropdownMenuItem key={item.to} asChild>
-                  <Link to={item.to}>{item.label}</Link>
+                  <Link to={item.to} onClick={handleNavigation}>{item.label}</Link>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
