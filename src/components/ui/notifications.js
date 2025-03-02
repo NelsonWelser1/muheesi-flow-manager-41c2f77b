@@ -3,6 +3,7 @@
  * Utility functions for displaying toast notifications
  */
 
+// Success notifications
 export const showSuccessToast = (toast, message) => {
   toast({
     title: "Success",
@@ -11,6 +12,7 @@ export const showSuccessToast = (toast, message) => {
   });
 };
 
+// Error notifications
 export const showErrorToast = (toast, message) => {
   toast({
     title: "Error",
@@ -19,6 +21,7 @@ export const showErrorToast = (toast, message) => {
   });
 };
 
+// Warning notifications
 export const showWarningToast = (toast, message) => {
   toast({
     title: "Warning",
@@ -27,6 +30,7 @@ export const showWarningToast = (toast, message) => {
   });
 };
 
+// Information notifications
 export const showInfoToast = (toast, message) => {
   toast({
     title: "Information",
@@ -34,7 +38,7 @@ export const showInfoToast = (toast, message) => {
   });
 };
 
-// Add a standard format for status notifications
+// Status-based notifications with consistent formatting
 export const showStatusToast = (toast, status, message) => {
   const statusConfig = {
     pending: { title: "Pending", variant: "warning" },
@@ -54,7 +58,7 @@ export const showStatusToast = (toast, status, message) => {
   });
 };
 
-// Add a feedback submission notification
+// Feedback submission notification
 export const showFeedbackSubmittedToast = (toast) => {
   toast({
     title: "Feedback Submitted",
@@ -62,4 +66,3 @@ export const showFeedbackSubmittedToast = (toast) => {
     variant: "success",
   });
 };
-
