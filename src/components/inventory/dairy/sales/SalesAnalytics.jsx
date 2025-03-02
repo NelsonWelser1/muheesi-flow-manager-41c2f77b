@@ -20,6 +20,7 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts';
+import { Badge } from "@/components/ui/badge";
 
 // Sample data - in a real app, this would come from your backend
 const salesData = [
@@ -84,6 +85,14 @@ const SalesAnalytics = () => {
     return ((totalROI / totalBudget) * 100).toFixed(1);
   };
   
+  const getSalesStatusBadge = () => {
+    const growth = ((salesData[11].sales - salesData[0].sales) / salesData[0].sales) * 100;
+    if (growth > 15) return <Badge variant="success">Strong Growth</Badge>;
+    if (growth > 5) return <Badge variant="info">Moderate Growth</Badge>;
+    if (growth > 0) return <Badge variant="warning">Slow Growth</Badge>;
+    return <Badge variant="destructive">Declining</Badge>;
+  };
+  
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -103,7 +112,10 @@ const SalesAnalytics = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Sales Analytics Dashboard</h2>
+        <div>
+          <h2 className="text-xl font-bold">Sales Analytics Dashboard</h2>
+          <div className="mt-1">{getSalesStatusBadge()}</div>
+        </div>
         <Select value={timeRange} onValueChange={setTimeRange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select time range" />

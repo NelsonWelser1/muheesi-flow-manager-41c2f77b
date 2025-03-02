@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from "@/components/ui/use-toast";
+import { showErrorToast } from '@/components/ui/notifications';
 
 export const useBatchOptions = () => {
   const [batchOptions, setBatchOptions] = useState([]);
@@ -49,6 +50,7 @@ export const useBatchOptions = () => {
           line: isInternational ? 'International Standards' : 'Local Standards',
           date: new Date(batch.created_at).toLocaleDateString(),
           type: batch.cheese_type,
+          status: batch.status || 'Processing'
         }
       });
 
@@ -68,11 +70,7 @@ export const useBatchOptions = () => {
       
     } catch (error) {
       console.error('Error fetching batch IDs:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch batch IDs",
-        variant: "destructive"
-      });
+      showErrorToast(toast, "Failed to fetch batch IDs");
     } finally {
       setFetchingBatches(false);
     }
@@ -83,7 +81,8 @@ export const useBatchOptions = () => {
     const lowerQuery = searchQuery.toLowerCase();
     return batchOptions.filter(batch => 
       batch.label.toLowerCase().includes(lowerQuery) ||
-      batch.source.toLowerCase().includes(lowerQuery)
+      batch.source.toLowerCase().includes(lowerQuery) ||
+      (batch.details.type && batch.details.type.toLowerCase().includes(lowerQuery))
     );
   }, [batchOptions, searchQuery]);
 

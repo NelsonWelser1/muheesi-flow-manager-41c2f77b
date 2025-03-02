@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase';
 import { useMilkReception } from '@/hooks/useMilkReception';
+import { showSuccessToast, showErrorToast, showWarningToast } from '@/components/ui/notifications';
 
 export const useMilkOffloadForm = () => {
   const { toast } = useToast();
@@ -78,10 +78,7 @@ export const useMilkOffloadForm = () => {
         destination: mostRecentEntry.destination || ''
       }));
 
-      toast({
-        title: `${tankValue} Status`,
-        description: `Available milk volume: ${availableMilk.toFixed(2)}L`,
-      });
+      showInfoToast(toast, `Available milk volume: ${availableMilk.toFixed(2)}L`);
     } else {
       setFormData(prev => ({
         ...prev,
@@ -91,11 +88,7 @@ export const useMilkOffloadForm = () => {
         quality_check: 'Grade A'
       }));
 
-      toast({
-        title: `${tankValue} Status`,
-        description: "No previous records found for this tank.",
-        variant: "warning"
-      });
+      showWarningToast(toast, "No previous records found for this tank.");
     }
     
     setValidationError(null);
@@ -157,12 +150,7 @@ export const useMilkOffloadForm = () => {
         suggestedTank: alternativeTank ? alternativeTank.name : null
       });
       
-      toast({
-        title: "Submission Failed",
-        description: "Requested volume exceeds available milk",
-        variant: "destructive",
-      });
-      
+      showErrorToast(toast, "Requested volume exceeds available milk");
       return;
     }
 
@@ -216,10 +204,7 @@ export const useMilkOffloadForm = () => {
 
       console.log('Successfully recorded milk offload:', { receptionData, offloadData });
 
-      toast({
-        title: "Success",
-        description: `Milk offload recorded successfully with Batch ID: ${formData.batch_id}`,
-      });
+      showSuccessToast(toast, `Milk offload recorded successfully with Batch ID: ${formData.batch_id}`);
 
       // Reset form
       setFormData({
@@ -241,11 +226,7 @@ export const useMilkOffloadForm = () => {
 
     } catch (error) {
       console.error('Form submission error:', error);
-      toast({
-        title: "Submission Failed",
-        description: error.message || "An error occurred while submitting the form",
-        variant: "destructive",
-      });
+      showErrorToast(toast, error.message || "An error occurred while submitting the form");
     } finally {
       setLoading(false);
     }
