@@ -18,18 +18,18 @@ const Navigation = () => {
     { to: "/feedback", label: "Feedback" },
   ];
 
-  // Handle navigation without page reload
-  const handleNavigation = (e) => {
-    // Let React Router handle the navigation
-    // No need to prevent default as Link component handles this
-  };
-
   return (
     <nav className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
         <Link 
           to="/" 
           className="text-2xl font-bold font-futuristic"
+          onClick={(e) => {
+            // Use client-side navigation for internal links
+            e.preventDefault();
+            window.history.pushState({}, '', '/');
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }}
         >
           Muheesi GKK Integrated System
         </Link>
@@ -39,7 +39,6 @@ const Navigation = () => {
               key={item.to} 
               asChild 
               className="bg-[#9b87f5] hover:bg-[#9b87f5] text-white font-bold"
-              onClick={handleNavigation}
             >
               <Link to={item.to}>{item.label}</Link>
             </Button>
@@ -50,10 +49,10 @@ const Navigation = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="outline"><Menu /></Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent className="bg-white">
               {navItems.map((item) => (
                 <DropdownMenuItem key={item.to} asChild>
-                  <Link to={item.to} onClick={handleNavigation}>{item.label}</Link>
+                  <Link to={item.to}>{item.label}</Link>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
