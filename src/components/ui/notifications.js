@@ -1,68 +1,56 @@
 
-/**
- * Utility functions for displaying toast notifications
- */
+import { toast } from "./use-toast";
 
-// Success notifications
-export const showSuccessToast = (toast, message) => {
-  toast({
+/**
+ * Shows a success toast notification
+ * @param {Function} toastFunction - The toast function from useToast hook
+ * @param {string} message - The message to display
+ */
+export const showSuccessToast = (toastFunction, message) => {
+  toastFunction({
     title: "Success",
     description: message,
-    variant: "success",
+    variant: "default",
   });
 };
 
-// Error notifications
-export const showErrorToast = (toast, message) => {
-  toast({
+/**
+ * Shows an error toast notification
+ * @param {Function} toastFunction - The toast function from useToast hook
+ * @param {string} message - The error message to display
+ */
+export const showErrorToast = (toastFunction, message) => {
+  toastFunction({
     title: "Error",
     description: message,
     variant: "destructive",
   });
 };
 
-// Warning notifications
-export const showWarningToast = (toast, message) => {
-  toast({
+/**
+ * Shows a warning toast notification
+ * @param {Function} toastFunction - The toast function from useToast hook
+ * @param {string} message - The warning message to display
+ */
+export const showWarningToast = (toastFunction, message) => {
+  toastFunction({
     title: "Warning",
     description: message,
-    variant: "warning",
+    variant: "default",
+    className: "bg-yellow-50 border-yellow-400 text-yellow-800",
   });
 };
 
-// Information notifications
-export const showInfoToast = (toast, message) => {
-  toast({
+/**
+ * Shows an info toast notification
+ * @param {Function} toastFunction - The toast function from useToast hook
+ * @param {string} message - The info message to display
+ */
+export const showInfoToast = (toastFunction, message) => {
+  toastFunction({
     title: "Information",
     description: message,
-  });
-};
-
-// Status-based notifications with consistent formatting
-export const showStatusToast = (toast, status, message) => {
-  const statusConfig = {
-    pending: { title: "Pending", variant: "warning" },
-    processing: { title: "Processing", variant: "info" },
-    approved: { title: "Approved", variant: "success" },
-    rejected: { title: "Rejected", variant: "destructive" },
-    completed: { title: "Completed", variant: "success" },
-    cancelled: { title: "Cancelled", variant: "destructive" },
-  };
-  
-  const config = statusConfig[status.toLowerCase()] || { title: status, variant: "default" };
-  
-  toast({
-    title: config.title,
-    description: message,
-    variant: config.variant,
-  });
-};
-
-// Feedback submission notification
-export const showFeedbackSubmittedToast = (toast) => {
-  toast({
-    title: "Feedback Submitted",
-    description: "Thank you for your feedback. We'll review it shortly.",
-    variant: "success",
+    variant: "default",
+    className: "bg-blue-50 border-blue-400 text-blue-800",
   });
 };

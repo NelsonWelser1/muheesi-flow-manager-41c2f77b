@@ -47,6 +47,11 @@ const ProductCatalogForm = ({ onBack }) => {
   };
 
   const onSubmit = async (data) => {
+    if (products.some(product => !product.name || !product.price)) {
+      showErrorToast(toast, "Please fill in all required product fields");
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       // Generate a catalog ID

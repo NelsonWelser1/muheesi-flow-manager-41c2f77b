@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +46,6 @@ const SalesProposalForm = ({ onBack }) => {
     const newProducts = [...products];
     newProducts[index][field] = value;
     
-    // Calculate total for the product
     if (field === 'quantity' || field === 'price') {
       const quantity = parseFloat(newProducts[index].quantity) || 0;
       const price = parseFloat(newProducts[index].price) || 0;
@@ -69,12 +67,10 @@ const SalesProposalForm = ({ onBack }) => {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      // Generate a proposal ID
       const proposalId = `PRO-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
       
       const { data: userData } = await supabase.auth.getUser();
       
-      // Format data for Supabase
       const formattedData = {
         proposal_id: proposalId,
         customer_name: data.customer_name,
@@ -98,7 +94,6 @@ const SalesProposalForm = ({ onBack }) => {
 
       showSuccessToast(toast, "Sales proposal created successfully");
 
-      // Reset form
       form.reset({
         customer_name: '',
         customer_email: '',
