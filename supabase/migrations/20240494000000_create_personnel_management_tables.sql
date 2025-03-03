@@ -1,4 +1,5 @@
 
+
 -- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -79,3 +80,4 @@ CREATE POLICY "Users can insert recruitment records"
     ON personnel_recruitment_records FOR INSERT
     TO authenticated
     WITH CHECK (auth.uid() = operator_id);
+
