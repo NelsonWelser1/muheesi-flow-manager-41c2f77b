@@ -61,7 +61,31 @@ const LivestockManagement = () => {
   };
 
   useEffect(() => {
-    fetchAnimals();
+    // Create livestock table if it doesn't exist
+    const createLivestockTable = async () => {
+      try {
+        // Check if table exists first
+        const { error: checkError } = await supabase
+          .from('livestock')
+          .select('count(*)')
+          .limit(1);
+        
+        if (checkError && checkError.code === '42P01') {
+          // Table doesn't exist, create it
+          const { error: createError } = await supabase.rpc('create_livestock_table');
+          if (createError) throw createError;
+          console.log('Livestock table created successfully');
+        }
+        
+        fetchAnimals();
+      } catch (error) {
+        console.error('Error setting up livestock table:', error);
+        toast.error('Failed to initialize livestock table');
+        setIsLoading(false);
+      }
+    };
+    
+    createLivestockTable();
   }, []);
 
   const onSubmit = async (values) => {
@@ -227,9 +251,9 @@ const LivestockManagement = () => {
                     name="age"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Age</FormLabel>
+                        <FormLabel>Age (in months)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter age" {...field} />
+                          <Input placeholder="Enter age in months" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -317,7 +341,7 @@ const LivestockManagement = () => {
                       <TableHead>Animal ID</TableHead>
                       <TableHead>Species</TableHead>
                       <TableHead>Breed</TableHead>
-                      <TableHead>Age</TableHead>
+                      <TableHead>Age (months)</TableHead>
                       <TableHead>Health Status</TableHead>
                       <TableHead>Timestamp</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
