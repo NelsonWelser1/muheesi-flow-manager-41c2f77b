@@ -8,12 +8,10 @@ import SalesExpenditure from './modules/SalesExpenditure';
 import EmployeeManagement from './modules/EmployeeManagement';
 import ScholarshipProgram from './modules/ScholarshipProgram';
 import FinanceAccounts from './modules/FinanceAccounts';
-
 const KashariFarmDashboard = () => {
-  return (
-    <div className="container mx-auto p-4 space-y-6">
+  return <div className="container mx-auto p-4 space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="mx-[2px] my-[2px]">
           <CardTitle>Kashari Mixed Farm Management System</CardTitle>
         </CardHeader>
         <CardContent>
@@ -58,8 +56,6 @@ const KashariFarmDashboard = () => {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default KashariFarmDashboard;
