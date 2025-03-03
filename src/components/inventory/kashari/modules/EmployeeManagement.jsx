@@ -291,7 +291,7 @@ const EmployeeManagement = () => {
                       <SelectValue placeholder="All Departments" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Departments</SelectItem>
+                      <SelectItem value="all">All Departments</SelectItem>
                       <SelectItem value="Administration">Administration</SelectItem>
                       <SelectItem value="Production">Production</SelectItem>
                       <SelectItem value="Sales">Sales</SelectItem>
@@ -307,7 +307,7 @@ const EmployeeManagement = () => {
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Statuses</SelectItem>
+                      <SelectItem value="all">All Statuses</SelectItem>
                       <SelectItem value="Active">Active</SelectItem>
                       <SelectItem value="Inactive">Inactive</SelectItem>
                       <SelectItem value="On Leave">On Leave</SelectItem>

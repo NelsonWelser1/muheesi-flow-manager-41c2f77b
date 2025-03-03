@@ -8,7 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import DairyManagement from './modules/DairyManagement';
 import LivestockManagement from './modules/LivestockManagement';
 import BananaPlantation from './modules/BananaPlantation';
-import SalesExpenditure from './modules/SalesExpenditure';
 import EmployeeManagement from './modules/EmployeeManagement';
 import ScholarshipProgram from './modules/ScholarshipProgram';
 import FinanceAccounts from './modules/FinanceAccounts';
@@ -38,11 +37,10 @@ const KashariFarmDashboard = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="dairy" className="space-y-4">
-            <TabsList className="w-full justify-start">
+            <TabsList className="w-full justify-start overflow-x-auto">
               <TabsTrigger value="dairy">Dairy Products</TabsTrigger>
               <TabsTrigger value="livestock">Livestock</TabsTrigger>
               <TabsTrigger value="banana">Banana Plantation</TabsTrigger>
-              <TabsTrigger value="sales">Sales & Expenditure</TabsTrigger>
               <TabsTrigger value="employees">Employees & Contractors</TabsTrigger>
               <TabsTrigger value="scholarships">Scholarships</TabsTrigger>
               <TabsTrigger value="finance">Finance & Accounts</TabsTrigger>
@@ -58,10 +56,6 @@ const KashariFarmDashboard = () => {
 
             <TabsContent value="banana">
               <BananaPlantation />
-            </TabsContent>
-
-            <TabsContent value="sales">
-              <SalesExpenditure />
             </TabsContent>
 
             <TabsContent value="employees">
