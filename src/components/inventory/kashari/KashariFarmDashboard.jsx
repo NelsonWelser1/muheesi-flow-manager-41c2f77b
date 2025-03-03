@@ -31,7 +31,7 @@ const KashariFarmDashboard = () => {
           Back to Inventory
         </Button>
       </div>
-      <Card className="relative bg-background">
+      <Card className="bg-background border">
         <CardHeader className="mx-[2px] my-[2px]">
           <CardTitle>Kashari Mixed Farm Management System</CardTitle>
         </CardHeader>

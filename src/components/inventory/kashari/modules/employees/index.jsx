@@ -11,7 +11,7 @@ import AddEmployeeForm from './AddEmployeeForm';
 const EmployeeManagement = () => {
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-card">
         <CardHeader>
           <CardTitle className="flex items-center font-normal">
             <Users className="mr-2 h-6 w-6" />
@@ -31,22 +31,22 @@ const EmployeeManagement = () => {
             </TabsList>
 
             {/* Employee List Tab */}
-            <TabsContent value="employees" className="space-y-4">
+            <TabsContent value="employees" className="space-y-4 mt-4">
               <EmployeeList />
             </TabsContent>
 
             {/* Attendance Tab */}
-            <TabsContent value="attendance" className="space-y-4">
+            <TabsContent value="attendance" className="space-y-4 mt-4">
               <AttendanceManager />
             </TabsContent>
 
             {/* Payroll Tab */}
-            <TabsContent value="payroll" className="space-y-4">
+            <TabsContent value="payroll" className="space-y-4 mt-4">
               <PayrollManager />
             </TabsContent>
 
             {/* Add Employee Tab */}
-            <TabsContent value="add" className="space-y-4">
+            <TabsContent value="add" className="space-y-4 mt-4">
               <AddEmployeeForm />
             </TabsContent>
           </Tabs>

@@ -26,7 +26,7 @@ const PayrollManager = () => {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="bg-card">
         <CardHeader>
           <CardTitle className="text-lg">Payroll Summary</CardTitle>
         </CardHeader>
