@@ -1,5 +1,4 @@
 
-
 -- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -13,6 +12,7 @@ CREATE TABLE IF NOT EXISTS personnel_employee_records (
     performance_rating INTEGER CHECK (performance_rating BETWEEN 1 AND 5),
     review_date_time TIMESTAMP WITH TIME ZONE NOT NULL,
     comments TEXT,
+    base_salary DECIMAL(10, 2),
     operator_id UUID REFERENCES auth.users(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

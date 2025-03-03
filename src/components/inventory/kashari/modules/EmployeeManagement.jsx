@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Users, Clock, DollarSign, UserPlus, Search, Filter, UserCheck, UserX, Calendar, MoreHorizontal, Sliders } from "lucide-react";
+
 const EmployeeManagement = () => {
   const {
     toast
@@ -262,7 +263,7 @@ const EmployeeManagement = () => {
         <CardHeader>
           <CardTitle className="flex items-center font-normal">
             <Users className="mr-2 h-6 w-6" />
-            Personnel Management Dashboard
+            Employee Management Dashboard
           </CardTitle>
           <CardDescription>
             Manage employee records, attendance, and payroll
@@ -679,4 +680,5 @@ const EmployeeManagement = () => {
       </Card>
     </div>;
 };
+
 export default EmployeeManagement;
