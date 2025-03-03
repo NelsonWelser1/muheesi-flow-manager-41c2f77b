@@ -32,11 +32,6 @@ export function DatePicker({ date, setDate, className }) {
           mode="single"
           selected={date}
           onSelect={setDate}
-          disabled={(date) => {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            return date < today;
-          }}
           initialFocus
         />
       </PopoverContent>

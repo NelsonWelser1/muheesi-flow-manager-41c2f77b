@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -79,6 +78,17 @@ const BananaPlantation = () => {
     ];
     setCrops(sampleCrops);
   }, []);
+
+  // Function to create custom date picker that allows all dates
+  const CustomDatePicker = ({ date, setDate, className }) => {
+    return (
+      <DatePicker 
+        date={date} 
+        setDate={setDate} 
+        className={className} 
+      />
+    );
+  };
 
   // Form configuration
   const form = useForm({
@@ -397,7 +407,7 @@ const BananaPlantation = () => {
 
       {/* Add Crop Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-background">
           <DialogHeader>
             <DialogTitle>Add New Crop</DialogTitle>
           </DialogHeader>
@@ -449,7 +459,7 @@ const BananaPlantation = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Last Fertilization Date</FormLabel>
-                      <DatePicker date={field.value} setDate={field.onChange} className="w-full" />
+                      <CustomDatePicker date={field.value} setDate={field.onChange} className="w-full" />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -475,7 +485,7 @@ const BananaPlantation = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Next Fertilization Date</FormLabel>
-                      <DatePicker date={field.value} setDate={field.onChange} className="w-full" />
+                      <CustomDatePicker date={field.value} setDate={field.onChange} className="w-full" />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -487,7 +497,7 @@ const BananaPlantation = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Last Pesticide Application</FormLabel>
-                      <DatePicker date={field.value} setDate={field.onChange} className="w-full" />
+                      <CustomDatePicker date={field.value} setDate={field.onChange} className="w-full" />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -569,7 +579,7 @@ const BananaPlantation = () => {
 
       {/* Edit Crop Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-background">
           <DialogHeader>
             <DialogTitle>Edit Crop</DialogTitle>
           </DialogHeader>
@@ -621,7 +631,7 @@ const BananaPlantation = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Last Fertilization Date</FormLabel>
-                      <DatePicker date={field.value} setDate={field.onChange} className="w-full" />
+                      <CustomDatePicker date={field.value} setDate={field.onChange} className="w-full" />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -647,7 +657,7 @@ const BananaPlantation = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Next Fertilization Date</FormLabel>
-                      <DatePicker date={field.value} setDate={field.onChange} className="w-full" />
+                      <CustomDatePicker date={field.value} setDate={field.onChange} className="w-full" />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -659,7 +669,7 @@ const BananaPlantation = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Last Pesticide Application</FormLabel>
-                      <DatePicker date={field.value} setDate={field.onChange} className="w-full" />
+                      <CustomDatePicker date={field.value} setDate={field.onChange} className="w-full" />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -741,7 +751,7 @@ const BananaPlantation = () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-background">
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
           </DialogHeader>
