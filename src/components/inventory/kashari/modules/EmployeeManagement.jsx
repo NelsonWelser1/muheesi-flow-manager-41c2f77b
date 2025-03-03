@@ -1,21 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter 
-} from "@/components/ui/card";
-import { 
-  Table, TableHeader, TableBody, TableHead, TableRow, TableCell 
-} from "@/components/ui/table";
-import { 
-  Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage 
-} from "@/components/ui/form";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,13 +14,11 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { 
-  Users, Clock, DollarSign, UserPlus, Search, Filter, 
-  UserCheck, UserX, Calendar, MoreHorizontal, Sliders
-} from "lucide-react";
-
+import { Users, Clock, DollarSign, UserPlus, Search, Filter, UserCheck, UserX, Calendar, MoreHorizontal, Sliders } from "lucide-react";
 const EmployeeManagement = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
@@ -38,7 +27,6 @@ const EmployeeManagement = () => {
     employeeId: '',
     isClockingIn: true
   });
-
   const form = useForm({
     defaultValues: {
       name: '',
@@ -52,58 +40,63 @@ const EmployeeManagement = () => {
   });
 
   // Fetch employees data
-  const { data: employees = [], isLoading: isLoadingEmployees } = useQuery({
+  const {
+    data: employees = [],
+    isLoading: isLoadingEmployees
+  } = useQuery({
     queryKey: ['personnel_employee_records'],
     queryFn: async () => {
       let query = supabase.from('personnel_employee_records').select('*');
-      
       if (searchTerm) {
         query = query.or(`employee_id.ilike.%${searchTerm}%,job_title.ilike.%${searchTerm}%`);
       }
-      
       if (departmentFilter) {
         query = query.eq('department', departmentFilter);
       }
-      
       if (statusFilter) {
         query = query.eq('status', statusFilter);
       }
-      
-      const { data, error } = await query;
+      const {
+        data,
+        error
+      } = await query;
       if (error) throw error;
       return data || [];
     }
   });
 
   // Fetch attendance records
-  const { data: attendanceRecords = [], isLoading: isLoadingAttendance } = useQuery({
+  const {
+    data: attendanceRecords = [],
+    isLoading: isLoadingAttendance
+  } = useQuery({
     queryKey: ['personnel_attendance'],
     queryFn: async () => {
       const today = new Date();
       const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
       const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
-      
-      const { data, error } = await supabase
-        .from('personnel_attendance')
-        .select('*')
-        .gte('timestamp', startOfDay)
-        .lte('timestamp', endOfDay);
-      
+      const {
+        data,
+        error
+      } = await supabase.from('personnel_attendance').select('*').gte('timestamp', startOfDay).lte('timestamp', endOfDay);
       if (error) throw error;
       return data || [];
     }
   });
 
   // Fetch payroll data
-  const { data: payrollData = [], isLoading: isLoadingPayroll } = useQuery({
+  const {
+    data: payrollData = [],
+    isLoading: isLoadingPayroll
+  } = useQuery({
     queryKey: ['personnel_payroll'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('personnel_payroll')
-        .select('*')
-        .order('payment_date', { ascending: false })
-        .limit(10);
-      
+      const {
+        data,
+        error
+      } = await supabase.from('personnel_payroll').select('*').order('payment_date', {
+        ascending: false
+      }).limit(10);
       if (error) throw error;
       return data || [];
     }
@@ -111,97 +104,116 @@ const EmployeeManagement = () => {
 
   // Add employee mutation
   const addEmployeeMutation = useMutation({
-    mutationFn: async (newEmployee) => {
-      const { data, error } = await supabase
-        .from('personnel_employee_records')
-        .insert([newEmployee]);
-      
+    mutationFn: async newEmployee => {
+      const {
+        data,
+        error
+      } = await supabase.from('personnel_employee_records').insert([newEmployee]);
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['personnel_employee_records'] });
+      queryClient.invalidateQueries({
+        queryKey: ['personnel_employee_records']
+      });
       toast({
         title: "Success",
-        description: "Employee added successfully",
+        description: "Employee added successfully"
       });
       form.reset();
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: "Error",
         description: `Failed to add employee: ${error.message}`,
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   });
 
   // Update employee status mutation
   const updateEmployeeStatusMutation = useMutation({
-    mutationFn: async ({ id, status }) => {
-      const { data, error } = await supabase
-        .from('personnel_employee_records')
-        .update({ status })
-        .eq('id', id);
-      
+    mutationFn: async ({
+      id,
+      status
+    }) => {
+      const {
+        data,
+        error
+      } = await supabase.from('personnel_employee_records').update({
+        status
+      }).eq('id', id);
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['personnel_employee_records'] });
+      queryClient.invalidateQueries({
+        queryKey: ['personnel_employee_records']
+      });
       toast({
         title: "Success",
-        description: "Employee status updated successfully",
+        description: "Employee status updated successfully"
       });
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: "Error",
         description: `Failed to update employee status: ${error.message}`,
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   });
 
   // Clock in/out mutation
   const clockInOutMutation = useMutation({
-    mutationFn: async ({ employeeId, type }) => {
-      const { data, error } = await supabase
-        .from('personnel_attendance')
-        .insert([{
-          employee_id: employeeId,
-          type,
-          timestamp: new Date().toISOString()
-        }]);
-      
+    mutationFn: async ({
+      employeeId,
+      type
+    }) => {
+      const {
+        data,
+        error
+      } = await supabase.from('personnel_attendance').insert([{
+        employee_id: employeeId,
+        type,
+        timestamp: new Date().toISOString()
+      }]);
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['personnel_attendance'] });
+      queryClient.invalidateQueries({
+        queryKey: ['personnel_attendance']
+      });
       toast({
         title: "Success",
-        description: `${clockInfo.isClockingIn ? 'Clock-in' : 'Clock-out'} recorded successfully`,
+        description: `${clockInfo.isClockingIn ? 'Clock-in' : 'Clock-out'} recorded successfully`
       });
-      setClockInfo({ employeeId: '', isClockingIn: true });
+      setClockInfo({
+        employeeId: '',
+        isClockingIn: true
+      });
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: "Error",
         description: `Failed to record attendance: ${error.message}`,
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   });
 
   // Handle form submission
-  const onSubmit = (data) => {
+  const onSubmit = data => {
     addEmployeeMutation.mutate(data);
   };
 
   // Handle status update
   const handleStatusUpdate = (id, status) => {
-    updateEmployeeStatusMutation.mutate({ id, status });
+    updateEmployeeStatusMutation.mutate({
+      id,
+      status
+    });
   };
 
   // Handle clock in/out
@@ -210,11 +222,10 @@ const EmployeeManagement = () => {
       toast({
         title: "Error",
         description: "Please select an employee",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-    
     clockInOutMutation.mutate({
       employeeId: clockInfo.employeeId,
       type: clockInfo.isClockingIn ? 'clock_in' : 'clock_out'
@@ -239,21 +250,17 @@ const EmployeeManagement = () => {
       Inactive: 0,
       'On Leave': 0
     };
-    
     employees.forEach(employee => {
       if (employee.status) {
         stats[employee.status] = (stats[employee.status] || 0) + 1;
       }
     });
-    
     return stats;
   }, [employees]);
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
+          <CardTitle className="flex items-center font-normal">
             <Users className="mr-2 h-6 w-6" />
             Personnel Management Dashboard
           </CardTitle>
@@ -275,18 +282,10 @@ const EmployeeManagement = () => {
               <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
                 <div className="relative w-full md:w-1/2">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search employees..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                  <Input placeholder="Search employees..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                 </div>
                 <div className="flex gap-2 w-full md:w-1/2">
-                  <Select
-                    value={departmentFilter}
-                    onValueChange={setDepartmentFilter}
-                  >
+                  <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Departments" />
                     </SelectTrigger>
@@ -299,10 +298,7 @@ const EmployeeManagement = () => {
                       <SelectItem value="HR">HR</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select
-                    value={statusFilter}
-                    onValueChange={setStatusFilter}
-                  >
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
@@ -367,17 +363,11 @@ const EmployeeManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {isLoadingEmployees ? (
-                      <TableRow>
+                    {isLoadingEmployees ? <TableRow>
                         <TableCell colSpan={6} className="text-center">Loading employees...</TableCell>
-                      </TableRow>
-                    ) : employees.length === 0 ? (
-                      <TableRow>
+                      </TableRow> : employees.length === 0 ? <TableRow>
                         <TableCell colSpan={6} className="text-center">No employees found</TableCell>
-                      </TableRow>
-                    ) : (
-                      employees.map((employee) => (
-                        <TableRow key={employee.id}>
+                      </TableRow> : employees.map(employee => <TableRow key={employee.id}>
                           <TableCell className="font-medium">
                             {employee.employee_id}
                           </TableCell>
@@ -388,20 +378,12 @@ const EmployeeManagement = () => {
                             {employee.phone || 'No phone'}
                           </TableCell>
                           <TableCell>
-                            <Badge
-                              variant={
-                                employee.status === 'Active' ? 'default' :
-                                employee.status === 'Inactive' ? 'destructive' : 'outline'
-                              }
-                            >
+                            <Badge variant={employee.status === 'Active' ? 'default' : employee.status === 'Inactive' ? 'destructive' : 'outline'}>
                               {employee.status || 'Unknown'}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Select
-                              defaultValue={employee.status || 'Active'}
-                              onValueChange={(value) => handleStatusUpdate(employee.id, value)}
-                            >
+                            <Select defaultValue={employee.status || 'Active'} onValueChange={value => handleStatusUpdate(employee.id, value)}>
                               <SelectTrigger className="w-[130px]">
                                 <SelectValue placeholder="Update Status" />
                               </SelectTrigger>
@@ -412,9 +394,7 @@ const EmployeeManagement = () => {
                               </SelectContent>
                             </Select>
                           </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                        </TableRow>)}
                   </TableBody>
                 </Table>
               </div>
@@ -429,44 +409,36 @@ const EmployeeManagement = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <Select
-                        value={clockInfo.employeeId}
-                        onValueChange={(value) => setClockInfo({ ...clockInfo, employeeId: value })}
-                      >
+                      <Select value={clockInfo.employeeId} onValueChange={value => setClockInfo({
+                      ...clockInfo,
+                      employeeId: value
+                    })}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select Employee" />
                         </SelectTrigger>
                         <SelectContent>
-                          {employees.map((employee) => (
-                            <SelectItem key={employee.id} value={employee.employee_id}>
+                          {employees.map(employee => <SelectItem key={employee.id} value={employee.employee_id}>
                               {employee.employee_id}
-                            </SelectItem>
-                          ))}
+                            </SelectItem>)}
                         </SelectContent>
                       </Select>
                       
                       <div className="flex space-x-2">
-                        <Button
-                          variant={clockInfo.isClockingIn ? "default" : "outline"}
-                          onClick={() => setClockInfo({ ...clockInfo, isClockingIn: true })}
-                          className="flex-1"
-                        >
+                        <Button variant={clockInfo.isClockingIn ? "default" : "outline"} onClick={() => setClockInfo({
+                        ...clockInfo,
+                        isClockingIn: true
+                      })} className="flex-1">
                           Clock In
                         </Button>
-                        <Button
-                          variant={!clockInfo.isClockingIn ? "default" : "outline"}
-                          onClick={() => setClockInfo({ ...clockInfo, isClockingIn: false })}
-                          className="flex-1"
-                        >
+                        <Button variant={!clockInfo.isClockingIn ? "default" : "outline"} onClick={() => setClockInfo({
+                        ...clockInfo,
+                        isClockingIn: false
+                      })} className="flex-1">
                           Clock Out
                         </Button>
                       </div>
                       
-                      <Button 
-                        className="w-full" 
-                        onClick={handleClockInOut}
-                        disabled={!clockInfo.employeeId}
-                      >
+                      <Button className="w-full" onClick={handleClockInOut} disabled={!clockInfo.employeeId}>
                         <Clock className="mr-2 h-4 w-4" />
                         {clockInfo.isClockingIn ? "Record Clock In" : "Record Clock Out"}
                       </Button>
@@ -520,17 +492,11 @@ const EmployeeManagement = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {isLoadingAttendance ? (
-                          <TableRow>
+                        {isLoadingAttendance ? <TableRow>
                             <TableCell colSpan={3} className="text-center">Loading attendance records...</TableCell>
-                          </TableRow>
-                        ) : attendanceRecords.length === 0 ? (
-                          <TableRow>
+                          </TableRow> : attendanceRecords.length === 0 ? <TableRow>
                             <TableCell colSpan={3} className="text-center">No attendance records found for today</TableCell>
-                          </TableRow>
-                        ) : (
-                          attendanceRecords.map((record) => (
-                            <TableRow key={record.id}>
+                          </TableRow> : attendanceRecords.map(record => <TableRow key={record.id}>
                               <TableCell>{record.employee_id}</TableCell>
                               <TableCell>
                                 <Badge variant={record.type === 'clock_in' ? 'default' : 'secondary'}>
@@ -540,9 +506,7 @@ const EmployeeManagement = () => {
                               <TableCell>
                                 {format(new Date(record.timestamp), 'MMM dd, yyyy hh:mm a')}
                               </TableCell>
-                            </TableRow>
-                          ))
-                        )}
+                            </TableRow>)}
                       </TableBody>
                     </Table>
                   </div>
@@ -570,17 +534,11 @@ const EmployeeManagement = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {isLoadingPayroll ? (
-                          <TableRow>
+                        {isLoadingPayroll ? <TableRow>
                             <TableCell colSpan={6} className="text-center">Loading payroll data...</TableCell>
-                          </TableRow>
-                        ) : payrollData.length === 0 ? (
-                          <TableRow>
+                          </TableRow> : payrollData.length === 0 ? <TableRow>
                             <TableCell colSpan={6} className="text-center">No payroll data found</TableCell>
-                          </TableRow>
-                        ) : (
-                          payrollData.map((payroll) => (
-                            <TableRow key={payroll.id}>
+                          </TableRow> : payrollData.map(payroll => <TableRow key={payroll.id}>
                               <TableCell>{payroll.employee_id}</TableCell>
                               <TableCell>
                                 {format(new Date(payroll.payment_date), 'MMM dd, yyyy')}
@@ -591,9 +549,7 @@ const EmployeeManagement = () => {
                               <TableCell className="font-medium">
                                 ${((payroll.base_salary || 0) + (payroll.bonus || 0) - (payroll.deductions || 0)).toFixed(2)}
                               </TableCell>
-                            </TableRow>
-                          ))
-                        )}
+                            </TableRow>)}
                       </TableBody>
                     </Table>
                   </div>
@@ -614,46 +570,33 @@ const EmployeeManagement = () => {
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="employee_id"
-                          render={({ field }) => (
-                            <FormItem>
+                        <FormField control={form.control} name="employee_id" render={({
+                        field
+                      }) => <FormItem>
                               <FormLabel>Employee ID</FormLabel>
                               <FormControl>
                                 <Input placeholder="EMP-0001" {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                         
-                        <FormField
-                          control={form.control}
-                          name="job_title"
-                          render={({ field }) => (
-                            <FormItem>
+                        <FormField control={form.control} name="job_title" render={({
+                        field
+                      }) => <FormItem>
                               <FormLabel>Job Title</FormLabel>
                               <FormControl>
                                 <Input placeholder="Farm Manager" {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="department"
-                          render={({ field }) => (
-                            <FormItem>
+                        <FormField control={form.control} name="department" render={({
+                        field
+                      }) => <FormItem>
                               <FormLabel>Department</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select Department" />
@@ -668,20 +611,13 @@ const EmployeeManagement = () => {
                                 </SelectContent>
                               </Select>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                         
-                        <FormField
-                          control={form.control}
-                          name="status"
-                          render={({ field }) => (
-                            <FormItem>
+                        <FormField control={form.control} name="status" render={({
+                        field
+                      }) => <FormItem>
                               <FormLabel>Status</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select Status" />
@@ -694,54 +630,40 @@ const EmployeeManagement = () => {
                                 </SelectContent>
                               </Select>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
+                        <FormField control={form.control} name="email" render={({
+                        field
+                      }) => <FormItem>
                               <FormLabel>Email</FormLabel>
                               <FormControl>
                                 <Input type="email" placeholder="employee@example.com" {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                         
-                        <FormField
-                          control={form.control}
-                          name="phone"
-                          render={({ field }) => (
-                            <FormItem>
+                        <FormField control={form.control} name="phone" render={({
+                        field
+                      }) => <FormItem>
                               <FormLabel>Phone</FormLabel>
                               <FormControl>
                                 <Input placeholder="+1234567890" {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                       </div>
 
-                      <FormField
-                        control={form.control}
-                        name="base_salary"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={form.control} name="base_salary" render={({
+                      field
+                    }) => <FormItem>
                             <FormLabel>Base Salary</FormLabel>
                             <FormControl>
                               <Input type="number" placeholder="0.00" {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
 
                       <Button type="submit" className="w-full">
                         <UserPlus className="mr-2 h-4 w-4" />
@@ -755,8 +677,6 @@ const EmployeeManagement = () => {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default EmployeeManagement;
