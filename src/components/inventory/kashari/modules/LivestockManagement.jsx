@@ -1,17 +1,13 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 const LivestockManagement = () => {
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle>Livestock Management</CardTitle>
       </CardHeader>
       <CardContent>
-        <p>Livestock management module coming soon...</p>
+        <p></p>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default LivestockManagement;
