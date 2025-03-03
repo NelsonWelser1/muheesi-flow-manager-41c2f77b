@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
@@ -30,13 +31,18 @@ const EmployeeManagement = () => {
   });
   const form = useForm({
     defaultValues: {
-      name: '',
-      role: '',
+      employee_id: '',
+      job_title: '',
       department: '',
       phone: '',
       email: '',
-      salary: '',
-      status: 'Active'
+      base_salary: '',
+      status: 'Active',
+      // Adding defaults for required fields in the table
+      shift_start: new Date().toISOString(),
+      shift_end: new Date(new Date().setHours(new Date().getHours() + 8)).toISOString(),
+      review_date_time: new Date().toISOString(),
+      performance_rating: 3
     }
   });
 
@@ -106,10 +112,16 @@ const EmployeeManagement = () => {
   // Add employee mutation
   const addEmployeeMutation = useMutation({
     mutationFn: async newEmployee => {
-      const {
-        data,
-        error
-      } = await supabase.from('personnel_employee_records').insert([newEmployee]);
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) throw new Error("Not authenticated");
+      
+      const employeeData = {
+        ...newEmployee,
+        base_salary: parseFloat(newEmployee.base_salary) || 0,
+        operator_id: user.data.user.id
+      };
+      
+      const { data, error } = await supabase.from('personnel_employee_records').insert([employeeData]);
       if (error) throw error;
       return data;
     },
@@ -124,6 +136,7 @@ const EmployeeManagement = () => {
       form.reset();
     },
     onError: error => {
+      console.error("Error adding employee:", error);
       toast({
         title: "Error",
         description: `Failed to add employee: ${error.message}`,
@@ -171,13 +184,17 @@ const EmployeeManagement = () => {
       employeeId,
       type
     }) => {
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) throw new Error("Not authenticated");
+      
       const {
         data,
         error
       } = await supabase.from('personnel_attendance').insert([{
         employee_id: employeeId,
         type,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        operator_id: user.data.user.id
       }]);
       if (error) throw error;
       return data;
@@ -297,12 +314,13 @@ const EmployeeManagement = () => {
                       <SelectValue placeholder="All Departments" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Departments</SelectItem>
+                      <SelectItem value="">All Departments</SelectItem>
                       <SelectItem value="Administration">Administration</SelectItem>
-                      <SelectItem value="Production">Production</SelectItem>
+                      <SelectItem value="Livestock farm">Livestock farm</SelectItem>
+                      <SelectItem value="Plantation">Plantation</SelectItem>
                       <SelectItem value="Sales">Sales</SelectItem>
-                      <SelectItem value="Finance">Finance</SelectItem>
-                      <SelectItem value="HR">HR</SelectItem>
+                      <SelectItem value="Finance & Accounts">Finance & Accounts</SelectItem>
+                      <SelectItem value="Scholarships">Scholarships</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -310,7 +328,7 @@ const EmployeeManagement = () => {
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="">All Statuses</SelectItem>
                       <SelectItem value="Active">Active</SelectItem>
                       <SelectItem value="Inactive">Inactive</SelectItem>
                       <SelectItem value="On Leave">On Leave</SelectItem>
@@ -689,3 +707,4 @@ const EmployeeManagement = () => {
 };
 
 export default EmployeeManagement;
+
