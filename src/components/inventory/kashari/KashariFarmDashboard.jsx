@@ -41,7 +41,7 @@ const KashariFarmDashboard = () => {
               <TabsTrigger value="dairy">Dairy Products</TabsTrigger>
               <TabsTrigger value="livestock">Livestock</TabsTrigger>
               <TabsTrigger value="banana">Banana Plantation</TabsTrigger>
-              <TabsTrigger value="employees">Employees & Contractors</TabsTrigger>
+              <TabsTrigger value="employees">Employee Management</TabsTrigger>
               <TabsTrigger value="scholarships">Scholarships</TabsTrigger>
               <TabsTrigger value="finance">Finance & Accounts</TabsTrigger>
             </TabsList>

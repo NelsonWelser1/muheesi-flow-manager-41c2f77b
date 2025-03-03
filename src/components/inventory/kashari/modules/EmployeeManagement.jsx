@@ -206,7 +206,13 @@ const EmployeeManagement = () => {
 
   // Handle form submission
   const onSubmit = data => {
-    addEmployeeMutation.mutate(data);
+    // Convert the employee data properly before submitting
+    const formattedData = {
+      ...data,
+      base_salary: parseFloat(data.base_salary) || 0
+    };
+    
+    addEmployeeMutation.mutate(formattedData);
   };
 
   // Handle status update
@@ -605,10 +611,11 @@ const EmployeeManagement = () => {
                                 </FormControl>
                                 <SelectContent>
                                   <SelectItem value="Administration">Administration</SelectItem>
-                                  <SelectItem value="Production">Production</SelectItem>
+                                  <SelectItem value="Livestock farm">Livestock farm</SelectItem>
+                                  <SelectItem value="Plantation">Plantation</SelectItem>
                                   <SelectItem value="Sales">Sales</SelectItem>
-                                  <SelectItem value="Finance">Finance</SelectItem>
-                                  <SelectItem value="HR">HR</SelectItem>
+                                  <SelectItem value="Finance & Accounts">Finance & Accounts</SelectItem>
+                                  <SelectItem value="Scholarships">Scholarships</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -659,7 +666,7 @@ const EmployeeManagement = () => {
                       <FormField control={form.control} name="base_salary" render={({
                       field
                     }) => <FormItem>
-                            <FormLabel>Base Salary</FormLabel>
+                            <FormLabel>Salary</FormLabel>
                             <FormControl>
                               <Input type="number" placeholder="0.00" {...field} />
                             </FormControl>
