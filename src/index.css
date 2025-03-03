@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -72,6 +73,17 @@
   }
   body {
     @apply bg-background text-foreground;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
   @media print {
@@ -92,4 +104,19 @@
       size: A4;
     }
   }
+}
+
+/* Ensure z-index stacking works properly */
+.dialog-content,
+.popover-content,
+.dropdown-content {
+  z-index: 50;
+}
+
+.tooltip {
+  z-index: 60;
+}
+
+.toast {
+  z-index: 100;
 }

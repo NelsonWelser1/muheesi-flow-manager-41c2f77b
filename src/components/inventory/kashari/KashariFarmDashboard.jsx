@@ -20,7 +20,8 @@ const KashariFarmDashboard = () => {
     navigate('/manage-inventory');
   };
 
-  return <div className="container mx-auto p-4 space-y-6">
+  return (
+    <div className="container mx-auto p-4 space-y-6">
       <div className="flex items-center mb-4">
         <Button 
           variant="ghost" 
@@ -31,7 +32,7 @@ const KashariFarmDashboard = () => {
           Back to Inventory
         </Button>
       </div>
-      <Card>
+      <Card className="relative">
         <CardHeader className="mx-[2px] my-[2px]">
           <CardTitle>Kashari Mixed Farm Management System</CardTitle>
         </CardHeader>
@@ -77,7 +78,8 @@ const KashariFarmDashboard = () => {
           </Tabs>
         </CardContent>
       </Card>
-    </div>;
+    </div>
+  );
 };
 
 export default KashariFarmDashboard;

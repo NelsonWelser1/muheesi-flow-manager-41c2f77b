@@ -27,20 +27,24 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <BrowserRouter>
-            <Navigation />
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/manage-inventory" element={<ManageInventory />} />
-              <Route path="/manage-companies" element={<ManageCompanies />} />
-              <Route path="/feedback" element={<Feedback />} />
-              <Route path="/manage-inventory/kajon-export" element={<ExportManagementDashboard />} />
-              <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
-              <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
-              <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
-              <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
-              <Route path="/manage-inventory/sales-marketing" element={<SalesMarketingDashboard />} />
-            </Routes>
+            <div className="flex flex-col min-h-screen">
+              <Navigation />
+              <main className="flex-grow overflow-y-auto">
+                <Routes>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/manage-inventory" element={<ManageInventory />} />
+                  <Route path="/manage-companies" element={<ManageCompanies />} />
+                  <Route path="/feedback" element={<Feedback />} />
+                  <Route path="/manage-inventory/kajon-export" element={<ExportManagementDashboard />} />
+                  <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
+                  <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
+                  <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
+                  <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
+                  <Route path="/manage-inventory/sales-marketing" element={<SalesMarketingDashboard />} />
+                </Routes>
+              </main>
+            </div>
           </BrowserRouter>
         </TooltipProvider>
       </SupabaseAuthProvider>
