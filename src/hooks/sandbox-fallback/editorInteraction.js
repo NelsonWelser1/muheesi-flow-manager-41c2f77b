@@ -23,6 +23,11 @@ export const isInEditorUICooldown = (lastResetTime) => {
   const fromGlobal = window.__MUHEESI_APP_STATE && 
     (Date.now() - window.__MUHEESI_APP_STATE.lastEditorUIInteractionTime < SANDBOX_RESET_COOLDOWN);
   
+  // For debugging
+  if (fromRef || fromGlobal) {
+    console.log('Editor UI cooldown active');
+  }
+  
   return fromRef || fromGlobal;
 };
 
@@ -65,11 +70,14 @@ export const broadcastManualReset = () => {
  */
 export const overrideSandboxLoadingState = () => {
   try {
+    // Force the sandbox state to "ready" to prevent loading screens
     window.parent.postMessage({ 
       type: 'sandbox-override', 
       status: 'ready', 
       reason: 'editor-ui-cooldown-active' 
     }, '*');
+    
+    console.log('Overriding sandbox loading state to ready');
   } catch (e) {
     console.log('Could not send override message to parent');
   }

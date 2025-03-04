@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { COMMON_PATHS, DEFAULT_TIMEOUT_MS } from './sandbox-fallback/constants';
@@ -16,6 +15,7 @@ const useSandboxFallback = (timeoutMs = DEFAULT_TIMEOUT_MS) => {
   const location = useLocation();
   const previousPathRef = useRef(location.pathname);
   const lastSandboxResetTime = useRef(Date.now());
+  const mousePositionsRef = useRef([]);
 
   // Enhanced editor interaction detection
   const checkEditorUICooldown = useCallback(() => {
@@ -38,15 +38,39 @@ const useSandboxFallback = (timeoutMs = DEFAULT_TIMEOUT_MS) => {
     };
   }, []);
 
-  // Enhanced editor UI detection using mouse position
+  // Improved editor UI detection using mouse pattern recognition
   useEffect(() => {
+    // Function to detect if mouse movements follow editor UI patterns
+    const detectEditorPattern = (positions) => {
+      if (positions.length < 5) return false;
+      
+      // Check if mouse is mostly on the left side (editor area)
+      const leftSideCount = positions.filter(pos => pos.x < window.innerWidth * 0.35).length;
+      const probability = leftSideCount / positions.length;
+      
+      return probability > 0.7; // If more than 70% of positions are in editor UI area
+    };
+    
     const detectEditorInteraction = (event) => {
-      // Check if mouse is in editor UI area (usually left side)
-      const editorWidth = window.innerWidth * 0.35; // Consider the left 35% to be editor area
-      if (event.clientX < editorWidth) {
-        console.log('Editor UI interaction detected via mouse position');
-        lastSandboxResetTime.current = Date.now();
-        broadcastEditorUIInteraction();
+      // Add current position to history
+      mousePositionsRef.current.push({ x: event.clientX, y: event.clientY, time: Date.now() });
+      
+      // Keep only the last 20 positions
+      if (mousePositionsRef.current.length > 20) {
+        mousePositionsRef.current.shift();
+      }
+      
+      // Only detect once we have enough data points
+      if (mousePositionsRef.current.length >= 5) {
+        // If pattern detected, mark as editor UI interaction
+        if (detectEditorPattern(mousePositionsRef.current)) {
+          console.log('Editor UI interaction pattern detected');
+          lastSandboxResetTime.current = Date.now();
+          broadcastEditorUIInteraction();
+          
+          // Clear positions to avoid repeated detections
+          mousePositionsRef.current = [];
+        }
       }
     };
     
@@ -66,6 +90,27 @@ const useSandboxFallback = (timeoutMs = DEFAULT_TIMEOUT_MS) => {
       document.removeEventListener('mousemove', throttledDetect);
     };
   }, []);
+  
+  // Additional prevention for rapid sandbox toggles
+  useEffect(() => {
+    const preventRapidToggles = (event) => {
+      if (event.data && event.data.type === 'sandbox-status' && event.data.status === 'loading') {
+        // Check if we're already loading
+        if (isLoading) {
+          console.log('Preventing duplicate loading state');
+          event.stopPropagation();
+          return false;
+        }
+      }
+    };
+    
+    // This uses capture phase to intercept events before normal handlers
+    window.addEventListener('message', preventRapidToggles, { capture: true });
+    
+    return () => {
+      window.removeEventListener('message', preventRapidToggles, { capture: true });
+    };
+  }, [isLoading]);
 
   // Monitor sandbox state changes from window messages
   useEffect(() => {

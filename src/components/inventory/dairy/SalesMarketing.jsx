@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import SalesMarketingLayout from './sales/SalesMarketingLayout';
 
 const SalesMarketing = ({ onBackToDashboard }) => {
+  // This component now has a simpler structure that just renders the layout
+  // We've removed duplicative layers that were causing re-renders
+  
   return (
     <div className="space-y-4">
       <Button 
@@ -15,7 +18,7 @@ const SalesMarketing = ({ onBackToDashboard }) => {
         <ArrowLeft className="h-4 w-4" /> Back to Dashboard
       </Button>
 
-      {/* Directly render the SalesMarketingLayout without any intermediate step */}
+      {/* Directly render the SalesMarketingLayout */}
       <SalesMarketingLayout onBack={onBackToDashboard} />
     </div>
   );

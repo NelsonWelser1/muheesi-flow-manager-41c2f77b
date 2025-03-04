@@ -13,12 +13,12 @@ const CooldownTimer = ({ isInEditorUICooldown }) => {
     }
     
     const updateCooldownTimer = () => {
-      // One hour in milliseconds
-      const HOUR_MS = 60 * 60 * 1000;
+      // 3 minutes in milliseconds (reduced from 1 hour for better UX)
+      const COOLDOWN_MS = 3 * 60 * 1000;
       const lastReset = window.__MUHEESI_APP_STATE?.lastEditorUIInteractionTime || 
-                         Date.now() - HOUR_MS;
+                         Date.now() - COOLDOWN_MS;
       const elapsed = Date.now() - lastReset;
-      const remaining = Math.max(0, HOUR_MS - elapsed);
+      const remaining = Math.max(0, COOLDOWN_MS - elapsed);
       
       // Convert to minutes and seconds
       const minutes = Math.floor(remaining / 60000);
@@ -49,7 +49,7 @@ const CooldownTimer = ({ isInEditorUICooldown }) => {
         <span className="font-bold ml-1">{cooldownRemaining}</span>
       </span>
       <div className="mt-3 p-2 bg-amber-50 rounded text-xs text-amber-800">
-        Automatic refresh is blocked for {cooldownRemaining} to prevent infinite loading loops when interacting with the editor UI.
+        Automatic refresh is blocked temporarily to prevent infinite loading loops when interacting with the editor UI.
       </div>
     </>
   );

@@ -14,8 +14,8 @@ export const COMMON_PATHS = [
   '/manage-inventory/sales-marketing',
 ];
 
-// Sandbox reset cooldown time (1 hour in milliseconds)
-export const SANDBOX_RESET_COOLDOWN = 60 * 60 * 1000;
+// Sandbox reset cooldown time (reduced from 1 hour to 3 minutes for better UX)
+export const SANDBOX_RESET_COOLDOWN = 3 * 60 * 1000;
 
-// Default timeout before showing fallback UI (20 seconds)
-export const DEFAULT_TIMEOUT_MS = 20000;
+// Default timeout before showing fallback UI (increased to 30 seconds)
+export const DEFAULT_TIMEOUT_MS = 30000;

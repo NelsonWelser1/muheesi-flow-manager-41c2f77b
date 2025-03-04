@@ -1,7 +1,7 @@
+
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Bell } from "lucide-react";
-import SalesMarketingLayout from '../sales/SalesMarketingLayout';
 
 const DairySectionView = ({ section, onBack }) => {
   const [activeForm, setActiveForm] = React.useState(null);
@@ -9,15 +9,9 @@ const DairySectionView = ({ section, onBack }) => {
   console.log('Rendering DairySectionView for:', section.title);
 
   const renderContent = () => {
-    switch (activeForm) {
-      default:
-        // If this is the Sales & Marketing section, directly render the SalesMarketingLayout
-        if (section.title === "Sales & Marketing") {
-          return <SalesMarketingLayout onBack={() => {}} />;
-        }
-        // Otherwise, render the section's component if it exists
-        return section.component && <section.component />;
-    }
+    // Simply render the component if it exists, without special cases
+    // This helps prevent unnecessary re-renders and sandbox reloads
+    return section.component && <section.component />;
   };
 
   return (

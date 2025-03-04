@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RefreshCw, ArrowLeft, HomeIcon } from "lucide-react";
@@ -22,9 +22,19 @@ const SandboxFallback = () => {
   } = useSandboxFallback();
 
   const [expandedPaths, setExpandedPaths] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
+  // Don't show fallback on initial load for a few seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoad(false);
+    }, 5000); // 5 second grace period for initial load
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   // Don't render anything if fallback shouldn't be shown
-  if (!showFallback) return null;
+  if (!showFallback || (isInitialLoad && !loadingStartTime)) return null;
 
   // Calculate elapsed loading time
   const elapsedSeconds = loadingStartTime 
