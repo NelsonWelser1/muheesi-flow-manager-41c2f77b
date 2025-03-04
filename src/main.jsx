@@ -9,28 +9,59 @@ let root = null;
 let retryCount = 0;
 const MAX_RETRIES = 5;
 
+// Function to hide loading fallback when app is rendered
+const hideLoadingFallback = () => {
+  const fallback = document.getElementById('loading-fallback');
+  if (fallback) {
+    fallback.style.display = 'none';
+  }
+};
+
 // Function to safely render the app
 const renderApp = () => {
-  const rootElement = document.getElementById('root');
-  
-  // Only create root if the element exists and root hasn't been created yet
-  if (rootElement && !root) {
-    try {
-      console.log("Initializing React root element");
-      root = ReactDOM.createRoot(rootElement);
-      root.render(
-        <React.StrictMode>
-          <App />
-        </React.StrictMode>
-      );
-      console.log("App rendered successfully");
-    } catch (error) {
-      console.error("Error rendering app:", error);
+  try {
+    const rootElement = document.getElementById('root');
+    
+    // Only create root if the element exists and root hasn't been created yet
+    if (rootElement && !root) {
+      try {
+        console.log("Initializing React root element");
+        // Remove any loading indicator that might be inside the root
+        if (document.getElementById('loading-fallback')) {
+          hideLoadingFallback();
+        }
+        
+        root = ReactDOM.createRoot(rootElement);
+        root.render(
+          <React.StrictMode>
+            <App />
+          </React.StrictMode>
+        );
+        console.log("App rendered successfully");
+      } catch (error) {
+        console.error("Error rendering app:", error);
+        retryRender();
+      }
+    } else if (!rootElement && retryCount < MAX_RETRIES) {
+      console.warn("Root element not found, will retry");
+      retryRender();
+    } else if (!root && retryCount < MAX_RETRIES) {
+      console.warn("Root not created yet, will retry");
       retryRender();
     }
-  } else if (!rootElement && retryCount < MAX_RETRIES) {
-    console.warn("Root element not found, will retry");
-    retryRender();
+  } catch (error) {
+    console.error("Fatal rendering error:", error);
+    // Show error in UI if available
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+      rootElement.innerHTML = `
+        <div style="padding: 20px; text-align: center;">
+          <h2>Application Error</h2>
+          <p>There was a problem loading the application. Please try refreshing the page.</p>
+          <p>Error: ${error.message}</p>
+        </div>
+      `;
+    }
   }
 };
 
@@ -58,4 +89,14 @@ window.addEventListener('load', () => {
     console.log("Root not created during normal flow, attempting final render");
     renderApp();
   }
+});
+
+// Add error handling for unhandled promises
+window.addEventListener('unhandledrejection', (event) => {
+  console.error("Unhandled Promise Rejection:", event.reason);
+});
+
+// Add global error handler
+window.addEventListener('error', (event) => {
+  console.error("Global error caught:", event.error);
 });

@@ -22,13 +22,19 @@ export const SupabaseAuthProviderInner = ({ children }) => {
 
   useEffect(() => {
     const getSession = async () => {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setLoading(false);
+      try {
+        setLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+      } catch (error) {
+        console.error("Auth session error:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event);
       setSession(session);
       queryClient.invalidateQueries('user');
     });
@@ -36,16 +42,20 @@ export const SupabaseAuthProviderInner = ({ children }) => {
     getSession();
 
     return () => {
-      authListener.subscription.unsubscribe();
-      setLoading(false);
+      if (authListener?.subscription?.unsubscribe) {
+        authListener.subscription.unsubscribe();
+      }
     };
   }, [queryClient]);
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-    queryClient.invalidateQueries('user');
-    setLoading(false);
+    try {
+      await supabase.auth.signOut();
+      setSession(null);
+      queryClient.invalidateQueries('user');
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
@@ -71,4 +81,3 @@ export const SupabaseAuthUI = () => (
     providers={[]}
   />
 );
-
