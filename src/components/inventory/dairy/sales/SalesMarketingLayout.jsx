@@ -13,6 +13,10 @@ import SalesContractsForm from './forms/SalesContractsForm';
 import ProductCataloguesDisplay from './forms/displays/ProductCataloguesDisplay';
 import MarketingCampaignsDisplay from './forms/displays/MarketingCampaignsDisplay';
 import SalesContractsDisplay from './forms/displays/SalesContractsDisplay';
+import PricingSheetsDisplay from './forms/displays/PricingSheetsDisplay';
+import SalesProposalsDisplay from './forms/displays/SalesProposalsDisplay';
+import CustomerFeedbackDisplay from './forms/displays/CustomerFeedbackDisplay';
+import CRMReportsDisplay from './forms/displays/CRMReportsDisplay';
 
 const SalesMarketingLayout = ({
   onBack
@@ -24,152 +28,90 @@ const SalesMarketingLayout = ({
     setActiveView('dashboard');
   };
 
-  // This function determines which report view to show based on the form type
-  const handleViewReports = (formType) => {
-    switch (formType) {
-      case 'product-catalog':
-        setActiveView('view-product-catalogues');
-        break;
-      case 'advertising-promotion':
-        setActiveView('view-marketing-campaigns');
-        break;
-      case 'sales-contracts':
-        setActiveView('view-sales-contracts');
-        break;
-      default:
-        // For forms without specific reports yet, we'll just show a placeholder
-        // In a real implementation, you would add the appropriate report view
-        console.log(`View reports for ${formType} - not yet implemented`);
-        break;
-    }
-  };
-  
   const renderContent = () => {
     switch (activeView) {
       case 'product-catalog':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleViewReports('product-catalog')}
-                className="flex items-center gap-2"
-              >
-                <FileText className="h-4 w-4" /> View Reports
-              </Button>
-            </div>
-            <ProductCatalogForm onBack={handleBackToMenu} />
+            <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+            <ProductCatalogForm 
+              onBack={handleBackToMenu} 
+              onViewReports={() => setActiveView('view-product-catalogues')}
+            />
           </div>
         );
       case 'pricing-sheets':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleViewReports('pricing-sheets')}
-                className="flex items-center gap-2"
-              >
-                <FileText className="h-4 w-4" /> View Reports
-              </Button>
-            </div>
-            <PricingSheetsForm onBack={handleBackToMenu} />
+            <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+            <PricingSheetsForm 
+              onBack={handleBackToMenu} 
+              onViewReports={() => setActiveView('view-pricing-sheets')}
+            />
           </div>
         );
       case 'sales-proposal':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleViewReports('sales-proposal')}
-                className="flex items-center gap-2"
-              >
-                <FileText className="h-4 w-4" /> View Reports
-              </Button>
-            </div>
-            <SalesProposalForm onBack={handleBackToMenu} />
+            <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+            <SalesProposalForm 
+              onBack={handleBackToMenu}
+              onViewReports={() => setActiveView('view-sales-proposals')}
+            />
           </div>
         );
       case 'customer-feedback':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleViewReports('customer-feedback')}
-                className="flex items-center gap-2"
-              >
-                <FileText className="h-4 w-4" /> View Reports
-              </Button>
-            </div>
-            <CustomerFeedbackForm onBack={handleBackToMenu} />
+            <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+            <CustomerFeedbackForm 
+              onBack={handleBackToMenu}
+              onViewReports={() => setActiveView('view-customer-feedback')}
+            />
           </div>
         );
       case 'crm-reports':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleViewReports('crm-reports')}
-                className="flex items-center gap-2"
-              >
-                <FileText className="h-4 w-4" /> View Reports
-              </Button>
-            </div>
-            <CRMReportsForm onBack={handleBackToMenu} />
+            <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+            <CRMReportsForm 
+              onBack={handleBackToMenu}
+              onViewReports={() => setActiveView('view-crm-reports')}
+            />
           </div>
         );
       case 'advertising-promotion':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleViewReports('advertising-promotion')}
-                className="flex items-center gap-2"
-              >
-                <FileText className="h-4 w-4" /> View Reports
-              </Button>
-            </div>
-            <AdvertisingPromotionForm onBack={handleBackToMenu} />
+            <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+            <AdvertisingPromotionForm 
+              onBack={handleBackToMenu}
+              onViewReports={() => setActiveView('view-marketing-campaigns')}
+            />
           </div>
         );
       case 'sales-contracts':
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleViewReports('sales-contracts')}
-                className="flex items-center gap-2"
-              >
-                <FileText className="h-4 w-4" /> View Reports
-              </Button>
-            </div>
-            <SalesContractsForm onBack={handleBackToMenu} />
+            <Button variant="outline" onClick={handleBackToMenu} className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+            <SalesContractsForm 
+              onBack={handleBackToMenu}
+              onViewReports={() => setActiveView('view-sales-contracts')}
+            />
           </div>
         );
       case 'view-product-catalogues':
@@ -178,6 +120,14 @@ const SalesMarketingLayout = ({
         return <MarketingCampaignsDisplay onBack={handleBackToMenu} />;
       case 'view-sales-contracts':
         return <SalesContractsDisplay onBack={handleBackToMenu} />;
+      case 'view-pricing-sheets':
+        return <PricingSheetsDisplay onBack={handleBackToMenu} />;
+      case 'view-sales-proposals':
+        return <SalesProposalsDisplay onBack={handleBackToMenu} />;
+      case 'view-customer-feedback':
+        return <CustomerFeedbackDisplay onBack={handleBackToMenu} />;
+      case 'view-crm-reports':
+        return <CRMReportsDisplay onBack={handleBackToMenu} />;
       case 'dashboard':
       default:
         return (
@@ -193,46 +143,36 @@ const SalesMarketingLayout = ({
                     title="Product Catalogues" 
                     description="Create detailed product catalogues to showcase your dairy products" 
                     onClick={() => setActiveView('product-catalog')} 
-                    hasReport={true}
-                    onViewReport={() => setActiveView('view-product-catalogues')}
                   />
                   <MenuCard 
                     title="Pricing Sheets" 
                     description="Create and manage pricing sheets for different products and customers" 
                     onClick={() => setActiveView('pricing-sheets')} 
-                    hasReport={false}
                   />
                   <MenuCard 
                     title="Sales Proposals" 
                     description="Generate customized sales proposals for potential customers" 
                     onClick={() => setActiveView('sales-proposal')} 
-                    hasReport={false}
                   />
                   <MenuCard 
                     title="Customer Feedback" 
                     description="Record and track customer feedback and satisfaction ratings" 
                     onClick={() => setActiveView('customer-feedback')} 
-                    hasReport={false}
                   />
                   <MenuCard 
                     title="CRM Reports" 
                     description="Create and manage customer relationship reports and interactions" 
                     onClick={() => setActiveView('crm-reports')} 
-                    hasReport={false}
                   />
                   <MenuCard 
                     title="Advertising & Promotion" 
                     description="Manage advertising assets and promotional campaigns" 
                     onClick={() => setActiveView('advertising-promotion')} 
-                    hasReport={true}
-                    onViewReport={() => setActiveView('view-marketing-campaigns')}
                   />
                   <MenuCard 
                     title="Sales Contracts" 
                     description="Create and manage sales contracts and agreements" 
                     onClick={() => setActiveView('sales-contracts')} 
-                    hasReport={true}
-                    onViewReport={() => setActiveView('view-sales-contracts')}
                   />
                 </div>
               </TabsContent>
@@ -243,19 +183,15 @@ const SalesMarketingLayout = ({
   };
 
   return <div className="space-y-4">
-      {activeView === 'dashboard'}
-
       {renderContent()}
     </div>;
 };
 
-// Enhanced MenuCard component with optional "View Reports" button
+// Enhanced MenuCard component without the View Reports button (now moved inside forms)
 const MenuCard = ({
   title,
   description,
   onClick,
-  hasReport = false,
-  onViewReport
 }) => {
   return (
     <div className="border rounded-lg p-6 hover:shadow-md transition-shadow bg-white flex flex-col justify-between">
@@ -263,13 +199,8 @@ const MenuCard = ({
         <h3 className="text-lg font-medium mb-2">{title}</h3>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
-      <div className="mt-4 flex flex-col space-y-2">
+      <div className="mt-4">
         <Button className="w-full" onClick={onClick}>Open Form</Button>
-        {hasReport && (
-          <Button variant="outline" className="w-full flex items-center justify-center gap-2" onClick={onViewReport}>
-            <FileText className="h-4 w-4" /> View Reports
-          </Button>
-        )}
       </div>
     </div>
   );

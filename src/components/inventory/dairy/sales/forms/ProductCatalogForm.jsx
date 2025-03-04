@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,13 +6,13 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileText } from "lucide-react";
 import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 import CatalogBasicInfoSection from './sections/CatalogBasicInfoSection';
 import ProductsListSection from './sections/ProductsListSection';
 
-const ProductCatalogForm = ({ onBack }) => {
+const ProductCatalogForm = ({ onBack, onViewReports }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [products, setProducts] = useState([{ name: '', category: '', description: '', price: '', unit: 'kg' }]);
@@ -85,17 +86,16 @@ const ProductCatalogForm = ({ onBack }) => {
 
   return (
     <div className="space-y-4">
-      <Button 
-        variant="outline" 
-        onClick={onBack}
-        className="flex items-center gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back
-      </Button>
-
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Product Catalog Form</CardTitle>
+          <Button 
+            variant="outline" 
+            onClick={onViewReports}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" /> View Reports
+          </Button>
         </CardHeader>
         <CardContent>
           <Form {...form}>

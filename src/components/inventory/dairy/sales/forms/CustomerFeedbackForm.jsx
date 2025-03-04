@@ -1,74 +1,52 @@
 
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { ArrowLeft } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, FileText } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
-const CustomerFeedbackForm = ({ onBack }) => {
+const CustomerFeedbackForm = ({ onBack, onViewReports }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const form = useForm({
     defaultValues: {
       customer_name: '',
       customer_email: '',
       customer_phone: '',
-      product_name: '',
-      rating: '5',
-      feedback_type: 'general',
+      product_service: '',
+      satisfaction_rating: '4',
       feedback_text: '',
-      action_required: 'no',
-      action_assigned_to: '',
-      status: 'new'
+      improvement_suggestions: '',
+      follow_up_required: false,
+      follow_up_status: 'pending'
     }
   });
-
-  const watchFeedbackType = form.watch('feedback_type');
-  const watchActionRequired = form.watch('action_required');
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      // Generate a feedback ID
-      const feedbackId = `FB-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
-      
       const { data: userData } = await supabase.auth.getUser();
       
-      // Format data for Supabase
       const formattedData = {
-        feedback_id: feedbackId,
         customer_name: data.customer_name,
         customer_email: data.customer_email,
         customer_phone: data.customer_phone,
-        product_name: data.product_name,
-        rating: parseInt(data.rating),
-        feedback_type: data.feedback_type,
+        product_service: data.product_service,
+        satisfaction_rating: parseFloat(data.satisfaction_rating),
         feedback_text: data.feedback_text,
-        action_required: data.action_required === 'yes',
-        action_assigned_to: data.action_assigned_to || null,
-        status: data.status,
-        created_at: new Date().toISOString(),
+        improvement_suggestions: data.improvement_suggestions,
+        follow_up_required: data.follow_up_required,
+        follow_up_status: data.follow_up_required ? data.follow_up_status : null,
+        feedback_date: new Date().toISOString(),
         created_by: userData?.user?.id || null
       };
 
@@ -85,17 +63,16 @@ const CustomerFeedbackForm = ({ onBack }) => {
         customer_name: '',
         customer_email: '',
         customer_phone: '',
-        product_name: '',
-        rating: '5',
-        feedback_type: 'general',
+        product_service: '',
+        satisfaction_rating: '4',
         feedback_text: '',
-        action_required: 'no',
-        action_assigned_to: '',
-        status: 'new'
+        improvement_suggestions: '',
+        follow_up_required: false,
+        follow_up_status: 'pending'
       });
     } catch (error) {
-      console.error('Error recording feedback:', error);
-      showErrorToast(toast, "Failed to record feedback: " + error.message);
+      console.error('Error recording customer feedback:', error);
+      showErrorToast(toast, "Failed to record customer feedback: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -103,17 +80,16 @@ const CustomerFeedbackForm = ({ onBack }) => {
 
   return (
     <div className="space-y-4">
-      <Button 
-        variant="outline" 
-        onClick={onBack}
-        className="flex items-center gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back
-      </Button>
-
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Customer Feedback Form</CardTitle>
+          <Button 
+            variant="outline" 
+            onClick={onViewReports}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" /> View Reports
+          </Button>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -135,10 +111,24 @@ const CustomerFeedbackForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
+                  name="product_service"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Product/Service</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter product or service name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="customer_email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Address</FormLabel>
+                      <FormLabel>Customer Email</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter email address" type="email" {...field} />
                       </FormControl>
@@ -152,7 +142,7 @@ const CustomerFeedbackForm = ({ onBack }) => {
                   name="customer_phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>Customer Phone</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter phone number" {...field} />
                       </FormControl>
@@ -163,24 +153,10 @@ const CustomerFeedbackForm = ({ onBack }) => {
 
                 <FormField
                   control={form.control}
-                  name="product_name"
+                  name="satisfaction_rating"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Product Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter product name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="rating"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rating (1-5)</FormLabel>
+                      <FormLabel>Satisfaction Rating (1-5)</FormLabel>
                       <Select 
                         defaultValue={field.value} 
                         onValueChange={field.onChange}
@@ -191,40 +167,11 @@ const CustomerFeedbackForm = ({ onBack }) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="1">★ (Poor)</SelectItem>
-                          <SelectItem value="2">★★ (Fair)</SelectItem>
-                          <SelectItem value="3">★★★ (Good)</SelectItem>
-                          <SelectItem value="4">★★★★ (Very Good)</SelectItem>
-                          <SelectItem value="5">★★★★★ (Excellent)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="feedback_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Feedback Type</FormLabel>
-                      <Select 
-                        defaultValue={field.value} 
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select feedback type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="general">General</SelectItem>
-                          <SelectItem value="product_quality">Product Quality</SelectItem>
-                          <SelectItem value="delivery">Delivery</SelectItem>
-                          <SelectItem value="customer_service">Customer Service</SelectItem>
-                          <SelectItem value="complaint">Complaint</SelectItem>
-                          <SelectItem value="suggestion">Suggestion</SelectItem>
+                          <SelectItem value="1">1 - Very Dissatisfied</SelectItem>
+                          <SelectItem value="2">2 - Dissatisfied</SelectItem>
+                          <SelectItem value="3">3 - Neutral</SelectItem>
+                          <SelectItem value="4">4 - Satisfied</SelectItem>
+                          <SelectItem value="5">5 - Very Satisfied</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -238,10 +185,28 @@ const CustomerFeedbackForm = ({ onBack }) => {
                 name="feedback_text"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Feedback Details</FormLabel>
+                    <FormLabel>Feedback</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter detailed feedback"
+                        placeholder="Please enter customer feedback"
+                        className="min-h-[120px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="improvement_suggestions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Improvement Suggestions</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter any suggestions for improvement"
                         className="min-h-[100px]"
                         {...field}
                       />
@@ -251,54 +216,34 @@ const CustomerFeedbackForm = ({ onBack }) => {
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="action_required"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Action Required?</FormLabel>
-                      <Select 
-                        defaultValue={field.value} 
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select option" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="no">No</SelectItem>
-                          <SelectItem value="yes">Yes</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {watchActionRequired === 'yes' && (
-                  <FormField
-                    control={form.control}
-                    name="action_assigned_to"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Assign Action To</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter name or department" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <FormField
+                control={form.control}
+                name="follow_up_required"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Follow-up Required</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Check if this feedback requires follow-up
+                      </p>
+                    </div>
+                  </FormItem>
                 )}
+              />
 
+              {form.watch('follow_up_required') && (
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="follow_up_status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel>Follow-up Status</FormLabel>
                       <Select 
                         defaultValue={field.value} 
                         onValueChange={field.onChange}
@@ -309,37 +254,17 @@ const CustomerFeedbackForm = ({ onBack }) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="new">
-                            <div className="flex items-center">
-                              <span>New</span>
-                              <Badge variant="info" className="ml-2">New</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="in_progress">
-                            <div className="flex items-center">
-                              <span>In Progress</span>
-                              <Badge variant="pending" className="ml-2">In Progress</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="resolved">
-                            <div className="flex items-center">
-                              <span>Resolved</span>
-                              <Badge variant="success" className="ml-2">Resolved</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="closed">
-                            <div className="flex items-center">
-                              <span>Closed</span>
-                              <Badge className="ml-2">Closed</Badge>
-                            </div>
-                          </SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="not_required">Not Required</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
+              )}
 
               <div className="flex justify-end">
                 <Button

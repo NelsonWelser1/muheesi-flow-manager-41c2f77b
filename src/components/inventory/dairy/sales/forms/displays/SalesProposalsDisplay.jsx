@@ -1,410 +1,208 @@
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger,
-  DialogClose
-} from "@/components/ui/dialog";
-import { ArrowLeft, Search, Download, Printer, FileDown, Plus, Minus } from "lucide-react";
+import { ArrowLeft, FileText, Download, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/supabase";
-import { format, subHours, subDays, subWeeks, subMonths, subYears } from 'date-fns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { showErrorToast } from "@/components/ui/notifications";
 
 const SalesProposalsDisplay = ({ onBack }) => {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
   const [proposals, setProposals] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [timeRange, setTimeRange] = useState('all');
-  const [selectedProposal, setSelectedProposal] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("all");
+  const { toast } = useToast();
 
-  // Function to fetch proposals with time range filter
-  const fetchProposals = async (range = timeRange) => {
-    setLoading(true);
-    try {
-      // Start building query
-      let query = supabase.from('sales_proposals').select('*');
-      
-      // Apply search filter if provided
-      if (searchTerm) {
-        query = query.or(`customer_name.ilike.%${searchTerm}%,proposal_id.ilike.%${searchTerm}%,contact_email.ilike.%${searchTerm}%`);
-      }
-      
-      // Apply time range filter
-      if (range !== 'all') {
-        const now = new Date();
-        let startDate;
-        
-        switch (range) {
-          case 'hour':
-            startDate = subHours(now, 1);
-            break;
-          case 'day':
-            startDate = subDays(now, 1);
-            break;
-          case 'week':
-            startDate = subWeeks(now, 1);
-            break;
-          case 'month':
-            startDate = subMonths(now, 1);
-            break;
-          case 'year':
-            startDate = subYears(now, 1);
-            break;
-          default:
-            startDate = null;
-        }
-        
-        if (startDate) {
-          query = query.gte('created_at', startDate.toISOString());
-        }
-      }
-      
-      // Execute query
-      const { data, error } = await query.order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      console.log('Fetched proposals:', data);
-      
-      if (data) {
-        setProposals(data);
-      }
-    } catch (error) {
-      console.error('Error fetching proposals:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load proposals: " + error.message,
-        variant: "destructive",
-      });
-      
-      // Use sample data on error
-      setProposals([
-        {
-          proposal_id: 'PROP-20240501-001',
-          customer_name: 'Acme Corporation',
-          contact_email: 'contact@acme.com',
-          contact_phone: '+123456789',
-          created_at: new Date().toISOString(),
-          grand_total: 'UGX 5,000,000',
-          products: [
-            { id: 1, product_type: 'Cheese', quantity: 50, price: 'UGX 10,000', total_amount: 'UGX 500,000' }
-          ]
-        }
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Initial data fetch
   useEffect(() => {
-    // Create table if it doesn't exist
-    const createTableIfNotExists = async () => {
-      try {
-        // Note: In a real app, this would be done via Supabase migrations
-        // This is just a fallback for demonstration purposes
-        const { error } = await supabase.rpc('create_sales_proposals_table_if_not_exists');
-        if (error && !error.message.includes('does not exist')) {
-          console.error('Error checking/creating table:', error);
-        }
-      } catch (err) {
-        console.error('Error in RPC call:', err);
-      }
-    };
-    
-    createTableIfNotExists();
-    fetchProposals();
+    fetchSalesProposals();
   }, []);
 
-  // Fetch data when search term or time range changes
-  useEffect(() => {
-    fetchProposals(timeRange);
-  }, [searchTerm, timeRange]);
-
-  // Handle time range adjustment
-  const adjustTimeRange = (direction) => {
-    const ranges = ['hour', 'day', 'week', 'month', 'year', 'all'];
-    const currentIndex = ranges.indexOf(timeRange);
-    
-    if (direction === 'increase') {
-      // Move to wider time range (right in the array)
-      const newIndex = Math.min(currentIndex + 1, ranges.length - 1);
-      setTimeRange(ranges[newIndex]);
-    } else {
-      // Move to narrower time range (left in the array)
-      const newIndex = Math.max(currentIndex - 1, 0);
-      setTimeRange(ranges[newIndex]);
-    }
-  };
-
-  // Handle export as CSV
-  const handleExportCSV = () => {
+  const fetchSalesProposals = async () => {
+    setIsLoading(true);
     try {
-      // Create CSV content
-      const headers = ["Proposal ID", "Customer Name", "Email", "Phone", "Date", "Grand Total"];
-      const csvRows = [headers];
-      
-      proposals.forEach(proposal => {
-        const row = [
-          proposal.proposal_id,
-          proposal.customer_name,
-          proposal.contact_email,
-          proposal.contact_phone,
-          format(new Date(proposal.created_at), 'yyyy-MM-dd HH:mm'),
-          proposal.grand_total
-        ];
-        csvRows.push(row);
-      });
-      
-      const csvContent = csvRows.map(row => row.join(',')).join('\n');
-      
-      // Create and download the file
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `sales_proposals_${format(new Date(), 'yyyyMMdd')}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      toast({
-        title: "Success",
-        description: "CSV file has been downloaded",
-      });
+      const { data, error } = await supabase
+        .from('sales_proposals')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setProposals(data || []);
     } catch (error) {
-      console.error('Error exporting CSV:', error);
-      toast({
-        title: "Error",
-        description: "Failed to export data: " + error.message,
-        variant: "destructive",
-      });
+      console.error('Error fetching sales proposals:', error);
+      showErrorToast(toast, "Failed to load sales proposals: " + error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Handle print
-  const handlePrint = () => {
-    window.print();
+  const getFilteredProposals = () => {
+    if (activeTab === "all") return proposals;
+    return proposals.filter(proposal => proposal.status === activeTab);
   };
 
-  // Format the time range for display
-  const formatTimeRangeDisplay = () => {
-    switch (timeRange) {
-      case 'hour': return 'Last Hour';
-      case 'day': return 'Last 24 Hours';
-      case 'week': return 'Last Week';
-      case 'month': return 'Last Month';
-      case 'year': return 'Last Year';
-      case 'all': return 'All Time';
-      default: return 'Custom Range';
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'approved':
+        return <Badge variant="success">Approved</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive">Rejected</Badge>;
+      case 'pending':
+        return <Badge variant="warning">Pending</Badge>;
+      case 'draft':
+        return <Badge variant="secondary">Draft</Badge>;
+      case 'expired':
+        return <Badge variant="outline">Expired</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
     }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const formatCurrency = (amount) => {
+    return parseFloat(amount).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    });
   };
 
   return (
     <div className="space-y-4">
-      <Button 
-        variant="outline" 
-        onClick={onBack}
-        className="flex items-center gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back
-      </Button>
-      
+      <div className="flex justify-between items-center">
+        <Button 
+          variant="outline" 
+          onClick={onBack}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back
+        </Button>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle className="flex justify-between items-center">
-            <span>Sales Proposals</span>
-            <div className="flex items-center gap-2">
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => adjustTimeRange('decrease')}
-                disabled={timeRange === 'hour'}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className="text-sm font-medium">
-                {formatTimeRangeDisplay()}
-              </span>
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => adjustTimeRange('increase')}
-                disabled={timeRange === 'all'}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardTitle>
-          <div className="flex flex-col md:flex-row gap-4 justify-between">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by customer name, proposal ID or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleExportCSV}>
-                <FileDown className="h-4 w-4 mr-2" />
-                CSV
-              </Button>
-              <Button variant="outline" onClick={handlePrint}>
-                <Printer className="h-4 w-4 mr-2" />
-                Print
-              </Button>
-            </div>
-          </div>
+          <CardTitle>Sales Proposals</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-10">Loading proposals...</div>
-          ) : proposals.length === 0 ? (
-            <div className="text-center py-10">
-              <p className="text-muted-foreground">No proposals found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Proposal ID</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Grand Total</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {proposals.map((proposal) => (
-                    <TableRow key={proposal.proposal_id}>
-                      <TableCell className="font-medium">{proposal.proposal_id}</TableCell>
-                      <TableCell>
-                        <div>{proposal.customer_name}</div>
-                        <div className="text-sm text-muted-foreground">{proposal.contact_email}</div>
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(proposal.created_at), 'MMM d, yyyy HH:mm')}
-                      </TableCell>
-                      <TableCell>{proposal.grand_total}</TableCell>
-                      <TableCell className="text-right">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setSelectedProposal(proposal)}
-                            >
-                              View
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="approved">Approved</TabsTrigger>
+              <TabsTrigger value="pending">Pending</TabsTrigger>
+              <TabsTrigger value="draft">Draft</TabsTrigger>
+              <TabsTrigger value="rejected">Rejected</TabsTrigger>
+              <TabsTrigger value="expired">Expired</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value={activeTab}>
+              {isLoading ? (
+                <div className="text-center py-8">Loading sales proposals...</div>
+              ) : getFilteredProposals().length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No sales proposals found.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {getFilteredProposals().map((proposal) => (
+                    <Card key={proposal.proposal_id} className="overflow-hidden">
+                      <div className="p-4 bg-muted/20">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium text-lg">Proposal for {proposal.customer_name || 'Unnamed Customer'}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              ID: {proposal.proposal_id || 'N/A'} &bull; Created: {formatDate(proposal.created_at)}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(proposal.status)}
+                            <Button variant="ghost" size="icon" title="View Proposal">
+                              <Eye className="h-4 w-4" />
                             </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle>Proposal Details</DialogTitle>
-                              <DialogDescription>
-                                Viewing details for proposal {proposal.proposal_id}
-                              </DialogDescription>
-                            </DialogHeader>
-                            {selectedProposal && (
-                              <div className="space-y-4 mt-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Customer</p>
-                                    <p className="text-lg">{selectedProposal.customer_name}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Contact</p>
-                                    <p>{selectedProposal.contact_email}</p>
-                                    <p>{selectedProposal.contact_phone}</p>
-                                  </div>
-                                </div>
-                                
-                                <div className="border rounded-md p-4">
-                                  <h3 className="font-medium mb-2">Products</h3>
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>No.</TableHead>
-                                        <TableHead>Product Type</TableHead>
-                                        <TableHead>Quantity</TableHead>
-                                        <TableHead>Price</TableHead>
-                                        <TableHead>Total</TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {selectedProposal.products && selectedProposal.products.map((product) => (
-                                        <TableRow key={product.id}>
-                                          <TableCell>{product.id}</TableCell>
-                                          <TableCell>{product.product_type}</TableCell>
-                                          <TableCell>{product.quantity}</TableCell>
-                                          <TableCell>{product.price}</TableCell>
-                                          <TableCell>{product.total_amount}</TableCell>
-                                        </TableRow>
-                                      ))}
-                                      <TableRow>
-                                        <TableCell colSpan={4} className="text-right font-bold">Grand Total:</TableCell>
-                                        <TableCell className="font-bold">{selectedProposal.grand_total}</TableCell>
-                                      </TableRow>
-                                    </TableBody>
-                                  </Table>
-                                </div>
-                                
-                                {selectedProposal.terms_conditions && (
-                                  <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Terms & Conditions</p>
-                                    <p className="whitespace-pre-wrap">{selectedProposal.terms_conditions}</p>
-                                  </div>
+                            <Button variant="ghost" size="icon" title="Download Proposal">
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-2">
+                          <div>
+                            <p className="text-sm font-medium">Proposal Date</p>
+                            <p className="text-sm">{formatDate(proposal.proposal_date)}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">Valid For</p>
+                            <p className="text-sm">{proposal.validity_period || 30} days</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">Grand Total</p>
+                            <p className="text-sm font-bold">{formatCurrency(proposal.grand_total)}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                          <div>
+                            <p className="text-sm font-medium">Customer Details</p>
+                            <p className="text-sm">{proposal.customer_name}</p>
+                            <p className="text-sm">{proposal.customer_email}</p>
+                            <p className="text-sm">{proposal.customer_phone}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">Products</p>
+                            <p className="text-sm">{(proposal.products || []).length} items</p>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4 pt-4 border-t">
+                          <p className="text-sm font-medium mb-2">Products</p>
+                          <div className="overflow-x-auto">
+                            <table className="w-full min-w-full table-auto text-sm">
+                              <thead className="bg-muted/50">
+                                <tr>
+                                  <th className="text-left p-2">Product</th>
+                                  <th className="text-right p-2">Quantity</th>
+                                  <th className="text-right p-2">Price</th>
+                                  <th className="text-right p-2">Total</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(proposal.products || []).slice(0, 3).map((product, idx) => (
+                                  <tr key={idx} className="border-b border-gray-100">
+                                    <td className="p-2">{product.name}</td>
+                                    <td className="text-right p-2">{product.quantity}</td>
+                                    <td className="text-right p-2">${parseFloat(product.price).toFixed(2)}</td>
+                                    <td className="text-right p-2">${parseFloat(product.total).toFixed(2)}</td>
+                                  </tr>
+                                ))}
+                                {(proposal.products || []).length > 3 && (
+                                  <tr>
+                                    <td colSpan="4" className="p-2 text-center text-muted-foreground">
+                                      + {proposal.products.length - 3} more items
+                                    </td>
+                                  </tr>
                                 )}
-                                
-                                <div className="flex justify-end gap-2">
-                                  <DialogClose asChild>
-                                    <Button variant="outline">Close</Button>
-                                  </DialogClose>
-                                  <Button onClick={handlePrint}>Print Proposal</Button>
-                                </div>
-                              </div>
-                            )}
-                          </DialogContent>
-                        </Dialog>
-                      </TableCell>
-                    </TableRow>
+                                {(proposal.products || []).length === 0 && (
+                                  <tr>
+                                    <td colSpan="4" className="p-2 text-center text-muted-foreground">
+                                      No products in this proposal
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
                   ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
