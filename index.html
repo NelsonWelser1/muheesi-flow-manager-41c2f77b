@@ -58,6 +58,70 @@
       @keyframes spin {
         to { transform: rotate(360deg); }
       }
+      
+      /* Timer display for loading state */
+      #loading-timer {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        color: #4b5563;
+      }
+      
+      /* Fallback actions */
+      #fallback-actions {
+        margin-top: 1.5rem;
+        display: none; /* Hidden by default */
+      }
+      
+      .fallback-btn {
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 0.25rem;
+      }
+      
+      .fallback-btn.secondary {
+        background-color: #6b7280;
+      }
+      
+      .fallback-btn.outline {
+        background-color: transparent;
+        border: 1px solid #d1d5db;
+        color: #4b5563;
+      }
+      
+      #available-paths {
+        margin-top: 1rem;
+        display: none;
+        text-align: left;
+        max-height: 150px;
+        overflow-y: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.25rem;
+        padding: 0.5rem;
+      }
+      
+      .path-btn {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: none;
+        padding: 0.5rem;
+        cursor: pointer;
+        font-size: 0.75rem;
+        border-radius: 0.25rem;
+      }
+      
+      .path-btn:hover {
+        background-color: #f3f4f6;
+      }
     </style>
     <script>
       // Pre-initialize event handling to avoid race conditions
@@ -66,19 +130,130 @@
         sandboxState: 'unknown',
         lastHoverTime: 0,
         lastLoadingTime: 0,
-        HOVER_COOLDOWN: 2000, // 2 second cooldown (increased from 1 second)
+        lastEditorInteractionTime: 0,
+        loadingStartTime: null,
+        HOVER_COOLDOWN: 2000, // 2 second cooldown
         LOADING_THROTTLE: 5000, // 5 second throttle for loading states
+        EDITOR_UI_COOLDOWN: 60 * 60 * 1000, // 1 hour cooldown for editor UI interactions
+        FALLBACK_TIMEOUT: 30000, // 30 seconds until fallback UI shows
+        loadingTimerId: null,
+        pathsToTry: [
+          '/',
+          '/dashboard',
+          '/manage-inventory',
+          '/manage-companies',
+          '/feedback',
+          '/manage-inventory/kashari-farm',
+          '/manage-inventory/bukomero-dairy'
+        ],
+        
         isInHoverCooldown: function() {
           return (Date.now() - this.lastHoverTime) < this.HOVER_COOLDOWN;
         },
         isInLoadingThrottle: function() {
           return (Date.now() - this.lastLoadingTime) < this.LOADING_THROTTLE;
         },
+        isInEditorUICooldown: function() {
+          return (Date.now() - this.lastEditorInteractionTime) < this.EDITOR_UI_COOLDOWN;
+        },
         updateHoverTime: function() {
           this.lastHoverTime = Date.now();
         },
         updateLoadingTime: function() {
           this.lastLoadingTime = Date.now();
+        },
+        startLoadingTimer: function() {
+          if (this.loadingStartTime === null) {
+            this.loadingStartTime = Date.now();
+            this.updateLoadingTimerDisplay();
+            
+            // Clear existing timer if any
+            if (this.loadingTimerId) {
+              clearTimeout(this.loadingTimerId);
+            }
+            
+            // Set timeout for fallback UI
+            this.loadingTimerId = setTimeout(() => {
+              this.showFallbackActions();
+            }, this.FALLBACK_TIMEOUT);
+          }
+        },
+        updateLoadingTimerDisplay: function() {
+          if (this.loadingStartTime !== null) {
+            const timerElement = document.getElementById('loading-timer');
+            if (timerElement) {
+              const elapsedSeconds = Math.floor((Date.now() - this.loadingStartTime) / 1000);
+              timerElement.textContent = `Loading for ${elapsedSeconds} seconds...`;
+              
+              if (elapsedSeconds >= 30 && !this.fallbackActionsShown) {
+                this.showFallbackActions();
+              }
+              
+              // Continue updating the timer
+              setTimeout(() => this.updateLoadingTimerDisplay(), 1000);
+            }
+          }
+        },
+        stopLoadingTimer: function() {
+          this.loadingStartTime = null;
+          if (this.loadingTimerId) {
+            clearTimeout(this.loadingTimerId);
+            this.loadingTimerId = null;
+          }
+          
+          const timerElement = document.getElementById('loading-timer');
+          if (timerElement) {
+            timerElement.textContent = '';
+          }
+          
+          this.hideFallbackActions();
+        },
+        showFallbackActions: function() {
+          const actionsElement = document.getElementById('fallback-actions');
+          if (actionsElement) {
+            actionsElement.style.display = 'block';
+            this.fallbackActionsShown = true;
+          }
+        },
+        hideFallbackActions: function() {
+          const actionsElement = document.getElementById('fallback-actions');
+          if (actionsElement) {
+            actionsElement.style.display = 'none';
+            this.fallbackActionsShown = false;
+          }
+          
+          const pathsElement = document.getElementById('available-paths');
+          if (pathsElement) {
+            pathsElement.style.display = 'none';
+          }
+        },
+        toggleAvailablePaths: function() {
+          const pathsElement = document.getElementById('available-paths');
+          if (pathsElement) {
+            if (pathsElement.style.display === 'none' || !pathsElement.style.display) {
+              pathsElement.style.display = 'block';
+              
+              // Populate paths
+              pathsElement.innerHTML = '';
+              this.pathsToTry.forEach(path => {
+                const btn = document.createElement('button');
+                btn.className = 'path-btn';
+                btn.textContent = `preview--muheesi-flow-manager.lovable.app${path === '/' ? '/index' : path}`;
+                btn.onclick = () => this.navigateToPath(path);
+                pathsElement.appendChild(btn);
+              });
+            } else {
+              pathsElement.style.display = 'none';
+            }
+          }
+        },
+        navigateToPath: function(path) {
+          // For initial HTML-only navigation
+          window.location.pathname = path;
+        },
+        markEditorUIInteraction: function() {
+          this.lastEditorInteractionTime = Date.now();
+          console.log('Editor UI interaction detected, cooldown activated for 1 hour');
         },
         hoverEvents: 0,
         incrementHoverEvents: function() {
@@ -88,9 +263,24 @@
         },
         shouldIgnoreNextLoadingState: function() {
           // Ignore loading states that happen immediately after multiple hover events
-          return this.hoverEvents > 3 && this.isInHoverCooldown();
+          // or during editor UI cooldown
+          return (this.hoverEvents > 3 && this.isInHoverCooldown()) || 
+                 this.isInEditorUICooldown();
         }
       };
+      
+      // Detect possible editor UI interaction patterns (specific to Lovable editor)
+      document.addEventListener('mousemove', function(event) {
+        // Check if mouse is in editor UI area (usually left side)
+        if (event.clientX < window.innerWidth * 0.3) { // Assuming editor is on the left ~30% of screen
+          if (!window.__MUHEESI_APP_STATE.isInEditorUICooldown()) {
+            window.__MUHEESI_APP_STATE.markEditorUIInteraction();
+          }
+        }
+        
+        window.__MUHEESI_APP_STATE.updateHoverTime();
+        window.__MUHEESI_APP_STATE.incrementHoverEvents();
+      }, { passive: true });
       
       // Debounce function to limit event firing
       function debounce(func, wait) {
@@ -112,7 +302,7 @@
       }, 100); // 100ms debounce
       
       // Intercept and throttle mousemove events
-      document.addEventListener('mousemove', throttledMousemove);
+      document.addEventListener('mousemove', throttledMousemove, { passive: true });
       
       // Ensure any sandbox status messages can be handled immediately
       window.addEventListener('message', function(event) {
@@ -124,13 +314,14 @@
           console.log(`Sandbox status changed: ${event.data.status} (previous: ${prevState})`);
           
           // Don't show loading state if we're in hover cooldown period or throttle period
-          // This prevents flickering during UI interactions
+          // or if we're in editor UI cooldown
           if ((window.__MUHEESI_APP_STATE.isInHoverCooldown() || 
                window.__MUHEESI_APP_STATE.shouldIgnoreNextLoadingState() ||
-               window.__MUHEESI_APP_STATE.isInLoadingThrottle()) && 
+               window.__MUHEESI_APP_STATE.isInLoadingThrottle() ||
+               window.__MUHEESI_APP_STATE.isInEditorUICooldown()) && 
               prevState === 'ready' && 
               event.data.status === 'loading') {
-            console.log("Ignoring loading state during cooldown/throttle period");
+            console.log("Ignoring loading state due to editor UI, cooldown, or throttle period");
             return;
           }
           
@@ -139,13 +330,55 @@
             if (event.data.status === 'loading') {
               window.__MUHEESI_APP_STATE.updateLoadingTime();
               fallback.style.display = 'flex';
+              window.__MUHEESI_APP_STATE.startLoadingTimer();
             } else if (event.data.status === 'ready') {
               // Slight delay to ensure app has time to render
               setTimeout(function() {
                 fallback.style.display = 'none';
+                window.__MUHEESI_APP_STATE.stopLoadingTimer();
               }, 300);
             }
           }
+        }
+      });
+      
+      // Add custom handlers for fallback buttons once DOM is loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        // Add loading timer element
+        const loadingContent = document.querySelector('#loading-fallback .content');
+        if (loadingContent) {
+          const timerElement = document.createElement('div');
+          timerElement.id = 'loading-timer';
+          loadingContent.appendChild(timerElement);
+          
+          // Add fallback actions container
+          const fallbackActions = document.createElement('div');
+          fallbackActions.id = 'fallback-actions';
+          
+          // Add buttons
+          fallbackActions.innerHTML = `
+            <div>
+              <button id="reload-btn" class="fallback-btn">Hard Refresh</button>
+              <button id="home-btn" class="fallback-btn secondary">Go to Home</button>
+              <button id="paths-btn" class="fallback-btn outline">Available Paths</button>
+            </div>
+            <div id="available-paths"></div>
+          `;
+          
+          loadingContent.appendChild(fallbackActions);
+          
+          // Add button event listeners
+          document.getElementById('reload-btn').addEventListener('click', function() {
+            window.location.reload();
+          });
+          
+          document.getElementById('home-btn').addEventListener('click', function() {
+            window.location.pathname = '/';
+          });
+          
+          document.getElementById('paths-btn').addEventListener('click', function() {
+            window.__MUHEESI_APP_STATE.toggleAvailablePaths();
+          });
         }
       });
     </script>

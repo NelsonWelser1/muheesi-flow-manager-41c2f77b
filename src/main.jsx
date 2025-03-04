@@ -17,32 +17,42 @@ let sandboxState = 'unknown';
 let preventRapidRerendersTimeout = null;
 
 // Constants for throttling and debouncing
-const MOUSE_INTERACTION_COOLDOWN = 2000; // 2 seconds cooldown
-const LOADING_STATE_DISPLAY_DELAY = 300; // 300ms delay before showing loading
-const RENDER_DEBOUNCE_TIMEOUT = 800; // 800ms debounce for render
-const LOADING_THROTTLE = 5000; // 5 seconds between loading screens
+const MOUSE_INTERACTION_COOLDOWN = 5000; // 5 seconds cooldown (increased)
+const LOADING_STATE_DISPLAY_DELAY = 500; // 500ms delay before showing loading (increased)
+const RENDER_DEBOUNCE_TIMEOUT = 1000; // 1000ms debounce for render (increased)
+const LOADING_THROTTLE = 10000; // 10 seconds between loading screens (increased)
+const EDITOR_UI_COOLDOWN = 60 * 60 * 1000; // 1 hour cooldown for editor UI interactions
 
 // Track timing data
 let lastMouseInteractionTime = 0;
 let lastLoadingStateTime = 0;
+let lastEditorUIInteractionTime = 0;
 let consecutiveLoadingEvents = 0;
 
 // Function to hide loading fallback
 const hideLoadingFallback = () => {
   const fallback = document.getElementById('loading-fallback');
   if (fallback) {
-    fallback.style.opacity = '0';
-    setTimeout(() => {
-      fallback.style.display = 'none';
-      fallback.style.opacity = '1';
-    }, 300);
+    fallback.style.display = 'none';
+    
+    // Also inform the app state that loading has stopped
+    if (window.__MUHEESI_APP_STATE) {
+      window.__MUHEESI_APP_STATE.stopLoadingTimer();
+    }
   }
 };
 
 // Function to show loading fallback with delay to prevent flashes
 const showLoadingFallback = () => {
+  // Check if we're in editor UI cooldown period
+  const now = Date.now();
+  if (now - lastEditorUIInteractionTime < EDITOR_UI_COOLDOWN) {
+    console.log("Ignoring loading state due to recent editor UI interaction");
+    return;
+  }
+  
   // Don't show if we've shown recently
-  if (Date.now() - lastLoadingStateTime < LOADING_THROTTLE) {
+  if (now - lastLoadingStateTime < LOADING_THROTTLE) {
     console.log("Throttling loading screen - shown too recently");
     return;
   }
@@ -53,9 +63,32 @@ const showLoadingFallback = () => {
     const fallback = document.getElementById('loading-fallback');
     if (fallback) {
       fallback.style.display = 'flex';
-      lastLoadingStateTime = Date.now();
+      lastLoadingStateTime = now;
+      
+      // Also inform the app state that loading has started
+      if (window.__MUHEESI_APP_STATE) {
+        window.__MUHEESI_APP_STATE.startLoadingTimer();
+      }
     }
   }, LOADING_STATE_DISPLAY_DELAY);
+};
+
+// Function to detect editor UI interactions based on mouse position and patterns
+const detectEditorUIInteraction = (event) => {
+  // Check if mouse is in editor UI area (usually left side)
+  if (event.clientX < window.innerWidth * 0.3) { // Assuming editor is on the left ~30% of screen
+    const now = Date.now();
+    // Only register if not in cooldown period already
+    if (now - lastEditorUIInteractionTime > EDITOR_UI_COOLDOWN) {
+      console.log("Editor UI interaction detected, applying 1 hour cooldown");
+      lastEditorUIInteractionTime = now;
+      
+      // Also update the global app state
+      if (window.__MUHEESI_APP_STATE) {
+        window.__MUHEESI_APP_STATE.markEditorUIInteraction();
+      }
+    }
+  }
 };
 
 // Enhanced render function with sandbox state preservation
@@ -119,6 +152,14 @@ const renderApp = () => {
 const debouncedRender = () => {
   // Skip rendering if it's due to rapid hover/mouse interaction
   const now = Date.now();
+  
+  // Skip if in editor UI cooldown
+  if (now - lastEditorUIInteractionTime < EDITOR_UI_COOLDOWN) {
+    console.log("Skipping render due to editor UI interaction cooldown");
+    return;
+  }
+  
+  // Skip if due to recent mouse interaction
   if (now - lastMouseInteractionTime < MOUSE_INTERACTION_COOLDOWN) {
     console.log("Skipping render due to recent mouse interaction");
     return;
@@ -137,8 +178,11 @@ const debouncedRender = () => {
 };
 
 // Track mouse events to prevent unnecessary renders with debounce
-document.addEventListener('mousemove', () => {
+document.addEventListener('mousemove', (event) => {
   lastMouseInteractionTime = Date.now();
+  
+  // Check for editor UI interactions
+  detectEditorUIInteraction(event);
   
   // If we have window.__MUHEESI_APP_STATE from index.html, update it too
   if (window.__MUHEESI_APP_STATE) {
@@ -155,6 +199,10 @@ window.addEventListener('message', (event) => {
     
     console.log(`Sandbox status changed: ${event.data.status} (previous: ${previousState})`);
     
+    // Check for editor UI interaction cooldown
+    const now = Date.now();
+    const isInEditorUICooldown = now - lastEditorUIInteractionTime < EDITOR_UI_COOLDOWN;
+    
     // Check for rapid loading state changes which indicate hover issues
     if (previousState === 'ready' && event.data.status === 'loading') {
       consecutiveLoadingEvents++;
@@ -162,6 +210,12 @@ window.addEventListener('message', (event) => {
       // If we're seeing too many loading events in succession, it's likely a hover issue
       if (consecutiveLoadingEvents > 2 && Date.now() - lastMouseInteractionTime < MOUSE_INTERACTION_COOLDOWN) {
         console.log("Ignoring loading state due to detected hover interaction pattern");
+        return;
+      }
+      
+      // Also ignore if we're in editor UI cooldown
+      if (isInEditorUICooldown) {
+        console.log("Ignoring loading state due to editor UI interaction cooldown");
         return;
       }
     } else if (event.data.status === 'ready') {
@@ -182,13 +236,15 @@ window.addEventListener('message', (event) => {
       } else if (sandboxState === 'loading') {
         // Only show loading if we're coming from a non-loading state
         // and not during recent mouse interaction
+        // and not during editor UI cooldown
         if (previousState !== 'loading' && 
-            Date.now() - lastMouseInteractionTime > MOUSE_INTERACTION_COOLDOWN &&
-            Date.now() - lastLoadingStateTime > LOADING_THROTTLE) {
+            now - lastMouseInteractionTime > MOUSE_INTERACTION_COOLDOWN &&
+            now - lastLoadingStateTime > LOADING_THROTTLE &&
+            !isInEditorUICooldown) {
           console.log("Sandbox loading, showing fallback");
           showLoadingFallback();
         } else {
-          console.log("Ignoring loading state due to recent interaction or throttle");
+          console.log("Ignoring loading state due to recent interaction, throttle, or editor UI cooldown");
         }
       }
     } else {

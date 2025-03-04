@@ -18,6 +18,7 @@ import KashariFarmDashboard from "./components/inventory/kashari/KashariFarmDash
 import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDairyDashboard";
 import SmartProductionDashboard from "./components/inventory/dairy/production/SmartProductionDashboard";
 import SalesMarketingDashboard from "./components/inventory/dairy/sales/SalesMarketingDashboard";
+import SandboxFallback from "./components/SandboxFallback";
 
 // Create custom error boundary component
 class AppErrorBoundary extends React.Component {
@@ -116,9 +117,10 @@ const App = () => {
         <Suspense fallback={<LoadingFallback />}>
           <AutoFillProvider>
             <SupabaseAuthProvider>
-              <TooltipProvider>
-                <Toaster />
-                <BrowserRouter>
+              <BrowserRouter>
+                <TooltipProvider>
+                  <Toaster />
+                  <SandboxFallback />
                   <div className="flex flex-col min-h-screen">
                     <Navigation />
                     <main className="flex-grow overflow-y-auto">
@@ -137,8 +139,8 @@ const App = () => {
                       </Routes>
                     </main>
                   </div>
-                </BrowserRouter>
-              </TooltipProvider>
+                </TooltipProvider>
+              </BrowserRouter>
             </SupabaseAuthProvider>
           </AutoFillProvider>
         </Suspense>
