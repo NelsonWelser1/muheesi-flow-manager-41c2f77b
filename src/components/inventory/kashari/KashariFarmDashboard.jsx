@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
-import DairyManagement from './modules/DairyManagement';
+import DairyManagement from './modules/dairy-management/index';
 import LivestockManagement from './modules/LivestockManagement';
 import BananaPlantation from './modules/banana-plantation/index';
 import EmployeeManagement from './modules/EmployeeManagement';
