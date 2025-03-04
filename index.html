@@ -21,6 +21,7 @@
         top: 0;
         left: 0;
         z-index: 9999;
+        transition: opacity 0.3s ease;
       }
       #loading-fallback .content {
         text-align: center;
@@ -58,6 +59,24 @@
         to { transform: rotate(360deg); }
       }
     </style>
+    <script>
+      // Pre-initialize event handling to avoid race conditions
+      window.__MUHEESI_APP_STATE = {
+        rendered: false,
+        sandboxState: 'unknown'
+      };
+      
+      // Ensure any sandbox status messages can be handled immediately
+      window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'sandbox-status') {
+          window.__MUHEESI_APP_STATE.sandboxState = event.data.status;
+          const fallback = document.getElementById('loading-fallback');
+          if (fallback && event.data.status === 'loading') {
+            fallback.style.display = 'flex';
+          }
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root">
