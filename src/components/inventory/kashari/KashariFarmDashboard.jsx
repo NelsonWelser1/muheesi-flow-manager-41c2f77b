@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import DairyManagement from './modules/dairy-management/index';
-import LivestockManagement from './modules/LivestockManagement';
+import LivestockManagement from './modules/livestock-management/index';
 import BananaPlantation from './modules/banana-plantation/index';
 import EmployeeManagement from './modules/employee-management/index';
 import ScholarshipProgram from './modules/ScholarshipProgram';
