@@ -73,6 +73,10 @@ const retryRender = () => {
   setTimeout(renderApp, delay);
 };
 
+// Immediately try to render when this script loads
+console.log("Script loaded, attempting immediate render");
+renderApp();
+
 // Handle different document ready states
 if (document.readyState === 'loading') {
   console.log("Document still loading, waiting for DOMContentLoaded");
