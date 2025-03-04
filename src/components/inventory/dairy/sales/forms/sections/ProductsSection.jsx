@@ -1,19 +1,20 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from "@/components/ui/card";
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { showErrorToast } from "@/components/ui/notifications";
 
-const ProductsSection = ({ products, setProducts, updateGrandTotal }) => {
-  const { toast } = useToast();
-  
+const ProductsSection = ({ products, setProducts }) => {
   const addProduct = () => {
-    setProducts([...products, { name: '', description: '', quantity: '1', price: '', total: '0' }]);
+    setProducts([...products, { 
+      name: '', 
+      category: '', 
+      base_price: '', 
+      discount: '0', 
+      final_price: '0' 
+    }]);
   };
 
   const removeProduct = (index) => {
@@ -21,7 +22,6 @@ const ProductsSection = ({ products, setProducts, updateGrandTotal }) => {
       const newProducts = [...products];
       newProducts.splice(index, 1);
       setProducts(newProducts);
-      updateGrandTotal(newProducts);
     }
   };
 
@@ -29,16 +29,17 @@ const ProductsSection = ({ products, setProducts, updateGrandTotal }) => {
     const newProducts = [...products];
     newProducts[index][field] = value;
     
-    if (field === 'quantity' || field === 'price') {
-      const quantity = parseFloat(newProducts[index].quantity) || 0;
-      const price = parseFloat(newProducts[index].price) || 0;
-      newProducts[index].total = (quantity * price).toFixed(2);
+    // Calculate final price when base_price or discount changes
+    if (field === 'base_price' || field === 'discount') {
+      const basePrice = parseFloat(newProducts[index].base_price) || 0;
+      const discount = parseFloat(newProducts[index].discount) || 0;
+      const finalPrice = basePrice * (1 - discount / 100);
+      newProducts[index].final_price = finalPrice.toFixed(2);
     }
     
     setProducts(newProducts);
-    updateGrandTotal(newProducts);
   };
-  
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -77,40 +78,40 @@ const ProductsSection = ({ products, setProducts, updateGrandTotal }) => {
                 onChange={(e) => handleProductChange(index, 'name', e.target.value)}
               />
             </div>
-            <div className="space-y-2 md:col-span-2">
-              <FormLabel>Description</FormLabel>
-              <Textarea
-                placeholder="Enter product description"
-                value={product.description}
-                onChange={(e) => handleProductChange(index, 'description', e.target.value)}
-              />
-            </div>
             <div className="space-y-2">
-              <FormLabel>Quantity</FormLabel>
+              <FormLabel>Category</FormLabel>
               <Input
-                type="number"
-                min="1"
-                placeholder="Enter quantity"
-                value={product.quantity}
-                onChange={(e) => handleProductChange(index, 'quantity', e.target.value)}
+                placeholder="Enter product category"
+                value={product.category}
+                onChange={(e) => handleProductChange(index, 'category', e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <FormLabel>Unit Price</FormLabel>
+              <FormLabel>Base Price ($)</FormLabel>
               <Input
                 type="number"
                 step="0.01"
-                placeholder="Enter unit price"
-                value={product.price}
-                onChange={(e) => handleProductChange(index, 'price', e.target.value)}
+                placeholder="Enter base price"
+                value={product.base_price}
+                onChange={(e) => handleProductChange(index, 'base_price', e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <FormLabel>Total</FormLabel>
+              <FormLabel>Discount (%)</FormLabel>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="Enter discount percentage"
+                value={product.discount}
+                onChange={(e) => handleProductChange(index, 'discount', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <FormLabel>Final Price ($)</FormLabel>
               <Input
                 readOnly
                 className="bg-gray-100"
-                value={product.total}
+                value={product.final_price}
               />
             </div>
           </div>
