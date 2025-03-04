@@ -13,6 +13,13 @@ let hasRendered = false;
 // Track sandbox state
 let sandboxState = 'unknown';
 
+// Prevent multiple rapid render attempts
+let preventRapidRerendersTimeout = null;
+
+// Track mouse interaction with the sandbox
+let lastMouseInteractionTime = 0;
+const MOUSE_INTERACTION_COOLDOWN = 1000; // 1 second cooldown
+
 // Function to hide loading fallback
 const hideLoadingFallback = () => {
   const fallback = document.getElementById('loading-fallback');
@@ -84,48 +91,67 @@ const renderApp = () => {
   }
 };
 
-// Prevent multiple render attempts during hover interactions
-let renderDebounceTimer = null;
+// Enhanced debounce function with cooldown check
 const debouncedRender = () => {
-  if (renderDebounceTimer) {
-    clearTimeout(renderDebounceTimer);
+  // Skip rendering if it's due to rapid hover/mouse interaction
+  const now = Date.now();
+  if (now - lastMouseInteractionTime < MOUSE_INTERACTION_COOLDOWN) {
+    console.log("Skipping render due to recent mouse interaction");
+    return;
   }
-  renderDebounceTimer = setTimeout(() => {
-    // Only render if the app hasn't rendered yet or if sandbox state changed
+  
+  if (preventRapidRerendersTimeout) {
+    clearTimeout(preventRapidRerendersTimeout);
+  }
+  
+  preventRapidRerendersTimeout = setTimeout(() => {
+    // Only render if the app hasn't rendered yet or if sandbox state changed to ready
     if (!hasRendered || sandboxState === 'ready') {
       renderApp();
     }
-  }, 300); // 300ms debounce to prevent rapid re-renders
+  }, 500); // 500ms debounce
 };
 
-// Handle Lovable sandbox environment
+// Track mouse events to prevent unnecessary renders
+document.addEventListener('mousemove', () => {
+  lastMouseInteractionTime = Date.now();
+});
+
+// Enhanced sandbox message handling
 window.addEventListener('message', (event) => {
   // Check if the message is from the Lovable editor about sandbox state
   if (event.data && event.data.type === 'sandbox-status') {
-    console.log(`Sandbox status changed: ${event.data.status} (previous: ${sandboxState})`);
-    
-    // Update sandbox state
+    const previousState = sandboxState;
     sandboxState = event.data.status;
     
-    if (event.data.status === 'ready') {
-      // For 'ready' state, render immediately if not rendered yet,
-      // or just ensure loading screen is hidden if already rendered
-      if (!hasRendered) {
-        console.log("Sandbox ready, rendering app");
-        renderApp();
-      } else {
-        console.log("Sandbox ready, app already rendered");
-        hideLoadingFallback();
+    console.log(`Sandbox status changed: ${event.data.status} (previous: ${previousState})`);
+    
+    // Only react to significant state transitions
+    if (previousState !== sandboxState) {
+      if (sandboxState === 'ready') {
+        // For 'ready' state, render if not already rendered
+        if (!hasRendered) {
+          console.log("Sandbox ready, rendering app");
+          renderApp();
+        } else {
+          console.log("Sandbox ready, app already rendered");
+          hideLoadingFallback();
+        }
+      } else if (sandboxState === 'loading') {
+        // Only show loading if we're coming from a non-loading state
+        // This prevents flickering during hover events
+        if (previousState !== 'loading') {
+          console.log("Sandbox loading, showing fallback");
+          showLoadingFallback();
+        }
       }
-    } else if (event.data.status === 'loading') {
-      console.log("Sandbox loading, showing fallback");
-      showLoadingFallback();
-      // Do not reset hasRendered here to prevent unnecessary re-renders
+    } else {
+      console.log("Ignoring duplicate sandbox status");
     }
   }
 });
 
-// Initial render attempt with debounce to prevent multiple renders
+// Initial render attempt with debounce
 console.log("Script loaded, attempting initial render");
 debouncedRender();
 
@@ -157,4 +183,3 @@ window.addEventListener('unhandledrejection', (event) => {
 window.addEventListener('error', (event) => {
   console.error("Global error caught:", event.error);
 });
-

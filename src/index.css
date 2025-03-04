@@ -103,6 +103,16 @@
   /* Ensure loading fallback is styled properly */
   #loading-fallback {
     animation: fade-in 0.3s ease-out;
+    /* Prevent loading fallback from being hidden unexpectedly during transitions */
+    opacity: 1 !important;
+    visibility: visible !important;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+  
+  /* Only hide loading fallback when it's explicitly set to display: none */
+  #loading-fallback[style*="display: none"] {
+    opacity: 0 !important;
+    visibility: hidden !important;
   }
 
   @keyframes fade-in {
@@ -150,4 +160,3 @@
 .toast {
   z-index: 100;
 }
-

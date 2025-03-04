@@ -63,16 +63,48 @@
       // Pre-initialize event handling to avoid race conditions
       window.__MUHEESI_APP_STATE = {
         rendered: false,
-        sandboxState: 'unknown'
+        sandboxState: 'unknown',
+        lastHoverTime: 0,
+        HOVER_COOLDOWN: 1000, // 1 second cooldown
+        isInHoverCooldown: function() {
+          return (Date.now() - this.lastHoverTime) < this.HOVER_COOLDOWN;
+        },
+        updateHoverTime: function() {
+          this.lastHoverTime = Date.now();
+        }
       };
+      
+      // Intercept and throttle mousemove events
+      document.addEventListener('mousemove', function() {
+        window.__MUHEESI_APP_STATE.updateHoverTime();
+      });
       
       // Ensure any sandbox status messages can be handled immediately
       window.addEventListener('message', function(event) {
         if (event.data && event.data.type === 'sandbox-status') {
+          // Track previous state to detect changes
+          const prevState = window.__MUHEESI_APP_STATE.sandboxState;
           window.__MUHEESI_APP_STATE.sandboxState = event.data.status;
+          
+          // Don't show loading state if we're in hover cooldown period
+          // This prevents flickering during UI interactions
+          if (window.__MUHEESI_APP_STATE.isInHoverCooldown() && 
+              prevState === 'ready' && 
+              event.data.status === 'loading') {
+            console.log("Ignoring loading state during hover cooldown");
+            return;
+          }
+          
           const fallback = document.getElementById('loading-fallback');
-          if (fallback && event.data.status === 'loading') {
-            fallback.style.display = 'flex';
+          if (fallback) {
+            if (event.data.status === 'loading') {
+              fallback.style.display = 'flex';
+            } else if (event.data.status === 'ready') {
+              // Slight delay to ensure app has time to render
+              setTimeout(function() {
+                fallback.style.display = 'none';
+              }, 300);
+            }
           }
         }
       });
