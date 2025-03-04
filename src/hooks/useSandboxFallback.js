@@ -1,23 +1,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { COMMON_PATHS, DEFAULT_TIMEOUT_MS } from './sandbox-fallback/constants';
+import { isInEditorUICooldown, broadcastEditorUIInteraction, broadcastManualReset } from './sandbox-fallback/editorInteraction';
+import { createNavigationHandlers } from './sandbox-fallback/navigation';
+import { createSandboxMessageHandler } from './sandbox-fallback/sandboxMessageHandler';
 
-// Directory paths for auto-navigation
-const COMMON_PATHS = [
-  '/',
-  '/dashboard',
-  '/manage-inventory',
-  '/manage-companies',
-  '/feedback',
-  '/manage-inventory/kajon-export',
-  '/manage-inventory/kajon-export/export-manager',
-  '/manage-inventory/kashari-farm',
-  '/manage-inventory/bukomero-dairy',
-  '/manage-inventory/smart-production',
-  '/manage-inventory/sales-marketing',
-];
-
-const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for faster fallback
+const useSandboxFallback = (timeoutMs = DEFAULT_TIMEOUT_MS) => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStartTime, setLoadingStartTime] = useState(null);
   const [showFallback, setShowFallback] = useState(false);
@@ -27,12 +16,11 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
   const location = useLocation();
   const previousPathRef = useRef(location.pathname);
   const lastSandboxResetTime = useRef(Date.now());
-  const SANDBOX_RESET_COOLDOWN = 60 * 60 * 1000; // Strict 1 hour cooldown in milliseconds
 
   // Enhanced editor interaction detection
-  const isInEditorUICooldown = useCallback(() => {
-    return Date.now() - lastSandboxResetTime.current < SANDBOX_RESET_COOLDOWN;
-  }, [SANDBOX_RESET_COOLDOWN]);
+  const checkEditorUICooldown = useCallback(() => {
+    return isInEditorUICooldown(lastSandboxResetTime.current);
+  }, []);
 
   // Store visit history for fallback navigation
   useEffect(() => {
@@ -58,21 +46,7 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
       if (event.clientX < editorWidth) {
         console.log('Editor UI interaction detected via mouse position');
         lastSandboxResetTime.current = Date.now();
-        
-        // Broadcast the interaction to ensure other components are aware
-        try {
-          window.parent.postMessage({ 
-            type: 'editor-ui-interaction', 
-            timestamp: Date.now() 
-          }, '*');
-        } catch (e) {
-          console.log('Could not send editor interaction message to parent');
-        }
-
-        // Ensure cooldown is active in global app state
-        if (window.__MUHEESI_APP_STATE) {
-          window.__MUHEESI_APP_STATE.markEditorUIInteraction();
-        }
+        broadcastEditorUIInteraction();
       }
     };
     
@@ -93,58 +67,17 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
     };
   }, []);
 
-  // Monitor sandbox state changes from window messages with improved detection
+  // Monitor sandbox state changes from window messages
   useEffect(() => {
-    const handleSandboxMessage = (event) => {
-      if (event.data && event.data.type === 'sandbox-status') {
-        const status = event.data.status;
-        
-        // Strong cooldown enforcement - ignore sandbox loading events completely during cooldown
-        if (isInEditorUICooldown() && status === 'loading') {
-          console.log('BLOCKED: Ignoring sandbox loading state due to active 1-hour editor UI cooldown');
-          
-          // Immediately send a "ready" message to override the loading state
-          try {
-            window.parent.postMessage({ 
-              type: 'sandbox-override', 
-              status: 'ready', 
-              reason: 'editor-ui-cooldown-active' 
-            }, '*');
-          } catch (e) {
-            console.log('Could not send override message to parent');
-          }
-          
-          return;
-        }
-        
-        // Handle app state messages based on sandbox status
-        if (status === 'loading' && !isLoading) {
-          console.log('Sandbox loading state detected, starting fallback timer');
-          setIsLoading(true);
-          setLoadingStartTime(Date.now());
-          
-          // Clear existing timeout if any
-          if (loadingTimeoutRef.current) {
-            clearTimeout(loadingTimeoutRef.current);
-          }
-          
-          // Set timeout for fallback UI
-          loadingTimeoutRef.current = setTimeout(() => {
-            console.log('Loading timeout exceeded, showing fallback UI');
-            setShowFallback(true);
-          }, timeoutMs);
-        } else if (status === 'ready') {
-          // Reset loading state
-          console.log('Sandbox ready state detected, clearing fallback timer');
-          if (loadingTimeoutRef.current) {
-            clearTimeout(loadingTimeoutRef.current);
-          }
-          setIsLoading(false);
-          setLoadingStartTime(null);
-          setShowFallback(false);
-        }
-      }
-    };
+    const handleSandboxMessage = createSandboxMessageHandler({
+      isInEditorUICooldown: checkEditorUICooldown,
+      setIsLoading,
+      setLoadingStartTime,
+      setShowFallback,
+      timeoutMs,
+      loadingTimeoutRef,
+      lastSandboxResetTime
+    });
 
     // Add event listener for sandbox messages
     window.addEventListener('message', handleSandboxMessage);
@@ -155,27 +88,15 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
         clearTimeout(loadingTimeoutRef.current);
       }
     };
-  }, [isLoading, isInEditorUICooldown, timeoutMs]);
+  }, [isLoading, checkEditorUICooldown, timeoutMs]);
 
-  // Handler for returning to previous screen
-  const handleReturnToPreviousScreen = useCallback(() => {
-    console.log('Attempting to return to previous screen:', previousPathRef.current);
-    if (previousPathRef.current && previousPathRef.current !== location.pathname) {
-      navigate(previousPathRef.current);
-    } else {
-      navigate('/');
-    }
-    setShowFallback(false);
-  }, [navigate, location.pathname]);
+  // Setup navigation handlers
+  const { handleReturnToPreviousScreen, handleNavigateToPath } = createNavigationHandlers(
+    navigate, 
+    setShowFallback
+  );
 
-  // Handler for navigating to a specific path
-  const handleNavigateToPath = useCallback((path) => {
-    console.log('Navigating to path:', path);
-    navigate(path);
-    setShowFallback(false);
-  }, [navigate]);
-
-  // Reset sandbox state detection - also marks that we've manually interacted with editor
+  // Reset sandbox state - also marks that we've manually interacted with editor
   const resetSandboxState = useCallback(() => {
     console.log('Manually resetting sandbox state');
     if (loadingTimeoutRef.current) {
@@ -187,17 +108,7 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
     
     // Mark that we've manually reset - this will trigger the cooldown
     lastSandboxResetTime.current = Date.now();
-    
-    // Broadcast the manual reset to ensure other components are aware
-    try {
-      window.parent.postMessage({ 
-        type: 'sandbox-manual-reset', 
-        timestamp: Date.now(),
-        source: 'user-action'
-      }, '*');
-    } catch (e) {
-      console.log('Could not send reset message to parent');
-    }
+    broadcastManualReset();
   }, []);
 
   return {
@@ -205,11 +116,11 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
     loadingStartTime,
     showFallback,
     availablePaths,
-    handleReturnToPreviousScreen,
+    handleReturnToPreviousScreen: () => handleReturnToPreviousScreen(previousPathRef, location),
     handleNavigateToPath,
     resetSandboxState,
     currentPath: location.pathname,
-    isInEditorUICooldown,
+    isInEditorUICooldown: checkEditorUICooldown,
   };
 };
 
