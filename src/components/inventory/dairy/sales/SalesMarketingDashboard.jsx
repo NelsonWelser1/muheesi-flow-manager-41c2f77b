@@ -12,6 +12,7 @@ import CRMReportsForm from './forms/CRMReportsForm';
 import AdvertisingPromotionForm from './forms/AdvertisingPromotionForm';
 import SalesContractForm from './forms/SalesContractForm';
 import MarketingCampaignForm from './forms/MarketingCampaignForm';
+import SalesDistributionForm from './SalesDistributionForm';
 
 const SalesMarketingDashboard = () => {
   const [activeTab, setActiveTab] = useState('analytics');
@@ -38,6 +39,7 @@ const SalesMarketingDashboard = () => {
               {activeForm === 'advertising-promotion' && <AdvertisingPromotionForm onBack={handleBackFromForm} />}
               {activeForm === 'sales-contract' && <SalesContractForm onBack={handleBackFromForm} />}
               {activeForm === 'marketing-campaign' && <MarketingCampaignForm onBack={handleBackFromForm} />}
+              {activeForm === 'sales-distribution' && <SalesDistributionForm onBack={handleBackFromForm} />}
             </>
           ) : (
             <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -65,7 +67,8 @@ const SalesMarketingDashboard = () => {
                     { id: 'crm-reports', title: 'CRM Reports', description: 'Generate customer relationship reports' },
                     { id: 'advertising-promotion', title: 'Advertising & Promotion', description: 'Manage marketing campaigns' },
                     { id: 'sales-contract', title: 'Sales Contracts', description: 'Create and manage sales contracts' },
-                    { id: 'marketing-campaign', title: 'Marketing Campaigns', description: 'Plan and track marketing initiatives' }
+                    { id: 'marketing-campaign', title: 'Marketing Campaigns', description: 'Plan and track marketing initiatives' },
+                    { id: 'sales-distribution', title: 'Sales Distribution', description: 'Manage sales transactions and distribution' }
                   ].map((form) => (
                     <Card key={form.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveForm(form.id)}>
                       <CardHeader className="pb-2">
