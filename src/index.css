@@ -97,6 +97,18 @@
     width: 100%;
     font-size: 1.5rem;
     color: #666;
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+
+  /* Ensure loading fallback is styled properly */
+  #loading-fallback {
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+
+  @keyframes pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
   }
 
   @media print {

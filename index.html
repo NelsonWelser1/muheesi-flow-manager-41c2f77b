@@ -9,7 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Fallback content to show before React loads -->
+      <div id="loading-fallback" style="display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%;">
+        <div style="text-align: center;">
+          <h2>Loading Muheesi GKK Integrated System...</h2>
+          <p>If this message persists, please try refreshing the page.</p>
+        </div>
+      </div>
+    </div>
     <!-- Make sure Lovable script loads first -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <!-- Then load the application -->
