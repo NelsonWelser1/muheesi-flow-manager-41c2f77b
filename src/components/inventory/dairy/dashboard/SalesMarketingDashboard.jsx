@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import SalesDistributionForm from '../sales/SalesDistributionForm';
+import SalesDistributionForm from '../sales/distribution/SalesDistributionForm';
 import MarketingCampaignForm from '../marketing/MarketingCampaignForm';
 import { supabase } from "@/integrations/supabase/supabase";
 import { useEffect, useState } from 'react';
