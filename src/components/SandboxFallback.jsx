@@ -1,9 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader, RefreshCw, ArrowLeft, HomeIcon, Clock } from "lucide-react";
+import { RefreshCw, ArrowLeft, HomeIcon } from "lucide-react";
 import useSandboxFallback from '@/hooks/useSandboxFallback';
+import CooldownTimer from './sandbox-fallback/CooldownTimer';
+import AvailablePathsList from './sandbox-fallback/AvailablePathsList';
+import DebugActions from './sandbox-fallback/DebugActions';
 
 const SandboxFallback = () => {
   const {
@@ -19,38 +22,7 @@ const SandboxFallback = () => {
   } = useSandboxFallback();
 
   const [expandedPaths, setExpandedPaths] = useState(false);
-  const [cooldownRemaining, setCooldownRemaining] = useState(null);
   
-  // Calculate and update cooldown remaining time
-  useEffect(() => {
-    if (!isInEditorUICooldown()) {
-      setCooldownRemaining(null);
-      return;
-    }
-    
-    const updateCooldownTimer = () => {
-      // One hour in milliseconds
-      const HOUR_MS = 60 * 60 * 1000;
-      const lastReset = window.__MUHEESI_APP_STATE?.lastEditorUIInteractionTime || 
-                         Date.now() - HOUR_MS;
-      const elapsed = Date.now() - lastReset;
-      const remaining = Math.max(0, HOUR_MS - elapsed);
-      
-      // Convert to minutes and seconds
-      const minutes = Math.floor(remaining / 60000);
-      const seconds = Math.floor((remaining % 60000) / 1000);
-      
-      setCooldownRemaining(`${minutes}m ${seconds}s`);
-    };
-    
-    // Update immediately
-    updateCooldownTimer();
-    
-    // Then update every second
-    const timer = setInterval(updateCooldownTimer, 1000);
-    return () => clearInterval(timer);
-  }, [isInEditorUICooldown]);
-
   // Don't render anything if fallback shouldn't be shown
   if (!showFallback) return null;
 
@@ -66,25 +38,18 @@ const SandboxFallback = () => {
           <h2 className="text-2xl font-semibold mb-2">Preview Taking Too Long</h2>
           <p className="text-gray-600 mb-4">
             The sandbox has been loading for {elapsedSeconds} seconds. 
-            {isInEditorUICooldown() ? (
-              <span className="block text-amber-600 mt-2">
-                Editor UI interaction detected. Sandbox refresh blocked for: 
-                <span className="font-bold ml-1">{cooldownRemaining}</span>
-              </span>
-            ) : (
-              " This might be caused by network issues."
-            )}
+            {!isInEditorUICooldown() && " This might be caused by network issues."}
           </p>
           
-          <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-              {isInEditorUICooldown() ? (
-                <Clock className="h-6 w-6 text-amber-600" />
-              ) : (
+          {isInEditorUICooldown() ? (
+            <CooldownTimer isInEditorUICooldown={isInEditorUICooldown} />
+          ) : (
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
                 <RefreshCw className="h-6 w-6 text-amber-600 animate-spin" />
-              )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
         
         <div className="space-y-4">
@@ -115,55 +80,17 @@ const SandboxFallback = () => {
           </Button>
           
           {expandedPaths && (
-            <div className="mt-4 border rounded-md p-3 max-h-[200px] overflow-y-auto">
-              <p className="text-sm text-gray-500 mb-2">Select a page to navigate to:</p>
-              <ul className="space-y-2">
-                {availablePaths.map((path) => (
-                  <li key={path}>
-                    <Button
-                      variant={currentPath === path ? "default" : "ghost"}
-                      className={`w-full justify-start text-left ${currentPath === path ? 'bg-blue-100 text-blue-800' : ''}`}
-                      onClick={() => handleNavigateToPath(path)}
-                    >
-                      {path === '/' ? 'Home Page' : path.split('/').pop().replace(/-/g, ' ')}
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <AvailablePathsList 
+              paths={availablePaths} 
+              currentPath={currentPath} 
+              onNavigate={handleNavigateToPath} 
+            />
           )}
           
-          <div className="pt-4 border-t">
-            <p className="text-xs text-gray-500 mb-2">Debug actions:</p>
-            <div className="flex space-x-2">
-              <Button 
-                onClick={() => window.location.reload()} 
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                disabled={isInEditorUICooldown()}
-              >
-                Hard Refresh
-                {isInEditorUICooldown() && (
-                  <span className="ml-1 text-xs text-amber-600">(Locked)</span>
-                )}
-              </Button>
-              <Button 
-                onClick={resetSandboxState} 
-                variant="outline"
-                size="sm"
-                className="flex-1"
-              >
-                Reset Sandbox State
-              </Button>
-            </div>
-            
-            {isInEditorUICooldown() && (
-              <div className="mt-3 p-2 bg-amber-50 rounded text-xs text-amber-800">
-                Automatic refresh is blocked for {cooldownRemaining} to prevent infinite loading loops when interacting with the editor UI.
-              </div>
-            )}
-          </div>
+          <DebugActions 
+            onReset={resetSandboxState} 
+            isInEditorUICooldown={isInEditorUICooldown}
+          />
         </div>
       </Card>
     </div>
