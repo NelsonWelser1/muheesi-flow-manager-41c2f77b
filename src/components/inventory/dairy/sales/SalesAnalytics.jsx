@@ -1,274 +1,277 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { supabase } from "@/integrations/supabase/supabase";
-import { TrendingUp, Users, ShoppingCart, DollarSign } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  LineChart, 
+  Line, 
+  AreaChart, 
+  Area, 
+  BarChart, 
+  Bar, 
+  PieChart, 
+  Pie, 
+  Cell, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
+import { Badge } from "@/components/ui/badge";
+
+// Sample data - in a real app, this would come from your backend
+const salesData = [
+  { month: 'Jan', sales: 4000, target: 4500, lastYear: 3800 },
+  { month: 'Feb', sales: 3000, target: 3500, lastYear: 2800 },
+  { month: 'Mar', sales: 2000, target: 2000, lastYear: 1800 },
+  { month: 'Apr', sales: 2780, target: 2500, lastYear: 2600 },
+  { month: 'May', sales: 1890, target: 2000, lastYear: 1700 },
+  { month: 'Jun', sales: 2390, target: 2200, lastYear: 2100 },
+  { month: 'Jul', sales: 3490, target: 3000, lastYear: 3200 },
+  { month: 'Aug', sales: 4000, target: 3800, lastYear: 3700 },
+  { month: 'Sep', sales: 4500, target: 4000, lastYear: 4100 },
+  { month: 'Oct', sales: 5000, target: 4500, lastYear: 4300 },
+  { month: 'Nov', sales: 4700, target: 4700, lastYear: 4200 },
+  { month: 'Dec', sales: 5200, target: 5000, lastYear: 4600 },
+];
+
+const customerSegments = [
+  { name: 'Retailers', value: 45 },
+  { name: 'Wholesalers', value: 30 },
+  { name: 'Direct Consumers', value: 15 },
+  { name: 'Export', value: 10 },
+];
+
+const productPerformance = [
+  { product: 'Fresh Milk', sales: 1200, growth: 8 },
+  { product: 'Yogurt', sales: 800, growth: 12 },
+  { product: 'Cheese', sales: 600, growth: 5 },
+  { product: 'Butter', sales: 400, growth: -2 },
+  { product: 'Ice Cream', sales: 700, growth: 15 },
+  { product: 'Cream', sales: 300, growth: 3 },
+];
+
+const marketingEffectiveness = [
+  { channel: 'Social Media', roi: 320, budget: 1200 },
+  { channel: 'Email Marketing', roi: 280, budget: 800 },
+  { channel: 'Trade Shows', roi: 180, budget: 1500 },
+  { channel: 'Print Ads', roi: 90, budget: 1000 },
+  { channel: 'Referrals', roi: 400, budget: 300 },
+];
 
 const SalesAnalytics = () => {
-  const [timePeriod, setTimePeriod] = useState('month');
-  const [salesData, setSalesData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchSalesData();
-  }, [timePeriod]);
-
-  const fetchSalesData = async () => {
-    setIsLoading(true);
-    try {
-      let { data, error } = await supabase
-        .from('sales_records')
-        .select('*')
-        .order('date_time', { ascending: false });
-
-      if (error) throw error;
-
-      // Process data for visualization
-      const processedData = processDataForTimePeriod(data || [], timePeriod);
-      setSalesData(processedData);
-    } catch (error) {
-      console.error('Error fetching sales data:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const [timeRange, setTimeRange] = useState('yearly');
+  
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  
+  const formatCurrency = (value) => {
+    return `$${value.toLocaleString()}`
   };
-
-  const processDataForTimePeriod = (data, period) => {
-    // This would be more sophisticated in a real app
-    const now = new Date();
-    let filteredData;
-    
-    switch (period) {
-      case 'week':
-        // Last 7 days
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        filteredData = data.filter(item => new Date(item.date_time) >= weekAgo);
-        return aggregateByDay(filteredData);
-      case 'month':
-        // Last 30 days
-        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        filteredData = data.filter(item => new Date(item.date_time) >= monthAgo);
-        return aggregateByDay(filteredData);
-      case 'quarter':
-        // Last 90 days
-        const quarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        filteredData = data.filter(item => new Date(item.date_time) >= quarterAgo);
-        return aggregateByWeek(filteredData);
-      case 'year':
-        // Last 365 days
-        const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        filteredData = data.filter(item => new Date(item.date_time) >= yearAgo);
-        return aggregateByMonth(filteredData);
-      default:
-        return aggregateByDay(data);
-    }
-  };
-
-  const aggregateByDay = (data) => {
-    // Group data by day and sum up sales
-    const groupedData = {};
-    
-    data.forEach(item => {
-      const date = new Date(item.date_time);
-      const day = date.toISOString().split('T')[0];
-      const saleAmount = item.quantity * item.price_per_unit;
-      
-      if (!groupedData[day]) {
-        groupedData[day] = { 
-          date: day, 
-          sales: 0,
-          transactions: 0,
-          units: 0
-        };
-      }
-      
-      groupedData[day].sales += saleAmount;
-      groupedData[day].transactions += 1;
-      groupedData[day].units += item.quantity;
-    });
-    
-    // Convert to array and sort by date
-    return Object.values(groupedData).sort((a, b) => a.date.localeCompare(b.date));
-  };
-
-  const aggregateByWeek = (data) => {
-    // Implement week aggregation
-    // Simplified for this example
-    return aggregateByDay(data);
-  };
-
-  const aggregateByMonth = (data) => {
-    // Group data by month
-    const groupedData = {};
-    
-    data.forEach(item => {
-      const date = new Date(item.date_time);
-      const month = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-      const saleAmount = item.quantity * item.price_per_unit;
-      
-      if (!groupedData[month]) {
-        groupedData[month] = { 
-          date: month, 
-          sales: 0,
-          transactions: 0,
-          units: 0
-        };
-      }
-      
-      groupedData[month].sales += saleAmount;
-      groupedData[month].transactions += 1;
-      groupedData[month].units += item.quantity;
-    });
-    
-    // Convert to array and sort by date
-    return Object.values(groupedData).sort((a, b) => a.date.localeCompare(b.date));
-  };
-
-  // Calculate summary statistics
+  
   const calculateTotalSales = () => {
-    return salesData.reduce((total, item) => total + item.sales, 0).toFixed(2);
+    return salesData.reduce((total, item) => total + item.sales, 0);
   };
-
-  const calculateTotalTransactions = () => {
-    return salesData.reduce((total, item) => total + item.transactions, 0);
+  
+  const calculateAverageGrowth = () => {
+    return (productPerformance.reduce((total, item) => total + item.growth, 0) / productPerformance.length).toFixed(1);
   };
-
-  const calculateTotalUnits = () => {
-    return salesData.reduce((total, item) => total + item.units, 0);
+  
+  const calculateTotalROI = () => {
+    const totalBudget = marketingEffectiveness.reduce((total, item) => total + item.budget, 0);
+    const totalROI = marketingEffectiveness.reduce((total, item) => total + item.roi, 0);
+    return ((totalROI / totalBudget) * 100).toFixed(1);
   };
-
-  const calculateAverageOrderValue = () => {
-    const totalSales = salesData.reduce((total, item) => total + item.sales, 0);
-    const totalTransactions = salesData.reduce((total, item) => total + item.transactions, 0);
-    return totalTransactions ? (totalSales / totalTransactions).toFixed(2) : '0.00';
+  
+  const getSalesStatusBadge = () => {
+    const growth = ((salesData[11].sales - salesData[0].sales) / salesData[0].sales) * 100;
+    if (growth > 15) return <Badge variant="success">Strong Growth</Badge>;
+    if (growth > 5) return <Badge variant="info">Moderate Growth</Badge>;
+    if (growth > 0) return <Badge variant="warning">Slow Growth</Badge>;
+    return <Badge variant="destructive">Declining</Badge>;
   };
-
+  
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border rounded shadow">
+          <p className="font-medium text-sm">{`${label}`}</p>
+          {payload.map((entry, index) => (
+            <p key={`item-${index}`} style={{ color: entry.color }} className="text-sm">
+              {`${entry.name}: ${typeof entry.value === 'number' ? formatCurrency(entry.value) : entry.value}`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Sales Analytics</h2>
-        <Select value={timePeriod} onValueChange={setTimePeriod}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Time Period" />
+        <div>
+          <h2 className="text-xl font-bold">Sales Analytics Dashboard</h2>
+          <div className="mt-1">{getSalesStatusBadge()}</div>
+        </div>
+        <Select value={timeRange} onValueChange={setTimeRange}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select time range" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="week">Last Week</SelectItem>
-            <SelectItem value="month">Last Month</SelectItem>
-            <SelectItem value="quarter">Last Quarter</SelectItem>
-            <SelectItem value="year">Last Year</SelectItem>
+            <SelectItem value="monthly">Monthly</SelectItem>
+            <SelectItem value="quarterly">Quarterly</SelectItem>
+            <SelectItem value="yearly">Yearly</SelectItem>
           </SelectContent>
         </Select>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard 
-          icon={<DollarSign className="h-8 w-8 text-blue-600" />}
-          title="Total Sales"
-          value={`$${calculateTotalSales()}`}
-          description={`For the last ${
-            timePeriod === 'week' ? '7 days' : 
-            timePeriod === 'month' ? '30 days' : 
-            timePeriod === 'quarter' ? '90 days' : '365 days'
-          }`}
-        />
-        
-        <MetricCard 
-          icon={<ShoppingCart className="h-8 w-8 text-green-600" />}
-          title="Total Transactions"
-          value={calculateTotalTransactions()}
-          description="Number of orders"
-        />
-        
-        <MetricCard 
-          icon={<TrendingUp className="h-8 w-8 text-purple-600" />}
-          title="Avg. Order Value"
-          value={`$${calculateAverageOrderValue()}`}
-          description="Average sale per transaction"
-        />
-        
-        <MetricCard 
-          icon={<Users className="h-8 w-8 text-orange-600" />}
-          title="Units Sold"
-          value={calculateTotalUnits()}
-          description="Total product units"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Sales Trend</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-80">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <p>Loading sales data...</p>
-                </div>
-              ) : (
+            <div className="text-2xl font-bold">{formatCurrency(calculateTotalSales())}</div>
+            <p className="text-xs text-muted-foreground">+14% from previous period</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Average Product Growth</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{calculateAverageGrowth()}%</div>
+            <p className="text-xs text-muted-foreground">Across all product categories</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Marketing ROI</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{calculateTotalROI()}%</div>
+            <p className="text-xs text-muted-foreground">Return on marketing investment</p>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <Tabs defaultValue="sales" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsTrigger value="sales">Sales Performance</TabsTrigger>
+          <TabsTrigger value="customers">Customer Segments</TabsTrigger>
+          <TabsTrigger value="products">Product Performance</TabsTrigger>
+          <TabsTrigger value="marketing">Marketing ROI</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="sales">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sales Performance vs Target</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={salesData}>
+                  <LineChart data={salesData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, 'Sales']} />
+                    <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                    <Line type="monotone" dataKey="sales" stroke="#8884d8" activeDot={{ r: 8 }} name="Sales ($)" />
+                    <Line type="monotone" dataKey="sales" stroke="#8884d8" name="Sales" strokeWidth={2} />
+                    <Line type="monotone" dataKey="target" stroke="#82ca9d" name="Target" strokeWidth={2} />
+                    <Line type="monotone" dataKey="lastYear" stroke="#ffc658" name="Last Year" strokeDasharray="5 5" />
                   </LineChart>
                 </ResponsiveContainer>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Transaction Analysis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <p>Loading transaction data...</p>
-                </div>
-              ) : (
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="customers">
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Segments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={salesData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
+                  <PieChart>
+                    <Pie
+                      data={customerSegments}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={true}
+                      outerRadius={150}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {customerSegments.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="transactions" fill="#82ca9d" name="Transactions" />
-                    <Bar dataKey="units" fill="#ffc658" name="Units Sold" />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="products">
+          <Card>
+            <CardHeader>
+              <CardTitle>Product Performance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={productPerformance} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="product" />
+                    <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
+                    <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="sales" fill="#8884d8" name="Sales Volume" />
+                    <Bar yAxisId="right" dataKey="growth" fill="#82ca9d" name="Growth %" />
                   </BarChart>
                 </ResponsiveContainer>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="marketing">
+          <Card>
+            <CardHeader>
+              <CardTitle>Marketing Channel Effectiveness</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={marketingEffectiveness} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="channel" />
+                    <YAxis />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Area type="monotone" dataKey="budget" fill="#8884d8" stroke="#8884d8" name="Budget" />
+                    <Area type="monotone" dataKey="roi" fill="#82ca9d" stroke="#82ca9d" name="ROI" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
-  );
-};
-
-// Helper component for metric cards
-const MetricCard = ({ icon, title, value, description }) => {
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-start">
-          <div className="p-2 rounded-lg bg-blue-50">{icon}</div>
-          <div className="ml-4">
-            <p className="text-sm font-medium text-gray-500">{title}</p>
-            <h3 className="text-2xl font-bold mt-1">{value}</h3>
-            <p className="text-xs text-gray-500 mt-1">{description}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 };
 

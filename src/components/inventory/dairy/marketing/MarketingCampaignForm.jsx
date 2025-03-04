@@ -1,332 +1,145 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker";
 import { useToast } from "@/components/ui/use-toast";
+import { ArrowLeft, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/supabase";
-import { ArrowLeft } from "lucide-react";
-import { v4 as uuidv4 } from 'uuid';
+import QRCodeGenerator from '../qr/QRCodeGenerator';
+
+const PLATFORMS = ["Social Media", "Print", "TV", "Radio", "Email", "Direct Marketing"];
 
 const MarketingCampaignForm = ({ onBack }) => {
+  const { register, handleSubmit, reset, watch } = useForm();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    campaign_name: '',
-    objectives: '',
-    target_audience: '',
-    start_date: null,
-    end_date: null,
-    budget: '',
-    strategies: [],
-    status: 'planning'
-  });
+  const [showQR, setShowQR] = React.useState(false);
+  const formData = watch();
 
-  const [strategy, setStrategy] = useState('');
-  const [kpi, setKpi] = useState('');
-  const [kpiValue, setKpiValue] = useState('');
-  const [kpis, setKpis] = useState([]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSelectChange = (name, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleDateChange = (name, date) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: date
-    }));
-  };
-
-  const addStrategy = () => {
-    if (strategy.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        strategies: [...prev.strategies, strategy]
-      }));
-      setStrategy('');
-    }
-  };
-
-  const removeStrategy = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      strategies: prev.strategies.filter((_, i) => i !== index)
-    }));
-  };
-
-  const addKpi = () => {
-    if (kpi.trim() && kpiValue.trim()) {
-      setKpis(prev => [...prev, { metric: kpi, target: kpiValue }]);
-      setKpi('');
-      setKpiValue('');
-    }
-  };
-
-  const removeKpi = (index) => {
-    setKpis(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.campaign_name || !formData.objectives || 
-        !formData.target_audience || !formData.start_date || 
-        !formData.end_date || !formData.budget) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    
+  const handleFormSubmit = async (data) => {
     try {
-      const campaign = {
-        campaign_id: `CAMP-${uuidv4().slice(0, 8)}`,
-        campaign_name: formData.campaign_name,
-        objectives: formData.objectives,
-        target_audience: formData.target_audience,
-        start_date: formData.start_date,
-        end_date: formData.end_date,
-        budget: parseFloat(formData.budget),
-        strategies: formData.strategies,
-        kpis: kpis,
-        progress_status: formData.status
-      };
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to submit campaign records",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      const { error } = await supabase.from('marketing_campaigns').insert([campaign]);
+      const { error } = await supabase
+        .from('marketing_campaigns')
+        .insert([{
+          ...data,
+          created_by: user.id
+        }]);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Marketing campaign created successfully"
+        description: "Campaign record saved successfully",
       });
-
-      // Reset form
-      setFormData({
-        campaign_name: '',
-        objectives: '',
-        target_audience: '',
-        start_date: null,
-        end_date: null,
-        budget: '',
-        strategies: [],
-        status: 'planning'
-      });
-      setKpis([]);
+      reset();
     } catch (error) {
-      console.error('Error creating campaign:', error);
+      console.error('Error saving campaign record:', error);
       toast({
         title: "Error",
-        description: "Failed to create marketing campaign",
-        variant: "destructive"
+        description: "Failed to save campaign record",
+        variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
+  if (showQR) {
+    return (
+      <div className="space-y-4">
+        <Button 
+          variant="outline" 
+          onClick={() => setShowQR(false)}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Form
+        </Button>
+        <QRCodeGenerator 
+          data={formData} 
+          title="Marketing Campaign"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
-        <ArrowLeft className="h-4 w-4" /> Back
+      <Button 
+        variant="outline" 
+        onClick={onBack}
+        className="flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" /> Back to Sales & Marketing
       </Button>
-
       <Card>
         <CardHeader>
-          <CardTitle>Create Marketing Campaign</CardTitle>
+          <CardTitle>Marketing Campaign Form</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="campaign_name">Campaign Name*</Label>
-                <Input
-                  id="campaign_name"
-                  name="campaign_name"
-                  value={formData.campaign_name}
-                  onChange={handleInputChange}
-                  required
-                />
+                <Label>Campaign Name</Label>
+                <Input {...register("campaign_name", { required: true })} />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) => handleSelectChange('status', value)}
-                >
+                <Label>Platform</Label>
+                <Select onValueChange={(value) => register("platform").onChange({ target: { value } })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder="Select platform" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="planning">Planning</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="on-hold">On Hold</SelectItem>
+                    {PLATFORMS.map((platform) => (
+                      <SelectItem key={platform} value={platform.toLowerCase()}>{platform}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="objectives">Campaign Objectives*</Label>
-              <Textarea
-                id="objectives"
-                name="objectives"
-                value={formData.objectives}
-                onChange={handleInputChange}
-                required
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="target_audience">Target Audience*</Label>
-              <Textarea
-                id="target_audience"
-                name="target_audience"
-                value={formData.target_audience}
-                onChange={handleInputChange}
-                required
-                rows={2}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="start_date">Start Date*</Label>
-                <Input
-                  id="start_date"
-                  name="start_date"
-                  type="date"
-                  value={formData.start_date || ''}
-                  onChange={(e) => handleDateChange('start_date', e.target.value)}
-                  required
-                />
+                <Label>Start Date</Label>
+                <Input type="date" {...register("start_date", { required: true })} />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="end_date">End Date*</Label>
-                <Input
-                  id="end_date"
-                  name="end_date"
-                  type="date"
-                  value={formData.end_date || ''}
-                  onChange={(e) => handleDateChange('end_date', e.target.value)}
-                  required
-                />
+                <Label>End Date</Label>
+                <Input type="date" {...register("end_date", { required: true })} />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="budget">Budget ($)*</Label>
-                <Input
-                  id="budget"
-                  name="budget"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.budget}
-                  onChange={handleInputChange}
-                  required
-                />
+                <Label>Budget</Label>
+                <Input type="number" step="0.01" {...register("budget", { required: true, min: 0 })} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Engagement Metrics</Label>
+                <Input {...register("engagement_metrics")} placeholder="Enter metrics or KPIs" />
               </div>
             </div>
 
-            <div className="space-y-4">
-              <Label>Marketing Strategies</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add a strategy"
-                  value={strategy}
-                  onChange={(e) => setStrategy(e.target.value)}
-                />
-                <Button type="button" onClick={addStrategy} className="flex-shrink-0">
-                  Add
-                </Button>
-              </div>
-              {formData.strategies.length > 0 && (
-                <ul className="space-y-2">
-                  {formData.strategies.map((strat, index) => (
-                    <li key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                      <span>{strat}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeStrategy(index)}
-                      >
-                        Remove
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <Label>Key Performance Indicators (KPIs)</Label>
-              <div className="grid grid-cols-3 gap-2">
-                <Input
-                  placeholder="KPI Metric"
-                  value={kpi}
-                  onChange={(e) => setKpi(e.target.value)}
-                />
-                <Input
-                  placeholder="Target Value"
-                  value={kpiValue}
-                  onChange={(e) => setKpiValue(e.target.value)}
-                />
-                <Button type="button" onClick={addKpi} className="flex-shrink-0">
-                  Add KPI
-                </Button>
-              </div>
-              {kpis.length > 0 && (
-                <ul className="space-y-2">
-                  {kpis.map((item, index) => (
-                    <li key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                      <span>
-                        <strong>{item.metric}:</strong> {item.target}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeKpi(index)}
-                      >
-                        Remove
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={onBack}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Create Campaign'}
+            <div className="flex gap-4">
+              <Button type="submit" className="flex-1">Submit Campaign</Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowQR(true)}
+                className="flex items-center gap-2"
+              >
+                <QrCode className="h-4 w-4" />
+                Generate QR
               </Button>
             </div>
           </form>
