@@ -1,4 +1,5 @@
-import React, { Suspense } from "react";
+
+import React, { Suspense, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -41,7 +42,10 @@ class AppErrorBoundary extends React.Component {
           <p className="mb-4">{this.state.error?.message || "An unexpected error occurred"}</p>
           <button
             className="bg-blue-500 text-white px-4 py-2 rounded"
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              window.location.reload();
+            }}
           >
             Refresh Page
           </button>
@@ -53,18 +57,46 @@ class AppErrorBoundary extends React.Component {
   }
 }
 
-// Loading component for suspense fallback
-const LoadingFallback = () => (
-  <div className="flex justify-center items-center h-screen">
-    <div className="text-center">
-      <h2 className="text-2xl font-semibold mb-2">Loading application...</h2>
-      <p>Please wait while we set things up for you.</p>
-    </div>
-  </div>
-);
+// Loading component for suspense fallback with retry capability
+const LoadingFallback = () => {
+  const [retryCount, setRetryCount] = useState(0);
+  
+  useEffect(() => {
+    // Auto-retry logic after delay
+    if (retryCount > 0) {
+      const timer = setTimeout(() => {
+        console.log(`Auto-retry attempt ${retryCount}`);
+        window.location.reload();
+      }, 10000); // 10 seconds delay
+      
+      return () => clearTimeout(timer);
+    }
+  }, [retryCount]);
 
-// Create QueryClient instance only once
-const queryClient = new QueryClient({
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <div className="text-center p-6 bg-white rounded-lg shadow-md">
+        <h2 className="text-2xl font-semibold mb-2">Loading application...</h2>
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto my-4"></div>
+        <p className="mb-4">Please wait while we set things up for you.</p>
+        {retryCount > 0 && (
+          <p className="text-amber-600">
+            Retry attempt {retryCount}... 
+          </p>
+        )}
+        <button 
+          onClick={() => setRetryCount(prev => prev + 1)}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        >
+          Retry Now
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Create QueryClient instance
+const createQueryClient = () => new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
@@ -76,6 +108,7 @@ const queryClient = new QueryClient({
 
 const App = () => {
   console.log("App component rendering");
+  const [queryClient] = React.useState(() => createQueryClient());
   
   return (
     <AppErrorBoundary>
