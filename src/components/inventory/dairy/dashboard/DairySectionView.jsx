@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { Bell, Megaphone } from "lucide-react";
+import { Bell, DollarSign, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SalesDistributionForm from '../sales/SalesDistributionForm';
 import MarketingCampaignForm from '../marketing/MarketingCampaignForm';
 
 const DairySectionView = ({ section, onBack }) => {
@@ -12,6 +13,8 @@ const DairySectionView = ({ section, onBack }) => {
 
   const renderContent = () => {
     switch (activeForm) {
+      case 'sales':
+        return <SalesDistributionForm onBack={() => setActiveForm(null)} />;
       case 'marketing':
         return <MarketingCampaignForm onBack={() => setActiveForm(null)} />;
       default:
@@ -43,7 +46,15 @@ const DairySectionView = ({ section, onBack }) => {
       </div>
 
       {section.title === "Sales & Marketing" && !activeForm && (
-        <div className="grid grid-cols-1 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Button
+            onClick={() => setActiveForm('sales')}
+            className="h-24 text-lg flex flex-col items-center justify-center gap-2"
+            style={{ backgroundColor: '#F97316', color: 'white' }}
+          >
+            <DollarSign className="h-6 w-6" />
+            Sales Distribution Form
+          </Button>
           <Button
             onClick={() => setActiveForm('marketing')}
             className="h-24 text-lg flex flex-col items-center justify-center gap-2"
