@@ -96,20 +96,38 @@ const LoadingFallback = () => {
   );
 };
 
-// Create QueryClient instance
+// Create QueryClient instance with improved stability
 const createQueryClient = () => new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 2, // Increased retries for better reliability
+      staleTime: 1000 * 60 * 10, // 10 minutes - increased for better performance
+      cacheTime: 1000 * 60 * 15, // 15 minutes
     },
   },
 });
 
+// App initialization indicator to prevent duplicate mounting
+window.__APP_INITIALIZED = window.__APP_INITIALIZED || false;
+
 const App = () => {
-  console.log("App component rendering");
-  const [queryClient] = React.useState(() => createQueryClient());
+  console.log("App component rendering, initialized:", window.__APP_INITIALIZED);
+  
+  // Use a ref to ensure we only initialize once
+  const [queryClient] = React.useState(() => {
+    if (!window.__APP_INITIALIZED) {
+      console.log("Creating new QueryClient");
+      window.__APP_INITIALIZED = true;
+      return createQueryClient();
+    } else {
+      console.log("Using existing QueryClient");
+      return window.__QUERY_CLIENT || createQueryClient();
+    }
+  });
+  
+  // Store client reference globally
+  window.__QUERY_CLIENT = queryClient;
   
   return (
     <AppErrorBoundary>

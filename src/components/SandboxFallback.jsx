@@ -81,7 +81,7 @@ const SandboxFallback = () => {
                       className={`w-full justify-start text-left ${currentPath === path ? 'bg-blue-100 text-blue-800' : ''}`}
                       onClick={() => handleNavigateToPath(path)}
                     >
-                      preview--muheesi-flow-manager.lovable.app{path === '/' ? '/index' : path}
+                      {path === '/' ? 'Home Page' : path.split('/').pop().replace(/-/g, ' ')}
                     </Button>
                   </li>
                 ))}
