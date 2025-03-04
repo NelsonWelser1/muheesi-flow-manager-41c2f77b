@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
 
 const AvailablePathsList = ({ paths, currentPath, onNavigate }) => {
   return (
@@ -14,6 +15,9 @@ const AvailablePathsList = ({ paths, currentPath, onNavigate }) => {
               className={`w-full justify-start text-left ${currentPath === path ? 'bg-blue-100 text-blue-800' : ''}`}
               onClick={() => onNavigate(path)}
             >
+              {currentPath === path && (
+                <Check className="mr-2 h-4 w-4 text-blue-600" />
+              )}
               {path === '/' ? 'Home Page' : path.split('/').pop().replace(/-/g, ' ')}
             </Button>
           </li>
