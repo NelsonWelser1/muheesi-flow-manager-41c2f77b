@@ -16,6 +16,7 @@ const useSandboxFallback = (timeoutMs = DEFAULT_TIMEOUT_MS) => {
   const location = useLocation();
   const previousPathRef = useRef(location.pathname);
   const lastSandboxResetTime = useRef(Date.now());
+  const preventFallbackOnPaths = ['/manage-inventory']; // Paths where we want to prevent fallback
 
   // Enhanced editor interaction detection
   const checkEditorUICooldown = useCallback(() => {
@@ -76,7 +77,9 @@ const useSandboxFallback = (timeoutMs = DEFAULT_TIMEOUT_MS) => {
       setShowFallback,
       timeoutMs,
       loadingTimeoutRef,
-      lastSandboxResetTime
+      lastSandboxResetTime,
+      currentPath: location.pathname,
+      preventFallbackOnPaths // Pass the paths to prevent fallback
     });
 
     // Add event listener for sandbox messages
@@ -88,7 +91,7 @@ const useSandboxFallback = (timeoutMs = DEFAULT_TIMEOUT_MS) => {
         clearTimeout(loadingTimeoutRef.current);
       }
     };
-  }, [isLoading, checkEditorUICooldown, timeoutMs]);
+  }, [isLoading, checkEditorUICooldown, timeoutMs, location.pathname]);
 
   // Setup navigation handlers
   const { handleReturnToPreviousScreen, handleNavigateToPath } = createNavigationHandlers(
@@ -111,10 +114,19 @@ const useSandboxFallback = (timeoutMs = DEFAULT_TIMEOUT_MS) => {
     broadcastManualReset();
   }, []);
 
+  // Determine if fallback should be shown based on current path
+  const shouldShowFallback = useCallback(() => {
+    // Don't show fallback on certain paths regardless of state
+    if (preventFallbackOnPaths.includes(location.pathname)) {
+      return false;
+    }
+    return showFallback;
+  }, [showFallback, location.pathname]);
+
   return {
     isLoading,
     loadingStartTime,
-    showFallback,
+    showFallback: shouldShowFallback(),
     availablePaths,
     handleReturnToPreviousScreen: () => handleReturnToPreviousScreen(previousPathRef, location),
     handleNavigateToPath,

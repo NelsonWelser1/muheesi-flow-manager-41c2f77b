@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { Bell, DollarSign, Megaphone } from "lucide-react";
+import { Bell, DollarSign, Megaphone, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SalesDistributionForm from '../sales/SalesDistributionForm';
 import MarketingCampaignForm from '../marketing/MarketingCampaignForm';
+import SalesMarketingDashboard from '../sales/SalesMarketingDashboard';
 
 const DairySectionView = ({ section, onBack }) => {
   const [activeForm, setActiveForm] = React.useState(null);
@@ -17,8 +18,10 @@ const DairySectionView = ({ section, onBack }) => {
         return <SalesDistributionForm onBack={() => setActiveForm(null)} />;
       case 'marketing':
         return <MarketingCampaignForm onBack={() => setActiveForm(null)} />;
+      case 'forms':
+        return <SalesMarketingDashboard onBack={() => setActiveForm(null)} />;
       default:
-        return section.component && <section.component />;
+        return section.component && React.createElement(section.component, { onBackToDashboard: onBack });
     }
   };
 
@@ -46,7 +49,7 @@ const DairySectionView = ({ section, onBack }) => {
       </div>
 
       {section.title === "Sales & Marketing" && !activeForm && (
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Button
             onClick={() => setActiveForm('sales')}
             className="h-24 text-lg flex flex-col items-center justify-center gap-2"
@@ -62,6 +65,14 @@ const DairySectionView = ({ section, onBack }) => {
           >
             <Megaphone className="h-6 w-6" />
             Marketing Campaign Form
+          </Button>
+          <Button
+            onClick={() => setActiveForm('forms')}
+            className="h-24 text-lg flex flex-col items-center justify-center gap-2"
+            style={{ backgroundColor: '#3B82F6', color: 'white' }}
+          >
+            <FileText className="h-6 w-6" />
+            Create Forms & View Reports
           </Button>
         </div>
       )}
