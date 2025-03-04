@@ -104,8 +104,6 @@
   #loading-fallback {
     animation: fade-in 0.3s ease-out;
     /* Prevent loading fallback from being hidden unexpectedly during transitions */
-    opacity: 1 !important;
-    visibility: visible !important;
     transition: opacity 0.3s ease, visibility 0.3s ease;
   }
   
@@ -159,4 +157,39 @@
 
 .toast {
   z-index: 100;
+}
+
+/* Add special class to prevent sandbox reinitialization when hovering */
+.sandbox-interaction-guard {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+/* When the sandbox is in loading state, add a semi-transparent overlay */
+.sandbox-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 9000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sandbox-loading.visible {
+  opacity: 1;
+}
+
+/* Add a class to guarantee element stays rendered even during hover re-renders */
+.always-rendered {
+  opacity: 1 !important;
+  visibility: visible !important;
 }

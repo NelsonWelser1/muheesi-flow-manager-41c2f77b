@@ -65,19 +65,54 @@
         rendered: false,
         sandboxState: 'unknown',
         lastHoverTime: 0,
-        HOVER_COOLDOWN: 1000, // 1 second cooldown
+        lastLoadingTime: 0,
+        HOVER_COOLDOWN: 2000, // 2 second cooldown (increased from 1 second)
+        LOADING_THROTTLE: 5000, // 5 second throttle for loading states
         isInHoverCooldown: function() {
           return (Date.now() - this.lastHoverTime) < this.HOVER_COOLDOWN;
         },
+        isInLoadingThrottle: function() {
+          return (Date.now() - this.lastLoadingTime) < this.LOADING_THROTTLE;
+        },
         updateHoverTime: function() {
           this.lastHoverTime = Date.now();
+        },
+        updateLoadingTime: function() {
+          this.lastLoadingTime = Date.now();
+        },
+        hoverEvents: 0,
+        incrementHoverEvents: function() {
+          this.hoverEvents++;
+          // Reset counter after a threshold to prevent integer overflow
+          if (this.hoverEvents > 1000) this.hoverEvents = 0;
+        },
+        shouldIgnoreNextLoadingState: function() {
+          // Ignore loading states that happen immediately after multiple hover events
+          return this.hoverEvents > 3 && this.isInHoverCooldown();
         }
       };
       
-      // Intercept and throttle mousemove events
-      document.addEventListener('mousemove', function() {
+      // Debounce function to limit event firing
+      function debounce(func, wait) {
+        let timeout;
+        return function() {
+          const context = this;
+          const args = arguments;
+          clearTimeout(timeout);
+          timeout = setTimeout(function() {
+            func.apply(context, args);
+          }, wait);
+        };
+      }
+      
+      // Throttled mousemove handler
+      const throttledMousemove = debounce(function() {
         window.__MUHEESI_APP_STATE.updateHoverTime();
-      });
+        window.__MUHEESI_APP_STATE.incrementHoverEvents();
+      }, 100); // 100ms debounce
+      
+      // Intercept and throttle mousemove events
+      document.addEventListener('mousemove', throttledMousemove);
       
       // Ensure any sandbox status messages can be handled immediately
       window.addEventListener('message', function(event) {
@@ -86,18 +121,23 @@
           const prevState = window.__MUHEESI_APP_STATE.sandboxState;
           window.__MUHEESI_APP_STATE.sandboxState = event.data.status;
           
-          // Don't show loading state if we're in hover cooldown period
+          console.log(`Sandbox status changed: ${event.data.status} (previous: ${prevState})`);
+          
+          // Don't show loading state if we're in hover cooldown period or throttle period
           // This prevents flickering during UI interactions
-          if (window.__MUHEESI_APP_STATE.isInHoverCooldown() && 
+          if ((window.__MUHEESI_APP_STATE.isInHoverCooldown() || 
+               window.__MUHEESI_APP_STATE.shouldIgnoreNextLoadingState() ||
+               window.__MUHEESI_APP_STATE.isInLoadingThrottle()) && 
               prevState === 'ready' && 
               event.data.status === 'loading') {
-            console.log("Ignoring loading state during hover cooldown");
+            console.log("Ignoring loading state during cooldown/throttle period");
             return;
           }
           
           const fallback = document.getElementById('loading-fallback');
           if (fallback) {
             if (event.data.status === 'loading') {
+              window.__MUHEESI_APP_STATE.updateLoadingTime();
               fallback.style.display = 'flex';
             } else if (event.data.status === 'ready') {
               // Slight delay to ensure app has time to render

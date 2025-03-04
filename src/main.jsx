@@ -16,24 +16,46 @@ let sandboxState = 'unknown';
 // Prevent multiple rapid render attempts
 let preventRapidRerendersTimeout = null;
 
-// Track mouse interaction with the sandbox
+// Constants for throttling and debouncing
+const MOUSE_INTERACTION_COOLDOWN = 2000; // 2 seconds cooldown
+const LOADING_STATE_DISPLAY_DELAY = 300; // 300ms delay before showing loading
+const RENDER_DEBOUNCE_TIMEOUT = 800; // 800ms debounce for render
+const LOADING_THROTTLE = 5000; // 5 seconds between loading screens
+
+// Track timing data
 let lastMouseInteractionTime = 0;
-const MOUSE_INTERACTION_COOLDOWN = 1000; // 1 second cooldown
+let lastLoadingStateTime = 0;
+let consecutiveLoadingEvents = 0;
 
 // Function to hide loading fallback
 const hideLoadingFallback = () => {
   const fallback = document.getElementById('loading-fallback');
   if (fallback) {
-    fallback.style.display = 'none';
+    fallback.style.opacity = '0';
+    setTimeout(() => {
+      fallback.style.display = 'none';
+      fallback.style.opacity = '1';
+    }, 300);
   }
 };
 
-// Function to show loading fallback
+// Function to show loading fallback with delay to prevent flashes
 const showLoadingFallback = () => {
-  const fallback = document.getElementById('loading-fallback');
-  if (fallback) {
-    fallback.style.display = 'flex';
+  // Don't show if we've shown recently
+  if (Date.now() - lastLoadingStateTime < LOADING_THROTTLE) {
+    console.log("Throttling loading screen - shown too recently");
+    return;
   }
+  
+  // Add a small delay to prevent flashing during quick interactions
+  clearTimeout(window.loadingDisplayTimeout);
+  window.loadingDisplayTimeout = setTimeout(() => {
+    const fallback = document.getElementById('loading-fallback');
+    if (fallback) {
+      fallback.style.display = 'flex';
+      lastLoadingStateTime = Date.now();
+    }
+  }, LOADING_STATE_DISPLAY_DELAY);
 };
 
 // Enhanced render function with sandbox state preservation
@@ -52,15 +74,17 @@ const renderApp = () => {
       root = ReactDOM.createRoot(rootElement);
     }
     
-    // If we've already rendered and the sandbox is still ready, don't re-render
+    // Don't re-render if app is already rendered and in a good state
     if (hasRendered && sandboxState === 'ready') {
       console.log("App already rendered and sandbox is ready, skipping render");
       hideLoadingFallback();
       return;
     }
     
-    // Remove loading indicator
-    hideLoadingFallback();
+    // Hide loading indicator after 300ms delay to ensure it's not flashing
+    setTimeout(() => {
+      hideLoadingFallback();
+    }, 300);
 
     console.log("Rendering App component");
     root.render(
@@ -109,12 +133,17 @@ const debouncedRender = () => {
     if (!hasRendered || sandboxState === 'ready') {
       renderApp();
     }
-  }, 500); // 500ms debounce
+  }, RENDER_DEBOUNCE_TIMEOUT);
 };
 
-// Track mouse events to prevent unnecessary renders
+// Track mouse events to prevent unnecessary renders with debounce
 document.addEventListener('mousemove', () => {
   lastMouseInteractionTime = Date.now();
+  
+  // If we have window.__MUHEESI_APP_STATE from index.html, update it too
+  if (window.__MUHEESI_APP_STATE) {
+    window.__MUHEESI_APP_STATE.updateHoverTime();
+  }
 });
 
 // Enhanced sandbox message handling
@@ -126,7 +155,20 @@ window.addEventListener('message', (event) => {
     
     console.log(`Sandbox status changed: ${event.data.status} (previous: ${previousState})`);
     
-    // Only react to significant state transitions
+    // Check for rapid loading state changes which indicate hover issues
+    if (previousState === 'ready' && event.data.status === 'loading') {
+      consecutiveLoadingEvents++;
+      
+      // If we're seeing too many loading events in succession, it's likely a hover issue
+      if (consecutiveLoadingEvents > 2 && Date.now() - lastMouseInteractionTime < MOUSE_INTERACTION_COOLDOWN) {
+        console.log("Ignoring loading state due to detected hover interaction pattern");
+        return;
+      }
+    } else if (event.data.status === 'ready') {
+      consecutiveLoadingEvents = 0;
+    }
+    
+    // Only react to significant state transitions with throttling
     if (previousState !== sandboxState) {
       if (sandboxState === 'ready') {
         // For 'ready' state, render if not already rendered
@@ -139,10 +181,14 @@ window.addEventListener('message', (event) => {
         }
       } else if (sandboxState === 'loading') {
         // Only show loading if we're coming from a non-loading state
-        // This prevents flickering during hover events
-        if (previousState !== 'loading') {
+        // and not during recent mouse interaction
+        if (previousState !== 'loading' && 
+            Date.now() - lastMouseInteractionTime > MOUSE_INTERACTION_COOLDOWN &&
+            Date.now() - lastLoadingStateTime > LOADING_THROTTLE) {
           console.log("Sandbox loading, showing fallback");
           showLoadingFallback();
+        } else {
+          console.log("Ignoring loading state due to recent interaction or throttle");
         }
       }
     } else {
