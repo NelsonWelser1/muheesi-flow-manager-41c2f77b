@@ -18,7 +18,15 @@ import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDair
 import SmartProductionDashboard from "./components/inventory/dairy/production/SmartProductionDashboard";
 import SalesMarketingDashboard from "./components/inventory/dairy/sales/SalesMarketingDashboard";
 
-const queryClient = new QueryClient();
+// Create QueryClient instance only once
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // Prevent refetching on window focus
+      retry: 1, // Limit retries
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
