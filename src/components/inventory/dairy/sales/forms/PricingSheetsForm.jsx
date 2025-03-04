@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -8,13 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { ArrowLeft, Plus, Trash, FileText } from "lucide-react";
+import { ArrowLeft, Plus, Trash, FileText, Bug } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
+import { PricingSheetsDisplay } from './displays/PricingSheetsDisplay';
 
-const PricingSheetsForm = ({ onBack, onViewReports }) => {
+const PricingSheetsForm = ({ onBack }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDisplay, setShowDisplay] = useState(false);
   const [products, setProducts] = useState([{ 
     name: '', 
     category: '', 
@@ -66,6 +68,13 @@ const PricingSheetsForm = ({ onBack, onViewReports }) => {
     setProducts(newProducts);
   };
 
+  // Debug handler to print form data to console
+  const handleDebug = () => {
+    const formData = form.getValues();
+    console.log('Current form values:', formData);
+    console.log('Products:', products);
+  };
+
   const onSubmit = async (data) => {
     if (products.some(product => !product.name || !product.base_price)) {
       showErrorToast(toast, "Please fill in all required product fields");
@@ -78,6 +87,7 @@ const PricingSheetsForm = ({ onBack, onViewReports }) => {
       const sheetId = `PS-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
       
       const { data: userData } = await supabase.auth.getUser();
+      console.log('Current user data:', userData);
       
       // Format data for Supabase
       const formattedData = {
@@ -88,16 +98,22 @@ const PricingSheetsForm = ({ onBack, onViewReports }) => {
         expiry_date: data.expiry_date || null,
         products: products,
         status: data.status,
-        created_at: new Date().toISOString(),
         created_by: userData?.user?.id || null
       };
 
-      const { error } = await supabase
+      console.log('Submitting pricing sheet data:', formattedData);
+
+      const { data: insertData, error } = await supabase
         .from('pricing_sheets')
-        .insert([formattedData]);
+        .insert([formattedData])
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating pricing sheet:', error);
+        throw error;
+      }
 
+      console.log('Pricing sheet created successfully:', insertData);
       showSuccessToast(toast, "Pricing sheet created successfully");
 
       // Reset form
@@ -123,18 +139,31 @@ const PricingSheetsForm = ({ onBack, onViewReports }) => {
     }
   };
 
+  if (showDisplay) {
+    return <PricingSheetsDisplay onBack={() => setShowDisplay(false)} />;
+  }
+
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Pricing Sheets Form</CardTitle>
-          <Button 
-            variant="outline" 
-            onClick={onViewReports}
-            className="flex items-center gap-2"
-          >
-            <FileText className="h-4 w-4" /> View Reports
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={handleDebug}
+              className="flex items-center gap-2"
+            >
+              <Bug className="h-4 w-4" /> Debug Form
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDisplay(true)}
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" /> View Reports
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
