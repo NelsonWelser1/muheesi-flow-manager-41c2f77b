@@ -13,28 +13,11 @@ export const createSandboxMessageHandler = ({
   setShowFallback,
   timeoutMs,
   loadingTimeoutRef,
-  lastSandboxResetTime,
-  currentPath,
-  preventFallbackOnPaths = []
+  lastSandboxResetTime
 }) => {
   return (event) => {
     if (event.data && event.data.type === 'sandbox-status') {
       const status = event.data.status;
-      
-      // Check if we should prevent fallback for current path
-      const preventFallback = preventFallbackOnPaths.includes(currentPath);
-      if (preventFallback && status === 'loading') {
-        console.log(`SKIPPED: Ignoring sandbox loading state on path ${currentPath}`);
-        
-        // Clear existing timeout if any
-        if (loadingTimeoutRef.current) {
-          clearTimeout(loadingTimeoutRef.current);
-        }
-        
-        // Immediately override with ready state
-        overrideSandboxLoadingState();
-        return;
-      }
       
       // Strong cooldown enforcement - ignore sandbox loading events completely during cooldown
       if (isInEditorUICooldown(lastSandboxResetTime.current) && status === 'loading') {
@@ -46,7 +29,7 @@ export const createSandboxMessageHandler = ({
       }
       
       // Handle app state messages based on sandbox status
-      if (status === 'loading' && !isInEditorUICooldown(lastSandboxResetTime.current)) {
+      if (status === 'loading' && !isLoading) {
         console.log('Sandbox loading state detected, starting fallback timer');
         setIsLoading(true);
         setLoadingStartTime(Date.now());
@@ -58,13 +41,8 @@ export const createSandboxMessageHandler = ({
         
         // Set timeout for fallback UI
         loadingTimeoutRef.current = setTimeout(() => {
-          // Only show fallback if we're not on a prevented path
-          if (!preventFallback) {
-            console.log('Loading timeout exceeded, showing fallback UI');
-            setShowFallback(true);
-          } else {
-            console.log(`Loading timeout exceeded but fallback prevented for path ${currentPath}`);
-          }
+          console.log('Loading timeout exceeded, showing fallback UI');
+          setShowFallback(true);
         }, timeoutMs);
       } else if (status === 'ready') {
         // Reset loading state
