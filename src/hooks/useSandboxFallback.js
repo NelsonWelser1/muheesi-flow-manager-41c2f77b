@@ -27,7 +27,12 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
   const location = useLocation();
   const previousPathRef = useRef(location.pathname);
   const lastSandboxResetTime = useRef(Date.now());
-  const SANDBOX_RESET_COOLDOWN = 60 * 60 * 1000; // 1 hour in milliseconds
+  const SANDBOX_RESET_COOLDOWN = 60 * 60 * 1000; // Strict 1 hour cooldown in milliseconds
+
+  // Enhanced editor interaction detection
+  const isInEditorUICooldown = useCallback(() => {
+    return Date.now() - lastSandboxResetTime.current < SANDBOX_RESET_COOLDOWN;
+  }, [SANDBOX_RESET_COOLDOWN]);
 
   // Store visit history for fallback navigation
   useEffect(() => {
@@ -45,46 +50,89 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
     };
   }, []);
 
+  // Enhanced editor UI detection using mouse position
+  useEffect(() => {
+    const detectEditorInteraction = (event) => {
+      // Check if mouse is in editor UI area (usually left side)
+      const editorWidth = window.innerWidth * 0.35; // Consider the left 35% to be editor area
+      if (event.clientX < editorWidth) {
+        console.log('Editor UI interaction detected via mouse position');
+        lastSandboxResetTime.current = Date.now();
+        
+        // Broadcast the interaction to ensure other components are aware
+        try {
+          window.parent.postMessage({ 
+            type: 'editor-ui-interaction', 
+            timestamp: Date.now() 
+          }, '*');
+        } catch (e) {
+          console.log('Could not send editor interaction message to parent');
+        }
+
+        // Ensure cooldown is active in global app state
+        if (window.__MUHEESI_APP_STATE) {
+          window.__MUHEESI_APP_STATE.markEditorUIInteraction();
+        }
+      }
+    };
+    
+    // Throttled event listener to reduce performance impact
+    let lastMove = 0;
+    const throttledDetect = (event) => {
+      const now = Date.now();
+      if (now - lastMove > 200) { // Throttle to 5 checks per second maximum
+        lastMove = now;
+        detectEditorInteraction(event);
+      }
+    };
+    
+    document.addEventListener('mousemove', throttledDetect, { passive: true });
+    
+    return () => {
+      document.removeEventListener('mousemove', throttledDetect);
+    };
+  }, []);
+
   // Monitor sandbox state changes from window messages with improved detection
   useEffect(() => {
     const handleSandboxMessage = (event) => {
       if (event.data && event.data.type === 'sandbox-status') {
         const status = event.data.status;
-        const now = Date.now();
         
-        // Check if we're in the editor UI cooldown period - prevent sandboxing after editor UI interactions
-        const isInEditorUICooldown = 
-          now - lastSandboxResetTime.current < SANDBOX_RESET_COOLDOWN;
+        // Strong cooldown enforcement - ignore sandbox loading events completely during cooldown
+        if (isInEditorUICooldown() && status === 'loading') {
+          console.log('BLOCKED: Ignoring sandbox loading state due to active 1-hour editor UI cooldown');
+          
+          // Immediately send a "ready" message to override the loading state
+          try {
+            window.parent.postMessage({ 
+              type: 'sandbox-override', 
+              status: 'ready', 
+              reason: 'editor-ui-cooldown-active' 
+            }, '*');
+          } catch (e) {
+            console.log('Could not send override message to parent');
+          }
+          
+          return;
+        }
         
-        // Check if the event is from a mouse/hover interaction
-        const isMouseEvent = window.__MUHEESI_APP_STATE && 
-          window.__MUHEESI_APP_STATE.isInHoverCooldown();
-
-        // Handle app state messages based on sandbox status and conditions
-        if (status === 'loading') {
-          // Enhanced condition to prevent unnecessary loading states
-          if (isInEditorUICooldown && isMouseEvent) {
-            console.log('Ignoring sandbox loading state due to editor UI interaction cooldown');
-            return;
+        // Handle app state messages based on sandbox status
+        if (status === 'loading' && !isLoading) {
+          console.log('Sandbox loading state detected, starting fallback timer');
+          setIsLoading(true);
+          setLoadingStartTime(Date.now());
+          
+          // Clear existing timeout if any
+          if (loadingTimeoutRef.current) {
+            clearTimeout(loadingTimeoutRef.current);
           }
-
-          // Only start the loading timer if not already loading
-          if (!isLoading) {
-            console.log('Sandbox loading state detected, starting fallback timer');
-            setIsLoading(true);
-            setLoadingStartTime(now);
-            
-            // Clear existing timeout if any
-            if (loadingTimeoutRef.current) {
-              clearTimeout(loadingTimeoutRef.current);
-            }
-            
-            // Set timeout for fallback UI - show after timeoutMs
-            loadingTimeoutRef.current = setTimeout(() => {
-              console.log('Loading timeout exceeded, showing fallback UI');
-              setShowFallback(true);
-            }, timeoutMs);
-          }
+          
+          // Set timeout for fallback UI
+          loadingTimeoutRef.current = setTimeout(() => {
+            console.log('Loading timeout exceeded, showing fallback UI');
+            setShowFallback(true);
+          }, timeoutMs);
         } else if (status === 'ready') {
           // Reset loading state
           console.log('Sandbox ready state detected, clearing fallback timer');
@@ -94,9 +142,6 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
           setIsLoading(false);
           setLoadingStartTime(null);
           setShowFallback(false);
-          
-          // Update last successful sandbox reset time
-          lastSandboxResetTime.current = now;
         }
       }
     };
@@ -110,7 +155,7 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
         clearTimeout(loadingTimeoutRef.current);
       }
     };
-  }, [isLoading, timeoutMs]);
+  }, [isLoading, isInEditorUICooldown, timeoutMs]);
 
   // Handler for returning to previous screen
   const handleReturnToPreviousScreen = useCallback(() => {
@@ -130,7 +175,7 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
     setShowFallback(false);
   }, [navigate]);
 
-  // Reset sandbox state detection
+  // Reset sandbox state detection - also marks that we've manually interacted with editor
   const resetSandboxState = useCallback(() => {
     console.log('Manually resetting sandbox state');
     if (loadingTimeoutRef.current) {
@@ -143,48 +188,16 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
     // Mark that we've manually reset - this will trigger the cooldown
     lastSandboxResetTime.current = Date.now();
     
-    // Also send a message to inform parent about state reset
+    // Broadcast the manual reset to ensure other components are aware
     try {
-      window.parent.postMessage({ type: 'sandbox-manual-reset' }, '*');
+      window.parent.postMessage({ 
+        type: 'sandbox-manual-reset', 
+        timestamp: Date.now(),
+        source: 'user-action'
+      }, '*');
     } catch (e) {
       console.log('Could not send reset message to parent');
     }
-  }, []);
-
-  // Detect editor UI interaction directly through mousemove on document
-  useEffect(() => {
-    const detectEditorInteraction = (event) => {
-      // Check if mouse is in editor UI area (usually left side)
-      if (event.clientX < window.innerWidth * 0.3) {
-        const now = Date.now();
-        // Check if we're not already in cooldown
-        if (now - lastSandboxResetTime.current > SANDBOX_RESET_COOLDOWN) {
-          console.log('Editor UI interaction detected via mouse position, activating cooldown');
-          lastSandboxResetTime.current = now;
-          
-          // Also update global state if available
-          if (window.__MUHEESI_APP_STATE) {
-            window.__MUHEESI_APP_STATE.markEditorUIInteraction();
-          }
-        }
-      }
-    };
-    
-    // Add throttled event listener to avoid performance issues
-    let lastMove = 0;
-    const throttledDetect = (event) => {
-      const now = Date.now();
-      if (now - lastMove > 100) { // Throttle to max 10 checks per second
-        lastMove = now;
-        detectEditorInteraction(event);
-      }
-    };
-    
-    document.addEventListener('mousemove', throttledDetect, { passive: true });
-    
-    return () => {
-      document.removeEventListener('mousemove', throttledDetect);
-    };
   }, []);
 
   return {
@@ -196,6 +209,7 @@ const useSandboxFallback = (timeoutMs = 20000) => { // Reduced to 20 seconds for
     handleNavigateToPath,
     resetSandboxState,
     currentPath: location.pathname,
+    isInEditorUICooldown,
   };
 };
 

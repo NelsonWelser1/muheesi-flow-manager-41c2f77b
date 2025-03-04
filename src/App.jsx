@@ -101,9 +101,9 @@ const createQueryClient = () => new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      retry: 2, // Increased retries for better reliability
-      staleTime: 1000 * 60 * 10, // 10 minutes - increased for better performance
-      cacheTime: 1000 * 60 * 15, // 15 minutes
+      retry: 3,
+      staleTime: 1000 * 60 * 15, // 15 minutes
+      cacheTime: 1000 * 60 * 30, // 30 minutes
     },
   },
 });
@@ -111,8 +111,28 @@ const createQueryClient = () => new QueryClient({
 // App initialization indicator to prevent duplicate mounting
 window.__APP_INITIALIZED = window.__APP_INITIALIZED || false;
 
+// The main App component
 const App = () => {
   console.log("App component rendering, initialized:", window.__APP_INITIALIZED);
+  
+  // Detect editor interactions early to enable cooldown
+  useEffect(() => {
+    // Early detection of editor UI area
+    const detectEditorUI = (event) => {
+      if (event.clientX < window.innerWidth * 0.35) {
+        console.log("App component detected editor UI interaction");
+        if (window.__MUHEESI_APP_STATE) {
+          window.__MUHEESI_APP_STATE.markEditorUIInteraction();
+        }
+      }
+    };
+    
+    document.addEventListener('mousemove', detectEditorUI, { passive: true });
+    
+    return () => {
+      document.removeEventListener('mousemove', detectEditorUI);
+    };
+  }, []);
   
   // Use a ref to ensure we only initialize once
   const [queryClient] = React.useState(() => {
