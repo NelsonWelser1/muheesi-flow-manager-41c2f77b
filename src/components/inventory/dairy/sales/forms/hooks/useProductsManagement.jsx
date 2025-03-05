@@ -11,6 +11,7 @@ export const useProductsManagement = () => {
   }]);
   
   const [currency, setCurrency] = useState('UGX');
+  const [grandTotal, setGrandTotal] = useState('0.00');
   
   // Available currencies
   const currencies = ['UGX', '$', '€', '£', '¥'];
@@ -35,7 +36,9 @@ export const useProductsManagement = () => {
       return sum + (parseFloat(product.final_price) || 0);
     }, 0);
     
-    return total.toFixed(2);
+    const formattedTotal = total.toFixed(2);
+    setGrandTotal(formattedTotal);
+    return formattedTotal;
   };
 
   // Update final prices whenever products change
@@ -58,6 +61,9 @@ export const useProductsManagement = () => {
     if (JSON.stringify(newProducts) !== JSON.stringify(products)) {
       setProducts(newProducts);
     }
+
+    // Update grand total whenever products change
+    updateGrandTotal();
   }, [products]);
 
   // Handle product changes
@@ -110,7 +116,8 @@ export const useProductsManagement = () => {
     currency,
     setCurrency,
     cycleCurrency,
-    currencies
+    currencies,
+    grandTotal
   };
 };
 

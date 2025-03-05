@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card } from "@/components/ui/card";
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -29,18 +29,9 @@ const ProductsSection = ({
   currency,
   setCurrency,
   cycleCurrency,
-  currencies
+  currencies,
+  grandTotal
 }) => {
-  const [grandTotal, setGrandTotal] = useState('0.00');
-
-  // Calculate grand total whenever products change
-  useEffect(() => {
-    const total = products.reduce((sum, product) => {
-      return sum + (parseFloat(product.final_price) || 0);
-    }, 0);
-    setGrandTotal(total.toFixed(2));
-  }, [products]);
-
   // Function to get the currency icon
   const getCurrencyIcon = (curr) => {
     switch(curr) {

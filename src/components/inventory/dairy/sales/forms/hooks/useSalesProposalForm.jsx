@@ -22,7 +22,8 @@ export const useSalesProposalForm = () => {
     currency,
     setCurrency,
     cycleCurrency,
-    currencies
+    currencies,
+    grandTotal
   } = useProductsManagement();
   
   // Form submission
@@ -33,13 +34,13 @@ export const useSalesProposalForm = () => {
     console.log("Current state:", {
       products,
       currency,
-      grandTotal: updateGrandTotal()
+      grandTotal
     });
     
     return {
       products,
       currency,
-      grandTotal: updateGrandTotal()
+      grandTotal
     };
   };
 
@@ -56,7 +57,8 @@ export const useSalesProposalForm = () => {
     currency,
     setCurrency,
     cycleCurrency,
-    currencies
+    currencies,
+    grandTotal
   };
 };
 

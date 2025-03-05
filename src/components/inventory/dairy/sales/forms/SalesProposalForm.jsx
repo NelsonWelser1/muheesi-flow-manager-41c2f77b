@@ -24,7 +24,8 @@ const SalesProposalForm = ({ onBack, onViewReports }) => {
     currency,
     setCurrency,
     cycleCurrency,
-    currencies
+    currencies,
+    grandTotal
   } = useSalesProposalForm();
 
   return (
@@ -65,6 +66,7 @@ const SalesProposalForm = ({ onBack, onViewReports }) => {
                 setCurrency={setCurrency}
                 cycleCurrency={cycleCurrency}
                 currencies={currencies}
+                grandTotal={grandTotal}
               />
               
               <TermsConditionsSection form={form} />
