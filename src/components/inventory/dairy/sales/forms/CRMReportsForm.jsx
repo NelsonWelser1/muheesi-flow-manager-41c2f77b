@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,15 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/supabase";
 import { ArrowLeft, FileText } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useCRMReports } from './hooks/useCRMReports';
 
 const CRMReportsForm = ({ onBack, onViewReports }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { submitCRMReport, debugFormData } = useCRMReports();
 
   const form = useForm({
     defaultValues: {
@@ -33,50 +33,39 @@ const CRMReportsForm = ({ onBack, onViewReports }) => {
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
+    
+    // Debug: Print form data to console
+    debugFormData(data);
+    
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const success = await submitCRMReport(data);
       
-      const reportData = {
-        report_title: data.report_title,
-        report_type: data.report_type,
-        department: data.department,
-        date_range_start: data.date_range_start,
-        date_range_end: data.date_range_end,
-        summary: data.summary,
-        key_findings: data.key_findings,
-        recommendations: data.recommendations,
-        distribution: data.distribution,
-        created_at: new Date().toISOString(),
-        created_by: userData?.user?.id || null,
-        created_by_name: userData?.user?.user_metadata?.full_name || userData?.user?.email
-      };
-
-      const { error } = await supabase
-        .from('crm_reports')
-        .insert([reportData]);
-
-      if (error) throw error;
-
-      showSuccessToast(toast, "CRM report created successfully");
-
-      // Reset form
-      form.reset({
-        report_title: '',
-        report_type: 'customer_segmentation',
-        department: 'Sales & Marketing',
-        date_range_start: '',
-        date_range_end: '',
-        summary: '',
-        key_findings: '',
-        recommendations: '',
-        distribution: 'internal'
-      });
+      if (success) {
+        // Reset form
+        form.reset({
+          report_title: '',
+          report_type: 'customer_segmentation',
+          department: 'Sales & Marketing',
+          date_range_start: '',
+          date_range_end: '',
+          summary: '',
+          key_findings: '',
+          recommendations: '',
+          distribution: 'internal'
+        });
+      }
     } catch (error) {
-      console.error('Error creating CRM report:', error);
-      showErrorToast(toast, "Failed to create CRM report: " + error.message);
+      console.error('Error in form submission:', error);
+      showErrorToast(toast, "Form submission error: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Debug function to be attached to any element for testing
+  const handleDebugClick = () => {
+    const currentFormData = form.getValues();
+    console.log('Debug - Current form values:', currentFormData);
   };
 
   return (
@@ -84,13 +73,22 @@ const CRMReportsForm = ({ onBack, onViewReports }) => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>CRM Reports Form</CardTitle>
-          <Button 
-            variant="outline" 
-            onClick={onViewReports}
-            className="flex items-center gap-2"
-          >
-            <FileText className="h-4 w-4" /> View Reports
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleDebugClick}
+              className="flex items-center gap-2"
+            >
+              Debug Form
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={onViewReports}
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" /> View Reports
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
