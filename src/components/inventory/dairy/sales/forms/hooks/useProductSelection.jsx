@@ -2,7 +2,6 @@
 import { useProductsFetching } from './useProductsFetching';
 import { useCurrencyFormat } from './useCurrencyFormat';
 import { useProductCalculations } from './useProductCalculations';
-import { useProductActions } from './useProductActions';
 import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -33,7 +32,7 @@ export const useProductSelection = (setValue, watch, initialCurrency) => {
     const price = watch('product_price');
     const totalAmount = watch('total_amount');
     
-    if (!productType || !quantity || !price) {
+    if (!productType || !quantity || !price || !totalAmount) {
       toast({
         title: "Error",
         description: "Please fill in all product details",

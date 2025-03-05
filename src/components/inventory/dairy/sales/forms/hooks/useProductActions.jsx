@@ -7,7 +7,8 @@ export const useProductActions = (setValue, watch, formatCurrency) => {
   const { toast } = useToast();
 
   // Handle product selection
-  const handleProductSelect = (productId) => {
+  const handleProductSelect = (productId, products) => {
+    if (!products) return;
     const product = products.find(p => p.id === Number(productId));
     if (product) {
       setValue('product_type', product.product_type);
@@ -18,7 +19,7 @@ export const useProductActions = (setValue, watch, formatCurrency) => {
   };
 
   // Add product to the list
-  const handleAddProduct = (products) => {
+  const handleAddProduct = () => {
     const productType = watch('product_type');
     const quantity = watch('product_quantity');
     const price = watch('product_price');

@@ -25,6 +25,16 @@ export const useProposalSubmission = (
       return;
     }
     
+    // Validate required fields
+    if (!data.customer_name || !data.contact_email || !data.contact_phone || !data.validity_period) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required customer information fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSubmitting(true);
     
     try {
@@ -40,7 +50,7 @@ export const useProposalSubmission = (
         validity_period: parseInt(data.validity_period),
         terms_conditions: data.terms_conditions,
         products: selectedProducts,
-        grand_total: calculateGrandTotal(),
+        grand_total: calculateGrandTotal(selectedProducts),
         status: 'draft',
         created_by: user?.id || null
       };
