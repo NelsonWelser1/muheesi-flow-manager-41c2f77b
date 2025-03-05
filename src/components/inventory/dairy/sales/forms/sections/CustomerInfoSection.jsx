@@ -1,94 +1,84 @@
 
-import React, { useEffect } from 'react';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import React from 'react';
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const CustomerInfoSection = ({ form }) => {
+const CustomerInfoSection = ({ register, errors, proposalId, currency, setCurrency }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <FormField
-        control={form.control}
-        name="customer_name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Customer Name</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter customer name" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="customer_email"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Customer Email</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter email address" type="email" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="customer_phone"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Customer Phone</FormLabel>
-            <FormControl>
-              <Input placeholder="Enter phone number" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="proposal_date"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Proposal Date</FormLabel>
-            <FormControl>
-              <Input type="date" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="validity_period"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Validity Period (Days)</FormLabel>
-            <FormControl>
-              <Input type="number" min="1" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="grand_total"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Grand Total</FormLabel>
-            <FormControl>
-              <Input readOnly className="bg-gray-100" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="proposal_id">Proposal ID</Label>
+        <Input 
+          id="proposal_id" 
+          {...register("proposal_id", { required: true })} 
+          readOnly 
+          className="bg-gray-100"
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label>Currency</Label>
+        <Select 
+          value={currency}
+          onValueChange={setCurrency}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select currency" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="USD">USD ($)</SelectItem>
+            <SelectItem value="UGX">UGX (Shilling)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="customer_name">Customer Name</Label>
+        <Input 
+          id="customer_name" 
+          {...register("customer_name", { required: true })} 
+        />
+        {errors.customer_name && <p className="text-red-500 text-sm">This field is required</p>}
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="contact_email">Contact Email</Label>
+        <Input 
+          id="contact_email" 
+          type="email"
+          {...register("contact_email", { 
+            required: true,
+            pattern: /^\S+@\S+$/i
+          })} 
+        />
+        {errors.contact_email && <p className="text-red-500 text-sm">Please enter a valid email</p>}
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="contact_phone">Contact Phone</Label>
+        <Input 
+          id="contact_phone" 
+          {...register("contact_phone", { required: true })} 
+        />
+        {errors.contact_phone && <p className="text-red-500 text-sm">This field is required</p>}
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="validity_period">Validity Period (days)</Label>
+        <Input 
+          id="validity_period" 
+          type="number"
+          min="1"
+          defaultValue="30"
+          {...register("validity_period", { 
+            required: true,
+            valueAsNumber: true,
+            min: 1
+          })} 
+        />
+        {errors.validity_period && <p className="text-red-500 text-sm">Please enter a valid number of days</p>}
+      </div>
     </div>
   );
 };
