@@ -16,6 +16,9 @@ export const useProposalSubmission = (
 
   // Handle form submission
   const onSubmit = async (data) => {
+    console.log("Form submission data:", data);
+    console.log("Selected products:", selectedProducts);
+    
     if (selectedProducts.length === 0) {
       toast({
         title: "Error",
@@ -40,6 +43,10 @@ export const useProposalSubmission = (
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
+      // Calculate the grand total
+      const grandTotal = calculateGrandTotal(selectedProducts);
+      console.log("Calculated grand total:", grandTotal);
+      
       // Prepare data for submission
       const proposal = {
         proposal_id: data.proposal_id,
@@ -47,10 +54,10 @@ export const useProposalSubmission = (
         customer_email: data.contact_email,
         customer_phone: data.contact_phone,
         proposal_date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
-        validity_period: parseInt(data.validity_period),
-        terms_conditions: data.terms_conditions,
+        validity_period: parseInt(data.validity_period || 30),
+        terms_conditions: data.terms_conditions || '',
         products: selectedProducts,
-        grand_total: calculateGrandTotal(selectedProducts),
+        grand_total: grandTotal,
         status: 'draft',
         created_by: user?.id || null
       };
@@ -58,11 +65,16 @@ export const useProposalSubmission = (
       console.log('Submitting proposal:', proposal);
       
       // Insert into sales_proposals table
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('sales_proposals')
         .insert([proposal]);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase insertion error:", error);
+        throw error;
+      }
+      
+      console.log("Inserted data:", insertedData);
       
       toast({
         title: "Success",

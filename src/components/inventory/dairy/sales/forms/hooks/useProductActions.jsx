@@ -15,6 +15,11 @@ export const useProductActions = (setValue, watch, formatCurrency) => {
       setValue('batch_id', product.batch_id);
       setValue('product_quantity', product.unit_quantity);
       setValue('unit_weight', product.unit_weight);
+      
+      // If there's a default price, set it
+      if (product.unit_price) {
+        setValue('product_price', formatCurrency(product.unit_price));
+      }
     }
   };
 
@@ -25,7 +30,7 @@ export const useProductActions = (setValue, watch, formatCurrency) => {
     const price = watch('product_price');
     const totalAmount = watch('total_amount');
     
-    if (!productType || !quantity || !price) {
+    if (!productType || !quantity || !price || !totalAmount) {
       toast({
         title: "Error",
         description: "Please fill in all product details",
@@ -34,6 +39,7 @@ export const useProductActions = (setValue, watch, formatCurrency) => {
       return;
     }
     
+    // Convert values to appropriate types before saving
     const newProduct = {
       id: selectedProducts.length + 1,
       product_type: productType,
@@ -42,6 +48,7 @@ export const useProductActions = (setValue, watch, formatCurrency) => {
       total_amount: totalAmount
     };
     
+    console.log("Adding product to selection:", newProduct);
     setSelectedProducts([...selectedProducts, newProduct]);
     
     // Clear product fields for next entry
