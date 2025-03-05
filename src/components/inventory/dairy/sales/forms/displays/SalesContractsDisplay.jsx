@@ -1,169 +1,80 @@
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Search, Eye, FileText, Calendar } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/supabase";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { format } from "date-fns";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { 
+  ArrowLeft, 
+  Search, 
+  FileText, 
+  MoreHorizontal,
+  Trash2, 
+  Edit, 
+  Eye,
+  Download
+} from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { format } from "date-fns";
+import { useSalesContracts } from '../hooks/useSalesContracts';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const SalesContractsDisplay = ({ onBack, onViewContract }) => {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [contracts, setContracts] = useState([]);
-  const [filteredContracts, setFilteredContracts] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [dateRange, setDateRange] = useState(null);
-  const [sortField, setSortField] = useState("created_at");
-  const [sortDirection, setSortDirection] = useState("desc");
+const SalesContractsDisplay = ({ onBack }) => {
+  const { contracts, isLoading, deleteContract, fetchContracts } = useSalesContracts();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
 
-  useEffect(() => {
-    fetchContracts();
-  }, [dateRange]);
-
-  useEffect(() => {
-    if (contracts.length > 0) {
-      filterContracts();
-    }
-  }, [searchQuery, contracts, statusFilter, sortField, sortDirection]);
-
-  const fetchContracts = async () => {
-    setLoading(true);
-    try {
-      let query = supabase
-        .from('sales_contracts')
-        .select('*');
-      
-      // Apply date range filter if set
-      if (dateRange?.from) {
-        query = query.gte('start_date', dateRange.from.toISOString());
-        
-        if (dateRange.to) {
-          // Add one day to include the end date fully
-          const endDate = new Date(dateRange.to);
-          endDate.setDate(endDate.getDate() + 1);
-          query = query.lt('end_date', endDate.toISOString());
-        }
-      }
-      
-      query = query.order(sortField, { ascending: sortDirection === 'asc' });
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      
-      if (data) {
-        console.log('Contracts fetched:', data);
-        setContracts(data);
-        setFilteredContracts(data);
-      }
-    } catch (error) {
-      console.error('Error fetching contracts:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load contracts: " + error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterContracts = () => {
-    let filtered = [...contracts];
+  // Filter contracts based on search term and active tab
+  const filteredContracts = contracts.filter(contract => {
+    const matchesSearch = 
+      contract.contract_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.contract_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.client_name.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Apply status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(contract => contract.contract_status === statusFilter);
-    }
-    
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(contract => 
-        contract.customer_name?.toLowerCase().includes(query) || 
-        contract.product_category?.toLowerCase().includes(query) ||
-        (contract.description && contract.description.toLowerCase().includes(query))
-      );
-    }
-    
-    // Apply sorting
-    filtered.sort((a, b) => {
-      let valueA = a[sortField];
-      let valueB = b[sortField];
-      
-      // Handle dates
-      if (sortField.includes('date')) {
-        valueA = new Date(valueA || 0).getTime();
-        valueB = new Date(valueB || 0).getTime();
-      }
-      
-      // Handle numbers
-      if (sortField === 'contract_value') {
-        valueA = parseFloat(valueA || 0);
-        valueB = parseFloat(valueB || 0);
-      }
-      
-      if (sortDirection === 'asc') {
-        return valueA > valueB ? 1 : -1;
-      } else {
-        return valueA < valueB ? 1 : -1;
-      }
-    });
-    
-    setFilteredContracts(filtered);
-  };
+    if (activeTab === 'all') return matchesSearch;
+    return matchesSearch && contract.status === activeTab;
+  });
 
-  const handleSort = (field) => {
-    if (field === sortField) {
-      // Toggle direction if same field
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      // New field, default to descending
-      setSortField(field);
-      setSortDirection('desc');
+  const handleDelete = async (contractId) => {
+    if (window.confirm('Are you sure you want to delete this contract?')) {
+      const { success } = await deleteContract(contractId);
+      if (success) {
+        fetchContracts();
+      }
     }
   };
 
   const getStatusBadge = (status) => {
-    let color;
     switch (status) {
       case 'draft':
-        color = "bg-gray-500";
-        break;
+        return <Badge variant="outline">Draft</Badge>;
       case 'pending_approval':
-        color = "bg-yellow-500";
-        break;
+        return <Badge variant="warning">Pending</Badge>;
       case 'active':
-        color = "bg-green-500";
-        break;
-      case 'completed':
-        color = "bg-blue-500";
-        break;
+        return <Badge variant="success">Active</Badge>;
+      case 'expired':
+        return <Badge variant="destructive">Expired</Badge>;
       case 'terminated':
-        color = "bg-red-500";
-        break;
+        return <Badge>Terminated</Badge>;
       default:
-        color = "bg-gray-500";
+        return <Badge variant="outline">{status}</Badge>;
     }
-    
-    return (
-      <Badge className={color}>
-        {status?.replace('_', ' ')}
-      </Badge>
-    );
   };
 
+  // Format currency
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -171,87 +82,14 @@ const SalesContractsDisplay = ({ onBack, onViewContract }) => {
     }).format(value);
   };
 
-  const handleExport = (format) => {
+  // Format date
+  const formatDate = (dateString) => {
     try {
-      if (filteredContracts.length === 0) {
-        toast({
-          title: "Export Failed",
-          description: "No data to export",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Convert contracts data to CSV format
-      let exportData;
-      
-      if (format === 'csv' || format === 'excel') {
-        // CSV/Excel format
-        const csvData = [
-          // Header row
-          ["ID", "Customer Name", "Customer Type", "Start Date", "End Date", "Product Category", "Contract Value", "Status", "Created At"],
-          // Data rows
-          ...filteredContracts.map(contract => [
-            contract.id,
-            contract.customer_name || "",
-            contract.customer_type || "",
-            contract.start_date ? format(new Date(contract.start_date), "yyyy-MM-dd") : "",
-            contract.end_date ? format(new Date(contract.end_date), "yyyy-MM-dd") : "",
-            contract.product_category || "",
-            contract.contract_value || "0",
-            contract.contract_status || "",
-            contract.created_at ? format(new Date(contract.created_at), "yyyy-MM-dd") : ""
-          ])
-        ];
-        
-        // Convert to CSV string
-        exportData = csvData.map(row => row.map(cell => 
-          typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell
-        ).join(',')).join('\n');
-      } else if (format === 'pdf') {
-        // For PDF, we'll just prepare the data
-        // In a real app, you would use a library like jsPDF
-        exportData = JSON.stringify(filteredContracts, null, 2);
-        console.log("PDF export data prepared:", exportData);
-        
-        toast({
-          title: "PDF Export",
-          description: "PDF export functionality would be implemented with a library like jsPDF",
-        });
-        return;
-      }
-
-      // Create download
-      const blob = new Blob([exportData], { type: format === 'excel' ? 'application/vnd.ms-excel' : 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.setAttribute('hidden', '');
-      a.setAttribute('href', url);
-      a.setAttribute('download', `sales-contracts-${new Date().toISOString()}.${format === 'excel' ? 'xlsx' : format}`);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      toast({
-        title: "Export Successful",
-        description: `Data exported as ${format.toUpperCase()}`,
-      });
+      return format(new Date(dateString), 'MMM dd, yyyy');
     } catch (error) {
-      console.error('Export error:', error);
-      toast({
-        title: "Export Failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error('Invalid date:', dateString);
+      return 'Invalid date';
     }
-  };
-
-  const clearFilters = () => {
-    setSearchQuery("");
-    setStatusFilter("all");
-    setDateRange(null);
-    setSortField("created_at");
-    setSortDirection("desc");
   };
 
   return (
@@ -263,141 +101,110 @@ const SalesContractsDisplay = ({ onBack, onViewContract }) => {
       >
         <ArrowLeft className="h-4 w-4" /> Back
       </Button>
-      
+
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <CardTitle>Sales Contracts</CardTitle>
-          <div className="flex items-center gap-2">
-            <DateRangePicker
-              dateRange={dateRange}
-              onDateRangeChange={setDateRange}
-              className="w-[300px]"
-            />
-            <Button 
-              variant="ghost" 
-              onClick={clearFilters}
-              title="Clear all filters"
-              className="flex items-center gap-1"
-            >
-              Reset
-            </Button>
+          <div className="w-full sm:w-auto flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search contracts..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 flex flex-col sm:flex-row gap-4 justify-between">
-            <div className="flex gap-4 flex-wrap flex-1">
-              <div className="relative flex-grow max-w-md">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search contracts..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Select 
-                value={statusFilter} 
-                onValueChange={setStatusFilter}
-                className="w-[180px]"
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="pending_approval">Pending Approval</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="terminated">Terminated</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleExport('csv')}>
-                <Download className="mr-2 h-4 w-4" /> CSV
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleExport('excel')}>
-                <Download className="mr-2 h-4 w-4" /> Excel
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleExport('pdf')}>
-                <FileText className="mr-2 h-4 w-4" /> PDF
-              </Button>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : filteredContracts.length === 0 ? (
-            <div className="text-center py-8">
-              <Calendar className="h-12 w-12 mx-auto text-muted-foreground" />
-              <p className="text-muted-foreground mt-4">No contracts found. {searchQuery || statusFilter !== "all" || dateRange ? "Try different search criteria." : "Create your first sales contract."}</p>
-              {(searchQuery || statusFilter !== "all" || dateRange) && (
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={clearFilters}
-                >
-                  Clear Filters
-                </Button>
+          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-5 mb-4">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="draft">Draft</TabsTrigger>
+              <TabsTrigger value="pending_approval">Pending</TabsTrigger>
+              <TabsTrigger value="active">Active</TabsTrigger>
+              <TabsTrigger value="expired">Expired</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value={activeTab}>
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <p>Loading contracts...</p>
+                </div>
+              ) : filteredContracts.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-lg font-medium">No contracts found</h3>
+                  <p className="text-sm text-gray-500">
+                    {searchTerm 
+                      ? "Try adjusting your search term" 
+                      : activeTab !== 'all' 
+                        ? `No ${activeTab} contracts found` 
+                        : "Create your first contract to see it here"}
+                  </p>
+                </div>
+              ) : (
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Contract ID</TableHead>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Start Date</TableHead>
+                        <TableHead>End Date</TableHead>
+                        <TableHead>Value</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredContracts.map((contract) => (
+                        <TableRow key={contract.id}>
+                          <TableCell className="font-medium">{contract.contract_id}</TableCell>
+                          <TableCell>{contract.contract_title}</TableCell>
+                          <TableCell>{contract.client_name}</TableCell>
+                          <TableCell>{formatDate(contract.start_date)}</TableCell>
+                          <TableCell>{formatDate(contract.end_date)}</TableCell>
+                          <TableCell>{formatCurrency(contract.total_value)}</TableCell>
+                          <TableCell>{getStatusBadge(contract.status)}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Open menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  <span>View Details</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  <span>Edit</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Download className="mr-2 h-4 w-4" />
+                                  <span>Download PDF</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDelete(contract.contract_id)}>
+                                  <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                                  <span className="text-red-500">Delete</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-muted/50 font-medium">
-                      <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('customer_name')}>
-                        Customer {sortField === 'customer_name' && (sortDirection === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('product_category')}>
-                        Product Category {sortField === 'product_category' && (sortDirection === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('start_date')}>
-                        Start Date {sortField === 'start_date' && (sortDirection === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('end_date')}>
-                        End Date {sortField === 'end_date' && (sortDirection === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('contract_value')}>
-                        Value {sortField === 'contract_value' && (sortDirection === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th className="p-3 text-left cursor-pointer" onClick={() => handleSort('contract_status')}>
-                        Status {sortField === 'contract_status' && (sortDirection === 'asc' ? '↑' : '↓')}
-                      </th>
-                      <th className="p-3 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredContracts.map((contract) => (
-                      <tr key={contract.id} className="border-b hover:bg-muted/30">
-                        <td className="p-3">{contract.customer_name}</td>
-                        <td className="p-3 capitalize">{contract.product_category || "—"}</td>
-                        <td className="p-3">{contract.start_date ? format(new Date(contract.start_date), "MMM d, yyyy") : "—"}</td>
-                        <td className="p-3">{contract.end_date ? format(new Date(contract.end_date), "MMM d, yyyy") : "—"}</td>
-                        <td className="p-3">{contract.contract_value ? formatCurrency(contract.contract_value) : "—"}</td>
-                        <td className="p-3">{getStatusBadge(contract.contract_status)}</td>
-                        <td className="p-3">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => onViewContract && onViewContract(contract)}
-                            className="h-8 w-8 p-0"
-                            title="View contract details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
