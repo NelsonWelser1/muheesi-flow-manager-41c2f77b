@@ -11,7 +11,7 @@ export const useSalesProposalForm = () => {
   // Initialize the proposal with a unique ID
   const { proposalId } = useProposalInitialization(setValue);
   
-  // Products management
+  // Products management with automatic grand total calculation
   const {
     products,
     setProducts,
@@ -24,13 +24,20 @@ export const useSalesProposalForm = () => {
   } = useProductsManagement();
   
   // Form submission
-  const { isSubmitting, onSubmit } = useProposalSubmission(reset, products);
+  const { isSubmitting, onSubmit } = useProposalSubmission(reset, products, currency);
 
   // Debug function
   const debugState = () => {
+    console.log("Current state:", {
+      products,
+      currency,
+      grandTotal: updateGrandTotal()
+    });
+    
     return {
       products,
-      currency
+      currency,
+      grandTotal: updateGrandTotal()
     };
   };
 

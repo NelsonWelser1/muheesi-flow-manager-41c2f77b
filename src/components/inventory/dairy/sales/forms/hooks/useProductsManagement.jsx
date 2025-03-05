@@ -21,10 +21,32 @@ export const useProductsManagement = (onGrandTotalChange) => {
     if (onGrandTotalChange) {
       onGrandTotalChange(total.toFixed(2));
     }
+    
+    return total.toFixed(2);
   };
 
-  // Update grand total whenever products change
+  // Update final prices and grand total whenever products change
   useEffect(() => {
+    const newProducts = [...products];
+    
+    // Recalculate all final prices
+    newProducts.forEach((product, index) => {
+      const basePrice = parseFloat(product.base_price) || 0;
+      const discount = parseFloat(product.discount) || 0;
+      
+      // Calculate final price with discount
+      const finalPrice = basePrice * (1 - discount / 100);
+      
+      // Update the final price
+      newProducts[index].final_price = finalPrice.toFixed(2);
+    });
+    
+    // Only update state if values have changed to prevent infinite loop
+    if (JSON.stringify(newProducts) !== JSON.stringify(products)) {
+      setProducts(newProducts);
+    }
+    
+    // Update grand total
     updateGrandTotal();
   }, [products]);
 
@@ -46,6 +68,9 @@ export const useProductsManagement = (onGrandTotalChange) => {
     }
     
     setProducts(newProducts);
+    
+    // Recalculate grand total after product change
+    return updateGrandTotal();
   };
 
   // Add a new product

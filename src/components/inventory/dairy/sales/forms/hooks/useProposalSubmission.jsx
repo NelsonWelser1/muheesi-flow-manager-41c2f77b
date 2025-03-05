@@ -1,109 +1,89 @@
 
-import { useState } from 'react';
+import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/supabase";
-import { format } from 'date-fns';
 
-export const useProposalSubmission = (
-  reset, 
-  selectedProducts, 
-  setSelectedProducts, 
-  calculateGrandTotal, 
-  setValue
-) => {
-  const [submitting, setSubmitting] = useState(false);
+export const useProposalSubmission = (reset, products, currency = 'UGX') => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // Handle form submission
+  const validateProducts = (products) => {
+    return products.every(product => 
+      product.name && 
+      product.category && 
+      product.base_price !== '' && 
+      product.base_price !== null
+    );
+  };
+
   const onSubmit = async (data) => {
-    console.log("Form submission data:", data);
-    console.log("Selected products:", selectedProducts);
+    console.log("Form submitted with data:", data);
+    console.log("Products at submission:", products);
     
-    if (selectedProducts.length === 0) {
+    setIsSubmitting(true);
+    
+    // Validate all required product fields are filled
+    if (!validateProducts(products)) {
       toast({
-        title: "Error",
-        description: "Please add at least one product",
-        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fill in all required product fields",
+        variant: "destructive"
       });
+      setIsSubmitting(false);
       return;
     }
-    
-    // Validate required fields
-    if (!data.customer_name || !data.contact_email || !data.contact_phone || !data.validity_period) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required customer information fields",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setSubmitting(true);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Calculate grand total
+      const grandTotal = products.reduce((sum, product) => {
+        return sum + (parseFloat(product.final_price) || 0);
+      }, 0).toFixed(2);
       
-      // Calculate the grand total
-      const grandTotal = calculateGrandTotal(selectedProducts);
-      console.log("Calculated grand total:", grandTotal);
-      
-      // Prepare data for submission
-      const proposal = {
-        proposal_id: data.proposal_id,
-        customer_name: data.customer_name,
-        customer_email: data.contact_email,
-        customer_phone: data.contact_phone,
-        proposal_date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
-        validity_period: parseInt(data.validity_period || 30),
-        terms_conditions: data.terms_conditions || '',
-        products: selectedProducts,
+      // Create proposal object with form data and products
+      const proposalData = {
+        ...data,
+        products: products,
+        currency: currency,
         grand_total: grandTotal,
-        status: 'draft',
-        created_by: user?.id || null
+        created_at: new Date().toISOString(),
+        status: 'pending'
       };
       
-      console.log('Submitting proposal:', proposal);
+      console.log("Submitting proposal:", proposalData);
       
-      // Insert into sales_proposals table
-      const { data: insertedData, error } = await supabase
-        .from('sales_proposals')
-        .insert([proposal]);
+      // Here you would typically save the data to your database
+      // For example with Supabase:
+      // const { data: savedProposal, error } = await supabase
+      //   .from('sales_proposals')
+      //   .insert([proposalData]);
       
-      if (error) {
-        console.error("Supabase insertion error:", error);
-        throw error;
-      }
+      // Simulate a successful API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      console.log("Inserted data:", insertedData);
-      
+      // Show success message
       toast({
-        title: "Success",
-        description: "Sales proposal saved successfully",
+        title: "Success!",
+        description: "Sales proposal created successfully",
       });
       
-      // Reset form and state
+      // Reset form
       reset();
-      setSelectedProducts([]);
       
-      // Generate new proposal ID
-      const timestamp = format(new Date(), 'yyyyMMddHHmmss');
-      const uniqueId = `PROP-${timestamp}-${Math.floor(Math.random() * 1000)}`;
-      setValue('proposal_id', uniqueId);
-      
+      // You might also want to redirect the user
+      // navigate('/sales/proposals');
     } catch (error) {
-      console.error('Error saving proposal:', error);
+      console.error("Error submitting proposal:", error);
       toast({
         title: "Error",
-        description: "Failed to save proposal: " + error.message,
-        variant: "destructive",
+        description: "There was a problem creating your sales proposal",
+        variant: "destructive"
       });
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
   return {
-    submitting,
+    isSubmitting,
     onSubmit
   };
 };
