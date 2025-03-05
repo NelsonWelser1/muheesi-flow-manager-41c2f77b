@@ -33,7 +33,11 @@ const ProductsSection = ({ products, setProducts }) => {
     if (field === 'base_price' || field === 'discount') {
       const basePrice = parseFloat(newProducts[index].base_price) || 0;
       const discount = parseFloat(newProducts[index].discount) || 0;
+      
+      // Ensure discount is treated as a percentage (0-100)
       const finalPrice = basePrice * (1 - discount / 100);
+      
+      // Set the final price with 2 decimal places
       newProducts[index].final_price = finalPrice.toFixed(2);
     }
     
