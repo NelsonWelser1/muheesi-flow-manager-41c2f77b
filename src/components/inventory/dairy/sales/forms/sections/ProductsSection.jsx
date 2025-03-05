@@ -6,44 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash } from "lucide-react";
 
-const ProductsSection = ({ products, setProducts }) => {
-  const addProduct = () => {
-    setProducts([...products, { 
-      name: '', 
-      category: '', 
-      base_price: '', 
-      discount: '0', 
-      final_price: '0' 
-    }]);
-  };
-
-  const removeProduct = (index) => {
-    if (products.length > 1) {
-      const newProducts = [...products];
-      newProducts.splice(index, 1);
-      setProducts(newProducts);
-    }
-  };
-
-  const handleProductChange = (index, field, value) => {
-    const newProducts = [...products];
-    newProducts[index][field] = value;
-    
-    // Calculate final price when base_price or discount changes
-    if (field === 'base_price' || field === 'discount') {
-      const basePrice = parseFloat(newProducts[index].base_price) || 0;
-      const discount = parseFloat(newProducts[index].discount) || 0;
-      
-      // Ensure discount is treated as a percentage (0-100)
-      const finalPrice = basePrice * (1 - discount / 100);
-      
-      // Set the final price with 2 decimal places
-      newProducts[index].final_price = finalPrice.toFixed(2);
-    }
-    
-    setProducts(newProducts);
-  };
-
+const ProductsSection = ({ 
+  products, 
+  handleProductChange,
+  addProduct,
+  removeProduct 
+}) => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
