@@ -35,7 +35,7 @@ const SelectedProductsSection = ({ selectedProducts, formatCurrency, calculateGr
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => removeProduct && removeProduct(index)}
+                  onClick={() => removeProduct(index)}
                   className="h-8 w-8 p-0"
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />

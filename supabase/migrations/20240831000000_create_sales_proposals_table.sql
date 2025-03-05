@@ -23,10 +23,11 @@ CREATE TABLE IF NOT EXISTS public.sales_proposals (
 -- Create trigger for updated_at (only if it doesn't exist)
 DO $$
 BEGIN
+    -- Check if the trigger already exists
     IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_sales_proposals_updated_at') THEN
-        -- Create the trigger function if it doesn't exist
+        -- Check if the function already exists
         IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_updated_at_column') THEN
-            CREATE FUNCTION update_updated_at_column()
+            CREATE OR REPLACE FUNCTION update_updated_at_column()
             RETURNS TRIGGER AS $$
             BEGIN
                 NEW.updated_at = CURRENT_TIMESTAMP;
@@ -45,6 +46,9 @@ END $$;
 
 -- Enable RLS but with permissive policies for now (no authentication)
 ALTER TABLE public.sales_proposals ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist to avoid errors
+DROP POLICY IF EXISTS "Allow public access for all operations" ON public.sales_proposals;
 
 -- Create policies that allow all operations without auth
 CREATE POLICY "Allow public access for all operations"
