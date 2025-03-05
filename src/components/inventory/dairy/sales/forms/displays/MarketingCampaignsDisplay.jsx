@@ -1,180 +1,128 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, ExternalLink, Download, Calendar, DollarSign, Tag, Flag, Clock } from "lucide-react";
-import { useAdvertisingPromotions } from '../hooks/useAdvertisingPromotions';
+import { ArrowLeft, Plus, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
+import { useAdvertisingPromotion } from '../hooks/useAdvertisingPromotion';
 
 const MarketingCampaignsDisplay = ({ onBack }) => {
-  const { promotions, isLoading } = useAdvertisingPromotions();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
+  const { promotions, isLoading, fetchPromotions } = useAdvertisingPromotion();
 
-  // Filter promotions based on search term and active tab
-  const filteredPromotions = promotions.filter(promo => {
-    const matchesSearch = 
-      promo.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      promo.promotion_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      promo.material_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      promo.promotion_id?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (activeTab === 'all') return matchesSearch;
-    return matchesSearch && promo.status?.toLowerCase() === activeTab.toLowerCase();
-  });
+  const handleRefresh = () => {
+    fetchPromotions();
+  };
 
-  // Helper function to get badge variant based on status
-  const getStatusVariant = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'active': return 'success';
-      case 'planning': return 'secondary';
-      case 'completed': return 'default';
-      case 'cancelled': return 'destructive';
-      default: return 'outline';
+  // Helper to format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
+  // Helper to parse JSON string for channels
+  const parseChannels = (channelsString) => {
+    try {
+      const channels = JSON.parse(channelsString);
+      return Object.keys(channels).filter(channel => channels[channel]);
+    } catch (error) {
+      console.error('Error parsing channels:', error);
+      return [];
     }
   };
 
-  // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  // Debug function
-  const handleDebugClick = (promotion) => {
-    console.log('Promotion details:', promotion);
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Button 
-          variant="outline" 
-          onClick={onBack}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to Menu
-        </Button>
-        <h2 className="text-2xl font-bold">Marketing Campaigns & Promotions</h2>
+        <div className="flex items-center space-x-2">
+          <Button variant="ghost" onClick={onBack} className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" /> Back
+          </Button>
+          <h2 className="text-xl font-semibold">Marketing Campaigns</h2>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" onClick={handleRefresh} className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" /> Refresh
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <CardTitle>All Marketing Campaigns</CardTitle>
-            <div className="relative w-full md:w-auto">
-              <Input
-                type="text"
-                placeholder="Search promotions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-xs"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="planning">Planning</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-            </TabsList>
+      {isLoading ? (
+        <div className="text-center py-8">Loading promotions...</div>
+      ) : promotions.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <p className="text-center text-muted-foreground mb-4">
+              No advertising promotions found
+            </p>
+            <Button onClick={onBack} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" /> Create New Promotion
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {promotions.map((promotion) => (
+            <Card key={promotion.id} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg">{promotion.title}</CardTitle>
+                  <Badge>{promotion.promotion_type}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="font-medium">Material Type:</p>
+                    <p>{promotion.material_type}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">Status:</p>
+                    <p>{promotion.status || 'Active'}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">Start Date:</p>
+                    <p>{formatDate(promotion.start_date)}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">End Date:</p>
+                    <p>{formatDate(promotion.end_date)}</p>
+                  </div>
+                </div>
 
-            <TabsContent value={activeTab} className="pt-4">
-              {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <p>Loading campaigns...</p>
+                <div>
+                  <p className="font-medium">Target Audience:</p>
+                  <p>{promotion.target_audience || 'N/A'}</p>
                 </div>
-              ) : filteredPromotions.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">No marketing campaigns found.</p>
+
+                <div>
+                  <p className="font-medium">Objectives:</p>
+                  <p className="line-clamp-2">{promotion.objectives || 'N/A'}</p>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {filteredPromotions.map((promotion) => (
-                    <Card key={promotion.id} className="overflow-hidden border">
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <Badge variant={getStatusVariant(promotion.status)}>
-                              {promotion.status || 'Unknown'}
-                            </Badge>
-                            <h3 className="text-lg font-semibold mt-2">{promotion.title}</h3>
-                            <p className="text-sm text-muted-foreground">ID: {promotion.promotion_id}</p>
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleDebugClick(promotion)}
-                            title="Debug: Log promotion details to console"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pb-3">
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="flex items-center gap-2">
-                              <Tag className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">{promotion.promotion_type || 'N/A'}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Flag className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">{promotion.material_type || 'N/A'}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">{formatDate(promotion.start_date)} - {formatDate(promotion.end_date)}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <DollarSign className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">{promotion.budget || 'N/A'}</span>
-                            </div>
-                          </div>
-                          
-                          {promotion.objectives && (
-                            <div className="pt-2">
-                              <h4 className="text-sm font-medium">Objectives:</h4>
-                              <p className="text-sm text-muted-foreground line-clamp-2">
-                                {promotion.objectives}
-                              </p>
-                            </div>
-                          )}
-                          
-                          {promotion.assets_urls && promotion.assets_urls.length > 0 && (
-                            <div className="pt-2">
-                              <h4 className="text-sm font-medium">Files:</h4>
-                              <div className="flex flex-wrap gap-2 mt-1">
-                                {promotion.assets_urls.map((asset, index) => (
-                                  <a
-                                    key={index}
-                                    href={asset.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-xs bg-secondary px-2 py-1 rounded hover:bg-secondary/80"
-                                  >
-                                    <Download className="h-3 w-3" />
-                                    {asset.name.length > 15 ? `${asset.name.substring(0, 12)}...` : asset.name}
-                                  </a>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+
+                <div>
+                  <p className="font-medium">Budget:</p>
+                  <p>{promotion.budget || 'N/A'}</p>
                 </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+
+                <div>
+                  <p className="font-medium">Channels:</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {promotion.channels && parseChannels(promotion.channels).map(channel => (
+                      <Badge key={channel} variant="outline" className="text-xs">
+                        {channel}
+                      </Badge>
+                    ))}
+                    {(!promotion.channels || parseChannels(promotion.channels).length === 0) && 
+                      <span className="text-muted-foreground">No channels specified</span>
+                    }
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
