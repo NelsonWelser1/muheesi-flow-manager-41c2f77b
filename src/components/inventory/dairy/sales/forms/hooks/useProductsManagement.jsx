@@ -9,6 +9,8 @@ export const useProductsManagement = (onGrandTotalChange) => {
     discount: '0', 
     final_price: '0' 
   }]);
+  
+  const [currency, setCurrency] = useState('UGX');
 
   // Calculate grand total based on products
   const updateGrandTotal = () => {
@@ -72,7 +74,9 @@ export const useProductsManagement = (onGrandTotalChange) => {
     handleProductChange,
     addProduct,
     removeProduct,
-    updateGrandTotal
+    updateGrandTotal,
+    currency,
+    setCurrency
   };
 };
 

@@ -4,14 +4,36 @@ import { Card } from "@/components/ui/card";
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash } from "lucide-react";
+import { Plus, Trash, ChevronUp, ChevronDown } from "lucide-react";
 
 const ProductsSection = ({ 
   products, 
   handleProductChange,
   addProduct,
-  removeProduct 
+  removeProduct,
+  currency,
+  setCurrency 
 }) => {
+  // Function to toggle between currencies
+  const cycleCurrency = (direction) => {
+    const currencies = ['UGX', '$', '€'];
+    const currentIndex = currencies.indexOf(currency);
+    let newIndex;
+    
+    if (direction === 'up') {
+      newIndex = (currentIndex + 1) % currencies.length;
+    } else {
+      newIndex = (currentIndex - 1 + currencies.length) % currencies.length;
+    }
+    
+    setCurrency(currencies[newIndex]);
+  };
+
+  // Calculate grand total
+  const grandTotal = products.reduce((sum, product) => {
+    return sum + (parseFloat(product.final_price) || 0);
+  }, 0).toFixed(2);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -59,14 +81,40 @@ const ProductsSection = ({
               />
             </div>
             <div className="space-y-2">
-              <FormLabel>Base Price ($)</FormLabel>
-              <Input
-                type="number"
-                step="0.01"
-                placeholder="Enter base price"
-                value={product.base_price}
-                onChange={(e) => handleProductChange(index, 'base_price', e.target.value)}
-              />
+              <FormLabel>Base Price</FormLabel>
+              <div className="flex relative">
+                <div className="absolute left-0 inset-y-0 flex items-center pl-3 text-gray-500">
+                  {currency}
+                </div>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="Enter base price"
+                  value={product.base_price}
+                  onChange={(e) => handleProductChange(index, 'base_price', e.target.value)}
+                  className="pl-10"
+                />
+                <div className="absolute right-0 inset-y-0 flex flex-col">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-5 w-8 p-0"
+                    onClick={() => cycleCurrency('up')}
+                  >
+                    <ChevronUp className="h-3 w-3" />
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-5 w-8 p-0"
+                    onClick={() => cycleCurrency('down')}
+                  >
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
             </div>
             <div className="space-y-2">
               <FormLabel>Discount (%)</FormLabel>
@@ -79,16 +127,35 @@ const ProductsSection = ({
               />
             </div>
             <div className="space-y-2">
-              <FormLabel>Final Price ($)</FormLabel>
-              <Input
-                readOnly
-                className="bg-gray-100"
-                value={product.final_price}
-              />
+              <FormLabel>Final Price</FormLabel>
+              <div className="flex relative">
+                <div className="absolute left-0 inset-y-0 flex items-center pl-3 text-gray-500">
+                  {currency}
+                </div>
+                <Input
+                  readOnly
+                  className="bg-gray-100 pl-10"
+                  value={product.final_price}
+                />
+              </div>
             </div>
           </div>
         </Card>
       ))}
+      
+      <div className="flex justify-end items-center space-x-2 mt-4 font-bold">
+        <span>Grand Total:</span>
+        <div className="flex relative w-32">
+          <div className="absolute left-0 inset-y-0 flex items-center pl-3 text-gray-500">
+            {currency}
+          </div>
+          <Input
+            readOnly
+            className="bg-gray-100 pl-10 font-bold"
+            value={grandTotal}
+          />
+        </div>
+      </div>
     </div>
   );
 };

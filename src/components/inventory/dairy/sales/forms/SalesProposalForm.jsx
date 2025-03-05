@@ -21,7 +21,9 @@ const SalesProposalForm = ({ onBack, onViewReports }) => {
     removeProduct,
     onSubmit, 
     isSubmitting, 
-    debugState 
+    debugState,
+    currency,
+    setCurrency 
   } = useSalesProposalForm();
 
   return (
@@ -58,6 +60,8 @@ const SalesProposalForm = ({ onBack, onViewReports }) => {
                 handleProductChange={handleProductChange}
                 addProduct={addProduct}
                 removeProduct={removeProduct}
+                currency={currency}
+                setCurrency={setCurrency}
               />
               
               <TermsConditionsSection form={form} />

@@ -3,57 +3,49 @@ import { useForm } from "react-hook-form";
 import { useProposalInitialization } from "./useProposalInitialization";
 import { useProductSelection } from "./useProductSelection";
 import { useProposalSubmission } from "./useProposalSubmission";
+import { useProductsManagement } from "./useProductsManagement";
 
 export const useSalesProposalForm = () => {
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   
   // Initialize the proposal with a unique ID
-  const { proposalId, currency, setCurrency } = useProposalInitialization(setValue);
+  const { proposalId } = useProposalInitialization(setValue);
   
-  // Product selection and management
-  const { 
-    loading, 
-    products, 
-    selectedProducts, 
-    setSelectedProducts,
-    handleProductSelect, 
-    handlePriceChange, 
-    handleAddProduct, 
-    removeProduct, 
-    calculateGrandTotal, 
-    formatCurrency, 
-    parseCurrency 
-  } = useProductSelection(setValue, watch, currency);
+  // Products management
+  const {
+    products,
+    setProducts,
+    handleProductChange,
+    addProduct,
+    removeProduct,
+    updateGrandTotal,
+    currency,
+    setCurrency
+  } = useProductsManagement();
   
   // Form submission
-  const { submitting, onSubmit } = useProposalSubmission(
-    reset, 
-    selectedProducts, 
-    setSelectedProducts, 
-    calculateGrandTotal, 
-    setValue
-  );
+  const { isSubmitting, onSubmit } = useProposalSubmission(reset, products);
+
+  // Debug function
+  const debugState = () => {
+    return {
+      products,
+      currency
+    };
+  };
 
   return {
-    register,
-    handleSubmit,
-    errors,
-    loading,
-    submitting,
+    form: { register, handleSubmit, formState: { errors } },
     products,
-    selectedProducts,
-    currency,
-    setCurrency,
-    proposalId,
-    handleProductSelect,
-    handlePriceChange,
-    handleAddProduct,
+    setProducts,
+    handleProductChange,
+    addProduct,
     removeProduct,
     onSubmit,
-    calculateGrandTotal,
-    formatCurrency,
-    setValue,
-    watch,
+    isSubmitting,
+    debugState,
+    currency,
+    setCurrency
   };
 };
 
