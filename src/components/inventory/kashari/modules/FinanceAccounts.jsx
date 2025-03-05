@@ -1,120 +1,172 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, X, Bug } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form } from "@/components/ui/form";
+import { Bug, Plus } from "lucide-react";
 import { useFinanceAccountsData } from './finance-accounts/hooks/useFinanceAccountsData';
-import TransactionForm from './finance-accounts/TransactionForm';
-import TransactionTable from './finance-accounts/TransactionTable';
-import FinanceSummary from './finance-accounts/FinanceSummary';
+import TransactionsTable from './finance-accounts/components/TransactionsTable';
+
+const TRANSACTION_TYPES = ["Income", "Expense", "Transfer"];
+const CATEGORIES = ["Sales", "Purchases", "Salaries", "Utilities", "Equipment", "Other"];
+const PAYMENT_METHODS = ["Cash", "Bank Transfer", "Mobile Money", "Cheque"];
 
 const FinanceAccounts = () => {
-  const [showForm, setShowForm] = useState(false);
   const {
     transactions,
     isLoading,
     isSubmitting,
     form,
     handleSubmit,
-    handleEdit,
-    handleDelete,
-    fetchTransactions,
-    debugForm,
-    editingTransaction,
-    setEditingTransaction,
-    getFinanceSummary
+    debugForm
   } = useFinanceAccountsData();
 
-  const onSubmit = (data) => {
-    console.log('Form submitted with data:', data);
-    handleSubmit(data);
-    if (!editingTransaction) {
-      setShowForm(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    form.reset();
-    setEditingTransaction(null);
-    setShowForm(false);
-  };
-
-  const financeSummary = getFinanceSummary();
-
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Finance & Accounts Management</CardTitle>
-            <CardDescription>Manage income, expenses, and financial transactions</CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => debugForm()}
-              className="flex items-center gap-1"
-            >
-              <Bug className="h-4 w-4" /> Debug
-            </Button>
-            <Button 
-              onClick={() => {
-                if (showForm && !editingTransaction) {
-                  setShowForm(false);
-                } else if (editingTransaction) {
-                  handleCancelEdit();
-                } else {
-                  setShowForm(true);
-                }
-              }} 
-              className="flex items-center gap-2"
-            >
-              {showForm || editingTransaction ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              {showForm || editingTransaction ? 'Cancel' : 'Add Transaction'}
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="overview">
-            <FinanceSummary summary={financeSummary} />
-          </TabsContent>
-          
-          <TabsContent value="transactions">
-            {/* Transaction Form */}
-            {(showForm || editingTransaction) && (
-              <div className="mb-6 p-4 border rounded-md bg-muted/50">
-                <h3 className="text-lg font-medium mb-4">{editingTransaction ? 'Edit Transaction' : 'Add New Transaction'}</h3>
-                <TransactionForm 
-                  form={form} 
-                  onSubmit={onSubmit}
-                  isEdit={!!editingTransaction}
-                  isSubmitting={isSubmitting}
-                />
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Add New Transaction</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="transaction_type">Transaction Type</Label>
+                  <Select 
+                    onValueChange={(value) => form.setValue('transaction_type', value)}
+                    defaultValue={form.getValues('transaction_type')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select transaction type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TRANSACTION_TYPES.map(type => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select 
+                    onValueChange={(value) => form.setValue('category', value)}
+                    defaultValue={form.getValues('category')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map(category => (
+                        <SelectItem key={category} value={category}>{category}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    placeholder="Enter amount"
+                    {...form.register('amount')}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="payment_method">Payment Method</Label>
+                  <Select 
+                    onValueChange={(value) => form.setValue('payment_method', value)}
+                    defaultValue={form.getValues('payment_method')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select payment method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAYMENT_METHODS.map(method => (
+                        <SelectItem key={method} value={method}>{method}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reference_number">Reference Number</Label>
+                  <Input
+                    id="reference_number"
+                    placeholder="Enter reference number"
+                    {...form.register('reference_number')}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select 
+                    onValueChange={(value) => form.setValue('status', value)}
+                    defaultValue={form.getValues('status') || 'Completed'}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Completed">Completed</SelectItem>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="Failed">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    placeholder="Enter transaction description"
+                    {...form.register('description')}
+                  />
+                </div>
               </div>
-            )}
-            
-            {/* Transaction Table */}
-            <TransactionTable 
-              transactions={transactions} 
-              isLoading={isLoading} 
-              handleEdit={(transaction) => {
-                handleEdit(transaction);
-                setShowForm(true);
-              }} 
-              handleDelete={handleDelete}
-            />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+
+              <div className="flex justify-between mt-6">
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => debugForm()}
+                  className="flex items-center gap-2"
+                >
+                  <Bug className="h-4 w-4" /> Debug Form
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  {isSubmitting ? "Submitting..." : "Add Transaction"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Transaction History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TransactionsTable 
+            transactions={transactions} 
+            isLoading={isLoading} 
+          />
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
