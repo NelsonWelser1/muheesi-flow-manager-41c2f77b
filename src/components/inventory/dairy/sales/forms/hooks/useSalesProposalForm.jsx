@@ -82,6 +82,11 @@ export const useSalesProposalForm = () => {
     form.setValue('grand_total', total.toFixed(2));
   };
 
+  // Update grand total whenever products change
+  useEffect(() => {
+    updateGrandTotal();
+  }, [products]);
+
   // Handle product changes
   const handleProductChange = (index, field, value) => {
     const newProducts = [...products];
@@ -100,7 +105,6 @@ export const useSalesProposalForm = () => {
     }
     
     setProducts(newProducts);
-    updateGrandTotal();
   };
 
   // Add a new product
@@ -120,9 +124,6 @@ export const useSalesProposalForm = () => {
       const newProducts = [...products];
       newProducts.splice(index, 1);
       setProducts(newProducts);
-      
-      // Update grand total after removing product
-      setTimeout(updateGrandTotal, 0);
     }
   };
 
