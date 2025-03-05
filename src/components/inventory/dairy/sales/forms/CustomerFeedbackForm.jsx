@@ -7,15 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/supabase";
-import { ArrowLeft, FileText } from "lucide-react";
+import { FileText, Bug } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
+import { useCustomerFeedback } from './hooks/useCustomerFeedback';
 
 const CustomerFeedbackForm = ({ onBack, onViewReports }) => {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isSubmitting, submitFeedback, debugFeedback } = useCustomerFeedback();
 
   const form = useForm({
     defaultValues: {
@@ -32,33 +32,11 @@ const CustomerFeedbackForm = ({ onBack, onViewReports }) => {
   });
 
   const onSubmit = async (data) => {
-    setIsSubmitting(true);
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      
-      const formattedData = {
-        customer_name: data.customer_name,
-        customer_email: data.customer_email,
-        customer_phone: data.customer_phone,
-        product_service: data.product_service,
-        satisfaction_rating: parseFloat(data.satisfaction_rating),
-        feedback_text: data.feedback_text,
-        improvement_suggestions: data.improvement_suggestions,
-        follow_up_required: data.follow_up_required,
-        follow_up_status: data.follow_up_required ? data.follow_up_status : null,
-        feedback_date: new Date().toISOString(),
-        created_by: userData?.user?.id || null
-      };
-
-      const { error } = await supabase
-        .from('customer_feedback')
-        .insert([formattedData]);
-
-      if (error) throw error;
-
-      showSuccessToast(toast, "Customer feedback recorded successfully");
-
-      // Reset form
+    // Submit the feedback data to Supabase
+    const result = await submitFeedback(data);
+    
+    if (result.success) {
+      // Reset form on successful submission
       form.reset({
         customer_name: '',
         customer_email: '',
@@ -70,12 +48,13 @@ const CustomerFeedbackForm = ({ onBack, onViewReports }) => {
         follow_up_required: false,
         follow_up_status: 'pending'
       });
-    } catch (error) {
-      console.error('Error recording customer feedback:', error);
-      showErrorToast(toast, "Failed to record customer feedback: " + error.message);
-    } finally {
-      setIsSubmitting(false);
     }
+  };
+
+  // Debug function to print form data to console
+  const handleDebug = () => {
+    const formData = form.getValues();
+    debugFeedback(formData);
   };
 
   return (
@@ -83,13 +62,23 @@ const CustomerFeedbackForm = ({ onBack, onViewReports }) => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Customer Feedback Form</CardTitle>
-          <Button 
-            variant="outline" 
-            onClick={onViewReports}
-            className="flex items-center gap-2"
-          >
-            <FileText className="h-4 w-4" /> View Reports
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={handleDebug}
+              className="flex items-center gap-2"
+              type="button"
+            >
+              <Bug className="h-4 w-4" /> Debug
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={onViewReports}
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" /> View Reports
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>

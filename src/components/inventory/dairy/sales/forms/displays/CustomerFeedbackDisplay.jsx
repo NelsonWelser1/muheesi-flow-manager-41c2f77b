@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Star, StarHalf } from "lucide-react";
+import { ArrowLeft, Star, StarHalf, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/supabase";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
@@ -21,13 +21,18 @@ const CustomerFeedbackDisplay = ({ onBack }) => {
   const fetchCustomerFeedback = async () => {
     setIsLoading(true);
     try {
+      console.log("Fetching customer feedback data...");
       const { data, error } = await supabase
         .from('customer_feedback')
         .select('*')
         .order('feedback_date', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching feedback:", error);
+        throw error;
+      }
 
+      console.log(`Retrieved ${data?.length || 0} feedback records`);
       setFeedbacks(data || []);
     } catch (error) {
       console.error('Error fetching customer feedback:', error);
@@ -43,7 +48,7 @@ const CustomerFeedbackDisplay = ({ onBack }) => {
     if (activeTab === "high") {
       return feedbacks.filter(feedback => feedback.satisfaction_rating >= 4);
     } else if (activeTab === "medium") {
-      return feedbacks.filter(feedback => feedback.satisfaction_rating >= 3 && feedback.satisfaction_rating < 4);
+      return feedbacks.filter(feedback => feedback.satisfaction_rating === 3);
     } else if (activeTab === "low") {
       return feedbacks.filter(feedback => feedback.satisfaction_rating < 3);
     }
@@ -57,7 +62,7 @@ const CustomerFeedbackDisplay = ({ onBack }) => {
   };
 
   const renderStars = (rating) => {
-    if (!rating) return "No rating";
+    if (!rating && rating !== 0) return "No rating";
     
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
@@ -68,7 +73,7 @@ const CustomerFeedbackDisplay = ({ onBack }) => {
           <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
         ))}
         {hasHalfStar && <StarHalf className="h-4 w-4 fill-yellow-400 text-yellow-400" />}
-        <span className="ml-1 text-sm">({rating.toFixed(1)})</span>
+        <span className="ml-1 text-sm">({rating})</span>
       </div>
     );
   };
@@ -83,6 +88,13 @@ const CustomerFeedbackDisplay = ({ onBack }) => {
         >
           <ArrowLeft className="h-4 w-4" /> Back
         </Button>
+        <Button 
+          variant="outline" 
+          onClick={fetchCustomerFeedback}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" /> Refresh Data
+        </Button>
       </div>
 
       <Card>
@@ -94,8 +106,8 @@ const CustomerFeedbackDisplay = ({ onBack }) => {
             <TabsList className="mb-4">
               <TabsTrigger value="all">All Feedback</TabsTrigger>
               <TabsTrigger value="high">High Satisfaction (4-5)</TabsTrigger>
-              <TabsTrigger value="medium">Medium Satisfaction (3-4)</TabsTrigger>
-              <TabsTrigger value="low">Low Satisfaction (0-3)</TabsTrigger>
+              <TabsTrigger value="medium">Medium Satisfaction (3)</TabsTrigger>
+              <TabsTrigger value="low">Low Satisfaction (1-2)</TabsTrigger>
             </TabsList>
 
             <TabsContent value={activeTab}>
