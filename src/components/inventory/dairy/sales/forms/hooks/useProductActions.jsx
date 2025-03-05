@@ -1,20 +1,11 @@
 
-import { useProductsFetching } from './useProductsFetching';
-import { useCurrencyFormat } from './useCurrencyFormat';
-import { useProductCalculations } from './useProductCalculations';
-import { useProductActions } from './useProductActions';
 import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 
-export const useProductSelection = (setValue, watch, initialCurrency) => {
+export const useProductActions = (setValue, watch, formatCurrency) => {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const { toast } = useToast();
-  
-  // Use smaller, focused hooks
-  const { loading, products } = useProductsFetching();
-  const { currency, setCurrency, formatCurrency, parseCurrency } = useCurrencyFormat(initialCurrency);
-  const { handlePriceChange, calculateGrandTotal } = useProductCalculations(setValue, watch, formatCurrency, parseCurrency);
-  
+
   // Handle product selection
   const handleProductSelect = (productId) => {
     const product = products.find(p => p.id === Number(productId));
@@ -27,7 +18,7 @@ export const useProductSelection = (setValue, watch, initialCurrency) => {
   };
 
   // Add product to the list
-  const handleAddProduct = () => {
+  const handleAddProduct = (products) => {
     const productType = watch('product_type');
     const quantity = watch('product_quantity');
     const price = watch('product_price');
@@ -68,20 +59,12 @@ export const useProductSelection = (setValue, watch, initialCurrency) => {
   };
 
   return {
-    loading,
-    products,
     selectedProducts,
     setSelectedProducts,
-    currency,
-    setCurrency,
     handleProductSelect,
-    handlePriceChange,
     handleAddProduct,
-    removeProduct,
-    calculateGrandTotal,
-    formatCurrency,
-    parseCurrency
+    removeProduct
   };
 };
 
-export default useProductSelection;
+export default useProductActions;
