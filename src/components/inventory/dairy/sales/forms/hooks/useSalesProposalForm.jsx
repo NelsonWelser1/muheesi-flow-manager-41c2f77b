@@ -20,7 +20,9 @@ export const useSalesProposalForm = () => {
     removeProduct,
     updateGrandTotal,
     currency,
-    setCurrency
+    setCurrency,
+    cycleCurrency,
+    currencies
   } = useProductsManagement();
   
   // Form submission
@@ -52,7 +54,9 @@ export const useSalesProposalForm = () => {
     isSubmitting,
     debugState,
     currency,
-    setCurrency
+    setCurrency,
+    cycleCurrency,
+    currencies
   };
 };
 

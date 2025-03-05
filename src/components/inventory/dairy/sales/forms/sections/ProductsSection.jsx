@@ -1,10 +1,25 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash, ChevronUp, ChevronDown } from "lucide-react";
+import { 
+  Plus, 
+  Trash, 
+  ChevronUp, 
+  ChevronDown, 
+  DollarSign, 
+  Euro,
+  PoundSterling,
+  Yen
+} from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 const ProductsSection = ({ 
   products, 
@@ -12,27 +27,30 @@ const ProductsSection = ({
   addProduct,
   removeProduct,
   currency,
-  setCurrency 
+  setCurrency,
+  cycleCurrency,
+  currencies
 }) => {
-  // Function to toggle between currencies
-  const cycleCurrency = (direction) => {
-    const currencies = ['UGX', '$', '€'];
-    const currentIndex = currencies.indexOf(currency);
-    let newIndex;
-    
-    if (direction === 'up') {
-      newIndex = (currentIndex + 1) % currencies.length;
-    } else {
-      newIndex = (currentIndex - 1 + currencies.length) % currencies.length;
-    }
-    
-    setCurrency(currencies[newIndex]);
-  };
+  const [grandTotal, setGrandTotal] = useState('0.00');
 
-  // Calculate grand total
-  const grandTotal = products.reduce((sum, product) => {
-    return sum + (parseFloat(product.final_price) || 0);
-  }, 0).toFixed(2);
+  // Calculate grand total whenever products change
+  useEffect(() => {
+    const total = products.reduce((sum, product) => {
+      return sum + (parseFloat(product.final_price) || 0);
+    }, 0);
+    setGrandTotal(total.toFixed(2));
+  }, [products]);
+
+  // Function to get the currency icon
+  const getCurrencyIcon = (curr) => {
+    switch(curr) {
+      case '$': return <DollarSign className="h-4 w-4" />;
+      case '€': return <Euro className="h-4 w-4" />;
+      case '£': return <PoundSterling className="h-4 w-4" />;
+      case '¥': return <Yen className="h-4 w-4" />;
+      default: return 'UGX';
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -83,9 +101,25 @@ const ProductsSection = ({
             <div className="space-y-2">
               <FormLabel>Base Price</FormLabel>
               <div className="flex relative">
-                <div className="absolute left-0 inset-y-0 flex items-center pl-3 text-gray-500">
-                  {currency}
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="absolute left-0 inset-y-0 flex items-center pl-3 text-gray-500 cursor-pointer">
+                      {typeof getCurrencyIcon(currency) === 'string' ? currency : getCurrencyIcon(currency)}
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="bg-background border">
+                    {currencies.map((curr) => (
+                      <DropdownMenuItem 
+                        key={curr}
+                        onClick={() => setCurrency(curr)}
+                        className="cursor-pointer flex items-center gap-2"
+                      >
+                        {typeof getCurrencyIcon(curr) === 'string' ? curr : getCurrencyIcon(curr)}
+                        <span>{curr}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Input
                   type="number"
                   step="0.01"
@@ -130,7 +164,7 @@ const ProductsSection = ({
               <FormLabel>Final Price</FormLabel>
               <div className="flex relative">
                 <div className="absolute left-0 inset-y-0 flex items-center pl-3 text-gray-500">
-                  {currency}
+                  {typeof getCurrencyIcon(currency) === 'string' ? currency : getCurrencyIcon(currency)}
                 </div>
                 <Input
                   readOnly
@@ -147,7 +181,7 @@ const ProductsSection = ({
         <span>Grand Total:</span>
         <div className="flex relative w-32">
           <div className="absolute left-0 inset-y-0 flex items-center pl-3 text-gray-500">
-            {currency}
+            {typeof getCurrencyIcon(currency) === 'string' ? currency : getCurrencyIcon(currency)}
           </div>
           <Input
             readOnly

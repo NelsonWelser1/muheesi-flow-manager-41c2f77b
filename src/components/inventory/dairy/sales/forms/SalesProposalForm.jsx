@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileText, Bug } from "lucide-react";
-import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 import CustomerInfoSection from './sections/CustomerInfoSection';
 import ProductsSection from './sections/ProductsSection';
@@ -23,7 +22,9 @@ const SalesProposalForm = ({ onBack, onViewReports }) => {
     isSubmitting, 
     debugState,
     currency,
-    setCurrency 
+    setCurrency,
+    cycleCurrency,
+    currencies
   } = useSalesProposalForm();
 
   return (
@@ -62,6 +63,8 @@ const SalesProposalForm = ({ onBack, onViewReports }) => {
                 removeProduct={removeProduct}
                 currency={currency}
                 setCurrency={setCurrency}
+                cycleCurrency={cycleCurrency}
+                currencies={currencies}
               />
               
               <TermsConditionsSection form={form} />

@@ -18,6 +18,7 @@ export const useProposalSubmission = (reset, products, currency = 'UGX') => {
   const onSubmit = async (data) => {
     console.log("Form submitted with data:", data);
     console.log("Products at submission:", products);
+    console.log("Current currency:", currency);
     
     setIsSubmitting(true);
     
@@ -37,6 +38,8 @@ export const useProposalSubmission = (reset, products, currency = 'UGX') => {
       const grandTotal = products.reduce((sum, product) => {
         return sum + (parseFloat(product.final_price) || 0);
       }, 0).toFixed(2);
+      
+      console.log("Calculated grand total:", grandTotal);
       
       // Create proposal object with form data and products
       const proposalData = {

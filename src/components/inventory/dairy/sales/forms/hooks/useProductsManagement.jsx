@@ -11,6 +11,23 @@ export const useProductsManagement = (onGrandTotalChange) => {
   }]);
   
   const [currency, setCurrency] = useState('UGX');
+  
+  // Available currencies
+  const currencies = ['UGX', '$', '€', '£', '¥'];
+
+  // Function to cycle through currencies
+  const cycleCurrency = (direction) => {
+    const currentIndex = currencies.indexOf(currency);
+    let newIndex;
+    
+    if (direction === 'up') {
+      newIndex = (currentIndex + 1) % currencies.length;
+    } else {
+      newIndex = (currentIndex - 1 + currencies.length) % currencies.length;
+    }
+    
+    setCurrency(currencies[newIndex]);
+  };
 
   // Calculate grand total based on products
   const updateGrandTotal = () => {
@@ -101,7 +118,9 @@ export const useProductsManagement = (onGrandTotalChange) => {
     removeProduct,
     updateGrandTotal,
     currency,
-    setCurrency
+    setCurrency,
+    cycleCurrency,
+    currencies
   };
 };
 
