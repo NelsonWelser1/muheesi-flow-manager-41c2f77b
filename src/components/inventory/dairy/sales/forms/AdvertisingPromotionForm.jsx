@@ -7,19 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/supabase";
-import { ArrowLeft, Plus, Trash, Upload, X } from "lucide-react";
+import { ArrowLeft, Plus, Trash, Upload, X, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
+import { useAdvertisingPromotions } from './hooks/useAdvertisingPromotions';
 
-const AdvertisingPromotionForm = ({ onBack }) => {
+const AdvertisingPromotionForm = ({ onBack, onViewReports }) => {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isSubmitting, submitPromotion } = useAdvertisingPromotions();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [channels, setChannels] = useState([
     { name: '', audience: '', budget: '', description: '' }
   ]);
+  const [debugModeEnabled, setDebugModeEnabled] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -73,79 +73,36 @@ const AdvertisingPromotionForm = ({ onBack }) => {
     setSelectedFiles(selectedFiles.filter(file => file.id !== id));
   };
 
-  const uploadFiles = async (promotionId) => {
-    const uploadPromises = selectedFiles.map(async (fileObj) => {
-      const fileExt = fileObj.name.split('.').pop();
-      const fileName = `${promotionId}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `promotions/${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('marketing')
-        .upload(filePath, fileObj.file);
-      
-      if (uploadError) throw uploadError;
-      
-      const { data: urlData } = supabase.storage
-        .from('marketing')
-        .getPublicUrl(filePath);
-      
-      return {
-        name: fileObj.name,
-        path: filePath,
-        type: fileObj.type,
-        size: fileObj.size,
-        url: urlData.publicUrl
-      };
+  // Debug handler
+  const handleDebugPrint = () => {
+    const formData = form.getValues();
+    console.log('Current form data:', {
+      ...formData,
+      channels: channels,
+      files: selectedFiles.map(f => ({ name: f.name, type: f.type, size: f.size }))
     });
-    
-    return Promise.all(uploadPromises);
+    toast({
+      title: "Debug Info",
+      description: "Form data printed to console"
+    });
   };
 
   const onSubmit = async (data) => {
-    setIsSubmitting(true);
-    try {
-      // Generate a promotion ID
-      const promotionId = `PROM-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
-      
-      const { data: userData } = await supabase.auth.getUser();
-      
-      // Upload files if any
-      let fileUrls = [];
-      if (selectedFiles.length > 0) {
-        try {
-          fileUrls = await uploadFiles(promotionId);
-        } catch (uploadError) {
-          console.error('Error uploading files:', uploadError);
-          throw new Error('Failed to upload promotional materials: ' + uploadError.message);
-        }
-      }
-      
-      // Format data for Supabase
-      const formattedData = {
-        promotion_id: promotionId,
-        title: data.promotion_title,
-        material_type: data.material_type,
-        promotion_type: data.promotion_type,
-        target_audience: data.target_audience,
-        objectives: data.objectives,
-        start_date: data.start_date,
-        end_date: data.end_date,
-        budget: data.budget,
+    // If debug mode is enabled, log the form data
+    if (debugModeEnabled) {
+      console.log('Form submission data:', {
+        ...data,
         channels: channels,
-        assets_urls: fileUrls,
-        status: data.status,
-        created_at: new Date().toISOString(),
-        created_by: userData?.user?.id || null
-      };
-
-      const { error } = await supabase
-        .from('advertising_promotions')
-        .insert([formattedData]);
-
-      if (error) throw error;
-
-      showSuccessToast(toast, "Advertising/Promotion campaign created successfully");
-
+        files: selectedFiles.map(f => ({ name: f.name, type: f.type, size: f.size }))
+      });
+    }
+    
+    const success = await submitPromotion(
+      { ...data, channels: channels },
+      selectedFiles
+    );
+    
+    if (success) {
       // Reset form
       form.reset({
         promotion_title: '',
@@ -160,23 +117,48 @@ const AdvertisingPromotionForm = ({ onBack }) => {
       });
       setChannels([{ name: '', audience: '', budget: '', description: '' }]);
       setSelectedFiles([]);
-    } catch (error) {
-      console.error('Error creating advertising/promotion:', error);
-      showErrorToast(toast, "Failed to create campaign: " + error.message);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="space-y-4">
-      <Button 
-        variant="outline" 
-        onClick={onBack}
-        className="flex items-center gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back
-      </Button>
+      <div className="flex justify-between items-center">
+        <Button 
+          variant="outline" 
+          onClick={onBack}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back
+        </Button>
+        
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => setDebugModeEnabled(!debugModeEnabled)}
+            className="flex items-center gap-2"
+          >
+            {debugModeEnabled ? 'Disable Debug' : 'Enable Debug'}
+          </Button>
+          
+          {debugModeEnabled && (
+            <Button
+              variant="outline"
+              onClick={handleDebugPrint}
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" /> Print Form Data
+            </Button>
+          )}
+          
+          <Button 
+            variant="outline" 
+            onClick={onViewReports}
+            className="flex items-center gap-2"
+          >
+            View Campaigns
+          </Button>
+        </div>
+      </div>
 
       <Card>
         <CardHeader>
@@ -499,6 +481,16 @@ const AdvertisingPromotionForm = ({ onBack }) => {
                   </div>
                 )}
               </div>
+
+              {debugModeEnabled && (
+                <div className="bg-gray-50 p-4 rounded-md">
+                  <h3 className="text-sm font-medium mb-2">Debug Information:</h3>
+                  <p className="text-xs">
+                    Form will submit to the <code>advertising_promotions</code> table in Supabase.
+                    Files will be uploaded to the <code>marketing</code> bucket in Supabase Storage.
+                  </p>
+                </div>
+              )}
 
               <div className="flex justify-end">
                 <Button

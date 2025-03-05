@@ -1,56 +1,46 @@
 
-import { toast } from "./use-toast";
-
 /**
- * Shows a success toast notification
- * @param {Function} toastFunction - The toast function from useToast hook
- * @param {string} message - The message to display
+ * Utility functions for displaying toast notifications in a consistent way
  */
-export const showSuccessToast = (toastFunction, message) => {
-  toastFunction({
+
+export const showSuccessToast = (toast, message) => {
+  toast({
     title: "Success",
     description: message,
-    variant: "default",
+    variant: "default"
   });
 };
 
-/**
- * Shows an error toast notification
- * @param {Function} toastFunction - The toast function from useToast hook
- * @param {string} message - The error message to display
- */
-export const showErrorToast = (toastFunction, message) => {
-  toastFunction({
+export const showErrorToast = (toast, message) => {
+  toast({
     title: "Error",
     description: message,
-    variant: "destructive",
+    variant: "destructive"
   });
 };
 
-/**
- * Shows a warning toast notification
- * @param {Function} toastFunction - The toast function from useToast hook
- * @param {string} message - The warning message to display
- */
-export const showWarningToast = (toastFunction, message) => {
-  toastFunction({
-    title: "Warning",
-    description: message,
-    variant: "default",
-    className: "bg-yellow-50 border-yellow-400 text-yellow-800",
-  });
-};
-
-/**
- * Shows an info toast notification
- * @param {Function} toastFunction - The toast function from useToast hook
- * @param {string} message - The info message to display
- */
-export const showInfoToast = (toastFunction, message) => {
-  toastFunction({
+export const showInfoToast = (toast, message) => {
+  toast({
     title: "Information",
     description: message,
-    variant: "default",
-    className: "bg-blue-50 border-blue-400 text-blue-800",
+    variant: "default"
   });
+};
+
+export const showWarningToast = (toast, message) => {
+  toast({
+    title: "Warning",
+    description: message,
+    variant: "destructive"
+  });
+};
+
+export const showDebugToast = (toast, message) => {
+  if (process.env.NODE_ENV !== 'production') {
+    toast({
+      title: "Debug",
+      description: message,
+      variant: "default"
+    });
+  }
 };
