@@ -7,7 +7,7 @@ import CustomerManagement from './CustomerManagement';
 import ProductCatalogForm from './forms/ProductCatalogForm';
 import PricingSheetsForm from './forms/PricingSheetsForm';
 import SalesProposalForm from './forms/SalesProposalForm';
-import CustomerFeedbackForm from './forms/CustomerFeedbackForm';
+import CustomerFeedbackForm from './forms/customer-feedback';
 import CRMReportsForm from './forms/CRMReportsForm';
 import AdvertisingPromotionForm from './forms/AdvertisingPromotionForm';
 import SalesContractForm from './forms/SalesContractForm';
