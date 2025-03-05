@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { 
@@ -22,7 +21,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
-import { CalendarIcon, ArrowLeft, PlusCircle, Trash2, FileText } from "lucide-react";
+import { CalendarIcon, ArrowLeft, PlusCircle, Trash2, FileText, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -76,7 +75,6 @@ const SalesContractsForm = ({ onBack }) => {
     const updatedProducts = [...products];
     updatedProducts[index][field] = value;
     
-    // Calculate total if quantity or unit_price changes
     if (field === 'quantity' || field === 'unit_price') {
       const quantity = field === 'quantity' ? parseFloat(value) || 0 : 
         parseFloat(updatedProducts[index].quantity) || 0;
@@ -96,7 +94,6 @@ const SalesContractsForm = ({ onBack }) => {
   };
 
   const onSubmit = async (data) => {
-    // Validate products
     if (products.length === 0 || !products.some(p => p.name.trim() !== '')) {
       toast({
         title: "Validation Error",
@@ -108,17 +105,14 @@ const SalesContractsForm = ({ onBack }) => {
     
     setIsSubmitting(true);
     try {
-      // Generate a contract ID
       const contractId = `SC-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
       
-      // Log form data for debugging
       console.log('Form data before submission:', {
         ...data,
         products,
         total_value: calculateTotal()
       });
       
-      // Format data for Supabase
       const formattedData = {
         contract_id: contractId,
         contract_title: data.contract_title,
@@ -141,7 +135,6 @@ const SalesContractsForm = ({ onBack }) => {
       
       console.log('Formatted data for Supabase:', formattedData);
       
-      // Call our createContract function from the hook
       const { success, error } = await createContract(formattedData);
 
       if (!success) throw new Error(error);
@@ -151,7 +144,6 @@ const SalesContractsForm = ({ onBack }) => {
         description: "Sales contract created successfully"
       });
 
-      // Reset form
       form.reset();
       setProducts([{ name: '', quantity: '', unit_price: '', total: '' }]);
     } catch (error) {
@@ -166,7 +158,6 @@ const SalesContractsForm = ({ onBack }) => {
     }
   };
 
-  // Debug function for logging form data
   const debugFormData = () => {
     const formData = form.getValues();
     console.log('Current form values:', formData);
@@ -190,7 +181,7 @@ const SalesContractsForm = ({ onBack }) => {
           onClick={() => setShowDisplay(true)}
           className="flex items-center gap-2"
         >
-          <FileText className="h-4 w-4" /> View Contracts
+          <Database className="h-4 w-4" /> View Records
         </Button>
       </div>
 

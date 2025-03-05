@@ -15,34 +15,44 @@ import { Badge } from "@/components/ui/badge";
 import { 
   ArrowLeft, 
   Search, 
-  FileText, 
   MoreHorizontal,
   Trash2, 
   Edit, 
   Eye,
-  Download
+  Download,
+  FileText,
+  FileSpreadsheet,
+  Share2,
+  Mail,
+  Filter
 } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import { useSalesContracts } from '../hooks/useSalesContracts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 const SalesContractsDisplay = ({ onBack }) => {
   const { contracts, isLoading, deleteContract, fetchContracts } = useSalesContracts();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const { toast } = useToast();
 
   // Filter contracts based on search term and active tab
   const filteredContracts = contracts.filter(contract => {
     const matchesSearch = 
-      contract.contract_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.contract_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.client_name.toLowerCase().includes(searchTerm.toLowerCase());
+      contract.contract_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.contract_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.client_name?.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (activeTab === 'all') return matchesSearch;
     return matchesSearch && contract.status === activeTab;
@@ -92,6 +102,180 @@ const SalesContractsDisplay = ({ onBack }) => {
     }
   };
 
+  // Export to PDF
+  const exportToPDF = () => {
+    try {
+      const doc = new jsPDF();
+      doc.text('Sales Contracts Report', 14, 16);
+      doc.text(`Generated: ${format(new Date(), 'MMM dd, yyyy HH:mm')}`, 14, 24);
+      
+      // Extract the data we want to display
+      const tableData = filteredContracts.map(contract => [
+        contract.contract_id,
+        contract.contract_title,
+        contract.client_name,
+        formatDate(contract.start_date),
+        formatDate(contract.end_date),
+        formatCurrency(contract.total_value),
+        contract.status
+      ]);
+      
+      doc.autoTable({
+        head: [['ID', 'Title', 'Client', 'Start Date', 'End Date', 'Value', 'Status']],
+        body: tableData,
+        startY: 30,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [41, 128, 185], textColor: [255, 255, 255] }
+      });
+      
+      doc.save('sales_contracts.pdf');
+      
+      toast({
+        title: "Success",
+        description: "PDF exported successfully",
+      });
+    } catch (error) {
+      console.error('Error exporting to PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to export PDF",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Export to Excel
+  const exportToExcel = () => {
+    try {
+      const tableData = filteredContracts.map(contract => ({
+        'Contract ID': contract.contract_id,
+        'Title': contract.contract_title,
+        'Client': contract.client_name,
+        'Start Date': formatDate(contract.start_date),
+        'End Date': formatDate(contract.end_date),
+        'Total Value': contract.total_value,
+        'Status': contract.status
+      }));
+      
+      const worksheet = XLSX.utils.json_to_sheet(tableData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Contracts");
+      
+      XLSX.writeFile(workbook, 'sales_contracts.xlsx');
+      
+      toast({
+        title: "Success",
+        description: "Excel file exported successfully",
+      });
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast({
+        title: "Error",
+        description: "Failed to export Excel file",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Export to CSV
+  const exportToCSV = () => {
+    try {
+      const tableData = filteredContracts.map(contract => ({
+        'Contract ID': contract.contract_id,
+        'Title': contract.contract_title,
+        'Client': contract.client_name,
+        'Start Date': formatDate(contract.start_date),
+        'End Date': formatDate(contract.end_date),
+        'Total Value': contract.total_value,
+        'Status': contract.status
+      }));
+      
+      const worksheet = XLSX.utils.json_to_sheet(tableData);
+      const csv = XLSX.utils.sheet_to_csv(worksheet);
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'sales_contracts.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Success",
+        description: "CSV file exported successfully",
+      });
+    } catch (error) {
+      console.error('Error exporting to CSV:', error);
+      toast({
+        title: "Error",
+        description: "Failed to export CSV file",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Share functions
+  const shareViaEmail = () => {
+    try {
+      // Generate the export first
+      const doc = new jsPDF();
+      doc.text('Sales Contracts Report', 14, 16);
+      
+      // Extract the data we want to display
+      const tableData = filteredContracts.map(contract => [
+        contract.contract_id,
+        contract.contract_title,
+        contract.client_name,
+        formatDate(contract.start_date),
+        formatDate(contract.end_date),
+        formatCurrency(contract.total_value),
+        contract.status
+      ]);
+      
+      doc.autoTable({
+        head: [['ID', 'Title', 'Client', 'Start Date', 'End Date', 'Value', 'Status']],
+        body: tableData,
+        startY: 30,
+      });
+      
+      // In a real app, we would send this PDF via email using a backend service
+      // For now, we'll just show a toast notification
+      toast({
+        title: "Email Sharing",
+        description: "This would email the PDF in a real application. Feature coming soon.",
+      });
+    } catch (error) {
+      console.error('Error sharing via email:', error);
+      toast({
+        title: "Error",
+        description: "Failed to share via email",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const shareViaWhatsApp = () => {
+    try {
+      // In a real app, we would generate a shareable link to the report
+      // For now, we'll just show a toast notification
+      toast({
+        title: "WhatsApp Sharing",
+        description: "This would share a link via WhatsApp in a real application. Feature coming soon.",
+      });
+    } catch (error) {
+      console.error('Error sharing via WhatsApp:', error);
+      toast({
+        title: "Error",
+        description: "Failed to share via WhatsApp",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Button 
@@ -115,6 +299,38 @@ const SalesContractsDisplay = ({ onBack }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Download className="h-4 w-4" />
+                  <span className="sr-only">Export</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={exportToPDF}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Export as PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToExcel}>
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Export as Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToCSV}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={shareViaEmail}>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Share via Email
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={shareViaWhatsApp}>
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Share via WhatsApp
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardHeader>
         <CardContent>
