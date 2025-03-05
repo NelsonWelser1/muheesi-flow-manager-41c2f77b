@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 
-export const useProductsManagement = (onGrandTotalChange) => {
+export const useProductsManagement = () => {
   const [products, setProducts] = useState([{ 
     name: '', 
     category: '', 
@@ -35,14 +35,10 @@ export const useProductsManagement = (onGrandTotalChange) => {
       return sum + (parseFloat(product.final_price) || 0);
     }, 0);
     
-    if (onGrandTotalChange) {
-      onGrandTotalChange(total.toFixed(2));
-    }
-    
     return total.toFixed(2);
   };
 
-  // Update final prices and grand total whenever products change
+  // Update final prices whenever products change
   useEffect(() => {
     const newProducts = [...products];
     
@@ -62,9 +58,6 @@ export const useProductsManagement = (onGrandTotalChange) => {
     if (JSON.stringify(newProducts) !== JSON.stringify(products)) {
       setProducts(newProducts);
     }
-    
-    // Update grand total
-    updateGrandTotal();
   }, [products]);
 
   // Handle product changes
@@ -85,9 +78,6 @@ export const useProductsManagement = (onGrandTotalChange) => {
     }
     
     setProducts(newProducts);
-    
-    // Recalculate grand total after product change
-    return updateGrandTotal();
   };
 
   // Add a new product
