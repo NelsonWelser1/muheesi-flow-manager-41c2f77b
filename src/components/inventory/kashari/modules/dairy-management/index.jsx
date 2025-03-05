@@ -4,8 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DailyProduction from './DailyProduction';
 import QualityMetrics from './QualityMetrics';
 import SalesOverview from './SalesOverview';
+import ProductionTable from './components/ProductionTable';
+import { useDairyProductionData } from './hooks/useDairyProductionData';
 
 const DairyManagement = () => {
+  const { productions, isLoading } = useDairyProductionData();
+  
   return (
     <div className="space-y-6">
       <Card>
@@ -17,6 +21,11 @@ const DairyManagement = () => {
             <DailyProduction />
             <QualityMetrics />
             <SalesOverview />
+          </div>
+          
+          <div className="mt-8">
+            <h3 className="text-lg font-medium mb-4">Recent Production Records</h3>
+            <ProductionTable productions={productions} isLoading={isLoading} />
           </div>
         </CardContent>
       </Card>
