@@ -1,23 +1,22 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import React, { useEffect, useState } from 'react';
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { ArrowLeft, Download, FileText, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/supabase";
-import { Loader2, Search, ArrowLeft, Calendar } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
 import { showErrorToast } from "@/components/ui/notifications";
-import { format } from 'date-fns';
+import { useToast } from "@/components/ui/use-toast";
 
 export const PricingSheetsDisplay = ({ onBack }) => {
   const [pricingSheets, setPricingSheets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredSheets, setFilteredSheets] = useState([]);
-  const [activeTab, setActiveTab] = useState("all");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -25,160 +24,175 @@ export const PricingSheetsDisplay = ({ onBack }) => {
   }, []);
 
   const fetchPricingSheets = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       console.log('Fetching pricing sheets...');
       
       const { data, error } = await supabase
         .from('pricing_sheets')
         .select('*')
         .order('created_at', { ascending: false });
-
+      
       if (error) {
         console.error('Error fetching pricing sheets:', error);
-        showErrorToast(toast, "Failed to load pricing sheets: " + error.message);
-        throw error;
+        showErrorToast(toast, "Failed to fetch pricing sheets");
+        return;
       }
-
-      console.log('Pricing sheets fetched:', data);
+      
+      console.log('Pricing sheets fetched successfully:', data);
       setPricingSheets(data || []);
-      setFilteredSheets(data || []);
     } catch (error) {
       console.error('Error in fetchPricingSheets:', error);
+      showErrorToast(toast, "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (!searchTerm.trim() && activeTab === "all") {
-      setFilteredSheets(pricingSheets);
-      return;
-    }
-
-    const filtered = pricingSheets.filter(sheet => {
-      // Filter by search term
-      const matchesSearch = searchTerm.trim() === '' || 
-        sheet.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sheet.sheet_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sheet.description?.toLowerCase().includes(searchTerm.toLowerCase());
+  const handleExport = (pricingSheet) => {
+    try {
+      // Convert pricing sheet to JSON string
+      const dataStr = JSON.stringify(pricingSheet, null, 2);
+      // Create a blob with the data
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      // Create an object URL for the blob
+      const url = URL.createObjectURL(blob);
       
-      // Filter by status tab
-      const matchesTab = activeTab === "all" || sheet.status === activeTab;
+      // Create a temporary link element
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pricing-sheet-${pricingSheet.sheet_id}.json`;
       
-      return matchesSearch && matchesTab;
-    });
-    
-    setFilteredSheets(filtered);
-  }, [searchTerm, activeTab, pricingSheets]);
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-500">Active</Badge>;
-      case 'expired':
-        return <Badge variant="destructive">Expired</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-500">Pending</Badge>;
-      case 'draft':
-        return <Badge variant="secondary">Draft</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
+      // Trigger the download
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting pricing sheet:', error);
+      showErrorToast(toast, "Failed to export pricing sheet");
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return format(new Date(dateString), 'MMM d, yyyy');
-  };
+  const filteredSheets = searchTerm.trim() === '' 
+    ? pricingSheets 
+    : pricingSheets.filter(sheet => 
+        sheet.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sheet.sheet_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sheet.status.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Pricing Sheets</CardTitle>
-        <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Button>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Pricing Sheets</CardTitle>
+          <Button 
+            variant="outline" 
+            onClick={onBack}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Form
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4 relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              type="search"
               placeholder="Search pricing sheets..."
-              className="pl-8"
+              className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-        </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="pending">Pending</TabsTrigger>
-            <TabsTrigger value="draft">Draft</TabsTrigger>
-            <TabsTrigger value="expired">Expired</TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : filteredSheets.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No pricing sheets found.
-          </div>
-        ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Sheet ID</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Effective Date</TableHead>
-                  <TableHead>Expiry Date</TableHead>
-                  <TableHead className="text-right">Products</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSheets.map((sheet) => (
-                  <TableRow key={sheet.id}>
-                    <TableCell className="font-medium">{sheet.sheet_id}</TableCell>
-                    <TableCell>{sheet.title}</TableCell>
-                    <TableCell>{getStatusBadge(sheet.status)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {formatDate(sheet.effective_date)}
+          {isLoading ? (
+            <div className="text-center py-8">Loading pricing sheets...</div>
+          ) : filteredSheets.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {searchTerm.trim() !== '' 
+                ? "No pricing sheets match your search criteria" 
+                : "No pricing sheets found. Create one to get started!"}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredSheets.map((sheet, index) => (
+                <Card key={sheet.id} className="overflow-hidden">
+                  <div className="bg-muted p-4 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium">{sheet.title}</h3>
+                      <p className="text-sm text-muted-foreground">ID: {sheet.sheet_id}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExport(sheet)}
+                        className="flex items-center gap-1"
+                      >
+                        <Download className="h-4 w-4" /> Export
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      <div>
+                        <p className="text-sm font-medium">Status</p>
+                        <p className="text-sm">{sheet.status}</p>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {sheet.expiry_date ? (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          {formatDate(sheet.expiry_date)}
-                        </div>
-                      ) : (
-                        '-'
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {Array.isArray(sheet.products) ? sheet.products.length : 0}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                      <div>
+                        <p className="text-sm font-medium">Effective Date</p>
+                        <p className="text-sm">{new Date(sheet.effective_date).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Expiry Date</p>
+                        <p className="text-sm">{sheet.expiry_date ? new Date(sheet.expiry_date).toLocaleDateString() : 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Products</p>
+                        <p className="text-sm">{sheet.products.length} products</p>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <p className="text-sm font-medium">Description</p>
+                      <p className="text-sm text-muted-foreground">{sheet.description || 'No description provided'}</p>
+                    </div>
+                    <div className="mt-4">
+                      <p className="text-sm font-medium">Products</p>
+                      <div className="mt-2 overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b">
+                              <th className="text-left py-2 px-1">Name</th>
+                              <th className="text-left py-2 px-1">Category</th>
+                              <th className="text-right py-2 px-1">Base Price</th>
+                              <th className="text-right py-2 px-1">Discount</th>
+                              <th className="text-right py-2 px-1">Final Price</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {sheet.products.map((product, idx) => (
+                              <tr key={idx} className="border-b last:border-b-0">
+                                <td className="py-2 px-1">{product.name}</td>
+                                <td className="py-2 px-1">{product.category}</td>
+                                <td className="py-2 px-1 text-right">${parseFloat(product.base_price).toFixed(2)}</td>
+                                <td className="py-2 px-1 text-right">{parseFloat(product.discount).toFixed(2)}%</td>
+                                <td className="py-2 px-1 text-right">${parseFloat(product.final_price).toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
-
-export default PricingSheetsDisplay;

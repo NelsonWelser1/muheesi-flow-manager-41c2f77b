@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from "@/integrations/supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
@@ -8,6 +8,8 @@ import { showSuccessToast, showErrorToast } from "@/components/ui/notifications"
 export const usePricingSheetsForm = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [pricingSheets, setPricingSheets] = useState([]);
   const [products, setProducts] = useState([{ 
     name: '', 
     category: '', 
@@ -25,6 +27,36 @@ export const usePricingSheetsForm = () => {
       status: 'draft'
     }
   });
+
+  useEffect(() => {
+    fetchPricingSheets();
+  }, []);
+
+  const fetchPricingSheets = async () => {
+    setIsLoading(true);
+    try {
+      console.log('Fetching pricing sheets...');
+      
+      const { data, error } = await supabase
+        .from('pricing_sheets')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching pricing sheets:', error);
+        showErrorToast(toast, "Failed to fetch pricing sheets");
+        return;
+      }
+      
+      console.log('Pricing sheets fetched successfully:', data);
+      setPricingSheets(data || []);
+    } catch (error) {
+      console.error('Error in fetchPricingSheets:', error);
+      showErrorToast(toast, "An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleDebug = () => {
     const formData = form.getValues();
@@ -88,6 +120,9 @@ export const usePricingSheetsForm = () => {
         discount: '0', 
         final_price: '0' 
       }]);
+      
+      // Refresh the pricing sheets list
+      fetchPricingSheets();
     } catch (error) {
       console.error('Error creating pricing sheet:', error);
       showErrorToast(toast, "Failed to create pricing sheet: " + error.message);
@@ -100,8 +135,11 @@ export const usePricingSheetsForm = () => {
     form,
     products,
     setProducts,
+    pricingSheets,
+    isLoading,
     isSubmitting,
     handleDebug,
-    onSubmit
+    onSubmit,
+    fetchPricingSheets
   };
 };
