@@ -32,6 +32,7 @@ const SalesProposalsForm = ({ onBack }) => {
     handleProductSelect,
     handlePriceChange,
     handleAddProduct,
+    removeProduct,
     onSubmit,
     calculateGrandTotal,
     formatCurrency,
@@ -88,6 +89,7 @@ const SalesProposalsForm = ({ onBack }) => {
               selectedProducts={selectedProducts}
               formatCurrency={formatCurrency}
               calculateGrandTotal={calculateGrandTotal}
+              removeProduct={removeProduct}
             />
             
             <TermsSection register={register} />

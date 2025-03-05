@@ -29,7 +29,7 @@ export const useSalesProposalForm = () => {
 
   // Format number with commas and currency
   const formatCurrency = (value) => {
-    if (!value) return '';
+    if (!value && value !== 0) return '';
     // Remove any non-numeric characters except decimal point
     const numericValue = value.toString().replace(/[^0-9.]/g, '');
     const number = parseFloat(numericValue);
@@ -154,8 +154,17 @@ export const useSalesProposalForm = () => {
     setValue('total_amount', '');
   };
 
+  // Remove product from the list
+  const removeProduct = (index) => {
+    const updatedProducts = [...selectedProducts];
+    updatedProducts.splice(index, 1);
+    setSelectedProducts(updatedProducts);
+  };
+
   // Calculate grand total
   const calculateGrandTotal = () => {
+    if (selectedProducts.length === 0) return 0;
+    
     return selectedProducts.reduce((total, product) => {
       const amount = parseCurrency(product.total_amount);
       return total + Number(amount);
@@ -182,15 +191,18 @@ export const useSalesProposalForm = () => {
       const proposal = {
         proposal_id: data.proposal_id,
         customer_name: data.customer_name,
-        contact_email: data.contact_email,
-        contact_phone: data.contact_phone,
-        products: selectedProducts,
-        validity_period: data.validity_period,
+        customer_email: data.contact_email,
+        customer_phone: data.contact_phone,
+        proposal_date: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
+        validity_period: parseInt(data.validity_period),
         terms_conditions: data.terms_conditions,
-        grand_total: formatCurrency(calculateGrandTotal()),
-        created_by: user?.id || 'anonymous',
-        created_at: new Date().toISOString(),
+        products: selectedProducts,
+        grand_total: calculateGrandTotal(),
+        status: 'draft',
+        created_by: user?.id || null
       };
+      
+      console.log('Submitting proposal:', proposal);
       
       // Insert into sales_proposals table
       const { error } = await supabase
@@ -240,6 +252,7 @@ export const useSalesProposalForm = () => {
     handleProductSelect,
     handlePriceChange,
     handleAddProduct,
+    removeProduct,
     onSubmit,
     calculateGrandTotal,
     formatCurrency,

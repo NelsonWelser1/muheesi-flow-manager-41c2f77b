@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS public.sales_proposals (
     customer_name TEXT NOT NULL,
     customer_email TEXT,
     customer_phone TEXT,
-    proposal_date DATE NOT NULL,
+    proposal_date DATE NOT NULL DEFAULT CURRENT_DATE,
     validity_period INTEGER NOT NULL,
     terms_conditions TEXT,
     products JSONB NOT NULL,
@@ -20,19 +20,28 @@ CREATE TABLE IF NOT EXISTS public.sales_proposals (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create trigger for updated_at
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
+-- Create trigger for updated_at (only if it doesn't exist)
+DO $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_sales_proposals_updated_at') THEN
+        -- Create the trigger function if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_updated_at_column') THEN
+            CREATE FUNCTION update_updated_at_column()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.updated_at = CURRENT_TIMESTAMP;
+                RETURN NEW;
+            END;
+            $$ language 'plpgsql';
+        END IF;
 
-CREATE TRIGGER update_sales_proposals_updated_at
-    BEFORE UPDATE ON sales_proposals
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+        -- Create the trigger
+        CREATE TRIGGER update_sales_proposals_updated_at
+            BEFORE UPDATE ON sales_proposals
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
 
 -- Enable RLS but with permissive policies for now (no authentication)
 ALTER TABLE public.sales_proposals ENABLE ROW LEVEL SECURITY;
