@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductCatalogForm from './forms/ProductCatalogForm';
 import PricingSheetsForm from './forms/PricingSheetsForm';
 import SalesProposalForm from './forms/SalesProposalForm';
-import CustomerFeedbackForm from './forms/CustomerFeedbackForm';
+import CustomerFeedbackForm from './forms/customer-feedback';
 import CRMReportsForm from './forms/CRMReportsForm';
 import AdvertisingPromotionForm from './forms/AdvertisingPromotionForm';
 import SalesContractsForm from './forms/SalesContractsForm';
