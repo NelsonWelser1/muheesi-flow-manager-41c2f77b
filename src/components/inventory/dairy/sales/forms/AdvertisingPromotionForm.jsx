@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FileText, Bug } from "lucide-react";
+import { FileText, Bug } from "lucide-react";
 import { useAdvertisingPromotion } from './hooks/useAdvertisingPromotion';
 
 const AdvertisingPromotionForm = ({ onBack, onViewReports }) => {
@@ -88,12 +87,7 @@ const AdvertisingPromotionForm = ({ onBack, onViewReports }) => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" onClick={onBack} className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Button>
-          <h2 className="text-xl font-semibold">Advertising & Promotion</h2>
-        </div>
+        <h2 className="text-xl font-semibold">Advertising & Promotion</h2>
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={onViewReports} className="flex items-center gap-2">
             <FileText className="h-4 w-4" /> View Reports
