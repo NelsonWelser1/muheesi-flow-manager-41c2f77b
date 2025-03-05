@@ -1,4 +1,34 @@
 
+/**
+ * Livestock Management Data Hook
+ * 
+ * This hook manages the state and data operations for the Livestock Management feature.
+ * 
+ * Flow:
+ * 1. On component mount, it checks if the livestock table exists and creates it if needed
+ * 2. It then fetches all livestock records from Supabase
+ * 3. Provides functions for CRUD operations (create, read, update, delete)
+ * 4. Handles form state for adding/editing livestock records
+ * 
+ * Debugging:
+ * - Console logs are added throughout to track data flow
+ * - The debugForm() function can be called to print current form values
+ * - Authentication is temporarily disabled (permissive RLS policies)
+ * 
+ * Form submission:
+ * - Form data is validated using Zod schema
+ * - On submit, data is sent to Supabase via the useFormSubmit hook
+ * - Success/error toasts provide feedback to the user
+ * 
+ * Database Schema:
+ * - animal_id: TEXT - Unique identifier for the animal
+ * - species: TEXT - Type of animal (cow, goat, etc)
+ * - breed: TEXT - Specific breed
+ * - age: TEXT - Age in months
+ * - health_status: TEXT - Current health condition
+ * - notes: TEXT - Optional additional information
+ */
+
 import { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

@@ -18,7 +18,8 @@ const LivestockManagement = () => {
     fetchAnimals,
     handleEdit,
     handleDelete,
-    resetForm
+    resetForm,
+    debugForm
   } = useLivestockData();
 
   return (
@@ -37,6 +38,7 @@ const LivestockManagement = () => {
             isEditing={isEditing}
             resetForm={resetForm}
             fetchAnimals={fetchAnimals}
+            debugForm={debugForm}
           />
         )}
         
