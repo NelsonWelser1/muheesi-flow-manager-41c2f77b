@@ -10,30 +10,35 @@ export const deliveryService = {
    */
   fetchAll: async () => {
     console.log('Fetching deliveries from Supabase database...');
-    const { data: session } = await supabase.auth.getSession();
-    
-    // Check authentication
-    if (!session?.session) {
-      console.log('User not authenticated, returning demo data');
-      // Return demo data for unauthenticated users
-      return [
-        { id: 'demo-1', delivery_id: 'DEMO-001', customer_name: 'Demo Customer', status: 'Delivered' },
-        { id: 'demo-2', delivery_id: 'DEMO-002', customer_name: 'Demo Customer 2', status: 'In Transit' },
-      ];
-    }
-    
-    const { data, error } = await supabase
-      .from('logistics_deliveries')
-      .select('*')
-      .order('created_at', { ascending: false });
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      // Check authentication
+      if (!session?.session) {
+        console.log('User not authenticated, returning demo data');
+        // Return demo data for unauthenticated users
+        return [
+          { id: 'demo-1', delivery_id: 'DEMO-001', customer_name: 'Demo Customer', status: 'Delivered' },
+          { id: 'demo-2', delivery_id: 'DEMO-002', customer_name: 'Demo Customer 2', status: 'In Transit' },
+        ];
+      }
+      
+      const { data, error } = await supabase
+        .from('logistics_deliveries')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Supabase fetch error:', error);
+      if (error) {
+        console.error('Supabase fetch error:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+      
+      console.log(`Successfully fetched ${data?.length || 0} deliveries:`, data);
+      return data || [];
+    } catch (error) {
+      console.error('Error in fetchAll:', error);
       throw error;
     }
-    
-    console.log(`Successfully fetched ${data?.length || 0} deliveries:`, data);
-    return data || [];
   },
 
   /**
@@ -41,32 +46,50 @@ export const deliveryService = {
    */
   create: async (deliveryData) => {
     console.log('Creating new delivery with data:', deliveryData);
-    const { data: session } = await supabase.auth.getSession();
-    
-    // Check authentication
-    if (!session?.session) {
-      console.error('Authentication required to create delivery');
-      throw new Error('You must be logged in to submit delivery records');
-    }
-    
-    // Add user ID to the delivery data
-    const userData = {
-      ...deliveryData,
-      operator_id: session.session.user.id
-    };
-    
-    const { data, error } = await supabase
-      .from('logistics_deliveries')
-      .insert([userData])
-      .select();
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      // Check authentication
+      if (!session?.session) {
+        console.error('Authentication required to create delivery');
+        throw new Error('You must be logged in to submit delivery records');
+      }
+      
+      // Validate required fields
+      const requiredFields = ['delivery_id', 'order_id', 'customer_name', 'status', 
+                              'pickup_location', 'delivery_location', 
+                              'scheduled_pickup_time', 'scheduled_delivery_time'];
+      
+      const missingFields = requiredFields.filter(field => !deliveryData[field]);
+      
+      if (missingFields.length > 0) {
+        const errorMsg = `Missing required fields: ${missingFields.join(', ')}`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      // Add user ID to the delivery data
+      const userData = {
+        ...deliveryData,
+        operator_id: session.session.user.id
+      };
+      
+      const { data, error } = await supabase
+        .from('logistics_deliveries')
+        .insert([userData])
+        .select();
 
-    if (error) {
-      console.error('Supabase insert error:', error);
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+      
+      console.log('Delivery created successfully:', data[0]);
+      return data[0];
+    } catch (error) {
+      console.error('Error in create:', error);
       throw error;
     }
-    
-    console.log('Delivery created successfully:', data[0]);
-    return data[0];
   },
 
   /**
@@ -74,27 +97,36 @@ export const deliveryService = {
    */
   getById: async (id) => {
     console.log('Fetching delivery by ID:', id);
-    const { data: session } = await supabase.auth.getSession();
-    
-    // Check authentication
-    if (!session?.session) {
-      console.error('Authentication required to fetch delivery details');
-      throw new Error('You must be logged in to view delivery details');
-    }
-    
-    const { data, error } = await supabase
-      .from('logistics_deliveries')
-      .select('*')
-      .eq('id', id)
-      .single();
+    try {
+      if (!id) {
+        throw new Error('Delivery ID is required');
+      }
+      
+      const { data: session } = await supabase.auth.getSession();
+      
+      // Check authentication
+      if (!session?.session) {
+        console.error('Authentication required to fetch delivery details');
+        throw new Error('You must be logged in to view delivery details');
+      }
+      
+      const { data, error } = await supabase
+        .from('logistics_deliveries')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-    if (error) {
-      console.error('Supabase fetch by ID error:', error);
+      if (error) {
+        console.error('Supabase fetch by ID error:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+      
+      console.log('Delivery details retrieved:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in getById:', error);
       throw error;
     }
-    
-    console.log('Delivery details retrieved:', data);
-    return data;
   },
 
   /**
@@ -102,27 +134,36 @@ export const deliveryService = {
    */
   update: async (id, updates) => {
     console.log('Updating delivery:', id, 'with data:', updates);
-    const { data: session } = await supabase.auth.getSession();
-    
-    // Check authentication
-    if (!session?.session) {
-      console.error('Authentication required to update delivery');
-      throw new Error('You must be logged in to update delivery records');
-    }
-    
-    const { data, error } = await supabase
-      .from('logistics_deliveries')
-      .update(updates)
-      .eq('id', id)
-      .select();
+    try {
+      if (!id) {
+        throw new Error('Delivery ID is required');
+      }
+      
+      const { data: session } = await supabase.auth.getSession();
+      
+      // Check authentication
+      if (!session?.session) {
+        console.error('Authentication required to update delivery');
+        throw new Error('You must be logged in to update delivery records');
+      }
+      
+      const { data, error } = await supabase
+        .from('logistics_deliveries')
+        .update(updates)
+        .eq('id', id)
+        .select();
 
-    if (error) {
-      console.error('Supabase update error:', error);
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+      
+      console.log('Delivery updated successfully:', data[0]);
+      return data[0];
+    } catch (error) {
+      console.error('Error in update:', error);
       throw error;
     }
-    
-    console.log('Delivery updated successfully:', data[0]);
-    return data[0];
   },
 
   /**
@@ -130,25 +171,75 @@ export const deliveryService = {
    */
   delete: async (id) => {
     console.log('Deleting delivery with ID:', id);
-    const { data: session } = await supabase.auth.getSession();
-    
-    // Check authentication
-    if (!session?.session) {
-      console.error('Authentication required to delete delivery');
-      throw new Error('You must be logged in to delete delivery records');
-    }
-    
-    const { error } = await supabase
-      .from('logistics_deliveries')
-      .delete()
-      .eq('id', id);
+    try {
+      if (!id) {
+        throw new Error('Delivery ID is required');
+      }
+      
+      const { data: session } = await supabase.auth.getSession();
+      
+      // Check authentication
+      if (!session?.session) {
+        console.error('Authentication required to delete delivery');
+        throw new Error('You must be logged in to delete delivery records');
+      }
+      
+      const { error } = await supabase
+        .from('logistics_deliveries')
+        .delete()
+        .eq('id', id);
 
-    if (error) {
-      console.error('Supabase delete error:', error);
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+      
+      console.log('Delivery deleted successfully');
+      return true;
+    } catch (error) {
+      console.error('Error in delete:', error);
       throw error;
     }
+  },
+  
+  /**
+   * Validate delivery data before submission
+   */
+  validateDeliveryData: (data) => {
+    const errors = {};
     
-    console.log('Delivery deleted successfully');
-    return true;
+    // Required fields
+    const requiredFields = {
+      delivery_id: 'Delivery ID',
+      order_id: 'Order ID',
+      customer_name: 'Customer Name',
+      status: 'Status',
+      pickup_location: 'Pickup Location',
+      delivery_location: 'Delivery Location',
+      scheduled_pickup_time: 'Scheduled Pickup Time',
+      scheduled_delivery_time: 'Scheduled Delivery Time'
+    };
+    
+    // Check for required fields
+    Object.entries(requiredFields).forEach(([field, label]) => {
+      if (!data[field]) {
+        errors[field] = `${label} is required`;
+      }
+    });
+    
+    // Validate dates
+    if (data.scheduled_pickup_time && data.scheduled_delivery_time) {
+      const pickupTime = new Date(data.scheduled_pickup_time);
+      const deliveryTime = new Date(data.scheduled_delivery_time);
+      
+      if (pickupTime > deliveryTime) {
+        errors.scheduled_delivery_time = 'Delivery time must be after pickup time';
+      }
+    }
+    
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors
+    };
   }
 };

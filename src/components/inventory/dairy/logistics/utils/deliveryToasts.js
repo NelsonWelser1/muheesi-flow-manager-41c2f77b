@@ -33,5 +33,27 @@ export const deliveryToasts = {
       description: message,
       variant: "destructive",
     });
+  },
+
+  /**
+   * Show validation error toast
+   */
+  validationError: (toast, message = "Please check the form for errors") => {
+    toast({
+      title: "Validation Error",
+      description: message,
+      variant: "destructive",
+    });
+  },
+
+  /**
+   * Show network error toast
+   */
+  networkError: (toast, message = "Network error occurred. Please try again.") => {
+    toast({
+      title: "Connection Error",
+      description: message,
+      variant: "destructive",
+    });
   }
 };
