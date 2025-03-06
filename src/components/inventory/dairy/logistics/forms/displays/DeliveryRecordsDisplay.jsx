@@ -34,12 +34,12 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
-import { useDeliveries } from '../hooks/useDeliveries';
+import { useDeliveries } from "../../hooks/useDeliveries";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import jsPDF from 'jspdf';
+import jsPDF from "jspdf";
 import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 
 const DeliveryRecordsDisplay = ({ onBack }) => {
   const { deliveries, isLoading, deleteDelivery, fetchDeliveries } = useDeliveries();
