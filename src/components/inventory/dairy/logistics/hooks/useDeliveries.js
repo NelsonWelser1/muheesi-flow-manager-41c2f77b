@@ -41,6 +41,17 @@ export const useDeliveries = () => {
     try {
       console.log('Creating new delivery with data:', deliveryData);
       
+      // Remove authentication requirement - temporarily disabled
+      // const { data: { user } } = await supabase.auth.getUser();
+      // if (!user) {
+      //   toast({
+      //     title: 'Error',
+      //     description: 'You must be logged in to submit delivery records',
+      //     variant: 'destructive',
+      //   });
+      //   return { success: false, error: 'Authentication required' };
+      // }
+      
       const { data, error } = await supabase
         .from('logistics_deliveries')
         .insert([deliveryData])
