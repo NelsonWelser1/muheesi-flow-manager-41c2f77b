@@ -3,6 +3,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase';
 import { useToast } from "@/components/ui/use-toast";
 
+/**
+ * Custom hook for managing delivery operations with Supabase
+ * Handles CRUD operations for logistics_deliveries table
+ * Note: Authentication is currently bypassed for development purposes
+ */
 export const useDeliveries = () => {
   const [deliveries, setDeliveries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -12,27 +17,33 @@ export const useDeliveries = () => {
   // Fetch all deliveries
   const fetchDeliveries = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
+    
     try {
-      console.log('Fetching deliveries from Supabase...');
+      console.log('Fetching deliveries from Supabase database...');
       const { data, error } = await supabase
         .from('logistics_deliveries')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase fetch error:', error);
+        throw error;
+      }
       
-      console.log('Fetched deliveries:', data);
+      console.log(`Successfully fetched ${data?.length || 0} deliveries:`, data);
       setDeliveries(data || []);
     } catch (error) {
-      console.error('Error fetching deliveries:', error);
-      setError(error.message);
+      console.error('Error fetching deliveries:', error.message || error);
+      setError(error.message || 'Failed to fetch deliveries');
       toast({
-        title: 'Error',
-        description: `Failed to fetch deliveries: ${error.message}`,
+        title: 'Data Fetch Error',
+        description: `Failed to fetch deliveries: ${error.message || 'Unknown error'}`,
         variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
+      console.log('Fetch operation completed');
     }
   }, [toast]);
 
@@ -41,17 +52,21 @@ export const useDeliveries = () => {
     try {
       console.log('Creating new delivery with data:', deliveryData);
       
-      // Authentication completely bypassed - no check required
-      // Users can submit data without logging in
+      // ⚠️ IMPORTANT: Authentication is completely bypassed
+      // This allows any user to submit data without logging in
+      // This should be re-enabled in production environments
       
       const { data, error } = await supabase
         .from('logistics_deliveries')
         .insert([deliveryData])
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw error;
+      }
       
-      console.log('Delivery created successfully:', data);
+      console.log('Delivery created successfully:', data[0]);
       toast({
         title: 'Success',
         description: 'Delivery record created successfully',
@@ -60,15 +75,15 @@ export const useDeliveries = () => {
       // Update the local state with the new delivery
       setDeliveries(prevDeliveries => [data[0], ...prevDeliveries]);
       
-      return { success: true, data };
+      return { success: true, data: data[0] };
     } catch (error) {
-      console.error('Error creating delivery:', error);
+      console.error('Error creating delivery:', error.message || error);
       toast({
-        title: 'Error',
-        description: `Failed to create delivery: ${error.message}`,
+        title: 'Submission Error',
+        description: `Failed to create delivery: ${error.message || 'Unknown error'}`,
         variant: 'destructive',
       });
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || 'Failed to create delivery' };
     }
   };
 
@@ -82,13 +97,16 @@ export const useDeliveries = () => {
         .eq('id', id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase fetch by ID error:', error);
+        throw error;
+      }
       
-      console.log('Delivery details:', data);
+      console.log('Delivery details retrieved:', data);
       return { success: true, data };
     } catch (error) {
-      console.error('Error fetching delivery:', error);
-      return { success: false, error: error.message };
+      console.error('Error fetching delivery by ID:', error.message || error);
+      return { success: false, error: error.message || 'Failed to fetch delivery' };
     }
   };
 
@@ -103,9 +121,12 @@ export const useDeliveries = () => {
         .eq('id', id)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
       
-      console.log('Delivery updated successfully:', data);
+      console.log('Delivery updated successfully:', data[0]);
       toast({
         title: 'Success',
         description: 'Delivery record updated successfully',
@@ -118,28 +139,31 @@ export const useDeliveries = () => {
         )
       );
       
-      return { success: true, data };
+      return { success: true, data: data[0] };
     } catch (error) {
-      console.error('Error updating delivery:', error);
+      console.error('Error updating delivery:', error.message || error);
       toast({
-        title: 'Error',
-        description: `Failed to update delivery: ${error.message}`,
+        title: 'Update Error',
+        description: `Failed to update delivery: ${error.message || 'Unknown error'}`,
         variant: 'destructive',
       });
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || 'Failed to update delivery' };
     }
   };
 
   // Delete a delivery
   const deleteDelivery = async (id) => {
     try {
-      console.log('Deleting delivery:', id);
+      console.log('Deleting delivery with ID:', id);
       const { error } = await supabase
         .from('logistics_deliveries')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
+      }
       
       console.log('Delivery deleted successfully');
       toast({
@@ -154,21 +178,26 @@ export const useDeliveries = () => {
       
       return { success: true };
     } catch (error) {
-      console.error('Error deleting delivery:', error);
+      console.error('Error deleting delivery:', error.message || error);
       toast({
-        title: 'Error',
-        description: `Failed to delete delivery: ${error.message}`,
+        title: 'Deletion Error',
+        description: `Failed to delete delivery: ${error.message || 'Unknown error'}`,
         variant: 'destructive',
       });
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || 'Failed to delete delivery' };
     }
   };
 
   // Load deliveries when component mounts
   useEffect(() => {
+    console.log('useDeliveries hook mounted, fetching initial data...');
     fetchDeliveries();
+    
+    // No cleanup needed for this effect
+    return () => console.log('useDeliveries hook unmounted');
   }, [fetchDeliveries]);
 
+  // Return all the functions and state needed by components
   return {
     deliveries,
     isLoading,
