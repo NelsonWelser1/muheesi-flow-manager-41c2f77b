@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 /**
  * Custom hook for managing delivery operations with Supabase
  * Handles CRUD operations for logistics_deliveries table
- * Note: Authentication is currently bypassed for development purposes
+ * AUTHENTICATION COMPLETELY BYPASSED - All operations allowed without login
  */
 export const useDeliveries = () => {
   const [deliveries, setDeliveries] = useState([]);
@@ -52,9 +52,8 @@ export const useDeliveries = () => {
     try {
       console.log('Creating new delivery with data:', deliveryData);
       
-      // ⚠️ IMPORTANT: Authentication is completely bypassed
-      // This allows any user to submit data without logging in
-      // This should be re-enabled in production environments
+      // AUTHENTICATION COMPLETELY BYPASSED
+      // No auth check is performed - anyone can submit data
       
       const { data, error } = await supabase
         .from('logistics_deliveries')
@@ -91,6 +90,7 @@ export const useDeliveries = () => {
   const getDeliveryById = async (id) => {
     try {
       console.log('Fetching delivery by ID:', id);
+      // AUTHENTICATION BYPASSED - No auth check for fetching delivery
       const { data, error } = await supabase
         .from('logistics_deliveries')
         .select('*')
@@ -115,6 +115,7 @@ export const useDeliveries = () => {
     try {
       console.log('Updating delivery:', id, 'with data:', updates);
       
+      // AUTHENTICATION BYPASSED - No auth check for updates
       const { data, error } = await supabase
         .from('logistics_deliveries')
         .update(updates)
@@ -155,6 +156,7 @@ export const useDeliveries = () => {
   const deleteDelivery = async (id) => {
     try {
       console.log('Deleting delivery with ID:', id);
+      // AUTHENTICATION BYPASSED - No auth check for deletion
       const { error } = await supabase
         .from('logistics_deliveries')
         .delete()
