@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,12 @@ const SalesContractsDisplay = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState('all');
   const { toast } = useToast();
 
+  // Ensure contracts are fetched when component mounts
+  useEffect(() => {
+    console.log('SalesContractsDisplay mounted, fetching contracts...');
+    fetchContracts();
+  }, [fetchContracts]);
+
   // Filter contracts based on search term and active tab
   const filteredContracts = contracts.filter(contract => {
     const matchesSearch = 
@@ -58,8 +64,15 @@ const SalesContractsDisplay = ({ onBack }) => {
     return matchesSearch && contract.status === activeTab;
   });
 
+  // Log contracts for debugging
+  useEffect(() => {
+    console.log('Current contracts:', contracts);
+    console.log('Filtered contracts:', filteredContracts);
+  }, [contracts, filteredContracts]);
+
   const handleDelete = async (contractId) => {
     if (window.confirm('Are you sure you want to delete this contract?')) {
+      console.log('Deleting contract:', contractId);
       const { success } = await deleteContract(contractId);
       if (success) {
         fetchContracts();
@@ -105,6 +118,7 @@ const SalesContractsDisplay = ({ onBack }) => {
   // Export to PDF
   const exportToPDF = () => {
     try {
+      console.log('Exporting to PDF...');
       const doc = new jsPDF();
       doc.text('Sales Contracts Report', 14, 16);
       doc.text(`Generated: ${format(new Date(), 'MMM dd, yyyy HH:mm')}`, 14, 24);
@@ -148,6 +162,7 @@ const SalesContractsDisplay = ({ onBack }) => {
   // Export to Excel
   const exportToExcel = () => {
     try {
+      console.log('Exporting to Excel...');
       const tableData = filteredContracts.map(contract => ({
         'Contract ID': contract.contract_id,
         'Title': contract.contract_title,
@@ -181,6 +196,7 @@ const SalesContractsDisplay = ({ onBack }) => {
   // Export to CSV
   const exportToCSV = () => {
     try {
+      console.log('Exporting to CSV...');
       const tableData = filteredContracts.map(contract => ({
         'Contract ID': contract.contract_id,
         'Title': contract.contract_title,
@@ -221,6 +237,7 @@ const SalesContractsDisplay = ({ onBack }) => {
   // Share functions
   const shareViaEmail = () => {
     try {
+      console.log('Sharing via email...');
       // Generate the export first
       const doc = new jsPDF();
       doc.text('Sales Contracts Report', 14, 16);
@@ -260,6 +277,7 @@ const SalesContractsDisplay = ({ onBack }) => {
 
   const shareViaWhatsApp = () => {
     try {
+      console.log('Sharing via WhatsApp...');
       // In a real app, we would generate a shareable link to the report
       // For now, we'll just show a toast notification
       toast({

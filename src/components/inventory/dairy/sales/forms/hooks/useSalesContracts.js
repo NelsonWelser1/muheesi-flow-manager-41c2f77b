@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -10,7 +10,7 @@ export const useSalesContracts = () => {
   const { toast } = useToast();
 
   // Fetch all contracts
-  const fetchContracts = async () => {
+  const fetchContracts = useCallback(async () => {
     setIsLoading(true);
     try {
       console.log('Fetching contracts from Supabase...');
@@ -34,7 +34,7 @@ export const useSalesContracts = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   // Create a new contract
   const createContract = async (contractData) => {
@@ -62,6 +62,9 @@ export const useSalesContracts = () => {
         title: 'Success',
         description: 'Sales contract created successfully',
       });
+      
+      // Update the local state with the new contract
+      setContracts(prevContracts => [data[0], ...prevContracts]);
       
       return { success: true, data };
     } catch (error) {
@@ -121,6 +124,13 @@ export const useSalesContracts = () => {
         description: 'Sales contract updated successfully',
       });
       
+      // Update the local state with the updated contract
+      setContracts(prevContracts => 
+        prevContracts.map(contract => 
+          contract.contract_id === contractId ? data[0] : contract
+        )
+      );
+      
       return { success: true, data };
     } catch (error) {
       console.error('Error updating contract:', error);
@@ -150,6 +160,11 @@ export const useSalesContracts = () => {
         description: 'Sales contract deleted successfully',
       });
       
+      // Update the local state by removing the deleted contract
+      setContracts(prevContracts => 
+        prevContracts.filter(contract => contract.contract_id !== contractId)
+      );
+      
       return { success: true };
     } catch (error) {
       console.error('Error deleting contract:', error);
@@ -165,7 +180,7 @@ export const useSalesContracts = () => {
   // Load contracts when component mounts
   useEffect(() => {
     fetchContracts();
-  }, []);
+  }, [fetchContracts]);
 
   return {
     contracts,
