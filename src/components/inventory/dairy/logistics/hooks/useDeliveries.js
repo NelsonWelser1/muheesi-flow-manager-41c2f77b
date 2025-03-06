@@ -3,17 +3,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { deliveryService } from '../services/deliveryService';
 import { deliveryToasts } from '../utils/deliveryToasts';
+import { useSupabaseAuth } from '@/integrations/supabase';
 
 /**
  * Custom hook for managing delivery operations
  * Uses deliveryService for API operations and deliveryToasts for notifications
- * AUTHENTICATION COMPLETELY BYPASSED - All operations allowed without login
  */
 export const useDeliveries = () => {
   const [deliveries, setDeliveries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError]= useState(null);
   const { toast } = useToast();
+  const { isLoggedIn } = useSupabaseAuth();
 
   // Fetch all deliveries
   const fetchDeliveries = useCallback(async () => {
@@ -35,6 +36,11 @@ export const useDeliveries = () => {
 
   // Create a new delivery
   const createDelivery = async (deliveryData) => {
+    if (!isLoggedIn) {
+      deliveryToasts.error(toast, 'You must be logged in to submit delivery records');
+      return { success: false, error: 'Authentication required' };
+    }
+    
     try {
       const newDelivery = await deliveryService.create(deliveryData);
       deliveryToasts.success(toast, 'Delivery record created successfully');
@@ -48,16 +54,27 @@ export const useDeliveries = () => {
 
   // Get a delivery by ID
   const getDeliveryById = async (id) => {
+    if (!isLoggedIn) {
+      deliveryToasts.error(toast, 'You must be logged in to view delivery details');
+      return { success: false, error: 'Authentication required' };
+    }
+    
     try {
       const delivery = await deliveryService.getById(id);
       return { success: true, data: delivery };
     } catch (error) {
+      deliveryToasts.error(toast, `Failed to fetch delivery: ${error.message || 'Unknown error'}`);
       return { success: false, error: error.message || 'Failed to fetch delivery' };
     }
   };
 
   // Update a delivery
   const updateDelivery = async (id, updates) => {
+    if (!isLoggedIn) {
+      deliveryToasts.error(toast, 'You must be logged in to update delivery records');
+      return { success: false, error: 'Authentication required' };
+    }
+    
     try {
       const updatedDelivery = await deliveryService.update(id, updates);
       deliveryToasts.success(toast, 'Delivery record updated successfully');
@@ -75,6 +92,11 @@ export const useDeliveries = () => {
 
   // Delete a delivery
   const deleteDelivery = async (id) => {
+    if (!isLoggedIn) {
+      deliveryToasts.error(toast, 'You must be logged in to delete delivery records');
+      return { success: false, error: 'Authentication required' };
+    }
+    
     try {
       await deliveryService.delete(id);
       deliveryToasts.success(toast, 'Delivery record deleted successfully');
@@ -103,6 +125,7 @@ export const useDeliveries = () => {
     createDelivery,
     getDeliveryById,
     updateDelivery,
-    deleteDelivery
+    deleteDelivery,
+    isAuthenticated: isLoggedIn
   };
 };

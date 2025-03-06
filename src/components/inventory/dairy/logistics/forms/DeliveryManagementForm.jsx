@@ -8,8 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { useDeliveries } from "../hooks/useDeliveries";
-import { Eye } from "lucide-react";
+import { Eye, LogIn } from "lucide-react";
 import DeliveryRecordsDisplay from "./displays/DeliveryRecordsDisplay";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSupabaseAuth } from '@/integrations/supabase';
+import { SupabaseAuthUI } from '@/integrations/supabase';
 
 const DELIVERY_STATUSES = ["Pending", "In Transit", "Delivered", "Delayed"];
 
@@ -18,13 +21,13 @@ const DeliveryManagementForm = () => {
   const { toast } = useToast();
   const [showRecords, setShowRecords] = useState(false);
   const { createDelivery } = useDeliveries();
+  const { isLoggedIn } = useSupabaseAuth();
 
   const onSubmit = async (data) => {
     console.log('Form data before submission:', data);
     try {
       const { success } = await createDelivery({
         ...data,
-        // No need for operator_id since auth is temporarily disabled
       });
 
       if (success) {
@@ -55,6 +58,27 @@ const DeliveryManagementForm = () => {
 
   if (showRecords) {
     return <DeliveryRecordsDisplay onBack={() => setShowRecords(false)} />;
+  }
+
+  // Show login form if user is not authenticated
+  if (!isLoggedIn) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Authentication Required</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-muted-foreground">
+              You must be logged in to manage delivery records. Please sign in or create an account to continue.
+            </p>
+            <div className="p-4 border rounded-md">
+              <SupabaseAuthUI />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

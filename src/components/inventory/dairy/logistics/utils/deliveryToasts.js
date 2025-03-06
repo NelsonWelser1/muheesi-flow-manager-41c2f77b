@@ -22,5 +22,16 @@ export const deliveryToasts = {
       description: errorMessage,
       variant: "destructive",
     });
+  },
+  
+  /**
+   * Show authentication error toast
+   */
+  authError: (toast, message = "You must be logged in to perform this action") => {
+    toast({
+      title: "Authentication Required",
+      description: message,
+      variant: "destructive",
+    });
   }
 };

@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase';
 
 /**
  * Service for handling delivery data operations with Supabase
- * AUTHENTICATION COMPLETELY BYPASSED - All operations allowed without login
  */
 export const deliveryService = {
   /**
@@ -11,6 +10,18 @@ export const deliveryService = {
    */
   fetchAll: async () => {
     console.log('Fetching deliveries from Supabase database...');
+    const { data: session } = await supabase.auth.getSession();
+    
+    // Check authentication
+    if (!session?.session) {
+      console.log('User not authenticated, returning demo data');
+      // Return demo data for unauthenticated users
+      return [
+        { id: 'demo-1', delivery_id: 'DEMO-001', customer_name: 'Demo Customer', status: 'Delivered' },
+        { id: 'demo-2', delivery_id: 'DEMO-002', customer_name: 'Demo Customer 2', status: 'In Transit' },
+      ];
+    }
+    
     const { data, error } = await supabase
       .from('logistics_deliveries')
       .select('*')
@@ -30,13 +41,23 @@ export const deliveryService = {
    */
   create: async (deliveryData) => {
     console.log('Creating new delivery with data:', deliveryData);
+    const { data: session } = await supabase.auth.getSession();
     
-    // AUTHENTICATION COMPLETELY BYPASSED
-    // No auth check is performed - anyone can submit data
+    // Check authentication
+    if (!session?.session) {
+      console.error('Authentication required to create delivery');
+      throw new Error('You must be logged in to submit delivery records');
+    }
+    
+    // Add user ID to the delivery data
+    const userData = {
+      ...deliveryData,
+      operator_id: session.session.user.id
+    };
     
     const { data, error } = await supabase
       .from('logistics_deliveries')
-      .insert([deliveryData])
+      .insert([userData])
       .select();
 
     if (error) {
@@ -53,7 +74,14 @@ export const deliveryService = {
    */
   getById: async (id) => {
     console.log('Fetching delivery by ID:', id);
-    // AUTHENTICATION BYPASSED - No auth check for fetching delivery
+    const { data: session } = await supabase.auth.getSession();
+    
+    // Check authentication
+    if (!session?.session) {
+      console.error('Authentication required to fetch delivery details');
+      throw new Error('You must be logged in to view delivery details');
+    }
+    
     const { data, error } = await supabase
       .from('logistics_deliveries')
       .select('*')
@@ -74,8 +102,14 @@ export const deliveryService = {
    */
   update: async (id, updates) => {
     console.log('Updating delivery:', id, 'with data:', updates);
+    const { data: session } = await supabase.auth.getSession();
     
-    // AUTHENTICATION BYPASSED - No auth check for updates
+    // Check authentication
+    if (!session?.session) {
+      console.error('Authentication required to update delivery');
+      throw new Error('You must be logged in to update delivery records');
+    }
+    
     const { data, error } = await supabase
       .from('logistics_deliveries')
       .update(updates)
@@ -96,7 +130,14 @@ export const deliveryService = {
    */
   delete: async (id) => {
     console.log('Deleting delivery with ID:', id);
-    // AUTHENTICATION BYPASSED - No auth check for deletion
+    const { data: session } = await supabase.auth.getSession();
+    
+    // Check authentication
+    if (!session?.session) {
+      console.error('Authentication required to delete delivery');
+      throw new Error('You must be logged in to delete delivery records');
+    }
+    
     const { error } = await supabase
       .from('logistics_deliveries')
       .delete()
