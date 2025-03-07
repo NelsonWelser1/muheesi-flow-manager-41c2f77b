@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import SalesDistributionForm from '../sales/SalesDistributionForm';
-import MarketingCampaignForm from '../marketing/MarketingCampaignForm';
 import { supabase } from "@/integrations/supabase/supabase";
 import { useEffect, useState } from 'react';
 
@@ -41,9 +40,8 @@ const SalesMarketingDashboard = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="sales" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-1">
           <TabsTrigger value="sales">Sales Dashboard</TabsTrigger>
-          <TabsTrigger value="marketing">Marketing Dashboard</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales" className="space-y-4">
@@ -95,57 +93,6 @@ const SalesMarketingDashboard = () => {
           </div>
           
           <SalesDistributionForm />
-        </TabsContent>
-
-        <TabsContent value="marketing" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Campaigns</CardTitle>
-              </CardHeader>
-              <CardContent className="h-[300px] overflow-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr>
-                      <th>Campaign</th>
-                      <th>Platform</th>
-                      <th>Budget</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {campaignData.map((campaign) => (
-                      <tr key={campaign.id}>
-                        <td>{campaign.campaign_name}</td>
-                        <td>{campaign.platform}</td>
-                        <td>${campaign.budget}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Campaign Performance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={campaignData.slice(0, 10)}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="start_date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="budget" stroke="#82ca9d" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <MarketingCampaignForm />
         </TabsContent>
       </Tabs>
     </div>
