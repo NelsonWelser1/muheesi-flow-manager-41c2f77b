@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Menu } from 'lucide-react';
+import { Menu, DollarSign, Receipt, Package } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +15,9 @@ const Navigation = () => {
     { to: "/dashboard", label: "Dashboard" },
     { to: "/manage-inventory", label: "Manage Inventory" },
     { to: "/manage-companies", label: "Manage Companies" },
+    { to: "/sales", label: "Sales", icon: DollarSign },
+    { to: "/accounts", label: "Accounts", icon: Receipt },
+    { to: "/inventory", label: "Inventory", icon: Package },
     { to: "/feedback", label: "Feedback" },
   ];
 
@@ -29,7 +33,10 @@ const Navigation = () => {
         <div className="hidden md:flex space-x-4">
           {navItems.map((item) => (
             <Button key={item.to} asChild className="bg-[#9b87f5] hover:bg-[#9b87f5] text-white font-bold">
-              <Link to={item.to}>{item.label}</Link>
+              <Link to={item.to} className="flex items-center gap-2">
+                {item.icon && <item.icon className="h-4 w-4" />}
+                {item.label}
+              </Link>
             </Button>
           ))}
         </div>
@@ -41,7 +48,10 @@ const Navigation = () => {
             <DropdownMenuContent>
               {navItems.map((item) => (
                 <DropdownMenuItem key={item.to} asChild>
-                  <Link to={item.to}>{item.label}</Link>
+                  <Link to={item.to} className="flex items-center gap-2">
+                    {item.icon && <item.icon className="h-4 w-4" />}
+                    {item.label}
+                  </Link>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

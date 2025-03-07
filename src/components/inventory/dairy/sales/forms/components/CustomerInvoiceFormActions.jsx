@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Upload, Mail, Phone, Printer, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-const CustomerInvoiceFormActions = () => {
+const CustomerInvoiceFormActions = ({ status = 'pending' }) => {
   return (
     <div className="flex flex-wrap gap-4 mt-6">
       <div className="flex items-center w-full justify-between mb-2">
         <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">Create Invoice</Button>
         <Badge variant="outline" className="flex items-center gap-1 py-1">
           <Clock className="h-4 w-4 text-yellow-500" />
-          <span>Status: Pending</span>
+          <span>Status: {status.charAt(0).toUpperCase() + status.slice(1)}</span>
         </Badge>
       </div>
       <Button 
