@@ -12,6 +12,10 @@ export const useDeliveryRecords = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const { toast } = useToast();
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5); // Number of items per page
 
   // Ensure deliveries are fetched when component mounts
   useEffect(() => {
@@ -29,12 +33,28 @@ export const useDeliveryRecords = () => {
     if (activeTab === 'all') return matchesSearch;
     return matchesSearch && delivery.status.replace(' ', '_').toLowerCase() === activeTab;
   });
+  
+  // Calculate pagination info
+  const totalPages = Math.ceil(filteredDeliveries.length / pageSize);
+  
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, activeTab]);
+  
+  // Get current page of deliveries
+  const paginatedDeliveries = filteredDeliveries.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   // Log deliveries for debugging
   useEffect(() => {
     console.log('Current deliveries:', deliveries);
     console.log('Filtered deliveries:', filteredDeliveries);
-  }, [deliveries, filteredDeliveries]);
+    console.log('Current page:', currentPage, 'of', totalPages);
+    console.log('Paginated deliveries:', paginatedDeliveries);
+  }, [deliveries, filteredDeliveries, currentPage, totalPages, paginatedDeliveries]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this delivery?')) {
@@ -231,5 +251,12 @@ export const useDeliveryRecords = () => {
     exportToCSV,
     shareViaEmail,
     shareViaWhatsApp,
+    // Pagination
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    paginatedDeliveries,
   };
 };

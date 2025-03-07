@@ -11,6 +11,7 @@ import ExportDropdown from './components/ExportDropdown';
 import DeliveryStatusTabs from './components/DeliveryStatusTabs';
 import DeliveryTable from './components/DeliveryTable';
 import NoDeliveriesFound from './components/NoDeliveriesFound';
+import DeliveryPagination from './components/DeliveryPagination';
 
 const DeliveryRecordsDisplay = ({ onBack }) => {
   const {
@@ -27,6 +28,12 @@ const DeliveryRecordsDisplay = ({ onBack }) => {
     exportToCSV,
     shareViaEmail,
     shareViaWhatsApp,
+    // Pagination states
+    currentPage,
+    pageSize,
+    totalPages,
+    setCurrentPage,
+    paginatedDeliveries,
   } = useDeliveryRecords();
 
   return (
@@ -68,11 +75,23 @@ const DeliveryRecordsDisplay = ({ onBack }) => {
                 activeTab={activeTab} 
               />
             ) : (
-              <DeliveryTable 
-                filteredDeliveries={filteredDeliveries}
-                handleDelete={handleDelete}
-                formatDate={formatDate}
-              />
+              <>
+                <DeliveryTable 
+                  filteredDeliveries={paginatedDeliveries}
+                  handleDelete={handleDelete}
+                  formatDate={formatDate}
+                />
+                
+                {totalPages > 1 && (
+                  <div className="mt-4">
+                    <DeliveryPagination 
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
         </CardContent>
