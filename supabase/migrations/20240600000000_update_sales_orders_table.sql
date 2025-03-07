@@ -1,10 +1,21 @@
 
 -- Update sales_orders table with additional fields
 
--- First check if the table already exists
+-- First, make sure the uuid-ossp extension is created
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Check if the table already exists and add missing columns if needed
 DO $$
+DECLARE
+  table_exists BOOLEAN;
 BEGIN
-  IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'sales_orders') THEN
+  -- Check if table exists
+  SELECT EXISTS (
+    SELECT FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'sales_orders'
+  ) INTO table_exists;
+
+  IF table_exists THEN
     -- Table exists, add any missing columns
     
     -- Check for customer_name column
@@ -106,9 +117,6 @@ BEGIN
     END IF;
     
   ELSE
-    -- Make sure the uuid-ossp extension is created first
-    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-    
     -- Table does not exist, create it
     CREATE TABLE public.sales_orders (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
