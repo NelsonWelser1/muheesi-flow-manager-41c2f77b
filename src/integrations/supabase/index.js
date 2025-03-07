@@ -36,6 +36,14 @@ import {
 
 import { useSalesOrders } from './hooks/useSalesOrders';
 
+// Import individual sales hooks
+import { useFetchSalesOrders } from './hooks/sales/useFetchSalesOrders';
+import { useCreateSalesOrder } from './hooks/sales/useCreateSalesOrder';
+import { useSalesOrderDetails } from './hooks/sales/useSalesOrderDetails';
+import { useUpdateSalesOrder } from './hooks/sales/useUpdateSalesOrder';
+import { useDeleteSalesOrder } from './hooks/sales/useDeleteSalesOrder';
+import { salesOrderUtils } from './hooks/sales/useSalesOrderUtils';
+
 // Export everything individually
 export {
     supabase,
@@ -65,6 +73,13 @@ export {
     useAddDashboard,
     useUpdateDashboard,
     useDeleteDashboard,
-    // Sales Orders
+    // Sales Orders - Main combined hook
     useSalesOrders,
+    // Individual Sales Order hooks
+    useFetchSalesOrders,
+    useCreateSalesOrder,
+    useSalesOrderDetails,
+    useUpdateSalesOrder,
+    useDeleteSalesOrder,
+    salesOrderUtils,
 };
