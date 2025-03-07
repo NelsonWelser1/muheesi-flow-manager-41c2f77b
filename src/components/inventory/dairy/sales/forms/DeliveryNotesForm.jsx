@@ -7,27 +7,87 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, QrCode, MapPin, Printer, Eye } from "lucide-react";
+import { ArrowLeft, QrCode, MapPin, Eye } from "lucide-react";
 import DeliveryNoteList from '../DeliveryNoteList';
+import QRCodeGenerator from '../../qr/QRCodeGenerator';
 
 const DeliveryNotesForm = ({ onBack }) => {
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       deliveryDate: new Date().toISOString().split('T')[0],
-      deliveryStatus: 'pending'
+      deliveryStatus: 'pending',
+      geolocation: ''
     }
   });
   const { toast } = useToast();
   const [showNoteList, setShowNoteList] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [deliveryData, setDeliveryData] = useState(null);
   
   const onSubmit = (data) => {
     console.log("Delivery note data:", data);
+    setDeliveryData(data);
     toast({
       title: "Success",
       description: "Delivery note created successfully",
     });
     // Here you would normally save to database
   };
+
+  const getGeolocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const locationString = `${latitude}, ${longitude}`;
+          setValue('deliveryLocation', locationString);
+          
+          toast({
+            title: "Location Added",
+            description: `Geolocation captured: ${locationString}`,
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast({
+            title: "Error",
+            description: "Unable to get your location. Please check permissions.",
+            variant: "destructive"
+          });
+        }
+      );
+    } else {
+      toast({
+        title: "Error",
+        description: "Geolocation is not supported by this browser.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const generateQRCode = () => {
+    const formData = watch();
+    setDeliveryData(formData);
+    setShowQRCode(true);
+  };
+
+  if (showQRCode && deliveryData) {
+    return (
+      <div className="space-y-4">
+        <Button 
+          variant="outline" 
+          onClick={() => setShowQRCode(false)}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Form
+        </Button>
+        <QRCodeGenerator 
+          data={deliveryData}
+          title="Delivery Note"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -90,7 +150,18 @@ const DeliveryNotesForm = ({ onBack }) => {
 
               <div className="space-y-2">
                 <Label>Delivery Location</Label>
-                <Input {...register("deliveryLocation", { required: "Delivery location is required" })} />
+                <div className="flex gap-2">
+                  <Input {...register("deliveryLocation", { required: "Delivery location is required" })} />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="flex items-center gap-2 whitespace-nowrap"
+                    onClick={getGeolocation}
+                  >
+                    <MapPin className="h-4 w-4" />
+                    Add Geolocation
+                  </Button>
+                </div>
                 {errors.deliveryLocation && (
                   <p className="text-sm text-red-500">{errors.deliveryLocation.message}</p>
                 )}
@@ -139,13 +210,13 @@ const DeliveryNotesForm = ({ onBack }) => {
               </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">Submit Delivery Note</Button>
               <Button 
                 type="button" 
                 variant="outline" 
                 className="flex items-center gap-2"
-                onClick={() => console.log("Generating QR code...")}
+                onClick={generateQRCode}
               >
                 <QrCode className="h-4 w-4" />
                 Generate QR Code
@@ -154,19 +225,10 @@ const DeliveryNotesForm = ({ onBack }) => {
                 type="button" 
                 variant="outline" 
                 className="flex items-center gap-2"
-                onClick={() => console.log("Adding geolocation...")}
+                onClick={getGeolocation}
               >
                 <MapPin className="h-4 w-4" />
                 Add Geolocation
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex items-center gap-2"
-                onClick={() => console.log("Printing delivery note...")}
-              >
-                <Printer className="h-4 w-4" />
-                Print PDF
               </Button>
             </div>
           </form>
