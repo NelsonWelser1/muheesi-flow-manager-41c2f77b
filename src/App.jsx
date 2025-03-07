@@ -1,9 +1,9 @@
 
-import React, { Suspense, useState, useEffect } from "react";
+import React, { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AutoFillProvider } from "./contexts/AutoFillContext";
 import { SupabaseAuthProvider } from "./integrations/supabase/auth";
 import Navigation from "./components/Navigation";
@@ -20,8 +20,29 @@ import SmartProductionDashboard from "./components/inventory/dairy/production/Sm
 import SalesMarketingDashboard from "./components/inventory/dairy/sales/SalesMarketingDashboard";
 import SandboxFallback from "./components/SandboxFallback";
 
-// Create custom error boundary component
-class AppErrorBoundary extends React.Component {
+// Loading component for suspense fallback
+const LoadingFallback = () => (
+  <div className="flex justify-center items-center h-screen">
+    <div className="text-center p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-semibold mb-2">Loading application...</h2>
+      <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto my-4"></div>
+      <p className="mb-4">Please wait while we set things up for you.</p>
+    </div>
+  </div>
+);
+
+// Create QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 3,
+    },
+  },
+});
+
+// Custom error boundary component
+class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -58,99 +79,9 @@ class AppErrorBoundary extends React.Component {
   }
 }
 
-// Loading component for suspense fallback with retry capability
-const LoadingFallback = () => {
-  const [retryCount, setRetryCount] = useState(0);
-  
-  useEffect(() => {
-    // Auto-retry logic after delay
-    if (retryCount > 0) {
-      const timer = setTimeout(() => {
-        console.log(`Auto-retry attempt ${retryCount}`);
-        window.location.reload();
-      }, 10000); // 10 seconds delay
-      
-      return () => clearTimeout(timer);
-    }
-  }, [retryCount]);
-
-  return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="text-center p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold mb-2">Loading application...</h2>
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto my-4"></div>
-        <p className="mb-4">Please wait while we set things up for you.</p>
-        {retryCount > 0 && (
-          <p className="text-amber-600">
-            Retry attempt {retryCount}... 
-          </p>
-        )}
-        <button 
-          onClick={() => setRetryCount(prev => prev + 1)}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
-          Retry Now
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// Create QueryClient instance with improved stability
-const createQueryClient = () => new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 3,
-      staleTime: 1000 * 60 * 15, // 15 minutes
-      cacheTime: 1000 * 60 * 30, // 30 minutes
-    },
-  },
-});
-
-// App initialization indicator to prevent duplicate mounting
-window.__APP_INITIALIZED = window.__APP_INITIALIZED || false;
-
-// The main App component
 const App = () => {
-  console.log("App component rendering, initialized:", window.__APP_INITIALIZED);
-  
-  // Detect editor interactions early to enable cooldown
-  useEffect(() => {
-    // Early detection of editor UI area
-    const detectEditorUI = (event) => {
-      if (event.clientX < window.innerWidth * 0.35) {
-        console.log("App component detected editor UI interaction");
-        if (window.__MUHEESI_APP_STATE) {
-          window.__MUHEESI_APP_STATE.markEditorUIInteraction();
-        }
-      }
-    };
-    
-    document.addEventListener('mousemove', detectEditorUI, { passive: true });
-    
-    return () => {
-      document.removeEventListener('mousemove', detectEditorUI);
-    };
-  }, []);
-  
-  // Use a ref to ensure we only initialize once
-  const [queryClient] = React.useState(() => {
-    if (!window.__APP_INITIALIZED) {
-      console.log("Creating new QueryClient");
-      window.__APP_INITIALIZED = true;
-      return createQueryClient();
-    } else {
-      console.log("Using existing QueryClient");
-      return window.__QUERY_CLIENT || createQueryClient();
-    }
-  });
-  
-  // Store client reference globally
-  window.__QUERY_CLIENT = queryClient;
-  
   return (
-    <AppErrorBoundary>
+    <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <Suspense fallback={<LoadingFallback />}>
           <AutoFillProvider>
@@ -174,6 +105,8 @@ const App = () => {
                         <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
                         <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
                         <Route path="/manage-inventory/sales-marketing" element={<SalesMarketingDashboard />} />
+                        {/* Catch-all route for index path */}
+                        <Route path="*" element={<Navigate to="/" replace />} />
                       </Routes>
                     </main>
                   </div>
@@ -183,7 +116,7 @@ const App = () => {
           </AutoFillProvider>
         </Suspense>
       </QueryClientProvider>
-    </AppErrorBoundary>
+    </ErrorBoundary>
   );
 };
 
