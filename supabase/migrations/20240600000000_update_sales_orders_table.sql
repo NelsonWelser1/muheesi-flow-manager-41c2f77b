@@ -106,6 +106,9 @@ BEGIN
     END IF;
     
   ELSE
+    -- Make sure the uuid-ossp extension is created first
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    
     -- Table does not exist, create it
     CREATE TABLE public.sales_orders (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
