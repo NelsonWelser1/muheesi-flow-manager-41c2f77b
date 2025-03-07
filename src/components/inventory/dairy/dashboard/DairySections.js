@@ -52,7 +52,7 @@ export const dairySections = [
   },
   { 
     id: 'sales', 
-    title: 'Sales & Marketing', 
+    title: 'Sales & Accounts', 
     icon: TrendingUp, 
     component: SalesMarketing,
     group: 'Operations',

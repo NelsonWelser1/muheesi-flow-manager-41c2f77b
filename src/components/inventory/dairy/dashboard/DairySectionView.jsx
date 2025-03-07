@@ -55,7 +55,7 @@ const DairySectionView = ({ section, onBack }) => {
         </div>
       </div>
 
-      {section.title === "Sales & Marketing" && !activeForm && (
+      {section.title === "Sales & Accounts" && !activeForm && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Button
             onClick={() => setActiveForm('sales')}
