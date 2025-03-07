@@ -1,505 +1,431 @@
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetDescription 
-} from "@/components/ui/sheet";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import React, { useState } from 'react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
 import { 
-  Eye, 
-  ArrowUpDown, 
-  Calendar, 
-  Download, 
-  Printer, 
-  Share2, 
-  Mail, 
-  FileSpreadsheet, 
-  FileText 
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
+} from "@/components/ui/table";
+import { 
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { 
+  Download, FileSpreadsheet, FileText, Share2, Mail, Send, Printer 
 } from "lucide-react";
+import { format } from 'date-fns';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { useDeliveryNotes } from '@/hooks/useDeliveryNotes';
 
 const DeliveryNoteList = ({ isOpen, onClose }) => {
-  // Mock data for demonstration - would come from API in production
-  const [deliveryNotes, setDeliveryNotes] = useState([
-    { 
-      id: 'DN001', 
-      orderReference: 'SO123', 
-      receiverName: 'John Doe', 
-      deliveryDate: '2024-05-15', 
-      deliveryLocation: 'Kampala City Center',
-      deliveryStatus: 'dispatched',
-      items: [{ name: 'Milk', quantity: 10, unit: 'Liters' }]
-    },
-    { 
-      id: 'DN002', 
-      orderReference: 'SO124', 
-      receiverName: 'Jane Smith', 
-      deliveryDate: '2024-05-16', 
-      deliveryLocation: 'Entebbe Road',
-      deliveryStatus: 'pending',
-      items: [{ name: 'Yogurt', quantity: 20, unit: 'Packs' }]
-    },
-  ]);
-  
-  const [filteredNotes, setFilteredNotes] = useState([]);
+  const { deliveryNotes, isLoading, updateDeliveryNoteStatus } = useDeliveryNotes();
+  const [sortField, setSortField] = useState('deliveryDate');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [dateRange, setDateRange] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'deliveryDate', direction: 'desc' });
-  const [timeRange, setTimeRange] = useState('all');
-  const { toast } = useToast();
-  const [selectedNote, setSelectedNote] = useState(null);
-  
-  // Initialize filtered orders when delivery notes are loaded
-  useEffect(() => {
-    setFilteredNotes(deliveryNotes);
-  }, [deliveryNotes]);
-  
-  // Handle sorting
-  const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+
+  const getFilteredDeliveryNotes = () => {
+    if (!deliveryNotes || !Array.isArray(deliveryNotes)) return [];
+
+    let filtered = [...deliveryNotes];
+
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(note => 
+        note.order_reference?.toLowerCase().includes(term) ||
+        note.receiver_name?.toLowerCase().includes(term) ||
+        note.delivery_location?.toLowerCase().includes(term)
+      );
     }
-    setSortConfig({ key, direction });
-    
-    const sortedData = [...filteredNotes].sort((a, b) => {
-      if (key === 'deliveryDate') {
-        const dateA = new Date(a[key]);
-        const dateB = new Date(b[key]);
-        return direction === 'asc' ? dateA - dateB : dateB - dateA;
+
+    // Apply date range filter
+    if (dateRange !== 'all') {
+      const now = new Date();
+      let dateFrom = new Date();
+
+      switch (dateRange) {
+        case 'today':
+          dateFrom.setHours(0, 0, 0, 0);
+          break;
+        case 'week':
+          dateFrom.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          dateFrom.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+          dateFrom.setFullYear(now.getFullYear() - 1);
+          break;
+        case 'custom':
+          if (startDate) {
+            dateFrom = new Date(startDate);
+          }
+          break;
+        default:
+          break;
       }
-      
-      if (a[key] < b[key]) {
-        return direction === 'asc' ? -1 : 1;
+
+      let dateTo = new Date();
+      if (dateRange === 'custom' && endDate) {
+        dateTo = new Date(endDate);
+        dateTo.setHours(23, 59, 59, 999);
       }
-      if (a[key] > b[key]) {
-        return direction === 'asc' ? 1 : -1;
+
+      filtered = filtered.filter(note => {
+        const noteDate = new Date(note.delivery_date);
+        return noteDate >= dateFrom && noteDate <= dateTo;
+      });
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let valueA = a[sortField] || '';
+      let valueB = b[sortField] || '';
+
+      // Handle dates
+      if (sortField === 'delivery_date' || sortField === 'created_at') {
+        valueA = new Date(valueA).getTime();
+        valueB = new Date(valueB).getTime();
+      }
+
+      if (valueA < valueB) {
+        return sortDirection === 'asc' ? -1 : 1;
+      }
+      if (valueA > valueB) {
+        return sortDirection === 'asc' ? 1 : -1;
       }
       return 0;
     });
-    
-    setFilteredNotes(sortedData);
+
+    return filtered;
   };
-  
-  // Handle search
-  useEffect(() => {
-    if (!deliveryNotes) return;
+
+  const handleStatusChange = (id, status) => {
+    updateDeliveryNoteStatus({ id, status });
+  };
+
+  const exportToExcel = () => {
+    const filteredData = getFilteredDeliveryNotes();
+    const worksheet = XLSX.utils.json_to_sheet(filteredData.map(note => ({
+      'Order Reference': note.order_reference,
+      'Delivery Date': format(new Date(note.delivery_date), 'yyyy-MM-dd'),
+      'Receiver': note.receiver_name,
+      'Location': note.delivery_location,
+      'Status': note.delivery_status,
+      'Created At': format(new Date(note.created_at), 'yyyy-MM-dd HH:mm')
+    })));
     
-    const filtered = deliveryNotes.filter(note => {
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        note.receiverName?.toLowerCase().includes(searchLower) ||
-        note.orderReference?.toLowerCase().includes(searchLower) ||
-        note.deliveryLocation?.toLowerCase().includes(searchLower) ||
-        note.deliveryStatus?.toLowerCase().includes(searchLower)
-      );
-    });
-    
-    setFilteredNotes(filtered);
-  }, [searchTerm, deliveryNotes]);
-  
-  // Handle time range filtering
-  useEffect(() => {
-    if (!deliveryNotes) return;
-    if (timeRange === 'all') {
-      setFilteredNotes(deliveryNotes);
-      return;
-    }
-    
-    const now = new Date();
-    let startDate = new Date();
-    
-    switch (timeRange) {
-      case 'today':
-        startDate.setHours(0, 0, 0, 0);
-        break;
-      case 'week':
-        startDate.setDate(now.getDate() - 7);
-        break;
-      case 'month':
-        startDate.setMonth(now.getMonth() - 1);
-        break;
-      case 'year':
-        startDate.setFullYear(now.getFullYear() - 1);
-        break;
-      default:
-        break;
-    }
-    
-    const filtered = deliveryNotes.filter(note => {
-      const deliveryDate = new Date(note.deliveryDate);
-      return deliveryDate >= startDate;
-    });
-    
-    setFilteredNotes(filtered);
-  }, [timeRange, deliveryNotes]);
-  
-  // Export functions
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Delivery Notes');
+    XLSX.writeFile(workbook, 'delivery_notes.xlsx');
+  };
+
   const exportToCSV = () => {
-    const headers = ['ID', 'Order Reference', 'Receiver', 'Date', 'Location', 'Status'];
+    const filteredData = getFilteredDeliveryNotes();
+    const worksheet = XLSX.utils.json_to_sheet(filteredData.map(note => ({
+      'Order Reference': note.order_reference,
+      'Delivery Date': format(new Date(note.delivery_date), 'yyyy-MM-dd'),
+      'Receiver': note.receiver_name,
+      'Location': note.delivery_location,
+      'Status': note.delivery_status,
+      'Created At': format(new Date(note.created_at), 'yyyy-MM-dd HH:mm')
+    })));
     
-    const csvData = filteredNotes.map(note => [
-      note.id,
-      note.orderReference,
-      note.receiverName,
-      new Date(note.deliveryDate).toLocaleDateString(),
-      note.deliveryLocation,
-      note.deliveryStatus
+    const csv = XLSX.utils.sheet_to_csv(worksheet);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'delivery_notes.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToPDF = () => {
+    const filteredData = getFilteredDeliveryNotes();
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text('Delivery Notes', 14, 22);
+    doc.setFontSize(11);
+    doc.text(`Generated on: ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 30);
+    
+    const tableColumn = ["Order Ref", "Date", "Receiver", "Location", "Status"];
+    const tableRows = filteredData.map(note => [
+      note.order_reference,
+      format(new Date(note.delivery_date), 'yyyy-MM-dd'),
+      note.receiver_name,
+      note.delivery_location,
+      note.delivery_status
     ]);
     
-    const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => row.join(','))
-    ].join('\n');
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 40,
+      styles: { fontSize: 10 }
+    });
     
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    doc.save('delivery_notes.pdf');
+  };
+
+  const shareViaWhatsApp = (note) => {
+    const text = `Delivery Note - Order: ${note.order_reference}, Date: ${format(new Date(note.delivery_date), 'yyyy-MM-dd')}, Receiver: ${note.receiver_name}, Location: ${note.delivery_location}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const shareViaEmail = (note) => {
+    const subject = `Delivery Note - ${note.order_reference}`;
+    const body = `
+      Delivery Note Details:
+      Order Reference: ${note.order_reference}
+      Delivery Date: ${format(new Date(note.delivery_date), 'yyyy-MM-dd')}
+      Receiver: ${note.receiver_name}
+      Contact: ${note.receiver_contact}
+      Location: ${note.delivery_location}
+      Status: ${note.delivery_status}
+    `;
+    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+  };
+
+  const saveLocally = (note) => {
+    const noteData = JSON.stringify(note, null, 2);
+    const blob = new Blob([noteData], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
+    
     link.setAttribute('href', url);
-    link.setAttribute('download', `delivery-notes-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `delivery_note_${note.id}.json`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
     link.click();
-    
-    toast({
-      title: "Export Successful",
-      description: "Delivery notes exported to CSV"
-    });
+    document.body.removeChild(link);
   };
-  
-  const exportToExcel = () => {
-    toast({
-      title: "Excel Export",
-      description: "Excel export functionality will be implemented with the xlsx library"
-    });
-  };
-  
-  const exportToPDF = () => {
-    toast({
-      title: "PDF Export",
-      description: "PDF export functionality will be implemented with the jspdf library"
-    });
-  };
-  
-  // Sharing functions
-  const shareByWhatsApp = (note) => {
-    const noteDetails = `
-      Delivery Note: ${note.id}
-      Order Reference: ${note.orderReference}
-      Receiver: ${note.receiverName}
-      Date: ${new Date(note.deliveryDate).toLocaleDateString()}
-      Location: ${note.deliveryLocation}
-      Status: ${note.deliveryStatus}
-    `;
-    
-    const encodedText = encodeURIComponent(noteDetails);
-    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
-  };
-  
-  const shareByEmail = (note) => {
-    const subject = `Delivery Note - ${note.id}`;
-    const body = `
-      Delivery Note: ${note.id}
-      Order Reference: ${note.orderReference}
-      Receiver: ${note.receiverName}
-      Date: ${new Date(note.deliveryDate).toLocaleDateString()}
-      Location: ${note.deliveryLocation}
-      Status: ${note.deliveryStatus}
-    `;
-    
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  };
-  
-  const saveToLocalAccount = (note) => {
-    localStorage.setItem(`delivery-note-${note.id}`, JSON.stringify(note));
-    
-    toast({
-      title: "Note Saved",
-      description: "Delivery note saved to your local account"
-    });
-  };
-  
-  // View order details
-  const viewNoteDetails = (note) => {
-    setSelectedNote(note);
-  };
+
+  const filteredNotes = getFilteredDeliveryNotes();
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-3xl overflow-y-auto" side="right">
-        <SheetHeader className="pb-4">
+      <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-6xl overflow-y-auto">
+        <SheetHeader>
           <SheetTitle>Delivery Notes</SheetTitle>
-          <SheetDescription>
-            View and manage your delivery notes
-          </SheetDescription>
         </SheetHeader>
         
-        <div className="flex flex-col gap-4">
-          {/* Search and filters */}
-          <div className="flex flex-wrap gap-2 justify-between items-center">
-            <div className="relative flex-grow max-w-sm">
+        <div className="my-4 space-y-4">
+          <div className="flex flex-wrap gap-2 items-center justify-between">
+            <div className="flex flex-wrap gap-2">
               <Input
-                placeholder="Search delivery notes..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
+                className="w-52"
               />
-            </div>
-            
-            <div className="flex gap-2">
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-[150px]">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Time range" />
+              
+              <Select value={dateRange} onValueChange={setDateRange}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Date range" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="all">All time</SelectItem>
                   <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                  <SelectItem value="year">This Year</SelectItem>
+                  <SelectItem value="week">Last 7 days</SelectItem>
+                  <SelectItem value="month">Last 30 days</SelectItem>
+                  <SelectItem value="year">Last year</SelectItem>
+                  <SelectItem value="custom">Custom range</SelectItem>
                 </SelectContent>
               </Select>
               
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <Download className="h-4 w-4" />
-                    Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuLabel>Export Options</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={exportToCSV}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={exportToExcel}>
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    Excel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={exportToPDF}>
-                    <Printer className="h-4 w-4 mr-2" />
-                    PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {dateRange === 'custom' && (
+                <>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-40"
+                  />
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-40"
+                  />
+                </>
+              )}
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={exportToCSV}
+                className="flex items-center gap-1"
+              >
+                <FileText className="h-4 w-4" />
+                CSV
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={exportToExcel}
+                className="flex items-center gap-1"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                Excel
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={exportToPDF}
+                className="flex items-center gap-1"
+              >
+                <Download className="h-4 w-4" />
+                PDF
+              </Button>
             </div>
           </div>
           
-          {/* Delivery Notes table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">View</TableHead>
-                  <TableHead>
-                    <button 
-                      className="flex items-center"
-                      onClick={() => handleSort('id')}
-                    >
-                      ID
-                      <ArrowUpDown className="ml-1 h-4 w-4" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button 
-                      className="flex items-center"
-                      onClick={() => handleSort('orderReference')}
-                    >
-                      Order Ref
-                      <ArrowUpDown className="ml-1 h-4 w-4" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button 
-                      className="flex items-center"
-                      onClick={() => handleSort('receiverName')}
-                    >
-                      Receiver
-                      <ArrowUpDown className="ml-1 h-4 w-4" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button 
-                      className="flex items-center"
-                      onClick={() => handleSort('deliveryDate')}
-                    >
-                      Date
-                      <ArrowUpDown className="ml-1 h-4 w-4" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button 
-                      className="flex items-center"
-                      onClick={() => handleSort('deliveryStatus')}
-                    >
-                      Status
-                      <ArrowUpDown className="ml-1 h-4 w-4" />
-                    </button>
-                  </TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredNotes.length > 0 ? (
-                  filteredNotes.map((note) => (
-                    <TableRow key={note.id}>
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => viewNoteDetails(note)}
+          {isLoading ? (
+            <div className="text-center py-8">Loading delivery notes...</div>
+          ) : filteredNotes.length === 0 ? (
+            <div className="text-center py-8">No delivery notes found</div>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead 
+                          className="cursor-pointer" 
+                          onClick={() => {
+                            if (sortField === 'order_reference') {
+                              setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setSortField('order_reference');
+                              setSortDirection('asc');
+                            }
+                          }}
                         >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                      <TableCell>{note.id}</TableCell>
-                      <TableCell>{note.orderReference}</TableCell>
-                      <TableCell>{note.receiverName}</TableCell>
-                      <TableCell>{new Date(note.deliveryDate).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <span 
-                          className={
-                            note.deliveryStatus === 'delivered' 
-                              ? 'text-green-600' 
-                              : note.deliveryStatus === 'dispatched' 
-                              ? 'text-amber-600' 
-                              : 'text-blue-600'
-                          }
+                          Order Ref {sortField === 'order_reference' && (sortDirection === 'asc' ? '↑' : '↓')}
+                        </TableHead>
+                        <TableHead 
+                          className="cursor-pointer"
+                          onClick={() => {
+                            if (sortField === 'delivery_date') {
+                              setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setSortField('delivery_date');
+                              setSortDirection('asc');
+                            }
+                          }}
                         >
-                          {note.deliveryStatus}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Share2 className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuLabel>Share Options</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => shareByWhatsApp(note)}>
-                              <Share2 className="h-4 w-4 mr-2" />
-                              WhatsApp
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => shareByEmail(note)}>
-                              <Mail className="h-4 w-4 mr-2" />
-                              Email
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => saveToLocalAccount(note)}>
-                              <Download className="h-4 w-4 mr-2" />
-                              Save Locally
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4">
-                      No delivery notes found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          
-          <div className="text-sm text-muted-foreground">
-            Showing {filteredNotes.length} of {deliveryNotes.length} delivery notes
-          </div>
-          
-          {/* Note Details Modal */}
-          {selectedNote && (
-            <div className="mt-4 p-4 border rounded-md bg-muted/30">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Delivery Note Details</h3>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedNote(null)}>Close</Button>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium">Delivery Note ID:</p>
-                  <p>{selectedNote.id}</p>
+                          Date {sortField === 'delivery_date' && (sortDirection === 'asc' ? '↑' : '↓')}
+                        </TableHead>
+                        <TableHead>Receiver</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredNotes.map((note) => (
+                        <TableRow key={note.id}>
+                          <TableCell>{note.order_reference}</TableCell>
+                          <TableCell>{format(new Date(note.delivery_date), 'yyyy-MM-dd')}</TableCell>
+                          <TableCell>{note.receiver_name}</TableCell>
+                          <TableCell>{note.delivery_location}</TableCell>
+                          <TableCell>
+                            <Select 
+                              value={note.delivery_status} 
+                              onValueChange={(value) => handleStatusChange(note.id, value)}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="dispatched">Dispatched</SelectItem>
+                                <SelectItem value="delivered">Delivered</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => shareViaWhatsApp(note)}
+                                title="Share via WhatsApp"
+                              >
+                                <Send className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => shareViaEmail(note)}
+                                title="Share via Email"
+                              >
+                                <Mail className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => saveLocally(note)}
+                                title="Save locally"
+                              >
+                                <Share2 className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => {
+                                  const doc = new jsPDF();
+                                  doc.setFontSize(18);
+                                  doc.text(`Delivery Note: ${note.order_reference}`, 14, 22);
+                                  
+                                  doc.setFontSize(12);
+                                  doc.text(`Date: ${format(new Date(note.delivery_date), 'yyyy-MM-dd')}`, 14, 32);
+                                  doc.text(`Receiver: ${note.receiver_name}`, 14, 38);
+                                  doc.text(`Contact: ${note.receiver_contact}`, 14, 44);
+                                  doc.text(`Location: ${note.delivery_location}`, 14, 50);
+                                  doc.text(`Status: ${note.delivery_status}`, 14, 56);
+                                  
+                                  if (note.items && note.items.length > 0) {
+                                    doc.text('Items:', 14, 66);
+                                    autoTable(doc, {
+                                      head: [['Item', 'Quantity', 'Unit']],
+                                      body: note.items.map(item => [
+                                        item.name,
+                                        item.quantity,
+                                        item.unit
+                                      ]),
+                                      startY: 70
+                                    });
+                                  }
+                                  
+                                  doc.save(`delivery_note_${note.order_reference}.pdf`);
+                                }}
+                                title="Print"
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">Order Reference:</p>
-                  <p>{selectedNote.orderReference}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Receiver:</p>
-                  <p>{selectedNote.receiverName}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Date:</p>
-                  <p>{new Date(selectedNote.deliveryDate).toLocaleDateString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Location:</p>
-                  <p>{selectedNote.deliveryLocation}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Status:</p>
-                  <p className={
-                    selectedNote.deliveryStatus === 'delivered' 
-                      ? 'text-green-600' 
-                      : selectedNote.deliveryStatus === 'dispatched' 
-                      ? 'text-amber-600' 
-                      : 'text-blue-600'
-                  }>
-                    {selectedNote.deliveryStatus}
-                  </p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-sm font-medium">Items:</p>
-                  <ul className="list-disc pl-5">
-                    {selectedNote.items.map((item, index) => (
-                      <li key={index}>
-                        {item.name}: {item.quantity} {item.unit}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              
-              <div className="flex gap-2 mt-4">
-                <Button size="sm" onClick={() => exportToPDF()}>
-                  <Printer className="h-4 w-4 mr-2" />
-                  Print
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => shareByEmail(selectedNote)}>
-                  <Mail className="h-4 w-4 mr-2" />
-                  Email
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => shareByWhatsApp(selectedNote)}>
-                  <Share2 className="h-4 w-4 mr-2" />
-                  WhatsApp
-                </Button>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </SheetContent>

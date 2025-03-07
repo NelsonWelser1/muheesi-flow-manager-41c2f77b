@@ -7,26 +7,117 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, QrCode, MapPin, Printer, Eye } from "lucide-react";
+import { ArrowLeft, QrCode, MapPin, Printer, Eye, Loader2, Save, Plus, Trash } from "lucide-react";
 import DeliveryNoteList from '../DeliveryNoteList';
+import { useDeliveryNotes } from '@/hooks/useDeliveryNotes';
 
 const DeliveryNotesForm = ({ onBack }) => {
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
     defaultValues: {
       deliveryDate: new Date().toISOString().split('T')[0],
-      deliveryStatus: 'pending'
+      deliveryStatus: 'pending',
+      items: []
     }
   });
+
   const { toast } = useToast();
   const [showNoteList, setShowNoteList] = useState(false);
+  const [items, setItems] = useState([]);
+  const [currentItem, setCurrentItem] = useState({
+    name: '',
+    quantity: '',
+    unit: ''
+  });
   
-  const onSubmit = (data) => {
-    console.log("Delivery note data:", data);
-    toast({
-      title: "Success",
-      description: "Delivery note created successfully",
-    });
-    // Here you would normally save to database
+  // Use our custom hook
+  const { addDeliveryNote, isSaving } = useDeliveryNotes();
+  
+  const onSubmit = async (data) => {
+    try {
+      console.log("Delivery note form data:", data);
+      
+      // Prepare the data for submission
+      const noteData = {
+        ...data,
+        items: items
+      };
+      
+      await addDeliveryNote(noteData);
+      
+      toast({
+        title: "Success",
+        description: "Delivery note created successfully",
+      });
+      
+      // Reset form after successful submission
+      reset();
+      setItems([]);
+      
+    } catch (error) {
+      console.error("Error submitting delivery note:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create delivery note. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAddItem = () => {
+    if (currentItem.name && currentItem.quantity) {
+      setItems([...items, { ...currentItem }]);
+      setCurrentItem({ name: '', quantity: '', unit: '' });
+    } else {
+      toast({
+        title: "Error",
+        description: "Item name and quantity are required",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRemoveItem = (index) => {
+    const updatedItems = [...items];
+    updatedItems.splice(index, 1);
+    setItems(updatedItems);
+  };
+
+  const handleDebugClick = () => {
+    console.log("Current form values:", watch());
+    console.log("Current items:", items);
+  };
+
+  const handleGeolocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const geolocation = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          };
+          setValue('geolocation', geolocation);
+          toast({
+            title: "Success",
+            description: `Geolocation added: ${geolocation.latitude}, ${geolocation.longitude}`,
+          });
+          console.log("Geolocation data:", geolocation);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          toast({
+            title: "Error",
+            description: "Failed to get geolocation",
+            variant: "destructive"
+          });
+        }
+      );
+    } else {
+      toast({
+        title: "Error",
+        description: "Geolocation is not supported by this browser",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -124,11 +215,54 @@ const DeliveryNotesForm = ({ onBack }) => {
               <Label>Delivered Items</Label>
               <div className="border rounded-lg p-4 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Input placeholder="Item name" {...register("itemName")} />
-                  <Input type="number" placeholder="Quantity" {...register("itemQuantity")} />
-                  <Input placeholder="Unit" {...register("itemUnit")} />
-                  <Button type="button" variant="outline">Add Item</Button>
+                  <Input 
+                    placeholder="Item name" 
+                    value={currentItem.name}
+                    onChange={(e) => setCurrentItem({...currentItem, name: e.target.value})}
+                  />
+                  <Input 
+                    type="number" 
+                    placeholder="Quantity" 
+                    value={currentItem.quantity}
+                    onChange={(e) => setCurrentItem({...currentItem, quantity: e.target.value})}
+                  />
+                  <Input 
+                    placeholder="Unit" 
+                    value={currentItem.unit}
+                    onChange={(e) => setCurrentItem({...currentItem, unit: e.target.value})}
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={handleAddItem}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" /> Add Item
+                  </Button>
                 </div>
+                
+                {items.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="font-medium mb-2">Added Items:</h4>
+                    <div className="border rounded divide-y">
+                      {items.map((item, index) => (
+                        <div key={index} className="p-2 flex justify-between items-center">
+                          <div>
+                            <span className="font-medium">{item.name}</span> - {item.quantity} {item.unit}
+                          </div>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleRemoveItem(index)}
+                          >
+                            <Trash className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -139,8 +273,30 @@ const DeliveryNotesForm = ({ onBack }) => {
               </div>
             </div>
 
-            <div className="flex gap-4">
-              <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">Submit Delivery Note</Button>
+            <div className="flex flex-wrap gap-4">
+              <Button 
+                type="submit" 
+                className="bg-[#0000a0] hover:bg-[#00008b]"
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : "Submit Delivery Note"}
+              </Button>
+              
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={handleDebugClick}
+              >
+                <Save className="h-4 w-4" />
+                Debug Form
+              </Button>
+              
               <Button 
                 type="button" 
                 variant="outline" 
@@ -150,15 +306,17 @@ const DeliveryNotesForm = ({ onBack }) => {
                 <QrCode className="h-4 w-4" />
                 Generate QR Code
               </Button>
+              
               <Button 
                 type="button" 
                 variant="outline" 
                 className="flex items-center gap-2"
-                onClick={() => console.log("Adding geolocation...")}
+                onClick={handleGeolocation}
               >
                 <MapPin className="h-4 w-4" />
                 Add Geolocation
               </Button>
+              
               <Button 
                 type="button" 
                 variant="outline" 
