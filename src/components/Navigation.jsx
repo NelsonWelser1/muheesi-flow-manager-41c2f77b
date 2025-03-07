@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Menu } from 'lucide-react';
 import {
@@ -8,9 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { navItems } from '../nav-items';
 
 const Navigation = () => {
-  const navItems = [
+  const location = useLocation();
+  const dashboardNavItems = [
     { to: "/dashboard", label: "Dashboard" },
     { to: "/manage-inventory", label: "Manage Inventory" },
     { to: "/manage-companies", label: "Manage Companies" },
@@ -27,10 +30,24 @@ const Navigation = () => {
           Muheesi GKK Integrated System
         </Link>
         <div className="hidden md:flex space-x-4">
-          {navItems.map((item) => (
+          {dashboardNavItems.map((item) => (
             <Button key={item.to} asChild className="bg-[#9b87f5] hover:bg-[#9b87f5] text-white font-bold">
               <Link to={item.to}>{item.label}</Link>
             </Button>
+          ))}
+          {navItems.map((item) => (
+            item.to !== "/" && (
+              <Button 
+                key={item.to} 
+                asChild 
+                className={`${location.pathname === item.to ? 'bg-[#7a5af8]' : 'bg-[#9b87f5]'} hover:bg-[#7a5af8] text-white font-bold`}
+              >
+                <Link to={item.to}>
+                  {item.icon && <span className="mr-2">{item.icon}</span>}
+                  {item.title}
+                </Link>
+              </Button>
+            )
           ))}
         </div>
         <div className="md:hidden">
@@ -39,10 +56,20 @@ const Navigation = () => {
               <Button variant="outline"><Menu /></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              {navItems.map((item) => (
+              {dashboardNavItems.map((item) => (
                 <DropdownMenuItem key={item.to} asChild>
                   <Link to={item.to}>{item.label}</Link>
                 </DropdownMenuItem>
+              ))}
+              {navItems.map((item) => (
+                item.to !== "/" && (
+                  <DropdownMenuItem key={item.to} asChild>
+                    <Link to={item.to}>
+                      {item.icon && <span className="mr-2">{item.icon}</span>}
+                      {item.title}
+                    </Link>
+                  </DropdownMenuItem>
+                )
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
