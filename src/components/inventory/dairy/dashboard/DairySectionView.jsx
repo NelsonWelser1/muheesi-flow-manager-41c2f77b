@@ -18,7 +18,7 @@ const DairySectionView = ({ section, onBack }) => {
   const renderContent = () => {
     if (activeForm === 'sales') {
       return <SalesOrderForm onBack={() => setActiveForm(null)} />;
-    } else if (activeForm === 'accounts') {
+    } else if (activeForm === 'invoice') {
       return <CustomerInvoiceForm onBack={() => setActiveForm(null)} />;
     } else if (activeForm === 'delivery') {
       return <DeliveryNotesForm onBack={() => setActiveForm(null)} />;
@@ -56,27 +56,35 @@ const DairySectionView = ({ section, onBack }) => {
       </div>
 
       {section.title === "Sales & Marketing" && !activeForm && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Button
             onClick={() => setActiveForm('sales')}
             className="h-24 text-lg flex flex-col items-center justify-center gap-2"
             style={{ backgroundColor: '#0000a0', color: 'white' }}
           >
             <DollarSign className="h-6 w-6" />
-            Sales
+            Sales Orders
           </Button>
           <Button
-            onClick={() => setActiveForm('bills')}
+            onClick={() => setActiveForm('delivery')}
             className="h-24 text-lg flex flex-col items-center justify-center gap-2"
             style={{ backgroundColor: '#0000a0', color: 'white' }}
           >
             <Receipt className="h-6 w-6" />
-            Accounts
+            Delivery Notes
+          </Button>
+          <Button
+            onClick={() => setActiveForm('invoice')}
+            className="h-24 text-lg flex flex-col items-center justify-center gap-2"
+            style={{ backgroundColor: '#0000a0', color: 'white' }}
+          >
+            <Receipt className="h-6 w-6" />
+            Customer Invoices
           </Button>
         </div>
       )}
 
-      {activeForm === 'bills' && (
+      {activeForm === 'accounts' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Button
             onClick={() => setActiveForm('bills')}
