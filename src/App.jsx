@@ -9,6 +9,14 @@ const App = () => {
       <Routes>
         {/* Other routes */}
         <Route path="/manage-inventory/logistics/*" element={<LogisticsRoutes />} />
+        {/* Redirect to the logistics dashboard as a fallback route for testing */}
+        <Route path="/" element={<div className="p-8">
+          <h1 className="text-2xl font-bold mb-4">Welcome to Muheesi GKK Integrated System</h1>
+          <p className="mb-4">This is the main dashboard page.</p>
+          <a href="/manage-inventory/logistics" className="text-blue-500 hover:underline">
+            Go to Logistics Dashboard
+          </a>
+        </div>} />
         {/* Other routes */}
       </Routes>
     </Router>

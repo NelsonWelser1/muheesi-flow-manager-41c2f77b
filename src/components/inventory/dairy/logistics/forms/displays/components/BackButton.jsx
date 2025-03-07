@@ -2,12 +2,23 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
-const BackButton = ({ onBack }) => {
+const BackButton = ({ onBack, fallbackPath = '/manage-inventory/logistics' }) => {
+  const navigate = useNavigate();
+  
+  const handleBack = () => {
+    if (typeof onBack === 'function') {
+      onBack();
+    } else {
+      navigate(fallbackPath);
+    }
+  };
+
   return (
     <Button 
       variant="outline" 
-      onClick={onBack} 
+      onClick={handleBack} 
       className="flex items-center gap-2 hover:bg-gray-100"
       aria-label="Go back"
     >
