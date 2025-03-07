@@ -38,7 +38,7 @@ const BillsExpensesForm = ({ onBack }) => {
               setValue={setValue}
               generateBillNumber={generateBillNumber}
             />
-            <BillsExpensesFormActions />
+            <BillsExpensesFormActions onSubmit={onSubmit} />
           </form>
         </CardContent>
       </Card>
