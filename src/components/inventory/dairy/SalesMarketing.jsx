@@ -37,6 +37,10 @@ const SalesMarketing = () => {
           </CardContent>
         </Card>
       </div>
+      
+      <div className="text-center py-8">
+        <p>Please select an option from the menu above to continue.</p>
+      </div>
     </div>
   );
 };

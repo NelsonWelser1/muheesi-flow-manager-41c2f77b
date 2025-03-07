@@ -3,6 +3,9 @@ import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Bell, DollarSign, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SalesOrderForm from '../sales/forms/SalesOrderForm';
+import DeliveryNotesForm from '../sales/forms/DeliveryNotesForm';
+import CustomerInvoiceForm from '../sales/forms/CustomerInvoiceForm';
 
 const DairySectionView = ({ section, onBack }) => {
   const [activeForm, setActiveForm] = React.useState(null);
@@ -10,9 +13,12 @@ const DairySectionView = ({ section, onBack }) => {
   console.log('Rendering DairySectionView for:', section.title);
 
   const renderContent = () => {
-    if (activeForm) {
-      // Will be implemented when the forms are created
-      return <div>Form content will be added here</div>;
+    if (activeForm === 'sales') {
+      return <SalesOrderForm onBack={() => setActiveForm(null)} />;
+    } else if (activeForm === 'accounts') {
+      return <CustomerInvoiceForm onBack={() => setActiveForm(null)} />;
+    } else if (activeForm === 'delivery') {
+      return <DeliveryNotesForm onBack={() => setActiveForm(null)} />;
     }
     return section.component && <section.component />;
   };
@@ -45,7 +51,7 @@ const DairySectionView = ({ section, onBack }) => {
           <Button
             onClick={() => setActiveForm('sales')}
             className="h-24 text-lg flex flex-col items-center justify-center gap-2"
-            style={{ backgroundColor: '#0EA5E9', color: 'white' }}
+            style={{ backgroundColor: '#0000a0', color: 'white' }}
           >
             <DollarSign className="h-6 w-6" />
             Sales
@@ -53,7 +59,7 @@ const DairySectionView = ({ section, onBack }) => {
           <Button
             onClick={() => setActiveForm('accounts')}
             className="h-24 text-lg flex flex-col items-center justify-center gap-2"
-            style={{ backgroundColor: '#0EA5E9', color: 'white' }}
+            style={{ backgroundColor: '#0000a0', color: 'white' }}
           >
             <Receipt className="h-6 w-6" />
             Accounts
