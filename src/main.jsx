@@ -64,15 +64,16 @@ const renderApp = () => {
   }
 };
 
-// Clear any existing timeouts to prevent multiple renders
+// Use multiple rendering strategies to ensure the app loads
+// Strategy 1: Direct immediate render
+renderApp();
+
+// Strategy 2: Clear any existing timeouts to prevent multiple renders
 if (window.__RENDER_TIMEOUT) {
   clearTimeout(window.__RENDER_TIMEOUT);
 }
 
-// Always try to render immediately
-renderApp();
-
-// Also schedule a backup render after a short delay to ensure it happens
+// Strategy 3: Backup render after a short delay
 window.__RENDER_TIMEOUT = setTimeout(() => {
   if (!hasRendered) {
     console.log("Backup render triggered");
@@ -80,7 +81,17 @@ window.__RENDER_TIMEOUT = setTimeout(() => {
   }
 }, 300);
 
-// Handle sandbox messages more reliably
+// Strategy 4: Listen for DOM content loaded
+if (document.readyState !== 'complete') {
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!hasRendered) {
+      console.log("DOM content loaded render triggered");
+      renderApp();
+    }
+  });
+}
+
+// Strategy 5: Handle sandbox messages
 window.addEventListener('message', (event) => {
   // Check if the message is from the Lovable editor about sandbox state
   if (event.data && event.data.type === 'sandbox-status') {
@@ -103,7 +114,7 @@ window.addEventListener('message', (event) => {
   }
 });
 
-// Ensure we render when window loads as a fallback
+// Strategy 6: Ensure we render when window loads as a fallback
 window.addEventListener('load', () => {
   console.log("Window fully loaded");
   if (!hasRendered) {

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Menu } from 'lucide-react';
 import {
@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Navigation = () => {
+  const navigate = useNavigate();
+  
   const navItems = [
     { to: "/dashboard", label: "Dashboard" },
     { to: "/manage-inventory", label: "Manage Inventory" },
@@ -18,18 +20,18 @@ const Navigation = () => {
     { to: "/feedback", label: "Feedback" },
   ];
 
+  const handleHomeClick = (e) => {
+    e.preventDefault();
+    navigate('/');
+  };
+
   return (
     <nav className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
         <Link 
           to="/" 
           className="text-2xl font-bold font-futuristic"
-          onClick={(e) => {
-            // Use client-side navigation for internal links
-            e.preventDefault();
-            window.history.pushState({}, '', '/');
-            window.dispatchEvent(new PopStateEvent('popstate'));
-          }}
+          onClick={handleHomeClick}
         >
           Muheesi GKK Integrated System
         </Link>

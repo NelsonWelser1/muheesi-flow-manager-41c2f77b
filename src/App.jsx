@@ -19,6 +19,7 @@ import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDair
 import SmartProductionDashboard from "./components/inventory/dairy/production/SmartProductionDashboard";
 import SalesMarketingDashboard from "./components/inventory/dairy/sales/SalesMarketingDashboard";
 import SandboxFallback from "./components/SandboxFallback";
+import Index from "./pages/Index";
 
 // Loading component for suspense fallback
 const LoadingFallback = () => (
@@ -94,7 +95,8 @@ const App = () => {
                     <Navigation />
                     <main className="flex-grow overflow-y-auto">
                       <Routes>
-                        <Route path="/" element={<LandingPage />} />
+                        <Route path="/" element={<Index />} />
+                        <Route path="/landing" element={<LandingPage />} />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/manage-inventory" element={<ManageInventory />} />
                         <Route path="/manage-companies" element={<ManageCompanies />} />
