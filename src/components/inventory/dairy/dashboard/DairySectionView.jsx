@@ -1,9 +1,8 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { Bell, DollarSign } from "lucide-react";
+import { Bell, DollarSign, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import SalesDistributionForm from '../sales/SalesDistributionForm';
 
 const DairySectionView = ({ section, onBack }) => {
   const [activeForm, setActiveForm] = React.useState(null);
@@ -11,12 +10,11 @@ const DairySectionView = ({ section, onBack }) => {
   console.log('Rendering DairySectionView for:', section.title);
 
   const renderContent = () => {
-    switch (activeForm) {
-      case 'sales':
-        return <SalesDistributionForm onBack={() => setActiveForm(null)} />;
-      default:
-        return section.component && <section.component />;
+    if (activeForm) {
+      // Will be implemented when the forms are created
+      return <div>Form content will be added here</div>;
     }
+    return section.component && <section.component />;
   };
 
   return (
@@ -43,14 +41,22 @@ const DairySectionView = ({ section, onBack }) => {
       </div>
 
       {section.title === "Sales & Marketing" && !activeForm && (
-        <div className="grid grid-cols-1 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <Button
             onClick={() => setActiveForm('sales')}
             className="h-24 text-lg flex flex-col items-center justify-center gap-2"
-            style={{ backgroundColor: '#F97316', color: 'white' }}
+            style={{ backgroundColor: '#0EA5E9', color: 'white' }}
           >
             <DollarSign className="h-6 w-6" />
-            Sales Distribution Form
+            Sales
+          </Button>
+          <Button
+            onClick={() => setActiveForm('accounts')}
+            className="h-24 text-lg flex flex-col items-center justify-center gap-2"
+            style={{ backgroundColor: '#0EA5E9', color: 'white' }}
+          >
+            <Receipt className="h-6 w-6" />
+            Accounts
           </Button>
         </div>
       )}

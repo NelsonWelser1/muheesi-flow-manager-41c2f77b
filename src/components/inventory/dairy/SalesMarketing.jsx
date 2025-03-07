@@ -2,21 +2,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Package, TrendingUp } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-const mockData = {
-  salesTrend: [
-    { date: 'Mon', sales: 4000 },
-    { date: 'Tue', sales: 3000 },
-    { date: 'Wed', sales: 5000 },
-    { date: 'Thu', sales: 2780 },
-    { date: 'Fri', sales: 1890 },
-  ],
-  activeCampaigns: [
-    { id: 1, name: 'Summer Sale', startDate: '2024-03-01', endDate: '2024-03-31', budget: 5000, roi: 2.5 },
-    { id: 2, name: 'New Product Launch', startDate: '2024-03-15', endDate: '2024-04-15', budget: 8000, roi: 1.8 },
-  ]
-};
 
 const SalesMarketing = () => {
   return (
@@ -52,59 +37,6 @@ const SalesMarketing = () => {
           </CardContent>
         </Card>
       </div>
-
-      <div className="grid grid-cols-1 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Sales Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={mockData.salesTrend}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="sales" stroke="#8884d8" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Active Sales Campaigns</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs uppercase bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3">Campaign</th>
-                  <th className="px-6 py-3">Start Date</th>
-                  <th className="px-6 py-3">End Date</th>
-                  <th className="px-6 py-3">Budget</th>
-                  <th className="px-6 py-3">ROI</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockData.activeCampaigns.map((campaign) => (
-                  <tr key={campaign.id} className="bg-white border-b">
-                    <td className="px-6 py-4">{campaign.name}</td>
-                    <td className="px-6 py-4">{campaign.startDate}</td>
-                    <td className="px-6 py-4">{campaign.endDate}</td>
-                    <td className="px-6 py-4">${campaign.budget}</td>
-                    <td className="px-6 py-4">{campaign.roi}x</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
