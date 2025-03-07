@@ -1,5 +1,5 @@
 
-import React, { Suspense } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -81,6 +81,18 @@ class ErrorBoundary extends React.Component {
 }
 
 const App = () => {
+  const [initialized, setInitialized] = useState(false);
+
+  // Make sure the routing is initialized properly
+  useEffect(() => {
+    console.log("App initialized, current path:", window.location.pathname);
+    setInitialized(true);
+  }, []);
+
+  if (!initialized) {
+    return <LoadingFallback />;
+  }
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>

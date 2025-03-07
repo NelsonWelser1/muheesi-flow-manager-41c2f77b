@@ -22,6 +22,7 @@ const Navigation = () => {
 
   const handleHomeClick = (e) => {
     e.preventDefault();
+    console.log("Navigation: Redirecting to home page");
     navigate('/');
   };
 

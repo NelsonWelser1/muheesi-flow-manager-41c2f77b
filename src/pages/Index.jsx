@@ -1,10 +1,14 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    console.log("Index page mounted");
+  }, []);
   
   return (
     <div className="container mx-auto px-4 py-8">

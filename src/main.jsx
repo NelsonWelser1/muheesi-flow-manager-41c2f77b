@@ -32,7 +32,7 @@ const renderApp = () => {
       fallback.style.display = 'none';
     }
 
-    console.log("Rendering App component");
+    console.log("Rendering App component with current route:", window.location.pathname);
     root.render(
       <React.StrictMode>
         <App />
