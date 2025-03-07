@@ -14,7 +14,8 @@ const CustomerInvoiceForm = ({ onBack }) => {
     setValue, 
     errors, 
     onSubmit,
-    generateInvoiceNumber 
+    generateInvoiceNumber,
+    invoiceStatus
   } = useCustomerInvoiceForm();
 
   return (
@@ -38,7 +39,7 @@ const CustomerInvoiceForm = ({ onBack }) => {
               setValue={setValue}
               generateInvoiceNumber={generateInvoiceNumber}
             />
-            <CustomerInvoiceFormActions />
+            <CustomerInvoiceFormActions status={invoiceStatus} />
           </form>
         </CardContent>
       </Card>

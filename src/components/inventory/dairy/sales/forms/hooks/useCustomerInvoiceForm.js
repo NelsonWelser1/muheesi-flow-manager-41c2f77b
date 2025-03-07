@@ -1,8 +1,10 @@
 
 import { useForm } from "react-hook-form";
 import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
 
 export const useCustomerInvoiceForm = () => {
+  const [invoiceStatus, setInvoiceStatus] = useState('pending');
   const { register, handleSubmit, setValue, formState: { errors } } = useForm({
     defaultValues: {
       invoiceDate: new Date().toISOString().split('T')[0],
@@ -24,10 +26,17 @@ export const useCustomerInvoiceForm = () => {
   
   const onSubmit = (data) => {
     console.log("Invoice data:", data);
-    toast({
-      title: "Success",
-      description: "Invoice created successfully",
-    });
+    setInvoiceStatus('processing');
+    
+    // Simulate processing delay
+    setTimeout(() => {
+      setInvoiceStatus('completed');
+      toast({
+        title: "Success",
+        description: "Invoice created successfully",
+      });
+    }, 1500);
+    
     // Here you would normally save to database
   };
 
@@ -37,6 +46,8 @@ export const useCustomerInvoiceForm = () => {
     setValue,
     errors,
     onSubmit,
-    generateInvoiceNumber
+    generateInvoiceNumber,
+    invoiceStatus,
+    setInvoiceStatus
   };
 };
