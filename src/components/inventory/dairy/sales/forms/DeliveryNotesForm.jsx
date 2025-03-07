@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, QrCode, MapPin, Printer } from "lucide-react";
+import { ArrowLeft, QrCode, MapPin, Printer, Eye } from "lucide-react";
+import DeliveryNoteList from '../DeliveryNoteList';
 
 const DeliveryNotesForm = ({ onBack }) => {
   const { register, handleSubmit, setValue, formState: { errors } } = useForm({
@@ -17,6 +18,7 @@ const DeliveryNotesForm = ({ onBack }) => {
     }
   });
   const { toast } = useToast();
+  const [showNoteList, setShowNoteList] = useState(false);
   
   const onSubmit = (data) => {
     console.log("Delivery note data:", data);
@@ -29,13 +31,24 @@ const DeliveryNotesForm = ({ onBack }) => {
 
   return (
     <div className="space-y-4">
-      <Button 
-        variant="outline" 
-        onClick={onBack}
-        className="flex items-center gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back
-      </Button>
+      <div className="flex justify-between items-center">
+        <Button 
+          variant="outline" 
+          onClick={onBack}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          onClick={() => setShowNoteList(true)}
+          className="flex items-center gap-2"
+        >
+          <Eye className="h-4 w-4" /> View Delivery Notes
+        </Button>
+      </div>
+      
       <Card>
         <CardHeader>
           <CardTitle>Delivery Notes Form</CardTitle>
@@ -159,6 +172,11 @@ const DeliveryNotesForm = ({ onBack }) => {
           </form>
         </CardContent>
       </Card>
+      
+      <DeliveryNoteList 
+        isOpen={showNoteList} 
+        onClose={() => setShowNoteList(false)}
+      />
     </div>
   );
 };
