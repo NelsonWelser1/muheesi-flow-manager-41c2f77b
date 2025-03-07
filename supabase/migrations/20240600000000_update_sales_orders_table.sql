@@ -4,8 +4,9 @@
 -- First, make sure the uuid-ossp extension is created
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Check if the table already exists and add missing columns if needed
-DO $$
+-- Check if table exists first
+DO $$ 
+<<check_and_update>>
 DECLARE
   table_exists BOOLEAN;
 BEGIN
@@ -135,21 +136,33 @@ BEGIN
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
-    
-    -- Create update trigger for updated_at
-    CREATE OR REPLACE FUNCTION update_modified_column()
-    RETURNS TRIGGER AS $$
-    BEGIN
-        NEW.updated_at = now();
-        RETURN NEW;
-    END;
-    $$ language 'plpgsql';
+  END IF;
+END check_and_update $$;
 
+-- Create update trigger for updated_at
+CREATE OR REPLACE FUNCTION update_modified_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Create the trigger if it doesn't exist
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'update_sales_orders_updated_at'
+  ) THEN
     CREATE TRIGGER update_sales_orders_updated_at
     BEFORE UPDATE ON sales_orders
     FOR EACH ROW
     EXECUTE FUNCTION update_modified_column();
   END IF;
+EXCEPTION
+  -- Handle case where sales_orders table doesn't exist yet
+  WHEN undefined_table THEN
+    NULL;
 END $$;
 
 -- Enable Row Level Security (RLS)
