@@ -7,8 +7,6 @@ import SalesOrderForm from '../sales/forms/SalesOrderForm';
 import DeliveryNotesForm from '../sales/forms/DeliveryNotesForm';
 import CustomerInvoiceForm from '../sales/forms/CustomerInvoiceForm';
 import BillsExpensesForm from '../accounts/forms/BillsExpensesForm';
-import PaymentsReceiptsForm from '../accounts/forms/PaymentsReceiptsForm';
-import PayrollPayslipsForm from '../accounts/forms/PayrollPayslipsForm';
 
 const DairySectionView = ({ section, onBack }) => {
   const [activeForm, setActiveForm] = React.useState(null);
@@ -24,10 +22,6 @@ const DairySectionView = ({ section, onBack }) => {
       return <DeliveryNotesForm onBack={() => setActiveForm(null)} />;
     } else if (activeForm === 'bills') {
       return <BillsExpensesForm onBack={() => setActiveForm(null)} />;
-    } else if (activeForm === 'payments') {
-      return <PaymentsReceiptsForm onBack={() => setActiveForm(null)} />;
-    } else if (activeForm === 'payroll') {
-      return <PayrollPayslipsForm onBack={() => setActiveForm(null)} />;
     }
     return section.component && <section.component />;
   };
