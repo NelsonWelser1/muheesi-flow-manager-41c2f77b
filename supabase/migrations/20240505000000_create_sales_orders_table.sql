@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.sales_orders (
     customer_name TEXT NOT NULL,
     order_date DATE NOT NULL,
     product TEXT NOT NULL,
+    product_type TEXT,
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     unit_price DECIMAL(10, 2) NOT NULL CHECK (unit_price >= 0),
     discount DECIMAL(5, 2) CHECK (discount >= 0 AND discount <= 100),

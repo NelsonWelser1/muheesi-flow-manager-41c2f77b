@@ -10,6 +10,14 @@ import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Save, Truck, Loader2 } from "lucide-react";
 import { useSalesOrders } from '@/integrations/supabase/hooks/useSalesOrders';
 
+// Product types mapping
+const PRODUCT_TYPES = {
+  cheese: ["Mozzarella", "Cheddar", "Gouda", "Parmesan", "Swiss", "Feta"],
+  yogurt: ["Plain", "Greek", "Fruit", "Low-fat", "Full-fat", "Flavored"],
+  milk: ["Whole", "Semi-skimmed", "Skimmed", "Raw", "Pasteurized", "UHT"],
+  processed_milk: ["Homogenized", "Condensed", "Evaporated", "Powdered", "Flavored", "Long-life"]
+};
+
 const SalesOrderForm = ({ onBack }) => {
   const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm({
     defaultValues: {
@@ -22,6 +30,21 @@ const SalesOrderForm = ({ onBack }) => {
   const { toast } = useToast();
   const { createSalesOrder } = useSalesOrders();
   const [isSaving, setIsSaving] = useState(false);
+  const [productTypes, setProductTypes] = useState([]);
+  
+  // Watch the product field to update product types
+  const selectedProduct = watch("product");
+  
+  // Update product types when product changes
+  React.useEffect(() => {
+    if (selectedProduct && PRODUCT_TYPES[selectedProduct]) {
+      setProductTypes(PRODUCT_TYPES[selectedProduct]);
+      // Reset the product type selection when product changes
+      setValue("productType", "");
+    } else {
+      setProductTypes([]);
+    }
+  }, [selectedProduct, setValue]);
   
   const onSubmit = async (data) => {
     try {
@@ -33,6 +56,7 @@ const SalesOrderForm = ({ onBack }) => {
         customer_name: data.customerName,
         order_date: data.orderDate,
         product: data.product,
+        product_type: data.productType, // Include the product type
         quantity: Number(data.quantity),
         unit_price: Number(data.unitPrice),
         discount: data.discount ? Number(data.discount) : null,
@@ -131,6 +155,26 @@ const SalesOrderForm = ({ onBack }) => {
                 {errors.product && (
                   <p className="text-sm text-red-500">{errors.product.message}</p>
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Product Type</Label>
+                <Select 
+                  onValueChange={(value) => setValue("productType", value)}
+                  disabled={!selectedProduct || productTypes.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select product type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {productTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input type="hidden" {...register("productType")} />
               </div>
 
               <div className="space-y-2">
