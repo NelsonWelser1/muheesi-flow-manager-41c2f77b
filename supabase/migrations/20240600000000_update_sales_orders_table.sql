@@ -4,9 +4,8 @@
 -- First, make sure the uuid-ossp extension is created
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Check if table exists first
-DO $$ 
-<<check_and_update>>
+-- Check if table exists and create or update it
+DO $$
 DECLARE
   table_exists BOOLEAN;
 BEGIN
@@ -137,9 +136,9 @@ BEGIN
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
   END IF;
-END check_and_update $$;
+END $$;
 
--- Create update trigger for updated_at
+-- Create update trigger function for updated_at column
 CREATE OR REPLACE FUNCTION update_modified_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -148,67 +147,116 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Create the trigger if it doesn't exist
+-- Create the trigger if it doesn't exist in a separate transaction
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_trigger WHERE tgname = 'update_sales_orders_updated_at'
+  -- Only try to create trigger if the table exists
+  IF EXISTS (
+    SELECT FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'sales_orders'
   ) THEN
-    CREATE TRIGGER update_sales_orders_updated_at
-    BEFORE UPDATE ON sales_orders
-    FOR EACH ROW
-    EXECUTE FUNCTION update_modified_column();
+    -- Check if trigger exists first
+    IF NOT EXISTS (
+      SELECT FROM pg_trigger WHERE tgname = 'update_sales_orders_updated_at'
+    ) THEN
+      CREATE TRIGGER update_sales_orders_updated_at
+      BEFORE UPDATE ON sales_orders
+      FOR EACH ROW
+      EXECUTE FUNCTION update_modified_column();
+    END IF;
   END IF;
-EXCEPTION
-  -- Handle case where sales_orders table doesn't exist yet
-  WHEN undefined_table THEN
-    NULL;
 END $$;
 
 -- Enable Row Level Security (RLS)
-ALTER TABLE public.sales_orders ENABLE ROW LEVEL SECURITY;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'sales_orders'
+  ) THEN
+    ALTER TABLE public.sales_orders ENABLE ROW LEVEL SECURITY;
+  END IF;
+EXCEPTION
+  WHEN undefined_table THEN
+    -- If table doesn't exist yet, do nothing
+    NULL;
+END $$;
 
 -- Create or update policies
 DO $$
 BEGIN
-  -- Drop existing policies if they exist
-  DROP POLICY IF EXISTS "Allow authenticated read access to sales_orders" ON public.sales_orders;
-  DROP POLICY IF EXISTS "Allow authenticated insert access to sales_orders" ON public.sales_orders;
-  DROP POLICY IF EXISTS "Allow authenticated update access to sales_orders" ON public.sales_orders;
-  DROP POLICY IF EXISTS "Allow authenticated delete access to sales_orders" ON public.sales_orders;
-  
-  -- Create new policies
-  CREATE POLICY "Allow authenticated read access to sales_orders"
-  ON public.sales_orders
-  FOR SELECT
-  TO authenticated
-  USING (true);
-  
-  CREATE POLICY "Allow authenticated insert access to sales_orders"
-  ON public.sales_orders
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (true);
-  
-  CREATE POLICY "Allow authenticated update access to sales_orders"
-  ON public.sales_orders
-  FOR UPDATE
-  TO authenticated
-  USING (true);
-  
-  CREATE POLICY "Allow authenticated delete access to sales_orders"
-  ON public.sales_orders
-  FOR DELETE
-  TO authenticated
-  USING (true);
+  -- Only proceed if table exists
+  IF EXISTS (
+    SELECT FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'sales_orders'
+  ) THEN
+    -- Drop existing policies if they exist
+    DROP POLICY IF EXISTS "Allow authenticated read access to sales_orders" ON public.sales_orders;
+    DROP POLICY IF EXISTS "Allow authenticated insert access to sales_orders" ON public.sales_orders;
+    DROP POLICY IF EXISTS "Allow authenticated update access to sales_orders" ON public.sales_orders;
+    DROP POLICY IF EXISTS "Allow authenticated delete access to sales_orders" ON public.sales_orders;
+    
+    -- Create new policies
+    CREATE POLICY "Allow authenticated read access to sales_orders"
+    ON public.sales_orders
+    FOR SELECT
+    TO authenticated
+    USING (true);
+    
+    CREATE POLICY "Allow authenticated insert access to sales_orders"
+    ON public.sales_orders
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (true);
+    
+    CREATE POLICY "Allow authenticated update access to sales_orders"
+    ON public.sales_orders
+    FOR UPDATE
+    TO authenticated
+    USING (true);
+    
+    CREATE POLICY "Allow authenticated delete access to sales_orders"
+    ON public.sales_orders
+    FOR DELETE
+    TO authenticated
+    USING (true);
+  END IF;
+EXCEPTION
+  WHEN undefined_table THEN
+    -- If table doesn't exist yet, do nothing
+    NULL;
 END $$;
 
 -- Grant access to authenticated users
-GRANT ALL ON public.sales_orders TO authenticated;
-GRANT ALL ON public.sales_orders TO service_role;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'sales_orders'
+  ) THEN
+    GRANT ALL ON public.sales_orders TO authenticated;
+    GRANT ALL ON public.sales_orders TO service_role;
+  END IF;
+EXCEPTION
+  WHEN undefined_table THEN
+    -- If table doesn't exist yet, do nothing
+    NULL;
+END $$;
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_sales_orders_customer_name ON public.sales_orders(customer_name);
-CREATE INDEX IF NOT EXISTS idx_sales_orders_order_date ON public.sales_orders(order_date);
-CREATE INDEX IF NOT EXISTS idx_sales_orders_payment_status ON public.sales_orders(payment_status);
-CREATE INDEX IF NOT EXISTS idx_sales_orders_created_at ON public.sales_orders(created_at);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'sales_orders'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_sales_orders_customer_name ON public.sales_orders(customer_name);
+    CREATE INDEX IF NOT EXISTS idx_sales_orders_order_date ON public.sales_orders(order_date);
+    CREATE INDEX IF NOT EXISTS idx_sales_orders_payment_status ON public.sales_orders(payment_status);
+    CREATE INDEX IF NOT EXISTS idx_sales_orders_created_at ON public.sales_orders(created_at);
+  END IF;
+EXCEPTION
+  WHEN undefined_table THEN
+    -- If table doesn't exist yet, do nothing
+    NULL;
+END $$;
