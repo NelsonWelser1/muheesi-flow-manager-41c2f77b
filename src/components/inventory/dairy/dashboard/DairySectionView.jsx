@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import SalesOrderForm from '../sales/forms/SalesOrderForm';
 import DeliveryNotesForm from '../sales/forms/DeliveryNotesForm';
 import CustomerInvoiceForm from '../sales/forms/CustomerInvoiceForm';
+import BillsExpensesForm from '../accounts/forms/BillsExpensesForm';
+import PaymentsReceiptsForm from '../accounts/forms/PaymentsReceiptsForm';
+import PayrollPayslipsForm from '../accounts/forms/PayrollPayslipsForm';
 
 const DairySectionView = ({ section, onBack }) => {
   const [activeForm, setActiveForm] = React.useState(null);
@@ -19,6 +22,12 @@ const DairySectionView = ({ section, onBack }) => {
       return <CustomerInvoiceForm onBack={() => setActiveForm(null)} />;
     } else if (activeForm === 'delivery') {
       return <DeliveryNotesForm onBack={() => setActiveForm(null)} />;
+    } else if (activeForm === 'bills') {
+      return <BillsExpensesForm onBack={() => setActiveForm(null)} />;
+    } else if (activeForm === 'payments') {
+      return <PaymentsReceiptsForm onBack={() => setActiveForm(null)} />;
+    } else if (activeForm === 'payroll') {
+      return <PayrollPayslipsForm onBack={() => setActiveForm(null)} />;
     }
     return section.component && <section.component />;
   };
@@ -57,12 +66,38 @@ const DairySectionView = ({ section, onBack }) => {
             Sales
           </Button>
           <Button
-            onClick={() => setActiveForm('accounts')}
+            onClick={() => setActiveForm('bills')}
             className="h-24 text-lg flex flex-col items-center justify-center gap-2"
             style={{ backgroundColor: '#0000a0', color: 'white' }}
           >
             <Receipt className="h-6 w-6" />
             Accounts
+          </Button>
+        </div>
+      )}
+
+      {activeForm === 'bills' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Button
+            onClick={() => setActiveForm('bills')}
+            className="h-20 text-md flex flex-col items-center justify-center gap-2"
+            style={{ backgroundColor: '#0000a0', color: 'white' }}
+          >
+            Bills & Expenses
+          </Button>
+          <Button
+            onClick={() => setActiveForm('payments')}
+            className="h-20 text-md flex flex-col items-center justify-center gap-2"
+            style={{ backgroundColor: '#0000a0', color: 'white' }}
+          >
+            Payments & Receipts
+          </Button>
+          <Button
+            onClick={() => setActiveForm('payroll')}
+            className="h-20 text-md flex flex-col items-center justify-center gap-2"
+            style={{ backgroundColor: '#0000a0', color: 'white' }}
+          >
+            Payroll & Payslips
           </Button>
         </div>
       )}
