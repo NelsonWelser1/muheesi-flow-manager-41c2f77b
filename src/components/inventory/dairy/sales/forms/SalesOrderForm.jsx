@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useSalesOrders } from '@/integrations/supabase/hooks/useSalesOrders';
 import { PRODUCT_TYPES } from './utils/productTypes';
@@ -14,6 +14,7 @@ import ProductSection from './components/ProductSection';
 import PricingSection from './components/PricingSection';
 import OrderDetailsSection from './components/OrderDetailsSection';
 import FormActions from './components/FormActions';
+import SalesOrderList from '../../sales/SalesOrderList';
 
 const SalesOrderForm = ({ onBack }) => {
   const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm({
@@ -28,6 +29,7 @@ const SalesOrderForm = ({ onBack }) => {
   const { createSalesOrder } = useSalesOrders();
   const [isSaving, setIsSaving] = useState(false);
   const [productTypes, setProductTypes] = useState([]);
+  const [showOrderList, setShowOrderList] = useState(false);
   
   // Watch the product field to update product types
   const selectedProduct = watch("product");
@@ -105,13 +107,24 @@ const SalesOrderForm = ({ onBack }) => {
 
   return (
     <div className="space-y-4">
-      <Button 
-        variant="outline" 
-        onClick={onBack}
-        className="flex items-center gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back
-      </Button>
+      <div className="flex justify-between items-center">
+        <Button 
+          variant="outline" 
+          onClick={onBack}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          onClick={() => setShowOrderList(true)}
+          className="flex items-center gap-2"
+        >
+          <Eye className="h-4 w-4" /> View Sales Orders
+        </Button>
+      </div>
+      
       <Card>
         <CardHeader>
           <CardTitle>Sales Order Form</CardTitle>
@@ -147,6 +160,11 @@ const SalesOrderForm = ({ onBack }) => {
           </form>
         </CardContent>
       </Card>
+      
+      <SalesOrderList 
+        isOpen={showOrderList} 
+        onClose={() => setShowOrderList(false)}
+      />
     </div>
   );
 };
