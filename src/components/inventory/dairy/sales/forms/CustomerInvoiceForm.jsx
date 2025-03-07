@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,8 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Upload, Mail, Phone, Eye } from "lucide-react";
-import CustomerInvoiceList from '../CustomerInvoiceList';
+import { ArrowLeft, Upload, Mail, Phone } from "lucide-react";
 
 const CustomerInvoiceForm = ({ onBack }) => {
   const { register, handleSubmit, setValue, formState: { errors } } = useForm({
@@ -20,7 +19,6 @@ const CustomerInvoiceForm = ({ onBack }) => {
     }
   });
   const { toast } = useToast();
-  const [showInvoiceList, setShowInvoiceList] = useState(false);
   
   const onSubmit = (data) => {
     console.log("Invoice data:", data);
@@ -41,24 +39,13 @@ const CustomerInvoiceForm = ({ onBack }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <Button 
-          variant="outline" 
-          onClick={onBack}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          onClick={() => setShowInvoiceList(true)}
-          className="flex items-center gap-2"
-        >
-          <Eye className="h-4 w-4" /> View Invoices
-        </Button>
-      </div>
-      
+      <Button 
+        variant="outline" 
+        onClick={onBack}
+        className="flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" /> Back
+      </Button>
       <Card>
         <CardHeader>
           <CardTitle>Customer Invoice Form</CardTitle>
@@ -232,11 +219,6 @@ const CustomerInvoiceForm = ({ onBack }) => {
           </form>
         </CardContent>
       </Card>
-      
-      <CustomerInvoiceList
-        isOpen={showInvoiceList} 
-        onClose={() => setShowInvoiceList(false)}
-      />
     </div>
   );
 };
