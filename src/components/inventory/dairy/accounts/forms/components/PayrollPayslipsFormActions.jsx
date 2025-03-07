@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Users, Mail, Download } from "lucide-react";
+import { Users, Mail, Download, Printer } from "lucide-react";
 
 const PayrollPayslipsFormActions = () => {
   return (
@@ -33,6 +33,15 @@ const PayrollPayslipsFormActions = () => {
       >
         <Download className="h-4 w-4" />
         Download Payslip PDF
+      </Button>
+      <Button 
+        type="button" 
+        variant="outline" 
+        className="flex items-center gap-2"
+        onClick={() => console.log("Printing payslip...")}
+      >
+        <Printer className="h-4 w-4" />
+        Print Payslip
       </Button>
     </div>
   );
