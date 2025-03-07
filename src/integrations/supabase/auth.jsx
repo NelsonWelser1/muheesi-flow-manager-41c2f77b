@@ -18,86 +18,38 @@ export const SupabaseAuthProvider = ({ children }) => {
 export const SupabaseAuthProviderInner = ({ children }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    let isMounted = true;
-    
     const getSession = async () => {
-      try {
-        if (!isMounted) return;
-        setLoading(true);
-        
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error && isMounted) {
-          console.error("Auth session error:", error);
-          setError(error);
-          return;
-        }
-        
-        if (isMounted) {
-          setSession(data.session);
-          setError(null);
-        }
-      } catch (err) {
-        if (isMounted) {
-          console.error("Auth session error:", err);
-          setError(err);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setLoading(false);
     };
 
-    // Setup auth state change listener
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, newSession) => {
-      if (isMounted) {
-        console.log("Auth state changed:", event);
-        setSession(newSession);
-        queryClient.invalidateQueries('user');
-      }
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      queryClient.invalidateQueries('user');
     });
 
-    // Get initial session
     getSession();
 
-    // Cleanup function
     return () => {
-      isMounted = false;
-      if (authListener?.subscription?.unsubscribe) {
-        authListener.subscription.unsubscribe();
-      }
+      authListener.subscription.unsubscribe();
+      setLoading(false);
     };
   }, [queryClient]);
 
   const logout = async () => {
-    try {
-      setLoading(true);
-      await supabase.auth.signOut();
-      setSession(null);
-      queryClient.invalidateQueries('user');
-    } catch (err) {
-      console.error("Logout error:", err);
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
+    await supabase.auth.signOut();
+    setSession(null);
+    queryClient.invalidateQueries('user');
+    setLoading(false);
   };
 
   return (
-    <SupabaseAuthContext.Provider 
-      value={{ 
-        session, 
-        loading, 
-        error,
-        logout,
-        isLoggedIn: !!session 
-      }}
-    >
+    <SupabaseAuthContext.Provider value={{ session, loading, logout }}>
       {children}
     </SupabaseAuthContext.Provider>
   );
@@ -119,3 +71,4 @@ export const SupabaseAuthUI = () => (
     providers={[]}
   />
 );
+

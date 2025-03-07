@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase/supabase";
 
 // Import form components
 import DeliveryManagementForm from './forms/DeliveryManagementForm';
@@ -24,20 +24,11 @@ const LogisticsDashboard = () => {
   const { data: activeDeliveries = 0 } = useQuery({
     queryKey: ['activeDeliveries'],
     queryFn: async () => {
-      try {
-        console.log('Fetching active deliveries count...');
-        const { count, error } = await supabase
-          .from('logistics_deliveries')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'In Transit');
-        
-        if (error) throw error;
-        console.log('Active deliveries count:', count);
-        return count || 0;
-      } catch (error) {
-        console.error('Error fetching active deliveries:', error);
-        return 0;
-      }
+      const { count } = await supabase
+        .from('logistics_delivery_management')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'In Transit');
+      return count || 0;
     }
   });
 
@@ -45,20 +36,11 @@ const LogisticsDashboard = () => {
   const { data: pendingOrders = 0 } = useQuery({
     queryKey: ['pendingOrders'],
     queryFn: async () => {
-      try {
-        console.log('Fetching pending orders count...');
-        const { count, error } = await supabase
-          .from('logistics_order_entries')
-          .select('*', { count: 'exact', head: true })
-          .eq('order_status', 'Pending');
-        
-        if (error) throw error;
-        console.log('Pending orders count:', count);
-        return count || 0;
-      } catch (error) {
-        console.error('Error fetching pending orders:', error);
-        return 0;
-      }
+      const { count } = await supabase
+        .from('logistics_order_entries')
+        .select('*', { count: 'exact', head: true })
+        .eq('order_status', 'Pending');
+      return count || 0;
     }
   });
 
@@ -66,22 +48,13 @@ const LogisticsDashboard = () => {
   const { data: avgDeliveryTime = '0' } = useQuery({
     queryKey: ['avgDeliveryTime'],
     queryFn: async () => {
-      try {
-        console.log('Fetching average delivery time...');
-        const { data, error } = await supabase
-          .from('logistics_delivery_performance')
-          .select('delivery_time')
-          .limit(100);
-        
-        if (error) throw error;
-        if (!data?.length) return '0';
-        const avg = data.reduce((acc, curr) => acc + curr.delivery_time, 0) / data.length;
-        console.log('Average delivery time:', avg);
-        return Math.round(avg).toString();
-      } catch (error) {
-        console.error('Error fetching average delivery time:', error);
-        return '0';
-      }
+      const { data } = await supabase
+        .from('logistics_delivery_performance')
+        .select('delivery_time')
+        .limit(100);
+      if (!data?.length) return '0';
+      const avg = data.reduce((acc, curr) => acc + curr.delivery_time, 0) / data.length;
+      return Math.round(avg).toString();
     }
   });
 
@@ -89,20 +62,11 @@ const LogisticsDashboard = () => {
   const { data: delayedDeliveries = 0 } = useQuery({
     queryKey: ['delayedDeliveries'],
     queryFn: async () => {
-      try {
-        console.log('Fetching delayed deliveries count...');
-        const { count, error } = await supabase
-          .from('logistics_deliveries')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'Delayed');
-        
-        if (error) throw error;
-        console.log('Delayed deliveries count:', count);
-        return count || 0;
-      } catch (error) {
-        console.error('Error fetching delayed deliveries:', error);
-        return 0;
-      }
+      const { count } = await supabase
+        .from('logistics_delivery_management')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Delayed');
+      return count || 0;
     }
   });
 

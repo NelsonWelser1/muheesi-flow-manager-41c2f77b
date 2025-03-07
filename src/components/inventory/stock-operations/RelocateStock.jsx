@@ -1,8 +1,7 @@
-
 import React from 'react';
 import StockUpdateForm from '../kajon/StockUpdateForm';
 
-const RelocateStock = () => {
+const RelocateStock = ({ isKazo }) => {
   return <StockUpdateForm />;
 };
 

@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Menu } from 'lucide-react';
 import {
@@ -11,8 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Navigation = () => {
-  const navigate = useNavigate();
-  
   const navItems = [
     { to: "/dashboard", label: "Dashboard" },
     { to: "/manage-inventory", label: "Manage Inventory" },
@@ -20,29 +17,18 @@ const Navigation = () => {
     { to: "/feedback", label: "Feedback" },
   ];
 
-  const handleHomeClick = (e) => {
-    e.preventDefault();
-    console.log("Navigation: Redirecting to home page");
-    navigate('/');
-  };
-
   return (
     <nav className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
         <Link 
           to="/" 
           className="text-2xl font-bold font-futuristic"
-          onClick={handleHomeClick}
         >
           Muheesi GKK Integrated System
         </Link>
         <div className="hidden md:flex space-x-4">
           {navItems.map((item) => (
-            <Button 
-              key={item.to} 
-              asChild 
-              className="bg-[#9b87f5] hover:bg-[#9b87f5] text-white font-bold"
-            >
+            <Button key={item.to} asChild className="bg-[#9b87f5] hover:bg-[#9b87f5] text-white font-bold">
               <Link to={item.to}>{item.label}</Link>
             </Button>
           ))}
@@ -52,7 +38,7 @@ const Navigation = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="outline"><Menu /></Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-white">
+            <DropdownMenuContent>
               {navItems.map((item) => (
                 <DropdownMenuItem key={item.to} asChild>
                   <Link to={item.to}>{item.label}</Link>
