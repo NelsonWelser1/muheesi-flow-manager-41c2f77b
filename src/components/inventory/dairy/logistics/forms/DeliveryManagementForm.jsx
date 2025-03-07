@@ -8,11 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { useDeliveries } from "../hooks/useDeliveries";
-import { Eye, LogIn, AlertCircle } from "lucide-react";
+import { Eye, AlertCircle } from "lucide-react";
 import DeliveryRecordsDisplay from "./displays/DeliveryRecordsDisplay";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSupabaseAuth } from '@/integrations/supabase';
-import { SupabaseAuthUI } from '@/integrations/supabase';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const DELIVERY_STATUSES = ["Pending", "In Transit", "Delivered", "Delayed"];
@@ -22,7 +20,6 @@ const DeliveryManagementForm = () => {
   const { toast } = useToast();
   const [showRecords, setShowRecords] = useState(false);
   const { createDelivery, validationErrors, setValidationErrors } = useDeliveries();
-  const { isLoggedIn } = useSupabaseAuth();
   const [serverErrors, setServerErrors] = useState({});
 
   const onSubmit = async (data) => {
@@ -77,27 +74,6 @@ const DeliveryManagementForm = () => {
 
   if (showRecords) {
     return <DeliveryRecordsDisplay onBack={() => setShowRecords(false)} />;
-  }
-
-  // Show login form if user is not authenticated
-  if (!isLoggedIn) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Authentication Required</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <p className="text-muted-foreground">
-              You must be logged in to manage delivery records. Please sign in or create an account to continue.
-            </p>
-            <div className="p-4 border rounded-md">
-              <SupabaseAuthUI />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
   }
 
   return (

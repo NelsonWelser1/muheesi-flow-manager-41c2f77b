@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { deliveryService } from '../services/deliveryService';
 import { deliveryToasts } from '../utils/deliveryToasts';
-import { useSupabaseAuth } from '@/integrations/supabase';
 
 /**
  * Custom hook for managing delivery operations
@@ -15,7 +14,6 @@ export const useDeliveries = () => {
   const [error, setError]= useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const { toast } = useToast();
-  const { isLoggedIn } = useSupabaseAuth();
 
   // Fetch all deliveries
   const fetchDeliveries = useCallback(async () => {
@@ -43,11 +41,6 @@ export const useDeliveries = () => {
 
   // Create a new delivery
   const createDelivery = async (deliveryData) => {
-    if (!isLoggedIn) {
-      deliveryToasts.authError(toast, 'You must be logged in to submit delivery records');
-      return { success: false, error: 'Authentication required' };
-    }
-    
     // Clear previous validation errors
     setValidationErrors({});
     
@@ -66,9 +59,7 @@ export const useDeliveries = () => {
       return { success: true, data: newDelivery };
     } catch (error) {
       // Handle different error types
-      if (error.message?.includes('Authentication') || error.message?.includes('logged in')) {
-        deliveryToasts.authError(toast, error.message);
-      } else if (error.message?.includes('Missing required fields')) {
+      if (error.message?.includes('Missing required fields')) {
         deliveryToasts.validationError(toast, error.message);
       } else if (error.message?.includes('network') || error.message?.includes('connection')) {
         deliveryToasts.networkError(toast, error.message);
@@ -81,19 +72,11 @@ export const useDeliveries = () => {
 
   // Get a delivery by ID
   const getDeliveryById = async (id) => {
-    if (!isLoggedIn) {
-      deliveryToasts.authError(toast, 'You must be logged in to view delivery details');
-      return { success: false, error: 'Authentication required' };
-    }
-    
     try {
       const delivery = await deliveryService.getById(id);
       return { success: true, data: delivery };
     } catch (error) {
-      // Handle different error types
-      if (error.message?.includes('Authentication') || error.message?.includes('logged in')) {
-        deliveryToasts.authError(toast, error.message);
-      } else if (error.message?.includes('network') || error.message?.includes('connection')) {
+      if (error.message?.includes('network') || error.message?.includes('connection')) {
         deliveryToasts.networkError(toast, error.message);
       } else {
         deliveryToasts.error(toast, `Failed to fetch delivery: ${error.message || 'Unknown error'}`);
@@ -104,11 +87,6 @@ export const useDeliveries = () => {
 
   // Update a delivery
   const updateDelivery = async (id, updates) => {
-    if (!isLoggedIn) {
-      deliveryToasts.authError(toast, 'You must be logged in to update delivery records');
-      return { success: false, error: 'Authentication required' };
-    }
-    
     // Validate delivery data for update if it contains fields that need validation
     if (Object.keys(updates).some(key => ['delivery_id', 'order_id', 'customer_name', 'status', 
                                           'pickup_location', 'delivery_location', 
@@ -135,10 +113,7 @@ export const useDeliveries = () => {
       );
       return { success: true, data: updatedDelivery };
     } catch (error) {
-      // Handle different error types
-      if (error.message?.includes('Authentication') || error.message?.includes('logged in')) {
-        deliveryToasts.authError(toast, error.message);
-      } else if (error.message?.includes('network') || error.message?.includes('connection')) {
+      if (error.message?.includes('network') || error.message?.includes('connection')) {
         deliveryToasts.networkError(toast, error.message);
       } else {
         deliveryToasts.error(toast, `Failed to update delivery: ${error.message || 'Unknown error'}`);
@@ -149,11 +124,6 @@ export const useDeliveries = () => {
 
   // Delete a delivery
   const deleteDelivery = async (id) => {
-    if (!isLoggedIn) {
-      deliveryToasts.authError(toast, 'You must be logged in to delete delivery records');
-      return { success: false, error: 'Authentication required' };
-    }
-    
     try {
       await deliveryService.delete(id);
       deliveryToasts.success(toast, 'Delivery record deleted successfully');
@@ -162,10 +132,7 @@ export const useDeliveries = () => {
       );
       return { success: true };
     } catch (error) {
-      // Handle different error types
-      if (error.message?.includes('Authentication') || error.message?.includes('logged in')) {
-        deliveryToasts.authError(toast, error.message);
-      } else if (error.message?.includes('network') || error.message?.includes('connection')) {
+      if (error.message?.includes('network') || error.message?.includes('connection')) {
         deliveryToasts.networkError(toast, error.message);
       } else {
         deliveryToasts.error(toast, `Failed to delete delivery: ${error.message || 'Unknown error'}`);
@@ -192,6 +159,6 @@ export const useDeliveries = () => {
     getDeliveryById,
     updateDelivery,
     deleteDelivery,
-    isAuthenticated: isLoggedIn
+    isAuthenticated: true // Always return true since auth is disabled
   };
 };

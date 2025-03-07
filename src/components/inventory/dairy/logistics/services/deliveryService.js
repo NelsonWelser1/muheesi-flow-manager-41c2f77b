@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase';
 
 /**
@@ -11,18 +10,6 @@ export const deliveryService = {
   fetchAll: async () => {
     console.log('Fetching deliveries from Supabase database...');
     try {
-      const { data: session } = await supabase.auth.getSession();
-      
-      // Check authentication
-      if (!session?.session) {
-        console.log('User not authenticated, returning demo data');
-        // Return demo data for unauthenticated users
-        return [
-          { id: 'demo-1', delivery_id: 'DEMO-001', customer_name: 'Demo Customer', status: 'Delivered' },
-          { id: 'demo-2', delivery_id: 'DEMO-002', customer_name: 'Demo Customer 2', status: 'In Transit' },
-        ];
-      }
-      
       const { data, error } = await supabase
         .from('logistics_deliveries')
         .select('*')
@@ -47,14 +34,6 @@ export const deliveryService = {
   create: async (deliveryData) => {
     console.log('Creating new delivery with data:', deliveryData);
     try {
-      const { data: session } = await supabase.auth.getSession();
-      
-      // Check authentication
-      if (!session?.session) {
-        console.error('Authentication required to create delivery');
-        throw new Error('You must be logged in to submit delivery records');
-      }
-      
       // Validate required fields
       const requiredFields = ['delivery_id', 'order_id', 'customer_name', 'status', 
                               'pickup_location', 'delivery_location', 
@@ -68,15 +47,10 @@ export const deliveryService = {
         throw new Error(errorMsg);
       }
       
-      // Add user ID to the delivery data
-      const userData = {
-        ...deliveryData,
-        operator_id: session.session.user.id
-      };
-      
+      // Authentication is temporarily disabled, proceed without operator_id
       const { data, error } = await supabase
         .from('logistics_deliveries')
-        .insert([userData])
+        .insert([deliveryData])
         .select();
 
       if (error) {
@@ -100,14 +74,6 @@ export const deliveryService = {
     try {
       if (!id) {
         throw new Error('Delivery ID is required');
-      }
-      
-      const { data: session } = await supabase.auth.getSession();
-      
-      // Check authentication
-      if (!session?.session) {
-        console.error('Authentication required to fetch delivery details');
-        throw new Error('You must be logged in to view delivery details');
       }
       
       const { data, error } = await supabase
@@ -139,14 +105,6 @@ export const deliveryService = {
         throw new Error('Delivery ID is required');
       }
       
-      const { data: session } = await supabase.auth.getSession();
-      
-      // Check authentication
-      if (!session?.session) {
-        console.error('Authentication required to update delivery');
-        throw new Error('You must be logged in to update delivery records');
-      }
-      
       const { data, error } = await supabase
         .from('logistics_deliveries')
         .update(updates)
@@ -174,14 +132,6 @@ export const deliveryService = {
     try {
       if (!id) {
         throw new Error('Delivery ID is required');
-      }
-      
-      const { data: session } = await supabase.auth.getSession();
-      
-      // Check authentication
-      if (!session?.session) {
-        console.error('Authentication required to delete delivery');
-        throw new Error('You must be logged in to delete delivery records');
       }
       
       const { error } = await supabase
