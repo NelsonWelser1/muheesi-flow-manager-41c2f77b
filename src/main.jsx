@@ -26,7 +26,7 @@ const renderApp = () => {
       root = ReactDOM.createRoot(rootElement);
     }
     
-    // Hide loading indicator
+    // Hide loading indicator immediately when we attempt to render
     const fallback = document.getElementById('loading-fallback');
     if (fallback) {
       fallback.style.display = 'none';
@@ -64,6 +64,22 @@ const renderApp = () => {
   }
 };
 
+// Clear any existing timeouts to prevent multiple renders
+if (window.__RENDER_TIMEOUT) {
+  clearTimeout(window.__RENDER_TIMEOUT);
+}
+
+// Always try to render immediately
+renderApp();
+
+// Also schedule a backup render after a short delay to ensure it happens
+window.__RENDER_TIMEOUT = setTimeout(() => {
+  if (!hasRendered) {
+    console.log("Backup render triggered");
+    renderApp();
+  }
+}, 300);
+
 // Handle sandbox messages more reliably
 window.addEventListener('message', (event) => {
   // Check if the message is from the Lovable editor about sandbox state
@@ -86,14 +102,6 @@ window.addEventListener('message', (event) => {
     }
   }
 });
-
-// Initial render attempt
-console.log("Script loaded, attempting initial render");
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', renderApp);
-} else {
-  renderApp();
-}
 
 // Ensure we render when window loads as a fallback
 window.addEventListener('load', () => {

@@ -105,7 +105,6 @@ const App = () => {
                         <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
                         <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
                         <Route path="/manage-inventory/sales-marketing" element={<SalesMarketingDashboard />} />
-                        {/* Catch-all route for index path */}
                         <Route path="*" element={<Navigate to="/" replace />} />
                       </Routes>
                     </main>
