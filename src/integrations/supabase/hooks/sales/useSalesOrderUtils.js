@@ -35,5 +35,15 @@ export const salesOrderUtils = {
       pending: orders.filter(order => order.payment_status === 'pending').length,
       totalValue: orders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0)
     };
+  },
+
+  /**
+   * Filter orders by payment status
+   */
+  filterOrdersByStatus: (orders, status) => {
+    if (!orders || !orders.length) return [];
+    if (!status || status === 'all') return orders;
+    
+    return orders.filter(order => order.payment_status === status);
   }
 };
