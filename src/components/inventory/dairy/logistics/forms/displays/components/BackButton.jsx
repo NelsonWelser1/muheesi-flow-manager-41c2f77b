@@ -8,7 +8,8 @@ const BackButton = ({ onBack }) => {
     <Button 
       variant="outline" 
       onClick={onBack}
-      className="flex items-center gap-2"
+      className="flex items-center gap-2 hover:bg-gray-100 transition-colors"
+      aria-label="Go back"
     >
       <ArrowLeft className="h-4 w-4" /> Back
     </Button>
