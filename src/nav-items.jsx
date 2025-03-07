@@ -1,5 +1,4 @@
-
-import { HomeIcon, Factory, DollarSign, Receipt, Package } from "lucide-react";
+import { HomeIcon, Factory } from "lucide-react";
 import Index from "./pages/Index.jsx";
 
 /**
@@ -16,20 +15,5 @@ export const navItems = [
     title: "Smart Production",
     to: "/manage-inventory/smart-production",
     icon: <Factory className="h-4 w-4" />,
-  },
-  {
-    title: "Sales",
-    to: "/sales",
-    icon: <DollarSign className="h-4 w-4" />,
-  },
-  {
-    title: "Accounts",
-    to: "/accounts",
-    icon: <Receipt className="h-4 w-4" />,
-  },
-  {
-    title: "Inventory",
-    to: "/inventory",
-    icon: <Package className="h-4 w-4" />,
   },
 ];

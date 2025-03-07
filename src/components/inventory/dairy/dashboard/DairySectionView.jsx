@@ -16,12 +16,12 @@ const DairySectionView = ({ section, onBack }) => {
   console.log('Rendering DairySectionView for:', section.title);
 
   const renderContent = () => {
-    if (activeForm === 'sales_order') {
+    if (activeForm === 'sales') {
       return <SalesOrderForm onBack={() => setActiveForm(null)} />;
-    } else if (activeForm === 'delivery_notes') {
-      return <DeliveryNotesForm onBack={() => setActiveForm(null)} />;
-    } else if (activeForm === 'customer_invoice') {
+    } else if (activeForm === 'accounts') {
       return <CustomerInvoiceForm onBack={() => setActiveForm(null)} />;
+    } else if (activeForm === 'delivery') {
+      return <DeliveryNotesForm onBack={() => setActiveForm(null)} />;
     } else if (activeForm === 'bills') {
       return <BillsExpensesForm onBack={() => setActiveForm(null)} />;
     } else if (activeForm === 'payments') {
@@ -76,34 +76,6 @@ const DairySectionView = ({ section, onBack }) => {
         </div>
       )}
 
-      {/* Sales Section Forms */}
-      {activeForm === 'sales' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Button
-            onClick={() => setActiveForm('sales_order')}
-            className="h-20 text-md flex flex-col items-center justify-center gap-2"
-            style={{ backgroundColor: '#0000a0', color: 'white' }}
-          >
-            Sales Order Form
-          </Button>
-          <Button
-            onClick={() => setActiveForm('delivery_notes')}
-            className="h-20 text-md flex flex-col items-center justify-center gap-2"
-            style={{ backgroundColor: '#0000a0', color: 'white' }}
-          >
-            Delivery Notes Form
-          </Button>
-          <Button
-            onClick={() => setActiveForm('customer_invoice')}
-            className="h-20 text-md flex flex-col items-center justify-center gap-2"
-            style={{ backgroundColor: '#0000a0', color: 'white' }}
-          >
-            Customer Invoice Form
-          </Button>
-        </div>
-      )}
-
-      {/* Accounts Section Forms */}
       {activeForm === 'bills' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Button
