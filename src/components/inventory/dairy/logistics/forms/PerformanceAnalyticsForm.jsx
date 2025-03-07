@@ -20,19 +20,25 @@ const PerformanceAnalyticsForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      // Authentication is temporarily disabled
-      // Prepare performance data with a placeholder operator_id
-      const performanceData = {
-        ...data,
-        operator_id: 'system-placeholder', // Placeholder since auth is disabled
-        performance_rating: parseInt(data.performance_rating),
-        delivery_time: parseInt(data.delivery_time),
-        created_at: new Date().toISOString()
-      };
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to submit performance records",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const { error } = await supabase
         .from('logistics_delivery_performance')
-        .insert([performanceData]);
+        .insert([{
+          ...data,
+          operator_id: user.id,
+          performance_rating: parseInt(data.performance_rating),
+          delivery_time: parseInt(data.delivery_time),
+        }]);
 
       if (error) throw error;
 

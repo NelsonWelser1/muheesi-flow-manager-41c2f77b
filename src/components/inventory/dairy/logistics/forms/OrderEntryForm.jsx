@@ -18,18 +18,24 @@ const OrderEntryForm = () => {
 
   const onSubmit = async (data) => {
     try {
-      // Authentication is temporarily disabled
-      // Prepare order data with a placeholder operator_id
-      const orderData = {
-        ...data,
-        operator_id: 'system-placeholder', // Placeholder since auth is disabled
-        order_details: JSON.stringify(data.order_details),
-        created_at: new Date().toISOString()
-      };
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to submit orders",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const { error } = await supabase
         .from('logistics_order_entries')
-        .insert([orderData]);
+        .insert([{
+          ...data,
+          operator_id: user.id,
+          order_details: JSON.stringify(data.order_details),
+        }]);
 
       if (error) throw error;
 

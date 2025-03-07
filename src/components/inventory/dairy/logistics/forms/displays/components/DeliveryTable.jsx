@@ -1,41 +1,47 @@
 
 import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { TrashIcon, PencilIcon } from "lucide-react";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 import DeliveryStatusBadge from './DeliveryStatusBadge';
+import DeliveryActionsMenu from './DeliveryActionsMenu';
 
-const DeliveryTable = ({ deliveries, handleDelete, formatDate }) => {
+const DeliveryTable = ({ filteredDeliveries, handleDelete, formatDate }) => {
   return (
-    <div className="rounded-md border">
+    <div className="border rounded-md overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Delivery ID</TableHead>
             <TableHead>Customer</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Date</TableHead>
+            <TableHead>Pickup Time</TableHead>
+            <TableHead>Delivery Time</TableHead>
+            <TableHead>Pickup Location</TableHead>
+            <TableHead>Delivery Location</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {deliveries.map((delivery) => (
+          {filteredDeliveries.map((delivery) => (
             <TableRow key={delivery.id}>
-              <TableCell className="font-medium">{delivery.id}</TableCell>
+              <TableCell className="font-medium">{delivery.delivery_id}</TableCell>
               <TableCell>{delivery.customer_name}</TableCell>
-              <TableCell>
-                <DeliveryStatusBadge status={delivery.status} />
-              </TableCell>
-              <TableCell>{formatDate(delivery.delivery_date)}</TableCell>
+              <TableCell><DeliveryStatusBadge status={delivery.status} /></TableCell>
+              <TableCell>{formatDate(delivery.scheduled_pickup_time)}</TableCell>
+              <TableCell>{formatDate(delivery.scheduled_delivery_time)}</TableCell>
+              <TableCell>{delivery.pickup_location}</TableCell>
+              <TableCell>{delivery.delivery_location}</TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" size="sm" onClick={() => alert('Edit feature coming soon')}>
-                    <PencilIcon className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDelete(delivery.id)}>
-                    <TrashIcon className="h-4 w-4" />
-                  </Button>
-                </div>
+                <DeliveryActionsMenu 
+                  delivery={delivery} 
+                  handleDelete={handleDelete} 
+                />
               </TableCell>
             </TableRow>
           ))}

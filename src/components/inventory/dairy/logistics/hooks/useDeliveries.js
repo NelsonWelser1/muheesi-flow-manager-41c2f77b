@@ -48,6 +48,6 @@ export const useDeliveries = () => {
     getDeliveryById,
     updateDelivery: handleUpdateDelivery,
     deleteDelivery,
-    isAuthenticated: true // Explicitly set to true since auth is disabled
+    isAuthenticated: true // Always return true since auth is disabled
   };
 };
