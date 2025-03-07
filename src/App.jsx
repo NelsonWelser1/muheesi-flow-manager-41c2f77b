@@ -1,4 +1,3 @@
-
 import React, { Suspense, useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,11 @@ import KashariFarmDashboard from "./components/inventory/kashari/KashariFarmDash
 import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDairyDashboard";
 import SmartProductionDashboard from "./components/inventory/dairy/production/SmartProductionDashboard";
 import SalesMarketingDashboard from "./components/inventory/dairy/sales/SalesMarketingDashboard";
+import LogisticsDashboard from "./components/inventory/dairy/logistics/LogisticsDashboard";
+import LogisticsOverview from "./components/inventory/dairy/logistics/modules/LogisticsOverview";
+import DeliveriesModule from "./components/inventory/dairy/logistics/modules/DeliveriesModule";
+import OrdersModule from "./components/inventory/dairy/logistics/modules/OrdersModule";
+import PerformanceModule from "./components/inventory/dairy/logistics/modules/PerformanceModule";
 import SandboxFallback from "./components/SandboxFallback";
 
 // Create custom error boundary component
@@ -174,6 +178,12 @@ const App = () => {
                         <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
                         <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
                         <Route path="/manage-inventory/sales-marketing" element={<SalesMarketingDashboard />} />
+                        
+                        <Route path="/manage-inventory/logistics" element={<LogisticsDashboard />} />
+                        <Route path="/manage-inventory/logistics/overview" element={<LogisticsOverview />} />
+                        <Route path="/manage-inventory/logistics/deliveries" element={<DeliveriesModule />} />
+                        <Route path="/manage-inventory/logistics/orders" element={<OrdersModule />} />
+                        <Route path="/manage-inventory/logistics/performance" element={<PerformanceModule />} />
                       </Routes>
                     </main>
                   </div>

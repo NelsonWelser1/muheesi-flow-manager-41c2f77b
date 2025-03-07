@@ -1,24 +1,14 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Truck, Package, Clock, AlertTriangle } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useToast } from "@/components/ui/use-toast";
+import { Truck, Package, Clock, AlertTriangle, BarChart3, ClipboardList, TrendingUp } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase";
-
-// Import form components
-import DeliveryManagementForm from './forms/DeliveryManagementForm';
-import OrderEntryForm from './forms/OrderEntryForm';
-import PerformanceAnalyticsForm from './forms/PerformanceAnalyticsForm';
 
 const LogisticsDashboard = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("overview");
 
   // Fetch active deliveries
   const { data: activeDeliveries = 0 } = useQuery({
@@ -106,6 +96,11 @@ const LogisticsDashboard = () => {
     }
   });
 
+  // Navigation handlers for each module
+  const navigateToModule = (module) => {
+    navigate(`/manage-inventory/logistics/${module}`);
+  };
+
   return (
     <div className="space-y-6">
       <Button 
@@ -164,53 +159,60 @@ const LogisticsDashboard = () => {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Logistics & Distribution Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="overview" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4 mb-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="deliveries">Deliveries</TabsTrigger>
-              <TabsTrigger value="orders">Orders</TabsTrigger>
-              <TabsTrigger value="performance">Performance</TabsTrigger>
-            </TabsList>
+      {/* Module Tiles */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigateToModule('overview')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-medium">Overview</CardTitle>
+            <BarChart3 className="h-5 w-5 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">View logistics performance summary and delivery trends.</p>
+          </CardContent>
+        </Card>
 
-            <TabsContent value="overview">
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={[
-                    { date: '2024-03-01', deliveries: 24 },
-                    { date: '2024-03-02', deliveries: 31 },
-                    { date: '2024-03-03', deliveries: 28 },
-                    { date: '2024-03-04', deliveries: 35 },
-                    { date: '2024-03-05', deliveries: 29 },
-                  ]}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="deliveries" stroke="#8884d8" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </TabsContent>
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigateToModule('deliveries')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-medium">Deliveries</CardTitle>
+            <Truck className="h-5 w-5 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Manage active deliveries and delivery schedules.</p>
+          </CardContent>
+        </Card>
 
-            <TabsContent value="deliveries">
-              <DeliveryManagementForm />
-            </TabsContent>
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigateToModule('orders')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-medium">Orders</CardTitle>
+            <ClipboardList className="h-5 w-5 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Process and track customer orders and items.</p>
+          </CardContent>
+        </Card>
 
-            <TabsContent value="orders">
-              <OrderEntryForm />
-            </TabsContent>
-
-            <TabsContent value="performance">
-              <PerformanceAnalyticsForm />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigateToModule('performance')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-medium">Performance</CardTitle>
+            <TrendingUp className="h-5 w-5 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Analyze delivery performance and efficiency metrics.</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

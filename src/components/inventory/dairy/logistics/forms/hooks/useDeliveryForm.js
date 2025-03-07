@@ -1,64 +1,72 @@
 
 import { useState } from 'react';
-import { useForm } from "react-hook-form";
+import { useForm } from 'react-hook-form';
 import { useToast } from "@/components/ui/use-toast";
-import { useDeliveries } from "../../hooks/useDeliveries";
+import { supabase } from "@/integrations/supabase";
 
 export const useDeliveryForm = () => {
-  const { register, handleSubmit, reset, setValue, formState: { errors: formErrors } } = useForm();
-  const { toast } = useToast();
   const [showRecords, setShowRecords] = useState(false);
-  const { createDelivery, validationErrors, setValidationErrors } = useDeliveries();
   const [serverErrors, setServerErrors] = useState({});
+  const { toast } = useToast();
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm();
 
+  const getFieldError = (fieldName) => {
+    return errors[fieldName] ? errors[fieldName].message : serverErrors[fieldName];
+  };
+  
   const onSubmit = async (data) => {
-    console.log('Form data before submission:', data);
-    setServerErrors({});
-    
     try {
-      const { success, validationErrors: serverValidationErrors } = await createDelivery({
+      // Note: Authentication check removed - temporarily disabled
+      // Authentication is disabled for now since we have no active users
+
+      // Prepare the data
+      const deliveryData = {
         ...data,
+        // Setting a placeholder value for operator_id since we're not authenticating
+        operator_id: 'system-placeholder', 
+        created_at: new Date().toISOString()
+      };
+
+      // Submit to Supabase
+      const { error } = await supabase
+        .from('logistics_deliveries')
+        .insert([deliveryData]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Delivery created successfully",
       });
-
-      if (serverValidationErrors) {
-        setServerErrors(serverValidationErrors);
-      }
-
-      if (success) {
-        toast({
-          title: "Success",
-          description: "Delivery record saved successfully",
-        });
-        reset();
-        setValidationErrors({});
-        setServerErrors({});
-      }
+      
+      reset();
+      setServerErrors({});
     } catch (error) {
-      console.error('Error saving delivery record:', error);
+      console.error('Error creating delivery:', error);
       toast({
         title: "Error",
-        description: "Failed to save delivery record",
+        description: "Failed to create delivery",
         variant: "destructive",
       });
+      setServerErrors({ submit: error.message });
     }
-  };
-
-  // Combine client-side and server-side validation errors
-  const getFieldError = (fieldName) => {
-    return formErrors[fieldName]?.message || serverErrors[fieldName] || validationErrors[fieldName];
   };
 
   const handleReset = () => {
     reset();
-    setValidationErrors({});
     setServerErrors({});
   };
 
   return {
     register,
-    handleSubmit,
     setValue,
-    formErrors,
+    handleSubmit,
     onSubmit,
     getFieldError,
     showRecords,
