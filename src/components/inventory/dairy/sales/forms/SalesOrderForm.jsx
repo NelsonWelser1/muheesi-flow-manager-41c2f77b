@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,25 +7,79 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Save, Truck } from "lucide-react";
+import { ArrowLeft, Save, Truck, Loader2 } from "lucide-react";
+import { useSalesOrders } from '@/integrations/supabase/hooks/useSalesOrders';
 
 const SalesOrderForm = ({ onBack }) => {
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm({
     defaultValues: {
       orderDate: new Date().toISOString().split('T')[0],
       paymentStatus: 'pending',
       deliveryRequired: 'no'
     }
   });
-  const { toast } = useToast();
   
-  const onSubmit = (data) => {
-    console.log("Sales order data:", data);
+  const { toast } = useToast();
+  const { createSalesOrder } = useSalesOrders();
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const onSubmit = async (data) => {
+    try {
+      console.log("Preparing to submit sales order data:", data);
+      setIsSaving(true);
+      
+      // Format the data to match the database schema
+      const formattedData = {
+        customer_name: data.customerName,
+        order_date: data.orderDate,
+        product: data.product,
+        quantity: Number(data.quantity),
+        unit_price: Number(data.unitPrice),
+        discount: data.discount ? Number(data.discount) : null,
+        payment_status: data.paymentStatus,
+        sales_rep: data.salesRep || null,
+        delivery_required: data.deliveryRequired,
+        notes: data.notes || null
+      };
+      
+      console.log("Formatted sales order data for Supabase:", formattedData);
+      
+      const { success, error } = await createSalesOrder(formattedData);
+      
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Sales order created successfully",
+        });
+        reset(); // Reset form after successful submission
+      } else {
+        console.error("Error creating sales order:", error);
+        toast({
+          title: "Error",
+          description: "Failed to create sales order. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error("Unexpected error in form submission:", err);
+      toast({
+        title: "Unexpected Error",
+        description: err.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Debug handler for testing
+  const handleDebug = () => {
+    const currentValues = watch();
+    console.log("Current form values:", currentValues);
     toast({
-      title: "Success",
-      description: "Sales order created successfully",
+      title: "Debug Info",
+      description: "Form values logged to console",
     });
-    // Here you would normally save to database
   };
 
   return (
@@ -167,17 +221,30 @@ const SalesOrderForm = ({ onBack }) => {
               <Input {...register("notes")} />
             </div>
 
-            <div className="flex gap-4">
-              <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">Submit Order</Button>
+            <div className="flex flex-wrap gap-4">
+              <Button 
+                type="submit" 
+                className="bg-[#0000a0] hover:bg-[#00008b]"
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : "Submit Order"}
+              </Button>
+              
               <Button 
                 type="button" 
                 variant="outline" 
                 className="flex items-center gap-2"
-                onClick={() => console.log("Saving draft...")}
+                onClick={handleDebug}
               >
                 <Save className="h-4 w-4" />
-                Save Draft
+                Debug Form
               </Button>
+              
               {watch("deliveryRequired") === "yes" && (
                 <Button 
                   type="button" 

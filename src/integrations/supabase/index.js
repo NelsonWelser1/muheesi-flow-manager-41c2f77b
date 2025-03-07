@@ -34,6 +34,8 @@ import {
     useDeleteDashboard,
 } from './hooks/useDashboard';
 
+import { useSalesOrders } from './hooks/useSalesOrders';
+
 // Export everything individually
 export {
     supabase,
@@ -63,4 +65,6 @@ export {
     useAddDashboard,
     useUpdateDashboard,
     useDeleteDashboard,
+    // Sales Orders
+    useSalesOrders,
 };
