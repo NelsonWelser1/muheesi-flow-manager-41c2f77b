@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -191,7 +192,12 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     
     const csvContent = [
       headers.join(','),
-      ...csvData.map(row => row.join(','))
+      ...csvData.map(row => row.map(cell => 
+        // Properly escape and quote cells that contain commas, quotes, or newlines
+        typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n')) 
+          ? `"${cell.replace(/"/g, '""')}"` 
+          : cell
+      ).join(','))
     ].join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -224,23 +230,44 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     
     const headers = ['Customer', 'Date', 'Product', 'Type', 'Quantity', 'Unit Price', 'Total', 'Status'];
     
-    const csvData = filteredOrders.map(order => [
-      order.customer_name,
-      new Date(order.order_date).toLocaleDateString(),
-      order.product,
-      order.product_type || '-',
-      order.quantity,
-      order.unit_price,
-      order.total_amount,
-      order.payment_status
-    ]);
+    // For Excel, we need to escape special characters and format the data properly
+    const excelRows = [
+      headers,
+      ...filteredOrders.map(order => [
+        order.customer_name,
+        new Date(order.order_date).toLocaleDateString(),
+        order.product,
+        order.product_type || '-',
+        order.quantity,
+        order.unit_price,
+        order.total_amount,
+        order.payment_status
+      ])
+    ];
     
-    const csvContent = [
-      headers.join('\t'),
-      ...csvData.map(row => row.join('\t'))
-    ].join('\n');
+    // Create Excel XML format
+    let excelContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+    excelContent += '<head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Sales Orders</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head>';
+    excelContent += '<body><table>';
     
-    const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel' });
+    // Add rows to the table
+    for (let i = 0; i < excelRows.length; i++) {
+      excelContent += '<tr>';
+      for (let j = 0; j < excelRows[i].length; j++) {
+        if (i === 0) {
+          // Header
+          excelContent += `<th>${excelRows[i][j]}</th>`;
+        } else {
+          // Data
+          excelContent += `<td>${excelRows[i][j]}</td>`;
+        }
+      }
+      excelContent += '</tr>';
+    }
+    
+    excelContent += '</table></body></html>';
+    
+    const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
@@ -268,141 +295,188 @@ const SalesOrderList = ({ isOpen, onClose }) => {
       return;
     }
     
-    const headers = ['Customer', 'Date', 'Product', 'Type', 'Quantity', 'Unit Price', 'Total', 'Status'];
+    // First, create an HTML table with the data
+    let htmlContent = '<html><head><style>';
+    htmlContent += 'body { font-family: Arial, sans-serif; }';
+    htmlContent += 'table { width: 100%; border-collapse: collapse; }';
+    htmlContent += 'th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }';
+    htmlContent += 'th { background-color: #f2f2f2; }';
+    htmlContent += 'h1 { text-align: center; }';
+    htmlContent += '.footer { text-align: center; margin-top: 20px; font-size: 12px; }';
+    htmlContent += '</style></head><body>';
+    htmlContent += '<h1>Sales Orders Report</h1>';
+    htmlContent += `<p>Generated on: ${new Date().toLocaleString()}</p>`;
+    htmlContent += '<table>';
     
-    const pdfData = filteredOrders.map(order => [
-      order.customer_name,
-      new Date(order.order_date).toLocaleDateString(),
-      order.product,
-      order.product_type || '-',
-      order.quantity,
-      order.unit_price,
-      order.total_amount,
-      order.payment_status
-    ]);
+    // Add table header
+    htmlContent += '<tr>';
+    ['Customer', 'Date', 'Product', 'Type', 'Quantity', 'Unit Price', 'Total', 'Status'].forEach(header => {
+      htmlContent += `<th>${header}</th>`;
+    });
+    htmlContent += '</tr>';
     
-    const textContent = [
-      "SALES ORDERS REPORT",
-      `Generated on: ${new Date().toLocaleString()}`,
-      "",
-      headers.join('\t'),
-      ...pdfData.map(row => row.join('\t'))
-    ].join('\n');
-    
-    const blob = new Blob([textContent], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `sales-orders-${new Date().toISOString().split('T')[0]}.pdf`);
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast({
-      title: "Export Successful",
-      description: "Sales orders exported to PDF format"
+    // Add table rows
+    filteredOrders.forEach(order => {
+      htmlContent += '<tr>';
+      htmlContent += `<td>${order.customer_name}</td>`;
+      htmlContent += `<td>${new Date(order.order_date).toLocaleDateString()}</td>`;
+      htmlContent += `<td>${order.product}</td>`;
+      htmlContent += `<td>${order.product_type || '-'}</td>`;
+      htmlContent += `<td>${order.quantity}</td>`;
+      htmlContent += `<td>${order.unit_price}</td>`;
+      htmlContent += `<td>${order.total_amount}</td>`;
+      htmlContent += `<td>${order.payment_status}</td>`;
+      htmlContent += '</tr>';
     });
     
-    return { blob, fileName: `sales-orders-${new Date().toISOString().split('T')[0]}.pdf` };
+    htmlContent += '</table>';
+    htmlContent += '<div class="footer">© Muheesi GKK Integrated System</div>';
+    htmlContent += '</body></html>';
+    
+    // Open in a new window for printing or save as PDF
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    
+    // Let the content render then print
+    setTimeout(() => {
+      printWindow.print();
+      toast({
+        title: "PDF Export",
+        description: "The report has been prepared for printing/saving as PDF"
+      });
+    }, 250);
+    
+    return { htmlContent, fileName: `sales-orders-${new Date().toISOString().split('T')[0]}.pdf` };
   };
   
   const shareByWhatsApp = (dataFormat = 'csv') => {
     let exportResult;
+    let messageText = '';
     
-    switch (dataFormat) {
-      case 'csv':
-        exportResult = exportToCSV();
-        break;
-      case 'excel':
-        exportResult = exportToExcel();
-        break;
-      case 'pdf':
-        exportResult = exportToPDF();
-        break;
-      default:
-        exportResult = exportToCSV();
+    try {
+      switch (dataFormat) {
+        case 'csv':
+          exportResult = exportToCSV();
+          messageText = `Sales orders exported in CSV format (${exportResult.fileName}).`;
+          break;
+        case 'excel':
+          exportResult = exportToExcel();
+          messageText = `Sales orders exported in Excel format (${exportResult.fileName}).`;
+          break;
+        case 'pdf':
+          exportResult = exportToPDF();
+          messageText = `Sales orders exported in PDF format. Please save the document from the print dialog.`;
+          break;
+        default:
+          exportResult = exportToCSV();
+          messageText = `Sales orders exported in CSV format (${exportResult.fileName}).`;
+      }
+      
+      const message = `${messageText} The file has been downloaded locally and is ready to be shared separately.`;
+      
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+      
+      toast({
+        title: "WhatsApp Sharing",
+        description: `File has been exported and WhatsApp sharing window opened`,
+      });
+    } catch (error) {
+      console.error("Error sharing via WhatsApp:", error);
+      toast({
+        title: "Sharing Failed",
+        description: "Could not complete the share operation",
+        variant: "destructive"
+      });
     }
-    
-    const message = `I've exported sales orders in ${dataFormat.toUpperCase()} format. The file has been downloaded and can be shared separately.`;
-    
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-    
-    toast({
-      title: "WhatsApp Sharing",
-      description: `File has been exported in ${dataFormat.toUpperCase()} format and can be shared via WhatsApp`,
-    });
   };
   
   const shareByEmail = (dataFormat = 'csv') => {
     let exportResult;
-    let mimeType;
+    let subject = `Sales Orders Export`;
+    let body = '';
     
-    switch (dataFormat) {
-      case 'csv':
-        exportResult = exportToCSV();
-        mimeType = 'text/csv';
-        break;
-      case 'excel':
-        exportResult = exportToExcel();
-        mimeType = 'application/vnd.ms-excel';
-        break;
-      case 'pdf':
-        exportResult = exportToPDF();
-        mimeType = 'application/pdf';
-        break;
-      default:
-        exportResult = exportToCSV();
-        mimeType = 'text/csv';
+    try {
+      switch (dataFormat) {
+        case 'csv':
+          exportResult = exportToCSV();
+          body = `Sales orders have been exported in CSV format (${exportResult.fileName}). The file has been downloaded locally and can be attached to this email.`;
+          break;
+        case 'excel':
+          exportResult = exportToExcel();
+          body = `Sales orders have been exported in Excel format (${exportResult.fileName}). The file has been downloaded locally and can be attached to this email.`;
+          break;
+        case 'pdf':
+          exportResult = exportToPDF();
+          body = `Sales orders have been exported in PDF format. Please attach the saved PDF document to this email.`;
+          break;
+        default:
+          exportResult = exportToCSV();
+          body = `Sales orders have been exported in CSV format (${exportResult.fileName}). The file has been downloaded locally and can be attached to this email.`;
+      }
+      
+      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      
+      toast({
+        title: "Email Sharing",
+        description: `File has been exported and email client opened`,
+      });
+    } catch (error) {
+      console.error("Error sharing via email:", error);
+      toast({
+        title: "Sharing Failed",
+        description: "Could not complete the share operation",
+        variant: "destructive"
+      });
     }
-    
-    const subject = `Sales Orders Export (${dataFormat.toUpperCase()})`;
-    const body = `I've exported sales orders in ${dataFormat.toUpperCase()} format. The file has been downloaded and can be attached to an email separately.`;
-    
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
-    toast({
-      title: "Email Sharing",
-      description: `File has been exported in ${dataFormat.toUpperCase()} format and can be shared via email`,
-    });
   };
   
   const shareToLocalAccount = (dataFormat = 'csv') => {
     let exportResult;
     
-    switch (dataFormat) {
-      case 'csv':
-        exportResult = exportToCSV();
-        break;
-      case 'excel':
-        exportResult = exportToExcel();
-        break;
-      case 'pdf':
-        exportResult = exportToPDF();
-        break;
-      default:
-        exportResult = exportToCSV();
+    try {
+      switch (dataFormat) {
+        case 'csv':
+          exportResult = exportToCSV();
+          break;
+        case 'excel':
+          exportResult = exportToExcel();
+          break;
+        case 'pdf':
+          exportResult = exportToPDF();
+          break;
+        default:
+          exportResult = exportToCSV();
+      }
+      
+      const exportRecord = {
+        timestamp: new Date().toISOString(),
+        fileName: exportResult.fileName,
+        format: dataFormat,
+        ordersCount: filteredOrders.length
+      };
+      
+      const existingExports = JSON.parse(localStorage.getItem('salesOrderExports') || '[]');
+      
+      existingExports.unshift(exportRecord);
+      
+      const updatedExports = existingExports.slice(0, 10);
+      
+      localStorage.setItem('salesOrderExports', JSON.stringify(updatedExports));
+      
+      toast({
+        title: "Export Shared",
+        description: `File has been exported in ${dataFormat.toUpperCase()} format and shared to your local account`,
+      });
+    } catch (error) {
+      console.error("Error sharing to local account:", error);
+      toast({
+        title: "Sharing Failed",
+        description: "Could not complete the share operation",
+        variant: "destructive"
+      });
     }
-    
-    const exportRecord = {
-      timestamp: new Date().toISOString(),
-      fileName: exportResult.fileName,
-      format: dataFormat,
-      ordersCount: filteredOrders.length
-    };
-    
-    const existingExports = JSON.parse(localStorage.getItem('salesOrderExports') || '[]');
-    
-    existingExports.unshift(exportRecord);
-    
-    const updatedExports = existingExports.slice(0, 10);
-    
-    localStorage.setItem('salesOrderExports', JSON.stringify(updatedExports));
-    
-    toast({
-      title: "Export Saved",
-      description: `File has been exported in ${dataFormat.toUpperCase()} format and saved to your local account`,
-    });
   };
   
   const shareExport = (format, method) => {

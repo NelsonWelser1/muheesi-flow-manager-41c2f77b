@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, QrCode, MapPin, Eye } from "lucide-react";
+import { ArrowLeft, MapPin, Eye } from "lucide-react";
 import DeliveryNoteList from '../DeliveryNoteList';
 import QRCodeGenerator from '../../qr/QRCodeGenerator';
 
@@ -63,12 +62,6 @@ const DeliveryNotesForm = ({ onBack }) => {
         variant: "destructive"
       });
     }
-  };
-
-  const generateQRCode = () => {
-    const formData = watch();
-    setDeliveryData(formData);
-    setShowQRCode(true);
   };
 
   if (showQRCode && deliveryData) {
@@ -216,15 +209,6 @@ const DeliveryNotesForm = ({ onBack }) => {
                 type="button" 
                 variant="outline" 
                 className="flex items-center gap-2"
-                onClick={generateQRCode}
-              >
-                <QrCode className="h-4 w-4" />
-                Generate QR Code
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex items-center gap-2"
                 onClick={getGeolocation}
               >
                 <MapPin className="h-4 w-4" />
@@ -238,6 +222,7 @@ const DeliveryNotesForm = ({ onBack }) => {
       <DeliveryNoteList 
         isOpen={showNoteList} 
         onClose={() => setShowNoteList(false)}
+        deliveryData={deliveryData}
       />
     </div>
   );

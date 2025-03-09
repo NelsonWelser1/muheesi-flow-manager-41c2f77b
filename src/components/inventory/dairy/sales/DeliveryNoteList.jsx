@@ -36,10 +36,13 @@ import {
   Share2, 
   Mail, 
   FileSpreadsheet, 
-  FileText 
+  FileText,
+  QrCode,
+  ArrowLeft
 } from "lucide-react";
+import QRCodeGenerator from '../qr/QRCodeGenerator';
 
-const DeliveryNoteList = ({ isOpen, onClose }) => {
+const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
   // Mock data for demonstration - would come from API in production
   const [deliveryNotes, setDeliveryNotes] = useState([
     { 
@@ -68,6 +71,7 @@ const DeliveryNoteList = ({ isOpen, onClose }) => {
   const [timeRange, setTimeRange] = useState('all');
   const { toast } = useToast();
   const [selectedNote, setSelectedNote] = useState(null);
+  const [showQRCode, setShowQRCode] = useState(false);
   
   // Initialize filtered orders when delivery notes are loaded
   useEffect(() => {
@@ -186,9 +190,33 @@ const DeliveryNoteList = ({ isOpen, onClose }) => {
   };
   
   const exportToExcel = () => {
+    const headers = ['ID', 'Order Reference', 'Receiver', 'Date', 'Location', 'Status'];
+    
+    const excelData = filteredNotes.map(note => [
+      note.id,
+      note.orderReference,
+      note.receiverName,
+      new Date(note.deliveryDate).toLocaleDateString(),
+      note.deliveryLocation,
+      note.deliveryStatus
+    ]);
+    
+    // Create a CSV-like format that Excel can open
+    const excelContent = [
+      headers.join('\t'),
+      ...excelData.map(row => row.join('\t'))
+    ].join('\n');
+    
+    const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `delivery-notes-${new Date().toISOString().split('T')[0]}.xls`);
+    link.click();
+    
     toast({
-      title: "Excel Export",
-      description: "Excel export functionality will be implemented with the xlsx library"
+      title: "Export Successful",
+      description: "Delivery notes exported to Excel format"
     });
   };
   
@@ -241,6 +269,30 @@ const DeliveryNoteList = ({ isOpen, onClose }) => {
   const viewNoteDetails = (note) => {
     setSelectedNote(note);
   };
+  
+  // Generate QR code
+  const generateQRCode = (note) => {
+    setSelectedNote(note);
+    setShowQRCode(true);
+  };
+
+  if (showQRCode && selectedNote) {
+    return (
+      <div className="space-y-4">
+        <Button 
+          variant="outline" 
+          onClick={() => setShowQRCode(false)}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Delivery Notes
+        </Button>
+        <QRCodeGenerator 
+          data={selectedNote} 
+          title="Delivery Note"
+        />
+      </div>
+    );
+  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -398,8 +450,14 @@ const DeliveryNoteList = ({ isOpen, onClose }) => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            <DropdownMenuLabel>Share Options</DropdownMenuLabel>
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => generateQRCode(note)}>
+                              <QrCode className="h-4 w-4 mr-2" />
+                              Generate QR Code
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Share Options</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => shareByWhatsApp(note)}>
                               <Share2 className="h-4 w-4 mr-2" />
                               WhatsApp
@@ -410,7 +468,7 @@ const DeliveryNoteList = ({ isOpen, onClose }) => {
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => saveToLocalAccount(note)}>
                               <Download className="h-4 w-4 mr-2" />
-                              Save Locally
+                              Share Locally
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -433,7 +491,7 @@ const DeliveryNoteList = ({ isOpen, onClose }) => {
           </div>
           
           {/* Note Details Modal */}
-          {selectedNote && (
+          {selectedNote && !showQRCode && (
             <div className="mt-4 p-4 border rounded-md bg-muted/30">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">Delivery Note Details</h3>
@@ -486,6 +544,14 @@ const DeliveryNoteList = ({ isOpen, onClose }) => {
               </div>
               
               <div className="flex gap-2 mt-4">
+                <Button 
+                  size="sm" 
+                  onClick={() => generateQRCode(selectedNote)}
+                  className="flex items-center gap-2"
+                >
+                  <QrCode className="h-4 w-4" />
+                  Generate QR Code
+                </Button>
                 <Button size="sm" onClick={() => exportToPDF()}>
                   <Printer className="h-4 w-4 mr-2" />
                   Print
