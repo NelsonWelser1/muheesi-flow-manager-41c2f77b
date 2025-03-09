@@ -39,7 +39,7 @@ import {
   Filter, 
   FileSpreadsheet, 
   FileText,
-  FilePdf,
+  File,
   RefreshCw,
   Save
 } from "lucide-react";
@@ -199,7 +199,10 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     const link = document.createElement('a');
     link.setAttribute('href', url);
     link.setAttribute('download', `sales-orders-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.display = 'none';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     
     toast({
       title: "Export Successful",
@@ -219,22 +222,40 @@ const SalesOrderList = ({ isOpen, onClose }) => {
       return;
     }
     
-    const { blob, fileName } = exportToCSV();
+    const headers = ['Customer', 'Date', 'Product', 'Type', 'Quantity', 'Unit Price', 'Total', 'Status'];
     
-    const excelFileName = fileName.replace('.csv', '.xlsx');
+    const csvData = filteredOrders.map(order => [
+      order.customer_name,
+      new Date(order.order_date).toLocaleDateString(),
+      order.product,
+      order.product_type || '-',
+      order.quantity,
+      order.unit_price,
+      order.total_amount,
+      order.payment_status
+    ]);
     
+    const csvContent = [
+      headers.join('\t'),
+      ...csvData.map(row => row.join('\t'))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', excelFileName);
+    link.setAttribute('download', `sales-orders-${new Date().toISOString().split('T')[0]}.xls`);
+    link.style.display = 'none';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     
     toast({
       title: "Export Successful",
       description: "Sales orders exported to Excel format"
     });
     
-    return { blob, fileName: excelFileName };
+    return { blob, fileName: `sales-orders-${new Date().toISOString().split('T')[0]}.xls` };
   };
   
   const exportToPDF = () => {
@@ -268,21 +289,22 @@ const SalesOrderList = ({ isOpen, onClose }) => {
       ...pdfData.map(row => row.join('\t'))
     ].join('\n');
     
-    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' });
-    const fileName = `sales-orders-${new Date().toISOString().split('T')[0]}.txt`;
-    
+    const blob = new Blob([textContent], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', fileName);
+    link.setAttribute('download', `sales-orders-${new Date().toISOString().split('T')[0]}.pdf`);
+    link.style.display = 'none';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     
     toast({
       title: "Export Successful",
-      description: "Sales orders exported to text format (PDF simulation)"
+      description: "Sales orders exported to PDF format"
     });
     
-    return { blob, fileName };
+    return { blob, fileName: `sales-orders-${new Date().toISOString().split('T')[0]}.pdf` };
   };
   
   const shareByWhatsApp = (dataFormat = 'csv') => {
@@ -327,7 +349,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
         break;
       case 'pdf':
         exportResult = exportToPDF();
-        mimeType = 'text/plain'; // Simulated PDF as text
+        mimeType = 'application/pdf';
         break;
       default:
         exportResult = exportToCSV();
@@ -345,7 +367,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     });
   };
   
-  const saveToLocalAccount = (dataFormat = 'csv') => {
+  const shareToLocalAccount = (dataFormat = 'csv') => {
     let exportResult;
     
     switch (dataFormat) {
@@ -392,7 +414,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
         shareByEmail(format);
         break;
       case 'local':
-        saveToLocalAccount(format);
+        shareToLocalAccount(format);
         break;
       default:
         console.error("Invalid sharing method");
@@ -468,7 +490,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                     Excel
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => exportToPDF()}>
-                    <FilePdf className="h-4 w-4 mr-2" />
+                    <File className="h-4 w-4 mr-2" />
                     PDF
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -503,7 +525,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => shareExport('csv', 'local')}>
                         <Save className="h-4 w-4 mr-2" />
-                        Save Locally
+                        Share Locally
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -526,7 +548,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => shareExport('excel', 'local')}>
                         <Save className="h-4 w-4 mr-2" />
-                        Save Locally
+                        Share Locally
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -534,7 +556,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                   <DropdownMenu>
                     <DropdownMenuTrigger className="w-full px-2 py-1.5 text-sm">
                       <div className="flex items-center">
-                        <FilePdf className="h-4 w-4 mr-2" />
+                        <File className="h-4 w-4 mr-2" />
                         <span>PDF</span>
                       </div>
                     </DropdownMenuTrigger>
@@ -549,7 +571,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => shareExport('pdf', 'local')}>
                         <Save className="h-4 w-4 mr-2" />
-                        Save Locally
+                        Share Locally
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -654,17 +676,17 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                             <DropdownMenuContent>
                               <DropdownMenuLabel>Share Options</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => shareByWhatsApp(order)}>
+                              <DropdownMenuItem onClick={() => shareByWhatsApp('pdf')}>
                                 <Share2 className="h-4 w-4 mr-2" />
                                 WhatsApp
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => shareByEmail(order)}>
+                              <DropdownMenuItem onClick={() => shareByEmail('pdf')}>
                                 <Mail className="h-4 w-4 mr-2" />
                                 Email
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => saveToLocalAccount(order)}>
-                                <Download className="h-4 w-4 mr-2" />
-                                Save Locally
+                              <DropdownMenuItem onClick={() => shareToLocalAccount('pdf')}>
+                                <Save className="h-4 w-4 mr-2" />
+                                Share Locally
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -750,11 +772,11 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                   <Printer className="h-4 w-4 mr-2" />
                   Print
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => shareByEmail(selectedOrder)}>
+                <Button size="sm" variant="outline" onClick={() => shareByEmail('pdf')}>
                   <Mail className="h-4 w-4 mr-2" />
                   Email
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => shareByWhatsApp(selectedOrder)}>
+                <Button size="sm" variant="outline" onClick={() => shareByWhatsApp('pdf')}>
                   <Share2 className="h-4 w-4 mr-2" />
                   WhatsApp
                 </Button>
