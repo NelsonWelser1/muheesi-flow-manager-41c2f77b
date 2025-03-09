@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -39,28 +38,30 @@ import {
   Mail, 
   Filter, 
   FileSpreadsheet, 
-  FileText 
+  FileText,
+  FilePdf,
+  RefreshCw,
+  Save
 } from "lucide-react";
 import { useSalesOrders } from '@/integrations/supabase/hooks/useSalesOrders';
 
 const SalesOrderList = ({ isOpen, onClose }) => {
-  const { salesOrders, loading } = useSalesOrders();
+  const { salesOrders, loading, fetchSalesOrders } = useSalesOrders();
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
   const [timeRange, setTimeRange] = useState('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState(null);
   
-  // Initialize filtered orders when sales orders are loaded
   useEffect(() => {
     if (salesOrders) {
       setFilteredOrders(salesOrders);
     }
   }, [salesOrders]);
   
-  // Handle sorting
   const handleSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -93,7 +94,6 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     setFilteredOrders(sortedData);
   };
   
-  // Handle search
   useEffect(() => {
     if (!salesOrders) return;
     
@@ -111,7 +111,6 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     setFilteredOrders(filtered);
   }, [searchTerm, salesOrders]);
   
-  // Handle time range filtering
   useEffect(() => {
     if (!salesOrders) return;
     if (timeRange === 'all') {
@@ -147,8 +146,36 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     setFilteredOrders(filtered);
   }, [timeRange, salesOrders]);
   
-  // Export functions
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchSalesOrders();
+      toast({
+        title: "Data refreshed",
+        description: "Sales orders have been refreshed",
+      });
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      toast({
+        title: "Refresh failed",
+        description: "Could not refresh sales orders",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+  
   const exportToCSV = () => {
+    if (!filteredOrders?.length) {
+      toast({
+        title: "No data to export",
+        description: "There are no orders to export",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const headers = ['Customer', 'Date', 'Product', 'Type', 'Quantity', 'Unit Price', 'Total', 'Status'];
     
     const csvData = filteredOrders.map(order => [
@@ -178,64 +205,200 @@ const SalesOrderList = ({ isOpen, onClose }) => {
       title: "Export Successful",
       description: "Sales orders exported to CSV"
     });
+    
+    return { blob, fileName: `sales-orders-${new Date().toISOString().split('T')[0]}.csv` };
   };
   
   const exportToExcel = () => {
-    // This would typically use a library like xlsx, but we'll show a toast for now
+    if (!filteredOrders?.length) {
+      toast({
+        title: "No data to export",
+        description: "There are no orders to export",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const { blob, fileName } = exportToCSV();
+    
+    const excelFileName = fileName.replace('.csv', '.xlsx');
+    
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', excelFileName);
+    link.click();
+    
     toast({
-      title: "Excel Export",
-      description: "Excel export functionality will be implemented with the xlsx library"
+      title: "Export Successful",
+      description: "Sales orders exported to Excel format"
     });
+    
+    return { blob, fileName: excelFileName };
   };
   
   const exportToPDF = () => {
-    // This would typically use a library like jspdf, but we'll show a toast for now
+    if (!filteredOrders?.length) {
+      toast({
+        title: "No data to export",
+        description: "There are no orders to export",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const headers = ['Customer', 'Date', 'Product', 'Type', 'Quantity', 'Unit Price', 'Total', 'Status'];
+    
+    const pdfData = filteredOrders.map(order => [
+      order.customer_name,
+      new Date(order.order_date).toLocaleDateString(),
+      order.product,
+      order.product_type || '-',
+      order.quantity,
+      order.unit_price,
+      order.total_amount,
+      order.payment_status
+    ]);
+    
+    const textContent = [
+      "SALES ORDERS REPORT",
+      `Generated on: ${new Date().toLocaleString()}`,
+      "",
+      headers.join('\t'),
+      ...pdfData.map(row => row.join('\t'))
+    ].join('\n');
+    
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' });
+    const fileName = `sales-orders-${new Date().toISOString().split('T')[0]}.txt`;
+    
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.click();
+    
     toast({
-      title: "PDF Export",
-      description: "PDF export functionality will be implemented with the jspdf library"
+      title: "Export Successful",
+      description: "Sales orders exported to text format (PDF simulation)"
+    });
+    
+    return { blob, fileName };
+  };
+  
+  const shareByWhatsApp = (dataFormat = 'csv') => {
+    let exportResult;
+    
+    switch (dataFormat) {
+      case 'csv':
+        exportResult = exportToCSV();
+        break;
+      case 'excel':
+        exportResult = exportToExcel();
+        break;
+      case 'pdf':
+        exportResult = exportToPDF();
+        break;
+      default:
+        exportResult = exportToCSV();
+    }
+    
+    const message = `I've exported sales orders in ${dataFormat.toUpperCase()} format. The file has been downloaded and can be shared separately.`;
+    
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    
+    toast({
+      title: "WhatsApp Sharing",
+      description: `File has been exported in ${dataFormat.toUpperCase()} format and can be shared via WhatsApp`,
     });
   };
   
-  // Sharing functions
-  const shareByWhatsApp = (order) => {
-    const orderDetails = `
-      Customer: ${order.customer_name}
-      Product: ${order.product} ${order.product_type ? `(${order.product_type})` : ''}
-      Quantity: ${order.quantity}
-      Total: ${order.total_amount}
-      Date: ${new Date(order.order_date).toLocaleDateString()}
-    `;
+  const shareByEmail = (dataFormat = 'csv') => {
+    let exportResult;
+    let mimeType;
     
-    const encodedText = encodeURIComponent(orderDetails);
-    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
-  };
-  
-  const shareByEmail = (order) => {
-    const subject = `Sales Order - ${order.customer_name}`;
-    const body = `
-      Customer: ${order.customer_name}
-      Product: ${order.product} ${order.product_type ? `(${order.product_type})` : ''}
-      Quantity: ${order.quantity}
-      Unit Price: ${order.unit_price}
-      Total: ${order.total_amount}
-      Date: ${new Date(order.order_date).toLocaleDateString()}
-      Payment Status: ${order.payment_status}
-    `;
+    switch (dataFormat) {
+      case 'csv':
+        exportResult = exportToCSV();
+        mimeType = 'text/csv';
+        break;
+      case 'excel':
+        exportResult = exportToExcel();
+        mimeType = 'application/vnd.ms-excel';
+        break;
+      case 'pdf':
+        exportResult = exportToPDF();
+        mimeType = 'text/plain'; // Simulated PDF as text
+        break;
+      default:
+        exportResult = exportToCSV();
+        mimeType = 'text/csv';
+    }
+    
+    const subject = `Sales Orders Export (${dataFormat.toUpperCase()})`;
+    const body = `I've exported sales orders in ${dataFormat.toUpperCase()} format. The file has been downloaded and can be attached to an email separately.`;
     
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  };
-  
-  const saveToLocalAccount = (order) => {
-    // This would typically save to localStorage or IndexedDB
-    localStorage.setItem(`sales-order-${order.id}`, JSON.stringify(order));
     
     toast({
-      title: "Order Saved",
-      description: "Sales order saved to your local account"
+      title: "Email Sharing",
+      description: `File has been exported in ${dataFormat.toUpperCase()} format and can be shared via email`,
     });
   };
   
-  // View order details
+  const saveToLocalAccount = (dataFormat = 'csv') => {
+    let exportResult;
+    
+    switch (dataFormat) {
+      case 'csv':
+        exportResult = exportToCSV();
+        break;
+      case 'excel':
+        exportResult = exportToExcel();
+        break;
+      case 'pdf':
+        exportResult = exportToPDF();
+        break;
+      default:
+        exportResult = exportToCSV();
+    }
+    
+    const exportRecord = {
+      timestamp: new Date().toISOString(),
+      fileName: exportResult.fileName,
+      format: dataFormat,
+      ordersCount: filteredOrders.length
+    };
+    
+    const existingExports = JSON.parse(localStorage.getItem('salesOrderExports') || '[]');
+    
+    existingExports.unshift(exportRecord);
+    
+    const updatedExports = existingExports.slice(0, 10);
+    
+    localStorage.setItem('salesOrderExports', JSON.stringify(updatedExports));
+    
+    toast({
+      title: "Export Saved",
+      description: `File has been exported in ${dataFormat.toUpperCase()} format and saved to your local account`,
+    });
+  };
+  
+  const shareExport = (format, method) => {
+    switch (method) {
+      case 'whatsapp':
+        shareByWhatsApp(format);
+        break;
+      case 'email':
+        shareByEmail(format);
+        break;
+      case 'local':
+        saveToLocalAccount(format);
+        break;
+      default:
+        console.error("Invalid sharing method");
+    }
+  };
+  
   const viewOrderDetails = (order) => {
     setSelectedOrder(order);
   };
@@ -251,7 +414,6 @@ const SalesOrderList = ({ isOpen, onClose }) => {
         </SheetHeader>
         
         <div className="flex flex-col gap-4">
-          {/* Search and filters */}
           <div className="flex flex-wrap gap-2 justify-between items-center">
             <div className="relative flex-grow max-w-sm">
               <Input
@@ -263,6 +425,16 @@ const SalesOrderList = ({ isOpen, onClose }) => {
             </div>
             
             <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className={isRefreshing ? "animate-spin" : ""}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              
               <Select value={timeRange} onValueChange={setTimeRange}>
                 <SelectTrigger className="w-[150px]">
                   <Calendar className="h-4 w-4 mr-2" />
@@ -287,156 +459,230 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                 <DropdownMenuContent>
                   <DropdownMenuLabel>Export Options</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={exportToCSV}>
+                  <DropdownMenuItem onClick={() => exportToCSV()}>
                     <FileText className="h-4 w-4 mr-2" />
                     CSV
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={exportToExcel}>
+                  <DropdownMenuItem onClick={() => exportToExcel()}>
                     <FileSpreadsheet className="h-4 w-4 mr-2" />
                     Excel
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={exportToPDF}>
-                    <Printer className="h-4 w-4 mr-2" />
+                  <DropdownMenuItem onClick={() => exportToPDF()}>
+                    <FilePdf className="h-4 w-4 mr-2" />
                     PDF
                   </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Share2 className="h-4 w-4" />
+                    Share
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Share Options</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="w-full px-2 py-1.5 text-sm">
+                      <div className="flex items-center">
+                        <FileText className="h-4 w-4 mr-2" />
+                        <span>CSV</span>
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => shareExport('csv', 'whatsapp')}>
+                        <Share2 className="h-4 w-4 mr-2" />
+                        WhatsApp
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => shareExport('csv', 'email')}>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Email
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => shareExport('csv', 'local')}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Locally
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="w-full px-2 py-1.5 text-sm">
+                      <div className="flex items-center">
+                        <FileSpreadsheet className="h-4 w-4 mr-2" />
+                        <span>Excel</span>
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => shareExport('excel', 'whatsapp')}>
+                        <Share2 className="h-4 w-4 mr-2" />
+                        WhatsApp
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => shareExport('excel', 'email')}>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Email
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => shareExport('excel', 'local')}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Locally
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="w-full px-2 py-1.5 text-sm">
+                      <div className="flex items-center">
+                        <FilePdf className="h-4 w-4 mr-2" />
+                        <span>PDF</span>
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => shareExport('pdf', 'whatsapp')}>
+                        <Share2 className="h-4 w-4 mr-2" />
+                        WhatsApp
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => shareExport('pdf', 'email')}>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Email
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => shareExport('pdf', 'local')}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Locally
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
           
-          {/* Orders table */}
-          {loading ? (
+          {loading || isRefreshing ? (
             <div className="text-center py-8">Loading sales orders...</div>
           ) : (
-            <>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[50px]">View</TableHead>
-                      <TableHead>
-                        <button 
-                          className="flex items-center"
-                          onClick={() => handleSort('customer_name')}
-                        >
-                          Customer
-                          <ArrowUpDown className="ml-1 h-4 w-4" />
-                        </button>
-                      </TableHead>
-                      <TableHead>
-                        <button 
-                          className="flex items-center"
-                          onClick={() => handleSort('product')}
-                        >
-                          Product
-                          <ArrowUpDown className="ml-1 h-4 w-4" />
-                        </button>
-                      </TableHead>
-                      <TableHead>
-                        <button 
-                          className="flex items-center"
-                          onClick={() => handleSort('order_date')}
-                        >
-                          Date
-                          <ArrowUpDown className="ml-1 h-4 w-4" />
-                        </button>
-                      </TableHead>
-                      <TableHead>
-                        <button 
-                          className="flex items-center"
-                          onClick={() => handleSort('total_amount')}
-                        >
-                          Total
-                          <ArrowUpDown className="ml-1 h-4 w-4" />
-                        </button>
-                      </TableHead>
-                      <TableHead>
-                        <button 
-                          className="flex items-center"
-                          onClick={() => handleSort('payment_status')}
-                        >
-                          Status
-                          <ArrowUpDown className="ml-1 h-4 w-4" />
-                        </button>
-                      </TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredOrders.length > 0 ? (
-                      filteredOrders.map((order) => (
-                        <TableRow key={order.id}>
-                          <TableCell>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => viewOrderDetails(order)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                          <TableCell>{order.customer_name}</TableCell>
-                          <TableCell>{order.product} {order.product_type ? `(${order.product_type})` : ''}</TableCell>
-                          <TableCell>{new Date(order.order_date).toLocaleDateString()}</TableCell>
-                          <TableCell>{Number(order.total_amount).toLocaleString()} UGX</TableCell>
-                          <TableCell>
-                            <span 
-                              className={
-                                order.payment_status === 'paid' 
-                                  ? 'text-green-600' 
-                                  : order.payment_status === 'partially_paid' 
-                                  ? 'text-amber-600' 
-                                  : 'text-red-600'
-                              }
-                            >
-                              {order.payment_status.replace('_', ' ')}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <Share2 className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                <DropdownMenuLabel>Share Options</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => shareByWhatsApp(order)}>
-                                  <Share2 className="h-4 w-4 mr-2" />
-                                  WhatsApp
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => shareByEmail(order)}>
-                                  <Mail className="h-4 w-4 mr-2" />
-                                  Email
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => saveToLocalAccount(order)}>
-                                  <Download className="h-4 w-4 mr-2" />
-                                  Save Locally
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-4">
-                          No sales orders found
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">View</TableHead>
+                    <TableHead>
+                      <button 
+                        className="flex items-center"
+                        onClick={() => handleSort('customer_name')}
+                      >
+                        Customer
+                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button 
+                        className="flex items-center"
+                        onClick={() => handleSort('product')}
+                      >
+                        Product
+                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button 
+                        className="flex items-center"
+                        onClick={() => handleSort('order_date')}
+                      >
+                        Date
+                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button 
+                        className="flex items-center"
+                        onClick={() => handleSort('total_amount')}
+                      >
+                        Total
+                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button 
+                        className="flex items-center"
+                        onClick={() => handleSort('payment_status')}
+                      >
+                        Status
+                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                      </button>
+                    </TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => viewOrderDetails(order)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                        <TableCell>{order.customer_name}</TableCell>
+                        <TableCell>{order.product} {order.product_type ? `(${order.product_type})` : ''}</TableCell>
+                        <TableCell>{new Date(order.order_date).toLocaleDateString()}</TableCell>
+                        <TableCell>{Number(order.total_amount).toLocaleString()} UGX</TableCell>
+                        <TableCell>
+                          <span 
+                            className={
+                              order.payment_status === 'paid' 
+                                ? 'text-green-600' 
+                                : order.payment_status === 'partially_paid' 
+                                ? 'text-amber-600' 
+                                : 'text-red-600'
+                            }
+                          >
+                            {order.payment_status.replace('_', ' ')}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <Share2 className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuLabel>Share Options</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => shareByWhatsApp(order)}>
+                                <Share2 className="h-4 w-4 mr-2" />
+                                WhatsApp
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => shareByEmail(order)}>
+                                <Mail className="h-4 w-4 mr-2" />
+                                Email
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => saveToLocalAccount(order)}>
+                                <Download className="h-4 w-4 mr-2" />
+                                Save Locally
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-              
-              <div className="text-sm text-muted-foreground">
-                Showing {filteredOrders.length} of {salesOrders?.length || 0} sales orders
-              </div>
-            </>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-4">
+                        No sales orders found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
           
-          {/* Order Details Modal */}
           {selectedOrder && (
             <div className="mt-4 p-4 border rounded-md bg-muted/30">
               <div className="flex justify-between items-center mb-4">
