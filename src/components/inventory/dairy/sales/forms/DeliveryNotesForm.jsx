@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ArrowLeft, MapPin, Eye } from "lucide-react";
 import DeliveryNoteList from '../DeliveryNoteList';
 import QRCodeGenerator from '../../qr/QRCodeGenerator';
@@ -22,6 +24,7 @@ const DeliveryNotesForm = ({ onBack }) => {
   const [showNoteList, setShowNoteList] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [deliveryData, setDeliveryData] = useState(null);
+  const [showMap, setShowMap] = useState(false);
   
   const onSubmit = (data) => {
     console.log("Delivery note data:", data);
@@ -34,35 +37,46 @@ const DeliveryNotesForm = ({ onBack }) => {
   };
 
   const getGeolocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const locationString = `${latitude}, ${longitude}`;
-          setValue('deliveryLocation', locationString);
-          
-          toast({
-            title: "Location Added",
-            description: `Geolocation captured: ${locationString}`,
-          });
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          toast({
-            title: "Error",
-            description: "Unable to get your location. Please check permissions.",
-            variant: "destructive"
-          });
-        }
-      );
-    } else {
-      toast({
-        title: "Error",
-        description: "Geolocation is not supported by this browser.",
-        variant: "destructive"
-      });
-    }
+    setShowMap(true);
   };
+
+  const handleMapSelection = (address) => {
+    setValue('deliveryLocation', address);
+    setShowMap(false);
+    
+    toast({
+      title: "Location Added",
+      description: `Address captured: ${address}`,
+    });
+  };
+
+  const MapDialog = () => (
+    <Dialog open={showMap} onOpenChange={setShowMap}>
+      <DialogContent className="sm:max-w-[900px]">
+        <DialogHeader>
+          <DialogTitle>Select Location</DialogTitle>
+          <DialogDescription>
+            Search for a location or drop a pin on the map to select an address.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="h-[500px] w-full">
+          <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.7575343289694!2d32.58333531426501!3d0.3152119641003346!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x177dbb0932824161%3A0x5d7bf3737904418e!2sKampala%2C%20Uganda!5e0!3m2!1sen!2sus!4v1648566034385!5m2!1sen!2sus" 
+            width="100%" 
+            height="100%" 
+            style={{ border: 0 }} 
+            allowFullScreen="" 
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={() => setShowMap(false)}>Cancel</Button>
+          <Button onClick={() => handleMapSelection("Kampala, Uganda")}>Use Selected Location</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   if (showQRCode && deliveryData) {
     return (
@@ -205,15 +219,6 @@ const DeliveryNotesForm = ({ onBack }) => {
 
             <div className="flex flex-wrap gap-4">
               <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">Submit Delivery Note</Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex items-center gap-2"
-                onClick={getGeolocation}
-              >
-                <MapPin className="h-4 w-4" />
-                Add Geolocation
-              </Button>
             </div>
           </form>
         </CardContent>
@@ -224,6 +229,9 @@ const DeliveryNotesForm = ({ onBack }) => {
         onClose={() => setShowNoteList(false)}
         deliveryData={deliveryData}
       />
+
+      {/* Map Selection Dialog */}
+      <MapDialog />
     </div>
   );
 };
