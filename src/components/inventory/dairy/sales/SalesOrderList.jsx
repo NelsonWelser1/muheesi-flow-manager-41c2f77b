@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -42,9 +41,11 @@ import {
   FileText,
   File,
   RefreshCw,
-  Save
+  Save,
+  Users
 } from "lucide-react";
 import { useSalesOrders } from '@/integrations/supabase/hooks/useSalesOrders';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const SalesOrderList = ({ isOpen, onClose }) => {
   const { salesOrders, loading, fetchSalesOrders } = useSalesOrders();
@@ -56,13 +57,20 @@ const SalesOrderList = ({ isOpen, onClose }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState(null);
-  
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareFileDetails, setShareFileDetails] = useState(null);
+  const [localAccounts, setLocalAccounts] = useState([
+    { id: 1, name: "Admin Account" },
+    { id: 2, name: "Sales Manager" },
+    { id: 3, name: "Delivery Manager" }
+  ]);
+
   useEffect(() => {
     if (salesOrders) {
       setFilteredOrders(salesOrders);
     }
   }, [salesOrders]);
-  
+
   const handleSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -94,7 +102,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     
     setFilteredOrders(sortedData);
   };
-  
+
   useEffect(() => {
     if (!salesOrders) return;
     
@@ -111,7 +119,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     
     setFilteredOrders(filtered);
   }, [searchTerm, salesOrders]);
-  
+
   useEffect(() => {
     if (!salesOrders) return;
     if (timeRange === 'all') {
@@ -146,7 +154,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     
     setFilteredOrders(filtered);
   }, [timeRange, salesOrders]);
-  
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -166,7 +174,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
       setIsRefreshing(false);
     }
   };
-  
+
   const exportToCSV = () => {
     if (!filteredOrders?.length) {
       toast({
@@ -193,7 +201,6 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     const csvContent = [
       headers.join(','),
       ...csvData.map(row => row.map(cell => 
-        // Properly escape and quote cells that contain commas, quotes, or newlines
         typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n')) 
           ? `"${cell.replace(/"/g, '""')}"` 
           : cell
@@ -215,9 +222,9 @@ const SalesOrderList = ({ isOpen, onClose }) => {
       description: "Sales orders exported to CSV"
     });
     
-    return { blob, fileName: `sales-orders-${new Date().toISOString().split('T')[0]}.csv` };
+    return { blob, url, fileName: `sales-orders-${new Date().toISOString().split('T')[0]}.csv` };
   };
-  
+
   const exportToExcel = () => {
     if (!filteredOrders?.length) {
       toast({
@@ -230,42 +237,34 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     
     const headers = ['Customer', 'Date', 'Product', 'Type', 'Quantity', 'Unit Price', 'Total', 'Status'];
     
-    // For Excel, we need to escape special characters and format the data properly
-    const excelRows = [
-      headers,
-      ...filteredOrders.map(order => [
-        order.customer_name,
-        new Date(order.order_date).toLocaleDateString(),
-        order.product,
-        order.product_type || '-',
-        order.quantity,
-        order.unit_price,
-        order.total_amount,
-        order.payment_status
-      ])
-    ];
+    let excelContent = '<?xml version="1.0"?>\n';
+    excelContent += '<?mso-application progid="Excel.Sheet"?>\n';
+    excelContent += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
+    excelContent += '<Worksheet ss:Name="Sales Orders">\n';
+    excelContent += '<Table>\n';
     
-    // Create Excel XML format
-    let excelContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
-    excelContent += '<head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Sales Orders</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head>';
-    excelContent += '<body><table>';
+    excelContent += '<Row>\n';
+    headers.forEach(header => {
+      excelContent += `<Cell><Data ss:Type="String">${header}</Data></Cell>\n`;
+    });
+    excelContent += '</Row>\n';
     
-    // Add rows to the table
-    for (let i = 0; i < excelRows.length; i++) {
-      excelContent += '<tr>';
-      for (let j = 0; j < excelRows[i].length; j++) {
-        if (i === 0) {
-          // Header
-          excelContent += `<th>${excelRows[i][j]}</th>`;
-        } else {
-          // Data
-          excelContent += `<td>${excelRows[i][j]}</td>`;
-        }
-      }
-      excelContent += '</tr>';
-    }
+    filteredOrders.forEach(order => {
+      excelContent += '<Row>\n';
+      excelContent += `<Cell><Data ss:Type="String">${order.customer_name}</Data></Cell>\n`;
+      excelContent += `<Cell><Data ss:Type="String">${new Date(order.order_date).toLocaleDateString()}</Data></Cell>\n`;
+      excelContent += `<Cell><Data ss:Type="String">${order.product}</Data></Cell>\n`;
+      excelContent += `<Cell><Data ss:Type="String">${order.product_type || '-'}</Data></Cell>\n`;
+      excelContent += `<Cell><Data ss:Type="Number">${order.quantity}</Data></Cell>\n`;
+      excelContent += `<Cell><Data ss:Type="Number">${order.unit_price}</Data></Cell>\n`;
+      excelContent += `<Cell><Data ss:Type="Number">${order.total_amount}</Data></Cell>\n`;
+      excelContent += `<Cell><Data ss:Type="String">${order.payment_status}</Data></Cell>\n`;
+      excelContent += '</Row>\n';
+    });
     
-    excelContent += '</table></body></html>';
+    excelContent += '</Table>\n';
+    excelContent += '</Worksheet>\n';
+    excelContent += '</Workbook>';
     
     const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' });
     const url = URL.createObjectURL(blob);
@@ -282,9 +281,9 @@ const SalesOrderList = ({ isOpen, onClose }) => {
       description: "Sales orders exported to Excel format"
     });
     
-    return { blob, fileName: `sales-orders-${new Date().toISOString().split('T')[0]}.xls` };
+    return { blob, url, fileName: `sales-orders-${new Date().toISOString().split('T')[0]}.xls` };
   };
-  
+
   const exportToPDF = () => {
     if (!filteredOrders?.length) {
       toast({
@@ -295,7 +294,6 @@ const SalesOrderList = ({ isOpen, onClose }) => {
       return;
     }
     
-    // First, create an HTML table with the data
     let htmlContent = '<html><head><style>';
     htmlContent += 'body { font-family: Arial, sans-serif; }';
     htmlContent += 'table { width: 100%; border-collapse: collapse; }';
@@ -308,14 +306,12 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     htmlContent += `<p>Generated on: ${new Date().toLocaleString()}</p>`;
     htmlContent += '<table>';
     
-    // Add table header
     htmlContent += '<tr>';
     ['Customer', 'Date', 'Product', 'Type', 'Quantity', 'Unit Price', 'Total', 'Status'].forEach(header => {
       htmlContent += `<th>${header}</th>`;
     });
     htmlContent += '</tr>';
     
-    // Add table rows
     filteredOrders.forEach(order => {
       htmlContent += '<tr>';
       htmlContent += `<td>${order.customer_name}</td>`;
@@ -333,152 +329,167 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     htmlContent += '<div class="footer">© Muheesi GKK Integrated System</div>';
     htmlContent += '</body></html>';
     
-    // Open in a new window for printing or save as PDF
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    printWindow.focus();
+    const blob = new Blob([htmlContent], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
     
-    // Let the content render then print
-    setTimeout(() => {
-      printWindow.print();
+    const printWindow = window.open(url, '_blank');
+    
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.document.title = `sales-orders-${new Date().toISOString().split('T')[0]}.pdf`;
+        printWindow.print();
+        toast({
+          title: "PDF Export",
+          description: "The report has been opened for printing/saving as PDF"
+        });
+      };
+    } else {
       toast({
-        title: "PDF Export",
-        description: "The report has been prepared for printing/saving as PDF"
+        title: "Export Error",
+        description: "Could not open PDF for printing. Please check your popup settings.",
+        variant: "destructive"
       });
-    }, 250);
+    }
     
-    return { htmlContent, fileName: `sales-orders-${new Date().toISOString().split('T')[0]}.pdf` };
+    return { 
+      blob, 
+      url,
+      htmlContent, 
+      fileName: `sales-orders-${new Date().toISOString().split('T')[0]}.pdf` 
+    };
   };
-  
-  const shareByWhatsApp = (dataFormat = 'csv') => {
-    let exportResult;
-    let messageText = '';
+
+  const prepareFileForSharing = (format) => {
+    let fileDetails;
+    
+    switch (format) {
+      case 'csv':
+        fileDetails = exportToCSV();
+        break;
+      case 'excel':
+        fileDetails = exportToExcel();
+        break;
+      case 'pdf':
+        fileDetails = exportToPDF();
+        break;
+      default:
+        fileDetails = exportToCSV();
+    }
+    
+    return fileDetails;
+  };
+
+  const shareByWhatsApp = (format) => {
+    const fileDetails = prepareFileForSharing(format);
+    
+    if (!fileDetails) return;
+    
+    const messageText = `I'm sharing the ${format.toUpperCase()} export of our sales orders: ${window.location.origin}/shared-files/${fileDetails.fileName}`;
     
     try {
-      switch (dataFormat) {
-        case 'csv':
-          exportResult = exportToCSV();
-          messageText = `Sales orders exported in CSV format (${exportResult.fileName}).`;
-          break;
-        case 'excel':
-          exportResult = exportToExcel();
-          messageText = `Sales orders exported in Excel format (${exportResult.fileName}).`;
-          break;
-        case 'pdf':
-          exportResult = exportToPDF();
-          messageText = `Sales orders exported in PDF format. Please save the document from the print dialog.`;
-          break;
-        default:
-          exportResult = exportToCSV();
-          messageText = `Sales orders exported in CSV format (${exportResult.fileName}).`;
+      if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        window.open(`whatsapp://send?text=${encodeURIComponent(messageText)}`, '_blank');
+      } else {
+        window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(messageText)}`, '_blank');
       }
-      
-      const message = `${messageText} The file has been downloaded locally and is ready to be shared separately.`;
-      
-      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
       
       toast({
         title: "WhatsApp Sharing",
-        description: `File has been exported and WhatsApp sharing window opened`,
+        description: `File prepared for sharing via WhatsApp`,
       });
     } catch (error) {
       console.error("Error sharing via WhatsApp:", error);
       toast({
         title: "Sharing Failed",
-        description: "Could not complete the share operation",
+        description: "Could not open WhatsApp. The file has been downloaded locally.",
         variant: "destructive"
       });
     }
   };
-  
-  const shareByEmail = (dataFormat = 'csv') => {
-    let exportResult;
-    let subject = `Sales Orders Export`;
-    let body = '';
+
+  const shareByEmail = (format) => {
+    const fileDetails = prepareFileForSharing(format);
+    
+    if (!fileDetails) return;
+    
+    const subject = `Sales Orders Export (${format.toUpperCase()})`;
+    const body = `Please find attached the sales orders export in ${format.toUpperCase()} format.
+    
+This export was generated on ${new Date().toLocaleString()}.
+    
+Regards,
+Muheesi GKK Integrated System`;
     
     try {
-      switch (dataFormat) {
-        case 'csv':
-          exportResult = exportToCSV();
-          body = `Sales orders have been exported in CSV format (${exportResult.fileName}). The file has been downloaded locally and can be attached to this email.`;
-          break;
-        case 'excel':
-          exportResult = exportToExcel();
-          body = `Sales orders have been exported in Excel format (${exportResult.fileName}). The file has been downloaded locally and can be attached to this email.`;
-          break;
-        case 'pdf':
-          exportResult = exportToPDF();
-          body = `Sales orders have been exported in PDF format. Please attach the saved PDF document to this email.`;
-          break;
-        default:
-          exportResult = exportToCSV();
-          body = `Sales orders have been exported in CSV format (${exportResult.fileName}). The file has been downloaded locally and can be attached to this email.`;
-      }
-      
       window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       
       toast({
         title: "Email Sharing",
-        description: `File has been exported and email client opened`,
+        description: `File prepared for sharing via email. Please attach the downloaded file to your email.`,
       });
     } catch (error) {
       console.error("Error sharing via email:", error);
       toast({
         title: "Sharing Failed",
-        description: "Could not complete the share operation",
+        description: "Could not open email client. The file has been downloaded locally.",
         variant: "destructive"
       });
     }
   };
-  
-  const shareToLocalAccount = (dataFormat = 'csv') => {
-    let exportResult;
+
+  const shareToLocalAccount = (format) => {
+    const fileDetails = prepareFileForSharing(format);
     
+    if (!fileDetails) return;
+    
+    setShareFileDetails({
+      ...fileDetails,
+      format,
+      timestamp: new Date().toISOString()
+    });
+    
+    setShareDialogOpen(true);
+  };
+
+  const completeLocalShare = (accountId) => {
     try {
-      switch (dataFormat) {
-        case 'csv':
-          exportResult = exportToCSV();
-          break;
-        case 'excel':
-          exportResult = exportToExcel();
-          break;
-        case 'pdf':
-          exportResult = exportToPDF();
-          break;
-        default:
-          exportResult = exportToCSV();
+      if (!shareFileDetails) return;
+      
+      const selectedAccount = localAccounts.find(account => account.id === accountId);
+      
+      if (!selectedAccount) {
+        throw new Error("Selected account not found");
       }
       
-      const exportRecord = {
-        timestamp: new Date().toISOString(),
-        fileName: exportResult.fileName,
-        format: dataFormat,
-        ordersCount: filteredOrders.length
+      const shareRecord = {
+        timestamp: shareFileDetails.timestamp,
+        fileName: shareFileDetails.fileName,
+        format: shareFileDetails.format,
+        sharedTo: selectedAccount.name,
+        url: shareFileDetails.url
       };
       
-      const existingExports = JSON.parse(localStorage.getItem('salesOrderExports') || '[]');
-      
-      existingExports.unshift(exportRecord);
-      
-      const updatedExports = existingExports.slice(0, 10);
-      
-      localStorage.setItem('salesOrderExports', JSON.stringify(updatedExports));
+      const existingShares = JSON.parse(localStorage.getItem('sharedSalesOrderFiles') || '[]');
+      existingShares.unshift(shareRecord);
+      localStorage.setItem('sharedSalesOrderFiles', JSON.stringify(existingShares.slice(0, 50)));
       
       toast({
-        title: "Export Shared",
-        description: `File has been exported in ${dataFormat.toUpperCase()} format and shared to your local account`,
+        title: "File Shared",
+        description: `${shareFileDetails.format.toUpperCase()} file has been shared to ${selectedAccount.name}`,
       });
+      
+      setShareDialogOpen(false);
+      setShareFileDetails(null);
     } catch (error) {
       console.error("Error sharing to local account:", error);
       toast({
         title: "Sharing Failed",
-        description: "Could not complete the share operation",
+        description: "Could not share file to selected account.",
         variant: "destructive"
       });
     }
   };
-  
+
   const shareExport = (format, method) => {
     switch (method) {
       case 'whatsapp':
@@ -494,7 +505,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
         console.error("Invalid sharing method");
     }
   };
-  
+
   const viewOrderDetails = (order) => {
     setSelectedOrder(order);
   };
@@ -598,7 +609,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                         Email
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => shareExport('csv', 'local')}>
-                        <Save className="h-4 w-4 mr-2" />
+                        <Users className="h-4 w-4 mr-2" />
                         Share Locally
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -621,7 +632,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                         Email
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => shareExport('excel', 'local')}>
-                        <Save className="h-4 w-4 mr-2" />
+                        <Users className="h-4 w-4 mr-2" />
                         Share Locally
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -644,7 +655,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                         Email
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => shareExport('pdf', 'local')}>
-                        <Save className="h-4 w-4 mr-2" />
+                        <Users className="h-4 w-4 mr-2" />
                         Share Locally
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -759,7 +770,7 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                                 Email
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => shareToLocalAccount('pdf')}>
-                                <Save className="h-4 w-4 mr-2" />
+                                <Users className="h-4 w-4 mr-2" />
                                 Share Locally
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -858,6 +869,52 @@ const SalesOrderList = ({ isOpen, onClose }) => {
             </div>
           )}
         </div>
+        
+        <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Share to Local Account</DialogTitle>
+              <DialogDescription>
+                Select which account in the system you want to share this file with.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium mb-2">File details:</h3>
+                  <p className="text-sm">Format: {shareFileDetails?.format?.toUpperCase()}</p>
+                  <p className="text-sm">Filename: {shareFileDetails?.fileName}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Select account:</h3>
+                  {localAccounts.map(account => (
+                    <div key={account.id} className="flex items-center">
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start text-left"
+                        onClick={() => completeLocalShare(account.id)}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        {account.name}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter className="sm:justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setShareDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </SheetContent>
     </Sheet>
   );
