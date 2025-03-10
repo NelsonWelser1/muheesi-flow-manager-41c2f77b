@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import DeliveryNoteList from '../DeliveryNoteList';
 import QRCodeGenerator from '../../qr/QRCodeGenerator';
