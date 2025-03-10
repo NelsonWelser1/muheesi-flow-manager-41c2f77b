@@ -78,36 +78,18 @@ const DeliveryNotesForm = ({ onBack }) => {
     }
   };
 
-  const addDeliveredItem = () => {
-    const itemName = watch("itemName");
-    const itemQuantity = watch("itemQuantity");
-    const itemUnit = watch("itemUnit");
+  const addDeliveredItem = (newItem) => {
+    setDeliveredItems([...deliveredItems, newItem]);
     
-    if (itemName && itemQuantity && itemUnit) {
-      const newItem = {
-        name: itemName,
-        quantity: itemQuantity,
-        unit: itemUnit
-      };
-      
-      setDeliveredItems([...deliveredItems, newItem]);
-      
-      // Reset form fields
-      setValue("itemName", "");
-      setValue("itemQuantity", "");
-      setValue("itemUnit", "");
-      
-      toast({
-        title: "Item Added",
-        description: `${itemQuantity} ${itemUnit} of ${itemName} added to delivery note`,
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: "Please fill all item details",
-        variant: "destructive"
-      });
-    }
+    // Reset form fields
+    setValue("itemName", "");
+    setValue("itemQuantity", "");
+    setValue("itemUnit", "");
+    
+    toast({
+      title: "Item Added",
+      description: `${newItem.quantity} ${newItem.unit} of ${newItem.name} added to delivery note`,
+    });
   };
 
   const removeDeliveredItem = (index) => {
@@ -153,7 +135,11 @@ const DeliveryNotesForm = ({ onBack }) => {
             <div className="space-y-2">
               <Label>Delivered Items</Label>
               <div className="border rounded-lg p-4 space-y-4">
-                <AddItemForm register={register} addDeliveredItem={addDeliveredItem} />
+                <AddItemForm 
+                  register={register} 
+                  addDeliveredItem={addDeliveredItem} 
+                  watch={watch}
+                />
                 <DeliveredItemsList 
                   deliveredItems={deliveredItems} 
                   removeDeliveredItem={removeDeliveredItem} 
