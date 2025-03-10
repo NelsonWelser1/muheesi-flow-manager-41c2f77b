@@ -64,7 +64,7 @@ const MapDialog = ({
         } else {
           toast({
             title: "Location Not Found",
-            description: "Please try a different search term.",
+            description: "Please try a different search term or enable billing for the Google Maps API.",
             variant: "destructive"
           });
         }
@@ -73,14 +73,16 @@ const MapDialog = ({
         console.error("Geocoding error:", error);
         toast({
           title: "Error",
-          description: "Failed to get location details. Please try again.",
+          description: "Failed to get location details. Make sure Google Maps API billing is enabled.",
           variant: "destructive"
         });
       });
   };
   
   const useCurrentView = () => {
-    if (mapSearchQuery.trim()) {
+    if (pinAddress) {
+      handleMapSelection(pinAddress);
+    } else if (mapSearchQuery.trim()) {
       // Get address details from search query
       fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(mapSearchQuery)}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8`)
         .then(response => response.json())
@@ -158,16 +160,8 @@ const MapDialog = ({
               Use Current View
             </Button>
             <Button 
-              onClick={() => {
-                dropPin();
-                if (pinAddress) {
-                  handleMapSelection(pinAddress);
-                } else if (mapSearchQuery.trim()) {
-                  handleMapSelection(mapSearchQuery);
-                } else {
-                  handleMapSelection("Kampala, Uganda");
-                }
-              }}
+              onClick={dropPin}
+              className="bg-[#0000a0] hover:bg-[#00008b]"
             >
               Drop Pin Here
             </Button>
