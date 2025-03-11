@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, UserPlus, UserCheck, Star, CalendarClock, Clock, TimerIcon, ClipboardList, UserCog } from "lucide-react";
+import { Users, GraduationCap, UserPlus, UserCheck, Star, CalendarClock, Clock, TimerIcon, ClipboardList, UserCog, FolderIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import EmployeeRecordsForm from './forms/EmployeeRecordsForm';
 import TrainingEvaluationForm from './forms/TrainingEvaluationForm';
 import RecruitmentManagementForm from './forms/RecruitmentManagementForm';
+import DossierManagement from './dossier/DossierManagement';
 
 const PersonnelDashboard = () => {
   const [activeComponent, setActiveComponent] = useState(null);
@@ -126,6 +127,7 @@ const PersonnelDashboard = () => {
             {activeComponent === "Employee Records & Scheduling" && <EmployeeRecordsForm />}
             {activeComponent === "Training & Performance" && <TrainingEvaluationForm />}
             {activeComponent === "Recruitment Management" && <RecruitmentManagementForm />}
+            {activeComponent === "Employee Dossiers" && <DossierManagement />}
           </CardContent>
         </Card>
       </div>
@@ -137,14 +139,14 @@ const PersonnelDashboard = () => {
       <h2 className="text-3xl font-bold">Personnel Management</h2>
       
       {/* Action Tiles */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Button
           variant="outline"
           className="h-32 flex flex-col items-center justify-center space-y-2 bg-blue-50 hover:bg-blue-100"
           onClick={() => setActiveComponent("Employee Records & Scheduling")}
         >
           <Users className="h-8 w-8" />
-          <span className="text-lg font-semibold">Employee Records & Scheduling</span>
+          <span className="text-lg font-semibold">Employee Records</span>
         </Button>
 
         <Button
@@ -162,7 +164,16 @@ const PersonnelDashboard = () => {
           onClick={() => setActiveComponent("Recruitment Management")}
         >
           <UserPlus className="h-8 w-8" />
-          <span className="text-lg font-semibold">Recruitment Management</span>
+          <span className="text-lg font-semibold">Recruitment</span>
+        </Button>
+
+        <Button
+          variant="outline"
+          className="h-32 flex flex-col items-center justify-center space-y-2 bg-amber-50 hover:bg-amber-100"
+          onClick={() => setActiveComponent("Employee Dossiers")}
+        >
+          <FolderIcon className="h-8 w-8" />
+          <span className="text-lg font-semibold">Employee Dossiers</span>
         </Button>
       </div>
 
