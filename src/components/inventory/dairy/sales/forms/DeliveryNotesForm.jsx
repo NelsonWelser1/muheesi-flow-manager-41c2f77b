@@ -30,13 +30,15 @@ const DeliveryNotesForm = ({ onBack }) => {
   const [showMap, setShowMap] = useState(false);
   const [deliveredItems, setDeliveredItems] = useState([]);
   const [mapSearchQuery, setMapSearchQuery] = useState('');
+  const [coordinates, setCoordinates] = useState(null);
   const searchInputRef = useRef(null);
   
   const onSubmit = (data) => {
     // Add delivered items to the data
     const finalData = {
       ...data,
-      deliveredItems: deliveredItems
+      deliveredItems: deliveredItems,
+      coordinates: coordinates
     };
     
     console.log("Delivery note data:", finalData);
@@ -52,8 +54,9 @@ const DeliveryNotesForm = ({ onBack }) => {
     setShowMap(true);
   };
 
-  const handleMapSelection = (address) => {
+  const handleMapSelection = (address, coords) => {
     setValue('deliveryLocation', address);
+    setCoordinates(coords);
     setShowMap(false);
     
     toast({
@@ -81,11 +84,6 @@ const DeliveryNotesForm = ({ onBack }) => {
 
   const addDeliveredItem = (newItem) => {
     setDeliveredItems([...deliveredItems, newItem]);
-    
-    // Reset form fields
-    setValue("itemName", "");
-    setValue("itemQuantity", "");
-    setValue("itemUnit", "");
     
     toast({
       title: "Item Added",

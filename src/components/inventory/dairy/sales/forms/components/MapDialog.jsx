@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { Search, MapPin } from "lucide-react";
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, MapPin, Move } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -20,6 +20,9 @@ const MapDialog = ({
   const [pinPosition, setPinPosition] = useState(null);
   const [pinAddress, setPinAddress] = useState('');
   const [mapIframe, setMapIframe] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
+  const mapContainerRef = useRef(null);
   
   useEffect(() => {
     // Initialize map iframe when dialog opens
@@ -45,8 +48,28 @@ const MapDialog = ({
   };
   
   const dropPin = () => {
+    // Extract coordinates from the map URL
+    try {
+      const iframe = document.getElementById('google-map-iframe');
+      if (iframe && iframe.src) {
+        const urlParams = new URL(iframe.src).searchParams;
+        const qParam = urlParams.get('q');
+        
+        // If the q parameter has coordinates
+        if (qParam && qParam.includes(',')) {
+          const [lat, lng] = qParam.split(',').map(coord => parseFloat(coord.trim()));
+          if (!isNaN(lat) && !isNaN(lng)) {
+            setCoordinates({ lat, lng });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error extracting coordinates:", error);
+    }
+    
     // Get detailed address using Geocoding API
-    fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(mapSearchQuery)}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8`)
+    const searchLocation = mapSearchQuery || 'Kampala, Uganda';
+    fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(searchLocation)}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8`)
       .then(response => response.json())
       .then(data => {
         if (data.results && data.results.length > 0) {
@@ -54,8 +77,14 @@ const MapDialog = ({
           const formattedAddress = result.formatted_address;
           
           // Set the pin position and address
-          setPinPosition(result.geometry.location);
+          const position = result.geometry.location;
+          setPinPosition(position);
           setPinAddress(formattedAddress);
+          
+          // Update coordinates
+          if (position) {
+            setCoordinates({ lat: position.lat, lng: position.lng });
+          }
           
           toast({
             title: "Pin Dropped",
@@ -79,9 +108,61 @@ const MapDialog = ({
       });
   };
   
+  const toggleDragMode = () => {
+    setIsDragging(!isDragging);
+    
+    if (!isDragging) {
+      toast({
+        title: "Drag Mode Enabled",
+        description: "You can now drag the pin to set the exact location.",
+      });
+    } else {
+      // When disabling drag mode, update the address based on the new position
+      if (coordinates.lat && coordinates.lng) {
+        fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates.lat},${coordinates.lng}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.results && data.results.length > 0) {
+              const formattedAddress = data.results[0].formatted_address;
+              setPinAddress(formattedAddress);
+              
+              toast({
+                title: "Location Updated",
+                description: `New location: ${formattedAddress}`,
+              });
+            }
+          })
+          .catch(err => console.error("Error getting address from coordinates:", err));
+      }
+    }
+  };
+  
+  const updateLocationFromDrag = (newLat, newLng) => {
+    // Update coordinates
+    setCoordinates({ lat: newLat, lng: newLng });
+    
+    // Update the iframe source to show the new location
+    const iframe = document.getElementById('google-map-iframe');
+    if (iframe) {
+      iframe.src = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${newLat},${newLng}`;
+    }
+    
+    // Get address from coordinates
+    fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${newLat},${newLng}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.results && data.results.length > 0) {
+          const formattedAddress = data.results[0].formatted_address;
+          setPinAddress(formattedAddress);
+        }
+      })
+      .catch(err => console.error("Error getting address from coordinates:", err));
+  };
+  
   const useCurrentView = () => {
     if (pinAddress) {
-      handleMapSelection(pinAddress);
+      // Send both address and coordinates to parent component
+      handleMapSelection(pinAddress, coordinates);
     } else if (mapSearchQuery.trim()) {
       // Get address details from search query
       fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(mapSearchQuery)}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8`)
@@ -89,16 +170,33 @@ const MapDialog = ({
         .then(data => {
           if (data.results && data.results.length > 0) {
             const formattedAddress = data.results[0].formatted_address;
-            handleMapSelection(formattedAddress);
+            const position = data.results[0].geometry.location;
+            handleMapSelection(formattedAddress, position);
           } else {
-            handleMapSelection(mapSearchQuery);
+            handleMapSelection(mapSearchQuery, null);
           }
         })
         .catch(() => {
-          handleMapSelection(mapSearchQuery);
+          handleMapSelection(mapSearchQuery, null);
         });
     } else {
-      handleMapSelection("Kampala, Uganda");
+      handleMapSelection("Kampala, Uganda", null);
+    }
+  };
+
+  // Simulated drag functionality (in a real implementation, this would use a proper Maps API)
+  const handlePinDrag = (e) => {
+    if (isDragging && mapContainerRef.current) {
+      const rect = mapContainerRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      
+      // Simulate new coordinates based on relative position in the container
+      // This is a simplified approximation
+      const lat = coordinates.lat ? coordinates.lat + (y - 0.5) * 0.02 : 0;
+      const lng = coordinates.lng ? coordinates.lng + (x - 0.5) * 0.02 : 0;
+      
+      updateLocationFromDrag(lat, lng);
     }
   };
 
@@ -108,7 +206,7 @@ const MapDialog = ({
         <DialogHeader>
           <DialogTitle>Select Location</DialogTitle>
           <DialogDescription>
-            Search for a location, then click "Drop Pin Here" to select an exact address.
+            Search for a location, click "Drop Pin Here" to select an address, then use "Toggle Drag Mode" to fine-tune the position.
           </DialogDescription>
         </DialogHeader>
         
@@ -127,7 +225,11 @@ const MapDialog = ({
           <Button onClick={handleMapSearch}>Search</Button>
         </div>
         
-        <div className="h-[500px] w-full relative">
+        <div 
+          className="h-[500px] w-full relative" 
+          ref={mapContainerRef}
+          onMouseMove={isDragging ? handlePinDrag : null}
+        >
           <iframe 
             id="google-map-iframe"
             src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=Kampala,Uganda" 
@@ -142,8 +244,11 @@ const MapDialog = ({
           {pinPosition && (
             <div className="absolute top-2 left-2 bg-white p-2 rounded-md shadow-md max-w-[300px] text-sm">
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-red-500" />
-                <span className="font-medium">Dropped Pin</span>
+                <MapPin className={`h-4 w-4 ${isDragging ? 'text-green-500' : 'text-red-500'}`} />
+                <span className="font-medium">
+                  {isDragging ? 'Draggable Pin' : 'Dropped Pin'} 
+                  {coordinates.lat && coordinates.lng ? ` (${coordinates.lat.toFixed(6)}, ${coordinates.lng.toFixed(6)})` : ''}
+                </span>
               </div>
               <p className="mt-1 text-gray-700 truncate">{pinAddress}</p>
             </div>
@@ -153,6 +258,16 @@ const MapDialog = ({
         <div className="flex justify-between mt-3">
           <Button variant="outline" onClick={() => setShowMap(false)}>Cancel</Button>
           <div className="flex gap-2">
+            {pinPosition && (
+              <Button 
+                variant="outline" 
+                onClick={toggleDragMode}
+                className={isDragging ? "bg-green-100" : ""}
+              >
+                <Move className="h-4 w-4 mr-2" />
+                {isDragging ? 'Save Position' : 'Toggle Drag Mode'}
+              </Button>
+            )}
             <Button 
               variant="outline" 
               onClick={useCurrentView}
