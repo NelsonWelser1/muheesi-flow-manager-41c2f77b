@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,7 +42,6 @@ const DeliveryNotesForm = ({ onBack }) => {
       return;
     }
     
-    // Add delivered items to the data
     const finalData = {
       ...data,
       deliveredItems: deliveredItems,
@@ -56,7 +54,6 @@ const DeliveryNotesForm = ({ onBack }) => {
       title: "Success",
       description: "Delivery note created successfully",
     });
-    // Here you would normally save to database
   };
 
   const getGeolocation = () => {
@@ -189,12 +186,7 @@ const DeliveryNotesForm = ({ onBack }) => {
       <MapDialog 
         showMap={showMap}
         setShowMap={setShowMap}
-        mapSearchQuery={mapSearchQuery}
-        setMapSearchQuery={setMapSearchQuery}
-        handleMapSearch={handleMapSearch}
-        handleKeyPress={handleKeyPress}
         handleMapSelection={handleMapSelection}
-        searchInputRef={searchInputRef}
       />
     </div>
   );
