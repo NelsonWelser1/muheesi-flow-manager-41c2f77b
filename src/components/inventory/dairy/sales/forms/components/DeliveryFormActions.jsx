@@ -1,11 +1,15 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Eye, ArrowLeft } from "lucide-react";
+import { ArrowLeft, List, FileText, Bug } from "lucide-react";
 
-const DeliveryFormActions = ({ onBack, setShowNoteList }) => {
+const DeliveryFormActions = ({ 
+  onBack, 
+  setShowNoteList,
+  onDebug
+}) => {
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex flex-wrap justify-between items-center gap-2">
       <Button 
         variant="outline" 
         onClick={onBack}
@@ -14,13 +18,25 @@ const DeliveryFormActions = ({ onBack, setShowNoteList }) => {
         <ArrowLeft className="h-4 w-4" /> Back
       </Button>
       
-      <Button 
-        variant="outline" 
-        onClick={() => setShowNoteList(true)}
-        className="flex items-center gap-2"
-      >
-        <Eye className="h-4 w-4" /> View Delivery Notes
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button 
+          variant="outline" 
+          onClick={() => setShowNoteList(true)}
+          className="flex items-center gap-2"
+        >
+          <List className="h-4 w-4" /> View All Delivery Notes
+        </Button>
+        
+        {onDebug && (
+          <Button 
+            variant="outline" 
+            onClick={onDebug}
+            className="flex items-center gap-2"
+          >
+            <Bug className="h-4 w-4" /> Debug Form
+          </Button>
+        )}
+      </div>
     </div>
   );
 };

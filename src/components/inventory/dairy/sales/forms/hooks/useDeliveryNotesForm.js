@@ -1,9 +1,11 @@
 
 import { useState, useRef } from 'react';
 import { useToast } from "@/components/ui/use-toast";
+import { useDeliveryNotes } from '@/integrations/supabase/hooks/sales/useDeliveryNotes';
 
 export const useDeliveryNotesForm = () => {
   const { toast } = useToast();
+  const { createDeliveryNote, fetchDeliveryNotes } = useDeliveryNotes();
   const [showNoteList, setShowNoteList] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [deliveryData, setDeliveryData] = useState(null);
@@ -11,6 +13,7 @@ export const useDeliveryNotesForm = () => {
   const [deliveredItems, setDeliveredItems] = useState([]);
   const [mapSearchQuery, setMapSearchQuery] = useState('');
   const [coordinates, setCoordinates] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const searchInputRef = useRef(null);
   
   const getGeolocation = () => {
@@ -65,7 +68,7 @@ export const useDeliveryNotesForm = () => {
     });
   };
 
-  const validateAndSubmit = (data, onSuccess) => {
+  const validateAndSubmit = async (data) => {
     if (deliveredItems.length === 0) {
       toast({
         title: "Missing Items",
@@ -81,19 +84,65 @@ export const useDeliveryNotesForm = () => {
       coordinates: coordinates
     };
     
-    console.log("Delivery note data:", finalData);
-    setDeliveryData(finalData);
+    console.log("Delivery note data to be submitted:", finalData);
+
+    setIsSubmitting(true);
+    
+    try {
+      // Save to Supabase
+      const { success, data: savedData, error } = await createDeliveryNote(finalData);
+      
+      if (success) {
+        setDeliveryData(savedData);
+        toast({
+          title: "Success",
+          description: "Delivery note created and saved to database",
+        });
+        return true;
+      } else {
+        console.error("Error saving delivery note:", error);
+        toast({
+          title: "Error",
+          description: "Failed to save delivery note to database",
+          variant: "destructive"
+        });
+        return false;
+      }
+    } catch (err) {
+      console.error("Unexpected error during submission:", err);
+      toast({
+        title: "Unexpected Error",
+        description: err.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Function for debugging - can be attached to a button
+  const debugFormData = (data) => {
+    console.log("Current form data:", {
+      formData: data,
+      deliveredItems,
+      coordinates
+    });
     
     toast({
-      title: "Success",
-      description: "Delivery note created successfully",
+      title: "Debug Info",
+      description: "Form data printed to console",
     });
+  };
 
-    if (onSuccess) {
-      onSuccess(finalData);
+  // Load delivery notes from database
+  const loadDeliveryNotes = async () => {
+    try {
+      await fetchDeliveryNotes();
+      console.log("Delivery notes loaded from database");
+    } catch (err) {
+      console.error("Error loading delivery notes:", err);
     }
-
-    return true;
   };
 
   return {
@@ -109,12 +158,15 @@ export const useDeliveryNotesForm = () => {
     setMapSearchQuery,
     coordinates,
     searchInputRef,
+    isSubmitting,
     getGeolocation,
     handleMapSelection,
     handleMapSearch,
     handleKeyPress,
     addDeliveredItem,
     removeDeliveredItem,
-    validateAndSubmit
+    validateAndSubmit,
+    debugFormData,
+    loadDeliveryNotes
   };
 };

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DeliveryNoteList from '../DeliveryNoteList';
@@ -31,17 +31,32 @@ const DeliveryNotesForm = ({ onBack }) => {
     setMapSearchQuery,
     coordinates,
     searchInputRef,
+    isSubmitting,
     getGeolocation,
     handleMapSelection,
     handleMapSearch,
     handleKeyPress,
     addDeliveredItem,
     removeDeliveredItem,
-    validateAndSubmit
+    validateAndSubmit,
+    debugFormData,
+    loadDeliveryNotes
   } = useDeliveryNotesForm();
 
-  const onSubmit = (data) => {
-    validateAndSubmit(data);
+  // Load delivery notes from database on component mount
+  useEffect(() => {
+    console.log("DeliveryNotesForm mounted - loading data from database");
+    loadDeliveryNotes();
+  }, []);
+
+  const onSubmit = async (data) => {
+    console.log("Form submitted with data:", data);
+    await validateAndSubmit(data);
+  };
+
+  const handleDebug = () => {
+    const currentData = watch();
+    debugFormData(currentData);
   };
 
   const handleMapLocationSelected = (address, coords) => {
@@ -60,7 +75,11 @@ const DeliveryNotesForm = ({ onBack }) => {
 
   return (
     <div className="space-y-4">
-      <DeliveryFormActions onBack={onBack} setShowNoteList={setShowNoteList} />
+      <DeliveryFormActions 
+        onBack={onBack} 
+        setShowNoteList={setShowNoteList} 
+        onDebug={handleDebug}
+      />
       
       <Card>
         <CardHeader>
@@ -79,6 +98,8 @@ const DeliveryNotesForm = ({ onBack }) => {
               removeDeliveredItem={removeDeliveredItem}
               deliveryData={deliveryData}
               onShowQRCode={() => setShowQRCode(true)}
+              isSubmitting={isSubmitting}
+              onDebug={handleDebug}
             />
           </form>
         </CardContent>

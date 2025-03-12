@@ -43,6 +43,7 @@ import { useSalesOrderDetails } from './hooks/sales/useSalesOrderDetails';
 import { useUpdateSalesOrder } from './hooks/sales/useUpdateSalesOrder';
 import { useDeleteSalesOrder } from './hooks/sales/useDeleteSalesOrder';
 import { salesOrderUtils } from './hooks/sales/useSalesOrderUtils';
+import { useDeliveryNotes } from './hooks/sales/useDeliveryNotes';
 
 // Export everything individually
 export {
@@ -82,4 +83,6 @@ export {
     useUpdateSalesOrder,
     useDeleteSalesOrder,
     salesOrderUtils,
+    // Delivery Notes
+    useDeliveryNotes,
 };

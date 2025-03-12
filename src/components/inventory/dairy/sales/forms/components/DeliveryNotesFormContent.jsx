@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Loader2, Bug } from "lucide-react";
 import DeliveryInfoFields from './DeliveryInfoFields';
 import AddItemForm from './AddItemForm';
 import DeliveredItemsList from './DeliveredItemsList';
@@ -16,7 +17,9 @@ const DeliveryNotesFormContent = ({
   deliveredItems,
   removeDeliveredItem,
   deliveryData,
-  onShowQRCode
+  onShowQRCode,
+  isSubmitting,
+  onDebug
 }) => {
   return (
     <div className="space-y-4">
@@ -44,9 +47,29 @@ const DeliveryNotesFormContent = ({
       <DigitalSignature />
 
       <div className="flex flex-wrap gap-4">
-        <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">
-          Submit Delivery Note
+        <Button 
+          type="submit" 
+          className="bg-[#0000a0] hover:bg-[#00008b]"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Submitting...
+            </>
+          ) : "Submit Delivery Note"}
         </Button>
+        
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onDebug}
+          className="flex items-center gap-2"
+        >
+          <Bug className="h-4 w-4" />
+          Debug Form
+        </Button>
+        
         {deliveryData && (
           <Button 
             type="button" 
