@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import MapSearchBar from './map/MapSearchBar';
 import MapContainer from './map/MapContainer';
@@ -9,22 +9,21 @@ import useMapInteraction from './map/useMapInteraction';
 const MapDialog = ({ 
   showMap, 
   setShowMap, 
-  handleMapSelection
+  handleMapSelection,
+  mapSearchQuery,
+  setMapSearchQuery,
+  handleMapSearch,
+  handleKeyPress,
+  searchInputRef
 }) => {
-  const searchInputRef = useRef(null);
-  
   const {
     pinPosition,
     pinAddress,
     isDragging,
     coordinates,
-    mapSearchQuery,
-    setMapSearchQuery,
-    handleMapSearch,
-    handleKeyPress,
-    dropPin,
     toggleDragMode,
     useCurrentView,
+    dropPin,
     handlePinDrag
   } = useMapInteraction(showMap, setShowMap, searchInputRef, handleMapSelection);
 

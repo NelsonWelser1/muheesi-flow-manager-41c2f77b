@@ -9,7 +9,6 @@ const useMapInteraction = (showMap, setShowMap, searchInputRef, handleMapSelecti
   const [pinAddress, setPinAddress] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
-  const [mapSearchQuery, setMapSearchQuery] = useState('');
   const [mapIframe, setMapIframe] = useState(null);
 
   useEffect(() => {
@@ -29,29 +28,12 @@ const useMapInteraction = (showMap, setShowMap, searchInputRef, handleMapSelecti
         window.removeEventListener('message', handleMapMessage);
       };
     }
-  }, [showMap]);
+  }, [showMap, searchInputRef]);
 
   const handleMapMessage = (event) => {
     if (event.data && event.data.type === 'MAP_CLICK') {
       setPinPosition(event.data.position);
       setPinAddress(event.data.address);
-    }
-  };
-
-  const handleMapSearch = () => {
-    if (mapSearchQuery.trim()) {
-      const mapElement = document.getElementById('google-map-iframe');
-      if (mapElement) {
-        const encodedQuery = encodeURIComponent(mapSearchQuery);
-        mapElement.src = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodedQuery}`;
-      }
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleMapSearch();
     }
   };
 
@@ -72,7 +54,7 @@ const useMapInteraction = (showMap, setShowMap, searchInputRef, handleMapSelecti
       }
       
       // Get detailed address using Geocoding API
-      const searchLocation = mapSearchQuery || 'Kampala, Uganda';
+      const searchLocation = document.getElementById('google-map-iframe').src.split('q=')[1];
       const locationData = await getCoordinatesFromAddress(searchLocation);
       
       if (locationData) {
@@ -151,16 +133,23 @@ const useMapInteraction = (showMap, setShowMap, searchInputRef, handleMapSelecti
     if (pinAddress) {
       // Send both address and coordinates to parent component
       handleMapSelection(pinAddress, coordinates);
-    } else if (mapSearchQuery.trim()) {
-      // Get address details from search query
-      const locationData = await getCoordinatesFromAddress(mapSearchQuery);
-      if (locationData) {
-        handleMapSelection(locationData.address, locationData.position);
-      } else {
-        handleMapSelection(mapSearchQuery, null);
-      }
     } else {
-      handleMapSelection("Kampala, Uganda", null);
+      // Get current iframe URL
+      const iframe = document.getElementById('google-map-iframe');
+      if (iframe && iframe.src) {
+        const urlParams = new URL(iframe.src).searchParams;
+        const qParam = urlParams.get('q');
+        
+        // Try to get the location details from the current map view
+        const locationData = await getCoordinatesFromAddress(qParam);
+        if (locationData) {
+          handleMapSelection(locationData.address, locationData.position);
+        } else {
+          handleMapSelection(qParam || "Kampala, Uganda", null);
+        }
+      } else {
+        handleMapSelection("Kampala, Uganda", null);
+      }
     }
   };
 
@@ -183,13 +172,9 @@ const useMapInteraction = (showMap, setShowMap, searchInputRef, handleMapSelecti
     pinAddress,
     isDragging,
     coordinates,
-    mapSearchQuery,
-    setMapSearchQuery,
-    handleMapSearch,
-    handleKeyPress,
-    dropPin,
     toggleDragMode,
     useCurrentView,
+    dropPin,
     handlePinDrag
   };
 };
