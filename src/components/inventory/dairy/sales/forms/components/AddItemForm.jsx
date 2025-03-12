@@ -3,25 +3,57 @@ import React, { useState } from 'react';
 import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 const AddItemForm = ({ register, addDeliveredItem, watch }) => {
   const [itemName, setItemName] = useState('');
   const [itemQuantity, setItemQuantity] = useState('');
   const [itemUnit, setItemUnit] = useState('');
+  const { toast } = useToast();
 
   const handleAddItem = () => {
-    if (itemName && itemQuantity && itemUnit) {
-      addDeliveredItem({
-        name: itemName,
-        quantity: itemQuantity,
-        unit: itemUnit
+    if (!itemName.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter an item name",
+        variant: "destructive"
       });
-      
-      // Reset form fields after adding an item
-      setItemName('');
-      setItemQuantity('');
-      setItemUnit('');
+      return;
     }
+
+    if (!itemQuantity || parseFloat(itemQuantity) <= 0) {
+      toast({
+        title: "Invalid Quantity",
+        description: "Please enter a valid quantity",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!itemUnit.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a unit (e.g., kg, liters, boxes)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    addDeliveredItem({
+      name: itemName,
+      quantity: itemQuantity,
+      unit: itemUnit
+    });
+    
+    // Reset form fields after adding an item
+    setItemName('');
+    setItemQuantity('');
+    setItemUnit('');
+    
+    toast({
+      title: "Item Added",
+      description: `${itemQuantity} ${itemUnit} of ${itemName} added to delivery note`,
+    });
   };
 
   return (

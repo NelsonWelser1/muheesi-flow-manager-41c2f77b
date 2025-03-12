@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Move } from "lucide-react";
+import { Search, MapPin, Move, Navigation } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -32,6 +32,13 @@ const MapDialog = ({
       
       // Listen for messages from the iframe (if using postMessage API)
       window.addEventListener('message', handleMapMessage);
+      
+      // Focus search input when dialog opens
+      if (searchInputRef && searchInputRef.current) {
+        setTimeout(() => {
+          searchInputRef.current.focus();
+        }, 300);
+      }
       
       return () => {
         window.removeEventListener('message', handleMapMessage);
@@ -251,6 +258,12 @@ const MapDialog = ({
                 </span>
               </div>
               <p className="mt-1 text-gray-700 truncate">{pinAddress}</p>
+            </div>
+          )}
+
+          {pinPosition && (
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+              <Navigation className={`h-8 w-8 ${isDragging ? 'text-green-500' : 'text-red-500'} animate-bounce`} />
             </div>
           )}
         </div>

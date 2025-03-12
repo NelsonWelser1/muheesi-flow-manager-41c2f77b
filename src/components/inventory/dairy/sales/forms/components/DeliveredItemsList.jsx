@@ -21,7 +21,7 @@ const DeliveredItemsList = ({ deliveredItems, removeDeliveredItem }) => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {deliveredItems.map((item, index) => (
-              <tr key={index}>
+              <tr key={index} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{item.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{item.quantity}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">{item.unit}</td>

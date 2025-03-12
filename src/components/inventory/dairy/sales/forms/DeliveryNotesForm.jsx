@@ -34,6 +34,15 @@ const DeliveryNotesForm = ({ onBack }) => {
   const searchInputRef = useRef(null);
   
   const onSubmit = (data) => {
+    if (deliveredItems.length === 0) {
+      toast({
+        title: "Missing Items",
+        description: "Please add at least one item to the delivery note",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Add delivered items to the data
     const finalData = {
       ...data,
@@ -94,6 +103,11 @@ const DeliveryNotesForm = ({ onBack }) => {
   const removeDeliveredItem = (index) => {
     const updatedItems = deliveredItems.filter((_, i) => i !== index);
     setDeliveredItems(updatedItems);
+    
+    toast({
+      title: "Item Removed",
+      description: "Item removed from delivery note",
+    });
   };
 
   if (showQRCode && deliveryData) {
