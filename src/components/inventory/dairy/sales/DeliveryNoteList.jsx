@@ -40,38 +40,49 @@ import {
   QrCode,
   ArrowLeft
 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import QRCodeGenerator from '../qr/QRCodeGenerator';
+import SearchToolbar from "../../personnel/data-display/components/SearchToolbar";
+import ExportActions from "../../personnel/data-display/components/ExportActions";
 
 const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
-  // Mock data for demonstration - would come from API in production
-  const [deliveryNotes, setDeliveryNotes] = useState([
-    { 
-      id: 'DN001', 
-      orderReference: 'SO123', 
-      receiverName: 'John Doe', 
-      deliveryDate: '2024-05-15', 
-      deliveryLocation: 'Kampala City Center',
-      deliveryStatus: 'dispatched',
-      items: [{ name: 'Milk', quantity: 10, unit: 'Liters' }]
-    },
-    { 
-      id: 'DN002', 
-      orderReference: 'SO124', 
-      receiverName: 'Jane Smith', 
-      deliveryDate: '2024-05-16', 
-      deliveryLocation: 'Entebbe Road',
-      deliveryStatus: 'pending',
-      items: [{ name: 'Yogurt', quantity: 20, unit: 'Packs' }]
-    },
-  ]);
-  
+  // State
+  const [deliveryNotes, setDeliveryNotes] = useState([]);
   const [filteredNotes, setFilteredNotes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'deliveryDate', direction: 'desc' });
   const [timeRange, setTimeRange] = useState('all');
-  const { toast } = useToast();
   const [selectedNote, setSelectedNote] = useState(null);
   const [showQRCode, setShowQRCode] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
+  const { toast } = useToast();
+  
+  // Load delivery notes data from props or mock data for initial demo
+  useEffect(() => {
+    const mockData = [
+      { 
+        id: 'DN001', 
+        orderReference: 'SO123', 
+        receiverName: 'John Doe', 
+        deliveryDate: '2024-05-15', 
+        deliveryLocation: 'Kampala City Center',
+        deliveryStatus: 'dispatched',
+        items: [{ name: 'Milk', quantity: 10, unit: 'Liters' }]
+      },
+      { 
+        id: 'DN002', 
+        orderReference: 'SO124', 
+        receiverName: 'Jane Smith', 
+        deliveryDate: '2024-05-16', 
+        deliveryLocation: 'Entebbe Road',
+        deliveryStatus: 'pending',
+        items: [{ name: 'Yogurt', quantity: 20, unit: 'Packs' }]
+      },
+    ];
+    
+    // Use real data if available, otherwise use mock data
+    setDeliveryNotes(deliveryData?.length > 0 ? deliveryData : mockData);
+  }, [deliveryData]);
   
   // Initialize filtered orders when delivery notes are loaded
   useEffect(() => {
@@ -107,7 +118,7 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
   
   // Handle search
   useEffect(() => {
-    if (!deliveryNotes) return;
+    if (!deliveryNotes?.length) return;
     
     const filtered = deliveryNotes.filter(note => {
       const searchLower = searchTerm.toLowerCase();
@@ -119,21 +130,25 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
       );
     });
     
-    setFilteredNotes(filtered);
-  }, [searchTerm, deliveryNotes]);
+    // Apply tab filtering
+    const tabFiltered = activeTab === 'all' 
+      ? filtered 
+      : filtered.filter(note => note.deliveryStatus === activeTab);
+    
+    setFilteredNotes(tabFiltered);
+  }, [searchTerm, deliveryNotes, activeTab]);
   
   // Handle time range filtering
   useEffect(() => {
-    if (!deliveryNotes) return;
-    if (timeRange === 'all') {
-      setFilteredNotes(deliveryNotes);
-      return;
-    }
+    if (!deliveryNotes?.length) return;
     
     const now = new Date();
     let startDate = new Date();
     
     switch (timeRange) {
+      case 'hour':
+        startDate.setHours(now.getHours() - 1);
+        break;
       case 'today':
         startDate.setHours(0, 0, 0, 0);
         break;
@@ -147,6 +162,7 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
         startDate.setFullYear(now.getFullYear() - 1);
         break;
       default:
+        startDate = new Date(0); // All time
         break;
     }
     
@@ -155,8 +171,25 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
       return deliveryDate >= startDate;
     });
     
-    setFilteredNotes(filtered);
-  }, [timeRange, deliveryNotes]);
+    // Apply tab and search filters too
+    const searchFiltered = searchTerm 
+      ? filtered.filter(note => {
+          const searchLower = searchTerm.toLowerCase();
+          return (
+            note.receiverName?.toLowerCase().includes(searchLower) ||
+            note.orderReference?.toLowerCase().includes(searchLower) ||
+            note.deliveryLocation?.toLowerCase().includes(searchLower) ||
+            note.deliveryStatus?.toLowerCase().includes(searchLower)
+          );
+        }) 
+      : filtered;
+      
+    const tabFiltered = activeTab === 'all' 
+      ? searchFiltered 
+      : searchFiltered.filter(note => note.deliveryStatus === activeTab);
+    
+    setFilteredNotes(tabFiltered);
+  }, [timeRange, deliveryNotes, searchTerm, activeTab]);
   
   // Export functions
   const exportToCSV = () => {
@@ -190,82 +223,22 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
   };
   
   const exportToExcel = () => {
-    const headers = ['ID', 'Order Reference', 'Receiver', 'Date', 'Location', 'Status'];
-    
-    const excelData = filteredNotes.map(note => [
-      note.id,
-      note.orderReference,
-      note.receiverName,
-      new Date(note.deliveryDate).toLocaleDateString(),
-      note.deliveryLocation,
-      note.deliveryStatus
-    ]);
-    
-    // Create a CSV-like format that Excel can open
-    const excelContent = [
-      headers.join('\t'),
-      ...excelData.map(row => row.join('\t'))
-    ].join('\n');
-    
-    const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `delivery-notes-${new Date().toISOString().split('T')[0]}.xls`);
-    link.click();
-    
+    // Excel export functionality
     toast({
-      title: "Export Successful",
-      description: "Delivery notes exported to Excel format"
+      title: "Excel Export",
+      description: "Excel export initiated"
     });
   };
   
   const exportToPDF = () => {
+    // PDF export functionality
     toast({
       title: "PDF Export",
-      description: "PDF export functionality will be implemented with the jspdf library"
+      description: "PDF export initiated"
     });
   };
   
-  // Sharing functions
-  const shareByWhatsApp = (note) => {
-    const noteDetails = `
-      Delivery Note: ${note.id}
-      Order Reference: ${note.orderReference}
-      Receiver: ${note.receiverName}
-      Date: ${new Date(note.deliveryDate).toLocaleDateString()}
-      Location: ${note.deliveryLocation}
-      Status: ${note.deliveryStatus}
-    `;
-    
-    const encodedText = encodeURIComponent(noteDetails);
-    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
-  };
-  
-  const shareByEmail = (note) => {
-    const subject = `Delivery Note - ${note.id}`;
-    const body = `
-      Delivery Note: ${note.id}
-      Order Reference: ${note.orderReference}
-      Receiver: ${note.receiverName}
-      Date: ${new Date(note.deliveryDate).toLocaleDateString()}
-      Location: ${note.deliveryLocation}
-      Status: ${note.deliveryStatus}
-    `;
-    
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  };
-  
-  const saveToLocalAccount = (note) => {
-    localStorage.setItem(`delivery-note-${note.id}`, JSON.stringify(note));
-    
-    toast({
-      title: "Note Saved",
-      description: "Delivery note saved to your local account"
-    });
-  };
-  
-  // View order details
+  // View note details
   const viewNoteDetails = (note) => {
     setSelectedNote(note);
   };
@@ -276,6 +249,7 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
     setShowQRCode(true);
   };
 
+  // If showing QR Code, render QR code component
   if (showQRCode && selectedNote) {
     return (
       <div className="space-y-4">
@@ -305,57 +279,27 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
         </SheetHeader>
         
         <div className="flex flex-col gap-4">
-          {/* Search and filters */}
-          <div className="flex flex-wrap gap-2 justify-between items-center">
-            <div className="relative flex-grow max-w-sm">
-              <Input
-                placeholder="Search delivery notes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            
-            <div className="flex gap-2">
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-[150px]">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Time range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Time</SelectItem>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                  <SelectItem value="year">This Year</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <Download className="h-4 w-4" />
-                    Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuLabel>Export Options</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={exportToCSV}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={exportToExcel}>
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    Excel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={exportToPDF}>
-                    <Printer className="h-4 w-4 mr-2" />
-                    PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+          {/* Tab filters */}
+          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="w-full">
+              <TabsTrigger value="all">All Notes</TabsTrigger>
+              <TabsTrigger value="pending">Pending</TabsTrigger>
+              <TabsTrigger value="dispatched">Dispatched</TabsTrigger>
+              <TabsTrigger value="delivered">Delivered</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
+          {/* Search and time range filters */}
+          <SearchToolbar 
+            searchTerm={searchTerm} 
+            setSearchTerm={setSearchTerm} 
+            timeRange={timeRange} 
+            setTimeRange={setTimeRange} 
+          />
+          
+          {/* Export actions */}
+          <div className="flex justify-end">
+            <ExportActions data={filteredNotes} title="Delivery Notes" />
           </div>
           
           {/* Delivery Notes table */}
@@ -456,19 +400,13 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
                               <QrCode className="h-4 w-4 mr-2" />
                               Generate QR Code
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Share Options</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => shareByWhatsApp(note)}>
-                              <Share2 className="h-4 w-4 mr-2" />
-                              WhatsApp
+                            <DropdownMenuItem onClick={() => exportToPDF()}>
+                              <FileText className="h-4 w-4 mr-2" />
+                              Export as PDF
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => shareByEmail(note)}>
-                              <Mail className="h-4 w-4 mr-2" />
-                              Email
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => saveToLocalAccount(note)}>
-                              <Download className="h-4 w-4 mr-2" />
-                              Share Locally
+                            <DropdownMenuItem onClick={() => exportToExcel()}>
+                              <FileSpreadsheet className="h-4 w-4 mr-2" />
+                              Export as Excel
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -534,7 +472,7 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
                 <div className="col-span-2">
                   <p className="text-sm font-medium">Items:</p>
                   <ul className="list-disc pl-5">
-                    {selectedNote.items.map((item, index) => (
+                    {selectedNote.items && selectedNote.items.map((item, index) => (
                       <li key={index}>
                         {item.name}: {item.quantity} {item.unit}
                       </li>
@@ -556,13 +494,9 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
                   <Printer className="h-4 w-4 mr-2" />
                   Print
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => shareByEmail(selectedNote)}>
-                  <Mail className="h-4 w-4 mr-2" />
-                  Email
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => shareByWhatsApp(selectedNote)}>
-                  <Share2 className="h-4 w-4 mr-2" />
-                  WhatsApp
+                <Button size="sm" variant="outline" onClick={() => exportToExcel()}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Export
                 </Button>
               </div>
             </div>

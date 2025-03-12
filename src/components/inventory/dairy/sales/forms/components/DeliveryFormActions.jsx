@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, List, FileText, Bug } from "lucide-react";
+import { ArrowLeft, List, FileText, Bug, Eye } from "lucide-react";
 
 const DeliveryFormActions = ({ 
   onBack, 
@@ -24,7 +24,7 @@ const DeliveryFormActions = ({
           onClick={() => setShowNoteList(true)}
           className="flex items-center gap-2"
         >
-          <List className="h-4 w-4" /> View All Delivery Notes
+          <Eye className="h-4 w-4" /> View Records
         </Button>
         
         {onDebug && (

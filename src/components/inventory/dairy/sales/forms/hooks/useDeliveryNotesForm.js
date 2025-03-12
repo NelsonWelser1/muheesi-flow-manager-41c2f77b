@@ -78,10 +78,11 @@ export const useDeliveryNotesForm = () => {
       return false;
     }
     
+    // Prepare data for submission - exclude coordinates field which is causing the error
     const finalData = {
       ...data,
       deliveredItems: deliveredItems,
-      coordinates: coordinates
+      // Note: We're not including coordinates field as it's causing a schema error
     };
     
     console.log("Delivery note data to be submitted:", finalData);
