@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Sheet, 
@@ -41,9 +40,9 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import QRCodeGenerator from '../qr/QRCodeGenerator';
-import SearchToolbar from "../../personnel/data-display/components/SearchToolbar";
-import ExportActions from "../../personnel/data-display/components/ExportActions";
+import QRCodeGenerator from "../qr/QRCodeGenerator";
+import SearchToolbar from "../forms/components/SearchToolbar";
+import ExportActions from "../forms/components/ExportActions";
 
 const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
   // State
