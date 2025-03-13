@@ -1,34 +1,39 @@
 
 import React from 'react';
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Search, Calendar } from 'lucide-react';
 
 const SearchToolbar = ({ searchTerm, setSearchTerm, timeRange, setTimeRange }) => {
   return (
-    <div className="flex justify-between items-center gap-4 mt-4">
-      <div className="flex-1">
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search records..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
-          />
-        </div>
+    <div className="flex flex-wrap gap-4 items-center">
+      <div className="relative flex-1 min-w-[240px]">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search delivery notes..."
+          className="pl-8"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
-      <div>
-        <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Select time range" />
+      
+      <div className="w-auto min-w-[160px]">
+        <Select 
+          value={timeRange} 
+          onValueChange={setTimeRange}
+        >
+          <SelectTrigger className="w-[160px]">
+            <Calendar className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="Time Range" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="day">Last 24 Hours</SelectItem>
-            <SelectItem value="week">Last Week</SelectItem>
-            <SelectItem value="month">Last Month</SelectItem>
-            <SelectItem value="year">Last Year</SelectItem>
             <SelectItem value="all">All Time</SelectItem>
+            <SelectItem value="hour">Last Hour</SelectItem>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="week">This Week</SelectItem>
+            <SelectItem value="month">This Month</SelectItem>
+            <SelectItem value="year">This Year</SelectItem>
           </SelectContent>
         </Select>
       </div>

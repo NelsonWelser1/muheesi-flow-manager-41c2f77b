@@ -1,24 +1,43 @@
 
 import React from 'react';
-import { QrCode } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QRCodeSVG } from 'qrcode.react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const QRCodeGenerator = ({ data, title }) => {
+  const qrData = typeof data === 'string' ? data : JSON.stringify(data);
+  
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <QrCode className="h-6 w-6" />
-          {title} QR Code
-        </CardTitle>
+        <CardTitle>{title || 'QR Code'}</CardTitle>
+        <CardDescription>
+          Scan this QR code to access the delivery information
+        </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col items-center gap-4">
+      <CardContent className="flex flex-col items-center">
         <div className="bg-white p-4 rounded-lg">
-          <QRCodeSVG value={JSON.stringify(data)} size={200} />
+          <QRCodeSVG
+            value={qrData}
+            size={250}
+            level="H" // High error correction capability
+            includeMargin={true}
+            className="mx-auto"
+          />
         </div>
-        <Button onClick={() => window.print()}>Print QR Code</Button>
+        
+        {data && typeof data === 'object' && (
+          <div className="mt-4 text-sm space-y-2 w-full">
+            {data.id && <p><strong>ID:</strong> {data.id}</p>}
+            {data.orderReference && <p><strong>Order Ref:</strong> {data.orderReference}</p>}
+            {data.receiverName && <p><strong>Receiver:</strong> {data.receiverName}</p>}
+            {data.deliveryDate && (
+              <p><strong>Date:</strong> {new Date(data.deliveryDate).toLocaleDateString()}</p>
+            )}
+            {data.deliveryStatus && (
+              <p><strong>Status:</strong> {data.deliveryStatus}</p>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

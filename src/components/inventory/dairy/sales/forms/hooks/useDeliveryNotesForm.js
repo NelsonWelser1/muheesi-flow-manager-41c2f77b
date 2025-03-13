@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { useDeliveryNotes } from '@/integrations/supabase/hooks/sales/useDeliveryNotes';
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 export const useDeliveryNotesForm = () => {
   const { toast } = useToast();
@@ -10,9 +11,17 @@ export const useDeliveryNotesForm = () => {
   const [showQRCode, setShowQRCode] = useState(false);
   const [deliveryData, setDeliveryData] = useState(null);
   const [deliveredItems, setDeliveredItems] = useState([]);
-  const [mapSearchQuery, setMapSearchQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const searchInputRef = useRef(null);
+
+  const refreshDeliveryNotes = () => {
+    setRefreshTrigger(prev => prev + 1);
+    toast({
+      title: "Refreshing",
+      description: "Fetching latest delivery notes...",
+    });
+  };
 
   const addDeliveredItem = (newItem) => {
     setDeliveredItems([...deliveredItems, newItem]);
@@ -59,6 +68,7 @@ export const useDeliveryNotesForm = () => {
       
       if (success) {
         setDeliveryData(savedData);
+        setDeliveredItems([]); // Clear items after successful submission
         toast({
           title: "Success",
           description: "Delivery note created and saved to database",
@@ -103,10 +113,9 @@ export const useDeliveryNotesForm = () => {
     setShowQRCode,
     deliveryData,
     deliveredItems,
-    mapSearchQuery,
-    setMapSearchQuery,
-    searchInputRef,
     isSubmitting,
+    refreshTrigger,
+    refreshDeliveryNotes,
     addDeliveredItem,
     removeDeliveredItem,
     validateAndSubmit,

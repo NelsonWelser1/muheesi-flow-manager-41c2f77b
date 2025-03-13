@@ -9,7 +9,7 @@ import DeliveryNotesFormContent from './components/DeliveryNotesFormContent';
 import { useDeliveryNotesForm } from './hooks/useDeliveryNotesForm';
 
 const DeliveryNotesForm = ({ onBack }) => {
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
     defaultValues: {
       deliveryDate: new Date().toISOString().split('T')[0],
       deliveryStatus: 'pending'
@@ -24,6 +24,7 @@ const DeliveryNotesForm = ({ onBack }) => {
     deliveryData,
     deliveredItems,
     isSubmitting,
+    refreshDeliveryNotes,
     addDeliveredItem,
     removeDeliveredItem,
     validateAndSubmit,
@@ -38,7 +39,19 @@ const DeliveryNotesForm = ({ onBack }) => {
 
   const onSubmit = async (data) => {
     console.log("Form submitted with data:", data);
-    await validateAndSubmit(data);
+    const success = await validateAndSubmit(data);
+    if (success) {
+      // Reset form after successful submission
+      reset({
+        deliveryDate: new Date().toISOString().split('T')[0],
+        deliveryStatus: 'pending',
+        orderReference: '',
+        receiverName: '',
+        receiverContact: '',
+        deliveryLocation: '',
+        deliveryPerson: ''
+      });
+    }
   };
 
   if (showQRCode && deliveryData) {
@@ -83,6 +96,7 @@ const DeliveryNotesForm = ({ onBack }) => {
         isOpen={showNoteList} 
         onClose={() => setShowNoteList(false)}
         deliveryData={deliveryData}
+        refreshData={refreshDeliveryNotes}
       />
     </div>
   );

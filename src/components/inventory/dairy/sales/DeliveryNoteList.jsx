@@ -30,22 +30,24 @@ import { useToast } from "@/components/ui/use-toast";
 import { 
   Eye, 
   ArrowUpDown, 
-  Calendar, 
-  Download, 
+  RefreshCw,
   Printer, 
   Share2, 
-  Mail, 
   FileSpreadsheet, 
   FileText,
   QrCode,
-  ArrowLeft
+  ArrowLeft,
+  Download,
+  Image
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import QRCodeGenerator from "../qr/QRCodeGenerator";
 import SearchToolbar from "./forms/components/SearchToolbar";
 import ExportActions from "./forms/components/ExportActions";
+import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
 
-const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
+const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
   // State
   const [deliveryNotes, setDeliveryNotes] = useState([]);
   const [filteredNotes, setFilteredNotes] = useState([]);
@@ -55,7 +57,9 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
   const [selectedNote, setSelectedNote] = useState(null);
   const [showQRCode, setShowQRCode] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
+  const qrCodeRef = React.useRef(null);
   
   // Load delivery notes data from props or mock data for initial demo
   useEffect(() => {
@@ -88,6 +92,28 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
   useEffect(() => {
     setFilteredNotes(deliveryNotes);
   }, [deliveryNotes]);
+  
+  // Handle refreshing data
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      if (refreshData) {
+        await refreshData();
+        toast({
+          title: "Refresh Complete",
+          description: "Delivery notes have been refreshed",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Refresh Failed",
+        description: "Could not refresh delivery notes",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
   
   // Handle sorting
   const handleSort = (key) => {
@@ -222,8 +248,85 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
     });
   };
   
+  // Export QR Code as PNG
+  const exportQrCodeAsPng = async () => {
+    if (!qrCodeRef.current) return;
+    
+    try {
+      const dataUrl = await toPng(qrCodeRef.current);
+      const link = document.createElement('a');
+      link.download = `delivery-note-qr-${selectedNote?.id || 'code'}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+      toast({
+        title: "QR Code Exported",
+        description: "QR Code saved as PNG image"
+      });
+    } catch (error) {
+      console.error('Error exporting QR code as PNG:', error);
+      toast({
+        title: "Export Failed",
+        description: "Could not export QR code as PNG",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Export QR Code as PDF
+  const exportQrCodeAsPdf = async () => {
+    if (!qrCodeRef.current) return;
+    
+    try {
+      const dataUrl = await toPng(qrCodeRef.current);
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Add title
+      pdf.setFontSize(16);
+      pdf.text('Delivery Note QR Code', 105, 20, { align: 'center' });
+      
+      // Add delivery info
+      if (selectedNote) {
+        pdf.setFontSize(12);
+        pdf.text(`Order Reference: ${selectedNote.orderReference}`, 20, 40);
+        pdf.text(`Receiver: ${selectedNote.receiverName}`, 20, 50);
+        pdf.text(`Delivery Date: ${new Date(selectedNote.deliveryDate).toLocaleDateString()}`, 20, 60);
+        pdf.text(`Status: ${selectedNote.deliveryStatus}`, 20, 70);
+      }
+      
+      // Add QR code image
+      const imgWidth = 100;
+      const imgHeight = 100;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const x = (pageWidth - imgWidth) / 2;
+      pdf.addImage(dataUrl, 'PNG', x, 80, imgWidth, imgHeight);
+      
+      // Add footer
+      pdf.setFontSize(10);
+      pdf.text('Generated on ' + new Date().toLocaleString(), 105, 200, { align: 'center' });
+      
+      pdf.save(`delivery-note-qr-${selectedNote?.id || 'code'}.pdf`);
+      
+      toast({
+        title: "QR Code Exported",
+        description: "QR Code saved as PDF document"
+      });
+    } catch (error) {
+      console.error('Error exporting QR code as PDF:', error);
+      toast({
+        title: "Export Failed",
+        description: "Could not export QR code as PDF",
+        variant: "destructive"
+      });
+    }
+  };
+  
   const exportToExcel = () => {
-    // Excel export functionality
     toast({
       title: "Excel Export",
       description: "Excel export initiated"
@@ -231,7 +334,6 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
   };
   
   const exportToPDF = () => {
-    // PDF export functionality
     toast({
       title: "PDF Export",
       description: "PDF export initiated"
@@ -260,10 +362,27 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
         >
           <ArrowLeft className="h-4 w-4" /> Back to Delivery Notes
         </Button>
-        <QRCodeGenerator 
-          data={selectedNote} 
-          title="Delivery Note"
-        />
+        <div ref={qrCodeRef}>
+          <QRCodeGenerator 
+            data={selectedNote} 
+            title="Delivery Note"
+          />
+        </div>
+        
+        <div className="flex flex-wrap gap-2 mt-4">
+          <Button onClick={exportQrCodeAsPng} className="flex items-center gap-2">
+            <Image className="h-4 w-4" />
+            Save as PNG
+          </Button>
+          <Button onClick={exportQrCodeAsPdf} className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Save as PDF
+          </Button>
+          <Button variant="outline" onClick={() => window.print()} className="flex items-center gap-2">
+            <Printer className="h-4 w-4" />
+            Print
+          </Button>
+        </div>
       </div>
     );
   }
@@ -272,7 +391,19 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData }) => {
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className="w-full sm:max-w-3xl overflow-y-auto" side="right">
         <SheetHeader className="pb-4">
-          <SheetTitle>Delivery Notes</SheetTitle>
+          <div className="flex justify-between items-center">
+            <SheetTitle>Delivery Notes</SheetTitle>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
           <SheetDescription>
             View and manage your delivery notes
           </SheetDescription>
