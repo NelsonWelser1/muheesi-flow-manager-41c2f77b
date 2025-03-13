@@ -5,7 +5,6 @@ import { Loader2, Save, Truck } from "lucide-react";
 
 const FormActions = ({ 
   isSaving, 
-  onDebug, 
   showDeliveryButton 
 }) => {
   return (
@@ -21,16 +20,6 @@ const FormActions = ({
             Submitting...
           </>
         ) : "Submit Order"}
-      </Button>
-      
-      <Button 
-        type="button" 
-        variant="outline" 
-        className="flex items-center gap-2"
-        onClick={onDebug}
-      >
-        <Save className="h-4 w-4" />
-        Debug Form
       </Button>
       
       {showDeliveryButton && (

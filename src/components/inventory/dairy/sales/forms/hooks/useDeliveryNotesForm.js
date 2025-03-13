@@ -9,45 +9,10 @@ export const useDeliveryNotesForm = () => {
   const [showNoteList, setShowNoteList] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
   const [deliveryData, setDeliveryData] = useState(null);
-  const [showMap, setShowMap] = useState(false);
   const [deliveredItems, setDeliveredItems] = useState([]);
   const [mapSearchQuery, setMapSearchQuery] = useState('');
-  const [coordinates, setCoordinates] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const searchInputRef = useRef(null);
-  
-  const getGeolocation = () => {
-    setShowMap(true);
-  };
-
-  const handleMapSelection = (address, coords) => {
-    setCoordinates(coords);
-    setShowMap(false);
-    
-    toast({
-      title: "Location Added",
-      description: `Address captured: ${address}`,
-    });
-
-    return address;
-  };
-
-  const handleMapSearch = () => {
-    if (mapSearchQuery.trim()) {
-      const mapElement = document.getElementById('google-map-iframe');
-      if (mapElement) {
-        const encodedQuery = encodeURIComponent(mapSearchQuery);
-        mapElement.src = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodedQuery}`;
-      }
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleMapSearch();
-    }
-  };
 
   const addDeliveredItem = (newItem) => {
     setDeliveredItems([...deliveredItems, newItem]);
@@ -78,11 +43,10 @@ export const useDeliveryNotesForm = () => {
       return false;
     }
     
-    // Prepare data for submission - exclude coordinates field which is causing the error
+    // Prepare data for submission
     const finalData = {
       ...data,
       deliveredItems: deliveredItems,
-      // Note: We're not including coordinates field as it's causing a schema error
     };
     
     console.log("Delivery note data to be submitted:", finalData);
@@ -122,20 +86,6 @@ export const useDeliveryNotesForm = () => {
     }
   };
 
-  // Function for debugging - can be attached to a button
-  const debugFormData = (data) => {
-    console.log("Current form data:", {
-      formData: data,
-      deliveredItems,
-      coordinates
-    });
-    
-    toast({
-      title: "Debug Info",
-      description: "Form data printed to console",
-    });
-  };
-
   // Load delivery notes from database
   const loadDeliveryNotes = async () => {
     try {
@@ -152,22 +102,14 @@ export const useDeliveryNotesForm = () => {
     showQRCode,
     setShowQRCode,
     deliveryData,
-    showMap,
-    setShowMap,
     deliveredItems,
     mapSearchQuery,
     setMapSearchQuery,
-    coordinates,
     searchInputRef,
     isSubmitting,
-    getGeolocation,
-    handleMapSelection,
-    handleMapSearch,
-    handleKeyPress,
     addDeliveredItem,
     removeDeliveredItem,
     validateAndSubmit,
-    debugFormData,
     loadDeliveryNotes
   };
 };

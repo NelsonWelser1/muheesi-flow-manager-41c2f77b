@@ -66,9 +66,7 @@ export const useDeliveryNotes = () => {
         delivery_location: deliveryData.deliveryLocation || '',
         delivery_person: deliveryData.deliveryPerson || null,
         delivery_status: deliveryData.deliveryStatus || 'pending',
-        delivered_items: deliveryData.deliveredItems || [],
-        signature_data: deliveryData.signatureData || null
-        // Note: We removed coordinates field as it's not in the schema
+        delivered_items: deliveryData.deliveredItems || []
       };
       
       const { data, error } = await supabase

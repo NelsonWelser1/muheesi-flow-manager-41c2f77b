@@ -3,7 +3,6 @@ import React, { useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DeliveryNoteList from '../DeliveryNoteList';
-import MapDialog from './components/MapDialog';
 import DeliveryFormActions from './components/DeliveryFormActions';
 import DeliveryQRCodeDisplay from './components/DeliveryQRCodeDisplay';
 import DeliveryNotesFormContent from './components/DeliveryNotesFormContent';
@@ -13,8 +12,7 @@ const DeliveryNotesForm = ({ onBack }) => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       deliveryDate: new Date().toISOString().split('T')[0],
-      deliveryStatus: 'pending',
-      geolocation: ''
+      deliveryStatus: 'pending'
     }
   });
   
@@ -24,22 +22,11 @@ const DeliveryNotesForm = ({ onBack }) => {
     showQRCode,
     setShowQRCode,
     deliveryData,
-    showMap,
-    setShowMap,
     deliveredItems,
-    mapSearchQuery,
-    setMapSearchQuery,
-    coordinates,
-    searchInputRef,
     isSubmitting,
-    getGeolocation,
-    handleMapSelection,
-    handleMapSearch,
-    handleKeyPress,
     addDeliveredItem,
     removeDeliveredItem,
     validateAndSubmit,
-    debugFormData,
     loadDeliveryNotes
   } = useDeliveryNotesForm();
 
@@ -52,16 +39,6 @@ const DeliveryNotesForm = ({ onBack }) => {
   const onSubmit = async (data) => {
     console.log("Form submitted with data:", data);
     await validateAndSubmit(data);
-  };
-
-  const handleDebug = () => {
-    const currentData = watch();
-    debugFormData(currentData);
-  };
-
-  const handleMapLocationSelected = (address, coords) => {
-    setValue('deliveryLocation', address);
-    return handleMapSelection(address, coords);
   };
 
   if (showQRCode && deliveryData) {
@@ -78,7 +55,6 @@ const DeliveryNotesForm = ({ onBack }) => {
       <DeliveryFormActions 
         onBack={onBack} 
         setShowNoteList={setShowNoteList} 
-        onDebug={handleDebug}
       />
       
       <Card>
@@ -92,14 +68,12 @@ const DeliveryNotesForm = ({ onBack }) => {
               errors={errors}
               setValue={setValue}
               watch={watch}
-              getGeolocation={getGeolocation}
               addDeliveredItem={addDeliveredItem}
               deliveredItems={deliveredItems}
               removeDeliveredItem={removeDeliveredItem}
               deliveryData={deliveryData}
               onShowQRCode={() => setShowQRCode(true)}
               isSubmitting={isSubmitting}
-              onDebug={handleDebug}
             />
           </form>
         </CardContent>
@@ -109,17 +83,6 @@ const DeliveryNotesForm = ({ onBack }) => {
         isOpen={showNoteList} 
         onClose={() => setShowNoteList(false)}
         deliveryData={deliveryData}
-      />
-
-      <MapDialog 
-        showMap={showMap}
-        setShowMap={setShowMap}
-        handleMapSelection={handleMapLocationSelected}
-        mapSearchQuery={mapSearchQuery}
-        setMapSearchQuery={setMapSearchQuery}
-        handleMapSearch={handleMapSearch}
-        handleKeyPress={handleKeyPress}
-        searchInputRef={searchInputRef}
       />
     </div>
   );

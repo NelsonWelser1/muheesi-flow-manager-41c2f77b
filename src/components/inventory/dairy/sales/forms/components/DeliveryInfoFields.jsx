@@ -1,13 +1,11 @@
 
 import React from 'react';
-import { MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import FormField from './FormField';
 
-const DeliveryInfoFields = ({ register, errors, setValue, getGeolocation }) => {
+const DeliveryInfoFields = ({ register, errors, setValue }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
@@ -42,18 +40,7 @@ const DeliveryInfoFields = ({ register, errors, setValue, getGeolocation }) => {
         label="Delivery Location"
         error={errors.deliveryLocation?.message}
       >
-        <div className="flex gap-2">
-          <Input {...register("deliveryLocation", { required: "Delivery location is required" })} />
-          <Button 
-            type="button" 
-            variant="outline" 
-            className="flex items-center gap-2 whitespace-nowrap"
-            onClick={getGeolocation}
-          >
-            <MapPin className="h-4 w-4" />
-            Add Geolocation
-          </Button>
-        </div>
+        <Input {...register("deliveryLocation", { required: "Delivery location is required" })} />
       </FormField>
 
       <FormField
