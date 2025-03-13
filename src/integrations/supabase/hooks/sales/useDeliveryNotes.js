@@ -100,7 +100,7 @@ export const useDeliveryNotes = () => {
       setError(err.message);
       toast({
         title: "Unexpected error",
-        description: err.message,
+        description: err.message || "An unexpected error occurred",
         variant: "destructive"
       });
       return { success: false, error: err, data: null };
@@ -133,6 +133,72 @@ export const useDeliveryNotes = () => {
     }
   };
 
+  // Update a delivery note
+  const updateDeliveryNote = async (id, updateData) => {
+    try {
+      console.log('Updating delivery note with ID:', id);
+      
+      // Format data to match database schema
+      const formattedData = {};
+      if (updateData.orderReference) formattedData.order_reference = updateData.orderReference;
+      if (updateData.deliveryDate) formattedData.delivery_date = updateData.deliveryDate;
+      if (updateData.receiverName) formattedData.receiver_name = updateData.receiverName;
+      if (updateData.receiverContact) formattedData.receiver_contact = updateData.receiverContact;
+      if (updateData.deliveryLocation) formattedData.delivery_location = updateData.deliveryLocation;
+      if (updateData.deliveryPerson) formattedData.delivery_person = updateData.deliveryPerson;
+      if (updateData.deliveryStatus) formattedData.delivery_status = updateData.deliveryStatus;
+      if (updateData.deliveredItems) formattedData.delivered_items = updateData.deliveredItems;
+      
+      const { data, error } = await supabase
+        .from('delivery_notes')
+        .update(formattedData)
+        .eq('id', id)
+        .select();
+      
+      if (error) {
+        console.error('Error updating delivery note:', error);
+        return { success: false, error, data: null };
+      }
+      
+      console.log('Delivery note updated successfully:', data);
+      
+      // Refresh delivery notes list
+      await fetchDeliveryNotes();
+      
+      return { success: true, data: data[0], error: null };
+    } catch (err) {
+      console.error('Unexpected error updating delivery note:', err);
+      return { success: false, error: err, data: null };
+    }
+  };
+
+  // Delete a delivery note
+  const deleteDeliveryNote = async (id) => {
+    try {
+      console.log('Deleting delivery note with ID:', id);
+      
+      const { error } = await supabase
+        .from('delivery_notes')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting delivery note:', error);
+        return { success: false, error };
+      }
+      
+      console.log('Delivery note deleted successfully');
+      
+      // Refresh delivery notes list
+      await fetchDeliveryNotes();
+      
+      return { success: true, error: null };
+    } catch (err) {
+      console.error('Unexpected error deleting delivery note:', err);
+      return { success: false, error: err };
+    }
+  };
+
   // Initialize by fetching delivery notes on component mount
   useEffect(() => {
     fetchDeliveryNotes();
@@ -144,6 +210,8 @@ export const useDeliveryNotes = () => {
     error,
     fetchDeliveryNotes,
     createDeliveryNote,
-    getDeliveryNoteById
+    getDeliveryNoteById,
+    updateDeliveryNote,
+    deleteDeliveryNote
   };
 };

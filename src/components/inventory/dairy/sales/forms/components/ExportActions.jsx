@@ -31,15 +31,27 @@ const ExportActions = ({ data, title }) => {
       // Get all keys from the first object
       const keys = Object.keys(data[0]);
       
-      // Convert snake_case to Title Case for headers
-      const headers = keys.map(key => 
-        key.split('_')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ')
-      );
+      // Convert snake_case to Title Case for headers (exclude items/arrays)
+      const headers = keys
+        .filter(key => !['items', 'delivered_items', 'deliveredItems'].includes(key))
+        .map(key => 
+          key.split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ')
+        );
       
       // Convert data to rows
-      const rows = data.map(item => keys.map(key => item[key]));
+      const rows = data.map(item => 
+        keys
+          .filter(key => !['items', 'delivered_items', 'deliveredItems'].includes(key))
+          .map(key => {
+            // Format dates
+            if (key.includes('date') && item[key]) {
+              return new Date(item[key]).toLocaleDateString();
+            }
+            return item[key];
+          })
+      );
       
       // Create CSV content
       const csvContent = [
@@ -93,6 +105,11 @@ const ExportActions = ({ data, title }) => {
       const processedData = data.map(item => {
         const processed = {};
         Object.keys(item).forEach(key => {
+          // Skip items arrays for Excel
+          if (['items', 'delivered_items', 'deliveredItems'].includes(key)) {
+            return;
+          }
+          
           if (typeof item[key] === 'object' && item[key] !== null && !Array.isArray(item[key])) {
             Object.keys(item[key]).forEach(nestedKey => {
               processed[`${key}_${nestedKey}`] = item[key][nestedKey];
@@ -100,7 +117,12 @@ const ExportActions = ({ data, title }) => {
           } else if (Array.isArray(item[key])) {
             processed[key] = JSON.stringify(item[key]);
           } else {
-            processed[key] = item[key];
+            // Format dates
+            if (key.includes('date') && item[key]) {
+              processed[key] = new Date(item[key]).toLocaleDateString();
+            } else {
+              processed[key] = item[key];
+            }
           }
         });
         return processed;
@@ -150,16 +172,19 @@ const ExportActions = ({ data, title }) => {
       doc.setFontSize(11);
       doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
       
-      // Get common keys from data (take first 6 most important ones if many)
+      // Get relevant keys from data (exclude some system fields)
+      const excludedKeys = ['items', 'delivered_items', 'deliveredItems', 'created_at', 'updated_at'];
       const firstItem = data[0];
-      const keys = Object.keys(firstItem).slice(0, 7); // Limit columns to 7 for better readability
+      const keys = Object.keys(firstItem).filter(key => !excludedKeys.includes(key)).slice(0, 6); // Limit columns to 6 for better readability
       
       // Convert data for table
       const tableData = data.map(item => {
         const rowData = [];
         
         keys.forEach(key => {
-          if (typeof item[key] === 'object' && item[key] !== null) {
+          if (key.includes('date') && item[key]) {
+            rowData.push(new Date(item[key]).toLocaleDateString());
+          } else if (typeof item[key] === 'object' && item[key] !== null) {
             rowData.push(JSON.stringify(item[key]).substring(0, 30) + '...');
           } else {
             rowData.push(item[key]);

@@ -51,7 +51,7 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
   const [deliveryNotes, setDeliveryNotes] = useState([]);
   const [filteredNotes, setFilteredNotes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'deliveryDate', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
   const [timeRange, setTimeRange] = useState('all');
   const [selectedNote, setSelectedNote] = useState(null);
   const [showQRCode, setShowQRCode] = useState(false);
@@ -63,21 +63,26 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
   // Use the Supabase hook to get delivery notes data
   const { deliveryNotes: supabaseNotes, fetchDeliveryNotes, loading } = useDeliveryNotes();
   
+  // Normalize notes to handle both camelCase and snake_case fields
+  const normalizeNotes = (notes) => {
+    if (!notes || !Array.isArray(notes)) return [];
+    
+    return notes.map(note => ({
+      id: note.id,
+      orderReference: note.order_reference || note.orderReference || '',
+      receiverName: note.receiver_name || note.receiverName || '',
+      receiverContact: note.receiver_contact || note.receiverContact || '',
+      deliveryDate: note.delivery_date || note.deliveryDate || '',
+      deliveryLocation: note.delivery_location || note.deliveryLocation || '',
+      deliveryPerson: note.delivery_person || note.deliveryPerson || '',
+      deliveryStatus: note.delivery_status || note.deliveryStatus || 'pending',
+      items: note.delivered_items || note.deliveredItems || [],
+      created_at: note.created_at || '',
+      updated_at: note.updated_at || ''
+    }));
+  };
+  
   // Initialize with data from props or from Supabase
-  useEffect(() => {
-    if (deliveryData?.length > 0) {
-      setDeliveryNotes(deliveryData);
-    } else if (supabaseNotes?.length > 0) {
-      setDeliveryNotes(supabaseNotes);
-    }
-  }, [deliveryData, supabaseNotes]);
-  
-  // Initialize filtered notes when delivery notes are loaded
-  useEffect(() => {
-    setFilteredNotes(deliveryNotes);
-  }, [deliveryNotes]);
-  
-  // Initial data load - fetch from Supabase when component mounts
   useEffect(() => {
     if (isOpen) {
       handleRefresh();
@@ -88,11 +93,8 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      if (refreshData) {
-        await refreshData();
-      } else {
-        await fetchDeliveryNotes();
-      }
+      console.log('Refreshing delivery notes...');
+      await fetchDeliveryNotes();
       
       toast({
         title: "Refresh Complete",
@@ -110,6 +112,16 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
     }
   };
   
+  // Update deliveryNotes when Supabase data changes
+  useEffect(() => {
+    if (supabaseNotes?.length > 0) {
+      const normalized = normalizeNotes(supabaseNotes);
+      setDeliveryNotes(normalized);
+      setFilteredNotes(normalized);
+      console.log('Normalized delivery notes:', normalized);
+    }
+  }, [supabaseNotes]);
+  
   // Handle sorting
   const handleSort = (key) => {
     let direction = 'asc';
@@ -119,7 +131,7 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
     setSortConfig({ key, direction });
     
     const sortedData = [...filteredNotes].sort((a, b) => {
-      if (key === 'deliveryDate') {
+      if (key === 'deliveryDate' || key === 'created_at') {
         const dateA = new Date(a[key]);
         const dateB = new Date(b[key]);
         return direction === 'asc' ? dateA - dateB : dateB - dateA;
@@ -137,7 +149,7 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
     setFilteredNotes(sortedData);
   };
   
-  // Handle search
+  // Handle search and tab filtering
   useEffect(() => {
     if (!deliveryNotes?.length) return;
     
@@ -212,37 +224,6 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
     setFilteredNotes(tabFiltered);
   }, [timeRange, deliveryNotes, searchTerm, activeTab]);
   
-  // Export functions
-  const exportToCSV = () => {
-    const headers = ['ID', 'Order Reference', 'Receiver', 'Date', 'Location', 'Status'];
-    
-    const csvData = filteredNotes.map(note => [
-      note.id,
-      note.order_reference || note.orderReference,
-      note.receiver_name || note.receiverName,
-      new Date(note.delivery_date || note.deliveryDate).toLocaleDateString(),
-      note.delivery_location || note.deliveryLocation,
-      note.delivery_status || note.deliveryStatus
-    ]);
-    
-    const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => row.join(','))
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `delivery-notes-${new Date().toISOString().split('T')[0]}.csv`);
-    link.click();
-    
-    toast({
-      title: "Export Successful",
-      description: "Delivery notes exported to CSV"
-    });
-  };
-  
   // Export QR Code as PNG
   const exportQrCodeAsPng = async () => {
     if (!qrCodeRef.current) return;
@@ -287,10 +268,10 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
       // Add delivery info
       if (selectedNote) {
         pdf.setFontSize(12);
-        pdf.text(`Order Reference: ${selectedNote.order_reference || selectedNote.orderReference}`, 20, 40);
-        pdf.text(`Receiver: ${selectedNote.receiver_name || selectedNote.receiverName}`, 20, 50);
-        pdf.text(`Delivery Date: ${new Date(selectedNote.delivery_date || selectedNote.deliveryDate).toLocaleDateString()}`, 20, 60);
-        pdf.text(`Status: ${selectedNote.delivery_status || selectedNote.deliveryStatus}`, 20, 70);
+        pdf.text(`Order Reference: ${selectedNote.orderReference}`, 20, 40);
+        pdf.text(`Receiver: ${selectedNote.receiverName}`, 20, 50);
+        pdf.text(`Delivery Date: ${new Date(selectedNote.deliveryDate).toLocaleDateString()}`, 20, 60);
+        pdf.text(`Status: ${selectedNote.deliveryStatus}`, 20, 70);
       }
       
       // Add QR code image
@@ -320,20 +301,6 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
     }
   };
   
-  const exportToExcel = () => {
-    toast({
-      title: "Excel Export",
-      description: "Excel export initiated"
-    });
-  };
-  
-  const exportToPDF = () => {
-    toast({
-      title: "PDF Export",
-      description: "PDF export initiated"
-    });
-  };
-  
   // View note details
   const viewNoteDetails = (note) => {
     setSelectedNote(note);
@@ -345,28 +312,8 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
     setShowQRCode(true);
   };
 
-  // Get field value accounting for both camelCase and snake_case
-  const getFieldValue = (note, camelCase, snakeCase) => {
-    return note[camelCase] !== undefined ? note[camelCase] : note[snakeCase];
-  };
-
-  // Helper to normalize note objects regardless of whether they use camelCase or snake_case
-  const normalizeNote = (note) => {
-    return {
-      id: note.id,
-      orderReference: getFieldValue(note, 'orderReference', 'order_reference'),
-      receiverName: getFieldValue(note, 'receiverName', 'receiver_name'),
-      deliveryDate: getFieldValue(note, 'deliveryDate', 'delivery_date'),
-      deliveryLocation: getFieldValue(note, 'deliveryLocation', 'delivery_location'),
-      deliveryStatus: getFieldValue(note, 'deliveryStatus', 'delivery_status'),
-      items: getFieldValue(note, 'items', 'delivered_items') || [],
-    };
-  };
-
   // If showing QR Code, render QR code component
   if (showQRCode && selectedNote) {
-    const normalizedNote = normalizeNote(selectedNote);
-    
     return (
       <div className="space-y-4">
         <Button 
@@ -378,7 +325,7 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
         </Button>
         <div ref={qrCodeRef}>
           <QRCodeGenerator 
-            data={normalizedNote} 
+            data={selectedNote} 
             title="Delivery Note"
           />
         </div>
@@ -509,65 +456,58 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
                       <p className="text-sm text-muted-foreground mt-2">Loading delivery notes...</p>
                     </TableCell>
                   </TableRow>
-                ) : filteredNotes.length > 0 ? (
-                  filteredNotes.map((note) => {
-                    const normalizedNote = normalizeNote(note);
-                    return (
-                      <TableRow key={normalizedNote.id}>
-                        <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => viewNoteDetails(note)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">{normalizedNote.id.slice(0, 8)}...</TableCell>
-                        <TableCell>{normalizedNote.orderReference}</TableCell>
-                        <TableCell>{normalizedNote.receiverName}</TableCell>
-                        <TableCell>{new Date(normalizedNote.deliveryDate).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <span 
-                            className={
-                              normalizedNote.deliveryStatus === 'delivered' 
-                                ? 'text-green-600' 
-                                : normalizedNote.deliveryStatus === 'dispatched' 
-                                ? 'text-amber-600' 
-                                : 'text-blue-600'
-                            }
-                          >
-                            {normalizedNote.deliveryStatus}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Share2 className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => generateQRCode(note)}>
-                                <QrCode className="h-4 w-4 mr-2" />
-                                Generate QR Code
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => exportToPDF()}>
-                                <FileText className="h-4 w-4 mr-2" />
-                                Export as PDF
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => exportToExcel()}>
-                                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                                Export as Excel
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
+                ) : filteredNotes && filteredNotes.length > 0 ? (
+                  filteredNotes.map((note) => (
+                    <TableRow key={note.id}>
+                      <TableCell>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => viewNoteDetails(note)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{note.id.slice(0, 8)}...</TableCell>
+                      <TableCell>{note.orderReference}</TableCell>
+                      <TableCell>{note.receiverName}</TableCell>
+                      <TableCell>{new Date(note.deliveryDate).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <span 
+                          className={
+                            note.deliveryStatus === 'delivered' 
+                              ? 'text-green-600' 
+                              : note.deliveryStatus === 'dispatched' 
+                              ? 'text-amber-600' 
+                              : 'text-blue-600'
+                          }
+                        >
+                          {note.deliveryStatus}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Share2 className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => generateQRCode(note)}>
+                              <QrCode className="h-4 w-4 mr-2" />
+                              Generate QR Code
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => window.print()}>
+                              <Printer className="h-4 w-4 mr-2" />
+                              Print
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-4">
@@ -605,12 +545,20 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
                   <p>{selectedNote.receiverName}</p>
                 </div>
                 <div>
+                  <p className="text-sm font-medium">Contact:</p>
+                  <p>{selectedNote.receiverContact}</p>
+                </div>
+                <div>
                   <p className="text-sm font-medium">Date:</p>
                   <p>{new Date(selectedNote.deliveryDate).toLocaleDateString()}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium">Location:</p>
                   <p>{selectedNote.deliveryLocation}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Delivery Person:</p>
+                  <p>{selectedNote.deliveryPerson}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium">Status:</p>
@@ -627,7 +575,7 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
                 <div className="col-span-2">
                   <p className="text-sm font-medium">Items:</p>
                   <ul className="list-disc pl-5">
-                    {selectedNote.items && selectedNote.items.map((item, index) => (
+                    {selectedNote.items && Array.isArray(selectedNote.items) && selectedNote.items.map((item, index) => (
                       <li key={index}>
                         {item.name}: {item.quantity} {item.unit}
                       </li>
@@ -645,13 +593,9 @@ const DeliveryNoteList = ({ isOpen, onClose, deliveryData, refreshData }) => {
                   <QrCode className="h-4 w-4" />
                   Generate QR Code
                 </Button>
-                <Button size="sm" onClick={() => exportToPDF()}>
+                <Button size="sm" onClick={() => window.print()}>
                   <Printer className="h-4 w-4 mr-2" />
                   Print
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => exportToExcel()}>
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Export
                 </Button>
               </div>
             </div>
