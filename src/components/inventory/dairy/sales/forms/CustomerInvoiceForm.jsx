@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,11 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Upload, Mail, Phone, Eye } from "lucide-react";
+import { ArrowLeft, Upload, Plus, Trash } from "lucide-react";
 import CustomerInvoiceList from '../CustomerInvoiceList';
+import { supabase } from '@/integrations/supabase/supabase';
 
 const CustomerInvoiceForm = ({ onBack }) => {
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       invoiceDate: new Date().toISOString().split('T')[0],
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
@@ -19,24 +20,199 @@ const CustomerInvoiceForm = ({ onBack }) => {
       paymentTerms: 'bank_transfer'
     }
   });
+  
   const { toast } = useToast();
   const [showInvoiceList, setShowInvoiceList] = useState(false);
+  const [invoiceItems, setInvoiceItems] = useState([
+    { description: '', quantity: 1, price: 0, tax: 0, discount: 0, total: 0 }
+  ]);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [fileUpload, setFileUpload] = useState(null);
+  const [filePreview, setFilePreview] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   
-  const onSubmit = (data) => {
-    console.log("Invoice data:", data);
-    toast({
-      title: "Success",
-      description: "Invoice created successfully",
+  // Auto-calculate totals when invoice items change
+  useEffect(() => {
+    let sum = 0;
+    const updatedItems = invoiceItems.map(item => {
+      const quantity = parseFloat(item.quantity) || 0;
+      const price = parseFloat(item.price) || 0;
+      const discount = parseFloat(item.discount) || 0;
+      const tax = parseFloat(item.tax) || 0;
+      
+      // Calculate item total: (price * quantity - discount) * (1 + tax/100)
+      const baseAmount = price * quantity;
+      const afterDiscount = baseAmount - discount;
+      const withTax = afterDiscount * (1 + tax/100);
+      const total = Math.round(withTax * 100) / 100; // Round to 2 decimal places
+      
+      sum += total;
+      return { ...item, total };
     });
-    // Here you would normally save to database
+    
+    setInvoiceItems(updatedItems);
+    setTotalAmount(Math.round(sum * 100) / 100); // Round to 2 decimal places
+  }, [invoiceItems]);
+  
+  // Handle adding a new item row
+  const handleAddItem = () => {
+    setInvoiceItems([
+      ...invoiceItems, 
+      { description: '', quantity: 1, price: 0, tax: 0, discount: 0, total: 0 }
+    ]);
   };
-
-  const generateInvoiceNumber = () => {
-    // Simple invoice number generation logic
-    const prefix = "INV";
-    const randomNum = Math.floor(10000 + Math.random() * 90000);
-    const timestamp = new Date().getTime().toString().slice(-4);
-    return `${prefix}-${randomNum}-${timestamp}`;
+  
+  // Handle removing an item row
+  const handleRemoveItem = (index) => {
+    if (invoiceItems.length === 1) {
+      toast({
+        title: "Cannot remove",
+        description: "At least one item is required",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const newItems = [...invoiceItems];
+    newItems.splice(index, 1);
+    setInvoiceItems(newItems);
+  };
+  
+  // Handle changes to item fields
+  const handleItemChange = (index, field, value) => {
+    const newItems = [...invoiceItems];
+    newItems[index][field] = value;
+    setInvoiceItems(newItems);
+  };
+  
+  // Handle file upload
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check file type
+    const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload JPG, PNG, or PDF files only",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setFileUpload(file);
+    
+    // Create preview for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => setFilePreview(e.target.result);
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(file.name); // Just show the filename for PDFs
+    }
+  };
+  
+  // Upload file to Supabase
+  const uploadPaymentProof = async (file, invoiceId) => {
+    if (!file) return null;
+    
+    try {
+      setIsUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${invoiceId}-payment-proof.${fileExt}`;
+      const filePath = `payment-proofs/${fileName}`;
+      
+      const { data, error } = await supabase.storage
+        .from('invoices')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+      
+      if (error) throw error;
+      
+      const { data: publicURL } = supabase.storage
+        .from('invoices')
+        .getPublicUrl(filePath);
+      
+      return publicURL.publicUrl;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "File upload failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  const onSubmit = async (data) => {
+    try {
+      // Generate invoice ID
+      const invoiceId = `INV-${Date.now().toString().slice(-6)}`;
+      
+      // Upload payment proof if exists
+      let paymentProofUrl = null;
+      if (fileUpload) {
+        paymentProofUrl = await uploadPaymentProof(fileUpload, invoiceId);
+      }
+      
+      // Prepare invoice data
+      const invoiceData = {
+        id: invoiceId,
+        customerName: data.customerName,
+        customerContact: data.customerContact,
+        billingAddress: data.billingAddress,
+        invoiceDate: data.invoiceDate,
+        dueDate: data.dueDate,
+        items: invoiceItems,
+        tax: data.tax || 0,
+        discount: data.discount || 0,
+        totalAmount: totalAmount,
+        paymentTerms: data.paymentTerms,
+        paymentStatus: data.paymentStatus,
+        paymentProofUrl: paymentProofUrl,
+        createdAt: new Date().toISOString()
+      };
+      
+      console.log("Invoice data to be saved:", invoiceData);
+      
+      // Here you would normally save to database
+      // For demo, we'll just show a success message
+      toast({
+        title: "Success",
+        description: "Invoice created successfully",
+      });
+      
+      // Reset form
+      setInvoiceItems([{ description: '', quantity: 1, price: 0, tax: 0, discount: 0, total: 0 }]);
+      setFileUpload(null);
+      setFilePreview('');
+      
+      // Show the invoice list after creation
+      setShowInvoiceList(true);
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create invoice. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -55,7 +231,7 @@ const CustomerInvoiceForm = ({ onBack }) => {
           onClick={() => setShowInvoiceList(true)}
           className="flex items-center gap-2"
         >
-          <Eye className="h-4 w-4" /> View Invoices
+          View Invoices
         </Button>
       </div>
       
@@ -69,7 +245,7 @@ const CustomerInvoiceForm = ({ onBack }) => {
               <div className="space-y-2">
                 <Label>Invoice Number</Label>
                 <Input 
-                  defaultValue={generateInvoiceNumber()} 
+                  defaultValue={`INV-${Date.now().toString().slice(-6)}`} 
                   readOnly 
                   className="bg-gray-50"
                   {...register("invoiceNumber")} 
@@ -117,13 +293,87 @@ const CustomerInvoiceForm = ({ onBack }) => {
             <div className="space-y-2">
               <Label>Itemized Products/Services</Label>
               <div className="border rounded-lg p-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                  <Input placeholder="Item description" {...register("itemDescription")} />
-                  <Input type="number" placeholder="Quantity" {...register("itemQuantity")} />
-                  <Input type="number" placeholder="Unit price" {...register("itemPrice")} />
-                  <Input placeholder="Total" readOnly className="bg-gray-50" />
-                  <Button type="button" variant="outline">Add Item</Button>
-                </div>
+                {invoiceItems.map((item, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-2 items-end">
+                    <div>
+                      <Label className="text-xs">Description</Label>
+                      <Input 
+                        placeholder="Item description" 
+                        value={item.description}
+                        onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Quantity</Label>
+                      <Input 
+                        type="number" 
+                        placeholder="Quantity"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                        min="1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Unit Price</Label>
+                      <Input 
+                        type="number" 
+                        placeholder="Unit price"
+                        value={item.price}
+                        onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+                        min="0"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Discount</Label>
+                      <Input 
+                        type="number" 
+                        placeholder="Discount"
+                        value={item.discount}
+                        onChange={(e) => handleItemChange(index, 'discount', e.target.value)}
+                        min="0"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Tax (%)</Label>
+                      <Input 
+                        type="number" 
+                        placeholder="Tax %"
+                        value={item.tax}
+                        onChange={(e) => handleItemChange(index, 'tax', e.target.value)}
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="flex-grow">
+                        <Label className="text-xs">Total</Label>
+                        <Input 
+                          value={item.total.toLocaleString()} 
+                          readOnly 
+                          className="bg-gray-50"
+                        />
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleRemoveItem(index)}
+                        className="self-end"
+                      >
+                        <Trash className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleAddItem}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" /> Add Item
+                </Button>
               </div>
             </div>
 
@@ -136,6 +386,7 @@ const CustomerInvoiceForm = ({ onBack }) => {
                     min: { value: 0, message: "Tax cannot be negative" },
                     max: { value: 100, message: "Tax cannot exceed 100%" }
                   })} 
+                  defaultValue="0"
                 />
                 {errors.tax && (
                   <p className="text-sm text-red-500">{errors.tax.message}</p>
@@ -150,6 +401,7 @@ const CustomerInvoiceForm = ({ onBack }) => {
                     min: { value: 0, message: "Discount cannot be negative" },
                     max: { value: 100, message: "Discount cannot exceed 100%" }
                   })} 
+                  defaultValue="0"
                 />
                 {errors.discount && (
                   <p className="text-sm text-red-500">{errors.discount.message}</p>
@@ -196,37 +448,61 @@ const CustomerInvoiceForm = ({ onBack }) => {
 
             <div className="space-y-2">
               <Label>Total Amount (Auto-calculated)</Label>
-              <Input readOnly className="bg-gray-50" value="UGX 0" />
+              <Input 
+                readOnly 
+                className="bg-gray-50 font-bold" 
+                value={`UGX ${totalAmount.toLocaleString()}`} 
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Attach Payment Proof (JPG, PNG, PDF, max 5MB)</Label>
+              <div className="flex flex-col gap-3">
+                <Input 
+                  type="file" 
+                  accept=".jpg,.jpeg,.png,.pdf" 
+                  onChange={handleFileChange}
+                  className="max-w-md"
+                />
+                
+                {filePreview && (
+                  <div className="p-2 border rounded-md max-w-md">
+                    {filePreview.startsWith('data:image') ? (
+                      <img 
+                        src={filePreview} 
+                        alt="Payment proof preview" 
+                        className="h-24 object-contain"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Upload className="h-4 w-4" />
+                        {filePreview}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-4">
-              <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">Create Invoice</Button>
+              <Button 
+                type="submit" 
+                className="bg-[#0000a0] hover:bg-[#00008b]"
+                disabled={isUploading}
+              >
+                {isUploading ? "Creating Invoice..." : "Create Invoice"}
+              </Button>
+              
               <Button 
                 type="button" 
                 variant="outline" 
                 className="flex items-center gap-2"
-                onClick={() => console.log("Uploading payment proof...")}
+                onClick={() => {
+                  document.querySelector('input[type="file"]').click();
+                }}
               >
                 <Upload className="h-4 w-4" />
                 Attach Payment Proof
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex items-center gap-2"
-                onClick={() => console.log("Sending email...")}
-              >
-                <Mail className="h-4 w-4" />
-                Email Invoice
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex items-center gap-2"
-                onClick={() => console.log("Sending WhatsApp...")}
-              >
-                <Phone className="h-4 w-4" />
-                WhatsApp Invoice
               </Button>
             </div>
           </form>
