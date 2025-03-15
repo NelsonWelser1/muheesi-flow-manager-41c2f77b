@@ -52,6 +52,9 @@ import { useCreateInvoice } from './hooks/sales/invoices/useCreateInvoice';
 import { useUpdateInvoice } from './hooks/sales/invoices/useUpdateInvoice';
 import { useDeleteInvoice } from './hooks/sales/invoices/useDeleteInvoice';
 
+// Import accounting hooks
+import { useBillsExpenses } from './hooks/accounting/useBillsExpenses';
+
 // Export everything individually
 export {
     supabase,
@@ -99,4 +102,6 @@ export {
     useCreateInvoice,
     useUpdateInvoice,
     useDeleteInvoice,
+    // Accounting hooks
+    useBillsExpenses,
 };

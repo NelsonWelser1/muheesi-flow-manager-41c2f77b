@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,33 +7,155 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, FileText, Upload } from "lucide-react";
+import { ArrowLeft, FileText, Upload, Loader2, Calendar, Check, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { useBillsExpenses } from "@/integrations/supabase/hooks/accounting/useBillsExpenses";
+import { FormField } from "@/components/inventory/dairy/sales/forms/components/FormField";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
+const RecurringFrequencies = [
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'biweekly', label: 'Bi-weekly' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'quarterly', label: 'Quarterly' },
+  { value: 'yearly', label: 'Yearly' },
+];
 
 const BillsExpensesForm = ({ onBack }) => {
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [fileSelected, setFileSelected] = useState(null);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState("");
+  const fileInputRef = useRef(null);
+  
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
     defaultValues: {
       billDate: new Date().toISOString().split('T')[0],
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
       status: 'pending',
-      paymentMethod: 'bank_transfer'
+      paymentMethod: 'bank_transfer',
+      currency: 'UGX',
+      isRecurring: false,
+      recurringFrequency: '',
+      recurringEndDate: '',
     }
   });
-  const { toast } = useToast();
   
-  const generateBillNumber = () => {
-    const prefix = "BILL";
-    const randomNum = Math.floor(10000 + Math.random() * 90000);
-    const timestamp = new Date().getTime().toString().slice(-4);
-    return `${prefix}-${randomNum}-${timestamp}`;
+  const { toast } = useToast();
+  const { createBillExpense, uploadReceipt, getLatestBillNumber } = useBillsExpenses();
+  
+  const watchExpenseType = watch("expenseType");
+  
+  useEffect(() => {
+    const loadBillNumber = async () => {
+      const billNumber = await getLatestBillNumber();
+      setValue("billNumber", billNumber);
+    };
+    
+    loadBillNumber();
+  }, [setValue, getLatestBillNumber]);
+  
+  const onSubmit = async (data) => {
+    try {
+      console.log("Bill/Expense data:", data);
+      
+      // Add recurring fields if enabled
+      if (isRecurring) {
+        data.isRecurring = true;
+      } else {
+        data.isRecurring = false;
+        data.recurringFrequency = null;
+        data.recurringEndDate = null;
+      }
+      
+      // If file was uploaded, add the URL
+      if (uploadedFileUrl) {
+        data.receiptUrl = uploadedFileUrl;
+      }
+      
+      // Submit to Supabase
+      const result = await createBillExpense(data);
+      
+      if (result.success) {
+        // Reset the form
+        reset({
+          billDate: new Date().toISOString().split('T')[0],
+          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          status: 'pending',
+          paymentMethod: 'bank_transfer',
+          currency: 'UGX',
+          isRecurring: false,
+          recurringFrequency: '',
+          recurringEndDate: '',
+        });
+        
+        // Get a new bill number
+        const newBillNumber = await getLatestBillNumber();
+        setValue("billNumber", newBillNumber);
+        
+        // Reset file state
+        setFileSelected(null);
+        setUploadedFileUrl("");
+        
+        // Reset recurring
+        setIsRecurring(false);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Error",
+        description: "Failed to record expense. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
-  const onSubmit = (data) => {
-    console.log("Bill/Expense data:", data);
-    toast({
-      title: "Success",
-      description: "Bill/Expense recorded successfully",
-    });
-    // Here you would normally save to database
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFileSelected(file);
+    }
+  };
+  
+  const handleFileUpload = async () => {
+    if (!fileSelected) {
+      toast({
+        title: "No file selected",
+        description: "Please select a file to upload",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsUploading(true);
+    
+    try {
+      const billNumber = watch("billNumber");
+      const result = await uploadReceipt(fileSelected, billNumber);
+      
+      if (result.success) {
+        setUploadedFileUrl(result.url);
+        toast({
+          title: "Success",
+          description: "File uploaded successfully",
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload file. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  const handleRecurringToggle = (checked) => {
+    setIsRecurring(checked);
+    setValue("isRecurring", checked);
   };
 
   return (
@@ -55,11 +177,13 @@ const BillsExpensesForm = ({ onBack }) => {
               <div className="space-y-2">
                 <Label>Bill Number</Label>
                 <Input 
-                  defaultValue={generateBillNumber()} 
+                  {...register("billNumber", { required: "Bill number is required" })}
                   readOnly 
                   className="bg-gray-50"
-                  {...register("billNumber")} 
                 />
+                {errors.billNumber && (
+                  <p className="text-sm text-red-500">{errors.billNumber.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -104,7 +228,19 @@ const BillsExpensesForm = ({ onBack }) => {
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
-                <Input type="hidden" {...register("expenseType")} />
+                <Input type="hidden" {...register("expenseType", { required: "Expense type is required" })} />
+                {errors.expenseType && (
+                  <p className="text-sm text-red-500">{errors.expenseType.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Expense Details</Label>
+                <Textarea 
+                  {...register("expenseDetails")} 
+                  placeholder="Add details specific to this expense type"
+                  rows={3}
+                />
               </div>
 
               <div className="space-y-2">
@@ -180,31 +316,131 @@ const BillsExpensesForm = ({ onBack }) => {
               </div>
             </div>
 
+            {/* Recurring Settings */}
+            <div className="border rounded-md p-4 mt-4 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    id="recurring" 
+                    checked={isRecurring}
+                    onCheckedChange={handleRecurringToggle}
+                  />
+                  <Label htmlFor="recurring" className="cursor-pointer flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Set as Recurring
+                  </Label>
+                </div>
+                
+                {isRecurring && (
+                  <div className="text-xs text-green-600 flex items-center gap-1">
+                    <Check className="h-3 w-3" /> Recurring Enabled
+                  </div>
+                )}
+              </div>
+              
+              {isRecurring && (
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Frequency</Label>
+                    <Select onValueChange={(value) => setValue("recurringFrequency", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RecurringFrequencies.map((freq) => (
+                          <SelectItem key={freq.value} value={freq.value}>
+                            {freq.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input type="hidden" {...register("recurringFrequency")} />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>End Date</Label>
+                    <Input 
+                      type="date" 
+                      {...register("recurringEndDate")}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label>Notes</Label>
-              <Input {...register("notes")} placeholder="Additional notes (optional)" />
+              <Textarea 
+                {...register("notes")} 
+                placeholder="Additional notes (optional)"
+                rows={3}
+              />
+            </div>
+
+            {/* File Upload Section */}
+            <div className="border rounded-md p-4 bg-gray-50">
+              <div className="space-y-2">
+                <Label className="block mb-2">Attach Invoice/Receipt</Label>
+                
+                <div className="flex flex-col md:flex-row items-start gap-4">
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="hidden"
+                      accept="image/*,.pdf,.doc,.docx"
+                    />
+                    
+                    <div 
+                      className="border-2 border-dashed rounded-md p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="h-8 w-8 mx-auto text-gray-400" />
+                      <p className="mt-2 text-sm text-gray-600">
+                        {fileSelected ? fileSelected.name : "Click to select file"}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="flex items-center gap-2"
+                    onClick={handleFileUpload}
+                    disabled={!fileSelected || isUploading}
+                  >
+                    {isUploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Upload className="h-4 w-4" />
+                    )}
+                    {isUploading ? "Uploading..." : "Upload File"}
+                  </Button>
+                </div>
+                
+                {uploadedFileUrl && (
+                  <div className="mt-2 p-2 bg-green-50 text-green-700 rounded-md flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4" />
+                      <span className="text-sm">File uploaded successfully</span>
+                    </div>
+                    <a 
+                      href={uploadedFileUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm underline"
+                    >
+                      View File
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-4">
               <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">Record Expense</Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex items-center gap-2"
-                onClick={() => console.log("Uploading attachment...")}
-              >
-                <Upload className="h-4 w-4" />
-                Attach Invoice/Receipt
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex items-center gap-2"
-                onClick={() => console.log("Setting as recurring...")}
-              >
-                <FileText className="h-4 w-4" />
-                Set as Recurring
-              </Button>
             </div>
           </form>
         </CardContent>
