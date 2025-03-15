@@ -46,6 +46,12 @@ import { salesOrderUtils } from './hooks/sales/useSalesOrderUtils';
 import { useDeliveryNotes } from './hooks/sales/useDeliveryNotes';
 import { useCustomerInvoices } from './hooks/sales/useCustomerInvoices';
 
+// Import individual invoice hooks
+import { useFetchInvoices } from './hooks/sales/invoices/useFetchInvoices';
+import { useCreateInvoice } from './hooks/sales/invoices/useCreateInvoice';
+import { useUpdateInvoice } from './hooks/sales/invoices/useUpdateInvoice';
+import { useDeleteInvoice } from './hooks/sales/invoices/useDeleteInvoice';
+
 // Export everything individually
 export {
     supabase,
@@ -86,6 +92,11 @@ export {
     salesOrderUtils,
     // Delivery Notes
     useDeliveryNotes,
-    // Customer Invoices
+    // Customer Invoices - Main combined hook
     useCustomerInvoices,
+    // Individual Invoice hooks
+    useFetchInvoices,
+    useCreateInvoice,
+    useUpdateInvoice,
+    useDeleteInvoice,
 };
