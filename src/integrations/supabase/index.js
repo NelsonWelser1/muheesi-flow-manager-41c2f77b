@@ -44,6 +44,7 @@ import { useUpdateSalesOrder } from './hooks/sales/useUpdateSalesOrder';
 import { useDeleteSalesOrder } from './hooks/sales/useDeleteSalesOrder';
 import { salesOrderUtils } from './hooks/sales/useSalesOrderUtils';
 import { useDeliveryNotes } from './hooks/sales/useDeliveryNotes';
+import { useCustomerInvoices } from './hooks/sales/useCustomerInvoices';
 
 // Export everything individually
 export {
@@ -85,4 +86,6 @@ export {
     salesOrderUtils,
     // Delivery Notes
     useDeliveryNotes,
+    // Customer Invoices
+    useCustomerInvoices,
 };
