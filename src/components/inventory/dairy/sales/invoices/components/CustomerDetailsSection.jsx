@@ -1,18 +1,23 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const CustomerDetailsSection = ({ register, errors }) => {
+const CustomerDetailsSection = ({ register, errors, setValue }) => {
+  // Generate the invoice number only once when the component mounts
+  useEffect(() => {
+    // Only set the invoice number if it's not already set
+    setValue("invoiceNumber", `INV-000001`, { shouldDirty: false });
+  }, [setValue]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
         <Label>Invoice Number</Label>
         <Input 
-          defaultValue={`INV-${Date.now().toString().slice(-6)}`} 
+          {...register("invoiceNumber")}
           readOnly 
           className="bg-gray-50"
-          {...register("invoiceNumber")} 
         />
       </div>
 

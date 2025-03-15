@@ -26,7 +26,7 @@ export const useInvoiceForm = () => {
   const [invoices, setInvoices] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Fetch invoices on component mount
+  // Fetch invoices on component mount and get the next invoice number
   useEffect(() => {
     fetchInvoices();
   }, []);
@@ -198,19 +198,17 @@ export const useInvoiceForm = () => {
   // Submit form and save to Supabase
   const onSubmit = async (data) => {
     try {
-      // Generate invoice ID
-      const invoiceId = `INV-${Date.now().toString().slice(-6)}`;
       console.log("Form data before submission:", { ...data, items: invoiceItems, totalAmount });
       
       // Upload payment proof if exists
       let paymentProofUrl = null;
       if (fileUpload) {
-        paymentProofUrl = await uploadPaymentProof(fileUpload, invoiceId);
+        paymentProofUrl = await uploadPaymentProof(fileUpload, data.invoiceNumber);
       }
       
       // Prepare invoice data
       const invoiceData = {
-        id: invoiceId,
+        id: data.invoiceNumber,
         customer_name: data.customerName,
         customer_contact: data.customerContact,
         billing_address: data.billingAddress,

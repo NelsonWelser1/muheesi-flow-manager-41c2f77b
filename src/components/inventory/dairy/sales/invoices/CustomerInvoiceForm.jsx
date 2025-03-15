@@ -47,7 +47,11 @@ const CustomerInvoiceForm = ({ onBack }) => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <CustomerDetailsSection register={register} errors={errors} />
+            <CustomerDetailsSection 
+              register={register} 
+              errors={errors} 
+              setValue={setValue} 
+            />
 
             <InvoiceItemsSection 
               invoiceItems={invoiceItems}
