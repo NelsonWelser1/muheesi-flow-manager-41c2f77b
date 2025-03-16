@@ -1,292 +1,217 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useBillsExpenses } from "@/integrations/supabase/hooks/accounting/useBillsExpenses";
-import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { 
-  RefreshCw, 
-  FileDown, 
-  Search, 
-  FileText, 
-  Printer, 
-  FileSpreadsheet,
-  ArrowLeft
-} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrowLeft, FileSpreadsheet, FileText, Download, RefreshCw, Search } from "lucide-react";
+import { useBillsExpenses } from "@/integrations/supabase/hooks/accounting/useBillsExpenses";
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const BillsExpensesRecords = ({ onBack }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [timeRange, setTimeRange] = useState("all");
+  const [sortBy, setSortBy] = useState("date-desc");
   const { billsExpenses, loading, fetchBillsExpenses } = useBillsExpenses();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [timeRange, setTimeRange] = useState('all');
-  const [selectedTab, setSelectedTab] = useState('all');
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const { toast } = useToast();
-  const printRef = useRef(null);
 
   useEffect(() => {
     fetchBillsExpenses();
   }, []);
 
-  // Filter records based on search, time range, and tab
-  const filterRecords = () => {
-    let filtered = [...billsExpenses];
-    
-    // Apply search filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(record => 
-        record.supplier_name?.toLowerCase().includes(term) || 
-        record.bill_number?.toLowerCase().includes(term) ||
-        record.expense_type?.toLowerCase().includes(term)
-      );
-    }
-    
-    // Apply time range filter
-    const now = new Date();
-    if (timeRange === 'day') {
-      const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-      filtered = filtered.filter(record => record.created_at >= dayAgo);
-    } else if (timeRange === 'week') {
-      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      filtered = filtered.filter(record => record.created_at >= weekAgo);
-    } else if (timeRange === 'month') {
-      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-      filtered = filtered.filter(record => record.created_at >= monthAgo);
-    } else if (timeRange === 'year') {
-      const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000).toISOString();
-      filtered = filtered.filter(record => record.created_at >= yearAgo);
-    }
-    
-    // Apply tab filter
-    if (selectedTab !== 'all') {
-      filtered = filtered.filter(record => record.status === selectedTab);
-    }
-    
-    return filtered;
+  const handleRefresh = () => {
+    fetchBillsExpenses();
   };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const getTimeRangeDate = () => {
+    const now = new Date();
+    switch (timeRange) {
+      case "hour":
+        return new Date(now.setHours(now.getHours() - 1));
+      case "day":
+        return new Date(now.setDate(now.getDate() - 1));
+      case "week":
+        return new Date(now.setDate(now.getDate() - 7));
+      case "month":
+        return new Date(now.setMonth(now.getMonth() - 1));
+      case "year":
+        return new Date(now.setFullYear(now.getFullYear() - 1));
+      default:
+        return null;
+    }
+  };
+
+  const filteredRecords = billsExpenses
+    .filter(record => {
+      // Status filter
+      if (statusFilter !== "all" && record.status !== statusFilter) {
+        return false;
+      }
+
+      // Time range filter
+      if (timeRange !== "all") {
+        const timeRangeDate = getTimeRangeDate();
+        const recordDate = new Date(record.created_at);
+        if (recordDate < timeRangeDate) {
+          return false;
+        }
+      }
+
+      // Search term
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          record.bill_number?.toLowerCase().includes(searchLower) ||
+          record.supplier_name?.toLowerCase().includes(searchLower) ||
+          record.expense_type?.toLowerCase().includes(searchLower) ||
+          record.expense_details?.toLowerCase().includes(searchLower) ||
+          record.notes?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "date-asc":
+          return new Date(a.created_at) - new Date(b.created_at);
+        case "date-desc":
+          return new Date(b.created_at) - new Date(a.created_at);
+        case "amount-asc":
+          return a.amount - b.amount;
+        case "amount-desc":
+          return b.amount - a.amount;
+        case "name-asc":
+          return a.supplier_name.localeCompare(b.supplier_name);
+        case "name-desc":
+          return b.supplier_name.localeCompare(a.supplier_name);
+        default:
+          return new Date(b.created_at) - new Date(a.created_at);
+      }
+    });
 
   const exportToExcel = () => {
-    try {
-      const filteredData = filterRecords();
-      
-      if (filteredData.length === 0) {
-        toast({
-          title: "No data to export",
-          description: "There are no records matching your current filters.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Format data for Excel
-      const formattedData = filteredData.map(record => ({
+    const worksheet = XLSX.utils.json_to_sheet(
+      filteredRecords.map(record => ({
         'Bill Number': record.bill_number,
         'Supplier': record.supplier_name,
-        'Date': formatDate(record.bill_date),
-        'Due Date': formatDate(record.due_date),
+        'Date': record.bill_date ? format(new Date(record.bill_date), 'yyyy-MM-dd') : '',
+        'Due Date': record.due_date ? format(new Date(record.due_date), 'yyyy-MM-dd') : '',
         'Expense Type': record.expense_type,
-        'Amount': `${record.currency} ${parseFloat(record.amount).toLocaleString()}`,
-        'Status': record.status,
+        'Details': record.expense_details,
+        'Amount': record.amount,
+        'Currency': record.currency,
         'Payment Method': record.payment_method,
-        'Is Recurring': record.is_recurring ? 'Yes' : 'No',
+        'Status': record.status,
+        'Recurring': record.is_recurring ? 'Yes' : 'No',
         'Notes': record.notes
-      }));
-      
-      // Create workbook and worksheet
-      const ws = XLSX.utils.json_to_sheet(formattedData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Bills & Expenses');
-      
-      // Generate Excel file
-      const timestamp = format(new Date(), 'yyyy-MM-dd');
-      XLSX.writeFile(wb, `bills-expenses-${timestamp}.xlsx`);
-      
-      toast({
-        title: "Success",
-        description: "Data exported to Excel successfully",
-      });
-    } catch (error) {
-      console.error('Error exporting to Excel:', error);
-      toast({
-        title: "Error",
-        description: "Failed to export data to Excel",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const exportToPDF = () => {
-    try {
-      const filteredData = filterRecords();
-      
-      if (filteredData.length === 0) {
-        toast({
-          title: "No data to export",
-          description: "There are no records matching your current filters.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Initialize PDF document
-      const doc = new jsPDF();
-      
-      // Add title
-      doc.setFontSize(18);
-      doc.text('Bills & Expenses Report', 14, 22);
-      
-      // Add date
-      doc.setFontSize(11);
-      doc.text(`Generated on: ${format(new Date(), 'PPP')}`, 14, 30);
-      
-      // Prepare table data
-      const tableData = filteredData.map(record => [
-        record.bill_number,
-        record.supplier_name,
-        formatDate(record.bill_date),
-        record.expense_type,
-        `${record.currency} ${parseFloat(record.amount).toLocaleString()}`,
-        record.status,
-      ]);
-      
-      // Add table
-      doc.autoTable({
-        startY: 35,
-        head: [['Bill #', 'Supplier', 'Date', 'Type', 'Amount', 'Status']],
-        body: tableData,
-        theme: 'grid',
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [0, 0, 160] },
-      });
-      
-      // Save PDF
-      const timestamp = format(new Date(), 'yyyy-MM-dd');
-      doc.save(`bills-expenses-${timestamp}.pdf`);
-      
-      toast({
-        title: "Success",
-        description: "Data exported to PDF successfully",
-      });
-    } catch (error) {
-      console.error('Error exporting to PDF:', error);
-      toast({
-        title: "Error",
-        description: "Failed to export data to PDF",
-        variant: "destructive"
-      });
-    }
+      }))
+    );
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Bills & Expenses');
+    XLSX.writeFile(workbook, 'bills-expenses.xlsx');
   };
 
   const exportToCSV = () => {
-    try {
-      const filteredData = filterRecords();
-      
-      if (filteredData.length === 0) {
-        toast({
-          title: "No data to export",
-          description: "There are no records matching your current filters.",
-          variant: "destructive"
-        });
-        return;
+    const worksheet = XLSX.utils.json_to_sheet(
+      filteredRecords.map(record => ({
+        'Bill Number': record.bill_number,
+        'Supplier': record.supplier_name,
+        'Date': record.bill_date ? format(new Date(record.bill_date), 'yyyy-MM-dd') : '',
+        'Due Date': record.due_date ? format(new Date(record.due_date), 'yyyy-MM-dd') : '',
+        'Expense Type': record.expense_type,
+        'Details': record.expense_details,
+        'Amount': record.amount,
+        'Currency': record.currency,
+        'Payment Method': record.payment_method,
+        'Status': record.status,
+        'Recurring': record.is_recurring ? 'Yes' : 'No',
+        'Notes': record.notes
+      }))
+    );
+    const csv = XLSX.utils.sheet_to_csv(worksheet);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'bills-expenses.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.text('Bills & Expenses Report', 14, 16);
+    
+    doc.autoTable({
+      head: [['Bill Number', 'Supplier', 'Date', 'Amount', 'Status']],
+      body: filteredRecords.map(record => [
+        record.bill_number,
+        record.supplier_name,
+        record.bill_date ? format(new Date(record.bill_date), 'yyyy-MM-dd') : '',
+        `${record.currency} ${record.amount}`,
+        record.status
+      ]),
+      startY: 20,
+      theme: 'grid',
+      styles: {
+        fontSize: 8,
+        cellPadding: 2
+      },
+      headStyles: {
+        fillColor: [0, 0, 160],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240]
       }
-      
-      // Prepare headers
-      let csv = 'Bill Number,Supplier,Date,Due Date,Expense Type,Amount,Status,Payment Method,Is Recurring,Notes\n';
-      
-      // Add data
-      filteredData.forEach(record => {
-        const row = [
-          record.bill_number,
-          `"${record.supplier_name || ''}"`,
-          formatDate(record.bill_date),
-          formatDate(record.due_date),
-          `"${record.expense_type || ''}"`,
-          `${record.currency} ${parseFloat(record.amount).toLocaleString()}`,
-          record.status,
-          record.payment_method,
-          record.is_recurring ? 'Yes' : 'No',
-          `"${record.notes || ''}"`
-        ].join(',');
-        csv += row + '\n';
-      });
-      
-      // Create download link
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const timestamp = format(new Date(), 'yyyy-MM-dd');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `bills-expenses-${timestamp}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({
-        title: "Success",
-        description: "Data exported to CSV successfully",
-      });
-    } catch (error) {
-      console.error('Error exporting to CSV:', error);
-      toast({
-        title: "Error",
-        description: "Failed to export data to CSV",
-        variant: "destructive"
-      });
+    });
+    
+    doc.save('bills-expenses.pdf');
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'paid':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'overdue':
+        return 'bg-red-100 text-red-800';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-blue-100 text-blue-800';
     }
   };
 
-  const printRecords = () => {
-    try {
-      window.print();
-      
-      toast({
-        title: "Success",
-        description: "Print dialog opened",
-      });
-    } catch (error) {
-      console.error('Error printing records:', error);
-      toast({
-        title: "Error",
-        description: "Failed to open print dialog",
-        variant: "destructive"
-      });
-    }
+  const formatCurrency = (amount, currency = 'UGX') => {
+    return new Intl.NumberFormat('en-UG', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0
+    }).format(amount);
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return '—';
-    return format(new Date(dateString), 'MMM dd, yyyy');
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'paid':
-        return <Badge className="bg-green-100 text-green-800 border-green-300">Paid</Badge>;
-      case 'partial':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Partially Paid</Badge>;
-      case 'pending':
-        return <Badge className="bg-red-100 text-red-800 border-red-300">Pending</Badge>;
-      default:
-        return <Badge className="bg-gray-100 text-gray-800 border-gray-300">{status}</Badge>;
+    if (!dateString) return '';
+    try {
+      return format(new Date(dateString), 'MMM dd, yyyy');
+    } catch (e) {
+      return dateString;
     }
   };
-
-  const filteredRecords = filterRecords();
 
   return (
     <div className="space-y-4">
@@ -296,56 +221,49 @@ const BillsExpensesRecords = ({ onBack }) => {
           onClick={onBack}
           className="flex items-center gap-2"
         >
-          <ArrowLeft className="h-4 w-4" /> Back
+          <ArrowLeft className="h-4 w-4" /> Back to Form
         </Button>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            onClick={fetchBillsExpenses} 
-            disabled={loading}
-            className="flex items-center gap-2"
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            className="flex items-center gap-1"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
+            <RefreshCw className="h-4 w-4" />
+            Refresh
           </Button>
-          <div className="dropdown relative group">
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToExcel}
+              className="flex items-center gap-1"
+              title="Export to Excel"
             >
-              <FileDown className="h-4 w-4" />
-              <span>Export</span>
+              <FileSpreadsheet className="h-4 w-4" />
+              Excel
             </Button>
-            <div className="dropdown-menu absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md border border-gray-200 py-1 hidden group-hover:block z-10">
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start px-3 py-2 text-sm" 
-                onClick={exportToExcel}
-              >
-                <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start px-3 py-2 text-sm" 
-                onClick={exportToPDF}
-              >
-                <FileText className="h-4 w-4 mr-2" /> PDF
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start px-3 py-2 text-sm" 
-                onClick={exportToCSV}
-              >
-                <FileText className="h-4 w-4 mr-2" /> CSV
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start px-3 py-2 text-sm" 
-                onClick={printRecords}
-              >
-                <Printer className="h-4 w-4 mr-2" /> Print
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToCSV}
+              className="flex items-center gap-1"
+              title="Export to CSV"
+            >
+              <Download className="h-4 w-4" />
+              CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToPDF}
+              className="flex items-center gap-1"
+              title="Export to PDF"
+            >
+              <FileText className="h-4 w-4" />
+              PDF
+            </Button>
           </div>
         </div>
       </div>
@@ -353,147 +271,99 @@ const BillsExpensesRecords = ({ onBack }) => {
       <Card>
         <CardHeader>
           <CardTitle>Bills & Expenses Records</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4 mb-4 items-center justify-between">
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
               <Input
                 placeholder="Search records..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearch}
                 className="pl-8"
               />
             </div>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-32 md:w-40">
-                <SelectValue placeholder="Time Range" />
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by time" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="hour">Last Hour</SelectItem>
                 <SelectItem value="day">Last 24 Hours</SelectItem>
                 <SelectItem value="week">Last Week</SelectItem>
                 <SelectItem value="month">Last Month</SelectItem>
                 <SelectItem value="year">Last Year</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date-desc">Date (Newest)</SelectItem>
+                <SelectItem value="date-asc">Date (Oldest)</SelectItem>
+                <SelectItem value="amount-desc">Amount (Highest)</SelectItem>
+                <SelectItem value="amount-asc">Amount (Lowest)</SelectItem>
+                <SelectItem value="name-asc">Supplier (A-Z)</SelectItem>
+                <SelectItem value="name-desc">Supplier (Z-A)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-
-          <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab}>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="all" value={statusFilter} onValueChange={setStatusFilter}>
             <TabsList className="mb-4">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="pending">Pending</TabsTrigger>
-              <TabsTrigger value="partial">Partially Paid</TabsTrigger>
               <TabsTrigger value="paid">Paid</TabsTrigger>
+              <TabsTrigger value="overdue">Overdue</TabsTrigger>
+              <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="all" className="mt-0">
-              <RecordsTable 
-                records={filteredRecords} 
-                loading={loading} 
-                formatDate={formatDate}
-                getStatusBadge={getStatusBadge}
-              />
-            </TabsContent>
-            <TabsContent value="pending" className="mt-0">
-              <RecordsTable 
-                records={filteredRecords} 
-                loading={loading} 
-                formatDate={formatDate}
-                getStatusBadge={getStatusBadge}
-              />
-            </TabsContent>
-            <TabsContent value="partial" className="mt-0">
-              <RecordsTable 
-                records={filteredRecords} 
-                loading={loading} 
-                formatDate={formatDate}
-                getStatusBadge={getStatusBadge}
-              />
-            </TabsContent>
-            <TabsContent value="paid" className="mt-0">
-              <RecordsTable 
-                records={filteredRecords} 
-                loading={loading} 
-                formatDate={formatDate}
-                getStatusBadge={getStatusBadge}
-              />
+            <TabsContent value={statusFilter}>
+              {loading ? (
+                <div className="text-center py-8">Loading records...</div>
+              ) : filteredRecords.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No records found. Try adjusting your filters.
+                </div>
+              ) : (
+                <div className="border rounded-md">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Bill Number</TableHead>
+                        <TableHead>Supplier</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredRecords.map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell className="font-medium">{record.bill_number}</TableCell>
+                          <TableCell>{record.supplier_name}</TableCell>
+                          <TableCell>{formatDate(record.bill_date)}</TableCell>
+                          <TableCell>{formatDate(record.due_date)}</TableCell>
+                          <TableCell>{record.expense_type}</TableCell>
+                          <TableCell>{formatCurrency(record.amount, record.currency)}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(record.status)}`}>
+                              {record.status}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
-
-      {/* Hidden print content */}
-      <div ref={printRef} style={{ display: 'none' }}>
-        <h1 className="text-2xl font-bold mb-4">Bills & Expenses Report</h1>
-        <p className="mb-4">Generated on: {format(new Date(), 'PPP')}</p>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="border p-2 text-left">Bill #</th>
-              <th className="border p-2 text-left">Supplier</th>
-              <th className="border p-2 text-left">Date</th>
-              <th className="border p-2 text-left">Type</th>
-              <th className="border p-2 text-left">Amount</th>
-              <th className="border p-2 text-left">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRecords.map((record) => (
-              <tr key={record.id}>
-                <td className="border p-2">{record.bill_number}</td>
-                <td className="border p-2">{record.supplier_name}</td>
-                <td className="border p-2">{formatDate(record.bill_date)}</td>
-                <td className="border p-2">{record.expense_type}</td>
-                <td className="border p-2">{record.currency} {parseFloat(record.amount).toLocaleString()}</td>
-                <td className="border p-2">{record.status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-// Separate Records Table component
-const RecordsTable = ({ records, loading, formatDate, getStatusBadge }) => {
-  if (loading) {
-    return <div className="text-center py-8">Loading records...</div>;
-  }
-
-  if (records.length === 0) {
-    return <div className="text-center py-8">No records found</div>;
-  }
-
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bill #</th>
-            <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
-            <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-            <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-            <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-            <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-            <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {records.map((record) => (
-            <tr key={record.id} className="hover:bg-gray-50">
-              <td className="p-3 text-sm">{record.bill_number}</td>
-              <td className="p-3 text-sm">{record.supplier_name}</td>
-              <td className="p-3 text-sm">{formatDate(record.bill_date)}</td>
-              <td className="p-3 text-sm">{formatDate(record.due_date)}</td>
-              <td className="p-3 text-sm">{record.expense_type}</td>
-              <td className="p-3 text-sm">{record.currency} {parseFloat(record.amount).toLocaleString()}</td>
-              <td className="p-3 text-sm">{getStatusBadge(record.status)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 };
