@@ -2,25 +2,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, FileText, Upload, Loader2, Calendar, Check, X } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft } from "lucide-react";
 import { useBillsExpenses } from "@/integrations/supabase/hooks/accounting/useBillsExpenses";
-import { FormField } from "@/components/inventory/dairy/sales/forms/components/FormField";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-const RecurringFrequencies = [
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'biweekly', label: 'Bi-weekly' },
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'quarterly', label: 'Quarterly' },
-  { value: 'yearly', label: 'Yearly' },
-];
+// Import our new component modules
+import FormFieldGroup from './components/FormFieldGroup';
+import RecurringSection from './components/RecurringSection';
+import NotesField from './components/NotesField';
+import FileUploadSection from './components/FileUploadSection';
 
 const BillsExpensesForm = ({ onBack }) => {
   const [isRecurring, setIsRecurring] = useState(false);
@@ -44,8 +35,6 @@ const BillsExpensesForm = ({ onBack }) => {
   
   const { toast } = useToast();
   const { createBillExpense, uploadReceipt, getLatestBillNumber } = useBillsExpenses();
-  
-  const watchExpenseType = watch("expenseType");
   
   useEffect(() => {
     const loadBillNumber = async () => {
@@ -158,6 +147,19 @@ const BillsExpensesForm = ({ onBack }) => {
     setValue("isRecurring", checked);
   };
 
+  // Update fileInputRef to handle file selection
+  useEffect(() => {
+    if (fileInputRef.current) {
+      fileInputRef.current.addEventListener('change', handleFileChange);
+    }
+    
+    return () => {
+      if (fileInputRef.current) {
+        fileInputRef.current.removeEventListener('change', handleFileChange);
+      }
+    };
+  }, [fileInputRef]);
+
   return (
     <div className="space-y-4">
       <Button 
@@ -173,271 +175,28 @@ const BillsExpensesForm = ({ onBack }) => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Bill Number</Label>
-                <Input 
-                  {...register("billNumber", { required: "Bill number is required" })}
-                  readOnly 
-                  className="bg-gray-50"
-                />
-                {errors.billNumber && (
-                  <p className="text-sm text-red-500">{errors.billNumber.message}</p>
-                )}
-              </div>
+            <FormFieldGroup 
+              register={register} 
+              errors={errors} 
+              setValue={setValue} 
+            />
 
-              <div className="space-y-2">
-                <Label>Supplier Name</Label>
-                <Input {...register("supplierName", { required: "Supplier name is required" })} />
-                {errors.supplierName && (
-                  <p className="text-sm text-red-500">{errors.supplierName.message}</p>
-                )}
-              </div>
+            <RecurringSection 
+              isRecurring={isRecurring}
+              handleRecurringToggle={handleRecurringToggle}
+              setValue={setValue}
+              register={register}
+            />
 
-              <div className="space-y-2">
-                <Label>Bill Date</Label>
-                <Input type="date" {...register("billDate", { required: "Bill date is required" })} />
-                {errors.billDate && (
-                  <p className="text-sm text-red-500">{errors.billDate.message}</p>
-                )}
-              </div>
+            <NotesField register={register} />
 
-              <div className="space-y-2">
-                <Label>Due Date</Label>
-                <Input type="date" {...register("dueDate", { required: "Due date is required" })} />
-                {errors.dueDate && (
-                  <p className="text-sm text-red-500">{errors.dueDate.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Expense Type</Label>
-                <Select 
-                  onValueChange={(value) => setValue("expenseType", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select expense type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="rent">Rent</SelectItem>
-                    <SelectItem value="utilities">Utilities</SelectItem>
-                    <SelectItem value="raw_materials">Raw Materials</SelectItem>
-                    <SelectItem value="salaries">Salaries</SelectItem>
-                    <SelectItem value="equipment">Equipment</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input type="hidden" {...register("expenseType", { required: "Expense type is required" })} />
-                {errors.expenseType && (
-                  <p className="text-sm text-red-500">{errors.expenseType.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Expense Details</Label>
-                <Textarea 
-                  {...register("expenseDetails")} 
-                  placeholder="Add details specific to this expense type"
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Amount</Label>
-                <Input 
-                  type="number" 
-                  step="0.01"
-                  {...register("amount", { 
-                    required: "Amount is required",
-                    min: { value: 0.01, message: "Amount must be greater than 0" }
-                  })} 
-                />
-                {errors.amount && (
-                  <p className="text-sm text-red-500">{errors.amount.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Currency</Label>
-                <Select 
-                  defaultValue="UGX"
-                  onValueChange={(value) => setValue("currency", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select currency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="UGX">UGX</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                    <SelectItem value="GBP">GBP</SelectItem>
-                    <SelectItem value="JPY">JPY</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input type="hidden" {...register("currency", { value: "UGX" })} />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Payment Method</Label>
-                <Select 
-                  defaultValue="bank_transfer"
-                  onValueChange={(value) => setValue("paymentMethod", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select payment method" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="credit">Credit</SelectItem>
-                    <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input type="hidden" {...register("paymentMethod")} />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select 
-                  defaultValue="pending"
-                  onValueChange={(value) => setValue("status", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="overdue">Overdue</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input type="hidden" {...register("status")} />
-              </div>
-            </div>
-
-            {/* Recurring Settings */}
-            <div className="border rounded-md p-4 mt-4 bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    id="recurring" 
-                    checked={isRecurring}
-                    onCheckedChange={handleRecurringToggle}
-                  />
-                  <Label htmlFor="recurring" className="cursor-pointer flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Set as Recurring
-                  </Label>
-                </div>
-                
-                {isRecurring && (
-                  <div className="text-xs text-green-600 flex items-center gap-1">
-                    <Check className="h-3 w-3" /> Recurring Enabled
-                  </div>
-                )}
-              </div>
-              
-              {isRecurring && (
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Frequency</Label>
-                    <Select onValueChange={(value) => setValue("recurringFrequency", value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select frequency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {RecurringFrequencies.map((freq) => (
-                          <SelectItem key={freq.value} value={freq.value}>
-                            {freq.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Input type="hidden" {...register("recurringFrequency")} />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>End Date</Label>
-                    <Input 
-                      type="date" 
-                      {...register("recurringEndDate")}
-                      min={new Date().toISOString().split('T')[0]}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Notes</Label>
-              <Textarea 
-                {...register("notes")} 
-                placeholder="Additional notes (optional)"
-                rows={3}
-              />
-            </div>
-
-            {/* File Upload Section */}
-            <div className="border rounded-md p-4 bg-gray-50">
-              <div className="space-y-2">
-                <Label className="block mb-2">Attach Invoice/Receipt</Label>
-                
-                <div className="flex flex-col md:flex-row items-start gap-4">
-                  <div className="flex-1">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                      className="hidden"
-                      accept="image/*,.pdf,.doc,.docx"
-                    />
-                    
-                    <div 
-                      className="border-2 border-dashed rounded-md p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Upload className="h-8 w-8 mx-auto text-gray-400" />
-                      <p className="mt-2 text-sm text-gray-600">
-                        {fileSelected ? fileSelected.name : "Click to select file"}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="flex items-center gap-2"
-                    onClick={handleFileUpload}
-                    disabled={!fileSelected || isUploading}
-                  >
-                    {isUploading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Upload className="h-4 w-4" />
-                    )}
-                    {isUploading ? "Uploading..." : "Upload File"}
-                  </Button>
-                </div>
-                
-                {uploadedFileUrl && (
-                  <div className="mt-2 p-2 bg-green-50 text-green-700 rounded-md flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4" />
-                      <span className="text-sm">File uploaded successfully</span>
-                    </div>
-                    <a 
-                      href={uploadedFileUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm underline"
-                    >
-                      View File
-                    </a>
-                  </div>
-                )}
-              </div>
-            </div>
+            <FileUploadSection 
+              fileInputRef={fileInputRef}
+              fileSelected={fileSelected}
+              handleFileUpload={handleFileUpload}
+              isUploading={isUploading}
+              uploadedFileUrl={uploadedFileUrl}
+            />
 
             <div className="flex gap-4">
               <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">Record Expense</Button>
