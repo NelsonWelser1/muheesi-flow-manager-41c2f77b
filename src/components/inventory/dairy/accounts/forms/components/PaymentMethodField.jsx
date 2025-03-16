@@ -4,14 +4,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const PaymentMethodField = ({ setValue, register }) => {
-  // Ensure setValue is properly passed from parent
+const PaymentMethodField = ({ setValue, register, errors }) => {
+  // Ensure setValue is properly used
   const handleValueChange = (value) => {
-    if (setValue && typeof setValue === 'function') {
-      setValue("paymentMethod", value);
-    } else {
-      console.error("setValue is not a function in PaymentMethodField");
-    }
+    setValue("paymentMethod", value);
   };
 
   return (
@@ -32,6 +28,9 @@ const PaymentMethodField = ({ setValue, register }) => {
         </SelectContent>
       </Select>
       <Input type="hidden" {...register("paymentMethod")} />
+      {errors?.paymentMethod && (
+        <p className="text-sm text-red-500">{errors.paymentMethod.message}</p>
+      )}
     </div>
   );
 };

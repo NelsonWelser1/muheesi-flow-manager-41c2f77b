@@ -7,11 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const StatusField = ({ setValue, register, errors }) => {
   // Ensure setValue is properly passed from parent
   const handleValueChange = (value) => {
-    if (setValue && typeof setValue === 'function') {
-      setValue("status", value);
-    } else {
-      console.error("setValue is not a function in StatusField");
-    }
+    setValue("status", value);
   };
 
   return (
@@ -32,6 +28,9 @@ const StatusField = ({ setValue, register, errors }) => {
         </SelectContent>
       </Select>
       <Input type="hidden" {...register("status")} />
+      {errors?.status && (
+        <p className="text-sm text-red-500">{errors.status.message}</p>
+      )}
     </div>
   );
 };
