@@ -1,7 +1,6 @@
 
 import React from 'react';
 import BillNumberField from './BillNumberField';
-import BasicInfoFields from './BasicInfoFields';
 import ExpenseTypeField from './ExpenseTypeField';
 import AmountField from './AmountField';
 import CurrencyField from './CurrencyField';
@@ -13,9 +12,42 @@ const FormFieldGroup = ({ register, errors, setValue }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <BillNumberField register={register} errors={errors} />
-      <BasicInfoFields register={register} errors={errors} />
+      <div className="space-y-2">
+        <div className="space-y-2">
+          <label className="block text-gray-700">Supplier Name</label>
+          <input 
+            className="w-full p-2 border border-gray-300 rounded"
+            {...register("supplierName", { required: "Supplier name is required" })}
+          />
+          {errors.supplierName && (
+            <p className="text-sm text-red-500">{errors.supplierName.message}</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <label className="block text-gray-700">Bill Date</label>
+          <input 
+            type="date" 
+            className="w-full p-2 border border-gray-300 rounded"
+            {...register("billDate", { required: "Bill date is required" })}
+          />
+          {errors.billDate && (
+            <p className="text-sm text-red-500">{errors.billDate.message}</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <label className="block text-gray-700">Due Date</label>
+          <input 
+            type="date" 
+            className="w-full p-2 border border-gray-300 rounded"
+            {...register("dueDate", { required: "Due date is required" })}
+          />
+          {errors.dueDate && (
+            <p className="text-sm text-red-500">{errors.dueDate.message}</p>
+          )}
+        </div>
+      </div>
       <div className="space-y-4">
-        <ExpenseTypeField register={register} errors={errors} />
+        <ExpenseTypeField register={register} errors={errors} setValue={setValue} />
         <ExpenseDetailsField register={register} />
       </div>
       <div className="space-y-4">
@@ -27,8 +59,8 @@ const FormFieldGroup = ({ register, errors, setValue }) => {
             <CurrencyField register={register} errors={errors} />
           </div>
         </div>
-        <PaymentMethodField register={register} errors={errors} />
-        <StatusField register={register} errors={errors} />
+        <PaymentMethodField register={register} setValue={setValue} />
+        <StatusField register={register} errors={errors} setValue={setValue} />
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useBillsExpenses } from "@/integrations/supabase/hooks/accounting/useBillsExpenses";
+import { toast } from "@/components/ui/use-toast";
 
 // Import our component modules
 import FormFieldGroup from './components/FormFieldGroup';
@@ -67,6 +68,11 @@ const BillsExpensesForm = ({ onBack }) => {
       const result = await createBillExpense(data);
       
       if (result.success) {
+        toast({
+          title: "Bill/Expense saved",
+          description: "Your bill/expense record has been saved successfully.",
+        });
+        
         // Reset the form
         reset({
           billDate: new Date().toISOString().split('T')[0],
@@ -92,6 +98,11 @@ const BillsExpensesForm = ({ onBack }) => {
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      toast({
+        title: "Error",
+        description: "There was an error saving your bill/expense record.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -104,6 +115,11 @@ const BillsExpensesForm = ({ onBack }) => {
   
   const handleFileUpload = async () => {
     if (!fileSelected) {
+      toast({
+        title: "No file selected",
+        description: "Please select a file to upload first.",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -115,9 +131,18 @@ const BillsExpensesForm = ({ onBack }) => {
       
       if (result.success) {
         setUploadedFileUrl(result.url);
+        toast({
+          title: "File uploaded",
+          description: "Your receipt has been uploaded successfully.",
+        });
       }
     } catch (error) {
       console.error("Error uploading file:", error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your receipt.",
+        variant: "destructive",
+      });
     } finally {
       setIsUploading(false);
     }

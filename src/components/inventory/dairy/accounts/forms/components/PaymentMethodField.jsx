@@ -5,12 +5,21 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PaymentMethodField = ({ setValue, register }) => {
+  // Ensure setValue is properly passed from parent
+  const handleValueChange = (value) => {
+    if (setValue && typeof setValue === 'function') {
+      setValue("paymentMethod", value);
+    } else {
+      console.error("setValue is not a function in PaymentMethodField");
+    }
+  };
+
   return (
     <div className="space-y-2">
       <Label>Payment Method</Label>
       <Select 
         defaultValue="bank_transfer"
-        onValueChange={(value) => setValue("paymentMethod", value)}
+        onValueChange={handleValueChange}
       >
         <SelectTrigger>
           <SelectValue placeholder="Select payment method" />
