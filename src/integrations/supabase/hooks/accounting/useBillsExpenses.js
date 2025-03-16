@@ -55,9 +55,28 @@ export const useBillsExpenses = () => {
       setLoading(true);
       console.log('Creating bill/expense:', billExpenseData);
       
+      // Map form fields to database columns
+      const mappedData = {
+        bill_number: billExpenseData.billNumber,
+        bill_date: billExpenseData.billDate,
+        due_date: billExpenseData.dueDate,
+        supplier_name: billExpenseData.supplierName,
+        expense_type: billExpenseData.expenseType,
+        expense_details: billExpenseData.expenseDetails,
+        amount: parseFloat(billExpenseData.amount),
+        currency: billExpenseData.currency,
+        payment_method: billExpenseData.paymentMethod,
+        status: billExpenseData.status,
+        notes: billExpenseData.notes,
+        is_recurring: billExpenseData.isRecurring,
+        recurring_frequency: billExpenseData.recurringFrequency,
+        recurring_end_date: billExpenseData.recurringEndDate,
+        receipt_url: billExpenseData.receiptUrl
+      };
+      
       const { data, error } = await supabase
         .from('bills_expenses')
-        .insert(billExpenseData)
+        .insert(mappedData)
         .select();
       
       if (error) {
@@ -149,7 +168,7 @@ export const useBillsExpenses = () => {
       const { data, error } = await supabase
         .from('bills_expenses')
         .select('bill_number')
-        .order('bill_number', { ascending: false })
+        .order('bill_number', { ascending: true })
         .limit(1);
       
       if (error) {

@@ -3,21 +3,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { useBillsExpenses } from "@/integrations/supabase/hooks/accounting/useBillsExpenses";
 
-// Import our new component modules
+// Import our component modules
 import FormFieldGroup from './components/FormFieldGroup';
 import RecurringSection from './components/RecurringSection';
 import NotesField from './components/NotesField';
 import FileUploadSection from './components/FileUploadSection';
+import BillsExpensesRecords from '../records/BillsExpensesRecords';
 
 const BillsExpensesForm = ({ onBack }) => {
   const [isRecurring, setIsRecurring] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [fileSelected, setFileSelected] = useState(null);
   const [uploadedFileUrl, setUploadedFileUrl] = useState("");
+  const [viewMode, setViewMode] = useState("form"); // form or records
   const fileInputRef = useRef(null);
   
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
@@ -33,7 +34,6 @@ const BillsExpensesForm = ({ onBack }) => {
     }
   });
   
-  const { toast } = useToast();
   const { createBillExpense, uploadReceipt, getLatestBillNumber } = useBillsExpenses();
   
   useEffect(() => {
@@ -43,7 +43,7 @@ const BillsExpensesForm = ({ onBack }) => {
     };
     
     loadBillNumber();
-  }, [setValue, getLatestBillNumber]);
+  }, [setValue]);
   
   const onSubmit = async (data) => {
     try {
@@ -92,11 +92,6 @@ const BillsExpensesForm = ({ onBack }) => {
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      toast({
-        title: "Error",
-        description: "Failed to record expense. Please try again.",
-        variant: "destructive"
-      });
     }
   };
   
@@ -109,11 +104,6 @@ const BillsExpensesForm = ({ onBack }) => {
   
   const handleFileUpload = async () => {
     if (!fileSelected) {
-      toast({
-        title: "No file selected",
-        description: "Please select a file to upload",
-        variant: "destructive"
-      });
       return;
     }
     
@@ -125,18 +115,9 @@ const BillsExpensesForm = ({ onBack }) => {
       
       if (result.success) {
         setUploadedFileUrl(result.url);
-        toast({
-          title: "Success",
-          description: "File uploaded successfully",
-        });
       }
     } catch (error) {
       console.error("Error uploading file:", error);
-      toast({
-        title: "Error",
-        description: "Failed to upload file. Please try again.",
-        variant: "destructive"
-      });
     } finally {
       setIsUploading(false);
     }
@@ -160,15 +141,27 @@ const BillsExpensesForm = ({ onBack }) => {
     };
   }, [fileInputRef]);
 
+  if (viewMode === "records") {
+    return <BillsExpensesRecords onBack={() => setViewMode("form")} />;
+  }
+
   return (
     <div className="space-y-4">
-      <Button 
-        variant="outline" 
-        onClick={onBack}
-        className="flex items-center gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back
-      </Button>
+      <div className="flex justify-between items-center">
+        <Button 
+          variant="outline" 
+          onClick={onBack}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => setViewMode("records")}
+        >
+          View Records
+        </Button>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Bills & Expenses Form</CardTitle>
