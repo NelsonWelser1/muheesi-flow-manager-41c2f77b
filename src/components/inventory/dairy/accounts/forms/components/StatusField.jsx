@@ -2,20 +2,21 @@
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 const StatusField = ({ setValue, register, errors }) => {
-  // Ensure setValue is properly passed from parent
-  const handleValueChange = (value) => {
-    setValue("status", value);
-  };
-
   return (
     <div className="space-y-2">
       <Label>Status</Label>
       <Select 
         defaultValue="pending"
-        onValueChange={handleValueChange}
+        onValueChange={(value) => setValue("status", value)}
       >
         <SelectTrigger>
           <SelectValue placeholder="Select status" />
@@ -27,7 +28,10 @@ const StatusField = ({ setValue, register, errors }) => {
           <SelectItem value="cancelled">Cancelled</SelectItem>
         </SelectContent>
       </Select>
-      <Input type="hidden" {...register("status")} />
+      <Input 
+        type="hidden" 
+        {...register("status", { required: "Status is required" })} 
+      />
       {errors?.status && (
         <p className="text-sm text-red-500">{errors.status.message}</p>
       )}
