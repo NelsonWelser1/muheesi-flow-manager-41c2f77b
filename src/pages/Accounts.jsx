@@ -17,7 +17,7 @@ const Accounts = () => {
       case 'bills-expenses-form':
         return <BillsExpensesForm onBack={() => setActiveView(null)} />;
       case 'payments-receipts-form':
-        return <PaymentsReceiptsForm onBack={() => setActiveView(null)} />;
+        return <PaymentsReceiptsForm onBack={() => setActiveView(null)} setActiveView={setActiveView} />;
       case 'payroll-payslips-form':
         return <PayrollPayslipsForm onBack={() => setActiveView(null)} />;
       case 'bills-expenses-records':

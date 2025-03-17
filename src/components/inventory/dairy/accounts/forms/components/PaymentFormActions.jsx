@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { CreditCard, Mail, Download } from "lucide-react";
+import { CreditCard } from "lucide-react";
 
 const PaymentFormActions = ({ paymentType }) => {
   return (

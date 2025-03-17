@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { usePaymentReceiptForm } from "./hooks/usePaymentReceiptForm";
 import PaymentFormContent from './components/PaymentFormContent';
 
-const PaymentsReceiptsForm = ({ onBack }) => {
+const PaymentsReceiptsForm = ({ onBack, setActiveView }) => {
   const { 
     register, 
     handleSubmit, 
@@ -15,7 +15,7 @@ const PaymentsReceiptsForm = ({ onBack }) => {
     errors, 
     onSubmit,
     paymentNumber
-  } = usePaymentReceiptForm();
+  } = usePaymentReceiptForm(setActiveView);
 
   return (
     <div className="space-y-4">

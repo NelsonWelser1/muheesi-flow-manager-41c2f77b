@@ -10,7 +10,7 @@ const PaymentFormContent = ({ register, errors, setValue, watch, paymentNumber }
   const paymentType = watch('paymentType');
   
   return (
-    <form className="space-y-4">
+    <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <PaymentTypeField register={register} setValue={setValue} />
         <PaymentNumberField register={register} value={paymentNumber} />
@@ -18,7 +18,7 @@ const PaymentFormContent = ({ register, errors, setValue, watch, paymentNumber }
         <PaymentDetailsFields register={register} errors={errors} setValue={setValue} />
       </div>
       <PaymentFormActions paymentType={paymentType} />
-    </form>
+    </div>
   );
 };
 

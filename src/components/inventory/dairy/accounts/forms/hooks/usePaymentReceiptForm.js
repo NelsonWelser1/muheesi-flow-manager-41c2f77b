@@ -4,7 +4,7 @@ import { usePaymentsReceipts } from "@/integrations/supabase/hooks/accounting/pa
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
-export const usePaymentReceiptForm = () => {
+export const usePaymentReceiptForm = (setActiveView) => {
   const [paymentNumber, setPaymentNumber] = useState("");
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
     defaultValues: {
@@ -34,6 +34,11 @@ export const usePaymentReceiptForm = () => {
       const result = await createPayment(data);
       
       if (result.success) {
+        toast({
+          title: "Success",
+          description: `${data.paymentType === 'received' ? 'Receipt' : 'Payment'} recorded successfully`,
+        });
+        
         // Reset form to default values
         reset({
           paymentDate: new Date().toISOString().split('T')[0],
@@ -47,6 +52,11 @@ export const usePaymentReceiptForm = () => {
         const newPaymentNumber = generatePaymentNumber('received');
         setPaymentNumber(newPaymentNumber);
         setValue('paymentNumber', newPaymentNumber);
+        
+        // Switch to records view after successful submission
+        if (setActiveView) {
+          setActiveView('payments-receipts-records');
+        }
       }
     } catch (error) {
       console.error("Error submitting form:", error);

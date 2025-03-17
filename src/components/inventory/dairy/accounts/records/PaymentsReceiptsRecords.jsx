@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw } from "lucide-react";
+import { ArrowLeft, RefreshCcw } from "lucide-react";
 import { usePaymentsReceipts } from "@/integrations/supabase/hooks/accounting/payments/usePaymentsReceipts";
 import SearchFilters from './components/SearchFilters';
 import StatusTabs from './components/StatusTabs';
@@ -10,7 +10,7 @@ import PaymentsReceiptsTable from './components/PaymentsReceiptsTable';
 import ExportActions from './components/ExportActions';
 import { useRecordsFilter } from './hooks/useRecordsFilter';
 
-const PaymentsReceiptsRecords = () => {
+const PaymentsReceiptsRecords = ({ onBack }) => {
   const { payments, loading, fetchPayments } = usePaymentsReceipts();
   const {
     searchTerm,
@@ -27,6 +27,13 @@ const PaymentsReceiptsRecords = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
+        <Button 
+          variant="outline" 
+          onClick={onBack}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back
+        </Button>
         <h2 className="text-2xl font-bold">Payments & Receipts Records</h2>
         <div className="flex gap-2">
           <ExportActions filteredRecords={filteredRecords} />
@@ -58,8 +65,11 @@ const PaymentsReceiptsRecords = () => {
           <StatusTabs
             statusFilter={statusFilter}
             setStatusFilter={setStatusFilter}
-            filteredRecords={filteredRecords}
-            loading={loading}
+          />
+          
+          <PaymentsReceiptsTable 
+            records={filteredRecords} 
+            loading={loading} 
           />
         </CardContent>
       </Card>

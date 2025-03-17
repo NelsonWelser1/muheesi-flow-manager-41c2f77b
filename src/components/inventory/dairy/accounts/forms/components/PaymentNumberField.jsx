@@ -8,7 +8,7 @@ const PaymentNumberField = ({ value, register }) => {
     <div className="space-y-2">
       <Label>Payment Number</Label>
       <Input 
-        value={value} 
+        value={value || ''} 
         readOnly 
         className="bg-gray-50"
         {...register("paymentNumber")} 
