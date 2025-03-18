@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.payments_receipts (
   reference_number TEXT,
   status TEXT NOT NULL,
   notes TEXT,
+  user_id UUID DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

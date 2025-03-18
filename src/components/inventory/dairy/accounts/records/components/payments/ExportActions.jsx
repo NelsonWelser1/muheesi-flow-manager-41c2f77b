@@ -1,229 +1,209 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
-  DropdownMenuTrigger, 
   DropdownMenuContent, 
-  DropdownMenuItem 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { 
-  FileDown, 
-  FileText, 
-  FileSpreadsheet, 
-  Printer, 
-  ChevronDown, 
-  Loader2
-} from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { format } from 'date-fns';
+import { Download, FileSpreadsheet, FileText, Printer } from "lucide-react";
 import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { format } from 'date-fns';
 
 const ExportActions = ({ filteredRecords }) => {
-  const [exporting, setExporting] = useState(false);
-  const { toast } = useToast();
-
-  const handleExport = async (format) => {
-    if (!filteredRecords?.length) {
-      toast({
-        title: "No records to export",
-        description: "There are no payment records to export.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setExporting(true);
-      const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm');
-      const filename = `payments_receipts_${timestamp}`;
-
-      // Prepare data for export
-      const exportData = filteredRecords.map(item => ({
-        "Payment Type": item.paymentType === 'received' ? 'Payment Received' : 'Payment Issued',
-        "Payment Number": item.paymentNumber,
-        "Name": item.partyName,
-        "Payment Date": item.paymentDate ? format(new Date(item.paymentDate), 'yyyy-MM-dd') : 'N/A',
-        "Payment Method": item.paymentMethod?.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase()),
-        "Amount": item.amount,
-        "Currency": item.currency,
-        "Reference Number": item.referenceNumber || 'N/A',
-        "Status": item.status,
-        "Notes": item.notes || ''
-      }));
-
-      switch (format) {
-        case 'csv':
-          exportToCSV(exportData, filename);
-          break;
-        case 'excel':
-          exportToExcel(exportData, filename);
-          break;
-        case 'pdf':
-          exportToPDF(exportData, filename);
-          break;
-        case 'print':
-          printData(exportData);
-          break;
-      }
-
-      toast({
-        title: "Export successful",
-        description: `Payment records have been exported as ${format.toUpperCase()}.`,
-      });
-    } catch (error) {
-      console.error("Export error:", error);
-      toast({
-        title: "Export failed",
-        description: "There was a problem exporting the payment records.",
-        variant: "destructive",
-      });
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  // Export to CSV
-  const exportToCSV = (data, filename) => {
-    // Convert data to CSV format
-    const headers = Object.keys(data[0]).join(',');
-    const csvData = data.map(row => 
-      Object.values(row).map(value => 
-        typeof value === 'string' && value.includes(',') ? `"${value}"` : value
-      ).join(',')
-    ).join('\n');
-    const csv = `${headers}\n${csvData}`;
-    
-    // Create download link
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${filename}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Export to Excel
-  const exportToExcel = (data, filename) => {
-    const worksheet = XLSX.utils.json_to_sheet(data);
+  const exportToCSV = () => {
+    const formattedData = formatDataForExport(filteredRecords);
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Payments");
-    XLSX.writeFile(workbook, `${filename}.xlsx`);
+    
+    // Generate filename with timestamp
+    const filename = `payments_receipts_${format(new Date(), 'yyyyMMdd_HHmmss')}.csv`;
+    
+    // Export to CSV
+    XLSX.writeFile(workbook, filename);
   };
 
-  // Export to PDF
-  const exportToPDF = (data, filename) => {
+  const exportToExcel = () => {
+    const formattedData = formatDataForExport(filteredRecords);
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Payments");
+    
+    // Generate filename with timestamp
+    const filename = `payments_receipts_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    
+    // Export to Excel
+    XLSX.writeFile(workbook, filename);
+  };
+
+  const exportToPDF = () => {
+    const formattedData = formatDataForExport(filteredRecords);
     const doc = new jsPDF();
     
-    // Add title
-    doc.setFontSize(18);
-    doc.text('Payments & Receipts Report', 14, 22);
-    doc.setFontSize(11);
-    doc.text(`Generated on: ${format(new Date(), 'MMMM dd, yyyy')}`, 14, 30);
+    doc.setFontSize(16);
+    doc.text("Payments & Receipts Report", 14, 16);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${format(new Date(), 'PPpp')}`, 14, 22);
     
-    // Create the table
-    autoTable(doc, {
-      head: [Object.keys(data[0])],
-      body: data.map(item => Object.values(item)),
-      startY: 40,
-      styles: {
-        fontSize: 8,
-        cellPadding: 2
-      },
-      headStyles: {
-        fillColor: [0, 0, 160]
-      },
-      alternateRowStyles: {
-        fillColor: [240, 240, 240]
-      }
+    const tableColumn = ["Number", "Type", "Name", "Date", "Amount", "Method", "Reference", "Status"];
+    const tableRows = formattedData.map(item => [
+      item.Number,
+      item.Type,
+      item.Name,
+      item.Date,
+      item.Amount,
+      item.Method,
+      item.Reference,
+      item.Status
+    ]);
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+      theme: 'grid',
+      headStyles: { fillColor: [0, 0, 160] }
     });
     
-    doc.save(`${filename}.pdf`);
+    const filename = `payments_receipts_${format(new Date(), 'yyyyMMdd_HHmmss')}.pdf`;
+    doc.save(filename);
   };
 
-  // Print data
-  const printData = (data) => {
+  const printData = () => {
+    const printContent = formatDataForPrint(filteredRecords);
     const printWindow = window.open('', '_blank');
-    
     printWindow.document.write(`
       <html>
         <head>
           <title>Payments & Receipts Report</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            h1 { color: #0000a0; }
-            table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-            th { background-color: #0000a0; color: white; text-align: left; padding: 8px; }
-            td { border: 1px solid #ddd; padding: 8px; }
-            tr:nth-child(even) { background-color: #f2f2f2; }
-            .report-date { margin-bottom: 20px; color: #666; }
-            @media print {
-              .no-print { display: none; }
-              body { padding: 0; margin: 0; }
+            body {
+              font-family: Arial, sans-serif;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+            }
+            th, td {
+              border: 1px solid #ddd;
+              padding: 8px;
+              text-align: left;
+            }
+            th {
+              background-color: #0000a0;
+              color: white;
+            }
+            tr:nth-child(even) {
+              background-color: #f2f2f2;
+            }
+            .report-header {
+              margin-bottom: 20px;
+            }
+            h1 {
+              color: #0000a0;
             }
           </style>
         </head>
         <body>
-          <button class="no-print" onclick="window.print();" style="padding: 10px; background: #0000a0; color: white; border: none; cursor: pointer; margin-bottom: 20px;">
-            Print Report
-          </button>
-          <h1>Payments & Receipts Report</h1>
-          <div class="report-date">Generated on: ${format(new Date(), 'MMMM dd, yyyy')}</div>
-          <table>
-            <thead>
-              <tr>
-                ${Object.keys(data[0]).map(header => `<th>${header}</th>`).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${data.map(row => `
-                <tr>
-                  ${Object.values(row).map(cell => `<td>${cell}</td>`).join('')}
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+          <div class="report-header">
+            <h1>Payments & Receipts Report</h1>
+            <p>Generated on: ${format(new Date(), 'PPpp')}</p>
+          </div>
+          ${printContent}
         </body>
       </html>
     `);
-    
     printWindow.document.close();
+    printWindow.onload = function() {
+      printWindow.print();
+    };
+  };
+
+  const formatDataForExport = (data) => {
+    return data.map(record => ({
+      Number: record.paymentNumber,
+      Type: record.paymentType === 'received' ? 'Payment Received' : 'Payment Issued',
+      Name: record.partyName,
+      Date: format(new Date(record.paymentDate), 'dd/MM/yyyy'),
+      Amount: `${record.currency} ${record.amount.toLocaleString()}`,
+      Method: record.paymentMethod.replace('_', ' '),
+      Reference: record.referenceNumber || '-',
+      Status: record.status,
+      Notes: record.notes || '-',
+      Created: format(new Date(record.created_at), 'dd/MM/yyyy HH:mm')
+    }));
+  };
+
+  const formatDataForPrint = (data) => {
+    let tableContent = `
+      <table>
+        <thead>
+          <tr>
+            <th>Number</th>
+            <th>Type</th>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Reference</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    data.forEach(record => {
+      tableContent += `
+        <tr>
+          <td>${record.paymentNumber}</td>
+          <td>${record.paymentType === 'received' ? 'Payment Received' : 'Payment Issued'}</td>
+          <td>${record.partyName}</td>
+          <td>${format(new Date(record.paymentDate), 'dd/MM/yyyy')}</td>
+          <td>${record.currency} ${record.amount.toLocaleString()}</td>
+          <td>${record.paymentMethod.replace('_', ' ')}</td>
+          <td>${record.referenceNumber || '-'}</td>
+          <td>${record.status}</td>
+        </tr>
+      `;
+    });
+
+    tableContent += `
+        </tbody>
+      </table>
+    `;
+
+    return tableContent;
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" disabled={exporting} className="flex items-center gap-2">
-          {exporting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <FileDown className="h-4 w-4" />
-          )}
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1"
+        >
+          <Download className="h-4 w-4" />
           Export
-          <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => handleExport('csv')}>
-          <FileText className="h-4 w-4 mr-2" />
-          Export as CSV
+        <DropdownMenuItem onClick={exportToCSV} className="flex items-center gap-2">
+          <FileText className="h-4 w-4" /> Export to CSV
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleExport('excel')}>
-          <FileSpreadsheet className="h-4 w-4 mr-2" />
-          Export as Excel
+        <DropdownMenuItem onClick={exportToExcel} className="flex items-center gap-2">
+          <FileSpreadsheet className="h-4 w-4" /> Export to Excel
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleExport('pdf')}>
-          <FileDown className="h-4 w-4 mr-2" />
-          Export as PDF
+        <DropdownMenuItem onClick={exportToPDF} className="flex items-center gap-2">
+          <FileText className="h-4 w-4" /> Export to PDF
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleExport('print')}>
-          <Printer className="h-4 w-4 mr-2" />
-          Print
+        <DropdownMenuItem onClick={printData} className="flex items-center gap-2">
+          <Printer className="h-4 w-4" /> Print
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
