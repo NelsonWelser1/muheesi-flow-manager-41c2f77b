@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,15 +7,20 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, CreditCard, Mail, Download } from "lucide-react";
+import { ArrowLeft, CreditCard, Mail, Download, Eye } from "lucide-react";
+import { usePaymentsReceipts } from "@/integrations/supabase/hooks/accounting/payments/usePaymentsReceipts";
+import PaymentsReceiptsRecords from "../records/PaymentsReceiptsRecords";
+
 const PaymentsReceiptsForm = ({
   onBack
 }) => {
+  const [viewMode, setViewMode] = useState('form'); // 'form' or 'records'
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: {
       errors
     }
@@ -26,28 +32,63 @@ const PaymentsReceiptsForm = ({
       paymentMethod: 'bank_transfer'
     }
   });
-  const {
-    toast
-  } = useToast();
+  
+  const { createPayment } = usePaymentsReceipts();
+  const { toast } = useToast();
   const paymentType = watch('paymentType');
+  
   const generatePaymentNumber = () => {
     const prefix = paymentType === 'received' ? "RCPT" : "PMT";
     const randomNum = Math.floor(10000 + Math.random() * 90000);
     const timestamp = new Date().getTime().toString().slice(-4);
     return `${prefix}-${randomNum}-${timestamp}`;
   };
-  const onSubmit = data => {
+  
+  const onSubmit = async (data) => {
     console.log("Payment/Receipt data:", data);
-    toast({
-      title: "Success",
-      description: `${data.paymentType === 'received' ? 'Receipt' : 'Payment'} recorded successfully`
-    });
-    // Here you would normally save to database
+    
+    // Ensure we have a payment number
+    if (!data.paymentNumber) {
+      data.paymentNumber = generatePaymentNumber();
+    }
+    
+    // Save to Supabase
+    const result = await createPayment(data);
+    
+    if (result) {
+      toast({
+        title: "Success",
+        description: `${data.paymentType === 'received' ? 'Receipt' : 'Payment'} recorded successfully`
+      });
+      
+      // Reset form
+      reset({
+        paymentDate: new Date().toISOString().split('T')[0],
+        paymentType: data.paymentType,
+        status: 'completed',
+        paymentMethod: 'bank_transfer'
+      });
+    }
   };
+  
+  if (viewMode === 'records') {
+    return <PaymentsReceiptsRecords onBack={() => setViewMode('form')} />;
+  }
+
   return <div className="space-y-4">
-      <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
-        <ArrowLeft className="h-4 w-4" /> Back
-      </Button>
+      <div className="flex justify-between items-center">
+        <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" /> Back
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => setViewMode('records')} 
+          className="flex items-center gap-2"
+        >
+          <Eye className="h-4 w-4" /> View Records
+        </Button>
+      </div>
+      
       <Card>
         <CardHeader>
           <CardTitle>Payments & Receipts Form</CardTitle>
@@ -168,9 +209,6 @@ const PaymentsReceiptsForm = ({
               <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">
                 Record {paymentType === 'received' ? 'Receipt' : 'Payment'}
               </Button>
-              
-              
-              
             </div>
           </form>
         </CardContent>
