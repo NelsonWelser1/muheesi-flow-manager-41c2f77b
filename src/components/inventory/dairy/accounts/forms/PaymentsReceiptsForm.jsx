@@ -172,10 +172,7 @@ const PaymentsReceiptsForm = ({
                 <CreditCard className="h-4 w-4" />
                 Generate Receipt
               </Button>
-              <Button type="button" variant="outline" className="flex items-center gap-2" onClick={() => console.log("Emailing receipt...")}>
-                <Mail className="h-4 w-4" />
-                Email Receipt
-              </Button>
+              
               
             </div>
           </form>
