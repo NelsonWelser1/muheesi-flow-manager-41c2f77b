@@ -20,8 +20,9 @@ export const usePaymentReceiptForm = (setActiveView) => {
   const { toast } = useToast();
   const paymentType = watch('paymentType');
   
-  // Only generate a new payment number when payment type changes or on mount
+  // Only generate a new payment number once on mount and when payment type changes
   useEffect(() => {
+    // Generate payment number only when component mounts or payment type changes
     const newPaymentNumber = generatePaymentNumber(paymentType);
     setPaymentNumber(newPaymentNumber);
     setValue('paymentNumber', newPaymentNumber);
