@@ -1,12 +1,21 @@
 
+import { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { usePaymentsReceipts } from "@/integrations/supabase/hooks/accounting/payments/usePaymentsReceipts";
-import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
 export const usePaymentReceiptForm = (setActiveView) => {
   const [paymentNumber, setPaymentNumber] = useState("");
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { 
+    register, 
+    handleSubmit, 
+    setValue, 
+    watch, 
+    reset, 
+    formState: { errors } 
+  } = useForm({
     defaultValues: {
       paymentDate: new Date().toISOString().split('T')[0],
       paymentType: 'received',
@@ -20,9 +29,8 @@ export const usePaymentReceiptForm = (setActiveView) => {
   const { toast } = useToast();
   const paymentType = watch('paymentType');
   
-  // Only generate a new payment number once on mount and when payment type changes
+  // Only generate a payment number once when component mounts OR when payment type changes
   useEffect(() => {
-    // Generate payment number only when component mounts or payment type changes
     const newPaymentNumber = generatePaymentNumber(paymentType);
     setPaymentNumber(newPaymentNumber);
     setValue('paymentNumber', newPaymentNumber);
@@ -30,7 +38,8 @@ export const usePaymentReceiptForm = (setActiveView) => {
   
   const onSubmit = async (data) => {
     try {
-      console.log("Payment/Receipt data:", data);
+      setIsSubmitting(true);
+      console.log("Submitting payment/receipt data:", data);
       
       // Make sure we have the payment number in the data
       if (!data.paymentNumber) {
@@ -45,24 +54,12 @@ export const usePaymentReceiptForm = (setActiveView) => {
           description: `${data.paymentType === 'received' ? 'Receipt' : 'Payment'} recorded successfully`,
         });
         
-        // Reset form to default values
-        reset({
-          paymentDate: new Date().toISOString().split('T')[0],
-          paymentType: 'received',
-          status: 'completed',
-          paymentMethod: 'bank_transfer',
-          currency: 'UGX'
-        });
-        
-        // Generate and set new payment number
-        const newPaymentNumber = generatePaymentNumber('received');
-        setPaymentNumber(newPaymentNumber);
-        setValue('paymentNumber', newPaymentNumber);
-        
         // Switch to records view after successful submission
         if (setActiveView) {
           setActiveView('payments-receipts-records');
         }
+      } else {
+        throw new Error(result.error?.message || "Failed to save payment record");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -71,6 +68,8 @@ export const usePaymentReceiptForm = (setActiveView) => {
         description: "There was an error saving your payment record.",
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -81,6 +80,7 @@ export const usePaymentReceiptForm = (setActiveView) => {
     watch,
     errors,
     onSubmit,
-    paymentNumber
+    paymentNumber,
+    isSubmitting
   };
 };
