@@ -20,8 +20,8 @@ export const usePaymentReceiptForm = (setActiveView) => {
   const { toast } = useToast();
   const paymentType = watch('paymentType');
   
+  // Only generate a new payment number when payment type changes or on mount
   useEffect(() => {
-    // Generate and set a new payment number whenever payment type changes
     const newPaymentNumber = generatePaymentNumber(paymentType);
     setPaymentNumber(newPaymentNumber);
     setValue('paymentNumber', newPaymentNumber);
@@ -30,6 +30,11 @@ export const usePaymentReceiptForm = (setActiveView) => {
   const onSubmit = async (data) => {
     try {
       console.log("Payment/Receipt data:", data);
+      
+      // Make sure we have the payment number in the data
+      if (!data.paymentNumber) {
+        data.paymentNumber = paymentNumber;
+      }
       
       const result = await createPayment(data);
       
