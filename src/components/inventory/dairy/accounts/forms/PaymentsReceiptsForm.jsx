@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, CreditCard, Mail, Download } from "lucide-react";
-
-const PaymentsReceiptsForm = ({ onBack }) => {
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+const PaymentsReceiptsForm = ({
+  onBack
+}) => {
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: {
+      errors
+    }
+  } = useForm({
     defaultValues: {
       paymentDate: new Date().toISOString().split('T')[0],
       paymentType: 'received',
@@ -18,33 +26,26 @@ const PaymentsReceiptsForm = ({ onBack }) => {
       paymentMethod: 'bank_transfer'
     }
   });
-  const { toast } = useToast();
-  
+  const {
+    toast
+  } = useToast();
   const paymentType = watch('paymentType');
-  
   const generatePaymentNumber = () => {
     const prefix = paymentType === 'received' ? "RCPT" : "PMT";
     const randomNum = Math.floor(10000 + Math.random() * 90000);
     const timestamp = new Date().getTime().toString().slice(-4);
     return `${prefix}-${randomNum}-${timestamp}`;
   };
-  
-  const onSubmit = (data) => {
+  const onSubmit = data => {
     console.log("Payment/Receipt data:", data);
     toast({
       title: "Success",
-      description: `${data.paymentType === 'received' ? 'Receipt' : 'Payment'} recorded successfully`,
+      description: `${data.paymentType === 'received' ? 'Receipt' : 'Payment'} recorded successfully`
     });
     // Here you would normally save to database
   };
-
-  return (
-    <div className="space-y-4">
-      <Button 
-        variant="outline" 
-        onClick={onBack}
-        className="flex items-center gap-2"
-      >
+  return <div className="space-y-4">
+      <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
         <ArrowLeft className="h-4 w-4" /> Back
       </Button>
       <Card>
@@ -56,10 +57,7 @@ const PaymentsReceiptsForm = ({ onBack }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Payment Type</Label>
-                <Select 
-                  defaultValue="received"
-                  onValueChange={(value) => setValue("paymentType", value)}
-                >
+                <Select defaultValue="received" onValueChange={value => setValue("paymentType", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select payment type" />
                   </SelectTrigger>
@@ -73,51 +71,40 @@ const PaymentsReceiptsForm = ({ onBack }) => {
 
               <div className="space-y-2">
                 <Label>Payment Number</Label>
-                <Input 
-                  value={generatePaymentNumber()} 
-                  readOnly 
-                  className="bg-gray-50"
-                  {...register("paymentNumber")} 
-                />
+                <Input value={generatePaymentNumber()} readOnly className="bg-gray-50" {...register("paymentNumber")} />
               </div>
 
               <div className="space-y-2">
                 <Label>{paymentType === 'received' ? 'Payer Name' : 'Payee Name'}</Label>
-                <Input {...register("partyName", { required: "Name is required" })} />
-                {errors.partyName && (
-                  <p className="text-sm text-red-500">{errors.partyName.message}</p>
-                )}
+                <Input {...register("partyName", {
+                required: "Name is required"
+              })} />
+                {errors.partyName && <p className="text-sm text-red-500">{errors.partyName.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label>Payment Date</Label>
-                <Input type="date" {...register("paymentDate", { required: "Payment date is required" })} />
-                {errors.paymentDate && (
-                  <p className="text-sm text-red-500">{errors.paymentDate.message}</p>
-                )}
+                <Input type="date" {...register("paymentDate", {
+                required: "Payment date is required"
+              })} />
+                {errors.paymentDate && <p className="text-sm text-red-500">{errors.paymentDate.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label>Payment Amount</Label>
-                <Input 
-                  type="number" 
-                  step="0.01"
-                  {...register("amount", { 
-                    required: "Amount is required",
-                    min: { value: 0.01, message: "Amount must be greater than 0" }
-                  })} 
-                />
-                {errors.amount && (
-                  <p className="text-sm text-red-500">{errors.amount.message}</p>
-                )}
+                <Input type="number" step="0.01" {...register("amount", {
+                required: "Amount is required",
+                min: {
+                  value: 0.01,
+                  message: "Amount must be greater than 0"
+                }
+              })} />
+                {errors.amount && <p className="text-sm text-red-500">{errors.amount.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label>Currency</Label>
-                <Select 
-                  defaultValue="UGX"
-                  onValueChange={(value) => setValue("currency", value)}
-                >
+                <Select defaultValue="UGX" onValueChange={value => setValue("currency", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
@@ -129,15 +116,14 @@ const PaymentsReceiptsForm = ({ onBack }) => {
                     <SelectItem value="JPY">JPY</SelectItem>
                   </SelectContent>
                 </Select>
-                <Input type="hidden" {...register("currency", { value: "UGX" })} />
+                <Input type="hidden" {...register("currency", {
+                value: "UGX"
+              })} />
               </div>
 
               <div className="space-y-2">
                 <Label>Payment Method</Label>
-                <Select 
-                  defaultValue="bank_transfer"
-                  onValueChange={(value) => setValue("paymentMethod", value)}
-                >
+                <Select defaultValue="bank_transfer" onValueChange={value => setValue("paymentMethod", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select payment method" />
                   </SelectTrigger>
@@ -159,10 +145,7 @@ const PaymentsReceiptsForm = ({ onBack }) => {
 
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select 
-                  defaultValue="completed"
-                  onValueChange={(value) => setValue("status", value)}
-                >
+                <Select defaultValue="completed" onValueChange={value => setValue("status", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -185,39 +168,19 @@ const PaymentsReceiptsForm = ({ onBack }) => {
               <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">
                 Record {paymentType === 'received' ? 'Receipt' : 'Payment'}
               </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex items-center gap-2"
-                onClick={() => console.log("Generating receipt...")}
-              >
+              <Button type="button" variant="outline" className="flex items-center gap-2" onClick={() => console.log("Generating receipt...")}>
                 <CreditCard className="h-4 w-4" />
                 Generate Receipt
               </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex items-center gap-2"
-                onClick={() => console.log("Emailing receipt...")}
-              >
+              <Button type="button" variant="outline" className="flex items-center gap-2" onClick={() => console.log("Emailing receipt...")}>
                 <Mail className="h-4 w-4" />
                 Email Receipt
               </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="flex items-center gap-2"
-                onClick={() => console.log("Downloading PDF...")}
-              >
-                <Download className="h-4 w-4" />
-                Download PDF
-              </Button>
+              
             </div>
           </form>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default PaymentsReceiptsForm;
