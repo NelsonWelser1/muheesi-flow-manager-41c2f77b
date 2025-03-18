@@ -35,7 +35,25 @@ export const usePaymentsReceipts = () => {
       }
       
       console.log('Payments and receipts fetched successfully:', data);
-      setPayments(data || []);
+      
+      // Map the database column names to the frontend property names
+      const mappedData = data.map(item => ({
+        id: item.id,
+        paymentNumber: item.payment_number,
+        paymentType: item.payment_type,
+        partyName: item.party_name,
+        paymentDate: item.payment_date,
+        amount: item.amount,
+        currency: item.currency,
+        paymentMethod: item.payment_method,
+        referenceNumber: item.reference_number,
+        status: item.status,
+        notes: item.notes,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at
+      }));
+      
+      setPayments(mappedData || []);
     } catch (err) {
       console.error('Unexpected error fetching payments and receipts:', err);
       setError(err.message);
@@ -55,9 +73,23 @@ export const usePaymentsReceipts = () => {
       setLoading(true);
       console.log('Creating new payment/receipt in Supabase:', paymentData);
       
+      // Convert frontend property names to database column names
+      const dbData = {
+        payment_number: paymentData.paymentNumber,
+        payment_type: paymentData.paymentType,
+        party_name: paymentData.partyName,
+        payment_date: paymentData.paymentDate,
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        payment_method: paymentData.paymentMethod,
+        reference_number: paymentData.referenceNumber,
+        status: paymentData.status,
+        notes: paymentData.notes
+      };
+      
       const { data, error } = await supabase
         .from('payments_receipts')
-        .insert([paymentData])
+        .insert([dbData])
         .select()
         .single();
         
@@ -72,8 +104,26 @@ export const usePaymentsReceipts = () => {
       }
       
       console.log('Payment/receipt created successfully:', data);
-      setPayments(prevPayments => [data, ...prevPayments]);
-      return data;
+      
+      // Map the response back to frontend property names
+      const mappedData = {
+        id: data.id,
+        paymentNumber: data.payment_number,
+        paymentType: data.payment_type,
+        partyName: data.party_name,
+        paymentDate: data.payment_date,
+        amount: data.amount,
+        currency: data.currency,
+        paymentMethod: data.payment_method,
+        referenceNumber: data.reference_number,
+        status: data.status,
+        notes: data.notes,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      };
+      
+      setPayments(prevPayments => [mappedData, ...prevPayments]);
+      return mappedData;
     } catch (err) {
       console.error('Unexpected error creating payment/receipt:', err);
       toast({
@@ -93,9 +143,23 @@ export const usePaymentsReceipts = () => {
       setLoading(true);
       console.log(`Updating payment/receipt ${id} in Supabase:`, paymentData);
       
+      // Convert frontend property names to database column names
+      const dbData = {
+        payment_number: paymentData.paymentNumber,
+        payment_type: paymentData.paymentType,
+        party_name: paymentData.partyName,
+        payment_date: paymentData.paymentDate,
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        payment_method: paymentData.paymentMethod,
+        reference_number: paymentData.referenceNumber,
+        status: paymentData.status,
+        notes: paymentData.notes
+      };
+      
       const { data, error } = await supabase
         .from('payments_receipts')
-        .update(paymentData)
+        .update(dbData)
         .eq('id', id)
         .select()
         .single();
@@ -111,10 +175,28 @@ export const usePaymentsReceipts = () => {
       }
       
       console.log('Payment/receipt updated successfully:', data);
+      
+      // Map the response back to frontend property names
+      const mappedData = {
+        id: data.id,
+        paymentNumber: data.payment_number,
+        paymentType: data.payment_type,
+        partyName: data.party_name,
+        paymentDate: data.payment_date,
+        amount: data.amount,
+        currency: data.currency,
+        paymentMethod: data.payment_method,
+        referenceNumber: data.reference_number,
+        status: data.status,
+        notes: data.notes,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      };
+      
       setPayments(prevPayments => 
-        prevPayments.map(payment => payment.id === id ? data : payment)
+        prevPayments.map(payment => payment.id === id ? mappedData : payment)
       );
-      return data;
+      return mappedData;
     } catch (err) {
       console.error('Unexpected error updating payment/receipt:', err);
       toast({

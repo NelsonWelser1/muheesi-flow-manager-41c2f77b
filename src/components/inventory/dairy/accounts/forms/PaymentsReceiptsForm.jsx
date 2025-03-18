@@ -118,28 +118,28 @@ const PaymentsReceiptsForm = ({
               <div className="space-y-2">
                 <Label>{paymentType === 'received' ? 'Payer Name' : 'Payee Name'}</Label>
                 <Input {...register("partyName", {
-                required: "Name is required"
-              })} />
+                  required: "Name is required"
+                })} />
                 {errors.partyName && <p className="text-sm text-red-500">{errors.partyName.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label>Payment Date</Label>
                 <Input type="date" {...register("paymentDate", {
-                required: "Payment date is required"
-              })} />
+                  required: "Payment date is required"
+                })} />
                 {errors.paymentDate && <p className="text-sm text-red-500">{errors.paymentDate.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label>Payment Amount</Label>
                 <Input type="number" step="0.01" {...register("amount", {
-                required: "Amount is required",
-                min: {
-                  value: 0.01,
-                  message: "Amount must be greater than 0"
-                }
-              })} />
+                  required: "Amount is required",
+                  min: {
+                    value: 0.01,
+                    message: "Amount must be greater than 0"
+                  }
+                })} />
                 {errors.amount && <p className="text-sm text-red-500">{errors.amount.message}</p>}
               </div>
 
@@ -158,8 +158,8 @@ const PaymentsReceiptsForm = ({
                   </SelectContent>
                 </Select>
                 <Input type="hidden" {...register("currency", {
-                value: "UGX"
-              })} />
+                  value: "UGX"
+                })} />
               </div>
 
               <div className="space-y-2">
