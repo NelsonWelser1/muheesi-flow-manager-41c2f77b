@@ -2,141 +2,174 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { 
-  Download, 
+  DownloadCloud, 
   FileSpreadsheet, 
-  FileText 
+  FilePdf 
 } from "lucide-react";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { useToast } from "@/components/ui/use-toast";
+import { format } from 'date-fns';
 
 const ExportActions = ({ filteredRecords }) => {
+  const { toast } = useToast();
+  
+  // Export to Excel
   const exportToExcel = () => {
-    const formattedData = filteredRecords.map(record => ({
-      'Payment Number': record.payment_number,
-      'Date': new Date(record.payment_date).toLocaleDateString(),
-      'Type': record.payment_type === 'received' ? 'Receipt' : 'Payment',
-      'Party': record.party_name,
-      'Amount': `${record.currency} ${record.amount}`,
-      'Method': record.payment_method,
-      'Status': record.status,
-      'Reference': record.reference_number || 'N/A',
-      'Notes': record.notes || 'N/A'
-    }));
-    
-    const worksheet = XLSX.utils.json_to_sheet(formattedData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Payments');
     
-    // Generate file name with current date
-    const fileName = `payments_receipts_${new Date().toISOString().split('T')[0]}.xlsx`;
-    
-    // Trigger download
-    XLSX.writeFile(workbook, fileName);
-  };
-  
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    
-    // Add title
-    doc.setFontSize(18);
-    doc.text('Payments & Receipts Report', 14, 22);
-    
-    // Add date
-    doc.setFontSize(11);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
-    
-    const tableColumn = ["Payment #", "Date", "Type", "Party", "Amount", "Status"];
-    const tableRows = filteredRecords.map(record => [
-      record.payment_number,
-      new Date(record.payment_date).toLocaleDateString(),
-      record.payment_type === 'received' ? 'Receipt' : 'Payment',
-      record.party_name,
-      `${record.currency} ${record.amount}`,
-      record.status
-    ]);
-    
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 35,
-      theme: 'grid',
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [0, 0, 160] }
-    });
-    
-    // Generate file name with current date
-    const fileName = `payments_receipts_${new Date().toISOString().split('T')[0]}.pdf`;
-    
-    // Save PDF
-    doc.save(fileName);
-  };
-  
-  const exportToCSV = () => {
-    const formattedData = filteredRecords.map(record => ({
+    // Convert the data to the format needed for Excel
+    const data = filteredRecords.map(record => ({
       'Payment Number': record.payment_number,
-      'Date': new Date(record.payment_date).toLocaleDateString(),
-      'Type': record.payment_type === 'received' ? 'Receipt' : 'Payment',
-      'Party': record.party_name,
-      'Amount': `${record.currency} ${record.amount}`,
+      'Type': record.payment_type === 'received' ? 'Received' : 'Issued',
+      'Party Name': record.party_name,
+      'Date': format(new Date(record.payment_date), 'dd/MM/yyyy'),
+      'Amount': record.amount,
+      'Currency': record.currency,
       'Method': record.payment_method,
+      'Reference': record.reference_number || '',
       'Status': record.status,
-      'Reference': record.reference_number || 'N/A',
-      'Notes': record.notes || 'N/A'
+      'Notes': record.notes || ''
     }));
     
-    // Convert to CSV
-    const headers = Object.keys(formattedData[0] || {}).join(',');
-    const csv = [
-      headers,
-      ...formattedData.map(row => 
-        Object.values(row).map(val => 
-          typeof val === 'string' && val.includes(',') ? `"${val}"` : val
-        ).join(',')
-      )
-    ].join('\n');
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Payments_Receipts');
+    XLSX.writeFile(workbook, 'Payments_Receipts_Report.xlsx');
     
-    // Create download link
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+    toast({
+      title: "Excel Export",
+      description: "Data exported successfully to Excel",
+    });
+  };
+  
+  // Export to CSV
+  const exportToCSV = () => {
+    const csvData = filteredRecords.map(record => ({
+      'Payment Number': record.payment_number,
+      'Type': record.payment_type === 'received' ? 'Received' : 'Issued',
+      'Party Name': record.party_name,
+      'Date': format(new Date(record.payment_date), 'dd/MM/yyyy'),
+      'Amount': record.amount,
+      'Currency': record.currency,
+      'Method': record.payment_method,
+      'Reference': record.reference_number || '',
+      'Status': record.status,
+      'Notes': record.notes || ''
+    }));
+    
+    const worksheet = XLSX.utils.json_to_sheet(csvData);
+    const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+    
+    // Create a blob and download
+    const blob = new Blob([csvOutput], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
     link.setAttribute('href', url);
-    link.setAttribute('download', `payments_receipts_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', 'Payments_Receipts_Report.csv');
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    toast({
+      title: "CSV Export",
+      description: "Data exported successfully to CSV",
+    });
+  };
+  
+  // Export to PDF
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    // Add a title
+    doc.setFontSize(18);
+    doc.text('Payments & Receipts Report', 14, 22);
+    
+    // Add a subtitle with the current date
+    doc.setFontSize(11);
+    doc.text(`Generated on ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 14, 30);
+    
+    // Create the table
+    const tableColumn = [
+      'Payment #', 
+      'Type', 
+      'Party', 
+      'Date', 
+      'Amount', 
+      'Method', 
+      'Status'
+    ];
+    
+    const tableRows = filteredRecords.map(record => [
+      record.payment_number,
+      record.payment_type === 'received' ? 'Received' : 'Issued',
+      record.party_name,
+      format(new Date(record.payment_date), 'dd/MM/yyyy'),
+      `${record.amount} ${record.currency}`,
+      record.payment_method,
+      record.status
+    ]);
+    
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 40,
+      theme: 'striped',
+      headStyles: { fillColor: [0, 0, 160] },
+      styles: { fontSize: 8 },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        2: { cellWidth: 40 }
+      }
+    });
+    
+    doc.save('Payments_Receipts_Report.pdf');
+    
+    toast({
+      title: "PDF Export",
+      description: "Data exported successfully to PDF",
+    });
   };
   
   return (
-    <div className="flex gap-2">
-      <Button 
-        variant="outline" 
-        onClick={exportToExcel} 
-        className="flex items-center gap-1"
-        disabled={filteredRecords.length === 0}
-      >
-        <FileSpreadsheet className="h-4 w-4" />
-        <span className="hidden sm:inline">Excel</span>
+    <div className="relative group">
+      <Button variant="outline" size="sm" className="flex items-center gap-1">
+        <DownloadCloud className="h-4 w-4" />
+        Export
       </Button>
-      <Button 
-        variant="outline" 
-        onClick={exportToPDF} 
-        className="flex items-center gap-1"
-        disabled={filteredRecords.length === 0}
-      >
-        <FileText className="h-4 w-4" />
-        <span className="hidden sm:inline">PDF</span>
-      </Button>
-      <Button 
-        variant="outline" 
-        onClick={exportToCSV} 
-        className="flex items-center gap-1"
-        disabled={filteredRecords.length === 0}
-      >
-        <Download className="h-4 w-4" />
-        <span className="hidden sm:inline">CSV</span>
-      </Button>
+      <div className="absolute right-0 mt-2 w-40 hidden group-hover:block z-10">
+        <div className="bg-white shadow-md rounded-md overflow-hidden border">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="w-full justify-start px-3 py-2 flex items-center gap-2"
+            onClick={exportToExcel}
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            Excel
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="w-full justify-start px-3 py-2 flex items-center gap-2"
+            onClick={exportToCSV}
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            CSV
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="w-full justify-start px-3 py-2 flex items-center gap-2"
+            onClick={exportToPDF}
+          >
+            <FilePdf className="h-4 w-4" />
+            PDF
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
