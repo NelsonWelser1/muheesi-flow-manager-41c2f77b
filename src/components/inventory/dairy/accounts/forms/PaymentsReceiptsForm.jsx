@@ -61,12 +61,18 @@ const PaymentsReceiptsForm = ({
         description: `${data.paymentType === 'received' ? 'Receipt' : 'Payment'} recorded successfully`
       });
       
-      // Reset form
+      // Reset form with default values
       reset({
         paymentDate: new Date().toISOString().split('T')[0],
         paymentType: data.paymentType,
         status: 'completed',
-        paymentMethod: 'bank_transfer'
+        paymentMethod: 'bank_transfer',
+        paymentNumber: generatePaymentNumber(), // Generate a new payment number
+        partyName: '',
+        amount: '',
+        currency: 'UGX',
+        referenceNumber: '',
+        notes: ''
       });
     }
   };
