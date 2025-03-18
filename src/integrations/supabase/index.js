@@ -1,3 +1,4 @@
+
 import { supabase } from './supabase';
 import { SupabaseAuthProvider, useSupabaseAuth, SupabaseAuthUI } from './auth';
 
@@ -53,7 +54,6 @@ import { useDeleteInvoice } from './hooks/sales/invoices/useDeleteInvoice';
 
 // Import accounting hooks
 import { useBillsExpenses } from './hooks/accounting/useBillsExpenses';
-import { usePaymentsReceipts } from './hooks/accounting/payments/usePaymentsReceipts';
 
 // Export everything individually
 export {
@@ -104,5 +104,4 @@ export {
     useDeleteInvoice,
     // Accounting hooks
     useBillsExpenses,
-    usePaymentsReceipts,
 };

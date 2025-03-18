@@ -1,84 +1,80 @@
 
-import { useState, useEffect, useMemo } from 'react';
-import { addDays, startOfDay, endOfDay, subDays, subMonths, subYears, isWithinInterval } from 'date-fns';
+import { useState, useMemo } from 'react';
 
-export const useRecordsFilter = (records = []) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [timeRange, setTimeRange] = useState('all');
-  const [sortBy, setSortBy] = useState('date-desc');
-  
-  // Filter records based on search term, status, and time range
+export const useRecordsFilter = (billsExpenses) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [timeRange, setTimeRange] = useState("all");
+  const [sortBy, setSortBy] = useState("date-desc");
+
+  const getTimeRangeDate = () => {
+    const now = new Date();
+    switch (timeRange) {
+      case "hour":
+        return new Date(now.setHours(now.getHours() - 1));
+      case "day":
+        return new Date(now.setDate(now.getDate() - 1));
+      case "week":
+        return new Date(now.setDate(now.getDate() - 7));
+      case "month":
+        return new Date(now.setMonth(now.getMonth() - 1));
+      case "year":
+        return new Date(now.setFullYear(now.getFullYear() - 1));
+      default:
+        return null;
+    }
+  };
+
   const filteredRecords = useMemo(() => {
-    let filtered = [...records];
-    
-    // Filter by search term
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(record => 
-        record.payment_number?.toLowerCase().includes(term) ||
-        record.party_name?.toLowerCase().includes(term) ||
-        record.payment_method?.toLowerCase().includes(term) ||
-        String(record.amount).includes(term)
-      );
-    }
-    
-    // Filter by status
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(record => record.status === statusFilter);
-    }
-    
-    // Filter by time range
-    if (timeRange !== 'all') {
-      const now = new Date();
-      let startDate;
-      
-      switch (timeRange) {
-        case 'today':
-          startDate = startOfDay(now);
-          break;
-        case 'this-week':
-          startDate = subDays(now, 7);
-          break;
-        case 'this-month':
-          startDate = subMonths(now, 1);
-          break;
-        case 'this-year':
-          startDate = subYears(now, 1);
-          break;
-        default:
-          startDate = null;
-      }
-      
-      if (startDate) {
-        filtered = filtered.filter(record => {
-          const recordDate = new Date(record.payment_date);
-          return isWithinInterval(recordDate, { start: startDate, end: now });
-        });
-      }
-    }
-    
-    // Sort records
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.payment_date);
-      const dateB = new Date(b.payment_date);
-      
-      switch (sortBy) {
-        case 'date-asc':
-          return dateA - dateB;
-        case 'date-desc':
-          return dateB - dateA;
-        case 'amount-asc':
-          return a.amount - b.amount;
-        case 'amount-desc':
-          return b.amount - a.amount;
-        default:
-          return dateB - dateA;
-      }
-    });
-    
-    return filtered;
-  }, [records, searchTerm, statusFilter, timeRange, sortBy]);
+    return billsExpenses
+      .filter(record => {
+        // Status filter
+        if (statusFilter !== "all" && record.status !== statusFilter) {
+          return false;
+        }
+
+        // Time range filter
+        if (timeRange !== "all") {
+          const timeRangeDate = getTimeRangeDate();
+          const recordDate = new Date(record.created_at);
+          if (recordDate < timeRangeDate) {
+            return false;
+          }
+        }
+
+        // Search term
+        if (searchTerm) {
+          const searchLower = searchTerm.toLowerCase();
+          return (
+            record.bill_number?.toLowerCase().includes(searchLower) ||
+            record.supplier_name?.toLowerCase().includes(searchLower) ||
+            record.expense_type?.toLowerCase().includes(searchLower) ||
+            record.expense_details?.toLowerCase().includes(searchLower) ||
+            record.notes?.toLowerCase().includes(searchLower)
+          );
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case "date-asc":
+            return new Date(a.created_at) - new Date(b.created_at);
+          case "date-desc":
+            return new Date(b.created_at) - new Date(a.created_at);
+          case "amount-asc":
+            return a.amount - b.amount;
+          case "amount-desc":
+            return b.amount - a.amount;
+          case "name-asc":
+            return a.supplier_name.localeCompare(b.supplier_name);
+          case "name-desc":
+            return b.supplier_name.localeCompare(a.supplier_name);
+          default:
+            return new Date(b.created_at) - new Date(a.created_at);
+        }
+      });
+  }, [billsExpenses, statusFilter, timeRange, searchTerm, sortBy]);
 
   return {
     searchTerm,
