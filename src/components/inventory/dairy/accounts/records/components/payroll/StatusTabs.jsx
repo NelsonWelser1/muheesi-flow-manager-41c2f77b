@@ -14,8 +14,8 @@ const StatusTabs = ({ statusFilter, setStatusFilter, filteredRecords, loading })
     };
 
     filteredRecords.forEach(record => {
-      if (record.paymentStatus && counts[record.paymentStatus] !== undefined) {
-        counts[record.paymentStatus]++;
+      if (record.payment_status && counts[record.payment_status] !== undefined) {
+        counts[record.payment_status]++;
       }
     });
 

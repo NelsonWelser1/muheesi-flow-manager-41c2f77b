@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Users, Mail, Download, Eye } from "lucide-react";
 import PayrollPayslipsRecords from '../records/PayrollPayslipsRecords';
+import { usePayrollPayslips } from './hooks/usePayrollPayslips';
 
 const PayrollPayslipsForm = ({ onBack }) => {
   const [viewMode, setViewMode] = useState('form'); // 'form' or 'records'
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
     defaultValues: {
       paymentDate: new Date().toISOString().split('T')[0],
       salaryPeriod: 'monthly',
@@ -20,6 +21,7 @@ const PayrollPayslipsForm = ({ onBack }) => {
     }
   });
   const { toast } = useToast();
+  const { loading, submitPayrollRecord, generatePayslipNumber } = usePayrollPayslips();
   
   const basicSalary = watch('basicSalary') || 0;
   const taxAmount = watch('taxAmount') || 0;
@@ -32,23 +34,42 @@ const PayrollPayslipsForm = ({ onBack }) => {
                           parseFloat(loanDeduction) + parseFloat(otherDeductions);
   const netSalary = parseFloat(basicSalary) - totalDeductions;
   
-  const generatePayslipNumber = () => {
-    const prefix = "PAY";
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const timestamp = new Date().getTime().toString().slice(-4);
-    return `${prefix}-${randomNum}-${timestamp}`;
-  };
+  // Generate payslip number on mount
+  useEffect(() => {
+    setValue("payslipNumber", generatePayslipNumber());
+  }, [setValue, generatePayslipNumber]);
   
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     // Add calculated net salary to the data
     data.netSalary = netSalary;
     
-    console.log("Payroll data:", data);
-    toast({
-      title: "Success",
-      description: "Payroll record created successfully",
-    });
-    // Here you would normally save to database
+    console.log("Payroll data for submission:", data);
+    
+    // Submit to Supabase via our hook
+    const result = await submitPayrollRecord(data);
+    
+    if (result.success) {
+      // Reset the form
+      reset({
+        payslipNumber: generatePayslipNumber(),
+        paymentDate: new Date().toISOString().split('T')[0],
+        salaryPeriod: 'monthly',
+        paymentStatus: 'pending'
+      });
+      
+      // Clear other fields
+      setValue("employeeName", "");
+      setValue("employeeId", "");
+      setValue("department", "");
+      setValue("basicSalary", "");
+      setValue("taxAmount", "0");
+      setValue("nssfAmount", "0");
+      setValue("loanDeduction", "0");
+      setValue("otherDeductions", "0");
+      setValue("currency", "UGX");
+      setValue("paymentMethod", "bank_transfer");
+      setValue("notes", "");
+    }
   };
 
   if (viewMode === 'records') {
@@ -289,7 +310,27 @@ const PayrollPayslipsForm = ({ onBack }) => {
             </div>
 
             <div className="flex flex-wrap gap-4">
-              <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">Process Payroll</Button>
+              <Button 
+                type="submit" 
+                className="bg-[#0000a0] hover:bg-[#00008b]"
+                disabled={loading}
+              >
+                {loading ? "Processing..." : "Process Payroll"}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => {
+                  console.log("Debug - Current form data:", watch());
+                  toast({
+                    title: "Debug info",
+                    description: "Form data logged to console"
+                  });
+                }}
+              >
+                Debug Form Data
+              </Button>
               <Button 
                 type="button" 
                 variant="outline" 

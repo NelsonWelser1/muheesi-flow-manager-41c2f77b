@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,132 +8,39 @@ import SearchFilters from './components/payroll/SearchFilters';
 import StatusTabs from './components/payroll/StatusTabs';
 import PayrollTable from './components/payroll/PayrollTable';
 import ExportActions from './components/payroll/ExportActions';
+import { usePayrollPayslips } from '../forms/hooks/usePayrollPayslips';
 
 const PayrollPayslipsRecords = ({ onBack }) => {
-  // Temporary mock data until we have a real API hook
-  const [payrollRecords, setPayrollRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [timeRange, setTimeRange] = useState('all');
   const [sortBy, setSortBy] = useState('date-desc');
   const [filteredRecords, setFilteredRecords] = useState([]);
   const { toast } = useToast();
-
-  // Mock fetch function - in a real app, this would call the Supabase hook
-  const fetchPayrollRecords = () => {
-    setLoading(true);
-    // Simulate API delay
-    setTimeout(() => {
-      const mockData = [
-        {
-          id: 1,
-          payslipNumber: 'PAY-1234-5678',
-          employeeName: 'John Doe',
-          employeeId: 'EMP001',
-          department: 'Operations',
-          salaryPeriod: 'monthly',
-          paymentDate: '2023-06-15',
-          basicSalary: 1500000,
-          taxAmount: 150000,
-          nssfAmount: 75000,
-          loanDeduction: 50000,
-          otherDeductions: 25000,
-          netSalary: 1200000,
-          currency: 'UGX',
-          paymentStatus: 'paid',
-          paymentMethod: 'bank_transfer',
-          notes: 'Regular monthly salary'
-        },
-        {
-          id: 2,
-          payslipNumber: 'PAY-2345-6789',
-          employeeName: 'Jane Smith',
-          employeeId: 'EMP002',
-          department: 'Finance',
-          salaryPeriod: 'monthly',
-          paymentDate: '2023-06-15',
-          basicSalary: 1800000,
-          taxAmount: 180000,
-          nssfAmount: 90000,
-          loanDeduction: 0,
-          otherDeductions: 30000,
-          netSalary: 1500000,
-          currency: 'UGX',
-          paymentStatus: 'paid',
-          paymentMethod: 'bank_transfer',
-          notes: 'Regular monthly salary'
-        },
-        {
-          id: 3,
-          payslipNumber: 'PAY-3456-7890',
-          employeeName: 'Mike Johnson',
-          employeeId: 'EMP003',
-          department: 'Production',
-          salaryPeriod: 'monthly',
-          paymentDate: '2023-06-15',
-          basicSalary: 1200000,
-          taxAmount: 120000,
-          nssfAmount: 60000,
-          loanDeduction: 100000,
-          otherDeductions: 0,
-          netSalary: 920000,
-          currency: 'UGX',
-          paymentStatus: 'pending',
-          paymentMethod: 'bank_transfer',
-          notes: 'Regular monthly salary'
-        },
-        {
-          id: 4,
-          payslipNumber: 'PAY-4567-8901',
-          employeeName: 'Sarah Williams',
-          employeeId: 'EMP004',
-          department: 'Sales',
-          salaryPeriod: 'monthly',
-          paymentDate: '2023-06-15',
-          basicSalary: 1600000,
-          taxAmount: 160000,
-          nssfAmount: 80000,
-          loanDeduction: 0,
-          otherDeductions: 0,
-          netSalary: 1360000,
-          currency: 'UGX',
-          paymentStatus: 'paid',
-          paymentMethod: 'mobile_money',
-          notes: 'Regular monthly salary with performance bonus'
-        }
-      ];
-      setPayrollRecords(mockData);
-      setLoading(false);
-    }, 800);
-  };
+  const { payrollRecords, loading, fetchPayrollRecords } = usePayrollPayslips();
 
   useEffect(() => {
     fetchPayrollRecords();
   }, []);
 
-  // Filter and sort records based on filters
   useEffect(() => {
     let filtered = [...payrollRecords];
 
-    // Filter by search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(
         record =>
-          record.payslipNumber?.toLowerCase().includes(searchLower) ||
-          record.employeeName?.toLowerCase().includes(searchLower) ||
-          record.employeeId?.toLowerCase().includes(searchLower) ||
+          record.payslip_number?.toLowerCase().includes(searchLower) ||
+          record.employee_name?.toLowerCase().includes(searchLower) ||
+          record.employee_id?.toLowerCase().includes(searchLower) ||
           record.department?.toLowerCase().includes(searchLower)
       );
     }
 
-    // Filter by status
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(record => record.paymentStatus === statusFilter);
+      filtered = filtered.filter(record => record.payment_status === statusFilter);
     }
 
-    // Filter by time range
     if (timeRange !== 'all') {
       const now = new Date();
       let startDate = new Date();
@@ -158,15 +64,14 @@ const PayrollPayslipsRecords = ({ onBack }) => {
       }
 
       filtered = filtered.filter(record => {
-        const recordDate = new Date(record.paymentDate);
+        const recordDate = new Date(record.payment_date);
         return recordDate >= startDate && recordDate <= now;
       });
     }
 
-    // Sort records
     filtered.sort((a, b) => {
-      const dateA = new Date(a.paymentDate);
-      const dateB = new Date(b.paymentDate);
+      const dateA = new Date(a.payment_date);
+      const dateB = new Date(b.payment_date);
 
       switch (sortBy) {
         case 'date-asc':
@@ -174,13 +79,13 @@ const PayrollPayslipsRecords = ({ onBack }) => {
         case 'date-desc':
           return dateB - dateA;
         case 'amount-asc':
-          return a.netSalary - b.netSalary;
+          return a.net_salary - b.net_salary;
         case 'amount-desc':
-          return b.netSalary - a.netSalary;
+          return b.net_salary - a.net_salary;
         case 'name-asc':
-          return a.employeeName.localeCompare(b.employeeName);
+          return a.employee_name.localeCompare(b.employee_name);
         case 'name-desc':
-          return b.employeeName.localeCompare(a.employeeName);
+          return b.employee_name.localeCompare(a.employee_name);
         default:
           return dateB - dateA;
       }
