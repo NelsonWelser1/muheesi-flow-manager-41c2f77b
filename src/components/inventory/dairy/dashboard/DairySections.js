@@ -33,15 +33,6 @@ export const dairySections = [
     status: 'maintenance'
   },
   { 
-    id: 'yogurt', 
-    title: 'Yogurt Processing', 
-    icon: Factory, 
-    component: YogurtProcessing,
-    group: 'Cheese Factory',
-    notifications: 0,
-    status: 'operational'
-  },
-  { 
     id: 'coldroom', 
     title: 'Cold Room', 
     icon: Snowflake, 
@@ -92,6 +83,15 @@ export const dairySections = [
     icon: Beef, 
     component: SlaughterhouseStock,
     group: 'Other Businesses',
+    notifications: 0,
+    status: 'operational'
+  },
+  { 
+    id: 'yogurt', 
+    title: 'Yogurt Processing', 
+    icon: Factory, 
+    component: YogurtProcessing,
+    group: 'Cheese Factory',
     notifications: 0,
     status: 'operational'
   }
