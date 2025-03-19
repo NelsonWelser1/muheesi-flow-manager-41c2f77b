@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FileSpreadsheet, FileText, Download } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
 
@@ -14,21 +14,21 @@ const ExportActions = ({ filteredRecords }) => {
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       filteredRecords.map(record => ({
-        'Payslip Number': record.payslipNumber,
-        'Employee Name': record.employeeName,
-        'Employee ID': record.employeeId,
+        'Payslip Number': record.payslip_number,
+        'Employee Name': record.employee_name,
+        'Employee ID': record.employee_id,
         'Department': record.department,
-        'Salary Period': record.salaryPeriod,
-        'Payment Date': record.paymentDate ? format(new Date(record.paymentDate), 'yyyy-MM-dd') : '',
-        'Basic Salary': record.basicSalary,
-        'Tax Amount': record.taxAmount,
-        'NSSF Amount': record.nssfAmount,
-        'Loan Deduction': record.loanDeduction,
-        'Other Deductions': record.otherDeductions,
-        'Net Salary': record.netSalary,
+        'Salary Period': record.salary_period,
+        'Payment Date': record.payment_date ? format(new Date(record.payment_date), 'yyyy-MM-dd') : '',
+        'Basic Salary': record.basic_salary,
+        'Tax Amount': record.tax_amount,
+        'NSSF Amount': record.nssf_amount,
+        'Loan Deduction': record.loan_deduction,
+        'Other Deductions': record.other_deductions,
+        'Net Salary': record.net_salary,
         'Currency': record.currency,
-        'Payment Status': record.paymentStatus,
-        'Payment Method': record.paymentMethod,
+        'Payment Status': record.payment_status,
+        'Payment Method': record.payment_method,
         'Notes': record.notes
       }))
     );
@@ -45,21 +45,21 @@ const ExportActions = ({ filteredRecords }) => {
   const exportToCSV = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       filteredRecords.map(record => ({
-        'Payslip Number': record.payslipNumber,
-        'Employee Name': record.employeeName,
-        'Employee ID': record.employeeId,
+        'Payslip Number': record.payslip_number,
+        'Employee Name': record.employee_name,
+        'Employee ID': record.employee_id,
         'Department': record.department,
-        'Salary Period': record.salaryPeriod,
-        'Payment Date': record.paymentDate ? format(new Date(record.paymentDate), 'yyyy-MM-dd') : '',
-        'Basic Salary': record.basicSalary,
-        'Tax Amount': record.taxAmount,
-        'NSSF Amount': record.nssfAmount,
-        'Loan Deduction': record.loanDeduction,
-        'Other Deductions': record.otherDeductions,
-        'Net Salary': record.netSalary,
+        'Salary Period': record.salary_period,
+        'Payment Date': record.payment_date ? format(new Date(record.payment_date), 'yyyy-MM-dd') : '',
+        'Basic Salary': record.basic_salary,
+        'Tax Amount': record.tax_amount,
+        'NSSF Amount': record.nssf_amount,
+        'Loan Deduction': record.loan_deduction,
+        'Other Deductions': record.other_deductions,
+        'Net Salary': record.net_salary,
         'Currency': record.currency,
-        'Payment Status': record.paymentStatus,
-        'Payment Method': record.paymentMethod,
+        'Payment Status': record.payment_status,
+        'Payment Method': record.payment_method,
         'Notes': record.notes
       }))
     );
@@ -80,42 +80,69 @@ const ExportActions = ({ filteredRecords }) => {
   };
 
   const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.text('Payroll & Payslips Report', 14, 16);
-    
-    doc.autoTable({
-      head: [['Payslip #', 'Employee', 'Department', 'Date', 'Gross Salary', 'Net Salary', 'Status']],
-      body: filteredRecords.map(record => [
-        record.payslipNumber,
-        `${record.employeeName} (${record.employeeId})`,
-        record.department,
-        record.paymentDate ? format(new Date(record.paymentDate), 'yyyy-MM-dd') : '',
-        `${record.currency} ${record.basicSalary}`,
-        `${record.currency} ${record.netSalary}`,
-        record.paymentStatus
-      ]),
-      startY: 20,
-      theme: 'grid',
-      styles: {
-        fontSize: 8,
-        cellPadding: 2
-      },
-      headStyles: {
-        fillColor: [0, 0, 160],
-        textColor: [255, 255, 255],
-        fontStyle: 'bold'
-      },
-      alternateRowStyles: {
-        fillColor: [240, 240, 240]
+    try {
+      // Create a new PDF document
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(16);
+      doc.text('Payroll & Payslips Report', 14, 15);
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${format(new Date(), 'dd MMM yyyy, HH:mm')}`, 14, 20);
+      
+      // Add table with data
+      doc.autoTable({
+        head: [['Payslip #', 'Employee', 'Department', 'Date', 'Gross Salary', 'Net Salary', 'Status']],
+        body: filteredRecords.map(record => [
+          record.payslip_number,
+          `${record.employee_name} (${record.employee_id})`,
+          record.department || 'N/A',
+          record.payment_date ? format(new Date(record.payment_date), 'yyyy-MM-dd') : '',
+          `${record.currency} ${record.basic_salary}`,
+          `${record.currency} ${record.net_salary}`,
+          record.payment_status
+        ]),
+        startY: 25,
+        theme: 'grid',
+        styles: {
+          fontSize: 8,
+          cellPadding: 2
+        },
+        headStyles: {
+          fillColor: [71, 85, 105],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [240, 240, 240]
+        }
+      });
+      
+      // Add page footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, {
+          align: 'center'
+        });
       }
-    });
-    
-    doc.save('payroll-payslips.pdf');
-    
-    toast({
-      title: "Export Successful",
-      description: "PDF file has been downloaded successfully."
-    });
+      
+      // Save the PDF
+      doc.save('payroll-payslips.pdf');
+      
+      toast({
+        title: "Export Successful",
+        description: "PDF file has been downloaded successfully."
+      });
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error generating the PDF. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   return (

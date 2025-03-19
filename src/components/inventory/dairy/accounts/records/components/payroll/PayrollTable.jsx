@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,8 @@ import { Mail, Download, Eye } from "lucide-react";
 import { format } from 'date-fns';
 import { useToast } from "@/components/ui/use-toast";
 import { useCurrencyFormatter } from "./hooks/useCurrencyFormatter";
+import { jsPDF } from "jspdf";
+import 'jspdf-autotable';
 
 const PayrollTable = ({ records, loading }) => {
   const { toast } = useToast();
@@ -44,68 +45,102 @@ const PayrollTable = ({ records, loading }) => {
   const handleEmailPayslip = (record) => {
     console.log("Emailing payslip to employee:", record);
     
-    // Simulate sending an email
+    // Create the email content
+    const emailContent = `
+Dear ${record.employee_name},
+
+Your payslip for the current pay period is ready. Here are the details:
+
+- Payslip Number: ${record.payslip_number}
+- Payment Date: ${format(new Date(record.payment_date), 'dd MMMM yyyy')}
+- Basic Salary: ${formatCurrency(record.basic_salary, record.currency)}
+- Net Salary: ${formatCurrency(record.net_salary, record.currency)}
+
+Please review the attached payslip for complete details.
+
+Regards,
+Grand Berna Dairies HR Department
+    `;
+    
+    // In a real application, we would use a backend API to send this email
+    // For now, we'll simulate an email being sent with a setTimeout
+    toast({
+      title: "Sending Email...",
+      description: "Processing your request...",
+    });
+    
     setTimeout(() => {
       toast({
         title: "Email Sent",
         description: `Payslip email sent to ${record.employee_name}`,
       });
-    }, 1000);
+    }, 1500);
   };
 
   const handleDownloadPayslip = (record) => {
     console.log("Downloading payslip PDF:", record);
     
-    // Create a simple text representation of the payslip
-    const payslipContent = `
-PAYSLIP
-
-Payslip Number: ${record.payslip_number}
-Employee: ${record.employee_name}
-Employee ID: ${record.employee_id}
-Department: ${record.department || 'N/A'}
-Payment Date: ${format(new Date(record.payment_date), 'dd MMMM yyyy')}
-
-EARNINGS
-Basic Salary: ${formatCurrency(record.basic_salary, record.currency)}
-
-DEDUCTIONS
-Tax: ${formatCurrency(record.tax_amount || 0, record.currency)}
-NSSF: ${formatCurrency(record.nssf_amount || 0, record.currency)}
-Loan: ${formatCurrency(record.loan_deduction || 0, record.currency)}
-Other: ${formatCurrency(record.other_deductions || 0, record.currency)}
-
-NET SALARY: ${formatCurrency(record.net_salary, record.currency)}
-
-Payment Status: ${record.payment_status === 'paid' ? 'Paid' : 'Pending'}
-Payment Method: ${record.payment_method || 'N/A'}
-    `;
-    
-    // Create a Blob from the text content
-    const blob = new Blob([payslipContent], { type: 'text/plain' });
-    
-    // Create a URL for the Blob
-    const url = URL.createObjectURL(blob);
-    
-    // Create a link element
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Payslip-${record.payslip_number}.txt`;
-    
-    // Append to the document and click the link
-    document.body.appendChild(a);
-    a.click();
-    
-    // Clean up
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 0);
-    
-    toast({
-      title: "Payslip Downloaded",
-      description: `Downloaded payslip for ${record.employee_name}`,
-    });
+    try {
+      // Create a new PDF document
+      const doc = new jsPDF();
+      
+      // Add document title
+      doc.setFontSize(18);
+      doc.setTextColor(40, 40, 40);
+      doc.text("PAYSLIP", 105, 15, { align: 'center' });
+      
+      // Add company logo (if we had one)
+      // doc.addImage(companyLogo, 'PNG', 14, 10, 30, 30);
+      
+      // Add employee information
+      doc.setFontSize(11);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Payslip Number: ${record.payslip_number}`, 14, 30);
+      doc.text(`Employee: ${record.employee_name} (ID: ${record.employee_id})`, 14, 35);
+      doc.text(`Department: ${record.department || 'N/A'}`, 14, 40);
+      doc.text(`Payment Date: ${format(new Date(record.payment_date), 'dd MMMM yyyy')}`, 14, 45);
+      
+      // Create salary details table
+      doc.autoTable({
+        startY: 55,
+        head: [['Description', 'Amount']],
+        body: [
+          ['Basic Salary', formatCurrency(record.basic_salary, record.currency)],
+          ['Tax Deduction', formatCurrency(record.tax_amount || 0, record.currency)],
+          ['NSSF Contribution', formatCurrency(record.nssf_amount || 0, record.currency)],
+          ['Loan Deduction', formatCurrency(record.loan_deduction || 0, record.currency)],
+          ['Other Deductions', formatCurrency(record.other_deductions || 0, record.currency)],
+          ['Net Salary', formatCurrency(record.net_salary, record.currency)]
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [71, 85, 105], textColor: 255 },
+        footStyles: { fillColor: [245, 245, 245], textColor: [100, 100, 100] }
+      });
+      
+      // Add payment information
+      const finalY = doc.lastAutoTable.finalY + 10;
+      doc.text(`Payment Status: ${record.payment_status === 'paid' ? 'Paid' : 'Pending'}`, 14, finalY);
+      doc.text(`Payment Method: ${record.payment_method || 'N/A'}`, 14, finalY + 5);
+      
+      // Add footer
+      doc.setFontSize(10);
+      doc.text('This is a computer-generated document. No signature is required.', 105, 280, { align: 'center' });
+      
+      // Save the PDF
+      doc.save(`Payslip-${record.payslip_number}.pdf`);
+      
+      toast({
+        title: "Payslip Downloaded",
+        description: `Downloaded payslip for ${record.employee_name}`,
+      });
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast({
+        title: "Download Failed",
+        description: "There was an error generating the PDF. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
