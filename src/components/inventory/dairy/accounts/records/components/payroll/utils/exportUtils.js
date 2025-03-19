@@ -1,8 +1,7 @@
 
 import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
 import { format } from 'date-fns';
+import { generatePayrollReportPDF } from './pdfUtils';
 
 export const exportToExcel = (filteredRecords, toast) => {
   try {
@@ -92,88 +91,8 @@ export const exportToCSV = (filteredRecords, toast) => {
 
 export const exportToPDF = async (filteredRecords, toast) => {
   try {
-    // Create a new PDF document
-    const doc = new jsPDF();
-    
-    // Add title
-    doc.setFontSize(16);
-    doc.text('Payroll & Payslips Report', 14, 15);
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${format(new Date(), 'dd MMM yyyy, HH:mm')}`, 14, 20);
-    
-    // Add company name
-    doc.setFontSize(12);
-    doc.setTextColor(80, 80, 80);
-    doc.text("Grand Berna Dairies Ltd", 105, 25, { align: 'center' });
-    doc.setTextColor(0, 0, 0);
-    
-    // Add table with data
-    if (typeof doc.autoTable === 'function') {
-      doc.autoTable({
-        head: [['Payslip #', 'Employee', 'Department', 'Date', 'Gross Salary', 'Deductions', 'Net Salary', 'Status']],
-        body: filteredRecords.map(record => {
-          const totalDeductions = 
-            parseFloat(record.tax_amount || 0) + 
-            parseFloat(record.nssf_amount || 0) + 
-            parseFloat(record.loan_deduction || 0) + 
-            parseFloat(record.other_deductions || 0);
-              
-          return [
-            record.payslip_number,
-            `${record.employee_name} (${record.employee_id})`,
-            record.department || 'N/A',
-            record.payment_date ? format(new Date(record.payment_date), 'dd MMM yyyy') : '',
-            `${record.currency} ${record.basic_salary}`,
-            `${record.currency} ${totalDeductions.toFixed(2)}`,
-            `${record.currency} ${record.net_salary}`,
-            record.payment_status
-          ];
-        }),
-        startY: 30,
-        theme: 'grid',
-        styles: {
-          fontSize: 8,
-          cellPadding: 2
-        },
-        headStyles: {
-          fillColor: [71, 85, 105],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold'
-        },
-        alternateRowStyles: {
-          fillColor: [240, 240, 240]
-        }
-      });
-    } else {
-      // Fallback if autoTable isn't available (should not happen)
-      doc.text("Error: PDF autotable plugin not properly loaded", 14, 30);
-      console.error("jsPDF-AutoTable plugin not properly initialized");
-    }
-    
-    // Add summary section if autoTable is available
-    if (typeof doc.autoTable === 'function') {
-      const totalEmployees = filteredRecords.length;
-      const totalGrossSalary = filteredRecords.reduce((sum, record) => sum + parseFloat(record.basic_salary || 0), 0);
-      const totalNetSalary = filteredRecords.reduce((sum, record) => sum + parseFloat(record.net_salary || 0), 0);
-      const mainCurrency = filteredRecords.length > 0 ? filteredRecords[0].currency : 'UGX';
-      
-      const finalY = doc.lastAutoTable.finalY + 10;
-      doc.setFontSize(10);
-      doc.text(`Summary`, 14, finalY);
-      doc.text(`Total Employees: ${totalEmployees}`, 14, finalY + 5);
-      doc.text(`Total Gross Salary: ${mainCurrency} ${totalGrossSalary.toFixed(2)}`, 14, finalY + 10);
-      doc.text(`Total Net Salary: ${mainCurrency} ${totalNetSalary.toFixed(2)}`, 14, finalY + 15);
-    }
-    
-    // Add page footer
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, {
-        align: 'center'
-      });
-    }
+    // Using our shared utility function to generate the PDF
+    const doc = generatePayrollReportPDF(filteredRecords);
     
     // Save the PDF
     doc.save('payroll-payslips.pdf');
@@ -203,10 +122,8 @@ export const emailPayrollReport = async (filteredRecords, recipientEmail, toast)
   });
   
   try {
-    // First generate the PDF
-    const doc = await exportToPDF(filteredRecords, {
-      toast: () => {} // Silent toast during PDF generation
-    });
+    // Generate the PDF using our shared utility
+    const doc = generatePayrollReportPDF(filteredRecords);
     
     // Get the PDF as a blob
     const pdfBlob = doc.output('blob');

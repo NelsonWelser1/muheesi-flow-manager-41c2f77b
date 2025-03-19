@@ -12,6 +12,7 @@ const PDFExportButton = ({ onClick }) => {
       await onClick();
     } catch (error) {
       console.error("PDF export error:", error);
+      // Error is handled in the parent component through the toast system
     } finally {
       setIsExporting(false);
     }
