@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ContentView from './ContentView';
 import FeatureTiles from './FeatureTiles';
+
 const MainCard = ({
   activeComponent,
   setActiveComponent,
@@ -12,22 +14,56 @@ const MainCard = ({
   avgDeliveryTime,
   delayedDeliveries
 }) => {
-  return <Card>
+  // Determine the appropriate back button text based on the active component
+  const getBackButtonText = () => {
+    if (!activeComponent) return null;
+    if (activeComponent === 'records') return '← Back to Management';
+    return '← Back to All Options';
+  };
+
+  // Only render back button if there's an active component
+  const renderBackButton = () => {
+    const backText = getBackButtonText();
+    if (!backText) return null;
+    
+    return (
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={handleBack} 
+        className="flex items-center gap-2"
+      >
+        {backText}
+      </Button>
+    );
+  };
+
+  return (
+    <Card>
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
           <span>Logistics & Distribution Management</span>
-          {!activeComponent}
-          {activeComponent && activeComponent !== 'records' && <Button variant="outline" size="sm" onClick={handleBack} className="flex items-center gap-2">
-              ← Back to All Options
-            </Button>}
-          {activeComponent === 'records' && <Button variant="outline" size="sm" onClick={handleBack} className="flex items-center gap-2">
-              ← Back to Management
-            </Button>}
+          {renderBackButton()}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {activeComponent ? <ContentView activeComponent={activeComponent} handleBack={handleBack} /> : <FeatureTiles onSelectComponent={setActiveComponent} activeDeliveries={activeDeliveries} pendingOrders={pendingOrders} avgDeliveryTime={avgDeliveryTime} delayedDeliveries={delayedDeliveries} />}
+        {activeComponent ? (
+          <ContentView 
+            activeComponent={activeComponent} 
+            handleBack={handleBack} 
+          />
+        ) : (
+          <FeatureTiles 
+            onSelectComponent={setActiveComponent}
+            activeDeliveries={activeDeliveries}
+            pendingOrders={pendingOrders}
+            avgDeliveryTime={avgDeliveryTime}
+            delayedDeliveries={delayedDeliveries}
+          />
+        )}
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export default MainCard;
