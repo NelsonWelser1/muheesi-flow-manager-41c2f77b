@@ -13,6 +13,7 @@ const useSalesDashboardData = () => {
     try {
       console.log('Fetching sales data from Supabase...');
       
+      // Fetch sales data
       const { data: salesRecords, error: salesError } = await supabase
         .from('sales_records')
         .select('*')
@@ -22,14 +23,30 @@ const useSalesDashboardData = () => {
       console.log('Fetched sales data:', salesRecords);
       setSalesData(salesRecords || []);
 
-      const { data: campaignRecords, error: campaignError } = await supabase
-        .from('marketing_campaigns')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Try to fetch marketing campaign data
+      try {
+        const { data: campaignRecords, error: campaignError } = await supabase
+          .from('marketing_campaigns')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (campaignError) throw campaignError;
-      console.log('Fetched campaign data:', campaignRecords);
-      setCampaignData(campaignRecords || []);
+        if (campaignError) {
+          // If table doesn't exist, just set empty array without throwing
+          if (campaignError.code === '42P01') { // PostgreSQL code for "relation does not exist"
+            console.log('Marketing campaigns table does not exist yet:', campaignError.message);
+            setCampaignData([]);
+          } else {
+            throw campaignError;
+          }
+        } else {
+          console.log('Fetched campaign data:', campaignRecords);
+          setCampaignData(campaignRecords || []);
+        }
+      } catch (campaignError) {
+        console.error('Error fetching campaign data:', campaignError);
+        // Set empty array but don't fail the whole data loading
+        setCampaignData([]);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       setError(error);

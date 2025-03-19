@@ -4,12 +4,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useSalesDashboardData from './hooks/useSalesDashboardData';
 import SalesDashboardContent from './components/SalesDashboardContent';
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const SalesMarketingDashboard = () => {
   const { salesData, campaignData, isLoading, error } = useSalesDashboardData();
 
   if (error) {
-    return <div className="text-center py-8 text-red-500">Error loading dashboard: {error.message}</div>;
+    return (
+      <Alert variant="destructive" className="mb-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>Error loading dashboard: {error.message}</AlertDescription>
+      </Alert>
+    );
   }
 
   return (
@@ -53,7 +61,13 @@ const SalesMarketingDashboard = () => {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p>No active marketing campaigns found.</p>
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>No Marketing Data</AlertTitle>
+                <AlertDescription>
+                  No marketing campaigns found. Marketing campaigns table may not be set up yet.
+                </AlertDescription>
+              </Alert>
             </div>
           )}
         </TabsContent>

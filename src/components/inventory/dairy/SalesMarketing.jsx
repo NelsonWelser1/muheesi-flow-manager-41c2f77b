@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Package, TrendingUp } from 'lucide-react';
+import { DollarSign, Package, TrendingUp, AlertCircle } from 'lucide-react';
 import useSalesDashboardData from './dashboard/hooks/useSalesDashboardData';
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const SalesMarketing = () => {
   const { salesData, campaignData, isLoading, error } = useSalesDashboardData();
@@ -65,9 +66,11 @@ const SalesMarketing = () => {
 
   if (error) {
     return (
-      <div className="text-center py-8 text-red-500">
-        <p>Error loading sales data: {error.message}</p>
-      </div>
+      <Alert variant="destructive" className="mb-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>Error loading sales data: {error.message}</AlertDescription>
+      </Alert>
     );
   }
 
@@ -125,7 +128,13 @@ const SalesMarketing = () => {
         </div>
       ) : salesData.length === 0 ? (
         <div className="text-center py-8">
-          <p>No sales data available. Please check back later.</p>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>No Data Available</AlertTitle>
+            <AlertDescription>
+              No sales data available. Please add sales records to see them reflected here.
+            </AlertDescription>
+          </Alert>
         </div>
       ) : (
         <div className="text-center py-8">
