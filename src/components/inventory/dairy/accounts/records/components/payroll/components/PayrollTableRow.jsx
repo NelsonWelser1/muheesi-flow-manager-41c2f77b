@@ -3,7 +3,7 @@ import React from 'react';
 import { TableRow, TableCell } from "@/components/ui/table";
 import { format } from 'date-fns';
 import PayslipStatusBadge from './PayslipStatusBadge';
-import PayslipActionButtons from './PayslipActionButtons';
+import PayslipActionButtons from './payslip-actions';
 
 const PayrollTableRow = ({ record, formatCurrency }) => {
   // Calculate total deductions
