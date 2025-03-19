@@ -11,13 +11,16 @@ const useSalesDashboardData = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
+      console.log('Fetching sales data from Supabase...');
+      
       const { data: salesRecords, error: salesError } = await supabase
         .from('sales_records')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('date_time', { ascending: false });
 
       if (salesError) throw salesError;
-      setSalesData(salesRecords);
+      console.log('Fetched sales data:', salesRecords);
+      setSalesData(salesRecords || []);
 
       const { data: campaignRecords, error: campaignError } = await supabase
         .from('marketing_campaigns')
@@ -25,7 +28,8 @@ const useSalesDashboardData = () => {
         .order('created_at', { ascending: false });
 
       if (campaignError) throw campaignError;
-      setCampaignData(campaignRecords);
+      console.log('Fetched campaign data:', campaignRecords);
+      setCampaignData(campaignRecords || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       setError(error);
