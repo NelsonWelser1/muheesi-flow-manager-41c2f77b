@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { TabsContent } from "@/components/ui/tabs";
-import ImportEmployeesForm from "../../components/ImportEmployeesForm";
+import ImportEmployeesForm from "../../components/ImportEmployees";
 import { useBulkPayroll } from '../BulkPayrollContext';
 
 const ImportTab = () => {
