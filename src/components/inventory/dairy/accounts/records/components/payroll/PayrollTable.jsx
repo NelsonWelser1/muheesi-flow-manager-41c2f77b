@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, Download, Eye } from "lucide-react";
 import { format } from 'date-fns';
 import { useToast } from "@/components/ui/use-toast";
-import { useCurrencyFormatter } from "../../../../forms/components/BulkPayrollTable/hooks/useCurrencyFormatter";
+import { useCurrencyFormatter } from "../../../../../forms/components/BulkPayrollTable/hooks/useCurrencyFormatter";
 
 const PayrollTable = ({ records, loading }) => {
   const { toast } = useToast();
