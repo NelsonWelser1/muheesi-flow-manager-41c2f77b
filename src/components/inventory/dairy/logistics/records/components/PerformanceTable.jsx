@@ -3,7 +3,8 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
-import { Star, ChevronUp, ChevronDown } from "lucide-react";
+import { Star, ChevronUp, ChevronDown, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const PerformanceTable = ({ performance, handleSort, sortConfig }) => {
   // Format date
@@ -127,6 +128,7 @@ const PerformanceTable = ({ performance, handleSort, sortConfig }) => {
               Date
               {renderSortIcon('created_at')}
             </TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -152,6 +154,12 @@ const PerformanceTable = ({ performance, handleSort, sortConfig }) => {
               </TableCell>
               <TableCell className="text-muted-foreground text-sm">
                 {formatDateTime(record.created_at)}
+              </TableCell>
+              <TableCell>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="sr-only">View details</span>
+                </Button>
               </TableCell>
             </TableRow>
           ))}

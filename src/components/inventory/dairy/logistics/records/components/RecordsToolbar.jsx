@@ -3,8 +3,10 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Clock, Download } from "lucide-react";
-import { useExportUtils } from '../hooks/useExportUtils';
+import { Search, Filter, Clock } from "lucide-react";
+import CSVExportButton from './export-buttons/CSVExportButton';
+import ExcelExportButton from './export-buttons/ExcelExportButton';
+import PDFExportButton from './export-buttons/PDFExportButton';
 
 const RecordsToolbar = ({ 
   searchTerm, 
@@ -13,14 +15,15 @@ const RecordsToolbar = ({
   setTimeRange, 
   statusFilter, 
   setStatusFilter, 
-  activeTab,
-  recordsCount
+  recordsCount,
+  recordType,
+  onExportCSV,
+  onExportExcel,
+  onExportPDF
 }) => {
-  const { exportToCSV, exportToExcel, exportToPDF } = useExportUtils(activeTab);
-
-  // Status filter options based on active tab
+  // Status filter options based on record type
   const getStatusOptions = () => {
-    switch(activeTab) {
+    switch(recordType) {
       case 'deliveries':
         return [
           { value: 'all', label: 'All Statuses' },
@@ -55,7 +58,7 @@ const RecordsToolbar = ({
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search records..."
+            placeholder={`Search ${recordType}...`}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="pl-8 w-full"
@@ -96,40 +99,22 @@ const RecordsToolbar = ({
       
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">
-          {recordsCount} {activeTab} found
+          {recordsCount} {recordType} found
         </p>
         
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={exportToCSV}
+          <CSVExportButton 
+            onClick={onExportCSV}
             disabled={recordsCount === 0}
-            className="flex items-center gap-1"
-          >
-            <Download className="h-4 w-4" />
-            CSV
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={exportToExcel}
+          />
+          <ExcelExportButton 
+            onClick={onExportExcel}
             disabled={recordsCount === 0}
-            className="flex items-center gap-1"
-          >
-            <Download className="h-4 w-4" />
-            Excel
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={exportToPDF}
+          />
+          <PDFExportButton 
+            onClick={onExportPDF}
             disabled={recordsCount === 0}
-            className="flex items-center gap-1"
-          >
-            <Download className="h-4 w-4" />
-            PDF
-          </Button>
+          />
         </div>
       </div>
     </div>

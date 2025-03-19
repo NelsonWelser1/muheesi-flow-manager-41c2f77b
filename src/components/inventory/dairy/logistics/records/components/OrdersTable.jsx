@@ -3,7 +3,8 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const OrdersTable = ({ orders, handleSort, sortConfig }) => {
   // Get status badge color
@@ -122,6 +123,7 @@ const OrdersTable = ({ orders, handleSort, sortConfig }) => {
               Created
               {renderSortIcon('created_at')}
             </TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -139,6 +141,12 @@ const OrdersTable = ({ orders, handleSort, sortConfig }) => {
               <TableCell>{getStatusBadge(order.order_status)}</TableCell>
               <TableCell className="text-muted-foreground text-sm">
                 {formatDateTime(order.created_at)}
+              </TableCell>
+              <TableCell>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="sr-only">View details</span>
+                </Button>
               </TableCell>
             </TableRow>
           ))}
