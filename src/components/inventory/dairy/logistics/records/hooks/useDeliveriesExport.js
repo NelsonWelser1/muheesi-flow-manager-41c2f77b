@@ -1,227 +1,65 @@
 
 import { useToast } from "@/components/ui/use-toast";
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
-import { format } from 'date-fns';
+import { exportToCSV, exportToExcel, exportToPDF } from "../utils/exportUtils";
 
-export const useDeliveriesExport = (deliveries) => {
+const useDeliveriesExport = (deliveries) => {
   const { toast } = useToast();
 
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
+  const handleExportToCSV = () => {
     try {
-      return format(new Date(dateString), 'yyyy-MM-dd HH:mm');
-    } catch (error) {
-      return dateString;
-    }
-  };
-
-  // Export to CSV
-  const exportToCSV = () => {
-    try {
-      if (!deliveries || deliveries.length === 0) {
-        toast({
-          title: "No data to export",
-          description: "There are no delivery records to export",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Get all keys from the first object
-      const keys = Object.keys(deliveries[0]);
-      
-      // Convert snake_case to Title Case for headers
-      const headers = keys.map(key => 
-        key.split('_')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ')
-      );
-      
-      // Convert data to rows
-      const rows = deliveries.map(item => 
-        keys.map(key => {
-          // Format dates
-          if (key.includes('date') || key.includes('time') || key === 'created_at' || key === 'updated_at') {
-            return formatDate(item[key]);
-          }
-          return item[key];
-        })
-      );
-      
-      // Create CSV content
-      const csvContent = [
-        headers.join(','),
-        ...rows.map(row => row.map(cell => 
-          typeof cell === 'object' ? JSON.stringify(cell) : String(cell).replace(/,/g, ';')
-        ).join(','))
-      ].join('\n');
-      
-      // Create and download blob
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      
-      link.href = url;
-      link.download = `logistics-deliveries-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
+      exportToCSV(deliveries, 'logistics_deliveries');
       toast({
         title: "Export Successful",
-        description: "Delivery data exported to CSV successfully"
+        description: "Deliveries data has been exported to CSV.",
       });
     } catch (error) {
-      console.error("CSV export error:", error);
+      console.error("CSV Export Error:", error);
       toast({
         title: "Export Failed",
-        description: "Could not export delivery data to CSV",
-        variant: "destructive"
+        description: "Failed to export deliveries data to CSV.",
+        variant: "destructive",
       });
     }
   };
 
-  // Export to Excel
-  const exportToExcel = () => {
+  const handleExportToExcel = () => {
     try {
-      if (!deliveries || deliveries.length === 0) {
-        toast({
-          title: "No data to export",
-          description: "There are no delivery records to export",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Process data to handle dates
-      const processedData = deliveries.map(item => {
-        const processed = {};
-        Object.keys(item).forEach(key => {
-          if (key.includes('date') || key.includes('time') || key === 'created_at' || key === 'updated_at') {
-            processed[key] = formatDate(item[key]);
-          } else if (typeof item[key] === 'object' && item[key] !== null) {
-            processed[key] = JSON.stringify(item[key]);
-          } else {
-            processed[key] = item[key];
-          }
-        });
-        return processed;
-      });
-      
-      // Create workbook and worksheet
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.json_to_sheet(processedData);
-      
-      // Add worksheet to workbook
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Deliveries");
-      
-      // Generate Excel file and trigger download
-      XLSX.writeFile(workbook, `logistics-deliveries-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
-      
+      exportToExcel(deliveries, 'logistics_deliveries');
       toast({
         title: "Export Successful",
-        description: "Delivery data exported to Excel successfully"
+        description: "Deliveries data has been exported to Excel.",
       });
     } catch (error) {
-      console.error("Excel export error:", error);
+      console.error("Excel Export Error:", error);
       toast({
         title: "Export Failed",
-        description: "Could not export delivery data to Excel",
-        variant: "destructive"
+        description: "Failed to export deliveries data to Excel.",
+        variant: "destructive",
       });
     }
   };
 
-  // Export to PDF
-  const exportToPDF = () => {
+  const handleExportToPDF = () => {
     try {
-      if (!deliveries || deliveries.length === 0) {
-        toast({
-          title: "No data to export",
-          description: "There are no delivery records to export",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const doc = new jsPDF();
-      
-      // Set title
-      doc.setFontSize(18);
-      doc.text("Logistics Deliveries", 14, 22);
-      
-      // Add date
-      doc.setFontSize(11);
-      doc.text(`Generated on: ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 30);
-      
-      // Get relevant keys from data (exclude some system fields)
-      const excludedKeys = ['created_at', 'updated_at', 'id'];
-      const firstItem = deliveries[0];
-      
-      // Limit columns for better readability (first 8 fields except the excluded)
-      const keys = Object.keys(firstItem)
-        .filter(key => !excludedKeys.includes(key))
-        .slice(0, 8);
-      
-      // Convert data for table
-      const tableData = deliveries.map(item => {
-        const rowData = [];
-        
-        keys.forEach(key => {
-          if (key.includes('date') || key.includes('time')) {
-            rowData.push(formatDate(item[key]));
-          } else if (typeof item[key] === 'object' && item[key] !== null) {
-            rowData.push(JSON.stringify(item[key]).substring(0, 30) + (JSON.stringify(item[key]).length > 30 ? '...' : ''));
-          } else {
-            rowData.push(item[key]);
-          }
-        });
-        
-        return rowData;
-      });
-      
-      // Generate readable headers from keys (convert snake_case to Title Case)
-      const headers = keys.map(key => 
-        key.split('_')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ')
-      );
-      
-      // Add table
-      doc.autoTable({
-        head: [headers],
-        body: tableData,
-        startY: 40,
-        margin: { top: 15 },
-        styles: { overflow: 'linebreak' },
-        columnStyles: { 0: { cellWidth: 25 } },
-        headStyles: { fillColor: [41, 128, 185] }
-      });
-      
-      // Save PDF
-      doc.save(`logistics-deliveries-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      
+      exportToPDF(deliveries, 'Logistics Deliveries Records');
       toast({
         title: "Export Successful",
-        description: "Delivery data exported to PDF successfully"
+        description: "Deliveries data has been exported to PDF.",
       });
     } catch (error) {
-      console.error("PDF export error:", error);
+      console.error("PDF Export Error:", error);
       toast({
         title: "Export Failed",
-        description: "Could not export delivery data to PDF",
-        variant: "destructive"
+        description: "Failed to export deliveries data to PDF.",
+        variant: "destructive",
       });
     }
   };
 
   return {
-    exportToCSV,
-    exportToExcel,
-    exportToPDF
+    exportToCSV: handleExportToCSV,
+    exportToExcel: handleExportToExcel,
+    exportToPDF: handleExportToPDF,
   };
 };
 

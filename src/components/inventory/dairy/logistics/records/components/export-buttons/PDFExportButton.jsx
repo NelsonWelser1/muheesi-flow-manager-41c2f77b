@@ -1,33 +1,19 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 
 const PDFExportButton = ({ onClick, disabled = false }) => {
-  const [isExporting, setIsExporting] = useState(false);
-  
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      await onClick();
-    } catch (error) {
-      console.error("PDF export error:", error);
-      // Error is handled in the parent component
-    } finally {
-      setIsExporting(false);
-    }
-  };
-  
   return (
     <Button
       variant="outline"
       size="sm"
-      onClick={handleExport}
-      disabled={disabled || isExporting}
+      onClick={onClick}
+      disabled={disabled}
       className="flex items-center gap-1"
       title="Export to PDF"
     >
-      <FileText className={`h-4 w-4 ${isExporting ? 'animate-pulse' : ''}`} />
+      <FileText className="h-4 w-4" />
       PDF
     </Button>
   );

@@ -17,6 +17,7 @@ import PerformanceAnalyticsForm from './forms/PerformanceAnalyticsForm';
 
 // Import records view component
 import LogisticsRecordsView from './records/LogisticsRecordsView';
+import ViewRecordsButton from './records/ViewRecordsButton';
 
 const LogisticsDashboard = () => {
   const navigate = useNavigate();
@@ -133,7 +134,15 @@ const LogisticsDashboard = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Logistics & Distribution Management</CardTitle>
+          <CardTitle className="flex justify-between items-center">
+            <span>Logistics & Distribution Management</span>
+            <div className="flex gap-2">
+              <ViewRecordsButton 
+                recordType="deliveries" 
+                to="/manage-inventory/logistics/records"
+              />
+            </div>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
@@ -166,14 +175,35 @@ const LogisticsDashboard = () => {
             </TabsContent>
 
             <TabsContent value="deliveries">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Delivery Management</h3>
+                <ViewRecordsButton 
+                  recordType="deliveries" 
+                  to="/manage-inventory/logistics/records/deliveries"
+                />
+              </div>
               <DeliveryManagementForm />
             </TabsContent>
 
             <TabsContent value="orders">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Order Entry</h3>
+                <ViewRecordsButton 
+                  recordType="orders" 
+                  to="/manage-inventory/logistics/records/orders"
+                />
+              </div>
               <OrderEntryForm />
             </TabsContent>
 
             <TabsContent value="performance">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Performance Analytics</h3>
+                <ViewRecordsButton 
+                  recordType="performance" 
+                  to="/manage-inventory/logistics/records/performance"
+                />
+              </div>
               <PerformanceAnalyticsForm />
             </TabsContent>
             
