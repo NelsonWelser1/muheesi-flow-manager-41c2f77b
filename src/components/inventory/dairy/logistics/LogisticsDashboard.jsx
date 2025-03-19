@@ -15,6 +15,9 @@ import DeliveryManagementForm from './forms/DeliveryManagementForm';
 import OrderEntryForm from './forms/OrderEntryForm';
 import PerformanceAnalyticsForm from './forms/PerformanceAnalyticsForm';
 
+// Import records view component
+import LogisticsRecordsView from './records/LogisticsRecordsView';
+
 const LogisticsDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -133,12 +136,13 @@ const LogisticsDashboard = () => {
           <CardTitle>Logistics & Distribution Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="overview" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4 mb-4">
+          <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-5 mb-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="deliveries">Deliveries</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="performance">Performance</TabsTrigger>
+              <TabsTrigger value="records">View Records</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview">
@@ -171,6 +175,10 @@ const LogisticsDashboard = () => {
 
             <TabsContent value="performance">
               <PerformanceAnalyticsForm />
+            </TabsContent>
+            
+            <TabsContent value="records">
+              <LogisticsRecordsView />
             </TabsContent>
           </Tabs>
         </CardContent>
