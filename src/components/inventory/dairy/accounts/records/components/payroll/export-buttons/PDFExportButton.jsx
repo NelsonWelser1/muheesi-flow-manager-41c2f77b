@@ -10,6 +10,8 @@ const PDFExportButton = ({ onClick }) => {
     setIsExporting(true);
     try {
       await onClick();
+    } catch (error) {
+      console.error("PDF export error:", error);
     } finally {
       setIsExporting(false);
     }

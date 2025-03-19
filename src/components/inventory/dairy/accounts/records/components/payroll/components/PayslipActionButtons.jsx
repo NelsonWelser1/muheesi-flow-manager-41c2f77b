@@ -43,7 +43,6 @@ const PayslipActionButtons = ({ record, formatCurrency }) => {
   };
 
   const generatePayslipPDF = () => {
-    // Create a new PDF document
     const doc = new jsPDF();
     
     // Add document title
@@ -65,25 +64,55 @@ const PayslipActionButtons = ({ record, formatCurrency }) => {
     doc.text(`Payment Date: ${format(new Date(record.payment_date), 'dd MMMM yyyy')}`, 14, 50);
     doc.text(`Salary Period: ${record.salary_period || 'Monthly'}`, 14, 55);
     
-    // Create salary details table
-    doc.autoTable({
-      startY: 65,
-      head: [['Description', 'Amount']],
-      body: [
+    // Create salary details table with jsPDF-AutoTable
+    if (typeof doc.autoTable === 'function') {
+      doc.autoTable({
+        startY: 65,
+        head: [['Description', 'Amount']],
+        body: [
+          ['Basic Salary', formatCurrency(record.basic_salary, record.currency)],
+          ['Tax Deduction', formatCurrency(record.tax_amount || 0, record.currency)],
+          ['NSSF Contribution', formatCurrency(record.nssf_amount || 0, record.currency)],
+          ['Loan Deduction', formatCurrency(record.loan_deduction || 0, record.currency)],
+          ['Other Deductions', formatCurrency(record.other_deductions || 0, record.currency)],
+          ['Net Salary', formatCurrency(record.net_salary, record.currency)]
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [71, 85, 105], textColor: 255 },
+        footStyles: { fillColor: [245, 245, 245], textColor: [100, 100, 100] }
+      });
+    } else {
+      // Fallback if autoTable isn't available
+      let y = 65;
+      doc.setFontSize(10);
+      doc.text("Description", 14, y);
+      doc.text("Amount", 120, y);
+      y += 10;
+      
+      // Draw lines
+      doc.line(14, y-5, 196, y-5);
+      
+      // Add rows manually
+      const items = [
         ['Basic Salary', formatCurrency(record.basic_salary, record.currency)],
         ['Tax Deduction', formatCurrency(record.tax_amount || 0, record.currency)],
         ['NSSF Contribution', formatCurrency(record.nssf_amount || 0, record.currency)],
         ['Loan Deduction', formatCurrency(record.loan_deduction || 0, record.currency)],
         ['Other Deductions', formatCurrency(record.other_deductions || 0, record.currency)],
         ['Net Salary', formatCurrency(record.net_salary, record.currency)]
-      ],
-      theme: 'striped',
-      headStyles: { fillColor: [71, 85, 105], textColor: 255 },
-      footStyles: { fillColor: [245, 245, 245], textColor: [100, 100, 100] }
-    });
+      ];
+      
+      items.forEach(item => {
+        doc.text(item[0], 14, y);
+        doc.text(item[1], 120, y);
+        y += 10;
+      });
+    }
+    
+    // Get the Y position after the table
+    const finalY = doc.autoTable ? doc.lastAutoTable.finalY + 10 : 150;
     
     // Add payment information
-    const finalY = doc.lastAutoTable.finalY + 10;
     doc.text(`Payment Status: ${record.payment_status === 'paid' ? 'Paid' : 'Pending'}`, 14, finalY);
     doc.text(`Payment Method: ${record.payment_method || 'N/A'}`, 14, finalY + 5);
     
