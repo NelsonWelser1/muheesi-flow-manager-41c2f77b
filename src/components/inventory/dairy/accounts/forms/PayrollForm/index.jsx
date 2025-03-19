@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Eye } from "lucide-react";
 import PayrollPayslipsRecords from '../../records/PayrollPayslipsRecords';
 import PayrollFormContent from './PayrollFormContent';
-import BulkPayrollModal from '../BulkPayrollModal';
+import BulkPayrollModal from '../BulkPayroll/BulkPayrollModal';
 
 const PayrollPayslipsForm = ({ onBack }) => {
   const [viewMode, setViewMode] = useState('form'); // 'form' or 'records'
