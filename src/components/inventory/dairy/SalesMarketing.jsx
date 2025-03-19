@@ -15,12 +15,12 @@ const SalesMarketing = () => {
     
     const today = new Date().setHours(0, 0, 0, 0);
     const todaySales = salesData.filter(sale => {
-      const saleDate = new Date(sale.date_time).setHours(0, 0, 0, 0);
+      const saleDate = new Date(sale.date_time || sale.created_at).setHours(0, 0, 0, 0);
       return saleDate === today;
     });
     
     return todaySales.reduce((total, sale) => 
-      total + (sale.quantity * sale.price_per_unit), 0);
+      total + (sale.quantity * (sale.price_per_unit || sale.unit_price)), 0);
   };
   
   // Calculate total products sold today
@@ -29,7 +29,7 @@ const SalesMarketing = () => {
     
     const today = new Date().setHours(0, 0, 0, 0);
     const todaySales = salesData.filter(sale => {
-      const saleDate = new Date(sale.date_time).setHours(0, 0, 0, 0);
+      const saleDate = new Date(sale.date_time || sale.created_at).setHours(0, 0, 0, 0);
       return saleDate === today;
     });
     
@@ -44,20 +44,20 @@ const SalesMarketing = () => {
     const yesterday = new Date(today - 86400000).setHours(0, 0, 0, 0);
     
     const todaySales = salesData.filter(sale => {
-      const saleDate = new Date(sale.date_time).setHours(0, 0, 0, 0);
+      const saleDate = new Date(sale.date_time || sale.created_at).setHours(0, 0, 0, 0);
       return saleDate === today;
     });
     
     const yesterdaySales = salesData.filter(sale => {
-      const saleDate = new Date(sale.date_time).setHours(0, 0, 0, 0);
+      const saleDate = new Date(sale.date_time || sale.created_at).setHours(0, 0, 0, 0);
       return saleDate === yesterday;
     });
     
     const todayRevenue = todaySales.reduce((total, sale) => 
-      total + (sale.quantity * sale.price_per_unit), 0);
+      total + (sale.quantity * (sale.price_per_unit || sale.unit_price)), 0);
     
     const yesterdayRevenue = yesterdaySales.reduce((total, sale) => 
-      total + (sale.quantity * sale.price_per_unit), 0);
+      total + (sale.quantity * (sale.price_per_unit || sale.unit_price)), 0);
     
     if (yesterdayRevenue === 0) return todayRevenue > 0 ? 100 : 0;
     

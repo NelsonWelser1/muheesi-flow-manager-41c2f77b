@@ -13,15 +13,43 @@ const useSalesDashboardData = () => {
     try {
       console.log('Fetching sales data from Supabase...');
       
-      // Fetch sales data
-      const { data: salesRecords, error: salesError } = await supabase
+      // Try to fetch sales_records first
+      let { data: salesRecords, error: salesRecordsError } = await supabase
         .from('sales_records')
         .select('*')
         .order('date_time', { ascending: false });
 
-      if (salesError) throw salesError;
-      console.log('Fetched sales data:', salesRecords);
-      setSalesData(salesRecords || []);
+      // If sales_records is empty or has error, fetch from sales_orders
+      if ((salesRecordsError || !salesRecords || salesRecords.length === 0)) {
+        console.log('No data in sales_records, trying sales_orders table...');
+        const { data: salesOrders, error: salesOrdersError } = await supabase
+          .from('sales_orders')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (salesOrdersError) {
+          console.error('Error fetching sales orders:', salesOrdersError);
+          throw salesOrdersError;
+        }
+
+        // Transform sales_orders data to match expected format
+        const formattedSalesOrders = salesOrders.map(order => ({
+          id: order.id,
+          date_time: order.created_at,
+          customer_name: order.customer_name,
+          product_type: order.product_type || order.product,
+          quantity: order.quantity,
+          price_per_unit: order.unit_price,
+          invoice_number: order.id.substring(0, 8),
+          destination: order.notes
+        }));
+
+        console.log('Fetched and formatted sales orders data:', formattedSalesOrders);
+        setSalesData(formattedSalesOrders || []);
+      } else {
+        console.log('Fetched sales records:', salesRecords);
+        setSalesData(salesRecords || []);
+      }
 
       // Try to fetch marketing campaign data
       try {

@@ -34,6 +34,16 @@ const SalesMarketingDashboard = () => {
               <Skeleton className="h-[300px] w-full" />
               <Skeleton className="h-[200px] w-full" />
             </div>
+          ) : salesData.length === 0 ? (
+            <div className="text-center py-8">
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>No Sales Data</AlertTitle>
+                <AlertDescription>
+                  No sales data available. Please add sales records to see them reflected here.
+                </AlertDescription>
+              </Alert>
+            </div>
           ) : (
             <SalesDashboardContent salesData={salesData} />
           )}

@@ -10,8 +10,14 @@ const SalesChart = ({ salesData }) => {
   
   // Process data for the chart
   const processChartData = () => {
+    if (!salesData || salesData.length === 0) return [];
+    
     // Sort by date (ascending)
-    const sortedData = [...salesData].sort((a, b) => new Date(a.date_time) - new Date(b.date_time));
+    const sortedData = [...salesData].sort((a, b) => {
+      const dateA = new Date(a.date_time || a.created_at);
+      const dateB = new Date(b.date_time || b.created_at);
+      return dateA - dateB;
+    });
     
     // Only take the last N records based on timeRange
     return sortedData.slice(-parseInt(timeRange));
@@ -32,10 +38,10 @@ const SalesChart = ({ salesData }) => {
       return (
         <Card className="bg-white p-2 shadow-lg border">
           <CardContent className="p-2">
-            <p className="font-medium">{new Date(data.date_time).toLocaleDateString()}</p>
+            <p className="font-medium">{new Date(data.date_time || data.created_at).toLocaleDateString()}</p>
             <p>Customer: {data.customer_name}</p>
             <p>Quantity: {data.quantity}</p>
-            <p>Amount: ${(data.quantity * data.price_per_unit).toFixed(2)}</p>
+            <p>Amount: ${((data.quantity * (data.price_per_unit || data.unit_price))).toFixed(2)}</p>
           </CardContent>
         </Card>
       );
@@ -75,7 +81,7 @@ const SalesChart = ({ salesData }) => {
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
-                dataKey="date_time" 
+                dataKey={salesData[0]?.date_time ? "date_time" : "created_at"}
                 tickFormatter={formatDate}
                 tick={{ fontSize: 12 }}
               />
@@ -95,7 +101,7 @@ const SalesChart = ({ salesData }) => {
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
-                dataKey="date_time" 
+                dataKey={salesData[0]?.date_time ? "date_time" : "created_at"}
                 tickFormatter={formatDate}
                 tick={{ fontSize: 12 }}
               />
