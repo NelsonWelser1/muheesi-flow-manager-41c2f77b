@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,10 +10,14 @@ import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Users, Mail, Download, Eye } from "lucide-react";
 import PayrollPayslipsRecords from '../records/PayrollPayslipsRecords';
 import { usePayrollPayslips } from './hooks/usePayrollPayslips';
+import BulkPayrollModal from './BulkPayrollModal';
+
 const PayrollPayslipsForm = ({
   onBack
 }) => {
   const [viewMode, setViewMode] = useState('form'); // 'form' or 'records'
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  
   const {
     register,
     handleSubmit,
@@ -29,14 +34,17 @@ const PayrollPayslipsForm = ({
       paymentStatus: 'pending'
     }
   });
+  
   const {
     toast
   } = useToast();
+  
   const {
     loading,
     submitPayrollRecord,
     generatePayslipNumber
   } = usePayrollPayslips();
+  
   const basicSalary = watch('basicSalary') || 0;
   const taxAmount = watch('taxAmount') || 0;
   const nssfAmount = watch('nssfAmount') || 0;
@@ -51,6 +59,7 @@ const PayrollPayslipsForm = ({
   useEffect(() => {
     setValue("payslipNumber", generatePayslipNumber());
   }, [setValue, generatePayslipNumber]);
+  
   const onSubmit = async data => {
     // Add calculated net salary to the data
     data.netSalary = netSalary;
@@ -81,9 +90,19 @@ const PayrollPayslipsForm = ({
       setValue("notes", "");
     }
   };
+  
+  const handleOpenBulkModal = () => {
+    setIsBulkModalOpen(true);
+  };
+  
+  const handleCloseBulkModal = () => {
+    setIsBulkModalOpen(false);
+  };
+  
   if (viewMode === 'records') {
     return <PayrollPayslipsRecords onBack={() => setViewMode('form')} />;
   }
+  
   return <div className="space-y-4">
       <div className="flex justify-between items-center">
         <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
@@ -276,7 +295,12 @@ const PayrollPayslipsForm = ({
                 {loading ? "Processing..." : "Process Payroll"}
               </Button>
               
-              <Button type="button" variant="outline" className="flex items-center gap-2" onClick={() => console.log("Generating bulk payroll...")}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex items-center gap-2" 
+                onClick={handleOpenBulkModal}
+              >
                 <Users className="h-4 w-4" />
                 Bulk Payroll Processing
               </Button>
@@ -284,6 +308,13 @@ const PayrollPayslipsForm = ({
           </form>
         </CardContent>
       </Card>
+      
+      {/* Bulk Payroll Processing Modal */}
+      <BulkPayrollModal 
+        isOpen={isBulkModalOpen} 
+        onClose={handleCloseBulkModal} 
+      />
     </div>;
 };
+
 export default PayrollPayslipsForm;
