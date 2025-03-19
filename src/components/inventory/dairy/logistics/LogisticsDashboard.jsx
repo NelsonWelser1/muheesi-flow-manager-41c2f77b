@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Truck, Package, Clock, AlertTriangle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useToast } from "@/components/ui/use-toast";
@@ -22,7 +21,7 @@ import ViewRecordsButton from './records/ViewRecordsButton';
 const LogisticsDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeComponent, setActiveComponent] = useState(null);
 
   // Fetch active deliveries
   const { data: activeDeliveries = 0 } = useQuery({
@@ -73,6 +72,125 @@ const LogisticsDashboard = () => {
       return count || 0;
     }
   });
+
+  // Return to main dashboard
+  const handleBack = () => {
+    setActiveComponent(null);
+  };
+
+  // Render active component or selection tiles
+  const renderContent = () => {
+    if (activeComponent === 'deliveries') {
+      return (
+        <>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">Delivery Management</h3>
+            <ViewRecordsButton 
+              recordType="deliveries" 
+              to="/manage-inventory/logistics/records/deliveries"
+            />
+          </div>
+          <DeliveryManagementForm />
+        </>
+      );
+    } else if (activeComponent === 'orders') {
+      return (
+        <>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">Order Entry</h3>
+            <ViewRecordsButton 
+              recordType="orders" 
+              to="/manage-inventory/logistics/records/orders"
+            />
+          </div>
+          <OrderEntryForm />
+        </>
+      );
+    } else if (activeComponent === 'performance') {
+      return (
+        <>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">Performance Analytics</h3>
+            <ViewRecordsButton 
+              recordType="performance" 
+              to="/manage-inventory/logistics/records/performance"
+            />
+          </div>
+          <PerformanceAnalyticsForm />
+        </>
+      );
+    } else if (activeComponent === 'records') {
+      return <LogisticsRecordsView />;
+    }
+
+    // Display component selection tiles
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card 
+          className="hover:shadow-lg transition-shadow cursor-pointer" 
+          onClick={() => setActiveComponent('deliveries')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xl font-medium">Deliveries</CardTitle>
+            <Truck className="h-6 w-6 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Manage delivery schedules, vehicle assignments, and tracking
+            </p>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="bg-blue-50 p-2 rounded-md">
+                <div className="text-lg font-semibold">{activeDeliveries}</div>
+                <p className="text-xs text-muted-foreground">Active</p>
+              </div>
+              <div className="bg-red-50 p-2 rounded-md">
+                <div className="text-lg font-semibold">{delayedDeliveries}</div>
+                <p className="text-xs text-muted-foreground">Delayed</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="hover:shadow-lg transition-shadow cursor-pointer" 
+          onClick={() => setActiveComponent('orders')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xl font-medium">Orders</CardTitle>
+            <Package className="h-6 w-6 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Process customer orders, manage allocations and fulfillment
+            </p>
+            <div className="bg-green-50 p-2 rounded-md">
+              <div className="text-lg font-semibold">{pendingOrders}</div>
+              <p className="text-xs text-muted-foreground">Pending Orders</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="hover:shadow-lg transition-shadow cursor-pointer" 
+          onClick={() => setActiveComponent('performance')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xl font-medium">Performance</CardTitle>
+            <Clock className="h-6 w-6 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Track delivery time, efficiency metrics, and logistics analytics
+            </p>
+            <div className="bg-purple-50 p-2 rounded-md">
+              <div className="text-lg font-semibold">{avgDeliveryTime}m</div>
+              <p className="text-xs text-muted-foreground">Avg. Delivery Time</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -136,81 +254,40 @@ const LogisticsDashboard = () => {
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
             <span>Logistics & Distribution Management</span>
-            <div className="flex gap-2">
-              <ViewRecordsButton 
-                recordType="deliveries" 
-                to="/manage-inventory/logistics/records"
-              />
-            </div>
+            {!activeComponent && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setActiveComponent('records')}
+                className="flex items-center gap-2"
+              >
+                View All Records
+              </Button>
+            )}
+            {activeComponent && activeComponent !== 'records' && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleBack}
+                className="flex items-center gap-2"
+              >
+                ← Back to All Options
+              </Button>
+            )}
+            {activeComponent === 'records' && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleBack}
+                className="flex items-center gap-2"
+              >
+                ← Back to Management
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5 mb-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="deliveries">Deliveries</TabsTrigger>
-              <TabsTrigger value="orders">Orders</TabsTrigger>
-              <TabsTrigger value="performance">Performance</TabsTrigger>
-              <TabsTrigger value="records">View Records</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="overview">
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={[
-                    { date: '2024-03-01', deliveries: 24 },
-                    { date: '2024-03-02', deliveries: 31 },
-                    { date: '2024-03-03', deliveries: 28 },
-                    { date: '2024-03-04', deliveries: 35 },
-                    { date: '2024-03-05', deliveries: 29 },
-                  ]}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="deliveries" stroke="#8884d8" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="deliveries">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Delivery Management</h3>
-                <ViewRecordsButton 
-                  recordType="deliveries" 
-                  to="/manage-inventory/logistics/records/deliveries"
-                />
-              </div>
-              <DeliveryManagementForm />
-            </TabsContent>
-
-            <TabsContent value="orders">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Order Entry</h3>
-                <ViewRecordsButton 
-                  recordType="orders" 
-                  to="/manage-inventory/logistics/records/orders"
-                />
-              </div>
-              <OrderEntryForm />
-            </TabsContent>
-
-            <TabsContent value="performance">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Performance Analytics</h3>
-                <ViewRecordsButton 
-                  recordType="performance" 
-                  to="/manage-inventory/logistics/records/performance"
-                />
-              </div>
-              <PerformanceAnalyticsForm />
-            </TabsContent>
-            
-            <TabsContent value="records">
-              <LogisticsRecordsView />
-            </TabsContent>
-          </Tabs>
+          {renderContent()}
         </CardContent>
       </Card>
     </div>
