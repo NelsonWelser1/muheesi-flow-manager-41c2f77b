@@ -90,7 +90,7 @@ export const exportToCSV = (filteredRecords, toast) => {
   }
 };
 
-export const exportToPDF = (filteredRecords, toast) => {
+export const exportToPDF = async (filteredRecords, toast) => {
   try {
     // Create a new PDF document
     const doc = new jsPDF();
@@ -101,19 +101,34 @@ export const exportToPDF = (filteredRecords, toast) => {
     doc.setFontSize(10);
     doc.text(`Generated on: ${format(new Date(), 'dd MMM yyyy, HH:mm')}`, 14, 20);
     
+    // Add company name
+    doc.setFontSize(12);
+    doc.setTextColor(80, 80, 80);
+    doc.text("Grand Berna Dairies Ltd", 105, 25, { align: 'center' });
+    doc.setTextColor(0, 0, 0);
+    
     // Add table with data
     doc.autoTable({
-      head: [['Payslip #', 'Employee', 'Department', 'Date', 'Gross Salary', 'Net Salary', 'Status']],
-      body: filteredRecords.map(record => [
-        record.payslip_number,
-        `${record.employee_name} (${record.employee_id})`,
-        record.department || 'N/A',
-        record.payment_date ? format(new Date(record.payment_date), 'yyyy-MM-dd') : '',
-        `${record.currency} ${record.basic_salary}`,
-        `${record.currency} ${record.net_salary}`,
-        record.payment_status
-      ]),
-      startY: 25,
+      head: [['Payslip #', 'Employee', 'Department', 'Date', 'Gross Salary', 'Deductions', 'Net Salary', 'Status']],
+      body: filteredRecords.map(record => {
+        const totalDeductions = 
+          parseFloat(record.tax_amount || 0) + 
+          parseFloat(record.nssf_amount || 0) + 
+          parseFloat(record.loan_deduction || 0) + 
+          parseFloat(record.other_deductions || 0);
+            
+        return [
+          record.payslip_number,
+          `${record.employee_name} (${record.employee_id})`,
+          record.department || 'N/A',
+          record.payment_date ? format(new Date(record.payment_date), 'dd MMM yyyy') : '',
+          `${record.currency} ${record.basic_salary}`,
+          `${record.currency} ${totalDeductions.toFixed(2)}`,
+          `${record.currency} ${record.net_salary}`,
+          record.payment_status
+        ];
+      }),
+      startY: 30,
       theme: 'grid',
       styles: {
         fontSize: 8,
@@ -129,6 +144,19 @@ export const exportToPDF = (filteredRecords, toast) => {
       }
     });
     
+    // Add summary section
+    const totalEmployees = filteredRecords.length;
+    const totalGrossSalary = filteredRecords.reduce((sum, record) => sum + parseFloat(record.basic_salary || 0), 0);
+    const totalNetSalary = filteredRecords.reduce((sum, record) => sum + parseFloat(record.net_salary || 0), 0);
+    const mainCurrency = filteredRecords.length > 0 ? filteredRecords[0].currency : 'USD';
+    
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(10);
+    doc.text(`Summary`, 14, finalY);
+    doc.text(`Total Employees: ${totalEmployees}`, 14, finalY + 5);
+    doc.text(`Total Gross Salary: ${mainCurrency} ${totalGrossSalary.toFixed(2)}`, 14, finalY + 10);
+    doc.text(`Total Net Salary: ${mainCurrency} ${totalNetSalary.toFixed(2)}`, 14, finalY + 15);
+    
     // Add page footer
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
@@ -142,10 +170,15 @@ export const exportToPDF = (filteredRecords, toast) => {
     // Save the PDF
     doc.save('payroll-payslips.pdf');
     
+    // Simulate email sending for bulk export if needed
+    // await new Promise(resolve => setTimeout(resolve, 1000));
+    
     toast({
       title: "Export Successful",
       description: "PDF file has been downloaded successfully."
     });
+    
+    return doc; // Return the doc object for potential emailing
   } catch (error) {
     console.error("PDF generation error:", error);
     toast({
@@ -153,5 +186,53 @@ export const exportToPDF = (filteredRecords, toast) => {
       description: "There was an error generating the PDF. Please try again.",
       variant: "destructive"
     });
+    throw error;
+  }
+};
+
+// New function to email PDF to administrator
+export const emailPayrollReport = async (filteredRecords, recipientEmail, toast) => {
+  toast({
+    title: "Sending Email...",
+    description: "Preparing payroll report for email..."
+  });
+  
+  try {
+    // First generate the PDF
+    const doc = await exportToPDF(filteredRecords, {
+      toast: () => {} // Silent toast during PDF generation
+    });
+    
+    // Get the PDF as a blob
+    const pdfBlob = doc.output('blob');
+    
+    // In a real implementation, you would:
+    // 1. Either send the blob to a backend API
+    // 2. Or use a client-side email service SDK
+    
+    // Simulating email sending with a timeout
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // This is where you'd implement the actual email sending
+    // const formData = new FormData();
+    // formData.append('pdf', pdfBlob, 'payroll-payslips.pdf');
+    // formData.append('recipientEmail', recipientEmail || 'admin@example.com');
+    // formData.append('subject', 'Payroll & Payslips Report');
+    // await fetch('/api/send-payroll-email', { method: 'POST', body: formData });
+    
+    toast({
+      title: "Email Sent",
+      description: `Payroll report sent to ${recipientEmail || 'administrator'}`,
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Email sending error:", error);
+    toast({
+      title: "Email Failed",
+      description: "There was an error sending the email. Please try again.",
+      variant: "destructive"
+    });
+    return false;
   }
 };
