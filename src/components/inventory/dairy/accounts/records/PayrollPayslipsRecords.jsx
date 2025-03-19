@@ -3,10 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SearchFilters from './components/payroll/SearchFilters';
 import StatusTabs from './components/payroll/StatusTabs';
-import PayrollTable from './components/payroll/PayrollTable';
 import ExportActions from './components/payroll/ExportActions';
 import { usePayrollPayslips } from '../forms/hooks/usePayrollPayslips';
 
