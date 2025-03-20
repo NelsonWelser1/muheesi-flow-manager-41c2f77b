@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import PersonnelDataDisplay from '../data-display/PersonnelDataDisplay';
 
 const JOB_POSITIONS = [
   "Production Manager",
@@ -114,10 +113,6 @@ const RecruitmentManagementForm = () => {
 
         <Button type="submit" className="w-full">Save Recruitment Record</Button>
       </form>
-      <PersonnelDataDisplay 
-        tableName="personnel_recruitment_records" 
-        title="Recruitment"
-      />
     </div>
   );
 };

@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import PersonnelDataDisplay from '../data-display/PersonnelDataDisplay';
 
 const TRAINING_MODULES = [
   "Safety Protocols",
@@ -122,10 +121,6 @@ const TrainingEvaluationForm = () => {
 
         <Button type="submit" className="w-full">Submit Training Evaluation</Button>
       </form>
-      <PersonnelDataDisplay 
-        tableName="personnel_training_evaluations" 
-        title="Training"
-      />
     </div>
   );
 };
