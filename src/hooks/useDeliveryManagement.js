@@ -48,9 +48,23 @@ export const useDeliveryManagement = () => {
       // Log form data for debugging purposes
       console.log('Submitting delivery data:', deliveryData);
 
+      // Add status if not provided (to meet the check constraint)
+      if (!deliveryData.status) {
+        deliveryData.status = 'Pending';
+      }
+
+      // Format date fields to ISO strings if they exist
+      const formattedData = {
+        ...deliveryData,
+        scheduled_pickup_time: deliveryData.scheduled_pickup_time ? new Date(deliveryData.scheduled_pickup_time).toISOString() : null,
+        scheduled_delivery_time: deliveryData.scheduled_delivery_time ? new Date(deliveryData.scheduled_delivery_time).toISOString() : null,
+        actual_pickup_time: deliveryData.actual_pickup_time ? new Date(deliveryData.actual_pickup_time).toISOString() : null,
+        actual_delivery_time: deliveryData.actual_delivery_time ? new Date(deliveryData.actual_delivery_time).toISOString() : null,
+      };
+
       const { data, error } = await supabase
         .from('logistics_delivery_management')
-        .insert([deliveryData])
+        .insert([formattedData])
         .select();
 
       if (error) throw error;
@@ -86,9 +100,18 @@ export const useDeliveryManagement = () => {
       // Log update data for debugging purposes
       console.log('Updating delivery data:', { id, updatedData });
 
+      // Format date fields to ISO strings if they exist
+      const formattedData = {
+        ...updatedData,
+        scheduled_pickup_time: updatedData.scheduled_pickup_time ? new Date(updatedData.scheduled_pickup_time).toISOString() : null,
+        scheduled_delivery_time: updatedData.scheduled_delivery_time ? new Date(updatedData.scheduled_delivery_time).toISOString() : null,
+        actual_pickup_time: updatedData.actual_pickup_time ? new Date(updatedData.actual_pickup_time).toISOString() : null,
+        actual_delivery_time: updatedData.actual_delivery_time ? new Date(updatedData.actual_delivery_time).toISOString() : null,
+      };
+
       const { data, error } = await supabase
         .from('logistics_delivery_management')
-        .update(updatedData)
+        .update(formattedData)
         .eq('id', id)
         .select();
 
