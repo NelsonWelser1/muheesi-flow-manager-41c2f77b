@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,25 +6,14 @@ import { useNavigate } from "react-router-dom";
 import DeliveriesRecords from './DeliveriesRecords';
 import OrdersRecords from './OrdersRecords';
 import PerformanceRecords from './PerformanceRecords';
-
 const LogisticsRecordsView = () => {
   const [activeTab, setActiveTab] = useState('deliveries');
   const navigate = useNavigate();
-
   const handleBack = () => {
     navigate('/manage-inventory/logistics');
   };
-
-  return (
-    <div className="space-y-4">
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={handleBack}
-        className="mb-2"
-      >
-        ← Back to Logistics Dashboard
-      </Button>
+  return <div className="space-y-4">
+      
       
       <Card className="w-full">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -53,8 +41,6 @@ const LogisticsRecordsView = () => {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default LogisticsRecordsView;
