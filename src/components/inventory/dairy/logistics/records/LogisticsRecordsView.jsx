@@ -16,8 +16,16 @@ const LogisticsRecordsView = () => {
   useEffect(() => {
     if (recordType && ['deliveries', 'orders', 'performance'].includes(recordType)) {
       setActiveTab(recordType);
+    } else if (recordType && !['deliveries', 'orders', 'performance'].includes(recordType)) {
+      // Redirect to a valid tab if an invalid recordType is provided
+      navigate('/manage-inventory/logistics/records/deliveries');
     }
-  }, [recordType]);
+  }, [recordType, navigate]);
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    navigate(`/manage-inventory/logistics/records/${value}`);
+  };
 
   const handleBack = () => {
     navigate('/manage-inventory/logistics');
@@ -39,7 +47,11 @@ const LogisticsRecordsView = () => {
           <CardTitle>Logistics Records</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
+          <Tabs 
+            defaultValue={activeTab} 
+            value={activeTab} 
+            onValueChange={handleTabChange}
+          >
             <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="deliveries">Deliveries</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>
