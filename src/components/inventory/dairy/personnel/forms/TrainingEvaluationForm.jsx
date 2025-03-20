@@ -32,18 +32,6 @@ const TrainingEvaluationForm = () => {
     }
   };
 
-  // Debug handler for testing (can be attached to any element for debugging)
-  const debugFormData = () => {
-    const currentValues = {
-      employeeId: document.querySelector('input[name="employeeId"]').value,
-      trainingModule: document.querySelector('select[name="trainingModule"]').value,
-      trainingDate: document.querySelector('input[name="trainingDate"]').value,
-      performanceRating: document.querySelector('input[name="performanceRating"]').value,
-      feedback: document.querySelector('textarea[name="feedback"]').value
-    };
-    console.log("Current form values:", currentValues);
-  };
-
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -133,9 +121,6 @@ const TrainingEvaluationForm = () => {
         >
           {isSubmitting ? 'Submitting...' : 'Submit Training Evaluation'}
         </Button>
-
-        {/* Debug button - can be uncommented during development */}
-        {/* <Button type="button" onClick={debugFormData} className="mt-2">Debug Form</Button> */}
       </form>
 
       {/* Display recent records */}

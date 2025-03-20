@@ -48,17 +48,20 @@ export const useTrainingEvaluations = (toast) => {
       // Log the actual data being sent to Supabase
       console.log('Submitting training data to Supabase:', formattedData);
 
-      // First try to insert directly to check if there's an error
+      // First, attempt to insert directly
       const { data: result, error } = await supabase
         .from('personnel_training_evaluations')
-        .insert([formattedData]);
+        .insert([formattedData])
+        .select(); // Added .select() to return the inserted row
 
-      // Handle foreign key constraint errors specially 
+      // Handle foreign key constraint errors specifically
       if (error) {
+        console.error('Error inserting training evaluation:', error);
+        
         if (error.code === '23503' && error.message.includes('personnel_training_evaluations_employee_id_fkey')) {
-          console.warn('Warning: Employee ID does not exist in personnel_employee_records, but continuing with submission');
+          console.warn('Warning: Employee ID does not exist in personnel_employee_records, using bypass procedure');
           
-          // Try to insert with RPC call that bypasses foreign key constraints for development
+          // Use the stored procedure to bypass foreign key constraints during development
           const { data: rpcResult, error: rpcError } = await supabase.rpc('insert_training_evaluation', {
             p_employee_id: formattedData.employee_id,
             p_training_module: formattedData.training_module,
@@ -73,7 +76,7 @@ export const useTrainingEvaluations = (toast) => {
           }
           
           showSuccessToast(toast, "Training evaluation saved (Note: Employee ID not found in system)");
-          await fetchRecords(); // Refresh the list anyway
+          await fetchRecords(); // Refresh the list
           return { success: true };
         }
         throw error;
