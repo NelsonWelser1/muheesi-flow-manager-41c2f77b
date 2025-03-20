@@ -12,12 +12,12 @@ const MainCard = ({
   activeDeliveries,
   pendingOrders,
   avgDeliveryTime,
-  delayedDeliveries
+  delayedDeliveries,
+  onViewRecords
 }) => {
   // Determine the appropriate back button text based on the active component
   const getBackButtonText = () => {
     if (!activeComponent) return null;
-    if (activeComponent === 'records') return '← Back to Management';
     return '← Back to All Options';
   };
 
@@ -50,7 +50,8 @@ const MainCard = ({
         {activeComponent ? (
           <ContentView 
             activeComponent={activeComponent} 
-            handleBack={handleBack} 
+            handleBack={handleBack}
+            onViewRecords={onViewRecords}
           />
         ) : (
           <FeatureTiles 

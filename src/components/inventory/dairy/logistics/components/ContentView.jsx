@@ -5,7 +5,6 @@ import ViewRecordsButton from '../records/ViewRecordsButton';
 import DeliveryManagementForm from '../forms/DeliveryManagementForm';
 import OrderEntryForm from '../forms/OrderEntryForm';
 import PerformanceAnalyticsForm from '../forms/PerformanceAnalyticsForm';
-import LogisticsRecordsView from '../records/LogisticsRecordsView';
 
 const ContentView = ({ activeComponent, handleBack }) => {
   if (activeComponent === 'deliveries') {
@@ -47,8 +46,6 @@ const ContentView = ({ activeComponent, handleBack }) => {
         <PerformanceAnalyticsForm />
       </>
     );
-  } else if (activeComponent === 'records') {
-    return <LogisticsRecordsView />;
   }
 
   return null;

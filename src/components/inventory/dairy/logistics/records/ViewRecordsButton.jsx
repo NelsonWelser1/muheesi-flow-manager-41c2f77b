@@ -9,9 +9,13 @@ const ViewRecordsButton = ({ recordType, to }) => {
   
   const handleViewRecords = () => {
     // Ensure we have a valid URL
-    const validUrl = to || `/manage-inventory/logistics/records/${recordType}`;
+    const validUrl = to || `/manage-inventory/logistics/records/${recordType || 'deliveries'}`;
     console.log("Navigating to:", validUrl);
-    navigate(validUrl);
+    
+    // Use setTimeout to ensure the navigation happens after the current event loop
+    setTimeout(() => {
+      navigate(validUrl);
+    }, 0);
   };
   
   return (
