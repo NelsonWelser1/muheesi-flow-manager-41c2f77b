@@ -27,10 +27,10 @@ ALTER TABLE delivery_management ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all operations for everyone" ON delivery_management
     FOR ALL TO public USING (true) WITH CHECK (true);
 
--- Create indexes for common query patterns
-CREATE INDEX idx_delivery_management_delivery_id ON delivery_management(delivery_id);
-CREATE INDEX idx_delivery_management_status ON delivery_management(status);
-CREATE INDEX idx_delivery_management_order_id ON delivery_management(order_id);
+-- Create indexes for common query patterns (with IF NOT EXISTS to prevent errors)
+CREATE INDEX IF NOT EXISTS idx_delivery_management_delivery_id ON delivery_management(delivery_id);
+CREATE INDEX IF NOT EXISTS idx_delivery_management_status ON delivery_management(status);
+CREATE INDEX IF NOT EXISTS idx_delivery_management_order_id ON delivery_management(order_id);
 
 -- Add trigger for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
