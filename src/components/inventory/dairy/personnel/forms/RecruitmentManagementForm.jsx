@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/supabase";
+import { useRecruitmentForm } from '../hooks/useRecruitmentForm';
 import RecruitmentRecordsDisplay from '../records/RecruitmentRecordsDisplay';
 
 const JOB_POSITIONS = [
@@ -20,52 +20,43 @@ const JOB_POSITIONS = [
 ];
 
 const RecruitmentManagementForm = () => {
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
   const { toast } = useToast();
   const [showRecords, setShowRecords] = useState(false);
+  const {
+    isSubmitting,
+    records,
+    submitRecruitmentRecord,
+  } = useRecruitmentForm(toast);
 
   const onSubmit = async (data) => {
+    console.log("Form data before submission:", data);
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const result = await submitRecruitmentRecord(data);
       
-      if (!user) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to submit recruitment records",
-          variant: "destructive",
-        });
-        return;
+      if (result.success) {
+        reset();
       }
-
-      const formattedData = {
-        candidate_name: data.candidateName,
-        job_title: data.jobTitle,
-        interview_date_time: data.interviewDateTime,
-        feedback: data.feedback,
-        hiring_manager_id: data.hiringManagerId,
-        status: 'Pending',
-        operator_id: user.id
-      };
-
-      const { error } = await supabase
-        .from('personnel_recruitment_records')
-        .insert([formattedData]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Recruitment record has been saved",
-      });
-      reset();
     } catch (error) {
-      console.error('Error saving recruitment record:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save recruitment record",
-        variant: "destructive",
-      });
+      console.error('Error in form submission:', error);
     }
+  };
+
+  const handleJobTitleChange = (value) => {
+    setValue("jobTitle", value);
+  };
+
+  const handleDebugClick = () => {
+    const formValues = {
+      candidateName: document.querySelector('input[name="candidateName"]').value,
+      jobTitle: document.querySelector('select[name="jobTitle"]')?.value || '',
+      interviewDateTime: document.querySelector('input[name="interviewDateTime"]').value,
+      hiringManagerId: document.querySelector('input[name="hiringManagerId"]').value,
+      feedback: document.querySelector('textarea[name="feedback"]').value,
+    };
+    
+    console.log("DEBUG - Current form values:", formValues);
   };
 
   if (showRecords) {
@@ -83,25 +74,43 @@ const RecruitmentManagementForm = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Recruitment Management Form</h3>
-        <Button 
-          variant="outline" 
-          onClick={() => setShowRecords(true)}
-        >
-          View Records
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={handleDebugClick}
+            className="text-xs"
+          >
+            Debug Form
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowRecords(true)}
+          >
+            View Records
+          </Button>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label>Candidate Name</Label>
-            <Input {...register("candidateName", { required: true })} placeholder="Enter candidate name" />
+            <Label htmlFor="candidateName">Candidate Name</Label>
+            <Input 
+              id="candidateName"
+              {...register("candidateName", { 
+                required: "Candidate name is required" 
+              })} 
+              placeholder="Enter candidate name"
+            />
+            {errors.candidateName && (
+              <p className="text-red-500 text-xs">{errors.candidateName.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label>Job Title Applied For</Label>
-            <Select onValueChange={(value) => register("jobTitle").onChange({ target: { value } })}>
-              <SelectTrigger>
+            <Label htmlFor="jobTitle">Job Title Applied For</Label>
+            <Select onValueChange={handleJobTitleChange}>
+              <SelectTrigger id="jobTitle">
                 <SelectValue placeholder="Select job position" />
               </SelectTrigger>
               <SelectContent>
@@ -112,29 +121,57 @@ const RecruitmentManagementForm = () => {
                 ))}
               </SelectContent>
             </Select>
+            {errors.jobTitle && (
+              <p className="text-red-500 text-xs">{errors.jobTitle.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label>Interview Date & Time</Label>
-            <Input type="datetime-local" {...register("interviewDateTime", { required: true })} />
+            <Label htmlFor="interviewDateTime">Interview Date & Time</Label>
+            <Input 
+              id="interviewDateTime"
+              type="datetime-local" 
+              {...register("interviewDateTime", { 
+                required: "Interview date and time is required" 
+              })} 
+            />
+            {errors.interviewDateTime && (
+              <p className="text-red-500 text-xs">{errors.interviewDateTime.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label>Hiring Manager ID</Label>
-            <Input {...register("hiringManagerId", { required: true })} placeholder="Enter hiring manager ID" />
+            <Label htmlFor="hiringManagerId">Hiring Manager ID</Label>
+            <Input 
+              id="hiringManagerId"
+              {...register("hiringManagerId", { 
+                required: "Hiring manager ID is required" 
+              })} 
+              placeholder="Enter hiring manager ID" 
+            />
+            {errors.hiringManagerId && (
+              <p className="text-red-500 text-xs">{errors.hiringManagerId.message}</p>
+            )}
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label>Feedback/Comments</Label>
+          <Label htmlFor="feedback">Feedback/Comments</Label>
           <Textarea 
+            id="feedback"
             {...register("feedback")} 
             placeholder="Enter interview feedback and comments"
             className="min-h-[100px]"
           />
         </div>
 
-        <Button type="submit" className="w-full">Save Recruitment Record</Button>
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving..." : "Save Recruitment Record"}
+        </Button>
       </form>
     </div>
   );
