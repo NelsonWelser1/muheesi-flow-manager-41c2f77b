@@ -71,13 +71,7 @@ const EmployeeRecordsForm = () => {
     
     setIsSubmitting(true);
     try {
-      // Temporarily bypass user authentication check
-      // const { data: { user } } = await supabase.auth.getUser();
-      // if (!user) {
-      //   showErrorToast(toast, "You must be logged in to submit records");
-      //   return;
-      // }
-
+      // Formatting the data properly for database insertion
       const formattedData = {
         employee_id: data.employeeId,
         job_title: data.jobTitle,
@@ -88,7 +82,6 @@ const EmployeeRecordsForm = () => {
         review_date_time: data.reviewDateTime,
         status: data.status || 'Active',
         comments: data.comments
-        // operator_id: user?.id // Temporarily commented out
       };
 
       // Log the actual data being sent to Supabase
@@ -113,11 +106,6 @@ const EmployeeRecordsForm = () => {
     }
   };
 
-  // Get form values for validation
-  const selectedJobTitle = watch('jobTitle');
-  const selectedDepartment = watch('department');
-  const selectedStatus = watch('status');
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -137,7 +125,10 @@ const EmployeeRecordsForm = () => {
 
           <div className="space-y-2">
             <Label>Job Title</Label>
-            <Select onValueChange={(value) => setValue("jobTitle", value)}>
+            <Select 
+              onValueChange={(value) => setValue("jobTitle", value)}
+              defaultValue=""
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select job title" />
               </SelectTrigger>
@@ -154,7 +145,10 @@ const EmployeeRecordsForm = () => {
 
           <div className="space-y-2">
             <Label>Department</Label>
-            <Select onValueChange={(value) => setValue("department", value)}>
+            <Select 
+              onValueChange={(value) => setValue("department", value)}
+              defaultValue=""
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
@@ -171,7 +165,10 @@ const EmployeeRecordsForm = () => {
 
           <div className="space-y-2">
             <Label>Status</Label>
-            <Select onValueChange={(value) => setValue("status", value)}>
+            <Select 
+              onValueChange={(value) => setValue("status", value)}
+              defaultValue="Active"
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
