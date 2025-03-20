@@ -1,6 +1,6 @@
 
-import React, { useState, useRef } from 'react';
-import { ArrowLeft, User, FileText, Upload, Calendar, Save, Link, TrashIcon } from "lucide-react";
+import React, { useState, useRef, useEffect } from 'react';
+import { ArrowLeft, User, FileText, Upload, Calendar, Save, Link, TrashIcon, FileImage, Loader2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,8 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEmployeeDossiers } from './hooks/useEmployeeDossiers';
 import { supabase } from "@/integrations/supabase/supabase";
+import { useDossierData } from './hooks/useDossierData';
 
 const DEPARTMENTS = ["Production", "Quality Control", "Administration", "Logistics", "Sales", "Maintenance"];
 const STATUS_OPTIONS = ["Active", "Onboarding", "On Leave", "Terminated", "Retired"];
@@ -25,14 +25,30 @@ const JOB_TITLES = [
   "Warehouse Staff"
 ];
 
+const FILE_CATEGORIES = [
+  "Document",
+  "Image",
+  "Contract",
+  "Resume/CV",
+  "ID Document",
+  "Certificate",
+  "Performance Review",
+  "Training Record",
+  "Medical Record",
+  "Other"
+];
+
 const DossierDetails = ({ dossier, onBack }) => {
   const [selectedTab, setSelectedTab] = useState("details");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isNewDossier = !dossier;
-  const { saveDossier, isSaving } = useEmployeeDossiers();
   const fileInputRef = useRef(null);
-  const [uploading, setUploading] = useState(false);
+  const { saveDossier, isSaving, uploading, uploadFile, getDocumentUrl, deleteDocument, fetchDocuments } = useDossierData();
+  const [documents, setDocuments] = useState([]);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
+  const [fileSelected, setFileSelected] = useState(null);
+  const [fileCategory, setFileCategory] = useState(FILE_CATEGORIES[0]);
 
   // Initialize form data
   const [formData, setFormData] = useState({
@@ -61,23 +77,21 @@ const DossierDetails = ({ dossier, onBack }) => {
     }
   });
 
-  // Fetch document records
-  const { data: documents = [], refetch: refetchDocuments } = useQuery({
-    queryKey: ['dossierDocuments', dossier?.id],
-    queryFn: async () => {
-      if (!dossier?.employee_id) return [];
-      
-      const { data, error } = await supabase
-        .from('personnel_documents')
-        .select('*')
-        .eq('employee_id', dossier.employee_id)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!dossier?.employee_id
-  });
+  // Fetch documents when dossier changes or tab changes to documents
+  useEffect(() => {
+    if (dossier?.employee_id && selectedTab === "documents") {
+      loadDocuments();
+    }
+  }, [dossier?.employee_id, selectedTab]);
+
+  const loadDocuments = async () => {
+    if (!dossier?.employee_id) return;
+    
+    setIsLoadingDocuments(true);
+    const docs = await fetchDocuments(dossier.employee_id);
+    setDocuments(docs);
+    setIsLoadingDocuments(false);
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -111,132 +125,63 @@ const DossierDetails = ({ dossier, onBack }) => {
     });
   };
 
-  const handleFileChange = async (e) => {
-    if (!dossier?.employee_id) {
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFileSelected(file);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!fileSelected) {
       toast({
-        title: "Employee ID Required",
-        description: "Please save the dossier first to upload documents.",
+        title: "No File Selected",
+        description: "Please select a file to upload.",
         variant: "destructive"
       });
       return;
     }
 
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    // Validate file
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
+    if (!dossier?.employee_id) {
       toast({
-        title: "File Too Large",
-        description: "Maximum file size is 10MB",
+        title: "Employee ID Required",
+        description: "Please save the dossier first to upload files.",
         variant: "destructive"
       });
       return;
     }
-    
-    setUploading(true);
-    
-    try {
-      // Upload to Supabase Storage
-      const filename = `${dossier.employee_id}/${Date.now()}_${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('employee_documents')
-        .upload(filename, file);
-      
-      if (uploadError) throw uploadError;
-      
-      // Create database record
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const { error: dbError } = await supabase
-        .from('personnel_documents')
-        .insert([{
-          employee_id: dossier.employee_id,
-          filename: file.name,
-          file_path: filename,
-          file_type: file.type,
-          file_size: (file.size / 1024).toFixed(2), // KB
-          category: 'Other',
-          uploaded_by: user?.id || 'anonymous'
-        }]);
-      
-      if (dbError) throw dbError;
-      
-      toast({
-        title: "Document Uploaded",
-        description: "File has been successfully uploaded.",
-      });
-      
-      // Refresh documents list
-      refetchDocuments();
-      
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast({
-        title: "Upload Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-      // Clear file input
+
+    const newDocument = await uploadFile(fileSelected, dossier.employee_id);
+    if (newDocument) {
+      setDocuments(prev => [newDocument, ...prev]);
+      setFileSelected(null);
       fileInputRef.current.value = '';
     }
   };
 
   const handleDeleteDocument = async (documentId, filePath) => {
-    try {
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from('employee_documents')
-        .remove([filePath]);
-      
-      if (storageError) throw storageError;
-      
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('personnel_documents')
-        .delete()
-        .eq('id', documentId);
-      
-      if (dbError) throw dbError;
-      
-      toast({
-        title: "Document Deleted",
-        description: "File has been successfully deleted.",
-      });
-      
-      // Refresh documents list
-      refetchDocuments();
-      
-    } catch (error) {
-      console.error("Delete error:", error);
-      toast({
-        title: "Delete Failed",
-        description: error.message,
-        variant: "destructive",
-      });
+    const success = await deleteDocument(documentId, filePath);
+    if (success) {
+      setDocuments(documents.filter(doc => doc.id !== documentId));
     }
   };
 
-  const handleViewDocument = async (filePath) => {
-    try {
-      const { data } = supabase.storage
-        .from('employee_documents')
-        .getPublicUrl(filePath);
-      
-      if (data?.publicUrl) {
-        window.open(data.publicUrl, '_blank');
-      }
-    } catch (error) {
-      console.error("View error:", error);
+  const handleViewDocument = (filePath) => {
+    const url = getDocumentUrl(filePath);
+    if (url) {
+      window.open(url, '_blank');
+    } else {
       toast({
         title: "View Failed",
         description: "Could not open the document.",
         variant: "destructive",
       });
     }
+  };
+
+  // Determine if a file is an image
+  const isImageFile = (fileType) => {
+    return fileType.startsWith('image/');
   };
 
   return (
@@ -398,12 +343,86 @@ const DossierDetails = ({ dossier, onBack }) => {
               <CardTitle>Attached Documents</CardTitle>
             </CardHeader>
             <CardContent>
-              {documents.length > 0 ? (
+              {/* File Upload Section */}
+              <div className="border rounded-md p-4 bg-gray-50 mb-6">
+                <div className="space-y-4">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-grow">
+                      <Label className="mb-2 block">Select File</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleFileSelect}
+                          className="hidden"
+                        />
+                        <Button 
+                          variant="outline" 
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-full flex items-center justify-center gap-2"
+                        >
+                          <Upload className="h-4 w-4" /> 
+                          {fileSelected ? fileSelected.name : "Choose File"}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="md:w-48 flex-shrink-0">
+                      <Label className="mb-2 block">File Category</Label>
+                      <Select 
+                        value={fileCategory}
+                        onValueChange={setFileCategory}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FILE_CATEGORIES.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {fileSelected && (
+                    <div className="p-2 bg-blue-50 rounded-md flex items-center gap-2">
+                      {isImageFile(fileSelected.type) ? <FileImage className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                      <span className="text-sm">
+                        {fileSelected.name} ({(fileSelected.size / 1024).toFixed(2)} KB)
+                      </span>
+                    </div>
+                  )}
+                  <Button 
+                    disabled={!fileSelected || uploading || !dossier?.employee_id} 
+                    onClick={handleFileUpload}
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} 
+                    {uploading ? "Uploading..." : "Upload File"}
+                  </Button>
+                  {!dossier?.employee_id && (
+                    <p className="text-amber-600 text-sm text-center">Save the dossier first to upload files</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Document List */}
+              {isLoadingDocuments ? (
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-gray-400" />
+                  <p>Loading documents...</p>
+                </div>
+              ) : documents.length > 0 ? (
                 <div className="space-y-4">
                   {documents.map((doc) => (
                     <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                       <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-gray-600" />
+                        {isImageFile(doc.file_type) ? (
+                          <FileImage className="h-5 w-5 text-blue-600" />
+                        ) : (
+                          <FileText className="h-5 w-5 text-gray-600" />
+                        )}
                         <div>
                           <p className="font-medium">{doc.filename}</p>
                           <p className="text-sm text-gray-500">
@@ -416,8 +435,9 @@ const DossierDetails = ({ dossier, onBack }) => {
                           variant="ghost" 
                           size="sm"
                           onClick={() => handleViewDocument(doc.file_path)}
+                          className="flex items-center gap-1"
                         >
-                          View
+                          <Eye className="h-4 w-4" /> View
                         </Button>
                         <Button 
                           variant="ghost" 
@@ -443,24 +463,6 @@ const DossierDetails = ({ dossier, onBack }) => {
                 </div>
               )}
             </CardContent>
-            <CardFooter className="border-t p-4">
-              <div className="w-full">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <Button 
-                  disabled={isNewDossier || !dossier?.employee_id || uploading} 
-                  className="w-full flex items-center justify-center gap-2"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="h-4 w-4" /> 
-                  {uploading ? "Uploading..." : "Upload New Document"}
-                </Button>
-              </div>
-            </CardFooter>
           </Card>
         </TabsContent>
 
