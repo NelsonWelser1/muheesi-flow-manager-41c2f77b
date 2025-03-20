@@ -13,10 +13,7 @@ const ContentView = ({ activeComponent, handleBack }) => {
       <>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium">Delivery Management</h3>
-          <ViewRecordsButton 
-            recordType="deliveries" 
-            to="/manage-inventory/logistics/records/deliveries"
-          />
+          <ViewRecordsButton recordType="deliveries" />
         </div>
         <DeliveryManagementForm />
       </>
@@ -26,10 +23,7 @@ const ContentView = ({ activeComponent, handleBack }) => {
       <>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium">Order Entry</h3>
-          <ViewRecordsButton 
-            recordType="orders" 
-            to="/manage-inventory/logistics/records/orders"
-          />
+          <ViewRecordsButton recordType="orders" />
         </div>
         <OrderEntryForm />
       </>
@@ -39,10 +33,7 @@ const ContentView = ({ activeComponent, handleBack }) => {
       <>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium">Performance Analytics</h3>
-          <ViewRecordsButton 
-            recordType="performance" 
-            to="/manage-inventory/logistics/records/performance"
-          />
+          <ViewRecordsButton recordType="performance" />
         </div>
         <PerformanceAnalyticsForm />
       </>
