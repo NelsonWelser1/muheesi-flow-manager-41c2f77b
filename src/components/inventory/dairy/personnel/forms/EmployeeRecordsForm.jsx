@@ -39,7 +39,7 @@ const STATUS_OPTIONS = [
 ];
 
 const EmployeeRecordsForm = () => {
-  const { register, handleSubmit, reset, setValue } = useForm();
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [records, setRecords] = useState([]);
@@ -87,16 +87,21 @@ const EmployeeRecordsForm = () => {
         performance_rating: parseInt(data.performanceRating) || null,
         review_date_time: data.reviewDateTime,
         status: data.status || 'Active',
-        comments: data.comments,
+        comments: data.comments
         // operator_id: user?.id // Temporarily commented out
       };
 
-      const { error } = await supabase
+      // Log the actual data being sent to Supabase
+      console.log('Submitting data to Supabase:', formattedData);
+
+      const { data: result, error } = await supabase
         .from('personnel_employee_records')
-        .insert([formattedData]);
+        .insert([formattedData])
+        .select();
 
       if (error) throw error;
 
+      console.log('Submission result:', result);
       showSuccessToast(toast, "Employee record has been saved successfully");
       reset();
       fetchRecords(); // Refresh the list
@@ -108,17 +113,10 @@ const EmployeeRecordsForm = () => {
     }
   };
 
-  const handleJobTitleChange = (value) => {
-    setValue("jobTitle", value);
-  };
-
-  const handleDepartmentChange = (value) => {
-    setValue("department", value);
-  };
-
-  const handleStatusChange = (value) => {
-    setValue("status", value);
-  };
+  // Get form values for validation
+  const selectedJobTitle = watch('jobTitle');
+  const selectedDepartment = watch('department');
+  const selectedStatus = watch('status');
 
   return (
     <div className="space-y-6">
@@ -130,12 +128,16 @@ const EmployeeRecordsForm = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label>Employee Name/ID</Label>
-            <Input {...register("employeeId", { required: true })} placeholder="Enter employee name or ID" />
+            <Input 
+              {...register("employeeId", { required: true })} 
+              placeholder="Enter employee name or ID" 
+            />
+            {errors.employeeId && <p className="text-sm text-red-500">Employee ID is required</p>}
           </div>
 
           <div className="space-y-2">
             <Label>Job Title</Label>
-            <Select onValueChange={handleJobTitleChange}>
+            <Select onValueChange={(value) => setValue("jobTitle", value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select job title" />
               </SelectTrigger>
@@ -147,11 +149,12 @@ const EmployeeRecordsForm = () => {
                 ))}
               </SelectContent>
             </Select>
+            {errors.jobTitle && <p className="text-sm text-red-500">Job title is required</p>}
           </div>
 
           <div className="space-y-2">
             <Label>Department</Label>
-            <Select onValueChange={handleDepartmentChange}>
+            <Select onValueChange={(value) => setValue("department", value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
@@ -163,11 +166,12 @@ const EmployeeRecordsForm = () => {
                 ))}
               </SelectContent>
             </Select>
+            {errors.department && <p className="text-sm text-red-500">Department is required</p>}
           </div>
 
           <div className="space-y-2">
             <Label>Status</Label>
-            <Select onValueChange={handleStatusChange}>
+            <Select onValueChange={(value) => setValue("status", value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
@@ -179,16 +183,25 @@ const EmployeeRecordsForm = () => {
                 ))}
               </SelectContent>
             </Select>
+            {errors.status && <p className="text-sm text-red-500">Status is required</p>}
           </div>
 
           <div className="space-y-2">
             <Label>Shift Schedule Start</Label>
-            <Input type="datetime-local" {...register("shiftStart", { required: true })} />
+            <Input 
+              type="datetime-local" 
+              {...register("shiftStart", { required: true })} 
+            />
+            {errors.shiftStart && <p className="text-sm text-red-500">Shift start time is required</p>}
           </div>
 
           <div className="space-y-2">
             <Label>Shift Schedule End</Label>
-            <Input type="datetime-local" {...register("shiftEnd", { required: true })} />
+            <Input 
+              type="datetime-local" 
+              {...register("shiftEnd", { required: true })} 
+            />
+            {errors.shiftEnd && <p className="text-sm text-red-500">Shift end time is required</p>}
           </div>
 
           <div className="space-y-2">
@@ -203,17 +216,25 @@ const EmployeeRecordsForm = () => {
                 max: 5
               })} 
             />
+            {errors.performanceRating && <p className="text-sm text-red-500">Performance rating (1-5) is required</p>}
           </div>
 
           <div className="space-y-2">
             <Label>Review Date & Time</Label>
-            <Input type="datetime-local" {...register("reviewDateTime", { required: true })} />
+            <Input 
+              type="datetime-local" 
+              {...register("reviewDateTime", { required: true })} 
+            />
+            {errors.reviewDateTime && <p className="text-sm text-red-500">Review date & time is required</p>}
           </div>
         </div>
 
         <div className="space-y-2">
           <Label>Performance Review Comments</Label>
-          <Textarea {...register("comments")} placeholder="Enter performance review comments" />
+          <Textarea 
+            {...register("comments")} 
+            placeholder="Enter performance review comments" 
+          />
         </div>
 
         <Button 

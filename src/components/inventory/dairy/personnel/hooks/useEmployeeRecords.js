@@ -2,32 +2,18 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 
-export const useEmployeeRecords = ({ timeRange, searchTerm, status }) => {
+export const useEmployeeRecords = ({ timeRange, searchTerm, status } = {}) => {
   const [records, setRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const getTimeRangeDate = () => {
-    const now = new Date();
-    switch (timeRange) {
-      case 'hour':
-        return new Date(now.setHours(now.getHours() - 1));
-      case 'day':
-        return new Date(now.setDate(now.getDate() - 1));
-      case 'week':
-        return new Date(now.setDate(now.getDate() - 7));
-      case 'month':
-        return new Date(now.setMonth(now.getMonth() - 1));
-      case 'year':
-        return new Date(now.setFullYear(now.getFullYear() - 1));
-      default:
-        return null;
-    }
-  };
-
   const fetchRecords = async () => {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      setIsLoading(true);
+      console.log('Fetching employee records with filters:', { timeRange, searchTerm, status });
+      
       let query = supabase
         .from('personnel_employee_records')
         .select('*');
@@ -38,34 +24,52 @@ export const useEmployeeRecords = ({ timeRange, searchTerm, status }) => {
       }
 
       // Apply time range filter
-      if (timeRange !== 'all') {
-        const timeRangeDate = getTimeRangeDate();
-        if (timeRangeDate) {
-          query = query.gte('created_at', timeRangeDate.toISOString());
+      if (timeRange && timeRange !== 'all') {
+        const now = new Date();
+        let startDate = new Date();
+
+        switch (timeRange) {
+          case 'hour':
+            startDate.setHours(now.getHours() - 1);
+            break;
+          case 'day':
+            startDate.setDate(now.getDate() - 1);
+            break;
+          case 'week':
+            startDate.setDate(now.getDate() - 7);
+            break;
+          case 'month':
+            startDate.setMonth(now.getMonth() - 1);
+            break;
+          case 'year':
+            startDate.setFullYear(now.getFullYear() - 1);
+            break;
+          default:
+            startDate = null;
+        }
+
+        if (startDate) {
+          query = query.gte('created_at', startDate.toISOString());
         }
       }
 
-      // Execute the query
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      // Apply search filter on the client side
-      let filteredData = data;
+      // Apply search term filter
       if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        filteredData = data.filter(record => 
-          record.employee_id?.toLowerCase().includes(searchLower) ||
-          record.job_title?.toLowerCase().includes(searchLower) ||
-          record.comments?.toLowerCase().includes(searchLower) ||
-          record.department?.toLowerCase().includes(searchLower)
+        query = query.or(
+          `employee_id.ilike.%${searchTerm}%,job_title.ilike.%${searchTerm}%,comments.ilike.%${searchTerm}%`
         );
       }
 
-      setRecords(filteredData);
+      // Get data ordered by most recent first
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      console.log('Fetched employee records:', data);
+      setRecords(data || []);
     } catch (err) {
       console.error('Error fetching employee records:', err);
-      setError(err);
+      setError(err.message || 'Failed to fetch employee records');
     } finally {
       setIsLoading(false);
     }
