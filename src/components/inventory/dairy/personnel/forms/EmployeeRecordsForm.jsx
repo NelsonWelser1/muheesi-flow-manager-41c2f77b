@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -12,6 +12,12 @@ const EmployeeRecordsForm = () => {
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
   const { toast } = useToast();
   const { isSubmitting, records, submitEmployeeRecord } = useEmployeeForm(toast);
+
+  // Register default values for select fields
+  useEffect(() => {
+    // Set default status value
+    setValue("status", "Active");
+  }, [setValue]);
 
   const onSubmit = async (data) => {
     const result = await submitEmployeeRecord(data);

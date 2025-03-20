@@ -13,15 +13,6 @@ const JOB_TITLES = [
   "Warehouse Staff"
 ];
 
-const DEPARTMENTS = [
-  "Production",
-  "Quality Control",
-  "Maintenance",
-  "Warehouse",
-  "Administration",
-  "Logistics"
-];
-
 const STATUS_OPTIONS = [
   "Active",
   "On Leave",
@@ -31,6 +22,7 @@ const STATUS_OPTIONS = [
   "Probation"
 ];
 
+// Department is removed from the form since it's not in the database schema
 const EmployeeBasicInfoFields = ({ register, errors, setValue }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -61,26 +53,6 @@ const EmployeeBasicInfoFields = ({ register, errors, setValue }) => {
           </SelectContent>
         </Select>
         {errors.jobTitle && <p className="text-sm text-red-500">Job title is required</p>}
-      </div>
-
-      <div className="space-y-2">
-        <Label>Department</Label>
-        <Select 
-          onValueChange={(value) => setValue("department", value)}
-          defaultValue=""
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select department" />
-          </SelectTrigger>
-          <SelectContent>
-            {DEPARTMENTS.map((dept) => (
-              <SelectItem key={dept} value={dept}>
-                {dept}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.department && <p className="text-sm text-red-500">Department is required</p>}
       </div>
 
       <div className="space-y-2">
