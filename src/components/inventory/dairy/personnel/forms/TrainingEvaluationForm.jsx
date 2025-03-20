@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/supabase";
+import { useTrainingEvaluations } from "../hooks/useTrainingEvaluations";
+import RecentTrainingRecords from "./training-evaluations/RecentTrainingRecords";
 
 const TRAINING_MODULES = [
   "Safety Protocols",
@@ -19,50 +20,28 @@ const TRAINING_MODULES = [
 ];
 
 const TrainingEvaluationForm = () => {
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
   const { toast } = useToast();
+  const { isSubmitting, records, submitTrainingEvaluation } = useTrainingEvaluations(toast);
 
   const onSubmit = async (data) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to submit evaluations",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const formattedData = {
-        employee_id: data.employeeId,
-        training_module: data.trainingModule,
-        training_date: data.trainingDate,
-        performance_rating: parseInt(data.performanceRating),
-        feedback: data.feedback,
-        operator_id: user.id
-      };
-
-      const { error } = await supabase
-        .from('personnel_training_evaluations')
-        .insert([formattedData]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Training evaluation has been saved",
-      });
+    console.log("Form data before submission:", data); // Debug log
+    const result = await submitTrainingEvaluation(data);
+    if (result.success) {
       reset();
-    } catch (error) {
-      console.error('Error saving training evaluation:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save training evaluation",
-        variant: "destructive",
-      });
     }
+  };
+
+  // Debug handler for testing (can be attached to any element for debugging)
+  const debugFormData = () => {
+    const currentValues = {
+      employeeId: document.querySelector('input[name="employeeId"]').value,
+      trainingModule: document.querySelector('select[name="trainingModule"]').value,
+      trainingDate: document.querySelector('input[name="trainingDate"]').value,
+      performanceRating: document.querySelector('input[name="performanceRating"]').value,
+      feedback: document.querySelector('textarea[name="feedback"]').value
+    };
+    console.log("Current form values:", currentValues);
   };
 
   return (
@@ -70,14 +49,25 @@ const TrainingEvaluationForm = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label>Employee ID</Label>
-            <Input {...register("employeeId", { required: true })} placeholder="Enter employee ID" />
+            <Label htmlFor="employeeId">Employee ID</Label>
+            <Input 
+              id="employeeId"
+              {...register("employeeId", { required: "Employee ID is required" })} 
+              placeholder="Enter employee ID" 
+              className={errors.employeeId ? "border-red-500" : ""}
+            />
+            {errors.employeeId && (
+              <p className="text-red-500 text-sm">{errors.employeeId.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label>Training Module</Label>
-            <Select onValueChange={(value) => register("trainingModule").onChange({ target: { value } })}>
-              <SelectTrigger>
+            <Label htmlFor="trainingModule">Training Module</Label>
+            <Select 
+              onValueChange={(value) => setValue("trainingModule", value)} 
+              name="trainingModule"
+            >
+              <SelectTrigger id="trainingModule" className={errors.trainingModule ? "border-red-500" : ""}>
                 <SelectValue placeholder="Select training module" />
               </SelectTrigger>
               <SelectContent>
@@ -88,39 +78,68 @@ const TrainingEvaluationForm = () => {
                 ))}
               </SelectContent>
             </Select>
+            {errors.trainingModule && (
+              <p className="text-red-500 text-sm">{errors.trainingModule.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label>Training Date</Label>
-            <Input type="date" {...register("trainingDate", { required: true })} />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Performance Rating (1-5)</Label>
+            <Label htmlFor="trainingDate">Training Date</Label>
             <Input 
+              id="trainingDate"
+              type="date" 
+              {...register("trainingDate", { required: "Training date is required" })} 
+              className={errors.trainingDate ? "border-red-500" : ""}
+            />
+            {errors.trainingDate && (
+              <p className="text-red-500 text-sm">{errors.trainingDate.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="performanceRating">Performance Rating (1-5)</Label>
+            <Input 
+              id="performanceRating"
               type="number" 
               min="1" 
               max="5" 
               {...register("performanceRating", { 
-                required: true,
-                min: 1,
-                max: 5
+                required: "Rating is required",
+                min: { value: 1, message: "Rating must be at least 1" },
+                max: { value: 5, message: "Rating must be at most 5" }
               })} 
+              className={errors.performanceRating ? "border-red-500" : ""}
             />
+            {errors.performanceRating && (
+              <p className="text-red-500 text-sm">{errors.performanceRating.message}</p>
+            )}
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label>Comments/Feedback</Label>
+          <Label htmlFor="feedback">Comments/Feedback</Label>
           <Textarea 
+            id="feedback"
             {...register("feedback")} 
             placeholder="Enter training feedback and comments"
             className="min-h-[100px]"
           />
         </div>
 
-        <Button type="submit" className="w-full">Submit Training Evaluation</Button>
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit Training Evaluation'}
+        </Button>
+
+        {/* Debug button - can be uncommented during development */}
+        {/* <Button type="button" onClick={debugFormData} className="mt-2">Debug Form</Button> */}
       </form>
+
+      {/* Display recent records */}
+      <RecentTrainingRecords records={records} />
     </div>
   );
 };

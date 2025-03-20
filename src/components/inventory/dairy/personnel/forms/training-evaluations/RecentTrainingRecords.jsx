@@ -1,0 +1,67 @@
+
+import React from 'react';
+import { format } from 'date-fns';
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+const RecentTrainingRecords = ({ records }) => {
+  if (!records || records.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Training Records</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-muted-foreground">No training records found</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const getRatingColor = (rating) => {
+    if (rating >= 4) return "success";
+    if (rating >= 3) return "warning";
+    return "destructive";
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Recent Training Records</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Employee</TableHead>
+              <TableHead>Module</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Rating</TableHead>
+              <TableHead>Feedback</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {records.map((record) => (
+              <TableRow key={record.id}>
+                <TableCell className="font-medium">{record.employee_id}</TableCell>
+                <TableCell>{record.training_module}</TableCell>
+                <TableCell>
+                  {record.training_date ? format(new Date(record.training_date), 'PPP') : 'N/A'}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getRatingColor(record.performance_rating)}>
+                    {record.performance_rating}/5
+                  </Badge>
+                </TableCell>
+                <TableCell className="max-w-xs truncate">{record.feedback || 'No feedback'}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default RecentTrainingRecords;
