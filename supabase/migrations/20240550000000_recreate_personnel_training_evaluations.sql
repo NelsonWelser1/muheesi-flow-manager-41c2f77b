@@ -2,8 +2,12 @@
 -- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create the training evaluations table
-CREATE TABLE IF NOT EXISTS personnel_training_evaluations (
+-- Drop existing table and related objects if they exist
+DROP TABLE IF EXISTS personnel_training_evaluations CASCADE;
+DROP FUNCTION IF EXISTS insert_training_evaluation;
+
+-- Create the training evaluations table without foreign key constraints for development
+CREATE TABLE personnel_training_evaluations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     employee_id TEXT NOT NULL,
     training_module TEXT NOT NULL,
@@ -20,31 +24,17 @@ CREATE INDEX idx_training_evaluations_employee_id ON personnel_training_evaluati
 CREATE INDEX idx_training_evaluations_training_date ON personnel_training_evaluations(training_date);
 CREATE INDEX idx_training_evaluations_created_at ON personnel_training_evaluations(created_at);
 
--- Temporarily comment out foreign key constraint for development
--- If the personnel_employee_records table exists, add a foreign key constraint
--- DO $$
--- BEGIN
---     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'personnel_employee_records') THEN
---         -- Check if the constraint already exists before creating it
---         IF NOT EXISTS (
---             SELECT 1 FROM pg_constraint 
---             WHERE conname = 'personnel_training_evaluations_employee_id_fkey'
---         ) THEN
---             ALTER TABLE personnel_training_evaluations 
---             ADD CONSTRAINT personnel_training_evaluations_employee_id_fkey 
---             FOREIGN KEY (employee_id) REFERENCES personnel_employee_records(employee_id);
---         END IF;
---     END IF;
--- END
--- $$;
-
 -- Enable Row Level Security
 ALTER TABLE personnel_training_evaluations ENABLE ROW LEVEL SECURITY;
 
--- Create policy for public access to allow operations from frontend
--- This is a temporary policy for development without authentication
+-- Create policy for public access to allow operations from frontend during development
 CREATE POLICY "Allow public access to training_evaluations" 
     ON personnel_training_evaluations
     FOR ALL
     USING (true)
     WITH CHECK (true);
+
+-- Comment for future implementation when employee records are properly set up
+-- ALTER TABLE personnel_training_evaluations 
+-- ADD CONSTRAINT personnel_training_evaluations_employee_id_fkey 
+-- FOREIGN KEY (employee_id) REFERENCES personnel_employee_records(employee_id);

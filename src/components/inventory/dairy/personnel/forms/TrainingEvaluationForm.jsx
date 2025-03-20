@@ -22,10 +22,10 @@ const TRAINING_MODULES = [
 const TrainingEvaluationForm = () => {
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
   const { toast } = useToast();
-  const { isSubmitting, records, submitTrainingEvaluation } = useTrainingEvaluations(toast);
+  const { isSubmitting, isLoading, records, submitTrainingEvaluation } = useTrainingEvaluations(toast);
 
   const onSubmit = async (data) => {
-    console.log("Form data before submission:", data); // Debug log
+    console.log("Form data before submission:", data);
     const result = await submitTrainingEvaluation(data);
     if (result.success) {
       reset();
@@ -123,8 +123,8 @@ const TrainingEvaluationForm = () => {
         </Button>
       </form>
 
-      {/* Display recent records */}
-      <RecentTrainingRecords records={records} />
+      {/* Display recent records with loading state */}
+      <RecentTrainingRecords records={records} isLoading={isLoading} />
     </div>
   );
 };
