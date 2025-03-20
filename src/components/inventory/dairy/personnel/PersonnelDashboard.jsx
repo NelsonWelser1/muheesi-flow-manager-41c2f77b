@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
 import ActionTiles from './dashboard/ActionTiles';
 import MetricsCards from './dashboard/MetricsCards';
 import CurrentShiftSchedule from './dashboard/CurrentShiftSchedule';
@@ -34,7 +36,7 @@ const PersonnelDashboard = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Personnel Management</h2>
-        {!activeComponent && activeComponent !== "Employee Records" && (
+        {!activeComponent && (
           <Button
             variant="outline"
             size="sm"

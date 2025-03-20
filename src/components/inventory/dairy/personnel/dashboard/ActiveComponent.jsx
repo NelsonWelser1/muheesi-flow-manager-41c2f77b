@@ -11,6 +11,14 @@ import PersonnelDataDisplay from '../data-display/PersonnelDataDisplay';
 const ActiveComponent = ({ activeComponent, onBack }) => {
   if (!activeComponent) return null;
 
+  const handleViewRecords = () => {
+    // This function will be passed to the EmployeeRecordsForm
+    // It will navigate to the Employee Records view within the active component
+    return activeComponent === "Employee Records & Scheduling" ? 
+      () => onBack() : // go back to dashboard first
+      null; // for other components, no action
+  };
+
   return (
     <div className="space-y-4">
       <Button variant="outline" onClick={onBack} className="mb-4">
@@ -21,7 +29,9 @@ const ActiveComponent = ({ activeComponent, onBack }) => {
           <CardTitle>{activeComponent}</CardTitle>
         </CardHeader>
         <CardContent>
-          {activeComponent === "Employee Records & Scheduling" && <EmployeeRecordsForm />}
+          {activeComponent === "Employee Records & Scheduling" && (
+            <EmployeeRecordsForm onViewRecords={handleViewRecords()} />
+          )}
           {activeComponent === "Training & Performance" && <TrainingEvaluationForm />}
           {activeComponent === "Recruitment Management" && <RecruitmentManagementForm />}
           {activeComponent === "Employee Dossiers" && <DossierManagement />}
