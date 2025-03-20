@@ -1,14 +1,28 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import EmployeeRecordsForm from '../forms/EmployeeRecordsForm';
 import TrainingEvaluationForm from '../forms/TrainingEvaluationForm';
 import RecruitmentManagementForm from '../forms/RecruitmentManagementForm';
 import DossierManagement from '../dossier/DossierManagement';
+import TrainingRecordsDisplay from '../records/TrainingRecordsDisplay';
 
 const ActiveComponent = ({ activeComponent, onBack }) => {
+  const [showTrainingRecords, setShowTrainingRecords] = useState(false);
+  
   if (!activeComponent) return null;
+
+  if (showTrainingRecords && activeComponent === "Training & Performance") {
+    return (
+      <div className="space-y-4">
+        <Button variant="outline" onClick={() => setShowTrainingRecords(false)} className="mb-4">
+          ← Back to Training & Performance Form
+        </Button>
+        <TrainingRecordsDisplay />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -30,8 +44,14 @@ const ActiveComponent = ({ activeComponent, onBack }) => {
           )}
           {activeComponent === "Training & Performance" && (
             <div>
-              <div className="mb-6">
+              <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-medium">Training & Performance Management</h3>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowTrainingRecords(true)}
+                >
+                  View Training Records
+                </Button>
               </div>
               <TrainingEvaluationForm />
             </div>
