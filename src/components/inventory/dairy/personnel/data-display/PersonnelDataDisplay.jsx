@@ -7,15 +7,11 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { 
   ArrowUpDown, 
-  FileText, 
-  FileSpreadsheet, 
-  Download, 
-  RefreshCcw, 
-  Filter
+  RefreshCcw
 } from "lucide-react";
 import SearchToolbar from './components/SearchToolbar';
 import DataTable from './components/DataTable';
-import { format } from 'date-fns';
+import ExportActions from './components/ExportActions';
 
 const PersonnelDataDisplay = ({ tableName, title }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,9 +35,9 @@ const PersonnelDataDisplay = ({ tableName, title }) => {
   const sortedData = [...(filteredData || [])].sort((a, b) => {
     switch (sortBy) {
       case 'name-asc':
-        return a.employee_id.localeCompare(b.employee_id);
+        return a.employee_id?.localeCompare(b.employee_id) || 0;
       case 'name-desc':
-        return b.employee_id.localeCompare(a.employee_id);
+        return b.employee_id?.localeCompare(a.employee_id) || 0;
       case 'date-asc':
         return new Date(a.created_at) - new Date(b.created_at);
       case 'date-desc':
@@ -54,61 +50,8 @@ const PersonnelDataDisplay = ({ tableName, title }) => {
     refetch();
     toast({
       title: "Refreshed",
-      description: "Employee records have been refreshed",
+      description: `${title} records have been refreshed`,
     });
-  };
-
-  const handleExport = (format) => {
-    if (!filteredData?.length) {
-      toast({
-        title: "Error",
-        description: "No data to export",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `employee-records-${timestamp}`;
-      
-      if (format === 'csv') {
-        const headers = Object.keys(filteredData[0]).join(',');
-        const rows = filteredData.map(row => 
-          Object.values(row).map(val => 
-            typeof val === 'string' ? `"${val.replace(/"/g, '""')}"` : val
-          ).join(',')
-        ).join('\n');
-        const csv = `${headers}\n${rows}`;
-        
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `${filename}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else if (format === 'excel') {
-        toast({
-          title: "Excel Export",
-          description: "Excel export functionality is in development",
-        });
-      } else if (format === 'pdf') {
-        toast({
-          title: "PDF Export",
-          description: "PDF export functionality is in development",
-        });
-      }
-    } catch (error) {
-      console.error('Export error:', error);
-      toast({
-        title: "Export Failed",
-        description: "Failed to export employee records",
-        variant: "destructive",
-      });
-    }
   };
 
   const handleSortChange = () => {
@@ -150,18 +93,7 @@ const PersonnelDataDisplay = ({ tableName, title }) => {
           setTimeRange={setTimeRange}
         />
         <div className="flex justify-end mt-4 space-x-2">
-          <Button variant="outline" size="sm" onClick={() => handleExport('pdf')}>
-            <FileText className="h-4 w-4 mr-1" />
-            PDF
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleExport('excel')}>
-            <FileSpreadsheet className="h-4 w-4 mr-1" />
-            Excel
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleExport('csv')}>
-            <Download className="h-4 w-4 mr-1" />
-            CSV
-          </Button>
+          <ExportActions data={sortedData} title={title} />
         </div>
       </CardHeader>
       <CardContent>

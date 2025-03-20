@@ -10,6 +10,7 @@ import PersonnelDataDisplay from '../data-display/PersonnelDataDisplay';
 
 const ActiveComponent = ({ activeComponent, onBack }) => {
   const [showEmployeeRecords, setShowEmployeeRecords] = useState(false);
+  const [showTrainingRecords, setShowTrainingRecords] = useState(false);
   
   if (!activeComponent) return null;
 
@@ -22,6 +23,20 @@ const ActiveComponent = ({ activeComponent, onBack }) => {
         <PersonnelDataDisplay 
           tableName="personnel_employee_records" 
           title="Employee"
+        />
+      </div>
+    );
+  }
+
+  if (showTrainingRecords && activeComponent === "Training & Performance") {
+    return (
+      <div className="space-y-4">
+        <Button variant="outline" onClick={() => setShowTrainingRecords(false)} className="mb-4">
+          ← Back to Training & Performance Form
+        </Button>
+        <PersonnelDataDisplay 
+          tableName="personnel_training_evaluations" 
+          title="Training"
         />
       </div>
     );
@@ -51,7 +66,20 @@ const ActiveComponent = ({ activeComponent, onBack }) => {
               <EmployeeRecordsForm />
             </div>
           )}
-          {activeComponent === "Training & Performance" && <TrainingEvaluationForm />}
+          {activeComponent === "Training & Performance" && (
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-medium">Training & Performance Management</h3>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowTrainingRecords(true)}
+                >
+                  View Training Records
+                </Button>
+              </div>
+              <TrainingEvaluationForm />
+            </div>
+          )}
           {activeComponent === "Recruitment Management" && <RecruitmentManagementForm />}
           {activeComponent === "Employee Dossiers" && <DossierManagement />}
         </CardContent>

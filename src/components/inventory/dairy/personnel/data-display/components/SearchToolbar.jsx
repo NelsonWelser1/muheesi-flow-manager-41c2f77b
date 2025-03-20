@@ -24,6 +24,7 @@ const SearchToolbar = ({ searchTerm, setSearchTerm, timeRange, setTimeRange }) =
             <SelectValue placeholder="Select time range" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="hour">Last Hour</SelectItem>
             <SelectItem value="day">Last 24 Hours</SelectItem>
             <SelectItem value="week">Last Week</SelectItem>
             <SelectItem value="month">Last Month</SelectItem>
