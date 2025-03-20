@@ -10,8 +10,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/supabase";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEmployeeDossiers } from './hooks/useEmployeeDossiers';
+import { supabase } from "@/integrations/supabase/supabase";
 
 const DEPARTMENTS = ["Production", "Quality Control", "Administration", "Logistics", "Sales", "Maintenance"];
 const STATUS_OPTIONS = ["Active", "Onboarding", "On Leave", "Terminated", "Retired"];
@@ -29,6 +30,7 @@ const DossierDetails = ({ dossier, onBack }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isNewDossier = !dossier;
+  const { saveDossier, isSaving } = useEmployeeDossiers();
 
   // Initialize form data
   const [formData, setFormData] = useState({
@@ -75,65 +77,23 @@ const DossierDetails = ({ dossier, onBack }) => {
     enabled: !!dossier
   });
 
-  // Save dossier mutation
-  const saveDossierMutation = useMutation({
-    mutationFn: async (data) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error("You must be logged in to save a dossier");
-      }
-      
-      const payload = {
-        ...data,
-        operator_id: user.id
-      };
-      
-      if (isNewDossier) {
-        const { data: newRecord, error } = await supabase
-          .from('personnel_employee_records')
-          .insert([payload])
-          .select()
-          .single();
-        
-        if (error) throw error;
-        return newRecord;
-      } else {
-        const { data: updatedRecord, error } = await supabase
-          .from('personnel_employee_records')
-          .update(payload)
-          .eq('id', dossier.id)
-          .select()
-          .single();
-        
-        if (error) throw error;
-        return updatedRecord;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employeeDossiers'] });
-      toast({
-        title: isNewDossier ? "Dossier Created" : "Dossier Updated",
-        description: `Successfully ${isNewDossier ? 'created' : 'updated'} employee dossier.`,
-      });
-      if (isNewDossier) onBack();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to save dossier: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  });
-
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    saveDossierMutation.mutate(formData);
+    
+    // Debug logging before submission
+    console.log("Submitting form data:", formData);
+    
+    // Use the hook's saveDossier function
+    saveDossier(formData, dossier?.id);
+    
+    // If new dossier, go back to the list after saving
+    if (isNewDossier) {
+      setTimeout(() => onBack(), 500);
+    }
   };
 
   const handleLinkRecruitment = (recruitmentRecord) => {
@@ -158,10 +118,10 @@ const DossierDetails = ({ dossier, onBack }) => {
         <h2 className="text-2xl font-bold">{isNewDossier ? 'Create New Dossier' : 'Edit Dossier'}</h2>
         <Button 
           onClick={handleSubmit} 
-          disabled={saveDossierMutation.isPending}
+          disabled={isSaving}
           className="flex items-center gap-1"
         >
-          <Save className="h-4 w-4" /> Save
+          <Save className="h-4 w-4" /> {isSaving ? 'Saving...' : 'Save'}
         </Button>
       </div>
 

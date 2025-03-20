@@ -8,7 +8,7 @@ import DossierUploader from './DossierUploader';
 import DossierSearchBar from './components/DossierSearchBar';
 import ViewModeToggle from './components/ViewModeToggle';
 import DossierActionButtons from './components/DossierActionButtons';
-import { useDossierData } from './hooks/useDossierData';
+import { useEmployeeDossiers } from './hooks/useEmployeeDossiers';
 
 const DossierManagement = () => {
   const [viewMode, setViewMode] = useState('list');
@@ -18,7 +18,7 @@ const DossierManagement = () => {
   const [showUploader, setShowUploader] = useState(false);
   const [showScheduler, setShowScheduler] = useState(false);
   
-  const { dossiers: filteredDossiers, isLoading, error } = useDossierData(searchQuery);
+  const { dossiers: filteredDossiers, isLoading, error } = useEmployeeDossiers(searchQuery);
 
   const handleCreateDossier = () => {
     setSelectedDossier(null);
@@ -26,6 +26,7 @@ const DossierManagement = () => {
   };
 
   const handleViewDossier = (dossier) => {
+    console.log('Viewing dossier:', dossier);
     setSelectedDossier(dossier);
     setShowDetails(true);
   };
@@ -81,7 +82,7 @@ const DossierManagement = () => {
       {isLoading ? (
         <LoadingState />
       ) : error ? (
-        <ErrorState />
+        <ErrorState error={error} />
       ) : (
         <DossierList 
           dossiers={filteredDossiers} 
@@ -103,10 +104,12 @@ const LoadingState = () => (
   </Card>
 );
 
-const ErrorState = () => (
+const ErrorState = ({ error }) => (
   <Card>
     <CardContent className="p-6">
-      <div className="text-center text-red-500">Error loading dossiers. Please try again.</div>
+      <div className="text-center text-red-500">
+        Error loading dossiers: {error?.message || 'Unknown error'}
+      </div>
     </CardContent>
   </Card>
 );
