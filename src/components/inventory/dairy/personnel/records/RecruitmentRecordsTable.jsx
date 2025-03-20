@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, Eye, Download, Mail, Phone } from "lucide-react";
 import { format } from 'date-fns';
+import { useToast } from "@/components/ui/use-toast";
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -33,6 +34,7 @@ const getStatusColor = (status) => {
 const RecruitmentRecordsTable = ({ records, isLoading, error }) => {
   const [sortColumn, setSortColumn] = useState('interview_date_time');
   const [sortDirection, setSortDirection] = useState('desc');
+  const { toast } = useToast();
 
   const handleSort = (column) => {
     if (sortColumn === column) {
@@ -65,6 +67,42 @@ const RecruitmentRecordsTable = ({ records, isLoading, error }) => {
     if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
     return 0;
   });
+
+  const handleViewRecord = (record) => {
+    console.log("Viewing record details:", record);
+    toast({
+      title: "View Record",
+      description: `Viewing details for ${record.candidate_name}`,
+    });
+    // Here you would typically open a modal or navigate to a details page
+  };
+
+  const handleDownloadRecord = (record) => {
+    console.log("Downloading record:", record);
+    toast({
+      title: "Download Record",
+      description: `Downloading record for ${record.candidate_name}`,
+    });
+    // Implementation for downloading a single record
+  };
+
+  const handleEmailRecord = (record) => {
+    console.log("Emailing record:", record);
+    toast({
+      title: "Email Record",
+      description: `Preparing to email record for ${record.candidate_name}`,
+    });
+    // Implementation for emailing a record
+  };
+
+  const handlePhoneCall = (record) => {
+    console.log("Initiating phone call:", record);
+    toast({
+      title: "Phone Call",
+      description: `Initiating call regarding ${record.candidate_name}`,
+    });
+    // Implementation for initiating a phone call
+  };
 
   if (isLoading) {
     return <div className="flex justify-center p-4">Loading recruitment records...</div>;
@@ -125,16 +163,36 @@ const RecruitmentRecordsTable = ({ records, isLoading, error }) => {
               <TableCell>{formatDate(record.created_at)}</TableCell>
               <TableCell>
                 <div className="flex space-x-2">
-                  <Button variant="ghost" size="icon" title="View">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    title="View"
+                    onClick={() => handleViewRecord(record)}
+                  >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" title="Download">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    title="Download"
+                    onClick={() => handleDownloadRecord(record)}
+                  >
                     <Download className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" title="Email">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    title="Email"
+                    onClick={() => handleEmailRecord(record)}
+                  >
                     <Mail className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" title="Call">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    title="Call"
+                    onClick={() => handlePhoneCall(record)}
+                  >
                     <Phone className="h-4 w-4" />
                   </Button>
                 </div>
