@@ -1,6 +1,7 @@
 
 -- Drop the old personnel_employee_records table if it exists
-DROP TABLE IF EXISTS personnel_employee_records;
+-- Use CASCADE to drop dependent objects as well
+DROP TABLE IF EXISTS personnel_employee_records CASCADE;
 
 -- Create the new table with the correct schema that matches our form
 CREATE TABLE personnel_employee_records (
@@ -15,7 +16,8 @@ CREATE TABLE personnel_employee_records (
     comments TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    operator_id UUID
+    operator_id UUID,
+    department TEXT
 );
 
 -- Create indexes for better performance
@@ -32,3 +34,15 @@ CREATE POLICY "Allow public access to personnel_employee_records"
     FOR ALL
     USING (true)
     WITH CHECK (true);
+
+-- Recreate dependent objects
+-- Recreate the foreign key constraint for training_evaluations table if it exists
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'personnel_training_evaluations') THEN
+        ALTER TABLE personnel_training_evaluations 
+        ADD CONSTRAINT personnel_training_evaluations_employee_id_fkey 
+        FOREIGN KEY (employee_id) REFERENCES personnel_employee_records(employee_id);
+    END IF;
+END
+$$;
