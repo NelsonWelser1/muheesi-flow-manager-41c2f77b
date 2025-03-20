@@ -2,11 +2,10 @@
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Clock, Search } from "lucide-react";
-import CSVExportButton from "./export-buttons/CSVExportButton";
-import ExcelExportButton from "./export-buttons/ExcelExportButton";
-import PDFExportButton from "./export-buttons/PDFExportButton";
+import { Search } from "lucide-react";
+import CSVExportButton from './export-buttons/CSVExportButton';
+import ExcelExportButton from './export-buttons/ExcelExportButton';
+import PDFExportButton from './export-buttons/PDFExportButton';
 
 const RecordsToolbar = ({
   searchTerm,
@@ -22,9 +21,9 @@ const RecordsToolbar = ({
   onExportPDF
 }) => {
   return (
-    <div className="flex flex-col gap-4 mb-4">
-      <div className="flex items-center justify-between">
-        <div className="relative w-64">
+    <div className="mb-6 space-y-4">
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={`Search ${recordType}...`}
@@ -34,46 +33,46 @@ const RecordsToolbar = ({
           />
         </div>
         
-        <div className="flex items-center gap-2">
-          <CSVExportButton onClick={onExportCSV} disabled={recordsCount === 0} />
-          <ExcelExportButton onClick={onExportExcel} disabled={recordsCount === 0} />
-          <PDFExportButton onClick={onExportPDF} disabled={recordsCount === 0} />
-        </div>
-      </div>
-      
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[150px]">
-              <Clock className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Time Range" />
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Time range" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="this-week">This Week</SelectItem>
-              <SelectItem value="this-month">This Month</SelectItem>
-              <SelectItem value="this-year">This Year</SelectItem>
+              <SelectItem value="hour">Last Hour</SelectItem>
+              <SelectItem value="day">Last Day</SelectItem>
+              <SelectItem value="week">Last Week</SelectItem>
+              <SelectItem value="month">Last Month</SelectItem>
+              <SelectItem value="year">Last Year</SelectItem>
             </SelectContent>
           </Select>
           
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-[130px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in-transit">In Transit</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
-              <SelectItem value="delayed">Delayed</SelectItem>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="Pending">Pending</SelectItem>
+              <SelectItem value="Confirmed">Confirmed</SelectItem>
+              <SelectItem value="In Progress">In Progress</SelectItem>
+              <SelectItem value="Cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        
-        <Badge variant="outline" className="text-xs">
+      </div>
+      
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-muted-foreground">
           {recordsCount} {recordType} found
-        </Badge>
+        </div>
+        
+        <div className="flex gap-2">
+          <CSVExportButton onClick={onExportCSV} disabled={recordsCount === 0} />
+          <ExcelExportButton onClick={onExportExcel} disabled={recordsCount === 0} />
+          <PDFExportButton onClick={onExportPDF} disabled={recordsCount === 0} />
+        </div>
       </div>
     </div>
   );

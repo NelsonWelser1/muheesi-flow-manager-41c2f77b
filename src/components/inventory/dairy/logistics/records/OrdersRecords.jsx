@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import OrdersTable from './components/OrdersTable';
 import RecordsToolbar from './components/RecordsToolbar';
-import { useLogisticsRecords } from './hooks/useLogisticsRecords';
+import { useOrdersRecords } from './hooks/useOrdersRecords';
 import useOrdersExport from './hooks/useOrdersExport';
 
 const OrdersRecords = () => {
@@ -24,7 +24,7 @@ const OrdersRecords = () => {
     isLoading,
     error,
     refetchRecords
-  } = useLogisticsRecords(searchTerm, timeRange, statusFilter, sortConfig);
+  } = useOrdersRecords(searchTerm, timeRange, statusFilter, sortConfig);
 
   const { exportToCSV, exportToExcel, exportToPDF } = useOrdersExport(orders);
 

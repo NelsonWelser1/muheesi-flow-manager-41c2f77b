@@ -1,86 +1,110 @@
 
-// Simple export utilities for demonstration
-// In a real application, you would use libraries like xlsx, file-saver, and jspdf
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import { format } from 'date-fns';
 
-export const exportToCSV = (data, filename) => {
+// Format date for display
+export const formatDate = (dateString) => {
+  if (!dateString) return '';
   try {
-    // Convert data to CSV format
-    const headers = Object.keys(data[0] || {}).join(',');
-    const rows = data.map(item => Object.values(item).join(','));
-    const csvContent = [headers, ...rows].join('\n');
-    
-    // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    
-    // Trigger download
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
   } catch (error) {
-    console.error('Error exporting to CSV:', error);
-    throw error;
+    return dateString;
   }
 };
 
-export const exportToExcel = (data, filename) => {
-  try {
-    // In a real app, you would use the xlsx library to properly format Excel files
-    // For this demonstration, we'll just create a CSV which can be opened in Excel
-    exportToCSV(data, filename);
-  } catch (error) {
-    console.error('Error exporting to Excel:', error);
-    throw error;
-  }
+// Process order data for export
+const processOrderData = (orders) => {
+  return orders.map(order => ({
+    'Order ID': order.order_id,
+    'Customer': order.customer_name,
+    'Order Date': formatDate(order.order_date_time),
+    'Priority': order.delivery_priority,
+    'Status': order.order_status,
+    'Created': formatDate(order.created_at),
+    'Updated': formatDate(order.updated_at),
+    'Details': typeof order.order_details === 'object' 
+      ? JSON.stringify(order.order_details) 
+      : order.order_details
+  }));
 };
 
-export const exportToPDF = (data, title) => {
-  try {
-    // In a real app, you would use a library like jspdf to create PDFs
-    // For this demonstration, we'll show how to set it up
-    
-    // Create a simple HTML representation
-    let content = `<h1>${title}</h1><table border="1">`;
-    
-    // Add headers
-    const headers = Object.keys(data[0] || {});
-    content += '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
-    
-    // Add rows
-    data.forEach(item => {
-      content += '<tr>' + headers.map(h => `<td>${item[h]}</td>`).join('') + '</tr>';
-    });
-    
-    content += '</table>';
-    
-    // Open a new window with the content
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>${title}</title>
-          <style>
-            body { font-family: Arial, sans-serif; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { padding: 8px; text-align: left; }
-            th { background-color: #f2f2f2; }
-          </style>
-        </head>
-        <body>
-          ${content}
-          <script>
-            setTimeout(() => { window.print(); window.close(); }, 500);
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  } catch (error) {
-    console.error('Error exporting to PDF:', error);
-    throw error;
-  }
+// Export to CSV
+export const exportToCSV = (orders, filename) => {
+  if (!orders || orders.length === 0) return;
+  
+  const processedData = processOrderData(orders);
+  
+  // Create headers and rows
+  const headers = Object.keys(processedData[0]);
+  const rows = processedData.map(item => headers.map(header => item[header]));
+  
+  // Combine headers and rows
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => 
+      cell ? `"${String(cell).replace(/"/g, '""')}"` : ''
+    ).join(','))
+  ].join('\n');
+  
+  // Create download link
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// Export to Excel
+export const exportToExcel = (orders, filename) => {
+  if (!orders || orders.length === 0) return;
+  
+  const processedData = processOrderData(orders);
+  
+  // Create workbook and worksheet
+  const worksheet = XLSX.utils.json_to_sheet(processedData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders');
+  
+  // Generate and download Excel file
+  XLSX.writeFile(workbook, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
+};
+
+// Export to PDF
+export const exportToPDF = (orders, title) => {
+  if (!orders || orders.length === 0) return;
+  
+  const processedData = processOrderData(orders);
+  
+  // Create PDF document
+  const doc = new jsPDF();
+  
+  // Add title
+  doc.setFontSize(16);
+  doc.text(title, 14, 15);
+  
+  // Add date
+  doc.setFontSize(10);
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
+  
+  // Convert data for table
+  const headers = Object.keys(processedData[0]);
+  const rows = processedData.map(item => headers.map(header => item[header]));
+  
+  // Add table
+  doc.autoTable({
+    head: [headers],
+    body: rows,
+    startY: 25,
+    theme: 'grid',
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [71, 85, 119] }
+  });
+  
+  // Save PDF
+  doc.save(`${title.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
 };
