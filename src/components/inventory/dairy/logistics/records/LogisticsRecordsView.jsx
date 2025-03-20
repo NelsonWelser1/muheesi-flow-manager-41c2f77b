@@ -1,24 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useNavigate, useParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import DeliveriesRecords from './DeliveriesRecords';
 import OrdersRecords from './OrdersRecords';
 import PerformanceRecords from './PerformanceRecords';
 
 const LogisticsRecordsView = () => {
-  const { recordType } = useParams();
-  const [activeTab, setActiveTab] = useState(recordType || 'deliveries');
+  const [activeTab, setActiveTab] = useState('deliveries');
   const navigate = useNavigate();
-
-  // Update the active tab when recordType param changes
-  useEffect(() => {
-    if (recordType) {
-      setActiveTab(recordType);
-    }
-  }, [recordType]);
 
   const handleBack = () => {
     navigate('/manage-inventory/logistics');
@@ -40,7 +32,7 @@ const LogisticsRecordsView = () => {
           <CardTitle>Logistics Records</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
+          <Tabs defaultValue="deliveries" value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="deliveries">Deliveries</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>

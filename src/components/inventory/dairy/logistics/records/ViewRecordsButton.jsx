@@ -8,7 +8,7 @@ const ViewRecordsButton = ({ recordType, to }) => {
   const navigate = useNavigate();
   
   const handleViewRecords = () => {
-    navigate(`/manage-inventory/logistics/records/${recordType}`);
+    navigate(to);
   };
   
   return (
