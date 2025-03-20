@@ -15,13 +15,16 @@ export const useDeliveryManagement = () => {
       setIsLoading(true);
       setError(null);
 
+      console.log('Fetching delivery records from Supabase...');
+      
       const { data, error } = await supabase
-        .from('delivery_management')
+        .from('logistics_delivery_management')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
+      console.log(`Fetched ${data ? data.length : 0} delivery records`);
       setDeliveries(data || []);
     } catch (err) {
       console.error('Error fetching deliveries:', err);
@@ -46,7 +49,7 @@ export const useDeliveryManagement = () => {
       console.log('Submitting delivery data:', deliveryData);
 
       const { data, error } = await supabase
-        .from('delivery_management')
+        .from('logistics_delivery_management')
         .insert([deliveryData])
         .select();
 
@@ -84,7 +87,7 @@ export const useDeliveryManagement = () => {
       console.log('Updating delivery data:', { id, updatedData });
 
       const { data, error } = await supabase
-        .from('delivery_management')
+        .from('logistics_delivery_management')
         .update(updatedData)
         .eq('id', id)
         .select();
@@ -127,7 +130,7 @@ export const useDeliveryManagement = () => {
       console.log('Deleting delivery:', id);
 
       const { error } = await supabase
-        .from('delivery_management')
+        .from('logistics_delivery_management')
         .delete()
         .eq('id', id);
 
