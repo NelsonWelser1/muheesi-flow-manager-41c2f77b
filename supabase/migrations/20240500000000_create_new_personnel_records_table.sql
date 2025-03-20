@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS personnel_employee_records CASCADE;
 -- Create the new table with the correct schema that matches our form
 CREATE TABLE personnel_employee_records (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    employee_id TEXT NOT NULL,
+    employee_id TEXT NOT NULL UNIQUE,  -- Added UNIQUE constraint
     job_title TEXT,
     shift_start TIMESTAMP WITH TIME ZONE,
     shift_end TIMESTAMP WITH TIME ZONE,
