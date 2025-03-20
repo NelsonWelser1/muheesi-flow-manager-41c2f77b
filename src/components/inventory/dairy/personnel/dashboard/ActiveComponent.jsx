@@ -12,11 +12,9 @@ const ActiveComponent = ({ activeComponent, onBack }) => {
   if (!activeComponent) return null;
 
   const handleViewRecords = () => {
-    // This function will be passed to the EmployeeRecordsForm
-    // It will navigate to the Employee Records view within the active component
     return activeComponent === "Employee Records & Scheduling" ? 
-      () => onBack() : // go back to dashboard first
-      null; // for other components, no action
+      () => onBack("Employee Records") : // Navigate to Employee Records view
+      null; // For other components, no action
   };
 
   return (
@@ -35,7 +33,12 @@ const ActiveComponent = ({ activeComponent, onBack }) => {
           {activeComponent === "Training & Performance" && <TrainingEvaluationForm />}
           {activeComponent === "Recruitment Management" && <RecruitmentManagementForm />}
           {activeComponent === "Employee Dossiers" && <DossierManagement />}
-          {activeComponent === "Employee Records" && <PersonnelDataDisplay tableName="personnel_employee_records" title="Employee" />}
+          {activeComponent === "Employee Records" && (
+            <PersonnelDataDisplay 
+              tableName="personnel_employee_records" 
+              title="Employee"
+            />
+          )}
         </CardContent>
       </Card>
     </div>

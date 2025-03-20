@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { Eye } from "lucide-react";
+import { Eye, FileText, FileSpreadsheet, Download } from "lucide-react";
 
 const JOB_TITLES = [
   "Production Manager",
@@ -80,7 +80,7 @@ const EmployeeRecordsForm = ({ onViewRecords }) => {
             className="flex items-center gap-2"
           >
             <Eye className="h-4 w-4" />
-            View Records
+            View Employee Records
           </Button>
         )}
       </div>

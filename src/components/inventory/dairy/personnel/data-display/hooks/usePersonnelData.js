@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
  * @param {string} tableName - The name of the table to fetch data from
  * @param {string} searchTerm - Search term to filter records
  * @param {string} timeRange - Time range filter (day, week, month, year, all)
- * @returns {Object} Query result with data, loading state
+ * @returns {Object} Query result with data, loading state, and refetch function
  */
 export const usePersonnelData = (tableName, searchTerm, timeRange) => {
   const { toast } = useToast();
@@ -20,7 +20,7 @@ export const usePersonnelData = (tableName, searchTerm, timeRange) => {
         let query = supabase.from(tableName).select('*');
 
         if (searchTerm) {
-          query = query.or(`name.ilike.%${searchTerm}%,id.ilike.%${searchTerm}%`);
+          query = query.or(`employee_id.ilike.%${searchTerm}%,job_title.ilike.%${searchTerm}%,comments.ilike.%${searchTerm}%`);
         }
 
         if (timeRange !== 'all') {
@@ -48,7 +48,12 @@ export const usePersonnelData = (tableName, searchTerm, timeRange) => {
 
         const { data, error } = await query;
         if (error) throw error;
-        return data;
+        
+        // Add a status field based on some logic (can be adjusted based on your actual data)
+        return data.map(record => ({
+          ...record,
+          status: determineStatus(record)
+        }));
       } catch (error) {
         console.error('Error fetching personnel data:', error);
         toast({
@@ -60,4 +65,19 @@ export const usePersonnelData = (tableName, searchTerm, timeRange) => {
       }
     }
   });
+};
+
+// Helper function to determine record status (customize based on your business logic)
+const determineStatus = (record) => {
+  // Example logic - customize based on your actual data structure
+  const now = new Date();
+  const shiftEnd = record.shift_end ? new Date(record.shift_end) : null;
+  
+  if (!shiftEnd) return 'pending';
+  
+  if (shiftEnd < now) {
+    return record.performance_rating >= 3 ? 'active' : 'inactive';
+  }
+  
+  return 'active';
 };
