@@ -30,38 +30,6 @@ const RecentTrainingRecords = ({
     if (rating >= 3) return "warning";
     return "destructive";
   };
-  return <Card>
-      <CardHeader>
-        <CardTitle>Recent Training Records</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Employee</TableHead>
-              <TableHead>Module</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Rating</TableHead>
-              <TableHead>Feedback</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {records.map(record => <TableRow key={record.id}>
-                <TableCell className="font-medium">{record.employee_id}</TableCell>
-                <TableCell>{record.training_module}</TableCell>
-                <TableCell>
-                  {record.training_date ? format(new Date(record.training_date), 'PPP') : 'N/A'}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={getRatingColor(record.performance_rating)}>
-                    {record.performance_rating}/5
-                  </Badge>
-                </TableCell>
-                <TableCell className="max-w-xs truncate">{record.feedback || 'No feedback'}</TableCell>
-              </TableRow>)}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>;
+  return;
 };
 export default RecentTrainingRecords;
