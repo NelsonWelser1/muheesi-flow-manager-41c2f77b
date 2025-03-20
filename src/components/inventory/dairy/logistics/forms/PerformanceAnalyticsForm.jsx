@@ -25,6 +25,42 @@ const PerformanceAnalyticsForm = () => {
     try {
       console.log("Form data before submission:", data);
       
+      if (!data.delivery_id) {
+        toast({
+          title: "Error",
+          description: "Delivery ID is required",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!data.performance_rating) {
+        toast({
+          title: "Error",
+          description: "Performance rating is required",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!data.delivery_time) {
+        toast({
+          title: "Error",
+          description: "Delivery time is required",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (actionRequired && !data.action_details) {
+        toast({
+          title: "Error",
+          description: "Action details are required when action is required",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const result = await addPerformanceRecord(data);
       
       if (result.success) {
@@ -33,6 +69,7 @@ const PerformanceAnalyticsForm = () => {
           description: "Performance record saved successfully",
         });
         reset();
+        setDebugData(null);
       }
     } catch (error) {
       console.error('Error saving performance record:', error);
