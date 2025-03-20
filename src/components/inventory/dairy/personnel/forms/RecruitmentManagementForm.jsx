@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
+import RecruitmentRecordsDisplay from '../records/RecruitmentRecordsDisplay';
 
 const JOB_POSITIONS = [
   "Production Manager",
@@ -21,6 +22,7 @@ const JOB_POSITIONS = [
 const RecruitmentManagementForm = () => {
   const { register, handleSubmit, reset } = useForm();
   const { toast } = useToast();
+  const [showRecords, setShowRecords] = useState(false);
 
   const onSubmit = async (data) => {
     try {
@@ -66,8 +68,29 @@ const RecruitmentManagementForm = () => {
     }
   };
 
+  if (showRecords) {
+    return (
+      <div className="space-y-4">
+        <Button variant="outline" onClick={() => setShowRecords(false)} className="mb-4">
+          ← Back to Recruitment Form
+        </Button>
+        <RecruitmentRecordsDisplay />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Recruitment Management Form</h3>
+        <Button 
+          variant="outline" 
+          onClick={() => setShowRecords(true)}
+        >
+          View Records
+        </Button>
+      </div>
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">

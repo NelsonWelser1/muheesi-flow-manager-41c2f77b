@@ -1,82 +1,117 @@
 
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
-import { format } from "date-fns";
+import { utils, writeFileXLSX } from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { format } from 'date-fns';
 
-// Helper function to format date
 const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  return format(new Date(dateString), 'PPP');
-};
-
-// Helper function to prepare data for export
-const prepareTrainingData = (records) => {
-  return records.map(record => ({
-    'Employee': record.employee_id,
-    'Training Module': record.training_module,
-    'Date': formatDate(record.training_date),
-    'Rating': `${record.performance_rating}/5`,
-    'Feedback': record.feedback || 'None'
-  }));
+  if (!dateString) return '-';
+  try {
+    return format(new Date(dateString), 'PPp');
+  } catch (error) {
+    return dateString;
+  }
 };
 
 // Export to PDF
-export const exportToPDF = (records, fileName) => {
+export const exportToPDF = (records, fileName = 'records') => {
   const doc = new jsPDF();
-  const formattedData = prepareTrainingData(records);
+  
+  // Define table columns
+  const columns = [
+    { header: 'Candidate Name', dataKey: 'candidate_name' },
+    { header: 'Job Title', dataKey: 'job_title' },
+    { header: 'Interview Date', dataKey: 'interview_date_time' },
+    { header: 'Status', dataKey: 'status' },
+    { header: 'Hiring Manager', dataKey: 'hiring_manager_id' },
+  ];
+  
+  // Format data for the table
+  const tableData = records.map(record => ({
+    ...record,
+    interview_date_time: formatDate(record.interview_date_time),
+    created_at: formatDate(record.created_at)
+  }));
   
   // Add title
   doc.setFontSize(16);
-  doc.text('Training & Performance Records', 14, 15);
-  doc.setFontSize(10);
-  doc.text(`Generated on: ${format(new Date(), 'PPP pp')}`, 14, 22);
+  doc.text('Recruitment Records', 14, 15);
   
-  // Create table with data
-  autoTable(doc, {
+  // Add date
+  doc.setFontSize(10);
+  doc.text(`Generated on: ${format(new Date(), 'PPpp')}`, 14, 22);
+  
+  // Create table
+  doc.autoTable({
+    columns,
+    body: tableData,
     startY: 30,
-    head: [Object.keys(formattedData[0])],
-    body: formattedData.map(Object.values),
-    theme: 'striped',
+    styles: { fontSize: 8, cellPadding: 2 },
+    headStyles: { fillColor: [66, 135, 245], textColor: [255, 255, 255] },
+    alternateRowStyles: { fillColor: [240, 240, 240] },
   });
   
   // Save the PDF
-  doc.save(`${fileName}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  doc.save(`${fileName}.pdf`);
 };
 
 // Export to Excel
-export const exportToExcel = (records, fileName) => {
-  const formattedData = prepareTrainingData(records);
+export const exportToExcel = (records, fileName = 'records') => {
+  // Format data
+  const formattedData = records.map(record => ({
+    'Candidate Name': record.candidate_name,
+    'Job Title': record.job_title,
+    'Interview Date/Time': formatDate(record.interview_date_time),
+    'Hiring Manager': record.hiring_manager_id,
+    'Status': record.status,
+    'Feedback': record.feedback,
+    'Created At': formatDate(record.created_at)
+  }));
   
-  // Create a new workbook
-  const workbook = XLSX.utils.book_new();
+  // Create worksheet
+  const ws = utils.json_to_sheet(formattedData);
+  const wb = utils.book_new();
+  utils.book_append_sheet(wb, ws, 'Records');
   
-  // Convert data to worksheet
-  const worksheet = XLSX.utils.json_to_sheet(formattedData);
-  
-  // Add worksheet to workbook
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Records');
-  
-  // Generate Excel file and trigger download
-  XLSX.writeFile(workbook, `${fileName}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  // Generate Excel file
+  writeFileXLSX(wb, `${fileName}.xlsx`);
 };
 
 // Export to CSV
-export const exportToCSV = (records, fileName) => {
-  const formattedData = prepareTrainingData(records);
+export const exportToCSV = (records, fileName = 'records') => {
+  // Format data
+  const formattedData = records.map(record => ({
+    'Candidate Name': record.candidate_name,
+    'Job Title': record.job_title,
+    'Interview Date/Time': formatDate(record.interview_date_time),
+    'Hiring Manager': record.hiring_manager_id,
+    'Status': record.status,
+    'Feedback': record.feedback,
+    'Created At': formatDate(record.created_at)
+  }));
   
-  // Convert data to worksheet
-  const worksheet = XLSX.utils.json_to_sheet(formattedData);
+  // Convert to CSV string
+  const headers = Object.keys(formattedData[0]);
+  let csvContent = headers.join(',') + '\n';
   
-  // Generate CSV and trigger download
-  const csv = XLSX.utils.sheet_to_csv(worksheet);
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  formattedData.forEach(row => {
+    const values = headers.map(header => {
+      const value = row[header] || '';
+      // Escape quotes and wrap with quotes if contains comma
+      return `"${String(value).replace(/"/g, '""')}"`;
+    });
+    csvContent += values.join(',') + '\n';
+  });
+  
+  // Create and download file
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
   
-  // Create a temporary link and trigger download
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', `${fileName}_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${fileName}.csv`);
+  link.style.visibility = 'hidden';
+  
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
