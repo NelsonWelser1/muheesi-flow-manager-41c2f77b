@@ -1,32 +1,20 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-const RecentTrainingRecords = ({ records }) => {
+const RecentTrainingRecords = ({
+  records
+}) => {
   if (!records || records.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Training Records</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground">No training records found</p>
-        </CardContent>
-      </Card>
-    );
+    return;
   }
-
-  const getRatingColor = (rating) => {
+  const getRatingColor = rating => {
     if (rating >= 4) return "success";
     if (rating >= 3) return "warning";
     return "destructive";
   };
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle>Recent Training Records</CardTitle>
       </CardHeader>
@@ -42,8 +30,7 @@ const RecentTrainingRecords = ({ records }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {records.map((record) => (
-              <TableRow key={record.id}>
+            {records.map(record => <TableRow key={record.id}>
                 <TableCell className="font-medium">{record.employee_id}</TableCell>
                 <TableCell>{record.training_module}</TableCell>
                 <TableCell>
@@ -55,13 +42,10 @@ const RecentTrainingRecords = ({ records }) => {
                   </Badge>
                 </TableCell>
                 <TableCell className="max-w-xs truncate">{record.feedback || 'No feedback'}</TableCell>
-              </TableRow>
-            ))}
+              </TableRow>)}
           </TableBody>
         </Table>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default RecentTrainingRecords;
