@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm, Controller } from "react-hook-form";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,9 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import useDeliveryManagement from '@/hooks/useDeliveryManagement';
-
 const DELIVERY_STATUSES = ["Pending", "In Transit", "Delivered", "Delayed"];
-
 const DeliveryManagementForm = () => {
   const {
     register,
@@ -26,16 +23,13 @@ const DeliveryManagementForm = () => {
       status: "Pending" // Set default status
     }
   });
-  
   const {
     toast
   } = useToast();
-  
   const {
     addDelivery,
     isLoading
   } = useDeliveryManagement();
-  
   const onSubmit = async data => {
     try {
       // Debug: Log form data to console
@@ -71,90 +65,80 @@ const DeliveryManagementForm = () => {
     };
     console.log("Current form values:", formValues);
   };
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+  return <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="delivery_id">Delivery ID</Label>
           <Input id="delivery_id" {...register("delivery_id", {
-            required: "Delivery ID is required"
-          })} />
+          required: "Delivery ID is required"
+        })} />
           {errors.delivery_id && <p className="text-sm text-red-500">{errors.delivery_id.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="order_id">Order ID</Label>
           <Input id="order_id" {...register("order_id", {
-            required: "Order ID is required"
-          })} />
+          required: "Order ID is required"
+        })} />
           {errors.order_id && <p className="text-sm text-red-500">{errors.order_id.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="customer_name">Customer Name</Label>
           <Input id="customer_name" {...register("customer_name", {
-            required: "Customer name is required"
-          })} />
+          required: "Customer name is required"
+        })} />
           {errors.customer_name && <p className="text-sm text-red-500">{errors.customer_name.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
-          <Controller
-            name="status"
-            control={control}
-            rules={{ required: "Status is required" }}
-            render={({ field }) => (
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
+          <Controller name="status" control={control} rules={{
+          required: "Status is required"
+        }} render={({
+          field
+        }) => <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  {DELIVERY_STATUSES.map(status => (
-                    <SelectItem key={status} value={status}>
+                  {DELIVERY_STATUSES.map(status => <SelectItem key={status} value={status}>
                       {status}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
-              </Select>
-            )}
-          />
+              </Select>} />
           {errors.status && <p className="text-sm text-red-500">{errors.status.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="pickup_location">Pickup Location</Label>
           <Input id="pickup_location" {...register("pickup_location", {
-            required: "Pickup location is required"
-          })} />
+          required: "Pickup location is required"
+        })} />
           {errors.pickup_location && <p className="text-sm text-red-500">{errors.pickup_location.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="delivery_location">Delivery Location</Label>
           <Input id="delivery_location" {...register("delivery_location", {
-            required: "Delivery location is required"
-          })} />
+          required: "Delivery location is required"
+        })} />
           {errors.delivery_location && <p className="text-sm text-red-500">{errors.delivery_location.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="scheduled_pickup_time">Scheduled Pickup Time</Label>
           <Input id="scheduled_pickup_time" type="datetime-local" {...register("scheduled_pickup_time", {
-            required: "Scheduled pickup time is required"
-          })} />
+          required: "Scheduled pickup time is required"
+        })} />
           {errors.scheduled_pickup_time && <p className="text-sm text-red-500">{errors.scheduled_pickup_time.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="scheduled_delivery_time">Scheduled Delivery Time</Label>
           <Input id="scheduled_delivery_time" type="datetime-local" {...register("scheduled_delivery_time", {
-            required: "Scheduled delivery time is required"
-          })} />
+          required: "Scheduled delivery time is required"
+        })} />
           {errors.scheduled_delivery_time && <p className="text-sm text-red-500">{errors.scheduled_delivery_time.message}</p>}
         </div>
 
@@ -179,17 +163,8 @@ const DeliveryManagementForm = () => {
           {isLoading ? 'Submitting...' : 'Submit Delivery Record'}
         </Button>
         
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={handleDebugClick} 
-          className="w-auto"
-        >
-          Debug
-        </Button>
+        
       </div>
-    </form>
-  );
+    </form>;
 };
-
 export default DeliveryManagementForm;
