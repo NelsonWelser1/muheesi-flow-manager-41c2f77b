@@ -24,9 +24,15 @@ CREATE INDEX idx_training_evaluations_created_at ON personnel_training_evaluatio
 DO $$
 BEGIN
     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'personnel_employee_records') THEN
-        ALTER TABLE personnel_training_evaluations 
-        ADD CONSTRAINT personnel_training_evaluations_employee_id_fkey 
-        FOREIGN KEY (employee_id) REFERENCES personnel_employee_records(employee_id);
+        -- Check if the constraint already exists before creating it
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_constraint 
+            WHERE conname = 'personnel_training_evaluations_employee_id_fkey'
+        ) THEN
+            ALTER TABLE personnel_training_evaluations 
+            ADD CONSTRAINT personnel_training_evaluations_employee_id_fkey 
+            FOREIGN KEY (employee_id) REFERENCES personnel_employee_records(employee_id);
+        END IF;
     END IF;
 END
 $$;
