@@ -7,9 +7,11 @@ import TrainingEvaluationForm from '../forms/TrainingEvaluationForm';
 import RecruitmentManagementForm from '../forms/RecruitmentManagementForm';
 import DossierManagement from '../dossier/DossierManagement';
 import TrainingRecordsDisplay from '../records/TrainingRecordsDisplay';
+import EmployeeRecordsDisplay from '../records/EmployeeRecordsDisplay';
 
 const ActiveComponent = ({ activeComponent, onBack }) => {
   const [showTrainingRecords, setShowTrainingRecords] = useState(false);
+  const [showEmployeeRecords, setShowEmployeeRecords] = useState(false);
   
   if (!activeComponent) return null;
 
@@ -20,6 +22,17 @@ const ActiveComponent = ({ activeComponent, onBack }) => {
           ← Back to Training & Performance Form
         </Button>
         <TrainingRecordsDisplay />
+      </div>
+    );
+  }
+
+  if (showEmployeeRecords && activeComponent === "Employee Records & Scheduling") {
+    return (
+      <div className="space-y-4">
+        <Button variant="outline" onClick={() => setShowEmployeeRecords(false)} className="mb-4">
+          ← Back to Employee Records Form
+        </Button>
+        <EmployeeRecordsDisplay />
       </div>
     );
   }
@@ -36,8 +49,14 @@ const ActiveComponent = ({ activeComponent, onBack }) => {
         <CardContent>
           {activeComponent === "Employee Records & Scheduling" && (
             <div>
-              <div className="mb-6">
+              <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-medium">Employee Records Management</h3>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowEmployeeRecords(true)}
+                >
+                  View Employee Records
+                </Button>
               </div>
               <EmployeeRecordsForm />
             </div>
