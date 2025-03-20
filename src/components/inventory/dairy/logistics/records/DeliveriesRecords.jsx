@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
@@ -7,10 +7,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
-import DeliveriesTable from './components/DeliveriesTable';
-import RecordsToolbar from './components/RecordsToolbar';
-import { useLogisticsRecords } from './hooks/useLogisticsRecords';
-import useDeliveriesExport from './hooks/useDeliveriesExport';
+import DeliveriesRecordsTable from './components/DeliveriesRecordsTable';
+import DeliveriesToolbar from './components/DeliveriesToolbar';
+import { useDeliveryRecords } from './hooks/useDeliveryRecords';
+import useDeliveryExports from './hooks/useDeliveryExports';
 
 const DeliveriesRecords = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,15 +19,18 @@ const DeliveriesRecords = () => {
   const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
   const { toast } = useToast();
   
+  // Fetch and filter delivery records
   const {
     deliveries,
     isLoading,
     error,
     refetchRecords
-  } = useLogisticsRecords(searchTerm, timeRange, statusFilter, sortConfig);
+  } = useDeliveryRecords(searchTerm, timeRange, statusFilter, sortConfig);
 
-  const { exportToCSV, exportToExcel, exportToPDF } = useDeliveriesExport(deliveries);
+  // Export functionality
+  const { exportToCSV, exportToExcel, exportToPDF } = useDeliveryExports(deliveries);
 
+  // Handle refresh button click
   const handleRefresh = async () => {
     try {
       await refetchRecords();
@@ -44,6 +47,7 @@ const DeliveriesRecords = () => {
     }
   };
 
+  // Handle sorting
   const handleSort = (key) => {
     setSortConfig(prevConfig => ({
       key,
@@ -51,6 +55,7 @@ const DeliveriesRecords = () => {
     }));
   };
 
+  // Render error state
   if (error) {
     return (
       <Alert variant="destructive" className="mb-6">
@@ -77,18 +82,18 @@ const DeliveriesRecords = () => {
         </Button>
       </CardHeader>
       <CardContent>
-        <RecordsToolbar 
+        <DeliveriesToolbar 
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           timeRange={timeRange}
           setTimeRange={setTimeRange}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
-          recordsCount={deliveries.length}
-          recordType="deliveries"
+          deliveriesCount={deliveries.length}
           onExportCSV={exportToCSV}
           onExportExcel={exportToExcel}
           onExportPDF={exportToPDF}
+          isLoading={isLoading}
         />
 
         {isLoading ? (
@@ -102,7 +107,7 @@ const DeliveriesRecords = () => {
             </AlertDescription>
           </Alert>
         ) : (
-          <DeliveriesTable 
+          <DeliveriesRecordsTable 
             deliveries={deliveries} 
             handleSort={handleSort} 
             sortConfig={sortConfig}

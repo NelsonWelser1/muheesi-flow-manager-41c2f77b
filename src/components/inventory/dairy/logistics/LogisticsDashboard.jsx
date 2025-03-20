@@ -16,6 +16,7 @@ import PerformanceAnalyticsForm from './forms/PerformanceAnalyticsForm';
 
 // Import records view component
 import LogisticsRecordsView from './records/LogisticsRecordsView';
+import DeliveriesRecordsView from './records/views/DeliveriesRecordsView';
 
 const LogisticsDashboard = () => {
   const navigate = useNavigate();
@@ -84,10 +85,20 @@ const LogisticsDashboard = () => {
         <>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium">Delivery Management</h3>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setActiveComponent('view-deliveries')}
+              className="flex items-center gap-2"
+            >
+              View Delivery Records
+            </Button>
           </div>
           <DeliveryManagementForm />
         </>
       );
+    } else if (activeComponent === 'view-deliveries') {
+      return <DeliveriesRecordsView onBack={() => setActiveComponent('deliveries')} />;
     } else if (activeComponent === 'orders') {
       return (
         <>
@@ -251,7 +262,7 @@ const LogisticsDashboard = () => {
                 View All Records
               </Button>
             )}
-            {activeComponent && activeComponent !== 'records' && (
+            {activeComponent && activeComponent !== 'records' && activeComponent !== 'view-deliveries' && (
               <Button 
                 variant="outline" 
                 size="sm" 
