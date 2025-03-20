@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/supabase";
 
@@ -12,6 +11,11 @@ export const useLogisticsRecords = (searchTerm, timeRange, statusFilter, sortCon
   const getTimeRangeFilter = useCallback(() => {
     const now = new Date();
     switch (timeRange) {
+      case 'hour': {
+        const hourAgo = new Date(now);
+        hourAgo.setHours(now.getHours() - 1);
+        return hourAgo.toISOString();
+      }
       case 'today':
         return now.toISOString().split('T')[0];
       case 'this-week': {
@@ -80,8 +84,10 @@ export const useLogisticsRecords = (searchTerm, timeRange, statusFilter, sortCon
             pickup_location: 'Warehouse A',
             delivery_location: 'Retail Store 145',
             status: 'In Transit',
+            scheduled_pickup_time: new Date().toISOString(),
             scheduled_delivery_time: new Date().toISOString(),
-            comments: 'Frozen goods delivery'
+            comments: 'Frozen goods delivery',
+            created_at: new Date().toISOString()
           },
           {
             id: '2',
@@ -90,8 +96,34 @@ export const useLogisticsRecords = (searchTerm, timeRange, statusFilter, sortCon
             pickup_location: 'Farm Location',
             delivery_location: 'Distribution Center',
             status: 'Delivered',
+            scheduled_pickup_time: new Date().toISOString(),
             scheduled_delivery_time: new Date().toISOString(),
-            comments: 'Fresh milk delivery'
+            comments: 'Fresh milk delivery',
+            created_at: new Date(Date.now() - 86400000).toISOString() // 1 day ago
+          },
+          {
+            id: '3',
+            delivery_id: 'DEL-003',
+            customer_name: 'Local Grocery',
+            pickup_location: 'Processing Plant',
+            delivery_location: 'Grocery Store',
+            status: 'Pending',
+            scheduled_pickup_time: new Date(Date.now() + 86400000).toISOString(), // 1 day in future
+            scheduled_delivery_time: new Date(Date.now() + 86400000 * 2).toISOString(), // 2 days in future
+            comments: 'Regular weekly delivery',
+            created_at: new Date(Date.now() - 86400000 * 2).toISOString() // 2 days ago
+          },
+          {
+            id: '4',
+            delivery_id: 'DEL-004',
+            customer_name: 'City Restaurant',
+            pickup_location: 'Central Warehouse',
+            delivery_location: 'Downtown Restaurant',
+            status: 'Delayed',
+            scheduled_pickup_time: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+            scheduled_delivery_time: new Date().toISOString(),
+            comments: 'Delayed due to weather conditions',
+            created_at: new Date(Date.now() - 86400000 * 3).toISOString() // 3 days ago
           }
         ]);
       } else {

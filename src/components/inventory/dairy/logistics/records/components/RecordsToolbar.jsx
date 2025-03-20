@@ -3,7 +3,7 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Search } from "lucide-react";
+import { Clock, Search, Filter } from "lucide-react";
 import CSVExportButton from "./export-buttons/CSVExportButton";
 import ExcelExportButton from "./export-buttons/ExcelExportButton";
 import PDFExportButton from "./export-buttons/PDFExportButton";
@@ -50,23 +50,11 @@ const RecordsToolbar = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="hour">Last Hour</SelectItem>
               <SelectItem value="today">Today</SelectItem>
               <SelectItem value="this-week">This Week</SelectItem>
               <SelectItem value="this-month">This Month</SelectItem>
               <SelectItem value="this-year">This Year</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in-transit">In Transit</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
-              <SelectItem value="delayed">Delayed</SelectItem>
             </SelectContent>
           </Select>
         </div>
