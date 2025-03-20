@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { Eye, FileText, FileSpreadsheet, Download } from "lucide-react";
 
 const JOB_TITLES = [
   "Production Manager",
@@ -19,7 +18,7 @@ const JOB_TITLES = [
   "Warehouse Staff"
 ];
 
-const EmployeeRecordsForm = ({ onViewRecords }) => {
+const EmployeeRecordsForm = () => {
   const { register, handleSubmit, reset } = useForm();
   const { toast } = useToast();
 
@@ -72,17 +71,6 @@ const EmployeeRecordsForm = ({ onViewRecords }) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Add New Employee Record</h3>
-        {onViewRecords && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onViewRecords}
-            className="flex items-center gap-2"
-          >
-            <Eye className="h-4 w-4" />
-            View Employee Records
-          </Button>
-        )}
       </div>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

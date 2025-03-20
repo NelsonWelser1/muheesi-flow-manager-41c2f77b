@@ -11,12 +11,6 @@ import PersonnelDataDisplay from '../data-display/PersonnelDataDisplay';
 const ActiveComponent = ({ activeComponent, onBack }) => {
   if (!activeComponent) return null;
 
-  const handleViewRecords = () => {
-    return activeComponent === "Employee Records & Scheduling" ? 
-      () => onBack("Employee Records") : // Navigate to Employee Records view
-      null; // For other components, no action
-  };
-
   return (
     <div className="space-y-4">
       <Button variant="outline" onClick={onBack} className="mb-4">
@@ -28,7 +22,7 @@ const ActiveComponent = ({ activeComponent, onBack }) => {
         </CardHeader>
         <CardContent>
           {activeComponent === "Employee Records & Scheduling" && (
-            <EmployeeRecordsForm onViewRecords={handleViewRecords()} />
+            <EmployeeRecordsForm />
           )}
           {activeComponent === "Training & Performance" && <TrainingEvaluationForm />}
           {activeComponent === "Recruitment Management" && <RecruitmentManagementForm />}
