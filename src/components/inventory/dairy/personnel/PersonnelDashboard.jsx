@@ -17,6 +17,10 @@ const PersonnelDashboard = () => {
     setActiveComponent(null);
   };
 
+  const handleViewRecords = () => {
+    setActiveComponent("Employee Records");
+  };
+
   if (activeComponent) {
     return (
       <ActiveComponent 
@@ -28,7 +32,20 @@ const PersonnelDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold">Personnel Management</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold">Personnel Management</h2>
+        {!activeComponent && activeComponent !== "Employee Records" && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleViewRecords}
+            className="flex items-center gap-2"
+          >
+            <Eye className="h-4 w-4" />
+            View Records
+          </Button>
+        )}
+      </div>
       
       {/* Action Tiles */}
       <ActionTiles onComponentSelect={setActiveComponent} />

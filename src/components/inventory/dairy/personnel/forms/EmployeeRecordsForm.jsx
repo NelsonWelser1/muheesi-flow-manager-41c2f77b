@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import PersonnelDataDisplay from '../data-display/PersonnelDataDisplay';
+import { Eye } from "lucide-react";
 
 const JOB_TITLES = [
   "Production Manager",
@@ -19,7 +19,7 @@ const JOB_TITLES = [
   "Warehouse Staff"
 ];
 
-const EmployeeRecordsForm = () => {
+const EmployeeRecordsForm = ({ onViewRecords }) => {
   const { register, handleSubmit, reset } = useForm();
   const { toast } = useToast();
 
@@ -70,6 +70,21 @@ const EmployeeRecordsForm = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Add New Employee Record</h3>
+        {onViewRecords && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onViewRecords}
+            className="flex items-center gap-2"
+          >
+            <Eye className="h-4 w-4" />
+            View Records
+          </Button>
+        )}
+      </div>
+      
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -130,10 +145,6 @@ const EmployeeRecordsForm = () => {
 
         <Button type="submit" className="w-full">Save Employee Record</Button>
       </form>
-      <PersonnelDataDisplay 
-        tableName="personnel_employee_records" 
-        title="Employee"
-      />
     </div>
   );
 };

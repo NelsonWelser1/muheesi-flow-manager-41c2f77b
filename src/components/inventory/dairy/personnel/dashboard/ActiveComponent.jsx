@@ -6,6 +6,7 @@ import EmployeeRecordsForm from '../forms/EmployeeRecordsForm';
 import TrainingEvaluationForm from '../forms/TrainingEvaluationForm';
 import RecruitmentManagementForm from '../forms/RecruitmentManagementForm';
 import DossierManagement from '../dossier/DossierManagement';
+import PersonnelDataDisplay from '../data-display/PersonnelDataDisplay';
 
 const ActiveComponent = ({ activeComponent, onBack }) => {
   if (!activeComponent) return null;
@@ -24,6 +25,7 @@ const ActiveComponent = ({ activeComponent, onBack }) => {
           {activeComponent === "Training & Performance" && <TrainingEvaluationForm />}
           {activeComponent === "Recruitment Management" && <RecruitmentManagementForm />}
           {activeComponent === "Employee Dossiers" && <DossierManagement />}
+          {activeComponent === "Employee Records" && <PersonnelDataDisplay tableName="personnel_employee_records" title="Employee" />}
         </CardContent>
       </Card>
     </div>
