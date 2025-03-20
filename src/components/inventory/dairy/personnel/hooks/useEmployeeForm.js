@@ -34,7 +34,6 @@ export const useEmployeeForm = (toast) => {
     setIsSubmitting(true);
     try {
       // Formatting the data properly for database insertion
-      // Remove 'department' from the data as it's not in the schema
       const formattedData = {
         employee_id: data.employeeId,
         job_title: data.jobTitle,
