@@ -14,11 +14,14 @@ const LogisticsRecordsView = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (recordType && ['deliveries', 'orders', 'performance'].includes(recordType)) {
-      setActiveTab(recordType);
-    } else if (recordType && !['deliveries', 'orders', 'performance'].includes(recordType)) {
+    // Set default tab if recordType is not provided or is invalid
+    if (!recordType) {
+      navigate('/manage-inventory/logistics/records/deliveries');
+    } else if (!['deliveries', 'orders', 'performance'].includes(recordType)) {
       // Redirect to a valid tab if an invalid recordType is provided
       navigate('/manage-inventory/logistics/records/deliveries');
+    } else {
+      setActiveTab(recordType);
     }
   }, [recordType, navigate]);
 

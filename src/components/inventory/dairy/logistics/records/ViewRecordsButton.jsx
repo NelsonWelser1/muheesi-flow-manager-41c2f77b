@@ -10,6 +10,7 @@ const ViewRecordsButton = ({ recordType, to }) => {
   const handleViewRecords = () => {
     // Ensure we have a valid URL
     const validUrl = to || `/manage-inventory/logistics/records/${recordType}`;
+    console.log("Navigating to:", validUrl);
     navigate(validUrl);
   };
   

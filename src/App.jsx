@@ -16,6 +16,7 @@ import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-bu
 import KashariFarmDashboard from "./components/inventory/kashari/KashariFarmDashboard";
 import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDairyDashboard";
 import SmartProductionDashboard from "./components/inventory/dairy/production/SmartProductionDashboard";
+import LogisticsRecordsView from "./components/inventory/dairy/logistics/records/LogisticsRecordsView";
 import Sales from "./pages/Sales";
 import Accounts from "./pages/Accounts";
 
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
               <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
               <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
+              <Route path="/manage-inventory/logistics/records/:recordType" element={<LogisticsRecordsView />} />
               <Route path="/sales" element={<Sales />} />
               <Route path="/accounts" element={<Accounts />} />
             </Routes>
