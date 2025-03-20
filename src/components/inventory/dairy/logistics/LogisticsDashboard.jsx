@@ -1,14 +1,12 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import DashboardMetrics from './components/DashboardMetrics';
 import MainCard from './components/MainCard';
 import { useLogisticsData } from './hooks/useLogisticsData';
 
 const LogisticsDashboard = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [activeComponent, setActiveComponent] = useState(null);
 
@@ -23,11 +21,6 @@ const LogisticsDashboard = () => {
   // Return to main dashboard
   const handleBack = () => {
     setActiveComponent(null);
-  };
-
-  // Handle navigation to records view
-  const handleViewRecords = (recordType) => {
-    navigate(`/manage-inventory/logistics/records/${recordType}`);
   };
 
   return (
@@ -47,7 +40,6 @@ const LogisticsDashboard = () => {
         pendingOrders={pendingOrders} 
         avgDeliveryTime={avgDeliveryTime} 
         delayedDeliveries={delayedDeliveries}
-        onViewRecords={handleViewRecords}
       />
     </div>
   );
