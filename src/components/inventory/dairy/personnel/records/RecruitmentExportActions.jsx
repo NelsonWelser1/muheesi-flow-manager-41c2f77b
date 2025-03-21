@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { CSVExportButton } from '../../logistics/records/components/export-buttons/CSVExportButton';
-import { ExcelExportButton } from '../../logistics/records/components/export-buttons/ExcelExportButton';
+import CSVExportButton from '../../logistics/records/components/export-buttons/CSVExportButton';
+import ExcelExportButton from '../../logistics/records/components/export-buttons/ExcelExportButton';
 import PDFExportButton from '../../logistics/records/components/export-buttons/PDFExportButton';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
