@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, TrendingUp, PieChart, Download, Plus, Filter, LayoutDashboard, Factory, Star } from "lucide-react";
@@ -71,11 +72,11 @@ const ReportsDashboard = () => {
         </div>
       </div>
       
-      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="relative z-10">
-        <TabsList className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 relative z-20 shadow-md">
+      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="relative z-50">
+        <TabsList className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 mb-10 relative z-50 shadow-md">
           <TabsTrigger 
             value="overview" 
-            className="h-32 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:from-blue-100 hover:to-blue-200 data-[state=active]:from-blue-200 data-[state=active]:to-blue-300 transition-all relative z-10"
+            className="h-32 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:from-blue-100 hover:to-blue-200 data-[state=active]:from-blue-200 data-[state=active]:to-blue-300 transition-all relative z-50"
           >
             <div className="flex flex-col items-center">
               <LayoutDashboard className="h-8 w-8 mb-2 text-blue-600" />
@@ -88,7 +89,7 @@ const ReportsDashboard = () => {
           
           <TabsTrigger 
             value="production" 
-            className="h-32 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:from-green-100 hover:to-green-200 data-[state=active]:from-green-200 data-[state=active]:to-green-300 transition-all relative z-10"
+            className="h-32 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:from-green-100 hover:to-green-200 data-[state=active]:from-green-200 data-[state=active]:to-green-300 transition-all relative z-50"
           >
             <div className="flex flex-col items-center">
               <Factory className="h-8 w-8 mb-2 text-green-600" />
@@ -101,7 +102,7 @@ const ReportsDashboard = () => {
           
           <TabsTrigger 
             value="quality" 
-            className="h-32 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:from-purple-100 hover:to-purple-200 data-[state=active]:from-purple-200 data-[state=active]:to-purple-300 transition-all relative z-10"
+            className="h-32 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:from-purple-100 hover:to-purple-200 data-[state=active]:from-purple-200 data-[state=active]:to-purple-300 transition-all relative z-50"
           >
             <div className="flex flex-col items-center">
               <Star className="h-8 w-8 mb-2 text-purple-600" />
@@ -113,7 +114,7 @@ const ReportsDashboard = () => {
           </TabsTrigger>
         </TabsList>
         
-        <div className="relative z-0">
+        <div className="relative z-30 mt-6 pt-4">
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
