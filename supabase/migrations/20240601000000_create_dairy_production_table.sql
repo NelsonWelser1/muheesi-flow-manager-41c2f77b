@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS dairy_production (
     production_date DATE NOT NULL,
     efficiency_percentage INTEGER,
     quality_score INTEGER,
-    operator_id UUID REFERENCES auth.users(id),
+    operator_id UUID,
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -30,7 +30,7 @@ CREATE POLICY "Enable read access for all users" ON dairy_production
 
 CREATE POLICY "Enable insert for authenticated users" ON dairy_production
     FOR INSERT
-    WITH CHECK (true);
+    WITH CHECK (auth.role() = 'authenticated');
 
 -- Insert sample data
 INSERT INTO dairy_production (product_type, batch_id, raw_material_used, finished_product_amount, production_date, efficiency_percentage, quality_score, notes)

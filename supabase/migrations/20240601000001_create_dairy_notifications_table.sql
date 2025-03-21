@@ -1,4 +1,7 @@
 
+-- Create extension if it doesn't exist
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Create dairy_notifications table
 CREATE TABLE IF NOT EXISTS dairy_notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -7,7 +10,7 @@ CREATE TABLE IF NOT EXISTS dairy_notifications (
     type TEXT NOT NULL,
     section_id TEXT NOT NULL,
     is_read BOOLEAN DEFAULT false,
-    user_id UUID REFERENCES auth.users(id),
+    user_id UUID,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -27,12 +30,12 @@ CREATE POLICY "Enable read access for all users" ON dairy_notifications
 
 CREATE POLICY "Enable insert for authenticated users" ON dairy_notifications
     FOR INSERT
-    WITH CHECK (true);
+    WITH CHECK (auth.role() = 'authenticated');
     
 CREATE POLICY "Enable update for authenticated users" ON dairy_notifications
     FOR UPDATE
-    USING (true)
-    WITH CHECK (true);
+    USING (auth.role() = 'authenticated')
+    WITH CHECK (auth.role() = 'authenticated');
 
 -- Insert sample notifications
 INSERT INTO dairy_notifications (title, message, type, section_id)
