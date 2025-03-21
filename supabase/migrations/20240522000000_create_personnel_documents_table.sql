@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS personnel_documents (
   file_path TEXT NOT NULL,
   file_type TEXT NOT NULL,
   file_size TEXT NOT NULL, 
-  category TEXT,
+  category TEXT NOT NULL DEFAULT 'General',
   description TEXT,
   upload_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   uploaded_by TEXT,
@@ -32,4 +32,5 @@ CREATE POLICY "Allow public access to personnel_documents"
 
 -- Create storage bucket for employee documents if it doesn't exist
 -- Note: This is a reminder as bucket creation can't be done via SQL
--- You'll need to create the bucket via Supabase UI or API
+-- You'll need to create the bucket via Supabase UI or API with the name 'employee_documents'
+

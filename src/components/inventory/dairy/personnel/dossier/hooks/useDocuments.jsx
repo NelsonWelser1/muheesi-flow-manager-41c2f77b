@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 export const useDocuments = (employeeId = null) => {
   const [uploading, setUploading] = useState(false);
@@ -23,19 +24,25 @@ export const useDocuments = (employeeId = null) => {
       
       console.log('Fetching documents for employee:', employeeId);
       
-      const { data, error } = await supabase
-        .from('personnel_documents')
-        .select('*')
-        .eq('employee_id', employeeId)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching documents:', error);
-        throw error;
+      try {
+        const { data, error } = await supabase
+          .from('personnel_documents')
+          .select('*')
+          .eq('employee_id', employeeId)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching documents:', error);
+          throw error;
+        }
+        
+        console.log('Fetched documents:', data);
+        return data || [];
+      } catch (err) {
+        console.error('Error in document fetch operation:', err);
+        showErrorToast(toast, `Failed to fetch documents: ${err.message}`);
+        return [];
       }
-      
-      console.log('Fetched documents:', data);
-      return data || [];
     },
     enabled: !!employeeId // Only run query if employeeId exists
   });
@@ -43,31 +50,19 @@ export const useDocuments = (employeeId = null) => {
   // Upload file to Supabase storage
   const uploadFile = async (file, employeeId, category = 'General', description = '') => {
     if (!employeeId) {
-      toast({
-        title: "Error",
-        description: "Employee ID is required to upload documents",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Employee ID is required to upload documents");
       return null;
     }
 
     if (!file) {
-      toast({
-        title: "Error",
-        description: "No file selected",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "No file selected");
       return null;
     }
     
     // Validate file
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      toast({
-        title: "Error",
-        description: "File size exceeds 5MB limit",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "File size exceeds 5MB limit");
       return null;
     }
     
@@ -87,10 +82,16 @@ export const useDocuments = (employeeId = null) => {
         .upload(filePath, file);
       
       if (uploadError) {
+        console.error('Storage upload error:', uploadError);
         throw uploadError;
       }
       
       console.log('File uploaded successfully:', data);
+      
+      // Ensure we have valid file_size (convert to string if needed)
+      const fileSizeStr = typeof file.size === 'number' 
+        ? (file.size / 1024).toFixed(2) 
+        : String(file.size);
       
       // Create database record
       const { data: documentData, error: dbError } = await supabase
@@ -99,38 +100,32 @@ export const useDocuments = (employeeId = null) => {
           employee_id: employeeId,
           filename: file.name,
           file_path: filePath,
-          file_type: file.type,
-          file_size: (file.size / 1024).toFixed(2), // Size in KB
-          category: category,
-          description: description,
+          file_type: file.type || 'application/octet-stream',
+          file_size: fileSizeStr,
+          category: category || 'General',
+          description: description || '',
           uploaded_by: 'System User', // Placeholder until auth is implemented
         }])
         .select()
         .single();
       
       if (dbError) {
+        console.error('Database insert error:', dbError);
+        // If DB insert fails, try to clean up the uploaded file
+        await supabase.storage.from('employee_documents').remove([filePath]);
         throw dbError;
       }
       
       // Invalidate cache and refresh data
       queryClient.invalidateQueries({ queryKey: ['personnelDocuments', employeeId] });
       
-      toast({
-        title: "Success",
-        description: "Document uploaded successfully",
-      });
+      showSuccessToast(toast, "Document uploaded successfully");
       
       return documentData;
       
     } catch (error) {
       console.error('Error uploading document:', error);
-      
-      toast({
-        title: "Upload Failed",
-        description: error.message || "An error occurred during upload",
-        variant: "destructive",
-      });
-      
+      showErrorToast(toast, error.message || "An error occurred during upload");
       return null;
     } finally {
       setUploading(false);
@@ -140,9 +135,13 @@ export const useDocuments = (employeeId = null) => {
   // Delete document
   const deleteDocument = useMutation({
     mutationFn: async ({ documentId, filePath }) => {
+      if (!documentId) {
+        throw new Error('Document ID is required for deletion');
+      }
+      
       console.log('Deleting document:', documentId, 'with file path:', filePath);
       
-      // First delete from storage
+      // First delete from storage if filePath exists
       if (filePath) {
         const { error: storageError } = await supabase.storage
           .from('employee_documents')
@@ -169,24 +168,20 @@ export const useDocuments = (employeeId = null) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['personnelDocuments', employeeId] });
-      
-      toast({
-        title: "Success",
-        description: "Document deleted successfully",
-      });
+      showSuccessToast(toast, "Document deleted successfully");
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to delete document: ${error.message}`,
-        variant: "destructive",
-      });
+      showErrorToast(toast, `Failed to delete document: ${error.message}`);
     }
   });
 
   // Update document metadata
   const updateDocument = useMutation({
     mutationFn: async ({ documentId, updates }) => {
+      if (!documentId) {
+        throw new Error('Document ID is required for updates');
+      }
+      
       console.log('Updating document:', documentId, 'with updates:', updates);
       
       const { data, error } = await supabase
@@ -208,18 +203,10 @@ export const useDocuments = (employeeId = null) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['personnelDocuments', employeeId] });
-      
-      toast({
-        title: "Success",
-        description: "Document information updated successfully",
-      });
+      showSuccessToast(toast, "Document information updated successfully");
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to update document: ${error.message}`,
-        variant: "destructive",
-      });
+      showErrorToast(toast, `Failed to update document: ${error.message}`);
     }
   });
 

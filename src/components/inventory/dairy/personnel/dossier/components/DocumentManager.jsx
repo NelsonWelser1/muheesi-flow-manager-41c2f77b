@@ -10,6 +10,8 @@ import {
   Upload, FileText, FileImage, Trash2, 
   Eye, Loader2, RefreshCw, File, AlertCircle
 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { showErrorToast } from "@/components/ui/notifications";
 
 const FILE_CATEGORIES = [
   "General",
@@ -28,11 +30,13 @@ const DocumentManager = ({ employeeId }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [category, setCategory] = useState(FILE_CATEGORIES[0]);
   const [description, setDescription] = useState('');
-  const [uploading, setUploading] = useState(false);
+  const [uploadAttempted, setUploadAttempted] = useState(false);
+  const { toast } = useToast();
   
   const {
     documents,
     isLoading,
+    uploading,
     uploadFile,
     deleteDocument,
     getFileUrl,
@@ -49,7 +53,18 @@ const DocumentManager = ({ employeeId }) => {
   };
 
   const handleUpload = async () => {
-    setUploading(true);
+    // Mark that we've attempted an upload for validation messaging
+    setUploadAttempted(true);
+    
+    if (!employeeId) {
+      showErrorToast(toast, "Please save employee information first to enable uploads");
+      return;
+    }
+    
+    if (!selectedFile) {
+      showErrorToast(toast, "Please select a file to upload");
+      return;
+    }
     
     // Debug information before upload
     console.log('Upload requested with:', {
@@ -60,15 +75,21 @@ const DocumentManager = ({ employeeId }) => {
     });
     
     try {
-      await uploadFile(selectedFile, employeeId, category, description);
-      // Reset form after successful upload
-      setSelectedFile(null);
-      setDescription('');
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      const result = await uploadFile(selectedFile, employeeId, category, description);
+      
+      if (result) {
+        // Reset form after successful upload
+        setSelectedFile(null);
+        setDescription('');
+        setUploadAttempted(false);
+        
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       }
-    } finally {
-      setUploading(false);
+    } catch (error) {
+      console.error('Upload error caught in component:', error);
+      showErrorToast(toast, `Upload failed: ${error.message}`);
     }
   };
 
@@ -88,6 +109,8 @@ const DocumentManager = ({ employeeId }) => {
     const url = getFileUrl(document.file_path);
     if (url) {
       window.open(url, '_blank');
+    } else {
+      showErrorToast(toast, "Could not generate file URL");
     }
   };
 
@@ -147,6 +170,12 @@ const DocumentManager = ({ employeeId }) => {
                       </span>
                     </div>
                   )}
+                  
+                  {uploadAttempted && !selectedFile && (
+                    <div className="text-red-500 text-sm mt-1">
+                      Please select a file
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -183,7 +212,7 @@ const DocumentManager = ({ employeeId }) => {
             <Button 
               type="button"
               onClick={handleUpload}
-              disabled={!selectedFile || uploading || !employeeId}
+              disabled={uploading || !employeeId}
               className="w-full flex items-center justify-center gap-2"
             >
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} 
