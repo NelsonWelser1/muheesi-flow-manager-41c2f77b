@@ -90,7 +90,7 @@ export const useDocuments = (employeeId = null) => {
       
       // Ensure we have valid file_size (convert to string if needed)
       const fileSizeStr = typeof file.size === 'number' 
-        ? (file.size / 1024).toFixed(2) 
+        ? (file.size / 1024).toFixed(2) + ' KB'
         : String(file.size);
       
       // Create database record
