@@ -6,9 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useToast } from "@/components/ui/use-toast";
-import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
-import { useReportData } from './hooks/useReportData';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { useDairyReportData } from './hooks/useDairyReportData';
 import ReportFormDialog from './ReportFormDialog';
+import QualityMetricsCard from './QualityMetricsCard';
+import ReportExportCard from './ReportExportCard';
 
 const ReportsDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -22,10 +25,9 @@ const ReportsDashboard = () => {
     isLoading, 
     error,
     refreshData
-  } = useReportData();
+  } = useDairyReportData();
   
   const handleReportSubmitted = () => {
-    showSuccessToast(toast, "Report submitted successfully");
     refreshData();
     setIsReportFormOpen(false);
   };
@@ -74,7 +76,7 @@ const ReportsDashboard = () => {
         <TabsList className="grid grid-cols-3 mb-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="production">Production</TabsTrigger>
-          <TabsTrigger value="sales">Sales</TabsTrigger>
+          <TabsTrigger value="quality">Quality</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-6">
@@ -97,7 +99,7 @@ const ReportsDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{reportCounts.growthPercent || "0%"}</div>
-                <p className="text-xs text-muted-foreground">From last month</p>
+                <p className="text-xs text-muted-foreground">From last period</p>
               </CardContent>
             </Card>
 
@@ -108,7 +110,7 @@ const ReportsDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{reportCounts.qualityScore || "0%"}</div>
-                <p className="text-xs text-muted-foreground">Above target</p>
+                <p className="text-xs text-muted-foreground">Average rating</p>
               </CardContent>
             </Card>
 
@@ -124,67 +126,243 @@ const ReportsDashboard = () => {
             </Card>
           </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Production Overview</CardTitle>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export Report
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={productionData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="product" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="quantity" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Production Overview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={productionData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="product" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="quantity" fill="#8884d8" name="Production Quantity" />
+                      <Bar dataKey="efficiency" fill="#82ca9d" name="Efficiency %" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <ReportExportCard 
+              productionData={productionData}
+              salesData={salesData}
+            />
+          </div>
         </TabsContent>
         
-        <TabsContent value="production" className="space-y-4">
+        <TabsContent value="production" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {productionData.map((item, index) => (
+              <Card key={index}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">{item.product}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{item.quantity.toFixed(2)} kg/L</div>
+                  <div className="flex justify-between mt-2">
+                    <span className="text-xs text-muted-foreground">Efficiency:</span>
+                    <span className="text-xs font-medium">{item.efficiency}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full" 
+                      style={{ width: `${item.efficiency}%` }}
+                    ></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
           <Card>
             <CardHeader>
               <CardTitle>Production Metrics</CardTitle>
             </CardHeader>
             <CardContent className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={productionData}>
+                <BarChart data={productionData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="product" />
-                  <YAxis />
+                  <YAxis yAxisId="left" orientation="left" />
+                  <YAxis yAxisId="right" orientation="right" />
                   <Tooltip />
-                  <Bar dataKey="quantity" fill="#8884d8" name="Production Quantity" />
-                  <Bar dataKey="efficiency" fill="#82ca9d" name="Efficiency %" />
+                  <Bar yAxisId="left" dataKey="quantity" fill="#8884d8" name="Production Quantity" />
+                  <Bar yAxisId="right" dataKey="efficiency" fill="#82ca9d" name="Efficiency %" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Latest Production</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {productionData.length > 0 ? (
+                  <ul className="space-y-2">
+                    {productionData.slice(0, 5).map((item, index) => (
+                      <li key={index} className="border-b pb-2">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{item.product}</span>
+                          <span>{item.quantity.toFixed(2)} kg/L</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Efficiency: {item.efficiency}%
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>No data</AlertTitle>
+                    <AlertDescription>
+                      No production data available. Add production reports to see them here.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Production Stats</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium">Total Production</span>
+                      <span className="text-sm">
+                        {productionData.reduce((sum, item) => sum + item.quantity, 0).toFixed(2)} kg/L
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-blue-600 h-2 rounded-full" style={{ width: '100%' }}></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium">Average Efficiency</span>
+                      <span className="text-sm">
+                        {Math.round(
+                          productionData.reduce((sum, item) => sum + item.efficiency, 0) / 
+                          (productionData.length || 1)
+                        )}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full" 
+                        style={{ 
+                          width: `${Math.round(
+                            productionData.reduce((sum, item) => sum + item.efficiency, 0) / 
+                            (productionData.length || 1)
+                          )}%` 
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <Button variant="outline" className="w-full" onClick={() => setIsReportFormOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Production Report
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
         
-        <TabsContent value="sales" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sales Performance</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="period" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#8884d8" name="Sales Value" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        <TabsContent value="quality" className="space-y-6">
+          <QualityMetricsCard qualityMetrics={qualityMetrics} />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Quality Scores by Product</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {productionData.length > 0 ? (
+                  <ul className="space-y-4">
+                    {productionData.map((item, index) => (
+                      <li key={index}>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm font-medium">{item.product}</span>
+                          <span className="text-sm">{item.efficiency}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              item.efficiency >= 90 ? 'bg-green-500' : 
+                              item.efficiency >= 70 ? 'bg-yellow-500' : 
+                              'bg-red-500'
+                            }`}
+                            style={{ width: `${item.efficiency}%` }}
+                          ></div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>No data</AlertTitle>
+                    <AlertDescription>
+                      No quality data available. Add quality reports to see them here.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Quality Improvement</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Track quality metrics improvement over time. Our quality score is a composite of:
+                  </p>
+                  
+                  <ul className="space-y-2">
+                    <li className="flex justify-between">
+                      <span className="text-sm">Taste Score:</span>
+                      <span className="text-sm font-medium">90%</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-sm">Texture Score:</span>
+                      <span className="text-sm font-medium">85%</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-sm">Appearance:</span>
+                      <span className="text-sm font-medium">92%</span>
+                    </li>
+                    <li className="flex justify-between">
+                      <span className="text-sm">Consistency:</span>
+                      <span className="text-sm font-medium">88%</span>
+                    </li>
+                    <li className="flex justify-between border-t pt-2 mt-2">
+                      <span className="text-sm font-medium">Overall Quality:</span>
+                      <span className="text-sm font-medium">89%</span>
+                    </li>
+                  </ul>
+                  
+                  <Button variant="outline" className="w-full" onClick={() => setIsReportFormOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Quality Report
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
       

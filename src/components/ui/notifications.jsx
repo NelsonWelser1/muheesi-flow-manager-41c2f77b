@@ -57,3 +57,34 @@ export const dismissToast = (toastId) => {
     return { id: toastId };
   }
 };
+
+// New notification helpers for reports
+export const showReportSubmittedToast = (toast, reportTitle) => {
+  toast({
+    title: "Report Submitted",
+    description: `Your report "${reportTitle}" has been submitted successfully.`,
+    variant: "default",
+    className: "bg-green-50 border-green-300 text-green-800",
+    duration: 4000,
+  });
+};
+
+export const showReportSharedToast = (toast, recipients) => {
+  toast({
+    title: "Report Shared",
+    description: `Report has been shared with ${recipients} recipient(s).`,
+    variant: "default",
+    className: "bg-blue-50 border-blue-300 text-blue-800",
+    duration: 3000,
+  });
+};
+
+export const showReportExportedToast = (toast, format) => {
+  toast({
+    title: "Report Exported",
+    description: `Report has been exported as ${format.toUpperCase()}.`,
+    variant: "default",
+    className: "bg-blue-50 border-blue-300 text-blue-800",
+    duration: 3000,
+  });
+};

@@ -1,62 +1,63 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
+import { useToast } from "@/components/ui/use-toast";
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 export const useSubmitReport = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const submitReport = async (reportData) => {
     setIsSubmitting(true);
-    
     try {
-      console.log('Submitting report data:', reportData);
+      console.log('Submitting report to Supabase:', reportData);
       
-      // First, save report configuration
-      const { data: configData, error: configError } = await supabase
-        .from('report_configurations')
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Add the report to dairy_production table
+      const { data, error } = await supabase
+        .from('dairy_production')
         .insert([{
-          report_type: reportData.type,
-          start_date: reportData.startDate,
-          end_date: reportData.endDate,
-          user_id: null // Setting to null since authentication is temporarily disabled
+          product_type: reportData.productType,
+          batch_id: reportData.batchId,
+          raw_material_used: parseFloat(reportData.rawMaterial),
+          finished_product_amount: parseFloat(reportData.finishedProduct),
+          production_date: reportData.productionDate,
+          efficiency_percentage: parseInt(reportData.efficiency),
+          quality_score: parseInt(reportData.qualityScore),
+          operator_id: user?.id || null,
+          notes: reportData.notes
         }])
         .select();
-
-      if (configError) {
-        console.error('Error saving report configuration:', configError);
-        throw configError;
-      }
-
-      console.log('Report configuration saved:', configData);
-
-      // Then save the maintenance report
-      const { data: reportResult, error: reportError } = await supabase
-        .from('maintenance_reports')
-        .insert([{
-          title: reportData.title,
-          type: reportData.type,
-          content: reportData.content,
-          recipient_name: reportData.recipient.name,
-          recipient_email: reportData.recipient.email,
-          recipient_phone: reportData.recipient.phone,
-          send_via: reportData.sendVia,
-          start_date: reportData.startDate,
-          end_date: reportData.endDate,
-          user_id: null // Setting to null since authentication is temporarily disabled
-        }])
-        .select();
-
-      if (reportError) {
-        console.error('Error saving report:', reportError);
-        throw reportError;
-      }
-
-      console.log('Report submitted successfully:', reportResult);
-      return reportResult;
       
+      if (error) throw error;
+      
+      console.log('Report submitted successfully:', data);
+      showSuccessToast(toast, 'Production report submitted successfully!');
+      
+      // Create a notification for the report
+      const { error: notificationError } = await supabase
+        .from('dairy_notifications')
+        .insert([{
+          title: 'New Production Report',
+          message: `A new ${reportData.productType} production report has been submitted.`,
+          type: 'info',
+          section_id: 'production',
+          user_id: user?.id || null
+        }]);
+      
+      if (notificationError) {
+        console.error('Error creating notification:', notificationError);
+        // Don't throw here, just log the error
+      }
+      
+      return { success: true, data };
     } catch (error) {
-      console.error('Error in report submission:', error);
-      throw error;
+      console.error('Error submitting report:', error);
+      showErrorToast(toast, `Failed to submit report: ${error.message}`);
+      return { success: false, error };
     } finally {
       setIsSubmitting(false);
     }
