@@ -1,284 +1,316 @@
 
 import React, { useState, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { FileText, Upload, Download, Trash2, File, FileImage, FileArchive, FilePlus } from "lucide-react";
 import { useDocuments } from '../hooks/useDocuments';
-import { format } from 'date-fns';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Upload, FileText, FileImage, Trash2, 
+  Eye, Loader2, RefreshCw, File, AlertCircle
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { showErrorToast } from "@/components/ui/notifications";
 
-const DOCUMENT_CATEGORIES = [
-  "General", 
-  "ID Documents", 
-  "Contracts", 
-  "Certifications", 
-  "Performance Reviews", 
-  "Training Records",
-  "Health & Safety",
+const FILE_CATEGORIES = [
+  "General",
+  "ID Document",
+  "Contract",
+  "Resume/CV",
+  "Certificate",
+  "Performance Review",
+  "Training Record",
+  "Medical Record",
   "Other"
 ];
 
 const DocumentManager = ({ employeeId }) => {
   const fileInputRef = useRef(null);
-  const [selectedCategory, setSelectedCategory] = useState('General');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [category, setCategory] = useState(FILE_CATEGORIES[0]);
   const [description, setDescription] = useState('');
-  const [fileError, setFileError] = useState('');
+  const [uploadAttempted, setUploadAttempted] = useState(false);
+  const { toast } = useToast();
   
-  const { 
-    documents, 
-    isLoading, 
-    error, 
-    uploading, 
-    uploadFile, 
-    deleteDocument, 
+  const {
+    documents,
+    isLoading,
+    uploading,
+    uploadFile,
+    deleteDocument,
     getFileUrl,
+    refetchDocuments,
     isDeleting
   } = useDocuments(employeeId);
 
-  // Handle file submission
-  const handleFileSubmit = async (e) => {
-    e.preventDefault();
-    setFileError('');
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      console.log('File selected:', file.name, file.type, file.size);
+    }
+  };
+
+  const handleUpload = async () => {
+    // Mark that we've attempted an upload for validation messaging
+    setUploadAttempted(true);
     
-    const fileInput = fileInputRef.current;
-    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-      setFileError('Please select a file to upload');
+    if (!employeeId) {
+      showErrorToast(toast, "Please save employee information first to enable uploads");
       return;
     }
     
-    const file = fileInput.files[0];
+    if (!selectedFile) {
+      showErrorToast(toast, "Please select a file to upload");
+      return;
+    }
     
-    // Debugging log for file upload
-    console.log('File upload submission:', { 
-      file, 
-      employeeId, 
-      category: selectedCategory, 
-      description 
+    // Debug information before upload
+    console.log('Upload requested with:', {
+      file: selectedFile,
+      employeeId,
+      category,
+      description
     });
     
-    await uploadFile(file, employeeId, selectedCategory, description);
-    
-    // Reset form
-    fileInput.value = '';
-    setDescription('');
-    setSelectedCategory('General');
-  };
-
-  // Get appropriate icon for file type
-  const getFileIcon = (fileType) => {
-    if (fileType?.includes('image')) return <FileImage className="h-4 w-4" />;
-    if (fileType?.includes('pdf')) return <FileText className="h-4 w-4" />;
-    if (fileType?.includes('zip') || fileType?.includes('compressed')) return <FileArchive className="h-4 w-4" />;
-    return <File className="h-4 w-4" />;
-  };
-
-  // Format file size
-  const formatFileSize = (sizeStr) => {
-    if (!sizeStr) return 'Unknown';
-    // If it's just a number without units, assume KB
-    if (!isNaN(sizeStr) && typeof sizeStr === 'string' && !sizeStr.includes(' ')) {
-      return `${sizeStr} KB`;
-    }
-    return sizeStr;
-  };
-
-  // Format date string
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'Unknown';
     try {
-      return format(new Date(dateStr), 'MMM d, yyyy');
-    } catch (e) {
-      return dateStr;
+      const result = await uploadFile(selectedFile, employeeId, category, description);
+      
+      if (result) {
+        // Reset form after successful upload
+        setSelectedFile(null);
+        setDescription('');
+        setUploadAttempted(false);
+        
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    } catch (error) {
+      console.error('Upload error caught in component:', error);
+      showErrorToast(toast, `Upload failed: ${error.message}`);
     }
   };
 
-  // Handle file download
-  const handleDownload = (document) => {
+  const handleDelete = async (document) => {
+    // Debug information before delete
+    console.log('Delete requested for document:', document);
+    
+    if (confirm(`Are you sure you want to delete "${document.filename}"?`)) {
+      await deleteDocument(document.id, document.file_path);
+    }
+  };
+
+  const handleView = (document) => {
+    // Debug information before view
+    console.log('View requested for document:', document);
+    
     const url = getFileUrl(document.file_path);
     if (url) {
-      // Log download attempt for debugging
-      console.log('Downloading file:', document.filename, 'URL:', url);
-      
-      // Create temporary link and trigger download
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = document.filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      window.open(url, '_blank');
+    } else {
+      showErrorToast(toast, "Could not generate file URL");
     }
   };
 
-  // Handle file deletion
-  const handleDelete = (document) => {
-    if (window.confirm(`Are you sure you want to delete "${document.filename}"?`)) {
-      deleteDocument(document.id, document.file_path);
-    }
+  const isImageFile = (fileType) => {
+    return fileType && fileType.startsWith('image/');
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" /> Upload Document
-          </CardTitle>
-          <CardDescription>
-            Upload documents related to this employee. Max file size: 5MB.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleFileSubmit} className="space-y-4">
+    <Card className="shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center justify-between">
+          <span>Attached Documents</span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => refetchDocuments()}
+            className="flex items-center gap-1"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Upload Form */}
+        <div className="border rounded-md p-4 bg-gray-50 mb-6">
+          <h3 className="font-medium mb-3">Upload New Document</h3>
+          <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Document Category</label>
+              <div>
+                <Label className="mb-1 block">Select File (Max 5MB)</Label>
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <Upload className="h-4 w-4" /> 
+                    {selectedFile ? selectedFile.name : "Choose File"}
+                  </Button>
+                  
+                  {selectedFile && (
+                    <div className="p-2 bg-blue-50 rounded-md flex items-center gap-2 text-sm">
+                      {isImageFile(selectedFile.type) ? 
+                        <FileImage className="h-4 w-4" /> : 
+                        <FileText className="h-4 w-4" />
+                      }
+                      <span>
+                        {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                      </span>
+                    </div>
+                  )}
+                  
+                  {uploadAttempted && !selectedFile && (
+                    <div className="text-red-500 text-sm mt-1">
+                      Please select a file
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <Label className="mb-1 block">Document Category</Label>
                 <Select 
-                  value={selectedCategory} 
-                  onValueChange={setSelectedCategory}
+                  value={category}
+                  onValueChange={setCategory}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {DOCUMENT_CATEGORIES.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category}
+                    {FILE_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Select File</label>
-                <Input 
-                  ref={fileInputRef} 
-                  type="file" 
-                  className="cursor-pointer"
-                />
-                {fileError && <p className="text-xs text-red-500">{fileError}</p>}
-              </div>
             </div>
             
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Description (Optional)</label>
-              <Textarea 
+            <div>
+              <Label className="mb-1 block">Description (Optional)</Label>
+              <Input
+                type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Add a description for this document"
-                rows={2}
+                placeholder="Brief description of the document"
               />
             </div>
             
             <Button 
-              type="submit" 
-              disabled={uploading || isLoading || !employeeId}
-              className="w-full"
+              type="button"
+              onClick={handleUpload}
+              disabled={uploading || !employeeId}
+              className="w-full flex items-center justify-center gap-2"
             >
-              {uploading ? 'Uploading...' : 'Upload Document'}
+              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} 
+              {uploading ? "Uploading..." : "Upload Document"}
             </Button>
             
             {!employeeId && (
-              <p className="text-sm text-amber-600">
-                Please save the employee dossier before uploading documents.
-              </p>
+              <div className="text-amber-600 text-sm flex items-center gap-1">
+                <AlertCircle className="h-4 w-4" />
+                <span>Save employee information first to enable document uploads</span>
+              </div>
             )}
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" /> Employee Documents
-          </CardTitle>
-          <CardDescription>
-            Manage documents uploaded for this employee.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </div>
+        </div>
+        
+        {/* Document List */}
+        <div className="space-y-3">
+          <h3 className="font-medium">Document List</h3>
+          
           {isLoading ? (
-            <div className="text-center py-8 text-gray-500">Loading documents...</div>
-          ) : error ? (
-            <div className="text-center py-8 text-red-500">
-              Error loading documents: {error.message}
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             </div>
-          ) : documents.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <FilePlus className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <p className="font-medium">No documents</p>
-              <p className="text-sm">Upload a document using the form above.</p>
+          ) : documents.length > 0 ? (
+            <div className="divide-y divide-gray-100">
+              {documents.map((doc) => (
+                <div 
+                  key={doc.id} 
+                  className="py-3 flex items-center justify-between hover:bg-gray-50 rounded-md p-2"
+                >
+                  <div className="flex items-center gap-3">
+                    {isImageFile(doc.file_type) ? (
+                      <FileImage className="h-8 w-8 p-1 bg-blue-50 text-blue-500 rounded" />
+                    ) : (
+                      <File className="h-8 w-8 p-1 bg-gray-50 text-gray-500 rounded" />
+                    )}
+                    
+                    <div className="overflow-hidden">
+                      <p className="font-medium truncate" title={doc.filename}>
+                        {doc.filename}
+                      </p>
+                      <div className="flex items-center text-xs text-gray-500 space-x-2">
+                        <span>{doc.category || 'General'}</span>
+                        <span>•</span>
+                        <span>{doc.file_size} KB</span>
+                        <span>•</span>
+                        <span>{new Date(doc.created_at).toLocaleDateString()}</span>
+                      </div>
+                      {doc.description && (
+                        <p className="text-sm text-gray-600 truncate" title={doc.description}>
+                          {doc.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleView(doc)}
+                      className="flex items-center gap-1"
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span className="hidden sm:inline">View</span>
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(doc)}
+                      disabled={isDeleting}
+                      className="text-red-500 hover:text-red-700 flex items-center gap-1"
+                    >
+                      {isDeleting ? 
+                        <Loader2 className="h-4 w-4 animate-spin" /> : 
+                        <Trash2 className="h-4 w-4" />
+                      }
+                      <span className="hidden sm:inline">Delete</span>
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="border rounded-md">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>File Name</TableHead>
-                    <TableHead className="hidden md:table-cell">Category</TableHead>
-                    <TableHead className="hidden md:table-cell">Size</TableHead>
-                    <TableHead className="hidden lg:table-cell">Uploaded</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {documents.map((doc) => (
-                    <TableRow key={doc.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getFileIcon(doc.file_type)}
-                          <span className="font-medium truncate max-w-[140px]">
-                            {doc.filename}
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-500 md:hidden">
-                          {doc.category} • {formatFileSize(doc.file_size)}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <Badge variant="outline">{doc.category}</Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {formatFileSize(doc.file_size)}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-gray-500 text-sm">
-                        {formatDate(doc.created_at)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDownload(doc)}
-                            title="Download file"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(doc)}
-                            disabled={isDeleting}
-                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                            title="Delete file"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-md">
+              <FileText className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+              <p>No documents have been uploaded yet.</p>
+              {employeeId && (
+                <p className="text-sm mt-1">
+                  Use the form above to upload your first document.
+                </p>
+              )}
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

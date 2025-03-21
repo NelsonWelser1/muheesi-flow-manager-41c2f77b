@@ -33,3 +33,4 @@ CREATE POLICY "Allow public access to personnel_documents"
 -- Create storage bucket for employee documents if it doesn't exist
 -- Note: This is a reminder as bucket creation can't be done via SQL
 -- You'll need to create the bucket via Supabase UI or API with the name 'employee_documents'
+
