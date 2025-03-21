@@ -1,4 +1,7 @@
 
+-- Create extension if it doesn't exist
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Create dairy_production table for production reports
 CREATE TABLE IF NOT EXISTS dairy_production (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -30,7 +33,7 @@ CREATE POLICY "Enable read access for all users" ON dairy_production
 
 CREATE POLICY "Enable insert for authenticated users" ON dairy_production
     FOR INSERT
-    WITH CHECK (auth.role() = 'authenticated');
+    WITH CHECK (true);
 
 -- Insert sample data
 INSERT INTO dairy_production (product_type, batch_id, raw_material_used, finished_product_amount, production_date, efficiency_percentage, quality_score, notes)

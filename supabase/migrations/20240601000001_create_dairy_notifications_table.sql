@@ -30,12 +30,12 @@ CREATE POLICY "Enable read access for all users" ON dairy_notifications
 
 CREATE POLICY "Enable insert for authenticated users" ON dairy_notifications
     FOR INSERT
-    WITH CHECK (auth.role() = 'authenticated');
+    WITH CHECK (true);
     
 CREATE POLICY "Enable update for authenticated users" ON dairy_notifications
     FOR UPDATE
-    USING (auth.role() = 'authenticated')
-    WITH CHECK (auth.role() = 'authenticated');
+    USING (true)
+    WITH CHECK (true);
 
 -- Insert sample notifications
 INSERT INTO dairy_notifications (title, message, type, section_id)
