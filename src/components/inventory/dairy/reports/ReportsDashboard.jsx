@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, TrendingUp, PieChart, Download, Plus, Filter } from "lucide-react";
+import { FileText, TrendingUp, PieChart, Download, Plus, Filter, LayoutDashboard, Factory, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -73,11 +72,46 @@ const ReportsDashboard = () => {
       </div>
       
       <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="production">Production</TabsTrigger>
-          <TabsTrigger value="quality">Quality</TabsTrigger>
-        </TabsList>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <TabsTrigger 
+            value="overview" 
+            className="h-32 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:from-blue-100 hover:to-blue-200 data-[state=active]:from-blue-200 data-[state=active]:to-blue-300 transition-all"
+          >
+            <div className="flex flex-col items-center">
+              <LayoutDashboard className="h-8 w-8 mb-2 text-blue-600" />
+              <span className="text-lg font-medium">Overview</span>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {reportCounts.daily || 0} Reports Today
+            </div>
+          </TabsTrigger>
+          
+          <TabsTrigger 
+            value="production" 
+            className="h-32 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:from-green-100 hover:to-green-200 data-[state=active]:from-green-200 data-[state=active]:to-green-300 transition-all"
+          >
+            <div className="flex flex-col items-center">
+              <Factory className="h-8 w-8 mb-2 text-green-600" />
+              <span className="text-lg font-medium">Production</span>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {productionData.length} Product Types
+            </div>
+          </TabsTrigger>
+          
+          <TabsTrigger 
+            value="quality" 
+            className="h-32 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:from-purple-100 hover:to-purple-200 data-[state=active]:from-purple-200 data-[state=active]:to-purple-300 transition-all"
+          >
+            <div className="flex flex-col items-center">
+              <Star className="h-8 w-8 mb-2 text-purple-600" />
+              <span className="text-lg font-medium">Quality</span>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Avg Score: {reportCounts.qualityScore || "0%"}
+            </div>
+          </TabsTrigger>
+        </div>
         
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
