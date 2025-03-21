@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, FileSpreadsheet, FilePdf, FileText, Share2 } from "lucide-react";
+import { CalendarIcon, FileSpreadsheet, FileText, Share2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { showReportExportedToast, showReportSharedToast } from "@/components/ui/notifications";
 
@@ -34,7 +34,7 @@ const ReportExportCard = ({ productionData, salesData }) => {
   ];
 
   const exportFormats = [
-    { value: "pdf", label: "PDF", icon: <FilePdf className="h-4 w-4 mr-2" /> },
+    { value: "pdf", label: "PDF", icon: <FileText className="h-4 w-4 mr-2" /> },
     { value: "excel", label: "Excel", icon: <FileSpreadsheet className="h-4 w-4 mr-2" /> },
     { value: "csv", label: "CSV", icon: <FileText className="h-4 w-4 mr-2" /> }
   ];
