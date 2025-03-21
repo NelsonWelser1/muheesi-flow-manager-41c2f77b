@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, FileSpreadsheet, FileText, Share2 } from "lucide-react";
+import { CalendarIcon, FileText, FileSpreadsheet, Share2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { showReportExportedToast, showReportSharedToast } from "@/components/ui/notifications";
 
