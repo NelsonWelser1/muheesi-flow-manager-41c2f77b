@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
-import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 export const useEmployeeDossiers = (searchQuery = '') => {
   const { toast } = useToast();
@@ -63,10 +62,17 @@ export const useEmployeeDossiers = (searchQuery = '') => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employeeDossiers'] });
-      showSuccessToast(toast, 'Dossier created successfully');
+      toast({
+        title: "Success",
+        description: "Dossier created successfully",
+      });
     },
     onError: (error) => {
-      showErrorToast(toast, `Failed to create dossier: ${error.message}`);
+      toast({
+        title: "Error",
+        description: `Failed to create dossier: ${error.message}`,
+        variant: "destructive",
+      });
     }
   });
 
@@ -91,10 +97,17 @@ export const useEmployeeDossiers = (searchQuery = '') => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employeeDossiers'] });
-      showSuccessToast(toast, 'Dossier updated successfully');
+      toast({
+        title: "Success",
+        description: "Dossier updated successfully",
+      });
     },
     onError: (error) => {
-      showErrorToast(toast, `Failed to update dossier: ${error.message}`);
+      toast({
+        title: "Error",
+        description: `Failed to update dossier: ${error.message}`,
+        variant: "destructive",
+      });
     }
   });
 
@@ -115,10 +128,17 @@ export const useEmployeeDossiers = (searchQuery = '') => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employeeDossiers'] });
-      showSuccessToast(toast, 'Dossier deleted successfully');
+      toast({
+        title: "Success",
+        description: "Dossier deleted successfully",
+      });
     },
     onError: (error) => {
-      showErrorToast(toast, `Failed to delete dossier: ${error.message}`);
+      toast({
+        title: "Error",
+        description: `Failed to delete dossier: ${error.message}`,
+        variant: "destructive",
+      });
     }
   });
 
@@ -129,7 +149,11 @@ export const useEmployeeDossiers = (searchQuery = '') => {
     
     // Validate required fields
     if (!formData.employee_id) {
-      showErrorToast(toast, 'Employee ID is required');
+      toast({
+        title: "Error",
+        description: "Employee ID is required",
+        variant: "destructive",
+      });
       return;
     }
     
