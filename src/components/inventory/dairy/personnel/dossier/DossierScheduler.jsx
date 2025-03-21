@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Calendar, Save, User, Clock, Check } from "lucide-react";
+import { ArrowLeft, Calendar, Save, User, Clock, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { useScheduledTasks } from './hooks/useScheduledTasks';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const TASK_TYPES = [
   "Performance Review",
@@ -22,8 +24,6 @@ const TASK_TYPES = [
 
 const DossierScheduler = ({ dossier, onBack }) => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-
   const [selectedEmployee, setSelectedEmployee] = useState(dossier?.employee_id || '');
   const [formData, setFormData] = useState({
     task_type: TASK_TYPES[0],
@@ -33,6 +33,15 @@ const DossierScheduler = ({ dossier, onBack }) => {
     assigned_to: '',
     notes: '',
   });
+
+  // Use our custom hook to manage scheduled tasks
+  const { 
+    tasks: scheduledTasks, 
+    isLoading, 
+    saveTask, 
+    toggleTaskCompletion,
+    deleteTask 
+  } = useScheduledTasks(selectedEmployee);
 
   // Fetch employees for dropdown if no specific dossier provided
   const { data: employees = [] } = useQuery({
@@ -49,95 +58,6 @@ const DossierScheduler = ({ dossier, onBack }) => {
     enabled: !dossier
   });
 
-  // Fetch existing scheduled tasks
-  const { data: scheduledTasks = [], isLoading } = useQuery({
-    queryKey: ['scheduledTasks', selectedEmployee],
-    queryFn: async () => {
-      if (!selectedEmployee) return [];
-      
-      const { data, error } = await supabase
-        .from('personnel_scheduled_tasks')
-        .select('*')
-        .eq('employee_id', selectedEmployee)
-        .order('scheduled_date', { ascending: true });
-      
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!selectedEmployee
-  });
-
-  // Save task mutation
-  const saveTaskMutation = useMutation({
-    mutationFn: async (data) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error("You must be logged in to schedule tasks");
-      }
-      
-      const { error } = await supabase
-        .from('personnel_scheduled_tasks')
-        .insert([{
-          employee_id: selectedEmployee,
-          task_type: data.task_type,
-          scheduled_date: data.scheduled_date,
-          scheduled_time: data.time,
-          location: data.location,
-          assigned_to: data.assigned_to,
-          notes: data.notes,
-          created_by: user.id,
-          completed: false
-        }]);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['scheduledTasks', selectedEmployee] });
-      toast({
-        title: "Task Scheduled",
-        description: "Successfully scheduled new task.",
-      });
-      setFormData({
-        task_type: TASK_TYPES[0],
-        scheduled_date: '',
-        time: '',
-        location: '',
-        assigned_to: '',
-        notes: '',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to schedule task: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Toggle task completion mutation
-  const toggleTaskCompletionMutation = useMutation({
-    mutationFn: async ({ id, completed }) => {
-      const { error } = await supabase
-        .from('personnel_scheduled_tasks')
-        .update({ completed: !completed })
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['scheduledTasks', selectedEmployee] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to update task: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  });
-
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -145,29 +65,31 @@ const DossierScheduler = ({ dossier, onBack }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (!selectedEmployee) {
-      toast({
-        title: "Employee Required",
-        description: "Please select an employee for this task.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // For debugging: log the form data to console
+    console.log("Submitting task data:", {
+      employee_id: selectedEmployee,
+      ...formData
+    });
     
-    if (!formData.scheduled_date) {
-      toast({
-        title: "Date Required",
-        description: "Please select a date for this task.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Save the task using our hook
+    saveTask({
+      employee_id: selectedEmployee,
+      ...formData
+    });
     
-    saveTaskMutation.mutate(formData);
+    // Reset form after successful submission
+    setFormData({
+      task_type: TASK_TYPES[0],
+      scheduled_date: '',
+      time: '',
+      location: '',
+      assigned_to: '',
+      notes: '',
+    });
   };
 
-  const toggleTaskCompletion = (task) => {
-    toggleTaskCompletionMutation.mutate({ id: task.id, completed: task.completed });
+  const handleTaskDelete = (taskId) => {
+    deleteTask(taskId);
   };
 
   return (
@@ -179,7 +101,7 @@ const DossierScheduler = ({ dossier, onBack }) => {
         <h2 className="text-2xl font-bold">Schedule Tasks</h2>
         <Button 
           onClick={handleSubmit} 
-          disabled={saveTaskMutation.isPending || !selectedEmployee}
+          disabled={isLoading || !selectedEmployee}
           className="flex items-center gap-1"
         >
           <Save className="h-4 w-4" /> Save Task
@@ -326,7 +248,7 @@ const DossierScheduler = ({ dossier, onBack }) => {
                     }`}
                   >
                     <button 
-                      onClick={() => toggleTaskCompletion(task)} 
+                      onClick={() => toggleTaskCompletion(task.id, task.completed)} 
                       className={`mt-1 flex-shrink-0 h-5 w-5 rounded-full border ${
                         task.completed ? 'bg-green-500 border-green-500 flex items-center justify-center' : 'border-gray-300'
                       }`}
@@ -368,6 +290,31 @@ const DossierScheduler = ({ dossier, onBack }) => {
                         </p>
                       )}
                     </div>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this task? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleTaskDelete(task.id)}
+                            className="bg-red-500 hover:bg-red-600"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 ))}
               </div>
