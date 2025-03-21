@@ -50,10 +50,12 @@ const ReportsDashboard = () => {
     <div className="space-y-6 bg-gray-50 p-4 rounded-lg">
       <ReportsHeader onOpenReportForm={() => setIsReportFormOpen(true)} />
       
-      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-        <TabTriggers reportCounts={enhancedReportCounts} />
+      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+        <div className="w-full">
+          <TabTriggers reportCounts={enhancedReportCounts} />
+        </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="bg-white p-6 rounded-lg shadow-sm mt-6">
           <TabsContent value="overview" className="space-y-6 mt-0">
             <OverviewContent 
               reportCounts={reportCounts}

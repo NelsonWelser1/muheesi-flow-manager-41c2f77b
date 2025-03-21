@@ -5,69 +5,67 @@ import { LayoutDashboard, Factory, Star, FileSpreadsheet } from "lucide-react";
 
 const TabTriggers = ({ reportCounts }) => {
   return (
-    <div className="mb-10">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <TabsTrigger 
-          value="overview" 
-          className="h-32 flex flex-col items-center justify-center gap-2 bg-white shadow-md rounded-lg hover:shadow-lg border border-blue-100 hover:border-blue-300 transition-all data-[state=active]:border-blue-500 data-[state=active]:shadow-lg"
-        >
-          <div className="flex flex-col items-center">
-            <div className="p-3 rounded-full bg-blue-50 mb-2">
-              <LayoutDashboard className="h-6 w-6 text-blue-600" />
-            </div>
-            <span className="text-lg font-medium">Overview</span>
+    <TabsList className="mb-10 flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 w-full">
+      <TabsTrigger 
+        value="overview" 
+        className="h-32 flex flex-col items-center justify-center gap-2 bg-white shadow-md rounded-lg hover:shadow-lg border border-blue-100 hover:border-blue-300 transition-all data-[state=active]:border-blue-500 data-[state=active]:shadow-lg"
+      >
+        <div className="flex flex-col items-center">
+          <div className="p-3 rounded-full bg-blue-50 mb-2">
+            <LayoutDashboard className="h-6 w-6 text-blue-600" />
           </div>
-          <div className="text-sm text-muted-foreground">
-            {reportCounts.daily || 0} Reports Today
+          <span className="text-lg font-medium">Overview</span>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {reportCounts.daily || 0} Reports Today
+        </div>
+      </TabsTrigger>
+      
+      <TabsTrigger 
+        value="production" 
+        className="h-32 flex flex-col items-center justify-center gap-2 bg-white shadow-md rounded-lg hover:shadow-lg border border-green-100 hover:border-green-300 transition-all data-[state=active]:border-green-500 data-[state=active]:shadow-lg"
+      >
+        <div className="flex flex-col items-center">
+          <div className="p-3 rounded-full bg-green-50 mb-2">
+            <Factory className="h-6 w-6 text-green-600" />
           </div>
-        </TabsTrigger>
-        
-        <TabsTrigger 
-          value="production" 
-          className="h-32 flex flex-col items-center justify-center gap-2 bg-white shadow-md rounded-lg hover:shadow-lg border border-green-100 hover:border-green-300 transition-all data-[state=active]:border-green-500 data-[state=active]:shadow-lg"
-        >
-          <div className="flex flex-col items-center">
-            <div className="p-3 rounded-full bg-green-50 mb-2">
-              <Factory className="h-6 w-6 text-green-600" />
-            </div>
-            <span className="text-lg font-medium">Production</span>
+          <span className="text-lg font-medium">Production</span>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {reportCounts.productTypes} Product Types
+        </div>
+      </TabsTrigger>
+      
+      <TabsTrigger 
+        value="quality" 
+        className="h-32 flex flex-col items-center justify-center gap-2 bg-white shadow-md rounded-lg hover:shadow-lg border border-purple-100 hover:border-purple-300 transition-all data-[state=active]:border-purple-500 data-[state=active]:shadow-lg"
+      >
+        <div className="flex flex-col items-center">
+          <div className="p-3 rounded-full bg-purple-50 mb-2">
+            <Star className="h-6 w-6 text-purple-600" />
           </div>
-          <div className="text-sm text-muted-foreground">
-            {reportCounts.productTypes} Product Types
+          <span className="text-lg font-medium">Quality</span>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Avg Score: {reportCounts.qualityScore || "0%"}
+        </div>
+      </TabsTrigger>
+      
+      <TabsTrigger 
+        value="generate" 
+        className="h-32 flex flex-col items-center justify-center gap-2 bg-white shadow-md rounded-lg hover:shadow-lg border border-amber-100 hover:border-amber-300 transition-all data-[state=active]:border-amber-500 data-[state=active]:shadow-lg"
+      >
+        <div className="flex flex-col items-center">
+          <div className="p-3 rounded-full bg-amber-50 mb-2">
+            <FileSpreadsheet className="h-6 w-6 text-amber-600" />
           </div>
-        </TabsTrigger>
-        
-        <TabsTrigger 
-          value="quality" 
-          className="h-32 flex flex-col items-center justify-center gap-2 bg-white shadow-md rounded-lg hover:shadow-lg border border-purple-100 hover:border-purple-300 transition-all data-[state=active]:border-purple-500 data-[state=active]:shadow-lg"
-        >
-          <div className="flex flex-col items-center">
-            <div className="p-3 rounded-full bg-purple-50 mb-2">
-              <Star className="h-6 w-6 text-purple-600" />
-            </div>
-            <span className="text-lg font-medium">Quality</span>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Avg Score: {reportCounts.qualityScore || "0%"}
-          </div>
-        </TabsTrigger>
-        
-        <TabsTrigger 
-          value="generate" 
-          className="h-32 flex flex-col items-center justify-center gap-2 bg-white shadow-md rounded-lg hover:shadow-lg border border-amber-100 hover:border-amber-300 transition-all data-[state=active]:border-amber-500 data-[state=active]:shadow-lg"
-        >
-          <div className="flex flex-col items-center">
-            <div className="p-3 rounded-full bg-amber-50 mb-2">
-              <FileSpreadsheet className="h-6 w-6 text-amber-600" />
-            </div>
-            <span className="text-lg font-medium">Generate</span>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Create Custom Reports
-          </div>
-        </TabsTrigger>
-      </div>
-    </div>
+          <span className="text-lg font-medium">Generate</span>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Create Custom Reports
+        </div>
+      </TabsTrigger>
+    </TabsList>
   );
 };
 
