@@ -5,7 +5,7 @@ import { Filter, Plus } from "lucide-react";
 
 const ReportsHeader = ({ onOpenReportForm }) => {
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex justify-between items-center mb-8">
       <h2 className="text-2xl font-bold">Reports & Analytics</h2>
       <div className="flex space-x-2">
         <Button variant="outline" size="sm">

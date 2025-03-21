@@ -9,12 +9,16 @@ const OverviewContent = ({ reportCounts, productionData, salesData }) => {
     <>
       <ReportMetricCards reportCounts={reportCounts} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <ProductionChart productionData={productionData} />
-        <ReportExportCard 
-          productionData={productionData}
-          salesData={salesData}
-        />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-8">
+        <div className="lg:col-span-2">
+          <ProductionChart productionData={productionData} />
+        </div>
+        <div>
+          <ReportExportCard 
+            productionData={productionData}
+            salesData={salesData}
+          />
+        </div>
       </div>
     </>
   );

@@ -10,6 +10,7 @@ import TabTriggers from './components/TabTriggers';
 import OverviewContent from './components/OverviewContent';
 import ProductionContent from './components/ProductionContent';
 import QualityContent from './components/QualityContent';
+import ReportExportCard from './ReportExportCard';
 import { LoadingState, ErrorState } from './components/LoadingAndErrorStates';
 
 const ReportsDashboard = () => {
@@ -46,13 +47,13 @@ const ReportsDashboard = () => {
   };
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-6">
       <ReportsHeader onOpenReportForm={() => setIsReportFormOpen(true)} />
       
-      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="relative z-50">
+      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-10">
         <TabTriggers reportCounts={enhancedReportCounts} />
         
-        <div className="relative z-30 mt-6 pt-4">
+        <div className="mt-10 pt-6">
           <TabsContent value="overview" className="space-y-6">
             <OverviewContent 
               reportCounts={reportCounts}
@@ -74,6 +75,15 @@ const ReportsDashboard = () => {
               productionData={productionData}
               onOpenReportForm={() => setIsReportFormOpen(true)}
             />
+          </TabsContent>
+          
+          <TabsContent value="generate" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
+              <ReportExportCard 
+                productionData={productionData}
+                salesData={salesData}
+              />
+            </div>
           </TabsContent>
         </div>
       </Tabs>
