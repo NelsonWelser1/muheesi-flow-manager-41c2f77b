@@ -72,7 +72,7 @@ const ReportsDashboard = () => {
       </div>
       
       <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <TabsList className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <TabsTrigger 
             value="overview" 
             className="h-32 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:from-blue-100 hover:to-blue-200 data-[state=active]:from-blue-200 data-[state=active]:to-blue-300 transition-all"
@@ -111,7 +111,7 @@ const ReportsDashboard = () => {
               Avg Score: {reportCounts.qualityScore || "0%"}
             </div>
           </TabsTrigger>
-        </div>
+        </TabsList>
         
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
