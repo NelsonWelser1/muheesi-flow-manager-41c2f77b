@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Mail, MessageSquare, Phone, FileText } from "lucide-react";
 import KazoReportsViewer from './kajon/KazoReportsViewer';
+import { supabase } from '@/integrations/supabase/supabase';
+import { showSuccessToast, showErrorToast, showLoadingToast, dismissToast } from '@/components/ui/notifications';
 
 const MakeReports = ({ isKazo = false }) => {
   const [recipient, setRecipient] = useState({
@@ -23,6 +25,7 @@ const MakeReports = ({ isKazo = false }) => {
     sendVia: [],
   });
   const [showReportsViewer, setShowReportsViewer] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const reportTypes = [
@@ -34,6 +37,10 @@ const MakeReports = ({ isKazo = false }) => {
     'Custom Report'
   ];
 
+  useEffect(() => {
+    // If we need to fetch any initial data in the future, we can add it here
+  }, []);
+
   const handleSendViaToggle = (method) => {
     setReport(prev => ({
       ...prev,
@@ -43,21 +50,123 @@ const MakeReports = ({ isKazo = false }) => {
     }));
   };
 
+  const validateForm = () => {
+    // Check for empty fields
+    if (!report.title.trim()) {
+      showErrorToast(toast, "Please enter a report title");
+      return false;
+    }
+    
+    if (!report.type) {
+      showErrorToast(toast, "Please select a report type");
+      return false;
+    }
+    
+    if (!report.content.trim()) {
+      showErrorToast(toast, "Please enter report content");
+      return false;
+    }
+    
+    if (report.sendVia.length === 0) {
+      showErrorToast(toast, "Please select at least one method to send the report");
+      return false;
+    }
+    
+    if (!recipient.name.trim()) {
+      showErrorToast(toast, "Please enter recipient name");
+      return false;
+    }
+    
+    if (!recipient.phone.trim()) {
+      showErrorToast(toast, "Please enter recipient phone number");
+      return false;
+    }
+    
+    if (!recipient.email.trim()) {
+      showErrorToast(toast, "Please enter recipient email");
+      return false;
+    }
+    
+    // Email validation using regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(recipient.email.trim())) {
+      showErrorToast(toast, "Please enter a valid email address");
+      return false;
+    }
+    
+    return true;
+  };
+
+  const resetForm = () => {
+    setRecipient({
+      name: '',
+      phone: '',
+      email: '',
+    });
+    
+    setReport({
+      title: '',
+      type: '',
+      content: '',
+      sendVia: [],
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!validateForm()) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    const loadingToastId = showLoadingToast(toast, "Submitting report...");
+    
     try {
-      // Here you would implement the actual sending logic
-      toast({
-        title: "Report Sent Successfully",
-        description: `Report has been sent to ${recipient.name} via ${report.sendVia.join(', ')}`,
-      });
+      // Prepare the data to be saved to Supabase
+      const reportData = {
+        title: report.title,
+        report_type: report.type,
+        content: report.content,
+        recipient_name: recipient.name,
+        recipient_phone: recipient.phone,
+        recipient_email: recipient.email,
+        send_via: report.sendVia,
+        location: 'Kazo' // Default location for Kazo Coffee Development Project
+      };
+      
+      // Insert data into Supabase
+      const { data, error } = await supabase
+        .from('kazo_coffee_reports')
+        .insert([reportData])
+        .select();
+      
+      if (error) {
+        console.error("Supabase error:", error);
+        throw new Error(error.message || "Error saving report");
+      }
+      
+      console.log("Report saved successfully:", data);
+      
+      // Dismiss loading toast
+      dismissToast(loadingToastId);
+      
+      // Show success message
+      showSuccessToast(toast, `Report "${report.title}" has been submitted successfully`);
+      
+      // Reset form after successful submission
+      resetForm();
+      
     } catch (error) {
-      toast({
-        title: "Error Sending Report",
-        description: "There was an error sending your report. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Error submitting report:", error);
+      
+      // Dismiss loading toast
+      dismissToast(loadingToastId);
+      
+      // Show error message
+      showErrorToast(toast, error.message || "There was an error sending your report. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -192,8 +301,12 @@ const MakeReports = ({ isKazo = false }) => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full">
-              Generate and Send Report
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : 'Generate and Send Report'}
             </Button>
           </form>
         </CardContent>

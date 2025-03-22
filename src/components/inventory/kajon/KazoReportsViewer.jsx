@@ -20,14 +20,16 @@ import CSVExportButton from "../dairy/logistics/records/components/export-button
 import ExcelExportButton from "../dairy/logistics/records/components/export-buttons/ExcelExportButton";
 import PDFExportButton from "../dairy/logistics/records/components/export-buttons/PDFExportButton";
 
-// Fetch functions would normally connect to real data
+// Import export utilities
 import { supabase } from '@/integrations/supabase/supabase';
 import { 
   exportToCSV, 
   exportToExcel, 
   exportToPDF 
 } from '@/utils/coffee/coffeeExport';
+import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
 
+// Fallback mock data (will be used if fetching from Supabase fails)
 const MOCK_REPORTS = [
   {
     id: '1',
@@ -97,46 +99,72 @@ const KazoReportsViewer = ({ onBack }) => {
   const fetchReports = async () => {
     setIsLoading(true);
     try {
-      // Try to fetch from maintenance_reports table first
+      // First, try to fetch from our new kazo_coffee_reports table
       let { data: reportData, error } = await supabase
-        .from('maintenance_reports')
+        .from('kazo_coffee_reports')
         .select('*')
         .order('created_at', { ascending: false });
 
-      // If no data is found or there's an error, try report_configurations
-      if (error || !reportData || reportData.length === 0) {
-        const { data: configData, error: configError } = await supabase
-          .from('report_configurations')
+      if (error) {
+        console.error("Error fetching from kazo_coffee_reports:", error);
+        throw error;
+      }
+
+      if (reportData && reportData.length > 0) {
+        // Process the data to ensure consistent structure
+        reportData = reportData.map(report => ({
+          id: report.id,
+          title: report.title,
+          report_type: report.report_type,
+          content: report.content,
+          recipient_name: report.recipient_name,
+          status: 'sent', // Default status for simplicity
+          created_at: report.created_at,
+          location: report.location || 'Kazo',
+          send_via: report.send_via
+        }));
+        
+        setReports(reportData);
+        console.log("Fetched reports from kazo_coffee_reports:", reportData);
+      } else {
+        // If no data in kazo_coffee_reports, try maintenance_reports as fallback
+        console.log("No data in kazo_coffee_reports table, trying maintenance_reports");
+        
+        const { data: maintenanceData, error: maintenanceError } = await supabase
+          .from('maintenance_reports')
           .select('*')
           .order('created_at', { ascending: false });
           
-        if (!configError && configData && configData.length > 0) {
-          reportData = configData.map(config => ({
-            id: config.id,
-            title: `${config.report_type} (${new Date(config.start_date).toLocaleDateString()} - ${new Date(config.end_date).toLocaleDateString()})`,
-            report_type: config.report_type,
-            created_at: config.created_at,
-            status: 'generated',
-            content: `Report covering period from ${new Date(config.start_date).toLocaleDateString()} to ${new Date(config.end_date).toLocaleDateString()}.`,
-            location: 'Kazo Project',
-            recipient_name: 'System Generated'
+        if (maintenanceError) {
+          console.error("Error fetching from maintenance_reports:", maintenanceError);
+          throw maintenanceError;
+        }
+        
+        if (maintenanceData && maintenanceData.length > 0) {
+          reportData = maintenanceData.map(report => ({
+            id: report.id,
+            title: report.title,
+            report_type: report.type,
+            content: report.content,
+            recipient_name: report.recipient_name,
+            status: 'sent',
+            created_at: report.created_at,
+            location: 'Kazo',
+            send_via: report.send_via
           }));
+          
+          setReports(reportData);
+          console.log("Fetched reports from maintenance_reports:", reportData);
         } else {
           // Fallback to mock data if no data is found in either table
-          console.log("Using mock reports data");
-          reportData = MOCK_REPORTS;
+          console.log("No data found in any table, using mock data");
+          setReports(MOCK_REPORTS);
         }
       }
-      
-      setReports(reportData);
     } catch (err) {
       console.error("Error fetching reports:", err);
       setReports(MOCK_REPORTS); // Fallback to mock data
-      toast({
-        title: "Error Loading Reports",
-        description: "Could not load report data. Using sample data instead.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Could not load report data. Using sample data instead.");
     } finally {
       setIsLoading(false);
     }
@@ -146,17 +174,10 @@ const KazoReportsViewer = ({ onBack }) => {
     try {
       const filteredData = getFilteredReports();
       exportToCSV(filteredData, 'kazo_coffee_reports');
-      toast({
-        title: "Export Successful",
-        description: "Reports exported to CSV successfully"
-      });
+      showSuccessToast(toast, "Reports exported to CSV successfully");
     } catch (error) {
       console.error("CSV export error:", error);
-      toast({
-        title: "Export Failed",
-        description: "Failed to export reports to CSV",
-        variant: "destructive"
-      });
+      showErrorToast(toast, "Failed to export reports to CSV");
     }
   };
 
@@ -164,17 +185,10 @@ const KazoReportsViewer = ({ onBack }) => {
     try {
       const filteredData = getFilteredReports();
       exportToExcel(filteredData, 'kazo_coffee_reports');
-      toast({
-        title: "Export Successful",
-        description: "Reports exported to Excel successfully"
-      });
+      showSuccessToast(toast, "Reports exported to Excel successfully");
     } catch (error) {
       console.error("Excel export error:", error);
-      toast({
-        title: "Export Failed",
-        description: "Failed to export reports to Excel",
-        variant: "destructive"
-      });
+      showErrorToast(toast, "Failed to export reports to Excel");
     }
   };
 
@@ -182,26 +196,16 @@ const KazoReportsViewer = ({ onBack }) => {
     try {
       const filteredData = getFilteredReports();
       exportToPDF(filteredData, 'kazo_coffee_reports', 'Kazo Coffee Development Project Reports');
-      toast({
-        title: "Export Successful",
-        description: "Reports exported to PDF successfully"
-      });
+      showSuccessToast(toast, "Reports exported to PDF successfully");
     } catch (error) {
       console.error("PDF export error:", error);
-      toast({
-        title: "Export Failed",
-        description: "Failed to export reports to PDF",
-        variant: "destructive"
-      });
+      showErrorToast(toast, "Failed to export reports to PDF");
     }
   };
 
   const handleRefresh = () => {
     fetchReports();
-    toast({
-      title: "Data Refreshed",
-      description: "Report data has been refreshed"
-    });
+    showSuccessToast(toast, "Report data has been refreshed");
   };
 
   const handleSort = (key) => {

@@ -1,110 +1,145 @@
 
-/**
- * Utilities for exporting coffee sales data to different formats
- */
-import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
-/**
- * Export data to CSV format
- * @param {Array} data - The data to export
- * @param {string} filename - The filename without extension
- */
-export const exportToCSV = (data, filename) => {
-  // Format data for CSV
-  const formattedData = formatDataForExport(data);
-  
-  // Create workbook and worksheet
-  const ws = XLSX.utils.json_to_sheet(formattedData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Coffee Sales');
-  
-  // Export to CSV
-  XLSX.writeFile(wb, `${filename}.csv`);
+// Helper to format date objects to readable strings
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
 };
 
-/**
- * Export data to Excel format
- * @param {Array} data - The data to export
- * @param {string} filename - The filename without extension
- */
-export const exportToExcel = (data, filename) => {
-  // Format data for Excel
-  const formattedData = formatDataForExport(data);
-  
-  // Create workbook and worksheet
-  const ws = XLSX.utils.json_to_sheet(formattedData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Coffee Sales');
-  
-  // Export to Excel
-  XLSX.writeFile(wb, `${filename}.xlsx`);
+// Export data to CSV file
+export const exportToCSV = (data, filename = 'export') => {
+  if (!data || data.length === 0) {
+    console.error('No data to export');
+    return;
+  }
+
+  // Convert data to CSV format
+  const header = Object.keys(data[0]);
+  const csvRows = [
+    header.join(','), // Header row
+    ...data.map(row => 
+      header.map(fieldName => {
+        let field = row[fieldName];
+        
+        // Format date fields
+        if (fieldName === 'created_at' && field) {
+          field = formatDate(field);
+        }
+        
+        // Handle arrays (like send_via)
+        if (Array.isArray(field)) {
+          field = field.join('; ');
+        }
+        
+        // Escape commas and quotes
+        if (typeof field === 'string') {
+          field = field.replace(/"/g, '""');
+          if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+            field = `"${field}"`;
+          }
+        }
+        
+        return field || '';
+      }).join(',')
+    )
+  ].join('\n');
+
+  // Create and trigger download
+  const blob = new Blob([csvRows], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${filename}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 
-/**
- * Export data to PDF format
- * @param {Array} data - The data to export
- * @param {string} filename - The filename without extension
- * @param {string} title - The title for the PDF document
- */
-export const exportToPDF = (data, filename, title) => {
-  // Create PDF document
+// Export data to Excel file
+export const exportToExcel = (data, filename = 'export') => {
+  if (!data || data.length === 0) {
+    console.error('No data to export');
+    return;
+  }
+
+  // Process data for Excel formatting
+  const processedData = data.map(item => {
+    // Create a new object with the same properties
+    const processedItem = { ...item };
+    
+    // Format date fields
+    if (processedItem.created_at) {
+      processedItem.created_at = formatDate(processedItem.created_at);
+    }
+    
+    // Format array fields
+    if (Array.isArray(processedItem.send_via)) {
+      processedItem.send_via = processedItem.send_via.join(', ');
+    }
+    
+    return processedItem;
+  });
+
+  // Create workbook and worksheet
+  const worksheet = XLSX.utils.json_to_sheet(processedData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Reports');
+  
+  // Trigger download
+  XLSX.writeFile(workbook, `${filename}.xlsx`);
+};
+
+// Export data to PDF file
+export const exportToPDF = (data, filename = 'export', title = 'Report') => {
+  if (!data || data.length === 0) {
+    console.error('No data to export');
+    return;
+  }
+
+  // Initialize PDF document
   const doc = new jsPDF();
   
   // Add title
-  doc.setFontSize(18);
-  doc.text(title, 14, 22);
-  doc.setFontSize(11);
-  doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+  doc.setFontSize(16);
+  doc.text(title, 14, 15);
+  doc.setFontSize(10);
+  doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 22);
   
-  // Format data for the table
-  const formattedData = formatDataForExport(data);
+  // Format data for PDF table
+  const rows = data.map(item => {
+    return [
+      item.title || '',
+      item.report_type || '',
+      item.recipient_name || '',
+      item.created_at ? formatDate(item.created_at) : '',
+      Array.isArray(item.send_via) ? item.send_via.join(', ') : item.send_via || '',
+      item.location || ''
+    ];
+  });
   
-  // Get table headers
-  const headers = Object.keys(formattedData[0]);
-  
-  // Prepare table rows
-  const rows = formattedData.map(record => Object.values(record));
-  
-  // Create table
+  // Create the table
   doc.autoTable({
-    head: [headers],
+    startY: 30,
+    head: [['Title', 'Report Type', 'Recipient', 'Date Created', 'Send Via', 'Location']],
     body: rows,
-    startY: 40,
-    theme: 'grid',
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [51, 51, 51], textColor: 255 },
+    headStyles: {
+      fillColor: [41, 128, 185],
+      textColor: 255,
+      fontStyle: 'bold'
+    },
+    alternateRowStyles: {
+      fillColor: [240, 240, 240]
+    },
     margin: { top: 30 }
   });
   
-  // Save PDF
+  // Save the PDF
   doc.save(`${filename}.pdf`);
-};
-
-/**
- * Format data for export to make it more readable
- * @param {Array} data - The raw data to format
- * @returns {Array} - Formatted data
- */
-const formatDataForExport = (data) => {
-  return data.map(record => {
-    // Get date in readable format
-    const date = new Date(record.created_at).toLocaleString();
-    
-    // Format the data
-    return {
-      'Date': date,
-      'Buyer Name': record.buyer_name,
-      'Buyer Contact': record.buyer_contact,
-      'Coffee Type': record.coffee_type,
-      'Quality Grade': record.quality_grade,
-      'Location': record.location,
-      'Manager': record.manager,
-      'Quantity': `${record.quantity} ${record.unit}`,
-      'Selling Price': `${record.selling_price} ${record.currency}`,
-      'Total Amount': `${record.total_price} ${record.currency}`,
-      'Status': record.status
-    };
-  });
 };
