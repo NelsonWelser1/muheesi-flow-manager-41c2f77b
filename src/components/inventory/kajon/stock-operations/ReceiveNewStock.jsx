@@ -9,7 +9,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAddKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
 import AuthenticationForm from '../AuthenticationForm';
 import CoffeeInventoryRecords from './records/CoffeeInventoryRecords';
-import { ClipboardList } from 'lucide-react';
+import { ClipboardList, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const COFFEE_GRADES = {
   arabica: [
@@ -61,6 +62,7 @@ const ReceiveNewStock = ({ isKazo }) => {
   const [managerName, setManagerName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [viewRecords, setViewRecords] = useState(false);
+  const [formError, setFormError] = useState('');
   const { toast } = useToast();
   const addCoffeeMutation = useAddKAJONCoffee();
 
@@ -77,29 +79,38 @@ const ReceiveNewStock = ({ isKazo }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setFormError('');
     
     try {
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
       
-      // Format data correctly for Supabase
+      // Format data correctly for Supabase based on the migration schema
       const formattedData = {
         manager: managerName,
         location: selectedLocation,
         coffeeType: data.coffeeType,
         qualityGrade: data.qualityGrade,
         source: data.source,
-        humidity: Number(data.humidity),
-        buying_price: Number(data.buyingPrice),
+        humidity: parseFloat(data.humidity),
+        buying_price: parseFloat(data.buyingPrice),
         currency: data.currency,
-        quantity: Number(data.quantity),
+        quantity: parseFloat(data.quantity),
         unit: data.unit,
-        notes: data.notes,
+        notes: data.notes || null,
         status: 'active'
       };
       
       // Log the formatted data before submission
       console.log("Form data being submitted:", formattedData);
+      
+      // Validate required fields
+      if (!formattedData.coffeeType) throw new Error("Coffee type is required");
+      if (!formattedData.qualityGrade) throw new Error("Quality grade is required");
+      if (!formattedData.source) throw new Error("Source is required");
+      if (isNaN(formattedData.humidity)) throw new Error("Humidity must be a valid number");
+      if (isNaN(formattedData.buying_price)) throw new Error("Buying price must be a valid number");
+      if (isNaN(formattedData.quantity)) throw new Error("Quantity must be a valid number");
       
       // Submit to Supabase
       await addCoffeeMutation.mutateAsync(formattedData);
@@ -115,6 +126,7 @@ const ReceiveNewStock = ({ isKazo }) => {
       
     } catch (error) {
       console.error("Error submitting form:", error);
+      setFormError(error.message || "Failed to receive coffee stock");
       toast({
         title: "Error",
         description: error.message || "Failed to receive coffee stock",
@@ -125,31 +137,31 @@ const ReceiveNewStock = ({ isKazo }) => {
     }
   };
 
-  // Safely render the records component
-  const renderRecords = () => {
+  const handleViewRecords = () => {
+    setViewRecords(true);
+  };
+
+  if (viewRecords) {
     try {
       return <CoffeeInventoryRecords onBack={() => setViewRecords(false)} isKazo={isKazo} />;
     } catch (error) {
       console.error("Error rendering CoffeeInventoryRecords:", error);
       return (
-        <div className="p-6 border rounded-md">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-medium">Records View Error</h3>
-            <Button onClick={() => setViewRecords(false)} variant="outline" size="sm">
-              Back
-            </Button>
-          </div>
-          <p className="text-red-500">There was an error loading the records. Please try again later.</p>
-          <pre className="mt-4 p-4 bg-gray-100 rounded text-xs overflow-auto">
-            {error.message}
-          </pre>
+        <div className="space-y-4">
+          <Button onClick={() => setViewRecords(false)} variant="outline" size="sm">
+            Back
+          </Button>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              There was a problem loading the records. Please try again later.
+              {error.message && <div className="mt-2 text-xs">{error.message}</div>}
+            </AlertDescription>
+          </Alert>
         </div>
       );
     }
-  };
-
-  if (viewRecords) {
-    return renderRecords();
   }
 
   if (!selectedLocation) {
@@ -190,7 +202,7 @@ const ReceiveNewStock = ({ isKazo }) => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Receive New Coffee Stock</h2>
         <Button 
-          onClick={() => setViewRecords(true)}
+          onClick={handleViewRecords}
           variant="outline"
           size="sm"
           className="flex items-center gap-2"
@@ -199,6 +211,14 @@ const ReceiveNewStock = ({ isKazo }) => {
           View Records
         </Button>
       </div>
+      
+      {formError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{formError}</AlertDescription>
+        </Alert>
+      )}
     
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
