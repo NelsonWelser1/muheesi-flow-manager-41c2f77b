@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useDairyReportData } from './hooks/useDairyReportData';
-import ReportFormDialog from './ReportFormDialog';
 
 // Import refactored components
 import ReportsHeader from './components/ReportsHeader';
@@ -14,7 +13,6 @@ import { LoadingState, ErrorState } from './components/LoadingAndErrorStates';
 
 const ReportsDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [isReportFormOpen, setIsReportFormOpen] = useState(false);
   
   const { 
     productionData, 
@@ -25,11 +23,6 @@ const ReportsDashboard = () => {
     error,
     refreshData
   } = useDairyReportData();
-  
-  const handleReportSubmitted = () => {
-    refreshData();
-    setIsReportFormOpen(false);
-  };
 
   if (isLoading) {
     return <LoadingState />;
@@ -47,7 +40,7 @@ const ReportsDashboard = () => {
 
   return (
     <div className="space-y-6 bg-gray-50 p-4 rounded-lg">
-      <ReportsHeader onOpenReportForm={() => setIsReportFormOpen(true)} />
+      <ReportsHeader />
       
       <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
         <div className="w-full">
@@ -65,8 +58,7 @@ const ReportsDashboard = () => {
           
           <TabsContent value="production" className="space-y-6 mt-0">
             <ProductionContent 
-              productionData={productionData} 
-              onOpenReportForm={() => setIsReportFormOpen(true)}
+              productionData={productionData}
             />
           </TabsContent>
           
@@ -74,17 +66,10 @@ const ReportsDashboard = () => {
             <QualityContent 
               qualityMetrics={qualityMetrics}
               productionData={productionData}
-              onOpenReportForm={() => setIsReportFormOpen(true)}
             />
           </TabsContent>
         </div>
       </Tabs>
-      
-      <ReportFormDialog 
-        open={isReportFormOpen} 
-        onOpenChange={setIsReportFormOpen}
-        onReportSubmitted={handleReportSubmitted}
-      />
     </div>
   );
 };
