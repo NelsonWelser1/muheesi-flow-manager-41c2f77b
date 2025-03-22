@@ -1,9 +1,12 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
+import FarmRecordsViewer from './FarmRecordsViewer';
 
 const FarmDetails = ({ isKazo, selectedFarm }) => {
   const [formData, setFormData] = useState({
@@ -18,6 +21,7 @@ const FarmDetails = ({ isKazo, selectedFarm }) => {
     quarterlyProduction: '',
     annualProduction: '',
   });
+  const [showRecordsViewer, setShowRecordsViewer] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -27,10 +31,26 @@ const FarmDetails = ({ isKazo, selectedFarm }) => {
     }));
   };
 
+  if (showRecordsViewer) {
+    return <FarmRecordsViewer onBack={() => setShowRecordsViewer(false)} isKazo={isKazo} />;
+  }
+
   return (
     <div className="space-y-6">
       <Card>
         <CardContent className="pt-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold">Farm Information</h2>
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={() => setShowRecordsViewer(true)}
+            >
+              <FileText className="h-4 w-4" />
+              View Records
+            </Button>
+          </div>
+          
           <form className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
