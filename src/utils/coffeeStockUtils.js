@@ -1,4 +1,7 @@
 import { supabase } from '@/integrations/supabase/supabase';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 /**
  * Fetch coffee stock data with optional filters
@@ -224,15 +227,6 @@ export const exportToExcel = (data, filename = 'coffee-stock-export') => {
   }
 
   try {
-    // For Excel export, we need to use the xlsx library
-    // We'll create a worksheet from our data
-    const XLSX = window.XLSX;
-    
-    if (!XLSX) {
-      console.error('XLSX library not found. Make sure it is properly imported.');
-      return;
-    }
-    
     // Convert data to worksheet
     const worksheet = XLSX.utils.json_to_sheet(data);
     
@@ -262,14 +256,6 @@ export const exportToPDF = (data, filename = 'coffee-stock-export') => {
   }
 
   try {
-    // For PDF export, we need to use the jsPDF library
-    const { jsPDF } = window.jspdf;
-    
-    if (!jsPDF) {
-      console.error('jsPDF library not found. Make sure it is properly imported.');
-      return;
-    }
-    
     // Create a new PDF document
     const doc = new jsPDF();
     

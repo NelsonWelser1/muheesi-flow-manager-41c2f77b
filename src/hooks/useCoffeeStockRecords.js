@@ -1,6 +1,5 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { showErrorToast } from '@/components/ui/notifications';
 import { fetchCoffeeStock } from '@/utils/coffeeStockUtils';
@@ -21,6 +20,8 @@ export const useCoffeeStockRecords = () => {
     try {
       // Calculate the timeAgo date if timeRange is specified
       let startDate = null;
+      let endDate = new Date(); // Use current date as end date
+      
       if (timeRange !== 'all') {
         const now = new Date();
         switch (timeRange) {
@@ -47,6 +48,7 @@ export const useCoffeeStockRecords = () => {
       const data = await fetchCoffeeStock({
         statusFilter: statusFilter !== 'all' ? statusFilter : null,
         startDate,
+        endDate,
         sortField: sortConfig.field,
         ascending: sortConfig.ascending
       });

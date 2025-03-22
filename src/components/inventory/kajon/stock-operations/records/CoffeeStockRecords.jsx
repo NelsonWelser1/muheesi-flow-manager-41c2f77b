@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +52,7 @@ const CoffeeStockRecords = ({ onBack }) => {
     return `${currency} ${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  // Handle export buttons
+  // Handle export buttons - use the filtered records for export
   const handleExportToPDF = () => {
     exportToPDF(records, 'coffee-stock-records');
   };
