@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, FileText } from "lucide-react";
+import PlantingHarvestingScheduleViewer from './PlantingHarvestingScheduleViewer';
 
 const FarmOperations = ({ isKazo, selectedFarm }) => {
   const [date, setDate] = useState(new Date());
@@ -14,13 +16,29 @@ const FarmOperations = ({ isKazo, selectedFarm }) => {
     planting: null,
     harvesting: null,
   });
+  const [showScheduleRecords, setShowScheduleRecords] = useState(false);
+
+  if (showScheduleRecords) {
+    return <PlantingHarvestingScheduleViewer onBack={() => setShowScheduleRecords(false)} isKazo={isKazo} />;
+  }
 
   return (
     <div className="space-y-6">
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Planting & Harvesting Schedule</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Planting & Harvesting Schedule</h3>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => setShowScheduleRecords(true)}
+              >
+                <FileText className="h-4 w-4" />
+                View Records
+              </Button>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
