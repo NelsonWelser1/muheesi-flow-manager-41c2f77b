@@ -5,12 +5,11 @@ import FarmDetails from './farms/FarmDetails';
 import FarmOperations from './farms/FarmOperations';
 import FarmAnalytics from './farms/FarmAnalytics';
 import ImageAnalysis from './farms/ImageAnalysis';
-
-const ManageFarms = ({ isKazo = false }) => {
+const ManageFarms = ({
+  isKazo = false
+}) => {
   const [selectedFarm, setSelectedFarm] = useState(null);
-
-  return (
-    <Card className="w-full">
+  return <Card className="w-full">
       <CardHeader>
         <CardTitle>
           {isKazo ? "Kazo Coffee Development Project Farms" : "KAJON Coffee Limited Farms"}
@@ -22,7 +21,7 @@ const ManageFarms = ({ isKazo = false }) => {
             <TabsTrigger value="details">Farm Details</TabsTrigger>
             <TabsTrigger value="operations">Operations</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="image-analysis">Image Analysis</TabsTrigger>
+            
           </TabsList>
 
           <TabsContent value="details">
@@ -42,8 +41,6 @@ const ManageFarms = ({ isKazo = false }) => {
           </TabsContent>
         </Tabs>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default ManageFarms;
