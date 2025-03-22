@@ -1,32 +1,56 @@
 
-// Re-export all coffee hooks from their respective files
-import { fromSupabase, refreshCoffeeInventorySchema } from '../utils/supabaseUtils';
-import { 
-    useKAJONCoffee as useKAJONCoffeeQuery,
-    useKAJONCoffees,
-    useCoffeeInventory,
-    useCoffeeSalesRecords,
-    useGetInventoryByLocation
-} from './coffee/useCoffeeQueries';
+// This file now serves as a placeholder for backward compatibility
+// All coffee inventory functionality has been removed
 
-import {
-    useAddKAJONCoffee,
-    useUpdateKAJONCoffee,
-    useDeleteKAJONCoffee
-} from './coffee/useCoffeeMutations';
+console.warn('Coffee inventory functionality has been removed');
 
-// For backward compatibility, we'll re-export everything
-export {
-    fromSupabase,
-    useKAJONCoffeeQuery as useKAJONCoffee,
-    useKAJONCoffees,
-    useCoffeeInventory,
-    useCoffeeSalesRecords,
-    useAddKAJONCoffee,
-    useUpdateKAJONCoffee,
-    useDeleteKAJONCoffee,
-    useGetInventoryByLocation
+// Export empty functions for backward compatibility
+export const fromSupabase = async () => {
+  console.warn('Coffee inventory functionality has been removed');
+  return [];
 };
 
-// Ensure the schema is refreshed when this module is loaded
-refreshCoffeeInventorySchema();
+export const useKAJONCoffee = () => {
+  console.warn('Coffee inventory functionality has been removed');
+  return { data: null, isLoading: false, error: null };
+};
+
+export const useKAJONCoffees = () => {
+  console.warn('Coffee inventory functionality has been removed');
+  return { data: [], isLoading: false, error: null };
+};
+
+export const useCoffeeInventory = () => {
+  console.warn('Coffee inventory functionality has been removed');
+  return { data: [], isLoading: false, error: null };
+};
+
+export const useCoffeeSalesRecords = () => {
+  console.warn('Coffee inventory functionality has been removed');
+  return { data: [], isLoading: false, error: null };
+};
+
+export const useGetInventoryByLocation = () => {
+  console.warn('Coffee inventory functionality has been removed');
+  return { data: [], isLoading: false, error: null };
+};
+
+export const useAddKAJONCoffee = () => {
+  console.warn('Coffee inventory functionality has been removed');
+  return { mutateAsync: async () => {}, isLoading: false, error: null };
+};
+
+export const useUpdateKAJONCoffee = () => {
+  console.warn('Coffee inventory functionality has been removed');
+  return { mutateAsync: async () => {}, isLoading: false, error: null };
+};
+
+export const useDeleteKAJONCoffee = () => {
+  console.warn('Coffee inventory functionality has been removed');
+  return { mutateAsync: async () => {}, isLoading: false, error: null };
+};
+
+// No schema refresh needed anymore
+export const refreshCoffeeInventorySchema = () => {
+  console.warn('Coffee inventory functionality has been removed');
+};

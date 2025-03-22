@@ -6,12 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from '@/integrations/supabase/supabase';
 import AuthenticationForm from '../AuthenticationForm';
-import CoffeeInventoryRecords from './records/CoffeeInventoryRecords';
 import { ClipboardList, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useAddKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
 
 const COFFEE_GRADES = {
   arabica: [
@@ -65,7 +62,6 @@ const ReceiveNewStock = ({ isKazo }) => {
   const [viewRecords, setViewRecords] = useState(false);
   const [formError, setFormError] = useState('');
   const { toast } = useToast();
-  const addCoffeeStock = useAddKAJONCoffee();
 
   const handleAuthentication = (name, location) => {
     setManagerName(name);
@@ -83,41 +79,12 @@ const ReceiveNewStock = ({ isKazo }) => {
     setFormError('');
     
     try {
-      const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData.entries());
-      
-      // Validate all required fields
-      const requiredFields = ['coffeeType', 'qualityGrade', 'source', 'humidity', 'buyingPrice', 'quantity'];
-      for (const field of requiredFields) {
-        if (!data[field]) {
-          throw new Error(`${field.replace(/([A-Z])/g, ' $1').trim()} is required`);
-        }
-      }
-      
-      // Prepare data for submission
-      const stockData = {
-        manager: managerName,
-        location: selectedLocation,
-        coffeeType: data.coffeeType,
-        qualityGrade: data.qualityGrade,
-        source: data.source,
-        humidity: parseFloat(data.humidity),
-        buying_price: parseFloat(data.buyingPrice),
-        currency: data.currency || 'UGX',
-        quantity: parseFloat(data.quantity),
-        unit: data.unit || 'kg',
-        notes: data.notes || null,
-        status: 'active'
-      };
-      
-      console.log("Sending data to Supabase:", stockData);
-      
-      // Use the mutation hook to add the coffee stock
-      await addCoffeeStock.mutateAsync(stockData);
+      // Simulate processing
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
-        title: "Success",
-        description: "Coffee stock received successfully",
+        title: "Note",
+        description: "Backend functionality for coffee inventory has been removed.",
       });
       
       // Reset form
@@ -125,12 +92,11 @@ const ReceiveNewStock = ({ isKazo }) => {
       setSelectedCoffeeType('');
       
     } catch (error) {
-      console.error("Error submitting form:", error);
-      setFormError(error.message);
+      console.error("Error:", error);
+      setFormError("Backend functionality has been removed");
       toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
+        title: "Note",
+        description: "Backend functionality for coffee inventory has been removed.",
       });
     } finally {
       setIsSubmitting(false);
@@ -139,14 +105,31 @@ const ReceiveNewStock = ({ isKazo }) => {
 
   const handleViewRecords = () => {
     setViewRecords(true);
+    toast({
+      title: "Note",
+      description: "Records functionality has been removed.",
+    });
   };
 
   if (viewRecords) {
-    return <CoffeeInventoryRecords 
-      onBack={() => setViewRecords(false)} 
-      isKazo={isKazo} 
-      location={selectedLocation}
-    />;
+    return (
+      <div className="p-6 text-center">
+        <h2 className="text-xl font-semibold mb-4">Coffee Inventory Records</h2>
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Information</AlertTitle>
+          <AlertDescription>
+            The coffee inventory records functionality has been removed.
+          </AlertDescription>
+        </Alert>
+        <Button 
+          onClick={() => setViewRecords(false)} 
+          className="mt-4"
+        >
+          Back to Form
+        </Button>
+      </div>
+    );
   }
 
   if (!selectedLocation) {
@@ -196,6 +179,14 @@ const ReceiveNewStock = ({ isKazo }) => {
           View Records
         </Button>
       </div>
+      
+      <Alert className="mb-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Information</AlertTitle>
+        <AlertDescription>
+          Backend functionality for this form has been removed. The form is for UI demonstration only.
+        </AlertDescription>
+      </Alert>
       
       {formError && (
         <Alert variant="destructive" className="mb-4">
@@ -326,7 +317,7 @@ const ReceiveNewStock = ({ isKazo }) => {
         </div>
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Receive Coffee Stock"}
+          {isSubmitting ? "Processing..." : "Receive Coffee Stock (Demo Only)"}
         </Button>
       </form>
     </div>

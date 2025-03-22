@@ -1,4 +1,3 @@
-
 import { supabase } from '../supabase';
 
 /**
@@ -20,14 +19,4 @@ export const fromSupabase = async (query) => {
     }
 };
 
-/**
- * Force schema refresh on module load
- */
-export const refreshCoffeeInventorySchema = () => {
-    supabase.from('coffee_inventory').select('coffeeType').limit(1)
-        .then(() => console.log("Successfully refreshed coffee_inventory schema"))
-        .catch(err => console.error("Error refreshing schema:", err));
-};
-
-// Execute schema refresh
-refreshCoffeeInventorySchema();
+// Coffee inventory schema refresh removed
