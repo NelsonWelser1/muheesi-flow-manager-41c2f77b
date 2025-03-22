@@ -66,7 +66,8 @@ export const useAddKAJONCoffee = () => {
             
             // Convert numeric fields
             if (newCoffee.quantity) newCoffee.quantity = Number(newCoffee.quantity);
-            if (newCoffee.buying_price) newCoffee.buying_price = Number(newCoffee.buyingPrice || newCoffee.buying_price);
+            if (newCoffee.buying_price) newCoffee.buying_price = Number(newCoffee.buying_price);
+            if (newCoffee.buyingPrice) newCoffee.buying_price = Number(newCoffee.buyingPrice);
             if (newCoffee.humidity) newCoffee.humidity = Number(newCoffee.humidity);
             
             // Map buyingPrice to buying_price if needed
@@ -99,7 +100,8 @@ export const useUpdateKAJONCoffee = () => {
             
             // Convert numeric fields
             if (updateData.quantity) updateData.quantity = Number(updateData.quantity);
-            if (updateData.buying_price) updateData.buying_price = Number(updateData.buyingPrice || updateData.buying_price);
+            if (updateData.buying_price) updateData.buying_price = Number(updateData.buying_price);
+            if (updateData.buyingPrice) updateData.buying_price = Number(updateData.buyingPrice);
             if (updateData.humidity) updateData.humidity = Number(updateData.humidity);
             
             // Map buyingPrice to buying_price if needed

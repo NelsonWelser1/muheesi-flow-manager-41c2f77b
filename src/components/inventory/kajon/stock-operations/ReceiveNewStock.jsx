@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useAddKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
 import AuthenticationForm from '../AuthenticationForm';
-import CoffeeInventoryRecords from '../stock-operations/records/CoffeeInventoryRecords';
+import CoffeeInventoryRecords from './records/CoffeeInventoryRecords';
 import { ListFilter } from 'lucide-react';
 
 const COFFEE_GRADES = {
