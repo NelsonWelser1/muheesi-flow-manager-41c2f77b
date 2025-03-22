@@ -8,6 +8,7 @@ import { Warehouse } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAddKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
 import AuthenticationForm from './AuthenticationForm';
+import StoreSelector from './StoreSelector';
 
 const COFFEE_GRADES = {
   arabica: [
@@ -26,19 +27,6 @@ const COFFEE_GRADES = {
     'Robusta Coffee: Organic Robusta'
   ]
 };
-
-const STORE_LOCATIONS = [
-  "Kanoni-Mbogo",
-  "Engari-Kaichumu",
-  "Engari-Kyengando",
-  "Migina",
-  "Kyampangara",
-  "Nkungu",
-  "Buremba",
-  "Kazo Town council",
-  "Burunga",
-  "Rwemikoma"
-];
 
 const StoreManagement = ({ selectedStore }) => {
   const { toast } = useToast();
@@ -67,21 +55,7 @@ const StoreManagement = ({ selectedStore }) => {
   };
 
   if (!selectedLocation) {
-    return (
-      <div className="space-y-4">
-        <Label>Select Store Location</Label>
-        <Select onValueChange={handleLocationSelect}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select location" />
-          </SelectTrigger>
-          <SelectContent>
-            {STORE_LOCATIONS.map(location => (
-              <SelectItem key={location} value={location}>{location}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    );
+    return <StoreSelector onLocationSelect={handleLocationSelect} />;
   }
 
   if (!isAuthenticated) {
