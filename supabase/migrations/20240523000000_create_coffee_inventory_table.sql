@@ -1,4 +1,7 @@
 
+-- Enable UUID extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Create coffee_inventory table
 CREATE TABLE IF NOT EXISTS coffee_inventory (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -8,7 +11,7 @@ CREATE TABLE IF NOT EXISTS coffee_inventory (
     qualityGrade TEXT NOT NULL,
     source TEXT NOT NULL,
     humidity DECIMAL(5,2) NOT NULL CHECK (humidity >= 0 AND humidity <= 100),
-    buyingPrice DECIMAL(12,2) NOT NULL CHECK (buyingPrice > 0),
+    buying_price DECIMAL(12,2) NOT NULL CHECK (buying_price > 0),
     currency TEXT NOT NULL DEFAULT 'UGX',
     quantity DECIMAL(12,2) NOT NULL CHECK (quantity > 0),
     unit TEXT NOT NULL DEFAULT 'kg',

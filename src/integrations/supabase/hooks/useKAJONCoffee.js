@@ -57,7 +57,7 @@ export const useAddKAJONCoffee = () => {
             console.log("Submitting new coffee inventory:", newCoffee);
             
             // Validate required fields
-            const requiredFields = ['manager', 'location', 'coffeeType', 'qualityGrade', 'source', 'quantity', 'buyingPrice'];
+            const requiredFields = ['manager', 'location', 'coffeeType', 'qualityGrade', 'source', 'quantity', 'buying_price'];
             for (const field of requiredFields) {
                 if (!newCoffee[field]) {
                     throw new Error(`${field} is required`);
@@ -66,8 +66,14 @@ export const useAddKAJONCoffee = () => {
             
             // Convert numeric fields
             if (newCoffee.quantity) newCoffee.quantity = Number(newCoffee.quantity);
-            if (newCoffee.buyingPrice) newCoffee.buyingPrice = Number(newCoffee.buyingPrice);
+            if (newCoffee.buying_price) newCoffee.buying_price = Number(newCoffee.buyingPrice || newCoffee.buying_price);
             if (newCoffee.humidity) newCoffee.humidity = Number(newCoffee.humidity);
+            
+            // Map buyingPrice to buying_price if needed
+            if (newCoffee.buyingPrice && !newCoffee.buying_price) {
+                newCoffee.buying_price = Number(newCoffee.buyingPrice);
+                delete newCoffee.buyingPrice;
+            }
             
             const { data, error } = await supabase.from('coffee_inventory').insert([{
                 ...newCoffee,
@@ -93,8 +99,14 @@ export const useUpdateKAJONCoffee = () => {
             
             // Convert numeric fields
             if (updateData.quantity) updateData.quantity = Number(updateData.quantity);
-            if (updateData.buyingPrice) updateData.buyingPrice = Number(updateData.buyingPrice);
+            if (updateData.buying_price) updateData.buying_price = Number(updateData.buyingPrice || updateData.buying_price);
             if (updateData.humidity) updateData.humidity = Number(updateData.humidity);
+            
+            // Map buyingPrice to buying_price if needed
+            if (updateData.buyingPrice && !updateData.buying_price) {
+                updateData.buying_price = Number(updateData.buyingPrice);
+                delete updateData.buyingPrice;
+            }
             
             updateData.updated_at = new Date().toISOString();
             
