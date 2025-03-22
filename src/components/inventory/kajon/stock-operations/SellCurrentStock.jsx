@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -60,8 +59,20 @@ const SellCurrentStock = ({ isKazo }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [managerName, setManagerName] = useState('');
   const [viewRecords, setViewRecords] = useState(false);
+  const [sellingPrice, setSellingPrice] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [totalSellingPrice, setTotalSellingPrice] = useState('');
   const { toast } = useToast();
   const updateCoffeeMutation = useUpdateKAJONCoffee();
+
+  useEffect(() => {
+    if (sellingPrice && quantity) {
+      const calculatedTotal = parseFloat(sellingPrice) * parseFloat(quantity);
+      setTotalSellingPrice(calculatedTotal.toFixed(2));
+    } else {
+      setTotalSellingPrice('');
+    }
+  }, [sellingPrice, quantity]);
 
   const handleAuthentication = (name, location) => {
     setManagerName(name);
@@ -78,7 +89,8 @@ const SellCurrentStock = ({ isKazo }) => {
         ...data,
         manager: managerName,
         location: selectedLocation,
-        type: 'sale'
+        type: 'sale',
+        totalPrice: totalSellingPrice
       });
 
       toast({
@@ -206,7 +218,14 @@ const SellCurrentStock = ({ isKazo }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Selling Price</Label>
-              <Input name="sellingPrice" type="number" placeholder="Enter price" required />
+              <Input 
+                name="sellingPrice" 
+                type="number" 
+                placeholder="Enter price" 
+                required 
+                value={sellingPrice}
+                onChange={(e) => setSellingPrice(e.target.value)}
+              />
             </div>
             <div>
               <Label>Currency</Label>
@@ -225,7 +244,14 @@ const SellCurrentStock = ({ isKazo }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Quantity</Label>
-              <Input name="quantity" type="number" placeholder="Enter quantity" required />
+              <Input 
+                name="quantity" 
+                type="number" 
+                placeholder="Enter quantity" 
+                required 
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+              />
             </div>
             <div>
               <Label>Unit</Label>
@@ -240,6 +266,16 @@ const SellCurrentStock = ({ isKazo }) => {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div>
+            <Label>Total Selling Price</Label>
+            <Input 
+              name="totalSellingPrice"
+              value={totalSellingPrice ? `${totalSellingPrice}` : '-'}
+              readOnly
+              className="bg-gray-50"
+            />
           </div>
         </div>
 
