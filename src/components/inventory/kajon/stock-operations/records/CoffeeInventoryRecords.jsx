@@ -1,101 +1,59 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { 
   Search, 
   RefreshCw, 
   ArrowUpDown, 
-  Filter,
-  CalendarDays
+  CalendarDays 
 } from 'lucide-react';
-import { useSupabaseAuth } from '@/integrations/supabase';
-import { supabase } from '@/integrations/supabase/supabase';
-import { fromSupabase } from '@/integrations/supabase/utils/supabaseUtils';
-import CSVExportButton from '@/components/inventory/dairy/logistics/records/components/export-buttons/CSVExportButton';
-import PDFExportButton from '@/components/inventory/dairy/logistics/records/components/export-buttons/PDFExportButton';
-import ExcelExportButton from '@/components/inventory/dairy/logistics/records/components/export-buttons/ExcelExportButton';
-import { exportToCSV, exportToExcel, exportToPDF } from '@/components/inventory/dairy/logistics/records/utils/exportUtils';
 import { format } from 'date-fns';
+import { useCoffeeStockRecords } from '@/hooks/useCoffeeStockRecords';
+import { exportToPDF, exportToCSV, exportToExcel } from '@/utils/coffeeStockUtils';
 
-const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
-  const [coffeeRecords, setCoffeeRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+// Create simple export button components instead of importing them
+const PDFExportButton = ({ onClick, disabled }) => (
+  <Button variant="outline" size="sm" onClick={onClick} disabled={disabled}>
+    Export PDF
+  </Button>
+);
+
+const ExcelExportButton = ({ onClick, disabled }) => (
+  <Button variant="outline" size="sm" onClick={onClick} disabled={disabled}>
+    Export Excel
+  </Button>
+);
+
+const CSVExportButton = ({ onClick, disabled }) => (
+  <Button variant="outline" size="sm" onClick={onClick} disabled={disabled}>
+    Export CSV
+  </Button>
+);
+
+const CoffeeInventoryRecords = ({ onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [timeRange, setTimeRange] = useState('all');
   const [showTimeFilter, setShowTimeFilter] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
-  const { user } = useSupabaseAuth();
+  
+  // Use our custom hook to fetch data from Supabase
+  const {
+    records: coffeeRecords,
+    loading,
+    error,
+    refreshData: fetchCoffeeRecords
+  } = useCoffeeStockRecords({
+    statusFilter,
+    timeRange,
+    searchTerm
+  });
 
-  // Fetch coffee inventory records from Supabase
-  const fetchCoffeeRecords = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      let query = supabase
-        .from('coffee_inventory')
-        .select('*');
-      
-      // Apply status filter if not 'all'
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
-      }
-      
-      // Apply time range filter if not 'all'
-      if (timeRange !== 'all') {
-        const now = new Date();
-        let timeAgo;
-        
-        switch (timeRange) {
-          case 'hour':
-            timeAgo = new Date(now.getTime() - 60 * 60 * 1000);
-            break;
-          case 'day':
-            timeAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-            break;
-          case 'week':
-            timeAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            break;
-          case 'month':
-            timeAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            break;
-          case 'year':
-            timeAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-            break;
-          default:
-            timeAgo = null;
-        }
-        
-        if (timeAgo) {
-          query = query.gte('created_at', timeAgo.toISOString());
-        }
-      }
-      
-      // Sort the results
-      query = query.order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
-      
-      const data = await fromSupabase(query);
-      setCoffeeRecords(data || []);
-    } catch (err) {
-      console.error('Error fetching coffee inventory records:', err);
-      setError('Failed to load coffee inventory records. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch records on component mount and when filters change
-  useEffect(() => {
-    fetchCoffeeRecords();
-  }, [statusFilter, timeRange, sortConfig]);
-
-  // Handle search filter
+  // Filter records based on search term if needed
   const filteredRecords = coffeeRecords.filter(record => {
     if (!searchTerm) return true;
     
@@ -110,7 +68,6 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
     );
   });
 
-  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -120,13 +77,11 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
     }
   };
 
-  // Format currency for display
   const formatCurrency = (amount, currency = 'UGX') => {
     if (amount === undefined || amount === null) return 'N/A';
     return `${currency} ${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  // Handle column sort
   const requestSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -135,7 +90,6 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
     setSortConfig({ key, direction });
   };
 
-  // Handle export buttons
   const handleExportToPDF = () => {
     exportToPDF(filteredRecords, 'Coffee Inventory Records');
   };
@@ -148,7 +102,6 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
     exportToCSV(filteredRecords, 'Coffee Inventory Records');
   };
 
-  // Render status badge
   const renderStatusBadge = (status) => {
     const statusColors = {
       active: 'bg-green-100 text-green-800 border-green-200',
@@ -165,7 +118,6 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
     );
   };
 
-  // Calculate total value of filtered inventory
   const totalInventoryValue = filteredRecords.reduce((sum, record) => {
     const itemValue = record.buying_price * record.quantity;
     return sum + (isNaN(itemValue) ? 0 : itemValue);
@@ -187,7 +139,6 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
       </CardHeader>
       
       <CardContent>
-        {/* Status tabs */}
         <Tabs defaultValue="all" className="mb-6" onValueChange={setStatusFilter}>
           <TabsList className="grid grid-cols-5">
             <TabsTrigger value="all">All</TabsTrigger>
@@ -198,7 +149,6 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
           </TabsList>
         </Tabs>
         
-        {/* Search and filters toolbar */}
         <div className="flex flex-wrap gap-3 mb-4 items-center">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -237,7 +187,6 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
           </div>
         </div>
         
-        {/* Time range filter dropdown */}
         {showTimeFilter && (
           <div className="mb-4 p-3 bg-muted rounded-md">
             <div className="text-sm font-medium mb-2">Select Time Range</div>
@@ -294,7 +243,6 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
           </div>
         )}
         
-        {/* Inventory summary card */}
         <div className="mb-4 p-4 bg-blue-50 border border-blue-100 rounded-md">
           <div className="flex flex-wrap justify-between items-center">
             <div>
@@ -308,7 +256,6 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
           </div>
         </div>
         
-        {/* Records table */}
         {loading ? (
           <div className="py-8 text-center">
             <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-muted-foreground" />
