@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useSubmitReport } from './hooks/useSubmitReport';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
+import { useProductionReports } from './hooks/useProductionReports';
 
 const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
   const [report, setReport] = useState({
@@ -24,7 +24,8 @@ const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
     notes: ''
   });
   const [date, setDate] = useState(new Date());
-  const { submitReport, isSubmitting } = useSubmitReport();
+  const { submitReport, isSubmitting } = useProductionReports();
+  const [validationErrors, setValidationErrors] = useState({});
 
   const productTypes = [
     'Fresh Milk',
@@ -39,19 +40,73 @@ const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setReport(prev => ({ ...prev, [name]: value }));
+    
+    // Clear validation error when field is updated
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({ ...prev, [name]: null }));
+    }
   };
 
   const handleSelectChange = (name, value) => {
     setReport(prev => ({ ...prev, [name]: value }));
+    
+    // Clear validation error when field is updated
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({ ...prev, [name]: null }));
+    }
   };
 
   const handleDateChange = (newDate) => {
     setDate(newDate);
     setReport(prev => ({ ...prev, productionDate: newDate }));
+    
+    // Clear validation error for production date
+    if (validationErrors.productionDate) {
+      setValidationErrors(prev => ({ ...prev, productionDate: null }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!report.productType) errors.productType = 'Product type is required';
+    if (!report.batchId) errors.batchId = 'Batch ID is required';
+    if (!report.rawMaterial) errors.rawMaterial = 'Raw material amount is required';
+    if (!report.finishedProduct) errors.finishedProduct = 'Finished product amount is required';
+    if (!report.productionDate) errors.productionDate = 'Production date is required';
+    
+    // Additional validation for numeric fields
+    if (report.rawMaterial && isNaN(parseFloat(report.rawMaterial))) {
+      errors.rawMaterial = 'Raw material must be a valid number';
+    }
+    
+    if (report.finishedProduct && isNaN(parseFloat(report.finishedProduct))) {
+      errors.finishedProduct = 'Finished product must be a valid number';
+    }
+    
+    if (report.efficiency && (isNaN(parseInt(report.efficiency)) || parseInt(report.efficiency) < 0 || parseInt(report.efficiency) > 100)) {
+      errors.efficiency = 'Efficiency must be a number between 0 and 100';
+    }
+    
+    if (report.qualityScore && (isNaN(parseInt(report.qualityScore)) || parseInt(report.qualityScore) < 0 || parseInt(report.qualityScore) > 100)) {
+      errors.qualityScore = 'Quality score must be a number between 0 and 100';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Log form data for debugging
+    console.log('Form data to be submitted:', report);
+    
+    // Validate form
+    if (!validateForm()) {
+      console.log('Validation errors:', validationErrors);
+      return;
+    }
     
     const result = await submitReport(report);
     
@@ -94,7 +149,7 @@ const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
                 onValueChange={(value) => handleSelectChange('productType', value)}
                 required
               >
-                <SelectTrigger>
+                <SelectTrigger className={validationErrors.productType ? "border-red-500" : ""}>
                   <SelectValue placeholder="Select product type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -103,6 +158,9 @@ const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
                   ))}
                 </SelectContent>
               </Select>
+              {validationErrors.productType && (
+                <p className="text-red-500 text-xs mt-1">{validationErrors.productType}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -112,8 +170,12 @@ const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
                 name="batchId" 
                 value={report.batchId} 
                 onChange={handleChange}
+                className={validationErrors.batchId ? "border-red-500" : ""}
                 required
               />
+              {validationErrors.batchId && (
+                <p className="text-red-500 text-xs mt-1">{validationErrors.batchId}</p>
+              )}
             </div>
           </div>
           
@@ -128,8 +190,12 @@ const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
                 step="0.01" 
                 value={report.rawMaterial} 
                 onChange={handleChange}
+                className={validationErrors.rawMaterial ? "border-red-500" : ""}
                 required
               />
+              {validationErrors.rawMaterial && (
+                <p className="text-red-500 text-xs mt-1">{validationErrors.rawMaterial}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -142,8 +208,12 @@ const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
                 step="0.01" 
                 value={report.finishedProduct} 
                 onChange={handleChange}
+                className={validationErrors.finishedProduct ? "border-red-500" : ""}
                 required
               />
+              {validationErrors.finishedProduct && (
+                <p className="text-red-500 text-xs mt-1">{validationErrors.finishedProduct}</p>
+              )}
             </div>
           </div>
           
@@ -152,7 +222,10 @@ const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
               <Label>Production Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
+                  <Button 
+                    variant="outline" 
+                    className={`w-full justify-start text-left font-normal ${validationErrors.productionDate ? "border-red-500" : ""}`}
+                  >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {format(date, "PPP")}
                   </Button>
@@ -166,6 +239,9 @@ const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
                   />
                 </PopoverContent>
               </Popover>
+              {validationErrors.productionDate && (
+                <p className="text-red-500 text-xs mt-1">{validationErrors.productionDate}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -178,8 +254,11 @@ const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
                 max="100" 
                 value={report.efficiency} 
                 onChange={handleChange}
-                required
+                className={validationErrors.efficiency ? "border-red-500" : ""}
               />
+              {validationErrors.efficiency && (
+                <p className="text-red-500 text-xs mt-1">{validationErrors.efficiency}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -192,8 +271,11 @@ const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
                 max="100" 
                 value={report.qualityScore} 
                 onChange={handleChange}
-                required
+                className={validationErrors.qualityScore ? "border-red-500" : ""}
               />
+              {validationErrors.qualityScore && (
+                <p className="text-red-500 text-xs mt-1">{validationErrors.qualityScore}</p>
+              )}
             </div>
           </div>
           
@@ -214,7 +296,14 @@ const ReportFormDialog = ({ open, onOpenChange, onReportSubmitted }) => {
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Submit Report"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit Report"
+              )}
             </Button>
           </DialogFooter>
         </form>

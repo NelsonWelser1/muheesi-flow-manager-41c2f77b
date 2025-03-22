@@ -27,6 +27,7 @@ const ReportsDashboard = () => {
   } = useDairyReportData();
   
   const handleReportSubmitted = () => {
+    console.log("Report submitted successfully, refreshing data...");
     refreshData();
     setIsReportFormOpen(false);
   };

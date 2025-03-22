@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from "@/components/ui/use-toast";
@@ -25,52 +24,41 @@ export const useDairyReportData = () => {
     try {
       console.log('Fetching dairy reports data...');
       
-      // 1. Try to fetch from dairy_production table
+      // 1. Try to fetch from dairy_production_reports table first (our new table)
       let { data: productionResults, error: productionError } = await supabase
-        .from('dairy_production')
+        .from('dairy_production_reports')
         .select('*')
         .order('production_date', { ascending: false })
         .limit(10);
 
-      // If there's an error with dairy_production, try production_line_local as a fallback
+      // If there's an error with dairy_production_reports, try dairy_production as a fallback
       if (productionError || !productionResults || productionResults.length === 0) {
-        console.log('No data in dairy_production or error occurred, trying production_line_local...', productionError);
+        console.log('No data in dairy_production_reports or error occurred, trying dairy_production...', productionError);
         
-        const { data: localProduction, error: localError } = await supabase
-          .from('production_line_local')
+        const { data: dairyProduction, error: dairyError } = await supabase
+          .from('dairy_production')
           .select('*')
-          .order('created_at', { ascending: false })
+          .order('production_date', { ascending: false })
           .limit(10);
           
-        if (!localError && localProduction && localProduction.length > 0) {
-          console.log('Found data in production_line_local:', localProduction.length, 'records');
-          // Map production_line_local data to match expected format
-          productionResults = localProduction.map(item => ({
-            product_type: item.cheese_type || 'Cheese',
-            finished_product_amount: item.expected_yield || 0,
-            raw_material_used: item.milk_volume || 0,
-            efficiency_percentage: calculateEfficiency(item.expected_yield, item.milk_volume),
-            quality_score: 85, // Default score since quality may not be in this table
-            production_date: item.start_time || item.created_at
-          }));
-        } else if (productionError) {
-          console.error('Error fetching from dairy_production:', productionError);
-        }
+        if (!dairyError && dairyProduction && dairyProduction.length > 0) {
+          console.log('Found data in dairy_production:', dairyProduction.length, 'records');
+          productionResults = dairyProduction;
+        } else {
+          // If still no data, try other fallback tables
+          // ... keep existing code (for fallback logic to other tables)
+          console.log('No data in dairy_production or error occurred, trying production_line_local...', productionError);
         
-        // If still no data, try production_line_international as another fallback
-        if ((!productionResults || productionResults.length === 0) && !productionError) {
-          console.log('Trying production_line_international...');
-          
-          const { data: intlProduction, error: intlError } = await supabase
-            .from('production_line_international')
+          const { data: localProduction, error: localError } = await supabase
+            .from('production_line_local')
             .select('*')
             .order('created_at', { ascending: false })
             .limit(10);
             
-          if (!intlError && intlProduction && intlProduction.length > 0) {
-            console.log('Found data in production_line_international:', intlProduction.length, 'records');
-            // Map production_line_international data to match expected format
-            productionResults = intlProduction.map(item => ({
+          if (!localError && localProduction && localProduction.length > 0) {
+            console.log('Found data in production_line_local:', localProduction.length, 'records');
+            // Map production_line_local data to match expected format
+            productionResults = localProduction.map(item => ({
               product_type: item.cheese_type || 'Cheese',
               finished_product_amount: item.expected_yield || 0,
               raw_material_used: item.milk_volume || 0,
@@ -78,12 +66,48 @@ export const useDairyReportData = () => {
               quality_score: 85, // Default score since quality may not be in this table
               production_date: item.start_time || item.created_at
             }));
-          } else if (intlError) {
-            console.error('Error fetching from production_line_international:', intlError);
+          } else if (productionError) {
+            console.error('Error fetching from dairy_production:', productionError);
+          }
+          
+          // If still no data, try production_line_international as another fallback
+          if ((!productionResults || productionResults.length === 0) && !productionError) {
+            console.log('Trying production_line_international...');
+            
+            const { data: intlProduction, error: intlError } = await supabase
+              .from('production_line_international')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .limit(10);
+              
+            if (!intlError && intlProduction && intlProduction.length > 0) {
+              console.log('Found data in production_line_international:', intlProduction.length, 'records');
+              // Map production_line_international data to match expected format
+              productionResults = intlProduction.map(item => ({
+                product_type: item.cheese_type || 'Cheese',
+                finished_product_amount: item.expected_yield || 0,
+                raw_material_used: item.milk_volume || 0,
+                efficiency_percentage: calculateEfficiency(item.expected_yield, item.milk_volume),
+                quality_score: 85, // Default score since quality may not be in this table
+                production_date: item.start_time || item.created_at
+              }));
+            } else if (intlError) {
+              console.error('Error fetching from production_line_international:', intlError);
+            }
           }
         }
       } else {
-        console.log('Found data in dairy_production:', productionResults.length, 'records');
+        console.log('Found data in dairy_production_reports:', productionResults.length, 'records');
+        
+        // Map fields to match expected format if needed
+        productionResults = productionResults.map(item => ({
+          product_type: item.product_type,
+          finished_product_amount: item.finished_product,
+          raw_material_used: item.raw_material,
+          efficiency_percentage: item.efficiency,
+          quality_score: item.quality_score,
+          production_date: item.production_date
+        }));
       }
 
       // Helper function to calculate efficiency
@@ -189,7 +213,7 @@ export const useDairyReportData = () => {
       setSalesData(salesResult);
       
       // Calculate dashboard metrics
-      const avgQualityScore = calculateAverageQualityScore(productionResults || [], qualityStats);
+      const avgQualityScore = calculateAverageQualityScore(productionResults || [], qualityMetrics);
       const growthPercent = calculateGrowthPercentage(productionResults || []);
       const reportsCount = productionResults?.length || 0;
       
