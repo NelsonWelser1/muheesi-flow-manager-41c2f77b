@@ -6,6 +6,7 @@ import { useTheme } from 'next-themes';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { AlertCircle } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const QualityMetricsCard = ({ qualityMetrics = [] }) => {
   const { theme } = useTheme();
@@ -25,7 +26,7 @@ const QualityMetricsCard = ({ qualityMetrics = [] }) => {
         .limit(10);
       
       if (qualityError || !qualityData || qualityData.length === 0) {
-        console.log('No data in quality_checks or error occurred, checking milk_reception...');
+        console.log('No data in quality_checks, checking milk_reception...');
         
         // Try milk_reception as fallback
         const { data: receptionData, error: receptionError } = await supabase
@@ -38,18 +39,6 @@ const QualityMetricsCard = ({ qualityMetrics = [] }) => {
           console.log('Found quality data in milk_reception:', receptionData.length, 'records');
           return formatMilkReceptionData(receptionData);
         }
-        
-        // Try quality_trends as another fallback
-        const { data: trendsData, error: trendsError } = await supabase
-          .from('quality_trends')
-          .select('*')
-          .order('date', { ascending: false })
-          .limit(10);
-          
-        if (!trendsError && trendsData && trendsData.length > 0) {
-          console.log('Found quality data in quality_trends:', trendsData.length, 'records');
-          return formatQualityTrendsData(trendsData);
-        }
       } else {
         console.log('Found quality data in quality_checks:', qualityData.length, 'records');
         return formatQualityChecksData(qualityData);
@@ -57,7 +46,7 @@ const QualityMetricsCard = ({ qualityMetrics = [] }) => {
       
       // Return the provided fallback data if no data found in any table
       console.log('No quality data found in any table, using fallback data');
-      return qualityMetrics;
+      return qualityMetrics.length > 0 ? qualityMetrics : generateFallbackData();
     },
   });
   
@@ -73,20 +62,19 @@ const QualityMetricsCard = ({ qualityMetrics = [] }) => {
   const formatQualityChecksData = (data) => {
     return data.map(item => {
       // Calculate quality score based on various parameters
-      const statuses = [
-        item.temperature_status || '',
-        item.ph_status || '',
-        item.moisture_status || '',
-        item.fat_status || '',
-        item.protein_status || '',
-        item.salt_status || ''
-      ];
-      
-      const passedCount = statuses.filter(status => 
-        status.toLowerCase() === 'passed' || status.toLowerCase() === 'pass'
+      const totalChecks = 6; // Total number of checks
+      const passedChecks = [
+        item.temperature_status,
+        item.ph_status || item.ph_level_status,
+        item.moisture_status,
+        item.fat_status,
+        item.protein_status,
+        item.salt_status
+      ].filter(status => 
+        status && (status.toLowerCase() === 'pass' || status.toLowerCase() === 'passed')
       ).length;
       
-      const qualityScore = Math.round((passedCount / statuses.length) * 100);
+      const qualityScore = Math.round((passedChecks / totalChecks) * 100);
       
       return {
         date: new Date(item.created_at).toLocaleDateString(),
@@ -94,14 +82,6 @@ const QualityMetricsCard = ({ qualityMetrics = [] }) => {
         volume: 0 // Volume data might not be available in this table
       };
     });
-  };
-  
-  const formatQualityTrendsData = (data) => {
-    return data.map(item => ({
-      date: new Date(item.date).toLocaleDateString(),
-      avgQuality: Math.round(item.average_score || 0),
-      volume: 0 // Volume data might not be available in this table
-    }));
   };
   
   // Helper function to parse quality score from different formats
@@ -129,18 +109,26 @@ const QualityMetricsCard = ({ qualityMetrics = [] }) => {
     return 85; // Default fallback
   };
 
-  // Use fetched data if available, otherwise use the provided data
+  // Generate fallback data if no data is available
+  const generateFallbackData = () => {
+    const today = new Date();
+    return Array(5).fill().map((_, i) => {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      return {
+        date: date.toLocaleDateString(),
+        avgQuality: 80 + Math.floor(Math.random() * 15),
+        volume: 400 + Math.floor(Math.random() * 200)
+      };
+    }).reverse();
+  };
+
+  // Use fetched data if available, otherwise use the provided data or fallback
   const chartData = (fetchedQualityMetrics && fetchedQualityMetrics.length > 0) 
     ? fetchedQualityMetrics 
     : qualityMetrics.length > 0 
       ? qualityMetrics 
-      : [
-          { date: '1/1', avgQuality: 85, volume: 500 },
-          { date: '1/2', avgQuality: 88, volume: 450 },
-          { date: '1/3', avgQuality: 82, volume: 520 },
-          { date: '1/4', avgQuality: 86, volume: 480 },
-          { date: '1/5', avgQuality: 89, volume: 510 }
-        ];
+      : generateFallbackData();
 
   // Calculate average quality score
   const avgQualityScore = Math.round(
@@ -156,9 +144,11 @@ const QualityMetricsCard = ({ qualityMetrics = [] }) => {
           <p className="text-blue-600 dark:text-blue-400">
             {`Quality Score: ${payload[0].value}%`}
           </p>
-          <p className="text-green-600 dark:text-green-400">
-            {`Volume: ${payload[1].value} L`}
-          </p>
+          {payload.length > 1 && (
+            <p className="text-green-600 dark:text-green-400">
+              {`Volume: ${payload[1].value} L`}
+            </p>
+          )}
         </div>
       );
     }
@@ -187,12 +177,13 @@ const QualityMetricsCard = ({ qualityMetrics = [] }) => {
           <CardTitle>Quality Metrics</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="h-[300px] flex items-center justify-center">
-            <div className="flex items-center space-x-2 text-red-500">
-              <AlertCircle className="h-5 w-5" />
-              <p>Error loading quality metrics: {error.message}</p>
-            </div>
-          </div>
+          <Alert variant="destructive">
+            <AlertCircle className="h-5 w-5" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Error loading quality metrics: {error.message}
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     );

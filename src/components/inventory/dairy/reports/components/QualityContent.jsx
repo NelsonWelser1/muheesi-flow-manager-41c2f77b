@@ -1,9 +1,9 @@
 
 import React from 'react';
-import ReportMetricCards from './ReportMetricCards';
-import ProductionChart from './ProductionChart';
-import { AlertCircle } from 'lucide-react';
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertCircle, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Plus } from "lucide-react";
 import QualityMetricsCard from '../QualityMetricsCard';
 
 const QualityContent = ({ qualityMetrics, productionData, onOpenReportForm }) => {
@@ -13,7 +13,7 @@ const QualityContent = ({ qualityMetrics, productionData, onOpenReportForm }) =>
     <>
       <QualityMetricsCard qualityMetrics={qualityMetrics} />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <QualityScoresCard productionData={productionData} />
         <QualityImprovementCard onOpenReportForm={onOpenReportForm} />
       </div>
@@ -21,7 +21,7 @@ const QualityContent = ({ qualityMetrics, productionData, onOpenReportForm }) =>
   );
 };
 
-const QualityScoresCard = ({ productionData }) => {
+const QualityScoresCard = ({ productionData = [] }) => {
   return (
     <Card>
       <CardHeader>
@@ -50,7 +50,7 @@ const QualityScoresCard = ({ productionData }) => {
             ))}
           </ul>
         ) : (
-          <Alert>
+          <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>No data</AlertTitle>
             <AlertDescription>
