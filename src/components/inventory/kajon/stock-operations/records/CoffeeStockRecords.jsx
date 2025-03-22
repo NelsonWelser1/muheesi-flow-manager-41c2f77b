@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,12 @@ import CSVExportButton from "@/components/inventory/dairy/logistics/records/comp
 import PDFExportButton from "@/components/inventory/dairy/logistics/records/components/export-buttons/PDFExportButton";
 import ExcelExportButton from "@/components/inventory/dairy/logistics/records/components/export-buttons/ExcelExportButton";
 import { format } from 'date-fns';
-import { calculateTotalInventoryValue, exportToCSV, exportToExcel, exportToPDF } from '@/utils/coffeeStockUtils';
+import { 
+  calculateTotalInventoryValue, 
+  exportToCSV, 
+  exportToExcel, 
+  exportToPDF 
+} from '@/utils/coffeeStockUtils';
 
 const CoffeeStockRecords = ({ onBack }) => {
   const [showTimeFilter, setShowTimeFilter] = useState(false);
@@ -36,7 +40,6 @@ const CoffeeStockRecords = ({ onBack }) => {
     handleRefresh
   } = useCoffeeStockRecords();
 
-  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -46,13 +49,11 @@ const CoffeeStockRecords = ({ onBack }) => {
     }
   };
 
-  // Format currency for display
   const formatCurrency = (amount, currency = 'UGX') => {
     if (amount === undefined || amount === null) return 'N/A';
     return `${currency} ${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  // Handle export buttons - use the filtered records for export
   const handleExportToPDF = () => {
     exportToPDF(records, 'coffee-stock-records');
   };
@@ -65,7 +66,6 @@ const CoffeeStockRecords = ({ onBack }) => {
     exportToCSV(records, 'coffee-stock-records');
   };
 
-  // Render status badge
   const renderStatusBadge = (status) => {
     const statusColors = {
       active: 'bg-green-100 text-green-800 border-green-200',
@@ -82,7 +82,6 @@ const CoffeeStockRecords = ({ onBack }) => {
     );
   };
 
-  // Calculate total inventory value
   const totalInventoryValue = calculateTotalInventoryValue(records);
 
   return (
@@ -103,7 +102,6 @@ const CoffeeStockRecords = ({ onBack }) => {
       </CardHeader>
       
       <CardContent>
-        {/* Status tabs */}
         <Tabs defaultValue={statusFilter} className="mb-6" onValueChange={handleStatusChange}>
           <TabsList className="grid grid-cols-5">
             <TabsTrigger value="all">All</TabsTrigger>
@@ -114,7 +112,6 @@ const CoffeeStockRecords = ({ onBack }) => {
           </TabsList>
         </Tabs>
         
-        {/* Search and filters toolbar */}
         <div className="flex flex-wrap gap-3 mb-4 items-center">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -153,7 +150,6 @@ const CoffeeStockRecords = ({ onBack }) => {
           </div>
         </div>
         
-        {/* Time range filter dropdown */}
         {showTimeFilter && (
           <div className="mb-4 p-3 bg-muted rounded-md">
             <div className="text-sm font-medium mb-2">Select Time Range</div>
@@ -210,7 +206,6 @@ const CoffeeStockRecords = ({ onBack }) => {
           </div>
         )}
         
-        {/* Inventory summary card */}
         <div className="mb-4 p-4 bg-blue-50 border border-blue-100 rounded-md">
           <div className="flex flex-wrap justify-between items-center">
             <div>
@@ -224,7 +219,6 @@ const CoffeeStockRecords = ({ onBack }) => {
           </div>
         </div>
         
-        {/* Records table */}
         {loading ? (
           <div className="py-8 text-center">
             <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-muted-foreground" />

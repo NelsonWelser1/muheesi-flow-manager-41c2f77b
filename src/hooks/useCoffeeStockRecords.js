@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { showErrorToast } from '@/components/ui/notifications';
-import { fetchCoffeeStock } from '@/utils/coffeeStockUtils';
+import { fetchCoffeeStock } from '@/utils/coffee/coffeeStockCore';
 
 export const useCoffeeStockRecords = () => {
   const [records, setRecords] = useState([]);
