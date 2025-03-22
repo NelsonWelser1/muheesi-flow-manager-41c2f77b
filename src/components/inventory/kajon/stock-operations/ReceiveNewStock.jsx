@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useAddKAJONCoffee, useKAJONCoffees } from '@/integrations/supabase/hooks/useKAJONCoffee';
+import { supabase } from '@/integrations/supabase/supabase';
 import AuthenticationForm from '../AuthenticationForm';
 import CoffeeInventoryRecords from './records/CoffeeInventoryRecords';
 import { ClipboardList, AlertCircle } from 'lucide-react';
@@ -55,6 +56,43 @@ const WAREHOUSE_LOCATIONS = {
   ]
 };
 
+// Direct function to handle stock submission with correct column names
+async function receiveCoffeeStock(formData) {
+  try {
+    console.log("Submitting to Supabase with data:", formData);
+    
+    const { data, error } = await supabase
+      .from('coffee_inventory')
+      .insert([
+        {
+          manager: formData.manager,
+          location: formData.location,
+          coffeeType: formData.coffeeType,
+          qualityGrade: formData.qualityGrade,
+          source: formData.source,
+          humidity: parseFloat(formData.humidity),
+          buying_price: parseFloat(formData.buyingPrice),
+          currency: formData.currency || 'UGX',
+          quantity: parseFloat(formData.quantity),
+          unit: formData.unit || 'kg',
+          notes: formData.notes,
+          status: 'active'
+        }
+      ]);
+
+    if (error) {
+      console.error("Error inserting coffee stock:", error);
+      return { success: false, message: error.message };
+    }
+    
+    console.log("Stock successfully added:", data);
+    return { success: true, message: "Stock received successfully!" };
+  } catch (err) {
+    console.error("Exception in receiveCoffeeStock:", err);
+    return { success: false, message: err.message };
+  }
+}
+
 const ReceiveNewStock = ({ isKazo }) => {
   const [selectedCoffeeType, setSelectedCoffeeType] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
@@ -64,7 +102,6 @@ const ReceiveNewStock = ({ isKazo }) => {
   const [viewRecords, setViewRecords] = useState(false);
   const [formError, setFormError] = useState('');
   const { toast } = useToast();
-  const addCoffeeMutation = useAddKAJONCoffee();
   const { data: inventoryData } = useKAJONCoffees({ location: selectedLocation });
 
   const handleAuthentication = (name, location) => {
@@ -90,40 +127,35 @@ const ReceiveNewStock = ({ isKazo }) => {
       const formattedData = {
         manager: managerName,
         location: selectedLocation,
-        coffeeType: data.coffeeType,  // Using coffeeType to match database schema
-        qualityGrade: data.qualityGrade,  // Using qualityGrade to match database schema
+        coffeeType: data.coffeeType,
+        qualityGrade: data.qualityGrade,
         source: data.source,
         humidity: parseFloat(data.humidity),
-        buying_price: parseFloat(data.buyingPrice),
+        buyingPrice: parseFloat(data.buyingPrice),
         currency: data.currency,
         quantity: parseFloat(data.quantity),
         unit: data.unit,
-        notes: data.notes || null,
-        status: 'active'
+        notes: data.notes || null
       };
       
       // Log the formatted data before submission
       console.log("Form data being submitted:", formattedData);
       
-      // Validate required fields
-      if (!formattedData.coffeeType) throw new Error("Coffee type is required");
-      if (!formattedData.qualityGrade) throw new Error("Quality grade is required");
-      if (!formattedData.source) throw new Error("Source is required");
-      if (isNaN(formattedData.humidity)) throw new Error("Humidity must be a valid number");
-      if (isNaN(formattedData.buying_price)) throw new Error("Buying price must be a valid number");
-      if (isNaN(formattedData.quantity)) throw new Error("Quantity must be a valid number");
+      // Submit using direct function
+      const result = await receiveCoffeeStock(formattedData);
       
-      // Submit to Supabase
-      await addCoffeeMutation.mutateAsync(formattedData);
-      
-      toast({
-        title: "Success",
-        description: "Coffee stock received successfully",
-      });
-      
-      // Reset form
-      e.target.reset();
-      setSelectedCoffeeType('');
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: result.message,
+        });
+        
+        // Reset form
+        e.target.reset();
+        setSelectedCoffeeType('');
+      } else {
+        throw new Error(result.message);
+      }
       
     } catch (error) {
       console.error("Error submitting form:", error);
