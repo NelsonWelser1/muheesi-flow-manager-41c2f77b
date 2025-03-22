@@ -82,19 +82,27 @@ const ReceiveNewStock = ({ isKazo }) => {
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
       
-      // Map buyingPrice to buying_price for database compatibility
-      data.buying_price = data.buyingPrice;
-      delete data.buyingPrice;
-      
-      // Log the form data before submission
-      console.log("Form data being submitted:", data);
-      
-      // Submit to Supabase
-      await addCoffeeMutation.mutateAsync({
-        ...data,
+      // Format data correctly for Supabase
+      const formattedData = {
         manager: managerName,
         location: selectedLocation,
-      });
+        coffeeType: data.coffeeType,
+        qualityGrade: data.qualityGrade,
+        source: data.source,
+        humidity: Number(data.humidity),
+        buying_price: Number(data.buyingPrice),
+        currency: data.currency,
+        quantity: Number(data.quantity),
+        unit: data.unit,
+        notes: data.notes,
+        status: 'active'
+      };
+      
+      // Log the formatted data before submission
+      console.log("Form data being submitted:", formattedData);
+      
+      // Submit to Supabase
+      await addCoffeeMutation.mutateAsync(formattedData);
       
       toast({
         title: "Success",
