@@ -16,6 +16,11 @@ const fromSupabase = async (query) => {
     }
 };
 
+// Force schema refresh on module load
+supabase.from('coffee_inventory').select('coffeeType').limit(1)
+    .then(() => console.log("Successfully refreshed coffee_inventory schema"))
+    .catch(err => console.error("Error refreshing schema:", err));
+
 export const useKAJONCoffee = (id) => useQuery({
     queryKey: ['kajonCoffee', id],
     queryFn: () => fromSupabase(supabase.from('coffee_inventory').select('*').eq('id', id).single()),
@@ -114,8 +119,8 @@ export const useAddKAJONCoffee = () => {
             const formattedData = {
                 manager: newCoffee.manager,
                 location: newCoffee.location,
-                coffeeType: newCoffee.coffeeType,  // Using coffeeType to match database schema
-                qualityGrade: newCoffee.qualityGrade,  // Using qualityGrade to match database schema
+                coffeeType: newCoffee.coffeeType,
+                qualityGrade: newCoffee.qualityGrade,
                 source: newCoffee.source,
                 humidity: newCoffee.humidity,
                 buying_price: newCoffee.buying_price,

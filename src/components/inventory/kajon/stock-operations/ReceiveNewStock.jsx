@@ -11,6 +11,7 @@ import AuthenticationForm from '../AuthenticationForm';
 import CoffeeInventoryRecords from './records/CoffeeInventoryRecords';
 import { ClipboardList, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAddKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
 
 const COFFEE_GRADES = {
   arabica: [
@@ -64,6 +65,7 @@ const ReceiveNewStock = ({ isKazo }) => {
   const [viewRecords, setViewRecords] = useState(false);
   const [formError, setFormError] = useState('');
   const { toast } = useToast();
+  const addCoffeeStock = useAddKAJONCoffee();
 
   const handleAuthentication = (name, location) => {
     setManagerName(name);
@@ -92,52 +94,26 @@ const ReceiveNewStock = ({ isKazo }) => {
         }
       }
       
-      // Validate numeric fields
-      const humidity = parseFloat(data.humidity);
-      if (isNaN(humidity) || humidity < 0 || humidity > 100) {
-        throw new Error("Humidity must be a number between 0 and 100");
-      }
-      
-      const buyingPrice = parseFloat(data.buyingPrice);
-      if (isNaN(buyingPrice) || buyingPrice <= 0) {
-        throw new Error("Buying price must be a positive number");
-      }
-      
-      const quantity = parseFloat(data.quantity);
-      if (isNaN(quantity) || quantity <= 0) {
-        throw new Error("Quantity must be a positive number");
-      }
-      
-      // Prepare data for Supabase insertion according to the schema
-      const coffeeData = {
+      // Prepare data for submission
+      const stockData = {
         manager: managerName,
         location: selectedLocation,
         coffeeType: data.coffeeType,
         qualityGrade: data.qualityGrade,
         source: data.source,
-        humidity: humidity,
-        buying_price: buyingPrice,
+        humidity: parseFloat(data.humidity),
+        buying_price: parseFloat(data.buyingPrice),
         currency: data.currency || 'UGX',
-        quantity: quantity,
+        quantity: parseFloat(data.quantity),
         unit: data.unit || 'kg',
         notes: data.notes || null,
         status: 'active'
       };
       
-      console.log("Sending data to Supabase:", coffeeData);
+      console.log("Sending data to Supabase:", stockData);
       
-      // Insert into Supabase
-      const { data: insertedData, error } = await supabase
-        .from('coffee_inventory')
-        .insert([coffeeData])
-        .select();
-      
-      if (error) {
-        console.error("Supabase insertion error:", error);
-        throw new Error(error.message);
-      }
-      
-      console.log("Successfully added coffee stock:", insertedData);
+      // Use the mutation hook to add the coffee stock
+      await addCoffeeStock.mutateAsync(stockData);
       
       toast({
         title: "Success",
