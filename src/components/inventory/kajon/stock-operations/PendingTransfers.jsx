@@ -1,106 +1,83 @@
 
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from '@/integrations/supabase/supabase';
-import { Loader2 } from 'lucide-react';
+import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
 import PendingTransferNotification from './notifications/PendingTransferNotification';
 
-const PendingTransfers = ({ location }) => {
+const PendingTransfers = ({ location, onlyShow = false }) => {
+  const { transfers, loading, error, handleStatusChange, handleRefresh } = useCoffeeStockTransfers();
   const [pendingTransfers, setPendingTransfers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
+  // Set status filter to 'pending' on component mount
   useEffect(() => {
-    if (!location) return;
+    handleStatusChange('pending');
+    // Initial data fetch
+    handleRefresh();
     
-    const fetchPendingTransfers = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const { data, error } = await supabase
-          .from('coffee_stock_transfers')
-          .select('*')
-          .eq('destination_location', location)
-          .eq('status', 'pending')
-          .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        setPendingTransfers(data || []);
-      } catch (err) {
-        console.error('Error fetching pending transfers:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Refresh data every 60 seconds
+    const intervalId = setInterval(() => {
+      handleRefresh();
+    }, 60000);
     
-    fetchPendingTransfers();
-    
-    // Set up real-time subscription for new transfers
-    const subscription = supabase
-      .channel('coffee_stock_transfers_changes')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'coffee_stock_transfers',
-        filter: `destination_location=eq.${location}` 
-      }, (payload) => {
-        if (payload.new.destination_location === location) {
-          fetchPendingTransfers();
-        }
-      })
-      .subscribe();
-    
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [location]);
+    return () => clearInterval(intervalId);
+  }, []);
+  
+  // Filter transfers based on destination location
+  useEffect(() => {
+    if (transfers && transfers.length > 0) {
+      const filtered = transfers.filter(transfer => 
+        transfer.status === 'pending' && 
+        transfer.destination_location === location
+      );
+      setPendingTransfers(filtered);
+    } else {
+      setPendingTransfers([]);
+    }
+  }, [transfers, location]);
+
+  // Handle successful response to a transfer
+  const handleTransferResponse = () => {
+    handleRefresh();
+  };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center p-4 mb-6">
-        <Loader2 className="h-6 w-6 animate-spin" />
-        <span className="ml-2">Loading pending transfers...</span>
+      <div className="p-4 text-center">
+        <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+        <p className="text-sm text-gray-500">Loading pending transfers...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 p-4 rounded-lg border border-red-200 mb-6">
-        <p className="text-red-700">Error loading pending transfers: {error}</p>
+      <div className="p-4 text-center text-red-500">
+        <p>Error loading transfers: {error}</p>
       </div>
     );
   }
 
   if (pendingTransfers.length === 0) {
-    return null;
+    return (
+      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center mb-6">
+        <p className="text-gray-500">No pending transfers for this location</p>
+      </div>
+    );
   }
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-medium">Pending Transfers ({pendingTransfers.length})</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {pendingTransfers.map(transfer => (
-            <PendingTransferNotification 
-              key={transfer.id}
-              transfer={transfer}
-              onAccept={() => {
-                setPendingTransfers(pendingTransfers.filter(t => t.id !== transfer.id));
-              }}
-              onDecline={() => {
-                setPendingTransfers(pendingTransfers.filter(t => t.id !== transfer.id));
-              }}
-            />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4 mb-6">
+      <h3 className="font-medium text-lg">Pending Transfers ({pendingTransfers.length})</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {pendingTransfers.map(transfer => (
+          <PendingTransferNotification 
+            key={transfer.id} 
+            transfer={transfer} 
+            onAccept={handleTransferResponse}
+            onDecline={handleTransferResponse}
+          />
+        ))}
+      </div>
+    </div>
   );
 };
 

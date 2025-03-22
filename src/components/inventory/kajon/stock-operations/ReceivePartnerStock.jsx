@@ -1,30 +1,18 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { useUpdateKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Eye, Inbox, RefreshCw, Bell, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 import AuthenticationForm from '../AuthenticationForm';
-
-const COFFEE_GRADES = {
-  arabica: [
-    'Arabica Coffee: Bugisu AA1',
-    'Arabica Coffee: Bugisu A1',
-    'Arabica Coffee: Bugisu PB',
-    'Arabica Coffee: Bugisu B',
-    'Arabica Coffee: DRUGAR',
-    'Arabica Coffee: Parchment Arabica'
-  ],
-  robusta: [
-    'Robusta Coffee: FAQ',
-    'Robusta Coffee: Screen 18',
-    'Robusta Coffee: Screen 15',
-    'Robusta Coffee: Screen 12',
-    'Robusta Coffee: Organic Robusta'
-  ]
-};
+import PendingTransfers from './PendingTransfers';
+import CoffeeRelocationRecords from './records/CoffeeRelocationRecords';
 
 const STORE_LOCATIONS = {
   kazo: [
@@ -52,49 +40,39 @@ const STORE_LOCATIONS = {
 };
 
 const ReceivePartnerStock = ({ isKazo }) => {
-  const [selectedCoffeeType, setSelectedCoffeeType] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [managerName, setManagerName] = useState('');
+  const [viewRecords, setViewRecords] = useState(false);
+  const [activeTab, setActiveTab] = useState('pending');
   const { toast } = useToast();
-  const updateCoffeeMutation = useUpdateKAJONCoffee();
+  const { handleRefresh } = useCoffeeStockTransfers();
 
   const handleAuthentication = (name, location) => {
     setManagerName(name);
     setIsAuthenticated(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-
-    try {
-      await updateCoffeeMutation.mutateAsync({
-        ...data,
-        manager: managerName,
-        location: selectedLocation,
-        type: 'partner_receipt',
-        status: 'approved'
-      });
-
-      toast({
-        title: "Success",
-        description: "Partner stock received successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to receive partner stock",
-        variant: "destructive",
-      });
-    }
+  const handleRefreshTransfers = () => {
+    handleRefresh();
+    showSuccessToast(toast, "Transfer list refreshed");
   };
+
+  if (viewRecords) {
+    return (
+      <div className="space-y-4">
+        <CoffeeRelocationRecords onBack={() => setViewRecords(false)} isKazo={isKazo} />
+      </div>
+    );
+  }
 
   if (!selectedLocation) {
     return (
       <div className="space-y-4">
-        <Label>Select Receiving Location</Label>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Receive Partner Stock</h2>
+        </div>
+        <Label>Select Your Location</Label>
         <Select onValueChange={setSelectedLocation}>
           <SelectTrigger>
             <SelectValue placeholder="Select location" />
@@ -116,117 +94,106 @@ const ReceivePartnerStock = ({ isKazo }) => {
 
   if (!isAuthenticated) {
     return (
-      <AuthenticationForm 
-        onAuthenticate={handleAuthentication}
-        title={isKazo ? "Store Manager Name" : "Warehouse Manager Name"}
-        selectedLocation={selectedLocation}
-      />
+      <>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Receive Partner Stock</h2>
+        </div>
+        <AuthenticationForm 
+          onAuthenticate={handleAuthentication}
+          title={isKazo ? "Store Manager Name" : "Warehouse Manager Name"}
+          selectedLocation={selectedLocation}
+        />
+      </>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <Label>Manager Name</Label>
-          <Input name="manager" value={managerName} readOnly />
-        </div>
-
-        <div>
-          <Label>Receiving Location</Label>
-          <Input name="location" value={selectedLocation} readOnly />
-        </div>
-
-        <div>
-          <Label>Source Location</Label>
-          <Select name="sourceLocation" required>
-            <SelectTrigger>
-              <SelectValue placeholder="Select source location" />
-            </SelectTrigger>
-            <SelectContent>
-              {isKazo ? (
-                <>
-                  <SelectItem value="Kanoni-Mbogo">Kanoni - Mbogo Store</SelectItem>
-                  <SelectItem value="Kanoni-Rwakahaya">Kanoni - Rwakahaya Store</SelectItem>
-                  <SelectItem value="Engari-Kaichumu">Engari - Kaichumu Store</SelectItem>
-                  <SelectItem value="Engari-Kyengando">Engari - Kyengando Store</SelectItem>
-                  <SelectItem value="Migina">Migina Store</SelectItem>
-                  <SelectItem value="Kagarama">Kagarama Store</SelectItem>
-                  <SelectItem value="Kyampangara">Kyampangara Store</SelectItem>
-                </>
-              ) : (
-                <>
-                  <SelectItem value="Kampala">Kampala Store</SelectItem>
-                  <SelectItem value="JBER">JBER</SelectItem>
-                  <SelectItem value="Mbarara">Mbarara Warehouse</SelectItem>
-                  <SelectItem value="Kakyinga">Kakyinga Factory</SelectItem>
-                  <SelectItem value="Kazo-Kanoni">Kazo - Kanoni Warehouse</SelectItem>
-                  <SelectItem value="Kazo">Kazo Coffee</SelectItem>
-                </>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label>Coffee Type</Label>
-          <Select 
-            name="coffeeType" 
-            onValueChange={setSelectedCoffeeType}
-            required
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Receive Partner Stock</h2>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleRefreshTransfers} 
+            className="flex items-center gap-1"
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select coffee type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="arabica">Arabica Coffee</SelectItem>
-              <SelectItem value="robusta">Robusta Coffee</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label>Quality Grade</Label>
-          <Select name="qualityGrade" disabled={!selectedCoffeeType} required>
-            <SelectTrigger>
-              <SelectValue placeholder="Select grade" />
-            </SelectTrigger>
-            <SelectContent>
-              {selectedCoffeeType && COFFEE_GRADES[selectedCoffeeType].map((grade) => (
-                <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Quantity</Label>
-            <Input name="quantity" type="number" placeholder="Enter quantity" required />
-          </div>
-          <div>
-            <Label>Unit</Label>
-            <Select name="unit" defaultValue="kg">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="kg">Kg</SelectItem>
-                <SelectItem value="tons">Tons</SelectItem>
-                <SelectItem value="bags">Bags</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div>
-          <Label>Transfer Reference Number</Label>
-          <Input name="referenceNumber" placeholder="Enter transfer reference" required />
+            <RefreshCw className="h-4 w-4" /> Refresh
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setViewRecords(true)} 
+            className="flex items-center gap-1"
+          >
+            <Eye className="h-4 w-4" /> View Records
+          </Button>
         </div>
       </div>
 
-      <Button type="submit" className="w-full">Approve and Receive Stock</Button>
-    </form>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Bell className="h-5 w-5 text-amber-600" /> Stock Transfer Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <Inbox className="h-5 w-5 text-amber-600 mt-1" />
+              <div>
+                <p className="font-medium text-amber-800">Welcome, {managerName}</p>
+                <p className="text-sm text-amber-700">You can view, accept, or decline pending stock transfers sent to your location ({selectedLocation}).</p>
+              </div>
+            </div>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+            <TabsList className="grid grid-cols-2 mb-4">
+              <TabsTrigger value="pending" className="flex items-center gap-1">
+                <Clock className="h-4 w-4" /> Pending Transfers
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex items-center gap-1">
+                <CheckCircle className="h-4 w-4" /> Processed Transfers
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="pending" className="mt-0">
+              <PendingTransfers location={selectedLocation} />
+            </TabsContent>
+            
+            <TabsContent value="history" className="mt-0">
+              <div className="bg-gray-50 rounded-lg border border-gray-200 p-6 text-center">
+                <p className="text-gray-500 mb-2">To view your transfer history, click the "View Records" button.</p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setViewRecords(true)} 
+                  className="flex items-center gap-1 mx-auto"
+                >
+                  <Eye className="h-4 w-4" /> View Complete Transfer History
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <div className="bg-blue-100 p-2 rounded-full">
+            <Inbox className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <p className="font-medium text-blue-800">About Stock Transfers</p>
+            <p className="text-sm text-blue-700 mt-1">
+              Stock transfers from other locations will appear automatically when they are sent to your location.
+              You can accept or decline each transfer based on your inventory needs and space availability.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

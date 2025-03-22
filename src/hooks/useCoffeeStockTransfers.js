@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
@@ -195,10 +196,6 @@ export const useCoffeeStockTransfers = () => {
       field,
       ascending: prevConfig.field === field ? !prevConfig.ascending : true
     }));
-  };
-
-  const handleRefresh = () => {
-    fetchTransfers();
   };
 
   // Fetch transfers when filters or sort change
