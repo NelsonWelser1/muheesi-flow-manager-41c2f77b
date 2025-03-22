@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -9,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AuthenticationForm from '../AuthenticationForm';
+import { useCoffeeStock } from '@/hooks/useCoffeeStock';
 import { 
   ClipboardList, 
   AlertCircle, 
@@ -20,9 +20,12 @@ import {
   DollarSign, 
   Weight, 
   Map, 
-  HelpCircle 
+  HelpCircle,
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { format } from 'date-fns';
 
 const COFFEE_GRADES = {
   arabica: [
@@ -67,15 +70,65 @@ const WAREHOUSE_LOCATIONS = {
   ]
 };
 
+const RecentCoffeeStockEntries = ({ entries, isLoading }) => {
+  if (isLoading) {
+    return (
+      <div className="p-4 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+        <p className="mt-2 text-sm text-muted-foreground">Loading recent entries...</p>
+      </div>
+    );
+  }
+
+  if (!entries || entries.length === 0) {
+    return (
+      <div className="p-4 text-center border rounded-md">
+        <p className="text-sm text-muted-foreground">No recent coffee stock entries</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 p-2">
+      <h3 className="text-sm font-medium">Recent Coffee Stock Entries</h3>
+      <div className="space-y-2">
+        {entries.map((entry) => (
+          <div 
+            key={entry.id} 
+            className="p-3 border rounded-md text-sm bg-card hover:bg-accent/50 transition-colors"
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="font-medium">{entry.quality_grade}</p>
+                <p className="text-xs text-muted-foreground">
+                  {entry.location} • {format(new Date(entry.created_at), 'MMM dd, yyyy')}
+                </p>
+              </div>
+              <div className="text-right">
+                <p>
+                  {entry.quantity} {entry.unit}
+                </p>
+                <p className="text-xs font-medium text-green-600">
+                  {entry.currency} {parseFloat(entry.buying_price).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const ReceiveNewStock = ({ isKazo }) => {
   const [selectedCoffeeType, setSelectedCoffeeType] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [managerName, setManagerName] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [viewRecords, setViewRecords] = useState(false);
   const [formError, setFormError] = useState('');
   const [activeTab, setActiveTab] = useState('form');
+  const [viewRecords, setViewRecords] = useState(false);
+  const [totalPrice, setTotalPrice] = useState('');
   const [formData, setFormData] = useState({
     manager: '',
     location: '',
@@ -89,10 +142,15 @@ const ReceiveNewStock = ({ isKazo }) => {
     unit: 'kg',
     notes: ''
   });
-  const [totalPrice, setTotalPrice] = useState('');
+  
   const { toast } = useToast();
+  const { 
+    submitCoffeeStock, 
+    recentCoffeeStocks, 
+    loading, 
+    fetchLoading 
+  } = useCoffeeStock();
 
-  // Calculate total price whenever buying price or quantity changes
   useEffect(() => {
     const price = parseFloat(formData.buyingPrice) || 0;
     const qty = parseFloat(formData.quantity) || 0;
@@ -122,19 +180,11 @@ const ReceiveNewStock = ({ isKazo }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setFormError('');
     
-    try {
-      // Simulate processing
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Note",
-        description: "Backend functionality for coffee inventory has been removed.",
-      });
-      
-      // Reset form
+    const result = await submitCoffeeStock(formData);
+    
+    if (result.success) {
       setFormData({
         manager: managerName,
         location: selectedLocation,
@@ -149,25 +199,21 @@ const ReceiveNewStock = ({ isKazo }) => {
         notes: ''
       });
       setSelectedCoffeeType('');
-      
-    } catch (error) {
-      console.error("Error:", error);
-      setFormError("Backend functionality has been removed");
-      toast({
-        title: "Note",
-        description: "Backend functionality for coffee inventory has been removed.",
-      });
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setFormError(result.error);
     }
+  };
+
+  const handleDebugClick = () => {
+    console.log("Current form data:", formData);
+    toast({
+      title: "Debug Info",
+      description: "Form data printed to console",
+    });
   };
 
   const handleViewRecords = () => {
     setViewRecords(true);
-    toast({
-      title: "Note",
-      description: "Records functionality has been removed.",
-    });
   };
 
   if (viewRecords) {
@@ -281,14 +327,6 @@ const ReceiveNewStock = ({ isKazo }) => {
         </TabsList>
         
         <TabsContent value="form">
-          <Alert className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Information</AlertTitle>
-            <AlertDescription>
-              Backend functionality for this form has been removed. The form is for UI demonstration only.
-            </AlertDescription>
-          </Alert>
-          
           {formError && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
@@ -297,251 +335,286 @@ const ReceiveNewStock = ({ isKazo }) => {
             </Alert>
           )}
         
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Coffee className="h-4 w-4 text-amber-600" />
-                      <Label>Warehouse Manager</Label>
-                    </div>
-                    <Input 
-                      name="manager" 
-                      value={managerName} 
-                      readOnly 
-                      className="bg-amber-50"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Map className="h-4 w-4 text-blue-600" />
-                      <Label>Stock Location</Label>
-                    </div>
-                    <Input 
-                      name="location" 
-                      value={selectedLocation} 
-                      readOnly 
-                      className="bg-blue-50"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Coffee className="h-4 w-4 text-amber-600" />
-                  <h3 className="text-lg font-medium">Coffee Details</h3>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label>Coffee Type</Label>
-                    <Select 
-                      name="coffeeType" 
-                      value={formData.coffeeType}
-                      onValueChange={(value) => {
-                        setSelectedCoffeeType(value);
-                        handleInputChange('coffeeType', value);
-                      }}
-                      required
-                    >
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="Select coffee type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="arabica">Arabica Coffee</SelectItem>
-                        <SelectItem value="robusta">Robusta Coffee</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Quality Grade</Label>
-                    <Select 
-                      name="qualityGrade" 
-                      disabled={!selectedCoffeeType}
-                      value={formData.qualityGrade}
-                      onValueChange={(value) => handleInputChange('qualityGrade', value)}
-                      required
-                    >
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="Select grade" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {selectedCoffeeType && COFFEE_GRADES[selectedCoffeeType].map((grade) => (
-                          <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Source of Coffee (Origin)</Label>
-                    <Input 
-                      name="source" 
-                      placeholder="Enter farm or location name" 
-                      value={formData.source}
-                      onChange={(e) => handleInputChange('source', e.target.value)}
-                      required 
-                      className="bg-white"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Droplet className="h-4 w-4 text-blue-600" />
-                      <Label>Coffee Bean Humidity (%)</Label>
-                    </div>
-                    <Input 
-                      name="humidity" 
-                      type="number" 
-                      step="0.01" 
-                      min="0" 
-                      max="100" 
-                      placeholder="Enter moisture content" 
-                      value={formData.humidity}
-                      onChange={(e) => handleInputChange('humidity', e.target.value)}
-                      required 
-                      className="bg-white"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <DollarSign className="h-4 w-4 text-green-600" />
-                  <h3 className="text-lg font-medium">Pricing and Quantity</h3>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Buying Price</Label>
-                      <Input 
-                        name="buyingPrice" 
-                        type="number" 
-                        step="0.01"
-                        min="0.01"
-                        placeholder="Enter price" 
-                        value={formData.buyingPrice}
-                        onChange={(e) => handleInputChange('buyingPrice', e.target.value)}
-                        required 
-                        className="bg-white"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Currency</Label>
-                      <Select 
-                        name="currency" 
-                        defaultValue="UGX"
-                        value={formData.currency}
-                        onValueChange={(value) => handleInputChange('currency', value)}
-                      >
-                        <SelectTrigger className="bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="UGX">UGX</SelectItem>
-                          <SelectItem value="USD">USD</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Weight className="h-4 w-4 text-purple-600" />
-                        <Label>Quantity</Label>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-3">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Coffee className="h-4 w-4 text-amber-600" />
+                          <Label>Warehouse Manager</Label>
+                        </div>
+                        <Input 
+                          name="manager" 
+                          value={managerName} 
+                          readOnly 
+                          className="bg-amber-50"
+                        />
                       </div>
-                      <Input 
-                        name="quantity" 
-                        type="number" 
-                        step="0.01"
-                        min="0.01"
-                        placeholder="Enter quantity" 
-                        value={formData.quantity}
-                        onChange={(e) => handleInputChange('quantity', e.target.value)}
-                        required 
-                        className="bg-white"
-                      />
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Map className="h-4 w-4 text-blue-600" />
+                          <Label>Stock Location</Label>
+                        </div>
+                        <Input 
+                          name="location" 
+                          value={selectedLocation} 
+                          readOnly 
+                          className="bg-blue-50"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Unit</Label>
-                      <Select 
-                        name="unit" 
-                        defaultValue="kg"
-                        value={formData.unit}
-                        onValueChange={(value) => handleInputChange('unit', value)}
-                      >
-                        <SelectTrigger className="bg-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="kg">Kg</SelectItem>
-                          <SelectItem value="tons">Tons</SelectItem>
-                          <SelectItem value="bags">Bags</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className="h-4 w-4 text-emerald-600" />
-                      <Label>Total</Label>
-                    </div>
-                    <div className="flex items-center">
-                      <Input 
-                        value={totalPrice ? `${formData.currency} ${totalPrice}` : ''}
-                        readOnly 
-                        className="bg-emerald-50 font-medium"
-                        placeholder="Total will be calculated automatically"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <FileText className="h-4 w-4 text-gray-600" />
-                  <h3 className="text-lg font-medium">Additional Information</h3>
-                </div>
+                  </CardContent>
+                </Card>
                 
-                <div className="space-y-2">
-                  <Label>Notes</Label>
-                  <Textarea 
-                    name="notes" 
-                    placeholder="Enter any additional notes or details about this coffee stock"
-                    value={formData.notes}
-                    onChange={(e) => handleInputChange('notes', e.target.value)}
-                    className="bg-white"
-                    rows={4}
-                  />
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <Coffee className="h-4 w-4 text-amber-600" />
+                      <h3 className="text-lg font-medium">Coffee Details</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label>Coffee Type</Label>
+                        <Select 
+                          name="coffeeType" 
+                          value={formData.coffeeType}
+                          onValueChange={(value) => {
+                            setSelectedCoffeeType(value);
+                            handleInputChange('coffeeType', value);
+                          }}
+                          required
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Select coffee type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="arabica">Arabica Coffee</SelectItem>
+                            <SelectItem value="robusta">Robusta Coffee</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Quality Grade</Label>
+                        <Select 
+                          name="qualityGrade" 
+                          disabled={!selectedCoffeeType}
+                          value={formData.qualityGrade}
+                          onValueChange={(value) => handleInputChange('qualityGrade', value)}
+                          required
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Select grade" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {selectedCoffeeType && COFFEE_GRADES[selectedCoffeeType].map((grade) => (
+                              <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Source of Coffee (Origin)</Label>
+                        <Input 
+                          name="source" 
+                          placeholder="Enter farm or location name" 
+                          value={formData.source}
+                          onChange={(e) => handleInputChange('source', e.target.value)}
+                          required 
+                          className="bg-white"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Droplet className="h-4 w-4 text-blue-600" />
+                          <Label>Coffee Bean Humidity (%)</Label>
+                        </div>
+                        <Input 
+                          name="humidity" 
+                          type="number" 
+                          step="0.01" 
+                          min="0" 
+                          max="100" 
+                          placeholder="Enter moisture content" 
+                          value={formData.humidity}
+                          onChange={(e) => handleInputChange('humidity', e.target.value)}
+                          required 
+                          className="bg-white"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      <h3 className="text-lg font-medium">Pricing and Quantity</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Buying Price</Label>
+                          <Input 
+                            name="buyingPrice" 
+                            type="number" 
+                            step="0.01"
+                            min="0.01"
+                            placeholder="Enter price" 
+                            value={formData.buyingPrice}
+                            onChange={(e) => handleInputChange('buyingPrice', e.target.value)}
+                            required 
+                            className="bg-white"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Currency</Label>
+                          <Select 
+                            name="currency" 
+                            defaultValue="UGX"
+                            value={formData.currency}
+                            onValueChange={(value) => handleInputChange('currency', value)}
+                          >
+                            <SelectTrigger className="bg-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="UGX">UGX</SelectItem>
+                              <SelectItem value="USD">USD</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Weight className="h-4 w-4 text-purple-600" />
+                            <Label>Quantity</Label>
+                          </div>
+                          <Input 
+                            name="quantity" 
+                            type="number" 
+                            step="0.01"
+                            min="0.01"
+                            placeholder="Enter quantity" 
+                            value={formData.quantity}
+                            onChange={(e) => handleInputChange('quantity', e.target.value)}
+                            required 
+                            className="bg-white"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Unit</Label>
+                          <Select 
+                            name="unit" 
+                            defaultValue="kg"
+                            value={formData.unit}
+                            onValueChange={(value) => handleInputChange('unit', value)}
+                          >
+                            <SelectTrigger className="bg-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="kg">Kg</SelectItem>
+                              <SelectItem value="tons">Tons</SelectItem>
+                              <SelectItem value="bags">Bags</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <DollarSign className="h-4 w-4 text-emerald-600" />
+                          <Label>Total</Label>
+                        </div>
+                        <div className="flex items-center">
+                          <Input 
+                            value={totalPrice ? `${formData.currency} ${totalPrice}` : ''}
+                            readOnly 
+                            className="bg-emerald-50 font-medium"
+                            placeholder="Total will be calculated automatically"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <FileText className="h-4 w-4 text-gray-600" />
+                      <h3 className="text-lg font-medium">Additional Information</h3>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Notes</Label>
+                      <Textarea 
+                        name="notes" 
+                        placeholder="Enter any additional notes or details about this coffee stock"
+                        value={formData.notes}
+                        onChange={(e) => handleInputChange('notes', e.target.value)}
+                        className="bg-white"
+                        rows={4}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <div className="flex justify-between items-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleDebugClick}
+                    className="flex items-center gap-2"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    Debug Form Data
+                  </Button>
+                  
+                  <Button 
+                    type="submit" 
+                    className="bg-green-600 hover:bg-green-700" 
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        Receive Coffee Stock
+                      </>
+                    )}
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <div className="flex justify-end">
-              <Button 
-                type="submit" 
-                className="bg-green-600 hover:bg-green-700" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Processing..." : "Receive Coffee Stock (Demo Only)"}
-              </Button>
+              </form>
             </div>
-          </form>
+            
+            <div className="lg:col-span-1">
+              <Card>
+                <CardContent className="pt-6">
+                  <RecentCoffeeStockEntries 
+                    entries={recentCoffeeStocks} 
+                    isLoading={fetchLoading} 
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
         
         <TabsContent value="guide">
@@ -604,4 +677,3 @@ const ReceiveNewStock = ({ isKazo }) => {
 };
 
 export default ReceiveNewStock;
-
