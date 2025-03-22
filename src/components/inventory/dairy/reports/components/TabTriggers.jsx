@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Factory, Star, FileSpreadsheet } from "lucide-react";
+import { LayoutDashboard, Factory, Star } from "lucide-react";
 
 const TabTriggers = ({ reportCounts }) => {
   return (
@@ -48,21 +48,6 @@ const TabTriggers = ({ reportCounts }) => {
         </div>
         <div className="text-sm text-muted-foreground">
           Avg Score: {reportCounts.qualityScore || "0%"}
-        </div>
-      </TabsTrigger>
-      
-      <TabsTrigger 
-        value="generate" 
-        className="h-32 flex flex-col items-center justify-center gap-2 bg-white shadow-md rounded-lg hover:shadow-lg border border-amber-100 hover:border-amber-300 transition-all data-[state=active]:border-amber-500 data-[state=active]:shadow-lg"
-      >
-        <div className="flex flex-col items-center">
-          <div className="p-3 rounded-full bg-amber-50 mb-2">
-            <FileSpreadsheet className="h-6 w-6 text-amber-600" />
-          </div>
-          <span className="text-lg font-medium">Generate</span>
-        </div>
-        <div className="text-sm text-muted-foreground">
-          Create Custom Reports
         </div>
       </TabsTrigger>
     </TabsList>

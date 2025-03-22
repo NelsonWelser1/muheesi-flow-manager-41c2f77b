@@ -10,7 +10,6 @@ import TabTriggers from './components/TabTriggers';
 import OverviewContent from './components/OverviewContent';
 import ProductionContent from './components/ProductionContent';
 import QualityContent from './components/QualityContent';
-import ReportExportCard from './ReportExportCard';
 import { LoadingState, ErrorState } from './components/LoadingAndErrorStates';
 
 const ReportsDashboard = () => {
@@ -77,15 +76,6 @@ const ReportsDashboard = () => {
               productionData={productionData}
               onOpenReportForm={() => setIsReportFormOpen(true)}
             />
-          </TabsContent>
-          
-          <TabsContent value="generate" className="space-y-6 mt-0">
-            <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
-              <ReportExportCard 
-                productionData={productionData}
-                salesData={salesData}
-              />
-            </div>
           </TabsContent>
         </div>
       </Tabs>
