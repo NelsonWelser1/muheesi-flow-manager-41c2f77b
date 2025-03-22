@@ -1,166 +1,110 @@
+
+/**
+ * Utilities for exporting coffee sales data to different formats
+ */
+import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 
 /**
- * Export coffee stock data to CSV format
- * @param {Array} data - Coffee stock entries
- * @param {string} filename - Output filename
+ * Export data to CSV format
+ * @param {Array} data - The data to export
+ * @param {string} filename - The filename without extension
  */
-export const exportToCSV = (data, filename = 'coffee-stock-export') => {
-  if (!data || !Array.isArray(data) || data.length === 0) {
-    console.warn('No data to export to CSV');
-    return;
-  }
-
-  try {
-    // Get headers from the first item
-    const headers = Object.keys(data[0]);
-    
-    // Format data rows
-    const csvRows = [
-      headers.join(','), // Header row
-      ...data.map(row => 
-        headers.map(header => {
-          const value = row[header];
-          // Handle values that need quotes (contain commas, quotes, or newlines)
-          const formatted = value === null || value === undefined ? '' : String(value);
-          return formatted.includes(',') || formatted.includes('"') || formatted.includes('\n') 
-            ? `"${formatted.replace(/"/g, '""')}"` 
-            : formatted;
-        }).join(',')
-      )
-    ];
-    
-    // Create CSV content and download
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    // Create download link and trigger click
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${filename}-${new Date().toISOString().slice(0, 10)}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    console.log(`CSV export of ${data.length} records completed`);
-  } catch (error) {
-    console.error('Error exporting to CSV:', error);
-    throw error;
-  }
+export const exportToCSV = (data, filename) => {
+  // Format data for CSV
+  const formattedData = formatDataForExport(data);
+  
+  // Create workbook and worksheet
+  const ws = XLSX.utils.json_to_sheet(formattedData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Coffee Sales');
+  
+  // Export to CSV
+  XLSX.writeFile(wb, `${filename}.csv`);
 };
 
 /**
- * Export coffee stock data to Excel format
- * @param {Array} data - Coffee stock entries
- * @param {string} filename - Output filename
+ * Export data to Excel format
+ * @param {Array} data - The data to export
+ * @param {string} filename - The filename without extension
  */
-export const exportToExcel = (data, filename = 'coffee-stock-export') => {
-  if (!data || !Array.isArray(data) || data.length === 0) {
-    console.warn('No data to export to Excel');
-    return;
-  }
-
-  try {
-    // Convert data to worksheet
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    
-    // Create workbook and append worksheet
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Coffee Stock');
-    
-    // Generate Excel file and trigger browser download
-    XLSX.writeFile(workbook, `${filename}-${new Date().toISOString().slice(0, 10)}.xlsx`);
-    
-    console.log(`Excel export of ${data.length} records completed`);
-  } catch (error) {
-    console.error('Error exporting to Excel:', error);
-    alert('Failed to export to Excel. Please try again later.');
-  }
+export const exportToExcel = (data, filename) => {
+  // Format data for Excel
+  const formattedData = formatDataForExport(data);
+  
+  // Create workbook and worksheet
+  const ws = XLSX.utils.json_to_sheet(formattedData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Coffee Sales');
+  
+  // Export to Excel
+  XLSX.writeFile(wb, `${filename}.xlsx`);
 };
 
 /**
- * Export coffee stock data to PDF format
- * @param {Array} data - Coffee stock entries
- * @param {string} filename - Output filename
+ * Export data to PDF format
+ * @param {Array} data - The data to export
+ * @param {string} filename - The filename without extension
+ * @param {string} title - The title for the PDF document
  */
-export const exportToPDF = (data, filename = 'coffee-stock-export') => {
-  if (!data || !Array.isArray(data) || data.length === 0) {
-    console.warn('No data to export to PDF');
-    return;
-  }
+export const exportToPDF = (data, filename, title) => {
+  // Create PDF document
+  const doc = new jsPDF();
+  
+  // Add title
+  doc.setFontSize(18);
+  doc.text(title, 14, 22);
+  doc.setFontSize(11);
+  doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+  
+  // Format data for the table
+  const formattedData = formatDataForExport(data);
+  
+  // Get table headers
+  const headers = Object.keys(formattedData[0]);
+  
+  // Prepare table rows
+  const rows = formattedData.map(record => Object.values(record));
+  
+  // Create table
+  doc.autoTable({
+    head: [headers],
+    body: rows,
+    startY: 40,
+    theme: 'grid',
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [51, 51, 51], textColor: 255 },
+    margin: { top: 30 }
+  });
+  
+  // Save PDF
+  doc.save(`${filename}.pdf`);
+};
 
-  try {
-    // Create a new PDF document
-    const doc = new jsPDF();
+/**
+ * Format data for export to make it more readable
+ * @param {Array} data - The raw data to format
+ * @returns {Array} - Formatted data
+ */
+const formatDataForExport = (data) => {
+  return data.map(record => {
+    // Get date in readable format
+    const date = new Date(record.created_at).toLocaleString();
     
-    // Add title
-    doc.setFontSize(16);
-    doc.text('Coffee Stock Report', 14, 15);
-    
-    // Add date
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
-    
-    // Select relevant columns for the PDF (to keep it readable)
-    const columns = [
-      'coffee_type',
-      'quality_grade',
-      'quantity',
-      'buying_price',
-      'location',
-      'status',
-      'created_at'
-    ];
-    
-    // Format data for autoTable
-    const tableData = data.map(item => {
-      const rowData = [];
-      columns.forEach(col => {
-        let value = item[col];
-        
-        // Format date
-        if (col === 'created_at' && value) {
-          try {
-            value = new Date(value).toLocaleDateString();
-          } catch (e) {
-            // Keep original value if date parsing fails
-          }
-        }
-        
-        rowData.push(value || 'N/A');
-      });
-      return rowData;
-    });
-    
-    // Generate table headers in Title Case
-    const headers = columns.map(col => 
-      col.split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ')
-    );
-    
-    // Add table to PDF
-    doc.autoTable({
-      head: [headers],
-      body: tableData,
-      startY: 30,
-      theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [66, 135, 245], textColor: 255 },
-      alternateRowStyles: { fillColor: [240, 240, 240] },
-      margin: { top: 25 }
-    });
-    
-    // Save PDF
-    doc.save(`${filename}-${new Date().toISOString().slice(0, 10)}.pdf`);
-    
-    console.log(`PDF export of ${data.length} records completed`);
-  } catch (error) {
-    console.error('Error exporting to PDF:', error);
-    alert('Failed to export to PDF. Please try again later.');
-  }
+    // Format the data
+    return {
+      'Date': date,
+      'Buyer Name': record.buyer_name,
+      'Buyer Contact': record.buyer_contact,
+      'Coffee Type': record.coffee_type,
+      'Quality Grade': record.quality_grade,
+      'Location': record.location,
+      'Manager': record.manager,
+      'Quantity': `${record.quantity} ${record.unit}`,
+      'Selling Price': `${record.selling_price} ${record.currency}`,
+      'Total Amount': `${record.total_price} ${record.currency}`,
+      'Status': record.status
+    };
+  });
 };

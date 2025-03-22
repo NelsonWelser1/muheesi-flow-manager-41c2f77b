@@ -2,426 +2,305 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
-import { 
-  Search, 
-  RefreshCw, 
-  ArrowUpDown, 
-  ArrowLeft,
-  CalendarDays
-} from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
-import { exportToCSV, exportToExcel, exportToPDF } from '@/utils/coffeeStockUtils';
-import { fetchCoffeeStock } from '@/utils/coffee/coffeeStockCore';
-import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Search, FileText, FileSpreadsheet, FileDown, RefreshCw } from 'lucide-react';
+import { useCoffeeSales } from '@/hooks/useCoffeeSales';
+import { useToast } from '@/components/ui/use-toast';
+import { showErrorToast } from '@/components/ui/notifications';
+
+// Import utility for exports
+import { exportToCSV, exportToExcel, exportToPDF } from '@/utils/coffee/coffeeExport';
+
+const TIME_RANGES = [
+  { value: 'all', label: 'All Time' },
+  { value: 'hour', label: 'Last Hour' },
+  { value: 'day', label: 'Last Day' },
+  { value: 'week', label: 'Last Week' },
+  { value: 'month', label: 'Last Month' },
+  { value: 'year', label: 'Last Year' }
+];
+
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'All Status' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' }
+];
 
 const CoffeeSalesRecords = ({ onBack }) => {
   const [records, setRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [statusFilter, setStatusFilter] = useState('sold');
-  const [timeRange, setTimeRange] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ field: 'created_at', ascending: false });
-  const [showTimeFilter, setShowTimeFilter] = useState(false);
+  const [timeRange, setTimeRange] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
+  
+  const { 
+    salesRecords, 
+    isLoading, 
+    fetchSalesByTimeRange, 
+    searchSalesRecords,
+    refetchSales
+  } = useCoffeeSales();
 
-  const fetchRecords = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Calculate the date range based on selected time filter
-      let startDate = null;
-      let endDate = new Date();
-      
-      if (timeRange !== 'all') {
-        const now = new Date();
-        switch (timeRange) {
-          case 'hour':
-            startDate = new Date(now.getTime() - 60 * 60 * 1000);
-            break;
-          case 'day':
-            startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-            break;
-          case 'week':
-            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            break;
-          case 'month':
-            startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            break;
-          case 'year':
-            startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-            break;
-          default:
-            startDate = null;
-        }
-      }
-
-      // Fetch data with filters
-      const data = await fetchCoffeeStock({
-        statusFilter: statusFilter,
-        startDate,
-        endDate,
-        sortField: sortConfig.field,
-        ascending: sortConfig.ascending
-      });
-
-      // Filter to only show sales records
-      const salesRecords = data.filter(record => record.status === 'sold');
-      setRecords(salesRecords);
-    } catch (err) {
-      console.error('Error fetching coffee sales records:', err);
-      setError('Failed to load coffee sales records');
-      toast({
-        title: "Error",
-        description: "Failed to load coffee sales records",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Load initial records
   useEffect(() => {
-    fetchRecords();
-  }, [statusFilter, timeRange, sortConfig]);
+    setRecords(salesRecords);
+  }, [salesRecords]);
 
-  // Filter records based on search term
-  const filteredRecords = records.filter(record => {
-    if (!searchTerm) return true;
+  // Handle time range filter change
+  const handleTimeRangeChange = async (value) => {
+    setTimeRange(value);
+    if (value === 'all') {
+      await refetchSales();
+      return;
+    }
     
-    const search = searchTerm.toLowerCase();
-    return (
-      (record.manager && record.manager.toLowerCase().includes(search)) ||
-      (record.location && record.location.toLowerCase().includes(search)) ||
-      (record.coffee_type && record.coffee_type.toLowerCase().includes(search)) ||
-      (record.quality_grade && record.quality_grade.toLowerCase().includes(search)) ||
-      (record.buyerName && record.buyerName.toLowerCase().includes(search)) ||
-      (record.buyerContact && record.buyerContact.toLowerCase().includes(search)) ||
-      (record.notes && record.notes.toLowerCase().includes(search))
-    );
-  });
-
-  const handleSort = (field) => {
-    setSortConfig(prevConfig => ({
-      field,
-      ascending: prevConfig.field === field ? !prevConfig.ascending : true
-    }));
-  };
-
-  const handleTimeRangeChange = (range) => {
-    setTimeRange(range);
-  };
-
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleRefresh = () => {
-    fetchRecords();
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
     try {
-      return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
-    } catch (error) {
-      return dateString;
+      const filteredRecords = await fetchSalesByTimeRange(value);
+      setRecords(filteredRecords);
+    } catch (err) {
+      console.error('Error filtering by time range:', err);
     }
   };
 
-  const formatCurrency = (amount, currency = 'UGX') => {
-    if (amount === undefined || amount === null) return 'N/A';
-    return `${currency} ${parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  // Handle status filter change 
+  const handleStatusChange = (value) => {
+    setStatusFilter(value);
+    
+    if (value === 'all') {
+      setRecords(salesRecords);
+      return;
+    }
+    
+    const filteredRecords = salesRecords.filter(record => record.status === value);
+    setRecords(filteredRecords);
   };
 
-  const handleExportToCSV = () => {
-    exportToCSV(filteredRecords, 'coffee-sales-records');
+  // Handle search
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) {
+      setRecords(salesRecords);
+      return;
+    }
+    
+    try {
+      const searchResults = await searchSalesRecords(searchTerm);
+      setRecords(searchResults);
+    } catch (err) {
+      console.error('Error searching records:', err);
+    }
   };
 
-  const handleExportToExcel = () => {
-    exportToExcel(filteredRecords, 'coffee-sales-records');
+  // Handle search input keypress (search on Enter)
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
-  const handleExportToPDF = () => {
-    exportToPDF(filteredRecords, 'coffee-sales-records');
+  // Handle refresh
+  const handleRefresh = async () => {
+    await refetchSales();
+  };
+
+  // Handle exports
+  const handleExport = async (format) => {
+    try {
+      setIsExporting(true);
+      
+      // Make sure we have records to export
+      if (!records || records.length === 0) {
+        showErrorToast(toast, 'No records available to export');
+        return;
+      }
+      
+      const filename = `coffee-sales-${new Date().toISOString().slice(0, 10)}`;
+      
+      switch (format) {
+        case 'csv':
+          await exportToCSV(records, filename);
+          break;
+        case 'excel':
+          await exportToExcel(records, filename);
+          break;
+        case 'pdf':
+          await exportToPDF(records, filename, 'Coffee Sales Records');
+          break;
+        default:
+          showErrorToast(toast, 'Unsupported export format');
+      }
+    } catch (err) {
+      console.error(`Error exporting as ${format}:`, err);
+      showErrorToast(toast, `Failed to export as ${format}`);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-xl font-semibold">Coffee Sales Records</CardTitle>
-        <div className="flex items-center space-x-2">
-          <Button 
-            onClick={onBack}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
+          <h2 className="text-xl font-semibold">Coffee Sales Records</h2>
         </div>
-      </CardHeader>
-      
-      <CardContent>
-        <div className="flex flex-wrap gap-3 mb-4 items-center">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search sales records..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="pl-8"
-            />
-          </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1"
-            onClick={() => setShowTimeFilter(!showTimeFilter)}
-          >
-            <CalendarDays className="h-4 w-4" />
-            Time Range
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1"
+        
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={handleRefresh}
+            disabled={isLoading}
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4 mr-1" />
             Refresh
           </Button>
+        </div>
+      </div>
+      
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-4 mb-4">
+        <div className="flex flex-1 gap-2">
+          <Input
+            placeholder="Search by name, contact, or location..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyPress={handleSearchKeyPress}
+            className="flex-1"
+          />
+          <Button variant="outline" onClick={handleSearch}>
+            <Search className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="flex gap-2">
+          <Select value={timeRange} onValueChange={handleTimeRangeChange}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Select time range" />
+            </SelectTrigger>
+            <SelectContent>
+              {TIME_RANGES.map((range) => (
+                <SelectItem key={range.value} value={range.value}>
+                  {range.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleExportToPDF}
-              disabled={loading || filteredRecords.length === 0}
-            >
-              Export to PDF
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleExportToExcel}
-              disabled={loading || filteredRecords.length === 0}
-            >
-              Export to Excel
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleExportToCSV}
-              disabled={loading || filteredRecords.length === 0}
-            >
-              Export to CSV
-            </Button>
-          </div>
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  {status.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        
-        {showTimeFilter && (
-          <div className="mb-4 p-3 bg-muted rounded-md">
-            <div className="text-sm font-medium mb-2">Select Time Range</div>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              <Button 
-                variant={timeRange === 'all' ? "default" : "outline"} 
-                size="sm" 
-                className="w-full" 
-                onClick={() => handleTimeRangeChange('all')}
-              >
-                All Time
-              </Button>
-              <Button 
-                variant={timeRange === 'hour' ? "default" : "outline"} 
-                size="sm" 
-                className="w-full" 
-                onClick={() => handleTimeRangeChange('hour')}
-              >
-                Past Hour
-              </Button>
-              <Button 
-                variant={timeRange === 'day' ? "default" : "outline"} 
-                size="sm" 
-                className="w-full" 
-                onClick={() => handleTimeRangeChange('day')}
-              >
-                Past Day
-              </Button>
-              <Button 
-                variant={timeRange === 'week' ? "default" : "outline"} 
-                size="sm" 
-                className="w-full" 
-                onClick={() => handleTimeRangeChange('week')}
-              >
-                Past Week
-              </Button>
-              <Button 
-                variant={timeRange === 'month' ? "default" : "outline"} 
-                size="sm" 
-                className="w-full" 
-                onClick={() => handleTimeRangeChange('month')}
-              >
-                Past Month
-              </Button>
-              <Button 
-                variant={timeRange === 'year' ? "default" : "outline"} 
-                size="sm" 
-                className="w-full" 
-                onClick={() => handleTimeRangeChange('year')}
-              >
-                Past Year
-              </Button>
-            </div>
-          </div>
-        )}
-        
-        <div className="mb-4 p-4 bg-blue-50 border border-blue-100 rounded-md">
-          <div className="flex flex-wrap justify-between items-center">
-            <div>
-              <h3 className="text-sm font-medium text-blue-800">Total Sales Records</h3>
-              <p className="text-2xl font-bold text-blue-900">{filteredRecords.length}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-blue-800">Time Range</h3>
-              <p className="text-md font-medium text-blue-900">
-                {timeRange === 'all' ? 'All Time' : 
-                 timeRange === 'hour' ? 'Past Hour' :
-                 timeRange === 'day' ? 'Past Day' :
-                 timeRange === 'week' ? 'Past Week' :
-                 timeRange === 'month' ? 'Past Month' : 'Past Year'}
-              </p>
-            </div>
-          </div>
+      </div>
+      
+      {/* Export buttons */}
+      <div className="flex justify-end gap-2 mb-4">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => handleExport('pdf')}
+          disabled={isExporting || isLoading || records.length === 0}
+        >
+          <FileText className="h-4 w-4 mr-1" />
+          PDF
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => handleExport('excel')}
+          disabled={isExporting || isLoading || records.length === 0}
+        >
+          <FileSpreadsheet className="h-4 w-4 mr-1" />
+          Excel
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => handleExport('csv')}
+          disabled={isExporting || isLoading || records.length === 0}
+        >
+          <FileDown className="h-4 w-4 mr-1" />
+          CSV
+        </Button>
+      </div>
+      
+      {/* Records table */}
+      <div className="rounded-md border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="px-4 py-3 text-left font-medium">Date</th>
+                <th className="px-4 py-3 text-left font-medium">Buyer</th>
+                <th className="px-4 py-3 text-left font-medium">Contact</th>
+                <th className="px-4 py-3 text-left font-medium">Coffee Type</th>
+                <th className="px-4 py-3 text-left font-medium">Quality Grade</th>
+                <th className="px-4 py-3 text-left font-medium">Location</th>
+                <th className="px-4 py-3 text-left font-medium">Quantity</th>
+                <th className="px-4 py-3 text-left font-medium">Price</th>
+                <th className="px-4 py-3 text-left font-medium">Total</th>
+                <th className="px-4 py-3 text-left font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {isLoading ? (
+                <tr>
+                  <td colSpan="10" className="px-4 py-10 text-center">Loading records...</td>
+                </tr>
+              ) : records.length === 0 ? (
+                <tr>
+                  <td colSpan="10" className="px-4 py-10 text-center">No records found</td>
+                </tr>
+              ) : (
+                records.map((record) => (
+                  <tr key={record.id} className="hover:bg-muted/50">
+                    <td className="px-4 py-3">
+                      {new Date(record.created_at).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3">{record.buyer_name}</td>
+                    <td className="px-4 py-3">{record.buyer_contact}</td>
+                    <td className="px-4 py-3 capitalize">{record.coffee_type}</td>
+                    <td className="px-4 py-3">{record.quality_grade}</td>
+                    <td className="px-4 py-3">{record.location}</td>
+                    <td className="px-4 py-3">
+                      {record.quantity} {record.unit}
+                    </td>
+                    <td className="px-4 py-3">
+                      {record.selling_price} {record.currency}
+                    </td>
+                    <td className="px-4 py-3">
+                      {record.total_price} {record.currency}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        record.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                        record.status === 'cancelled' ? 'bg-red-100 text-red-800' : 
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {record.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-        
-        {loading ? (
-          <div className="py-8 text-center">
-            <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-muted-foreground" />
-            <p className="text-muted-foreground">Loading coffee sales records...</p>
-          </div>
-        ) : error ? (
-          <div className="py-8 text-center text-red-500">
-            <p>{error}</p>
-            <Button variant="outline" className="mt-2" onClick={handleRefresh}>
-              Try Again
-            </Button>
-          </div>
-        ) : filteredRecords.length === 0 ? (
-          <div className="py-8 text-center border rounded-md">
-            <p className="text-muted-foreground mb-2">No coffee sales records found</p>
-            <p className="text-sm text-muted-foreground">Try changing your search or time range settings</p>
-          </div>
-        ) : (
-          <div className="border rounded-md overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[180px]">
-                      <Button 
-                        variant="ghost" 
-                        className="flex items-center gap-1 p-0 h-auto font-medium"
-                        onClick={() => handleSort('created_at')}
-                      >
-                        Date <ArrowUpDown className="h-3 w-3" />
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        className="flex items-center gap-1 p-0 h-auto font-medium"
-                        onClick={() => handleSort('buyerName')}
-                      >
-                        Buyer <ArrowUpDown className="h-3 w-3" />
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        className="flex items-center gap-1 p-0 h-auto font-medium"
-                        onClick={() => handleSort('coffee_type')}
-                      >
-                        Type <ArrowUpDown className="h-3 w-3" />
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        className="flex items-center gap-1 p-0 h-auto font-medium"
-                        onClick={() => handleSort('quality_grade')}
-                      >
-                        Grade <ArrowUpDown className="h-3 w-3" />
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        className="flex items-center gap-1 p-0 h-auto font-medium"
-                        onClick={() => handleSort('quantity')}
-                      >
-                        Quantity <ArrowUpDown className="h-3 w-3" />
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        className="flex items-center gap-1 p-0 h-auto font-medium"
-                        onClick={() => handleSort('sellingPrice')}
-                      >
-                        Price <ArrowUpDown className="h-3 w-3" />
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        className="flex items-center gap-1 p-0 h-auto font-medium"
-                        onClick={() => handleSort('location')}
-                      >
-                        Location <ArrowUpDown className="h-3 w-3" />
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        className="flex items-center gap-1 p-0 h-auto font-medium"
-                        onClick={() => handleSort('manager')}
-                      >
-                        Manager <ArrowUpDown className="h-3 w-3" />
-                      </Button>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRecords.map((record) => (
-                    <TableRow key={record.id}>
-                      <TableCell className="font-medium">{formatDate(record.created_at)}</TableCell>
-                      <TableCell>{record.buyerName || 'N/A'}</TableCell>
-                      <TableCell>{record.coffee_type || 'N/A'}</TableCell>
-                      <TableCell>{record.quality_grade || 'N/A'}</TableCell>
-                      <TableCell>{record.quantity} {record.unit || 'kg'}</TableCell>
-                      <TableCell>{formatCurrency(record.sellingPrice, record.currency)}</TableCell>
-                      <TableCell>{record.location || 'N/A'}</TableCell>
-                      <TableCell>{record.manager || 'N/A'}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        )}
-        
-        <div className="mt-4 text-sm text-muted-foreground">
-          Showing {filteredRecords.length} sales records
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

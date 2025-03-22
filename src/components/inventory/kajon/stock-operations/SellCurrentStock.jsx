@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -5,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { useUpdateKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
-import AuthenticationForm from '../AuthenticationForm';
 import { Eye } from 'lucide-react';
+import AuthenticationForm from '../AuthenticationForm';
 import CoffeeSalesRecords from './records/CoffeeSalesRecords';
+import { useCoffeeSales } from '@/hooks/useCoffeeSales';
+import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
 
 const COFFEE_GRADES = {
   arabica: [
@@ -63,7 +65,7 @@ const SellCurrentStock = ({ isKazo }) => {
   const [quantity, setQuantity] = useState('');
   const [totalSellingPrice, setTotalSellingPrice] = useState('');
   const { toast } = useToast();
-  const updateCoffeeMutation = useUpdateKAJONCoffee();
+  const { createSale, isSubmitting } = useCoffeeSales();
 
   useEffect(() => {
     if (sellingPrice && quantity) {
@@ -83,26 +85,37 @@ const SellCurrentStock = ({ isKazo }) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
+    
+    // Debug: Log form data to console
+    console.log('Form data before submission:', data);
 
     try {
-      await updateCoffeeMutation.mutateAsync({
-        ...data,
+      // Map form data to expected schema
+      const saleData = {
         manager: managerName,
         location: selectedLocation,
-        type: 'sale',
-        totalPrice: totalSellingPrice
-      });
-
-      toast({
-        title: "Success",
-        description: "Stock sale recorded successfully",
-      });
+        buyerName: data.buyerName,
+        buyerContact: data.buyerContact,
+        coffeeType: data.coffeeType,
+        qualityGrade: data.qualityGrade,
+        sellingPrice: data.sellingPrice,
+        currency: data.currency || 'UGX',
+        quantity: data.quantity,
+        unit: data.unit || 'kg',
+        totalPrice: data.totalSellingPrice || totalSellingPrice
+      };
+      
+      await createSale(saleData);
+      
+      // Clear form fields after successful submission
+      setSellingPrice('');
+      setQuantity('');
+      setTotalSellingPrice('');
+      e.target.reset();
+      setSelectedCoffeeType('');
+      
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to record stock sale",
-        variant: "destructive",
-      });
+      showErrorToast(toast, `Failed to record sale: ${error.message}`);
     }
   };
 
@@ -279,7 +292,9 @@ const SellCurrentStock = ({ isKazo }) => {
           </div>
         </div>
 
-        <Button type="submit" className="w-full">Record Sale</Button>
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? 'Recording Sale...' : 'Record Sale'}
+        </Button>
       </form>
     </div>
   );
