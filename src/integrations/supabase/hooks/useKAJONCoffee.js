@@ -26,6 +26,12 @@ export const useKAJONCoffees = (filters = {}) => useQuery({
         if (filters.coffeeType) {
             query = query.eq('coffeeType', filters.coffeeType);
         }
+        if (filters.status) {
+            query = query.eq('status', filters.status);
+        }
+        if (filters.startDate && filters.endDate) {
+            query = query.gte('created_at', filters.startDate).lte('created_at', filters.endDate);
+        }
         
         // Sort by newest first
         query = query.order('created_at', { ascending: false });
@@ -51,7 +57,7 @@ export const useAddKAJONCoffee = () => {
             console.log("Submitting new coffee inventory:", newCoffee);
             
             // Validate required fields
-            const requiredFields = ['manager', 'location', 'coffeeType', 'qualityGrade', 'quantity', 'buyingPrice'];
+            const requiredFields = ['manager', 'location', 'coffeeType', 'qualityGrade', 'source', 'quantity', 'buyingPrice'];
             for (const field of requiredFields) {
                 if (!newCoffee[field]) {
                     throw new Error(`${field} is required`);
