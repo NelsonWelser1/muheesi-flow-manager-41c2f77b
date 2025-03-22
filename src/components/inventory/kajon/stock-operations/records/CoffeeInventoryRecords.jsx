@@ -15,10 +15,10 @@ import {
 import { useSupabaseAuth } from '@/integrations/supabase';
 import { supabase } from '@/integrations/supabase/supabase';
 import { fromSupabase } from '@/integrations/supabase/utils/supabaseUtils';
-import CSVExportButton from '../../dairy/logistics/records/components/export-buttons/CSVExportButton';
-import PDFExportButton from '../../dairy/logistics/records/components/export-buttons/PDFExportButton';
-import ExcelExportButton from '../../dairy/logistics/records/components/export-buttons/ExcelExportButton';
-import { exportToCSV, exportToExcel, exportToPDF } from '../../dairy/logistics/records/utils/exportUtils';
+import CSVExportButton from '@/components/inventory/dairy/logistics/records/components/export-buttons/CSVExportButton';
+import PDFExportButton from '@/components/inventory/dairy/logistics/records/components/export-buttons/PDFExportButton';
+import ExcelExportButton from '@/components/inventory/dairy/logistics/records/components/export-buttons/ExcelExportButton';
+import { exportToCSV, exportToExcel, exportToPDF } from '@/components/inventory/dairy/logistics/records/utils/exportUtils';
 import { format } from 'date-fns';
 
 const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
