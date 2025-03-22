@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StockOperations from './StockOperations';
@@ -24,7 +25,7 @@ const KazoCoffeeProject = () => {
       </TabsContent>
 
       <TabsContent value="view-stock">
-        <ViewCurrentStock />
+        <ViewCurrentStock isKazo={true} />
       </TabsContent>
 
       <TabsContent value="reports">
