@@ -3,9 +3,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabase';
 
 const fromSupabase = async (query) => {
-    const { data, error } = await query;
-    if (error) throw new Error(error.message);
-    return data;
+    try {
+        const { data, error } = await query;
+        if (error) {
+            console.error("Supabase query error:", error);
+            throw new Error(error.message);
+        }
+        return data;
+    } catch (err) {
+        console.error("Error in fromSupabase:", err);
+        throw err;
+    }
 };
 
 export const useKAJONCoffee = (id) => useQuery({
@@ -17,26 +25,33 @@ export const useKAJONCoffee = (id) => useQuery({
 export const useKAJONCoffees = (filters = {}) => useQuery({
     queryKey: ['kajonCoffee', filters],
     queryFn: async () => {
-        let query = supabase.from('coffee_inventory').select('*');
-        
-        // Apply filters if provided
-        if (filters.location) {
-            query = query.eq('location', filters.location);
+        try {
+            let query = supabase.from('coffee_inventory').select('*');
+            
+            // Apply filters if provided
+            if (filters.location) {
+                query = query.eq('location', filters.location);
+            }
+            if (filters.coffeeType) {
+                query = query.eq('coffeeType', filters.coffeeType);
+            }
+            if (filters.status) {
+                query = query.eq('status', filters.status);
+            }
+            if (filters.startDate && filters.endDate) {
+                query = query.gte('created_at', filters.startDate).lte('created_at', filters.endDate);
+            }
+            
+            // Sort by newest first
+            query = query.order('created_at', { ascending: false });
+            
+            const data = await fromSupabase(query);
+            console.log("Fetched coffee inventory data:", data);
+            return data;
+        } catch (error) {
+            console.error("Error fetching coffee inventory:", error);
+            throw error;
         }
-        if (filters.coffeeType) {
-            query = query.eq('coffeeType', filters.coffeeType);
-        }
-        if (filters.status) {
-            query = query.eq('status', filters.status);
-        }
-        if (filters.startDate && filters.endDate) {
-            query = query.gte('created_at', filters.startDate).lte('created_at', filters.endDate);
-        }
-        
-        // Sort by newest first
-        query = query.order('created_at', { ascending: false });
-        
-        return fromSupabase(query);
     },
 });
 

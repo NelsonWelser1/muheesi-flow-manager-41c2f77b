@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useKAJONCoffees } from '@/integrations/supabase/hooks/useKAJONCoffee';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,15 @@ const CoffeeInventoryRecords = ({ onBack, isKazo }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const { data: inventoryRecords, isLoading, error } = useKAJONCoffees(filters);
   const { toast } = useToast();
+  const [errorState, setErrorState] = useState(null);
+  
+  // Additional error handling
+  useEffect(() => {
+    if (error) {
+      console.error("Records fetch error:", error);
+      setErrorState(error);
+    }
+  }, [error]);
   
   const locationOptions = isKazo ? [
     "Kanoni-Mbogo",
@@ -49,17 +58,17 @@ const CoffeeInventoryRecords = ({ onBack, isKazo }) => {
       filteredRecords.forEach(record => {
         const row = [
           format(new Date(record.created_at), 'yyyy-MM-dd'),
-          record.manager,
-          record.location,
-          record.coffeeType,
-          record.qualityGrade,
-          record.source,
-          record.humidity,
-          record.buying_price,
-          record.currency,
-          record.quantity,
-          record.unit,
-          record.status
+          record.manager || '',
+          record.location || '',
+          record.coffeeType || '',
+          record.qualityGrade || '',
+          record.source || '',
+          record.humidity || '',
+          record.buying_price || '',
+          record.currency || '',
+          record.quantity || '',
+          record.unit || '',
+          record.status || ''
         ];
         csvContent += row.join(',') + "\n";
       });
@@ -92,7 +101,7 @@ const CoffeeInventoryRecords = ({ onBack, isKazo }) => {
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
       ...prev,
-      [key]: value
+      [key]: value === '' ? undefined : value
     }));
   };
 
@@ -101,29 +110,51 @@ const CoffeeInventoryRecords = ({ onBack, isKazo }) => {
     setSearchTerm('');
   };
 
-  const filteredRecords = inventoryRecords?.filter(record => {
-    if (!searchTerm) return true;
-    
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      record.manager?.toLowerCase().includes(searchLower) ||
-      record.location?.toLowerCase().includes(searchLower) ||
-      record.coffeeType?.toLowerCase().includes(searchLower) ||
-      record.qualityGrade?.toLowerCase().includes(searchLower) ||
-      record.source?.toLowerCase().includes(searchLower)
-    );
-  }) || [];
+  // Safe filtering with error handling
+  const filteredRecords = React.useMemo(() => {
+    try {
+      if (!inventoryRecords) return [];
+      
+      return inventoryRecords.filter(record => {
+        if (!searchTerm) return true;
+        
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          (record.manager || '').toLowerCase().includes(searchLower) ||
+          (record.location || '').toLowerCase().includes(searchLower) ||
+          (record.coffeeType || '').toLowerCase().includes(searchLower) ||
+          (record.qualityGrade || '').toLowerCase().includes(searchLower) ||
+          (record.source || '').toLowerCase().includes(searchLower)
+        );
+      });
+    } catch (err) {
+      console.error("Error filtering records:", err);
+      return [];
+    }
+  }, [inventoryRecords, searchTerm]);
 
-  if (isLoading) return <div className="flex justify-center p-8">Loading inventory records...</div>;
-  
-  if (error) return (
-    <div className="p-8">
-      <Button onClick={onBack} variant="outline" className="mb-4">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back
-      </Button>
-      <div className="text-red-500">Error loading inventory records: {error.message}</div>
-    </div>
-  );
+  // If there's an error state, display it
+  if (errorState) {
+    return (
+      <div className="p-8">
+        <Button onClick={onBack} variant="outline" className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
+        <div className="text-red-500">Error loading inventory records: {errorState.message}</div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-8">
+        <Button onClick={onBack} variant="outline" className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
+        <div className="flex justify-center p-8">Loading inventory records...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -132,7 +163,7 @@ const CoffeeInventoryRecords = ({ onBack, isKazo }) => {
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
         <h2 className="text-xl font-semibold">Coffee Inventory Records</h2>
-        <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
+        <Button onClick={handleExport} variant="outline" className="flex items-center gap-2" disabled={filteredRecords.length === 0}>
           <Download className="h-4 w-4" />
           Export CSV
         </Button>
@@ -209,18 +240,18 @@ const CoffeeInventoryRecords = ({ onBack, isKazo }) => {
             ) : (
               filteredRecords.map((record) => (
                 <TableRow key={record.id}>
-                  <TableCell>{format(new Date(record.created_at), 'yyyy-MM-dd')}</TableCell>
-                  <TableCell>{record.manager}</TableCell>
-                  <TableCell>{record.location}</TableCell>
-                  <TableCell>{record.coffeeType}</TableCell>
-                  <TableCell>{record.qualityGrade}</TableCell>
-                  <TableCell>{record.source}</TableCell>
-                  <TableCell>{record.humidity}%</TableCell>
+                  <TableCell>{record.created_at ? format(new Date(record.created_at), 'yyyy-MM-dd') : 'N/A'}</TableCell>
+                  <TableCell>{record.manager || 'N/A'}</TableCell>
+                  <TableCell>{record.location || 'N/A'}</TableCell>
+                  <TableCell>{record.coffeeType || 'N/A'}</TableCell>
+                  <TableCell>{record.qualityGrade || 'N/A'}</TableCell>
+                  <TableCell>{record.source || 'N/A'}</TableCell>
+                  <TableCell>{record.humidity ? `${record.humidity}%` : 'N/A'}</TableCell>
                   <TableCell>
-                    {record.buying_price} {record.currency}
+                    {record.buying_price ? `${record.buying_price} ${record.currency || 'UGX'}` : 'N/A'}
                   </TableCell>
                   <TableCell>
-                    {record.quantity} {record.unit}
+                    {record.quantity ? `${record.quantity} ${record.unit || 'kg'}` : 'N/A'}
                   </TableCell>
                   <TableCell>
                     <span className={`px-2 py-1 rounded-full text-xs ${
@@ -228,7 +259,7 @@ const CoffeeInventoryRecords = ({ onBack, isKazo }) => {
                       record.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
                       'bg-gray-100 text-gray-800'
                     }`}>
-                      {record.status}
+                      {record.status || 'unknown'}
                     </span>
                   </TableCell>
                 </TableRow>

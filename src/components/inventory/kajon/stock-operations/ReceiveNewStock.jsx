@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAddKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
 import AuthenticationForm from '../AuthenticationForm';
 import CoffeeInventoryRecords from './records/CoffeeInventoryRecords';
-import { ListFilter } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 
 const COFFEE_GRADES = {
   arabica: [
@@ -125,8 +125,31 @@ const ReceiveNewStock = ({ isKazo }) => {
     }
   };
 
+  // Safely render the records component
+  const renderRecords = () => {
+    try {
+      return <CoffeeInventoryRecords onBack={() => setViewRecords(false)} isKazo={isKazo} />;
+    } catch (error) {
+      console.error("Error rendering CoffeeInventoryRecords:", error);
+      return (
+        <div className="p-6 border rounded-md">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-medium">Records View Error</h3>
+            <Button onClick={() => setViewRecords(false)} variant="outline" size="sm">
+              Back
+            </Button>
+          </div>
+          <p className="text-red-500">There was an error loading the records. Please try again later.</p>
+          <pre className="mt-4 p-4 bg-gray-100 rounded text-xs overflow-auto">
+            {error.message}
+          </pre>
+        </div>
+      );
+    }
+  };
+
   if (viewRecords) {
-    return <CoffeeInventoryRecords onBack={() => setViewRecords(false)} isKazo={isKazo} />;
+    return renderRecords();
   }
 
   if (!selectedLocation) {
@@ -172,7 +195,7 @@ const ReceiveNewStock = ({ isKazo }) => {
           size="sm"
           className="flex items-center gap-2"
         >
-          <ListFilter className="h-4 w-4" />
+          <ClipboardList className="h-4 w-4" />
           View Records
         </Button>
       </div>
