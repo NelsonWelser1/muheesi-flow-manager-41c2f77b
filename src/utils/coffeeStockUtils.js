@@ -161,3 +161,76 @@ export const getCoffeeInventorySummary = (coffeeStockEntries) => {
     statusCounts
   };
 };
+
+/**
+ * Export coffee stock data to CSV format
+ * @param {Array} data - Coffee stock entries
+ * @param {string} filename - Output filename
+ */
+export const exportToCSV = (data, filename = 'coffee-stock-export.csv') => {
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    console.warn('No data to export to CSV');
+    return;
+  }
+
+  try {
+    // Get headers from the first item
+    const headers = Object.keys(data[0]);
+    
+    // Format data rows
+    const csvRows = [
+      headers.join(','), // Header row
+      ...data.map(row => 
+        headers.map(header => {
+          const value = row[header];
+          // Handle values that need quotes (contain commas, quotes, or newlines)
+          const formatted = value === null || value === undefined ? '' : String(value);
+          return formatted.includes(',') || formatted.includes('"') || formatted.includes('\n') 
+            ? `"${formatted.replace(/"/g, '""')}"` 
+            : formatted;
+        }).join(',')
+      )
+    ];
+    
+    // Create CSV content and download
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create download link and trigger click
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log(`CSV export of ${data.length} records completed`);
+  } catch (error) {
+    console.error('Error exporting to CSV:', error);
+    throw error;
+  }
+};
+
+/**
+ * Export coffee stock data to Excel format
+ * @param {Array} data - Coffee stock entries
+ * @param {string} filename - Output filename
+ */
+export const exportToExcel = (data, filename = 'coffee-stock-export.xlsx') => {
+  console.log(`Exporting ${data?.length || 0} records to Excel as ${filename}`);
+  // Full implementation would use xlsx library
+  // This is a placeholder for the actual implementation
+};
+
+/**
+ * Export coffee stock data to PDF format
+ * @param {Array} data - Coffee stock entries
+ * @param {string} filename - Output filename
+ */
+export const exportToPDF = (data, filename = 'coffee-stock-export.pdf') => {
+  console.log(`Exporting ${data?.length || 0} records to PDF as ${filename}`);
+  // Full implementation would use jspdf library
+  // This is a placeholder for the actual implementation
+};

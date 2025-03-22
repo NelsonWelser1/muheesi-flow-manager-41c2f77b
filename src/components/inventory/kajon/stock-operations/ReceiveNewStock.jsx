@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from 'date-fns';
+import CoffeeStockRecords from './records/CoffeeStockRecords';
 
 const COFFEE_GRADES = {
   arabica: [
@@ -217,24 +218,7 @@ const ReceiveNewStock = ({ isKazo }) => {
   };
 
   if (viewRecords) {
-    return (
-      <div className="p-6 text-center">
-        <h2 className="text-xl font-semibold mb-4">Coffee Inventory Records</h2>
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Information</AlertTitle>
-          <AlertDescription>
-            The coffee inventory records functionality has been removed.
-          </AlertDescription>
-        </Alert>
-        <Button 
-          onClick={() => setViewRecords(false)} 
-          className="mt-4"
-        >
-          Back to Form
-        </Button>
-      </div>
-    );
+    return <CoffeeStockRecords onBack={() => setViewRecords(false)} />;
   }
 
   if (!selectedLocation) {
