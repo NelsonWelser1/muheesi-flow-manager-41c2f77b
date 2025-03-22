@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -174,17 +173,6 @@ const StockOperations = ({ isKazo = false }) => {
               Back to Operations
             </Button>
             
-            {activeComponent === 'receive-new' && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={handleViewRecords}
-              >
-                <Eye className="h-4 w-4" />
-                View Records
-              </Button>
-            )}
           </div>
 
           {activeComponent === 'records' ? (
