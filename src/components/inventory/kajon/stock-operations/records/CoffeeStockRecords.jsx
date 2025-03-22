@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,23 +16,7 @@ import CSVExportButton from "@/components/inventory/dairy/logistics/records/comp
 import PDFExportButton from "@/components/inventory/dairy/logistics/records/components/export-buttons/PDFExportButton";
 import ExcelExportButton from "@/components/inventory/dairy/logistics/records/components/export-buttons/ExcelExportButton";
 import { format } from 'date-fns';
-import { calculateTotalInventoryValue } from '@/utils/coffeeStockUtils';
-
-// Custom export functions
-const exportToCSV = (data, filename) => {
-  console.log(`Exporting ${data.length} records to CSV as ${filename}`);
-  // Implementation would go here - could be imported from a utils file
-};
-
-const exportToExcel = (data, filename) => {
-  console.log(`Exporting ${data.length} records to Excel as ${filename}`);
-  // Implementation would go here - could be imported from a utils file
-};
-
-const exportToPDF = (data, filename) => {
-  console.log(`Exporting ${data.length} records to PDF as ${filename}`);
-  // Implementation would go here - could be imported from a utils file
-};
+import { calculateTotalInventoryValue, exportToCSV, exportToExcel, exportToPDF } from '@/utils/coffeeStockUtils';
 
 const CoffeeStockRecords = ({ onBack }) => {
   const [showTimeFilter, setShowTimeFilter] = useState(false);
@@ -70,15 +53,15 @@ const CoffeeStockRecords = ({ onBack }) => {
 
   // Handle export buttons
   const handleExportToPDF = () => {
-    exportToPDF(records, 'Coffee Stock Records');
+    exportToPDF(records, 'coffee-stock-records');
   };
 
   const handleExportToExcel = () => {
-    exportToExcel(records, 'Coffee Stock Records');
+    exportToExcel(records, 'coffee-stock-records');
   };
 
   const handleExportToCSV = () => {
-    exportToCSV(records, 'Coffee Stock Records');
+    exportToCSV(records, 'coffee-stock-records');
   };
 
   // Render status badge
