@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -89,7 +89,21 @@ const ReceiveNewStock = ({ isKazo }) => {
     unit: 'kg',
     notes: ''
   });
+  const [totalPrice, setTotalPrice] = useState('');
   const { toast } = useToast();
+
+  // Calculate total price whenever buying price or quantity changes
+  useEffect(() => {
+    const price = parseFloat(formData.buyingPrice) || 0;
+    const qty = parseFloat(formData.quantity) || 0;
+    
+    if (price > 0 && qty > 0) {
+      const total = price * qty;
+      setTotalPrice(total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    } else {
+      setTotalPrice('');
+    }
+  }, [formData.buyingPrice, formData.quantity]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -121,8 +135,6 @@ const ReceiveNewStock = ({ isKazo }) => {
       });
       
       // Reset form
-      e.target.reset();
-      setSelectedCoffeeType('');
       setFormData({
         manager: managerName,
         location: selectedLocation,
@@ -136,6 +148,7 @@ const ReceiveNewStock = ({ isKazo }) => {
         unit: 'kg',
         notes: ''
       });
+      setSelectedCoffeeType('');
       
     } catch (error) {
       console.error("Error:", error);
@@ -479,6 +492,21 @@ const ReceiveNewStock = ({ isKazo }) => {
                       </Select>
                     </div>
                   </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="h-4 w-4 text-emerald-600" />
+                      <Label>Total</Label>
+                    </div>
+                    <div className="flex items-center">
+                      <Input 
+                        value={totalPrice ? `${formData.currency} ${totalPrice}` : ''}
+                        readOnly 
+                        className="bg-emerald-50 font-medium"
+                        placeholder="Total will be calculated automatically"
+                      />
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -504,30 +532,7 @@ const ReceiveNewStock = ({ isKazo }) => {
               </CardContent>
             </Card>
             
-            <div className="flex justify-end space-x-3">
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => {
-                  setFormData({
-                    manager: managerName,
-                    location: selectedLocation,
-                    coffeeType: '',
-                    qualityGrade: '',
-                    source: '',
-                    humidity: '',
-                    buyingPrice: '',
-                    currency: 'UGX',
-                    quantity: '',
-                    unit: 'kg',
-                    notes: ''
-                  });
-                  setSelectedCoffeeType('');
-                }}
-              >
-                Reset Form
-              </Button>
-              
+            <div className="flex justify-end">
               <Button 
                 type="submit" 
                 className="bg-green-600 hover:bg-green-700" 
@@ -599,3 +604,4 @@ const ReceiveNewStock = ({ isKazo }) => {
 };
 
 export default ReceiveNewStock;
+
