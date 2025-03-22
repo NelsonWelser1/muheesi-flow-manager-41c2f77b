@@ -213,10 +213,7 @@ const MakeReports = ({
                 <div className="flex flex-wrap gap-2">
                   
                   
-                  <Button type="button" variant={report.sendVia.includes('whatsapp') ? 'default' : 'outline'} onClick={() => handleSendViaToggle('whatsapp')}>
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    WhatsApp
-                  </Button>
+                  
                   
                 </div>
               </div>
