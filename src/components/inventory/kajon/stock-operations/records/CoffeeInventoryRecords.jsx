@@ -60,8 +60,8 @@ const CoffeeInventoryRecords = ({ onBack, isKazo, location }) => {
     
     const searchTermLower = searchTerm.toLowerCase();
     return (
-      (item.coffee_type && item.coffee_type.toLowerCase().includes(searchTermLower)) ||
-      (item.quality_grade && item.quality_grade.toLowerCase().includes(searchTermLower)) ||
+      (item.coffeeType && item.coffeeType.toLowerCase().includes(searchTermLower)) ||
+      (item.qualityGrade && item.qualityGrade.toLowerCase().includes(searchTermLower)) ||
       (item.source && item.source.toLowerCase().includes(searchTermLower)) ||
       (item.location && item.location.toLowerCase().includes(searchTermLower)) ||
       (item.manager && item.manager.toLowerCase().includes(searchTermLower))
@@ -185,8 +185,8 @@ const CoffeeInventoryRecords = ({ onBack, isKazo, location }) => {
                 {tabFilteredData.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>
-                      <div className="font-medium">{item.coffee_type || 'Unknown'}</div>
-                      <div className="text-sm text-gray-500">{item.quality_grade || 'Ungraded'}</div>
+                      <div className="font-medium">{item.coffeeType || 'Unknown'}</div>
+                      <div className="text-sm text-gray-500">{item.qualityGrade || 'Ungraded'}</div>
                     </TableCell>
                     <TableCell>
                       <div>{item.source || 'Unknown'}</div>

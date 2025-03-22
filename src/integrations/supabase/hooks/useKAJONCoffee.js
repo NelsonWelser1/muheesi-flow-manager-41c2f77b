@@ -32,8 +32,8 @@ export const useKAJONCoffees = (filters = {}) => useQuery({
             if (filters.location) {
                 query = query.eq('location', filters.location);
             }
-            if (filters.coffee_type) {
-                query = query.eq('coffee_type', filters.coffee_type);
+            if (filters.coffeeType) {
+                query = query.eq('coffeeType', filters.coffeeType);
             }
             if (filters.status) {
                 query = query.eq('status', filters.status);
@@ -80,7 +80,7 @@ export const useAddKAJONCoffee = () => {
             console.log("Submitting new coffee inventory:", newCoffee);
             
             // Validate required fields based on the migration schema
-            const requiredFields = ['manager', 'location', 'coffee_type', 'quality_grade', 'source', 'humidity', 'buying_price', 'quantity'];
+            const requiredFields = ['manager', 'location', 'coffeeType', 'qualityGrade', 'source', 'humidity', 'buying_price', 'quantity'];
             for (const field of requiredFields) {
                 if (newCoffee[field] === undefined || newCoffee[field] === null || newCoffee[field] === '') {
                     throw new Error(`${field} is required`);
@@ -114,8 +114,8 @@ export const useAddKAJONCoffee = () => {
             const formattedData = {
                 manager: newCoffee.manager,
                 location: newCoffee.location,
-                coffee_type: newCoffee.coffee_type,
-                quality_grade: newCoffee.quality_grade,
+                coffeeType: newCoffee.coffeeType,  // Using coffeeType to match database schema
+                qualityGrade: newCoffee.qualityGrade,  // Using qualityGrade to match database schema
                 source: newCoffee.source,
                 humidity: newCoffee.humidity,
                 buying_price: newCoffee.buying_price,
@@ -123,9 +123,7 @@ export const useAddKAJONCoffee = () => {
                 quantity: newCoffee.quantity,
                 unit: newCoffee.unit,
                 notes: newCoffee.notes || null,
-                status: newCoffee.status,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
+                status: newCoffee.status
             };
 
             console.log("Formatted data for submission:", formattedData);

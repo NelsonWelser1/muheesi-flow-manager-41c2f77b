@@ -90,8 +90,8 @@ const ReceiveNewStock = ({ isKazo }) => {
       const formattedData = {
         manager: managerName,
         location: selectedLocation,
-        coffee_type: data.coffeeType,  // Changed from coffeeType to coffee_type
-        quality_grade: data.qualityGrade,  // Changed from qualityGrade to quality_grade
+        coffeeType: data.coffeeType,  // Using coffeeType to match database schema
+        qualityGrade: data.qualityGrade,  // Using qualityGrade to match database schema
         source: data.source,
         humidity: parseFloat(data.humidity),
         buying_price: parseFloat(data.buyingPrice),
@@ -106,8 +106,8 @@ const ReceiveNewStock = ({ isKazo }) => {
       console.log("Form data being submitted:", formattedData);
       
       // Validate required fields
-      if (!formattedData.coffee_type) throw new Error("Coffee type is required");
-      if (!formattedData.quality_grade) throw new Error("Quality grade is required");
+      if (!formattedData.coffeeType) throw new Error("Coffee type is required");
+      if (!formattedData.qualityGrade) throw new Error("Quality grade is required");
       if (!formattedData.source) throw new Error("Source is required");
       if (isNaN(formattedData.humidity)) throw new Error("Humidity must be a valid number");
       if (isNaN(formattedData.buying_price)) throw new Error("Buying price must be a valid number");
