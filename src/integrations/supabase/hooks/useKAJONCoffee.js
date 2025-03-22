@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabase';
 
@@ -10,11 +11,27 @@ const fromSupabase = async (query) => {
 export const useKAJONCoffee = (id) => useQuery({
     queryKey: ['kajonCoffee', id],
     queryFn: () => fromSupabase(supabase.from('coffee_inventory').select('*').eq('id', id).single()),
+    enabled: !!id,
 });
 
-export const useKAJONCoffees = () => useQuery({
-    queryKey: ['kajonCoffee'],
-    queryFn: () => fromSupabase(supabase.from('coffee_inventory').select('*')),
+export const useKAJONCoffees = (filters = {}) => useQuery({
+    queryKey: ['kajonCoffee', filters],
+    queryFn: async () => {
+        let query = supabase.from('coffee_inventory').select('*');
+        
+        // Apply filters if provided
+        if (filters.location) {
+            query = query.eq('location', filters.location);
+        }
+        if (filters.coffeeType) {
+            query = query.eq('coffeeType', filters.coffeeType);
+        }
+        
+        // Sort by newest first
+        query = query.order('created_at', { ascending: false });
+        
+        return fromSupabase(query);
+    },
 });
 
 export const useCoffeeInventory = () => useQuery({
@@ -30,10 +47,31 @@ export const useCoffeeSalesRecords = () => useQuery({
 export const useAddKAJONCoffee = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (newCoffee) => fromSupabase(supabase.from('coffee_inventory').insert([{
-            ...newCoffee,
-            created_at: new Date().toISOString(),
-        }])),
+        mutationFn: async (newCoffee) => {
+            console.log("Submitting new coffee inventory:", newCoffee);
+            
+            // Validate required fields
+            const requiredFields = ['manager', 'location', 'coffeeType', 'qualityGrade', 'quantity', 'buyingPrice'];
+            for (const field of requiredFields) {
+                if (!newCoffee[field]) {
+                    throw new Error(`${field} is required`);
+                }
+            }
+            
+            // Convert numeric fields
+            if (newCoffee.quantity) newCoffee.quantity = Number(newCoffee.quantity);
+            if (newCoffee.buyingPrice) newCoffee.buyingPrice = Number(newCoffee.buyingPrice);
+            if (newCoffee.humidity) newCoffee.humidity = Number(newCoffee.humidity);
+            
+            const { data, error } = await supabase.from('coffee_inventory').insert([{
+                ...newCoffee,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            }]).select();
+            
+            if (error) throw error;
+            return data;
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['kajonCoffee'] });
             queryClient.invalidateQueries({ queryKey: ['coffeeInventory'] });
@@ -44,8 +82,25 @@ export const useAddKAJONCoffee = () => {
 export const useUpdateKAJONCoffee = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, ...updateData }) => 
-            fromSupabase(supabase.from('coffee_inventory').update(updateData).eq('id', id)),
+        mutationFn: async ({ id, ...updateData }) => {
+            console.log("Updating coffee inventory:", id, updateData);
+            
+            // Convert numeric fields
+            if (updateData.quantity) updateData.quantity = Number(updateData.quantity);
+            if (updateData.buyingPrice) updateData.buyingPrice = Number(updateData.buyingPrice);
+            if (updateData.humidity) updateData.humidity = Number(updateData.humidity);
+            
+            updateData.updated_at = new Date().toISOString();
+            
+            const { data, error } = await supabase
+                .from('coffee_inventory')
+                .update(updateData)
+                .eq('id', id)
+                .select();
+                
+            if (error) throw error;
+            return data;
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['kajonCoffee'] });
             queryClient.invalidateQueries({ queryKey: ['coffeeInventory'] });
@@ -56,10 +111,31 @@ export const useUpdateKAJONCoffee = () => {
 export const useDeleteKAJONCoffee = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (id) => fromSupabase(supabase.from('coffee_inventory').delete().eq('id', id)),
+        mutationFn: async (id) => {
+            console.log("Deleting coffee inventory:", id);
+            const { data, error } = await supabase
+                .from('coffee_inventory')
+                .delete()
+                .eq('id', id)
+                .select();
+                
+            if (error) throw error;
+            return data;
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['kajonCoffee'] });
             queryClient.invalidateQueries({ queryKey: ['coffeeInventory'] });
         },
     });
 };
+
+export const useGetInventoryByLocation = (location) => useQuery({
+    queryKey: ['coffeeInventory', 'location', location],
+    queryFn: () => fromSupabase(
+        supabase.from('coffee_inventory')
+            .select('*')
+            .eq('location', location)
+            .order('created_at', { ascending: false })
+    ),
+    enabled: !!location,
+});

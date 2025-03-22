@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import ReceiveNewStock from './ReceiveNewStock';
+import ReceiveNewStock from '../kajon/stock-operations/ReceiveNewStock';
 import SellCurrentStock from './SellCurrentStock';
 import RelocateStock from './RelocateStock';
 import ReceivePartnerStock from './ReceivePartnerStock';
