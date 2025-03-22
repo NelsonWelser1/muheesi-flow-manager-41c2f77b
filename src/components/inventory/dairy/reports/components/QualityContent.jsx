@@ -1,76 +1,110 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Plus } from "lucide-react";
+import QualityMetricsCard from '../QualityMetricsCard';
 
-const QualityContent = ({ qualityMetrics, productionData }) => {
-  // Sort products by quality score (descending)
-  const sortedProducts = [...productionData].sort((a, b) => b.quality - a.quality);
-  const topProducts = sortedProducts.slice(0, 3);
-  const lowQualityProducts = productionData.filter(product => product.quality < 80);
-
+const QualityContent = ({ qualityMetrics, productionData, onOpenReportForm }) => {
+  const hasQualityData = qualityMetrics && qualityMetrics.length > 0;
+  
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {qualityMetrics.map((metric, index) => (
-          <Card key={index}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{metric.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold mb-2">
-                {metric.value}
-                <span className="text-sm font-normal ml-1">{metric.unit}</span>
-              </div>
-              <p className="text-sm text-muted-foreground">{metric.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+    <>
+      <QualityMetricsCard qualityMetrics={qualityMetrics} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Top Quality Products</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {topProducts.map((product, index) => (
-                <li key={index} className="flex justify-between items-center p-2 border rounded">
-                  <span>{product.product}</span>
-                  <span className="font-semibold">{product.quality}%</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Quality Alerts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {lowQualityProducts.length > 0 ? (
-              <div className="space-y-2">
-                {lowQualityProducts.map((product, index) => (
-                  <Alert key={index} variant="destructive" className="bg-red-50 border-red-200">
-                    <AlertTriangle className="h-4 w-4 mr-2 text-red-600" />
-                    <AlertDescription>
-                      {product.product} has a low quality score of {product.quality}%
-                    </AlertDescription>
-                  </Alert>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center py-8 text-sm text-muted-foreground">
-                No quality alerts at this time
-              </p>
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <QualityScoresCard productionData={productionData} />
+        <QualityImprovementCard onOpenReportForm={onOpenReportForm} />
       </div>
-    </div>
+    </>
+  );
+};
+
+const QualityScoresCard = ({ productionData = [] }) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Quality Scores by Product</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {productionData.length > 0 ? (
+          <ul className="space-y-4">
+            {productionData.map((item, index) => (
+              <li key={index}>
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm font-medium">{item.product}</span>
+                  <span className="text-sm">{item.efficiency}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full ${
+                      item.efficiency >= 90 ? 'bg-green-500' : 
+                      item.efficiency >= 70 ? 'bg-yellow-500' : 
+                      'bg-red-500'
+                    }`}
+                    style={{ width: `${item.efficiency}%` }}
+                  ></div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>No data</AlertTitle>
+            <AlertDescription>
+              No quality data available. Add quality reports to see them here.
+            </AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const QualityImprovementCard = ({ onOpenReportForm }) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Quality Improvement</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Track quality metrics improvement over time. Our quality score is a composite of:
+          </p>
+          
+          <ul className="space-y-2">
+            <li className="flex justify-between">
+              <span className="text-sm">Taste Score:</span>
+              <span className="text-sm font-medium">90%</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-sm">Texture Score:</span>
+              <span className="text-sm font-medium">85%</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-sm">Appearance:</span>
+              <span className="text-sm font-medium">92%</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="text-sm">Consistency:</span>
+              <span className="text-sm font-medium">88%</span>
+            </li>
+            <li className="flex justify-between border-t pt-2 mt-2">
+              <span className="text-sm font-medium">Overall Quality:</span>
+              <span className="text-sm font-medium">89%</span>
+            </li>
+          </ul>
+          
+          <Button variant="outline" className="w-full" onClick={onOpenReportForm}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Quality Report
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
