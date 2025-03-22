@@ -20,7 +20,7 @@ const ManageFarms = ({
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="details">Farm Details</TabsTrigger>
             <TabsTrigger value="operations">Operations</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            
             
           </TabsList>
 
