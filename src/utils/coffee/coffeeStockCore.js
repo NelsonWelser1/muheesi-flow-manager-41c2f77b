@@ -1,34 +1,34 @@
 
+/**
+ * Core utilities for coffee stock management
+ */
 import { supabase } from '@/integrations/supabase/supabase';
 
 /**
  * Fetch coffee stock data with optional filters
  * @param {Object} options - Query options
- * @param {string} options.statusFilter - Filter by status
- * @param {Date} options.startDate - Start date for time range filter
- * @param {Date} options.endDate - End date for time range filter
- * @param {string} options.sortField - Field to sort by
- * @param {boolean} options.ascending - Sort direction
- * @param {number} options.limit - Limit number of results
- * @returns {Promise<Array>} - Coffee stock data
+ * @returns {Promise<Array>} - The filtered coffee stock data
  */
-export const fetchCoffeeStock = async ({
-  statusFilter = null,
-  startDate = null,
-  endDate = null,
-  sortField = 'created_at',
-  ascending = false,
-  limit = null
-} = {}) => {
+export const fetchCoffeeStock = async (options = {}) => {
+  const { 
+    statusFilter, 
+    startDate, 
+    endDate, 
+    sortField = 'created_at', 
+    ascending = false 
+  } = options;
+
   try {
-    let query = supabase.from('coffee_stock').select('*');
+    let query = supabase
+      .from('coffee_sales')
+      .select('*');
     
-    // Apply status filter if provided
-    if (statusFilter && statusFilter !== 'all') {
+    // Apply status filter if specified
+    if (statusFilter) {
       query = query.eq('status', statusFilter);
     }
-    
-    // Apply date range filter if provided
+
+    // Apply date range filters if specified
     if (startDate) {
       query = query.gte('created_at', startDate.toISOString());
     }
@@ -40,48 +40,37 @@ export const fetchCoffeeStock = async ({
     // Apply sorting
     query = query.order(sortField, { ascending });
     
-    // Apply limit if provided
-    if (limit) {
-      query = query.limit(limit);
-    }
-    
     const { data, error } = await query;
     
-    if (error) {
-      console.error('Error fetching coffee stock:', error);
-      throw error;
-    }
+    if (error) throw error;
     
     return data || [];
   } catch (err) {
-    console.error('Exception when fetching coffee stock:', err);
+    console.error('Error fetching coffee stock data:', err);
     throw err;
   }
 };
 
 /**
- * Update the status of a coffee stock entry
- * @param {string} id - Coffee stock entry ID
- * @param {string} status - New status value
- * @returns {Promise<Object>} - Updated coffee stock entry
+ * Update coffee stock status
+ * @param {string} id - Record ID
+ * @param {string} status - New status
+ * @returns {Promise<Object>} - Updated record
  */
 export const updateCoffeeStockStatus = async (id, status) => {
   try {
     const { data, error } = await supabase
-      .from('coffee_stock')
+      .from('coffee_sales')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single();
     
-    if (error) {
-      console.error('Error updating coffee stock status:', error);
-      throw error;
-    }
+    if (error) throw error;
     
     return data;
   } catch (err) {
-    console.error('Exception when updating coffee stock status:', err);
+    console.error('Error updating coffee stock status:', err);
     throw err;
   }
 };

@@ -75,9 +75,11 @@ export const useCoffeeStockRecords = () => {
     return (
       (record.manager && record.manager.toLowerCase().includes(search)) ||
       (record.location && record.location.toLowerCase().includes(search)) ||
+      (record.sourceLocation && record.sourceLocation.toLowerCase().includes(search)) ||
+      (record.destinationLocation && record.destinationLocation.toLowerCase().includes(search)) ||
       (record.coffee_type && record.coffee_type.toLowerCase().includes(search)) ||
       (record.quality_grade && record.quality_grade.toLowerCase().includes(search)) ||
-      (record.source && record.source.toLowerCase().includes(search)) ||
+      (record.reason && record.reason.toLowerCase().includes(search)) ||
       (record.notes && record.notes.toLowerCase().includes(search))
     );
   });
