@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { useAddKAJONCoffee, useKAJONCoffees } from '@/integrations/supabase/hooks/useKAJONCoffee';
 import { supabase } from '@/integrations/supabase/supabase';
 import AuthenticationForm from '../AuthenticationForm';
 import CoffeeInventoryRecords from './records/CoffeeInventoryRecords';
@@ -56,43 +55,6 @@ const WAREHOUSE_LOCATIONS = {
   ]
 };
 
-// Direct function to handle stock submission with correct column names
-async function receiveCoffeeStock(formData) {
-  try {
-    console.log("Submitting to Supabase with data:", formData);
-    
-    const { data, error } = await supabase
-      .from('coffee_inventory')
-      .insert([
-        {
-          manager: formData.manager,
-          location: formData.location,
-          coffeeType: formData.coffeeType,
-          qualityGrade: formData.qualityGrade,
-          source: formData.source,
-          humidity: parseFloat(formData.humidity),
-          buying_price: parseFloat(formData.buyingPrice),
-          currency: formData.currency || 'UGX',
-          quantity: parseFloat(formData.quantity),
-          unit: formData.unit || 'kg',
-          notes: formData.notes,
-          status: 'active'
-        }
-      ]);
-
-    if (error) {
-      console.error("Error inserting coffee stock:", error);
-      return { success: false, message: error.message };
-    }
-    
-    console.log("Stock successfully added:", data);
-    return { success: true, message: "Stock received successfully!" };
-  } catch (err) {
-    console.error("Exception in receiveCoffeeStock:", err);
-    return { success: false, message: err.message };
-  }
-}
-
 const ReceiveNewStock = ({ isKazo }) => {
   const [selectedCoffeeType, setSelectedCoffeeType] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
@@ -102,7 +64,6 @@ const ReceiveNewStock = ({ isKazo }) => {
   const [viewRecords, setViewRecords] = useState(false);
   const [formError, setFormError] = useState('');
   const { toast } = useToast();
-  const { data: inventoryData } = useKAJONCoffees({ location: selectedLocation });
 
   const handleAuthentication = (name, location) => {
     setManagerName(name);
@@ -123,46 +84,76 @@ const ReceiveNewStock = ({ isKazo }) => {
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
       
-      // Format data correctly for Supabase based on the migration schema
-      const formattedData = {
+      // Validate all required fields
+      const requiredFields = ['coffeeType', 'qualityGrade', 'source', 'humidity', 'buyingPrice', 'quantity'];
+      for (const field of requiredFields) {
+        if (!data[field]) {
+          throw new Error(`${field.replace(/([A-Z])/g, ' $1').trim()} is required`);
+        }
+      }
+      
+      // Validate numeric fields
+      const humidity = parseFloat(data.humidity);
+      if (isNaN(humidity) || humidity < 0 || humidity > 100) {
+        throw new Error("Humidity must be a number between 0 and 100");
+      }
+      
+      const buyingPrice = parseFloat(data.buyingPrice);
+      if (isNaN(buyingPrice) || buyingPrice <= 0) {
+        throw new Error("Buying price must be a positive number");
+      }
+      
+      const quantity = parseFloat(data.quantity);
+      if (isNaN(quantity) || quantity <= 0) {
+        throw new Error("Quantity must be a positive number");
+      }
+      
+      // Prepare data for Supabase insertion according to the schema
+      const coffeeData = {
         manager: managerName,
         location: selectedLocation,
         coffeeType: data.coffeeType,
         qualityGrade: data.qualityGrade,
         source: data.source,
-        humidity: parseFloat(data.humidity),
-        buyingPrice: parseFloat(data.buyingPrice),
-        currency: data.currency,
-        quantity: parseFloat(data.quantity),
-        unit: data.unit,
-        notes: data.notes || null
+        humidity: humidity,
+        buying_price: buyingPrice,
+        currency: data.currency || 'UGX',
+        quantity: quantity,
+        unit: data.unit || 'kg',
+        notes: data.notes || null,
+        status: 'active'
       };
       
-      // Log the formatted data before submission
-      console.log("Form data being submitted:", formattedData);
+      console.log("Sending data to Supabase:", coffeeData);
       
-      // Submit using direct function
-      const result = await receiveCoffeeStock(formattedData);
+      // Insert into Supabase
+      const { data: insertedData, error } = await supabase
+        .from('coffee_inventory')
+        .insert([coffeeData])
+        .select();
       
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: result.message,
-        });
-        
-        // Reset form
-        e.target.reset();
-        setSelectedCoffeeType('');
-      } else {
-        throw new Error(result.message);
+      if (error) {
+        console.error("Supabase insertion error:", error);
+        throw new Error(error.message);
       }
+      
+      console.log("Successfully added coffee stock:", insertedData);
+      
+      toast({
+        title: "Success",
+        description: "Coffee stock received successfully",
+      });
+      
+      // Reset form
+      e.target.reset();
+      setSelectedCoffeeType('');
       
     } catch (error) {
       console.error("Error submitting form:", error);
-      setFormError(error.message || "Failed to receive coffee stock");
+      setFormError(error.message);
       toast({
         title: "Error",
-        description: error.message || "Failed to receive coffee stock",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -175,30 +166,11 @@ const ReceiveNewStock = ({ isKazo }) => {
   };
 
   if (viewRecords) {
-    try {
-      return <CoffeeInventoryRecords 
-        onBack={() => setViewRecords(false)} 
-        isKazo={isKazo} 
-        location={selectedLocation}
-      />;
-    } catch (error) {
-      console.error("Error rendering CoffeeInventoryRecords:", error);
-      return (
-        <div className="space-y-4">
-          <Button onClick={() => setViewRecords(false)} variant="outline" size="sm">
-            Back
-          </Button>
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              There was a problem loading the records. Please try again later.
-              {error.message && <div className="mt-2 text-xs">{error.message}</div>}
-            </AlertDescription>
-          </Alert>
-        </div>
-      );
-    }
+    return <CoffeeInventoryRecords 
+      onBack={() => setViewRecords(false)} 
+      isKazo={isKazo} 
+      location={selectedLocation}
+    />;
   }
 
   if (!selectedLocation) {
