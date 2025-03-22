@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -63,7 +64,7 @@ const MakeReports = ({ isKazo = false }) => {
       <Card>
         <CardHeader>
           <CardTitle>
-            {isKazo ? "Kazo Coffee Development Project Reports" : "KAJON Coffee Limited Reports"}
+            Kazo Coffee Development Project Reports
           </CardTitle>
         </CardHeader>
         <CardContent>
