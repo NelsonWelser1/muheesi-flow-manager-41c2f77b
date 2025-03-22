@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -7,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useUpdateKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
 import AuthenticationForm from '../AuthenticationForm';
+import { Eye } from 'lucide-react';
+import CoffeeSalesRecords from './records/CoffeeSalesRecords';
 
 const COFFEE_GRADES = {
   arabica: [
@@ -56,6 +59,7 @@ const SellCurrentStock = ({ isKazo }) => {
   const [selectedLocation, setSelectedLocation] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [managerName, setManagerName] = useState('');
+  const [viewRecords, setViewRecords] = useState(false);
   const { toast } = useToast();
   const updateCoffeeMutation = useUpdateKAJONCoffee();
 
@@ -90,9 +94,14 @@ const SellCurrentStock = ({ isKazo }) => {
     }
   };
 
+  if (viewRecords) {
+    return <CoffeeSalesRecords onBack={() => setViewRecords(false)} />;
+  }
+
   if (!selectedLocation) {
     return (
       <div className="space-y-4">
+        <h2 className="text-xl font-semibold mb-4">Sell Current Coffee Stock</h2>
         <Label>Select Store Location</Label>
         <Select onValueChange={setSelectedLocation}>
           <SelectTrigger>
@@ -115,110 +124,128 @@ const SellCurrentStock = ({ isKazo }) => {
 
   if (!isAuthenticated) {
     return (
-      <AuthenticationForm 
-        onAuthenticate={handleAuthentication}
-        title={isKazo ? "Store Manager Name" : "Warehouse Manager Name"}
-        selectedLocation={selectedLocation}
-      />
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold mb-4">Sell Current Coffee Stock</h2>
+        <AuthenticationForm 
+          onAuthenticate={handleAuthentication}
+          title={isKazo ? "Store Manager Name" : "Warehouse Manager Name"}
+          selectedLocation={selectedLocation}
+        />
+      </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <Label>Manager Name</Label>
-          <Input name="manager" value={managerName} readOnly />
-        </div>
-
-        <div>
-          <Label>Stock Location</Label>
-          <Input name="location" value={selectedLocation} readOnly />
-        </div>
-
-        <div>
-          <Label>Buyer Name</Label>
-          <Input name="buyerName" placeholder="Enter buyer's name" required />
-        </div>
-
-        <div>
-          <Label>Buyer Contact</Label>
-          <Input name="buyerContact" placeholder="Enter buyer's contact" required />
-        </div>
-
-        <div>
-          <Label>Coffee Type</Label>
-          <Select 
-            name="coffeeType" 
-            onValueChange={setSelectedCoffeeType}
-            required
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select coffee type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="arabica">Arabica Coffee</SelectItem>
-              <SelectItem value="robusta">Robusta Coffee</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label>Quality Grade</Label>
-          <Select name="qualityGrade" disabled={!selectedCoffeeType} required>
-            <SelectTrigger>
-              <SelectValue placeholder="Select grade" />
-            </SelectTrigger>
-            <SelectContent>
-              {selectedCoffeeType && COFFEE_GRADES[selectedCoffeeType].map((grade) => (
-                <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Selling Price</Label>
-            <Input name="sellingPrice" type="number" placeholder="Enter price" required />
-          </div>
-          <div>
-            <Label>Currency</Label>
-            <Select name="currency" defaultValue="UGX">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="UGX">UGX</SelectItem>
-                <SelectItem value="USD">USD</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Quantity</Label>
-            <Input name="quantity" type="number" placeholder="Enter quantity" required />
-          </div>
-          <div>
-            <Label>Unit</Label>
-            <Select name="unit" defaultValue="kg">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="kg">Kg</SelectItem>
-                <SelectItem value="tons">Tons</SelectItem>
-                <SelectItem value="bags">Bags</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Sell Current Coffee Stock</h2>
+        <Button 
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1"
+          onClick={() => setViewRecords(true)}
+        >
+          <Eye className="h-4 w-4" />
+          View Sales Records
+        </Button>
       </div>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <Label>Manager Name</Label>
+            <Input name="manager" value={managerName} readOnly />
+          </div>
 
-      <Button type="submit" className="w-full">Record Sale</Button>
-    </form>
+          <div>
+            <Label>Stock Location</Label>
+            <Input name="location" value={selectedLocation} readOnly />
+          </div>
+
+          <div>
+            <Label>Buyer Name</Label>
+            <Input name="buyerName" placeholder="Enter buyer's name" required />
+          </div>
+
+          <div>
+            <Label>Buyer Contact</Label>
+            <Input name="buyerContact" placeholder="Enter buyer's contact" required />
+          </div>
+
+          <div>
+            <Label>Coffee Type</Label>
+            <Select 
+              name="coffeeType" 
+              onValueChange={setSelectedCoffeeType}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select coffee type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="arabica">Arabica Coffee</SelectItem>
+                <SelectItem value="robusta">Robusta Coffee</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Quality Grade</Label>
+            <Select name="qualityGrade" disabled={!selectedCoffeeType} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select grade" />
+              </SelectTrigger>
+              <SelectContent>
+                {selectedCoffeeType && COFFEE_GRADES[selectedCoffeeType].map((grade) => (
+                  <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Selling Price</Label>
+              <Input name="sellingPrice" type="number" placeholder="Enter price" required />
+            </div>
+            <div>
+              <Label>Currency</Label>
+              <Select name="currency" defaultValue="UGX">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="UGX">UGX</SelectItem>
+                  <SelectItem value="USD">USD</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Quantity</Label>
+              <Input name="quantity" type="number" placeholder="Enter quantity" required />
+            </div>
+            <div>
+              <Label>Unit</Label>
+              <Select name="unit" defaultValue="kg">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kg">Kg</SelectItem>
+                  <SelectItem value="tons">Tons</SelectItem>
+                  <SelectItem value="bags">Bags</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        <Button type="submit" className="w-full">Record Sale</Button>
+      </form>
+    </div>
   );
 };
 
