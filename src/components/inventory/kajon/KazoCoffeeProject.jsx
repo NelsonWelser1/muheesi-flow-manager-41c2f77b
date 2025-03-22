@@ -29,7 +29,7 @@ const KazoCoffeeProject = () => {
       </TabsContent>
 
       <TabsContent value="reports">
-        <MakeReports />
+        <MakeReports isKazo={true} />
       </TabsContent>
 
       <TabsContent value="farms">

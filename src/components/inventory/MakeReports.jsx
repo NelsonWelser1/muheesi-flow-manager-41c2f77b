@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Mail, MessageSquare, Phone } from "lucide-react";
+import { Mail, MessageSquare, Phone, FileText } from "lucide-react";
+import KazoReportsViewer from './kajon/KazoReportsViewer';
 
 const MakeReports = ({ isKazo = false }) => {
   const [recipient, setRecipient] = useState({
@@ -21,6 +22,7 @@ const MakeReports = ({ isKazo = false }) => {
     content: '',
     sendVia: [],
   });
+  const [showReportsViewer, setShowReportsViewer] = useState(false);
   const { toast } = useToast();
 
   const reportTypes = [
@@ -59,13 +61,27 @@ const MakeReports = ({ isKazo = false }) => {
     }
   };
 
+  if (showReportsViewer && isKazo) {
+    return <KazoReportsViewer onBack={() => setShowReportsViewer(false)} />;
+  }
+
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle>
             Kazo Coffee Development Project Reports
           </CardTitle>
+          {isKazo && (
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={() => setShowReportsViewer(true)}
+            >
+              <FileText className="h-4 w-4" />
+              View Reports
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
