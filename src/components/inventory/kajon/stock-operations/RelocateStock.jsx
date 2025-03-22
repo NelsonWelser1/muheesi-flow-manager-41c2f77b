@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -10,6 +9,7 @@ import { useUpdateKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoff
 import AuthenticationForm from '../AuthenticationForm';
 import { Eye } from 'lucide-react';
 import CoffeeRelocationRecords from './records/CoffeeRelocationRecords';
+import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
 
 const COFFEE_GRADES = {
   arabica: [
@@ -63,6 +63,7 @@ const RelocateStock = ({ isKazo }) => {
   const [viewRecords, setViewRecords] = useState(false);
   const { toast } = useToast();
   const updateCoffeeMutation = useUpdateKAJONCoffee();
+  const { submitTransfer } = useCoffeeStockTransfers();
 
   const handleAuthentication = (name, location) => {
     setManagerName(name);
@@ -75,11 +76,26 @@ const RelocateStock = ({ isKazo }) => {
     const data = Object.fromEntries(formData.entries());
 
     try {
+      const transferData = {
+        manager: managerName,
+        source_location: selectedLocation,
+        destination_location: data.destinationLocation || destinationLocation,
+        coffee_type: data.coffeeType,
+        quality_grade: data.qualityGrade,
+        quantity: parseFloat(data.quantity) || 0,
+        unit: data.unit || 'kg',
+        reason: data.reason || '',
+        sender_user_id: 'dummy-sender-id',
+        recipient_user_id: 'dummy-recipient-id',
+      };
+
+      await submitTransfer(transferData);
+
       await updateCoffeeMutation.mutateAsync({
         ...data,
         manager: managerName,
         sourceLocation: selectedLocation,
-        destinationLocation,
+        destinationLocation: data.destinationLocation || destinationLocation,
         type: 'relocation',
         status: 'pending'
       });
@@ -88,12 +104,17 @@ const RelocateStock = ({ isKazo }) => {
         title: "Success",
         description: "Stock relocation request sent successfully",
       });
+
+      e.target.reset();
+      setSelectedCoffeeType('');
+      setDestinationLocation('');
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to send relocation request",
         variant: "destructive",
       });
+      console.error("Relocation error:", error);
     }
   };
 
