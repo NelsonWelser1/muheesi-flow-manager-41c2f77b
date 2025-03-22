@@ -10,30 +10,28 @@ import { useToast } from "@/components/ui/use-toast";
 import { showErrorToast } from "@/components/ui/notifications";
 import { ArrowLeft, Search, Calendar, DownloadCloud, RefreshCw, FileText, FileSpreadsheet, FileDown } from "lucide-react";
 import { format } from 'date-fns';
-import { useCoffeeStockRecords } from '@/hooks/useCoffeeStockRecords';
+import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
 import { exportToCSV, exportToExcel, exportToPDF } from '@/utils/coffee/coffeeExport';
 
 const CoffeeRelocationRecords = ({ onBack, isKazo }) => {
+  const { toast } = useToast();
+  const [showExportActions, setShowExportActions] = useState(false);
+  
+  // Use the useCoffeeStockTransfers hook to get transfer records directly
   const {
-    records,
+    transfers,
     loading,
     error,
     statusFilter,
     timeRange,
     searchTerm,
     sortConfig,
-    handleSort,
     handleStatusChange,
     handleTimeRangeChange,
     handleSearch,
+    handleSort,
     handleRefresh
-  } = useCoffeeStockRecords();
-  
-  const { toast } = useToast();
-  const [showExportActions, setShowExportActions] = useState(false);
-
-  // Filter to only show relocation records
-  const relocationRecords = records.filter(record => record.type === 'relocation');
+  } = useCoffeeStockTransfers();
 
   // Handle export actions
   const handleExport = (format) => {
@@ -44,13 +42,13 @@ const CoffeeRelocationRecords = ({ onBack, isKazo }) => {
       
       switch (format) {
         case 'csv':
-          exportToCSV(relocationRecords, filename);
+          exportToCSV(transfers, filename);
           break;
         case 'excel':
-          exportToExcel(relocationRecords, filename);
+          exportToExcel(transfers, filename);
           break;
         case 'pdf':
-          exportToPDF(relocationRecords, filename, title);
+          exportToPDF(transfers, filename, title);
           break;
         default:
           break;
@@ -64,11 +62,11 @@ const CoffeeRelocationRecords = ({ onBack, isKazo }) => {
   // Generate status badge styles
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'completed':
+      case 'received':
         return "bg-green-100 text-green-800";
       case 'pending':
         return "bg-yellow-100 text-yellow-800";
-      case 'cancelled':
+      case 'declined':
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -155,8 +153,8 @@ const CoffeeRelocationRecords = ({ onBack, isKazo }) => {
               <TabsList>
                 <TabsTrigger value="all">All</TabsTrigger>
                 <TabsTrigger value="pending">Pending</TabsTrigger>
-                <TabsTrigger value="completed">Completed</TabsTrigger>
-                <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+                <TabsTrigger value="received">Received</TabsTrigger>
+                <TabsTrigger value="declined">Declined</TabsTrigger>
               </TabsList>
               
               <div className="flex flex-wrap gap-4">
@@ -202,13 +200,13 @@ const CoffeeRelocationRecords = ({ onBack, isKazo }) => {
               ) : error ? (
                 <div className="h-64 flex items-center justify-center">
                   <div className="text-center text-destructive space-y-2">
-                    <p>Failed to load records</p>
+                    <p>Failed to load records: {error}</p>
                     <Button variant="outline" size="sm" onClick={handleRefresh}>
                       Try Again
                     </Button>
                   </div>
                 </div>
-              ) : relocationRecords.length === 0 ? (
+              ) : transfers.length === 0 ? (
                 <div className="h-64 flex items-center justify-center">
                   <div className="text-center text-muted-foreground space-y-2">
                     <p>No relocation records found</p>
@@ -282,12 +280,12 @@ const CoffeeRelocationRecords = ({ onBack, isKazo }) => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {relocationRecords.map((record) => (
+                      {transfers.map((record) => (
                         <TableRow key={record.id}>
                           <TableCell>{formatDate(record.created_at)}</TableCell>
                           <TableCell>{record.manager}</TableCell>
-                          <TableCell>{record.sourceLocation || record.location}</TableCell>
-                          <TableCell>{record.destinationLocation}</TableCell>
+                          <TableCell>{record.source_location}</TableCell>
+                          <TableCell>{record.destination_location}</TableCell>
                           <TableCell>{record.coffee_type}</TableCell>
                           <TableCell>{record.quality_grade}</TableCell>
                           <TableCell>{`${record.quantity} ${record.unit || 'kg'}`}</TableCell>
