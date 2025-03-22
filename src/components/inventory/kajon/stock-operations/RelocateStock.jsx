@@ -68,6 +68,7 @@ const RelocateStock = ({ isKazo }) => {
 
   const handleAuthentication = (name, location) => {
     setManagerName(name);
+    setSelectedLocation(location);
     setIsAuthenticated(true);
   };
 
@@ -97,7 +98,7 @@ const RelocateStock = ({ isKazo }) => {
       const transferData = {
         manager: managerName,
         source_location: selectedLocation,
-        destination_location: data.destinationLocation || destinationLocation,
+        destination_location: data.destinationLocation,
         coffee_type: data.coffeeType,
         quality_grade: data.qualityGrade,
         quantity: quantity,
@@ -108,6 +109,8 @@ const RelocateStock = ({ isKazo }) => {
         recipient_user_id: null
       };
 
+      console.log("Submitting transfer data:", transferData);
+      
       // Submit transfer to Supabase via the hook
       await submitTransfer(transferData);
 
@@ -209,22 +212,21 @@ const RelocateStock = ({ isKazo }) => {
               <SelectContent>
                 {isKazo ? (
                   <>
-                    <SelectItem value="Kanoni-Mbogo">Kanoni - Mbogo Store</SelectItem>
-                    <SelectItem value="Kanoni-Rwakahaya">Kanoni - Rwakahaya Store</SelectItem>
-                    <SelectItem value="Engari-Kaichumu">Engari - Kaichumu Store</SelectItem>
-                    <SelectItem value="Engari-Kyengando">Engari - Kyengando Store</SelectItem>
-                    <SelectItem value="Migina">Migina Store</SelectItem>
-                    <SelectItem value="Kagarama">Kagarama Store</SelectItem>
-                    <SelectItem value="Kyampangara">Kyampangara Store</SelectItem>
+                    {STORE_LOCATIONS.kazo
+                      .filter(location => location !== selectedLocation)
+                      .map(location => (
+                        <SelectItem key={location} value={location}>{location}</SelectItem>
+                      ))
+                    }
                   </>
                 ) : (
                   <>
-                    <SelectItem value="Kampala">Kampala Store</SelectItem>
-                    <SelectItem value="JBER">JBER</SelectItem>
-                    <SelectItem value="Mbarara">Mbarara Warehouse</SelectItem>
-                    <SelectItem value="Kakyinga">Kakyinga Factory</SelectItem>
-                    <SelectItem value="Kazo-Kanoni">Kazo - Kanoni Warehouse</SelectItem>
-                    <SelectItem value="Kazo">Kazo Coffee</SelectItem>
+                    {STORE_LOCATIONS.regular
+                      .filter(location => location !== selectedLocation)
+                      .map(location => (
+                        <SelectItem key={location} value={location}>{location}</SelectItem>
+                      ))
+                    }
                   </>
                 )}
               </SelectContent>

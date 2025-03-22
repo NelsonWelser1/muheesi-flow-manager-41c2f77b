@@ -50,6 +50,7 @@ const ReceivePartnerStock = ({ isKazo }) => {
 
   const handleAuthentication = (name, location) => {
     setManagerName(name);
+    setSelectedLocation(location);
     setIsAuthenticated(true);
   };
 

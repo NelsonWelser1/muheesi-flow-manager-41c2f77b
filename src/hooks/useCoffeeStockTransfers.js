@@ -100,6 +100,8 @@ export const useCoffeeStockTransfers = () => {
   // Submit a new stock transfer
   const submitTransfer = async (transferData) => {
     try {
+      console.log('Submitting transfer:', transferData);
+      
       const { data, error } = await supabase
         .from('coffee_stock_transfers')
         .insert([{
@@ -111,6 +113,7 @@ export const useCoffeeStockTransfers = () => {
         .select();
 
       if (error) {
+        console.error('Supabase error:', error);
         throw error;
       }
 
