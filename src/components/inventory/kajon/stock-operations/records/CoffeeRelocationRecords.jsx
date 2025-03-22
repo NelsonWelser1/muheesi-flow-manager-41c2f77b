@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
 import { showErrorToast } from "@/components/ui/notifications";
-import { ArrowLeft, Search, Calendar, DownloadCloud, RefreshCw, FileCsv, FileText, FileSpreadsheet } from "lucide-react";
+import { ArrowLeft, Search, Calendar, DownloadCloud, RefreshCw, FileText, FileSpreadsheet, FileDown } from "lucide-react";
 import { format } from 'date-fns';
 import { useCoffeeStockRecords } from '@/hooks/useCoffeeStockRecords';
 import { exportToCSV, exportToExcel, exportToPDF } from '@/utils/coffee/coffeeExport';
@@ -123,7 +123,7 @@ const CoffeeRelocationRecords = ({ onBack, isKazo }) => {
               onClick={() => handleExport('csv')}
               className="flex items-center gap-1"
             >
-              <FileCsv className="h-4 w-4" /> CSV
+              <FileDown className="h-4 w-4" /> CSV
             </Button>
             <Button 
               variant="outline" 
