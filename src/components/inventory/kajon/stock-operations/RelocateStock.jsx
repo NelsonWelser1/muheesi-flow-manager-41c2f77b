@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -5,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { useUpdateKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
-import AuthenticationForm from '../AuthenticationForm';
 import { Eye } from 'lucide-react';
+import AuthenticationForm from '../AuthenticationForm';
 import CoffeeRelocationRecords from './records/CoffeeRelocationRecords';
 import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
+import PendingTransfers from './PendingTransfers';
 
 const COFFEE_GRADES = {
   arabica: [
@@ -62,7 +64,6 @@ const RelocateStock = ({ isKazo }) => {
   const [managerName, setManagerName] = useState('');
   const [viewRecords, setViewRecords] = useState(false);
   const { toast } = useToast();
-  const updateCoffeeMutation = useUpdateKAJONCoffee();
   const { submitTransfer } = useCoffeeStockTransfers();
 
   const handleAuthentication = (name, location) => {
@@ -76,44 +77,47 @@ const RelocateStock = ({ isKazo }) => {
     const data = Object.fromEntries(formData.entries());
 
     try {
+      // Validate required fields
+      const requiredFields = ['coffeeType', 'qualityGrade', 'quantity', 'reason'];
+      for (const field of requiredFields) {
+        if (!data[field] || data[field].trim() === '') {
+          showErrorToast(toast, `${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
+          return;
+        }
+      }
+
+      // Validate quantity is a positive number
+      const quantity = parseFloat(data.quantity);
+      if (isNaN(quantity) || quantity <= 0) {
+        showErrorToast(toast, "Quantity must be a positive number");
+        return;
+      }
+
+      // Prepare transfer data
       const transferData = {
         manager: managerName,
         source_location: selectedLocation,
         destination_location: data.destinationLocation || destinationLocation,
         coffee_type: data.coffeeType,
         quality_grade: data.qualityGrade,
-        quantity: parseFloat(data.quantity) || 0,
+        quantity: quantity,
         unit: data.unit || 'kg',
         reason: data.reason || '',
-        sender_user_id: 'dummy-sender-id',
-        recipient_user_id: 'dummy-recipient-id',
+        sender_user_id: 'dummy-sender-id', // In a real app, this would be the authenticated user's ID
+        recipient_user_id: 'dummy-recipient-id', // In a real app, this would be looked up based on destination
       };
 
+      // Submit transfer to Supabase via the hook
       await submitTransfer(transferData);
 
-      await updateCoffeeMutation.mutateAsync({
-        ...data,
-        manager: managerName,
-        sourceLocation: selectedLocation,
-        destinationLocation: data.destinationLocation || destinationLocation,
-        type: 'relocation',
-        status: 'pending'
-      });
-
-      toast({
-        title: "Success",
-        description: "Stock relocation request sent successfully",
-      });
-
+      showSuccessToast(toast, "Stock relocation request sent successfully");
+      
+      // Reset form
       e.target.reset();
       setSelectedCoffeeType('');
       setDestinationLocation('');
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send relocation request",
-        variant: "destructive",
-      });
+      showErrorToast(toast, `Failed to send relocation request: ${error.message}`);
       console.error("Relocation error:", error);
     }
   };
@@ -175,6 +179,10 @@ const RelocateStock = ({ isKazo }) => {
           <Eye className="h-4 w-4" /> View Records
         </Button>
       </div>
+      
+      {/* Show pending transfers for the current location */}
+      <PendingTransfers location={selectedLocation} />
+      
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -256,7 +264,7 @@ const RelocateStock = ({ isKazo }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Quantity</Label>
-              <Input name="quantity" type="number" placeholder="Enter quantity" required />
+              <Input name="quantity" type="number" placeholder="Enter quantity" required min="0.01" step="0.01" />
             </div>
             <div>
               <Label>Unit</Label>
