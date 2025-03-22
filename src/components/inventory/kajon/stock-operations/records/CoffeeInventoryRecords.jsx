@@ -1,325 +1,234 @@
 
-import React, { useState, useEffect } from 'react';
-import { useKAJONCoffees } from '@/integrations/supabase/hooks/useKAJONCoffee';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { format } from 'date-fns';
-import { ArrowLeft, Download, Filter, Search, RefreshCw, AlertCircle } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Search, Filter, Download } from "lucide-react";
+import { useKAJONCoffees } from '@/integrations/supabase/hooks/useKAJONCoffee';
+import { 
+  Table, TableHeader, TableRow, TableHead, 
+  TableBody, TableCell 
+} from "@/components/ui/table";
+import { 
+  Card, CardContent, CardDescription, CardHeader, CardTitle 
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Alert, AlertDescription, AlertTitle
+} from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
-const CoffeeInventoryRecords = ({ onBack, isKazo }) => {
-  const [filters, setFilters] = useState({});
+const CoffeeInventoryRecords = ({ onBack, isKazo, location }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: inventoryRecords, isLoading, error, refetch } = useKAJONCoffees(filters);
-  const { toast } = useToast();
-  const [errorState, setErrorState] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
   
-  // Handle errors from the query
-  useEffect(() => {
-    if (error) {
-      console.error("Records fetch error:", error);
-      setErrorState(error);
-    } else {
-      setErrorState(null);
-    }
-  }, [error]);
+  // Set up filters for the API call
+  const filters = {};
+  if (location) {
+    filters.location = location;
+  }
   
-  // Log data for debugging
-  useEffect(() => {
-    console.log("Inventory records received:", inventoryRecords);
-  }, [inventoryRecords]);
+  // Fetch coffee inventory data
+  const { data: inventoryData, isLoading, error } = useKAJONCoffees(filters);
   
-  const locationOptions = isKazo ? [
-    "Kanoni-Mbogo",
-    "Kanoni-Rwakahaya",
-    "Engari-Kaichumu",
-    "Engari-Kyengando",
-    "Migina",
-    "Kagarama",
-    "Kyampangara",
-    "Nkungu",
-    "Buremba",
-    "Kazo Town council",
-    "Burunga",
-    "Rwemikoma"
-  ] : [
-    "Kampala Store",
-    "JBER",
-    "Mbarara Warehouse",
-    "Kakyinga Factory",
-    "Kazo - Kanoni Warehouse",
-    "Kazo Coffee"
-  ];
-
-  const handleExport = () => {
-    try {
-      if (!filteredRecords || filteredRecords.length === 0) {
-        toast({
-          title: "Export Error",
-          description: "No data available to export",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Create CSV content
-      let csvContent = "data:text/csv;charset=utf-8,";
-      
-      // Add headers
-      csvContent += "Date,Manager,Location,Coffee Type,Quality Grade,Source,Humidity,Buying Price,Currency,Quantity,Unit,Status\n";
-      
-      // Add data rows
-      filteredRecords.forEach(record => {
-        try {
-          const row = [
-            record.created_at ? format(new Date(record.created_at), 'yyyy-MM-dd') : 'N/A',
-            record.manager || '',
-            record.location || '',
-            record.coffeeType || '',
-            record.qualityGrade || '',
-            record.source || '',
-            record.humidity || '',
-            record.buying_price || '',
-            record.currency || '',
-            record.quantity || '',
-            record.unit || '',
-            record.status || ''
-          ];
-          csvContent += row.join(',') + "\n";
-        } catch (err) {
-          console.error("Error processing record for export:", err, record);
-        }
-      });
-      
-      // Create download link
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `coffee_inventory_${format(new Date(), 'yyyy-MM-dd')}.csv`);
-      document.body.appendChild(link);
-      
-      // Trigger download
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({
-        title: "Export Successful",
-        description: "Coffee inventory records have been exported to CSV",
-      });
-    } catch (err) {
-      console.error("Export error:", err);
-      toast({
-        title: "Export Failed",
-        description: "Failed to export inventory records",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value === '' ? undefined : value
-    }));
-  };
-
-  const clearFilters = () => {
-    setFilters({});
-    setSearchTerm('');
-  };
-
-  const handleRefresh = async () => {
-    try {
-      await refetch();
-      toast({
-        title: "Refreshed",
-        description: "Inventory records have been refreshed",
-      });
-    } catch (err) {
-      console.error("Refresh error:", err);
-      toast({
-        title: "Refresh Failed",
-        description: "Failed to refresh inventory records",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Safely filter records with error handling
-  const filteredRecords = React.useMemo(() => {
-    try {
-      if (!inventoryRecords) return [];
-      
-      return inventoryRecords.filter(record => {
-        if (!searchTerm) return true;
-        
-        const searchLower = searchTerm.toLowerCase();
-        return (
-          (record.manager?.toLowerCase() || '').includes(searchLower) ||
-          (record.location?.toLowerCase() || '').includes(searchLower) ||
-          (record.coffeeType?.toLowerCase() || '').includes(searchLower) ||
-          (record.qualityGrade?.toLowerCase() || '').includes(searchLower) ||
-          (record.source?.toLowerCase() || '').includes(searchLower)
-        );
-      });
-    } catch (err) {
-      console.error("Error filtering records:", err);
-      return [];
-    }
-  }, [inventoryRecords, searchTerm]);
-
-  // If there's an error state, display it
-  if (errorState) {
+  if (error) {
     return (
-      <div className="p-8">
-        <Button onClick={onBack} variant="outline" className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
+      <div className="space-y-4">
+        <div className="flex items-center">
+          <Button onClick={onBack} variant="ghost" size="sm" className="mr-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <h2 className="text-xl font-semibold">Coffee Inventory Records</h2>
+        </div>
+        
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
-            Error loading inventory records: {errorState.message}
+            {error.message || "Failed to load inventory records"}
           </AlertDescription>
         </Alert>
       </div>
     );
   }
-
+  
+  // Filter the data based on search term
+  const filteredData = inventoryData?.filter(item => {
+    if (!searchTerm) return true;
+    
+    const searchTermLower = searchTerm.toLowerCase();
+    return (
+      (item.coffee_type && item.coffee_type.toLowerCase().includes(searchTermLower)) ||
+      (item.quality_grade && item.quality_grade.toLowerCase().includes(searchTermLower)) ||
+      (item.source && item.source.toLowerCase().includes(searchTermLower)) ||
+      (item.location && item.location.toLowerCase().includes(searchTermLower)) ||
+      (item.manager && item.manager.toLowerCase().includes(searchTermLower))
+    );
+  }) || [];
+  
+  // Filter based on active tab
+  const tabFilteredData = activeTab === 'all' 
+    ? filteredData 
+    : filteredData.filter(item => item.status === activeTab);
+  
+  // Format currency
+  const formatCurrency = (amount, currency) => {
+    if (!amount) return '0';
+    
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency || 'UGX',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount);
+    } catch (e) {
+      console.error('Error formatting currency:', e);
+      return `${amount} ${currency || 'UGX'}`;
+    }
+  };
+  
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Unknown';
+    
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return dateString;
+    }
+  };
+  
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <Button onClick={onBack} variant="outline">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back
-            </Button>
-            <h2 className="text-xl font-semibold">Coffee Inventory Records</h2>
-            <div className="flex gap-2">
-              <Button onClick={handleRefresh} variant="outline" size="sm" className="flex items-center gap-1">
-                <RefreshCw className="h-4 w-4" />
-                Refresh
-              </Button>
-              <Button 
-                onClick={handleExport} 
-                variant="outline" 
-                className="flex items-center gap-2" 
-                disabled={!filteredRecords || filteredRecords.length === 0 || isLoading}
-              >
-                <Download className="h-4 w-4" />
-                Export CSV
-              </Button>
-            </div>
-          </div>
-          
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Search records..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            
-            <Select
-              value={filters.location || ''}
-              onValueChange={(value) => handleFilterChange('location', value)}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Locations</SelectItem>
-                {locationOptions.map(location => (
-                  <SelectItem key={location} value={location}>{location}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select
-              value={filters.coffeeType || ''}
-              onValueChange={(value) => handleFilterChange('coffeeType', value)}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
-                <SelectItem value="arabica">Arabica Coffee</SelectItem>
-                <SelectItem value="robusta">Robusta Coffee</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Button onClick={clearFilters} variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
-            </Button>
-          </div>
-          
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Button onClick={onBack} variant="ghost" size="sm" className="mr-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <h2 className="text-xl font-semibold flex-1">Coffee Inventory Records</h2>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Filter className="h-4 w-4 mr-2" />
+            Filter
+          </Button>
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+        </div>
+      </div>
+      
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Search by type, grade, source, location..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <Tabs 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="w-full sm:w-auto"
+        >
+          <TabsList className="grid grid-cols-3 w-full">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="processed">Processed</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+      
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle>Inventory List</CardTitle>
+          <CardDescription>
+            {location 
+              ? `Showing coffee inventory for ${location}` 
+              : 'Showing all coffee inventory'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           {isLoading ? (
-            <div className="text-center py-10">
-              <p className="text-gray-500">Loading inventory records...</p>
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="flex gap-2 items-center">
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ))}
             </div>
-          ) : filteredRecords && filteredRecords.length > 0 ? (
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Manager</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Coffee Type</TableHead>
-                    <TableHead>Quality Grade</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Humidity</TableHead>
-                    <TableHead>Buying Price</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Status</TableHead>
+          ) : tabFilteredData.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Coffee Details</TableHead>
+                  <TableHead>Origin</TableHead>
+                  <TableHead>Specifications</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tabFilteredData.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <div className="font-medium">{item.coffee_type || 'Unknown'}</div>
+                      <div className="text-sm text-gray-500">{item.quality_grade || 'Ungraded'}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div>{item.source || 'Unknown'}</div>
+                      <div className="text-sm text-gray-500">{item.location}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div>Humidity: {item.humidity || 0}%</div>
+                      <div className="text-sm text-gray-500">Manager: {item.manager}</div>
+                    </TableCell>
+                    <TableCell>
+                      {formatCurrency(item.buying_price, item.currency)}
+                    </TableCell>
+                    <TableCell>
+                      {item.quantity} {item.unit}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={item.status === 'active' ? 'default' : 'secondary'}
+                      >
+                        {item.status || 'Unknown'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {formatDate(item.created_at)}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRecords.map((record) => (
-                    <TableRow key={record.id}>
-                      <TableCell>{record.created_at ? format(new Date(record.created_at), 'yyyy-MM-dd') : 'N/A'}</TableCell>
-                      <TableCell>{record.manager || 'N/A'}</TableCell>
-                      <TableCell>{record.location || 'N/A'}</TableCell>
-                      <TableCell>{record.coffeeType || 'N/A'}</TableCell>
-                      <TableCell>{record.qualityGrade || 'N/A'}</TableCell>
-                      <TableCell>{record.source || 'N/A'}</TableCell>
-                      <TableCell>{record.humidity ? `${record.humidity}%` : 'N/A'}</TableCell>
-                      <TableCell>
-                        {record.buying_price ? `${record.buying_price} ${record.currency || 'UGX'}` : 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        {record.quantity ? `${record.quantity} ${record.unit || 'kg'}` : 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          record.status === 'active' ? 'bg-green-100 text-green-800' : 
-                          record.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {record.status || 'unknown'}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                ))}
+              </TableBody>
+            </Table>
           ) : (
-            <div className="text-center py-10 border rounded-md">
-              <p className="text-gray-500">No inventory records found</p>
+            <div className="text-center py-10">
+              <p className="text-gray-500">No coffee inventory records found.</p>
+              {searchTerm && (
+                <p className="text-gray-400 mt-2">
+                  Try adjusting your search term or filters.
+                </p>
+              )}
             </div>
           )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

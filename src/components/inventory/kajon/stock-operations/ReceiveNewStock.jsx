@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { useAddKAJONCoffee } from '@/integrations/supabase/hooks/useKAJONCoffee';
+import { useAddKAJONCoffee, useKAJONCoffees } from '@/integrations/supabase/hooks/useKAJONCoffee';
 import AuthenticationForm from '../AuthenticationForm';
 import CoffeeInventoryRecords from './records/CoffeeInventoryRecords';
 import { ClipboardList, AlertCircle } from 'lucide-react';
@@ -65,6 +65,7 @@ const ReceiveNewStock = ({ isKazo }) => {
   const [formError, setFormError] = useState('');
   const { toast } = useToast();
   const addCoffeeMutation = useAddKAJONCoffee();
+  const { data: inventoryData } = useKAJONCoffees({ location: selectedLocation });
 
   const handleAuthentication = (name, location) => {
     setManagerName(name);
@@ -89,8 +90,8 @@ const ReceiveNewStock = ({ isKazo }) => {
       const formattedData = {
         manager: managerName,
         location: selectedLocation,
-        coffeeType: data.coffeeType,
-        qualityGrade: data.qualityGrade,
+        coffee_type: data.coffeeType,  // Changed from coffeeType to coffee_type
+        quality_grade: data.qualityGrade,  // Changed from qualityGrade to quality_grade
         source: data.source,
         humidity: parseFloat(data.humidity),
         buying_price: parseFloat(data.buyingPrice),
@@ -105,8 +106,8 @@ const ReceiveNewStock = ({ isKazo }) => {
       console.log("Form data being submitted:", formattedData);
       
       // Validate required fields
-      if (!formattedData.coffeeType) throw new Error("Coffee type is required");
-      if (!formattedData.qualityGrade) throw new Error("Quality grade is required");
+      if (!formattedData.coffee_type) throw new Error("Coffee type is required");
+      if (!formattedData.quality_grade) throw new Error("Quality grade is required");
       if (!formattedData.source) throw new Error("Source is required");
       if (isNaN(formattedData.humidity)) throw new Error("Humidity must be a valid number");
       if (isNaN(formattedData.buying_price)) throw new Error("Buying price must be a valid number");
@@ -143,7 +144,11 @@ const ReceiveNewStock = ({ isKazo }) => {
 
   if (viewRecords) {
     try {
-      return <CoffeeInventoryRecords onBack={() => setViewRecords(false)} isKazo={isKazo} />;
+      return <CoffeeInventoryRecords 
+        onBack={() => setViewRecords(false)} 
+        isKazo={isKazo} 
+        location={selectedLocation}
+      />;
     } catch (error) {
       console.error("Error rendering CoffeeInventoryRecords:", error);
       return (
