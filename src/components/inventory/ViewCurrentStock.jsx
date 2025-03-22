@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
-import ViewStockDashboard from './ViewStockDashboard';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/card";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ViewStockDashboard from './ViewStockDashboard';
 import StockCards from './stock-visualization/StockCards';
 import StockTable from './stock-visualization/StockTable';
 import StockMap from './stock-visualization/StockMap';
