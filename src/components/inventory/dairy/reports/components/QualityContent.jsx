@@ -1,12 +1,14 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, Plus } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import ReportMetricCards from './ReportMetricCards';
+import ProductionChart from './ProductionChart';
+import { AlertCircle } from 'lucide-react';
+import { Card } from "@/components/ui/card";
 import QualityMetricsCard from '../QualityMetricsCard';
 
 const QualityContent = ({ qualityMetrics, productionData, onOpenReportForm }) => {
+  const hasQualityData = qualityMetrics && qualityMetrics.length > 0;
+  
   return (
     <>
       <QualityMetricsCard qualityMetrics={qualityMetrics} />
