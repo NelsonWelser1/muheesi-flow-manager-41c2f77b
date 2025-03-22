@@ -9,7 +9,19 @@ import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AuthenticationForm from '../AuthenticationForm';
-import { ClipboardList, AlertCircle, BarChart4, Coffee, Package, FileText, Droplet, DollarSign, Scales, Map, HelpCircle } from 'lucide-react';
+import { 
+  ClipboardList, 
+  AlertCircle, 
+  BarChart4, 
+  Coffee, 
+  Package, 
+  FileText, 
+  Droplet, 
+  DollarSign, 
+  Weight, 
+  Map, 
+  HelpCircle 
+} from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const COFFEE_GRADES = {
@@ -433,7 +445,7 @@ const ReceiveNewStock = ({ isKazo }) => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2">
-                        <Scales className="h-4 w-4 text-purple-600" />
+                        <Weight className="h-4 w-4 text-purple-600" />
                         <Label>Quantity</Label>
                       </div>
                       <Input 
