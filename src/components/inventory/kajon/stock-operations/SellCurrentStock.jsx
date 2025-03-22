@@ -26,6 +26,31 @@ const COFFEE_GRADES = {
   ]
 };
 
+const STORE_LOCATIONS = {
+  kazo: [
+    "Kanoni-Mbogo",
+    "Kanoni-Rwakahaya",
+    "Engari-Kaichumu",
+    "Engari-Kyengando",
+    "Migina",
+    "Kagarama",
+    "Kyampangara",
+    "Nkungu",
+    "Buremba",
+    "Kazo Town council",
+    "Burunga",
+    "Rwemikoma"
+  ],
+  regular: [
+    "Kampala",
+    "JBER",
+    "Mbarara",
+    "Kakyinga",
+    "Kazo-Kanoni",
+    "Kazo"
+  ]
+};
+
 const SellCurrentStock = ({ isKazo }) => {
   const [selectedCoffeeType, setSelectedCoffeeType] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
@@ -34,7 +59,7 @@ const SellCurrentStock = ({ isKazo }) => {
   const { toast } = useToast();
   const updateCoffeeMutation = useUpdateKAJONCoffee();
 
-  const handleAuthentication = (name) => {
+  const handleAuthentication = (name, location) => {
     setManagerName(name);
     setIsAuthenticated(true);
   };
@@ -74,26 +99,14 @@ const SellCurrentStock = ({ isKazo }) => {
             <SelectValue placeholder="Select location" />
           </SelectTrigger>
           <SelectContent>
-            {isKazo ? (
-              <>
-                <SelectItem value="Kanoni-Mbogo">Kanoni - Mbogo Store</SelectItem>
-                <SelectItem value="Kanoni-Rwakahaya">Kanoni - Rwakahaya Store</SelectItem>
-                <SelectItem value="Engari-Kaichumu">Engari - Kaichumu Store</SelectItem>
-                <SelectItem value="Engari-Kyengando">Engari - Kyengando Store</SelectItem>
-                <SelectItem value="Migina">Migina Store</SelectItem>
-                <SelectItem value="Kagarama">Kagarama Store</SelectItem>
-                <SelectItem value="Kyampangara">Kyampangara Store</SelectItem>
-              </>
-            ) : (
-              <>
-                <SelectItem value="Kampala">Kampala Store</SelectItem>
-                <SelectItem value="JBER">JBER</SelectItem>
-                <SelectItem value="Mbarara">Mbarara Warehouse</SelectItem>
-                <SelectItem value="Kakyinga">Kakyinga Factory</SelectItem>
-                <SelectItem value="Kazo-Kanoni">Kazo - Kanoni Warehouse</SelectItem>
-                <SelectItem value="Kazo">Kazo Coffee</SelectItem>
-              </>
-            )}
+            {isKazo 
+              ? STORE_LOCATIONS.kazo.map(location => (
+                  <SelectItem key={location} value={location}>{location}</SelectItem>
+                ))
+              : STORE_LOCATIONS.regular.map(location => (
+                  <SelectItem key={location} value={location}>{location}</SelectItem>
+                ))
+            }
           </SelectContent>
         </Select>
       </div>
@@ -105,6 +118,7 @@ const SellCurrentStock = ({ isKazo }) => {
       <AuthenticationForm 
         onAuthenticate={handleAuthentication}
         title={isKazo ? "Store Manager Name" : "Warehouse Manager Name"}
+        selectedLocation={selectedLocation}
       />
     );
   }

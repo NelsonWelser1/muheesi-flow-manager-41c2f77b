@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,17 @@ const WAREHOUSE_LOCATIONS = [
   "Mbarara Warehouse",
   "Kakyinga Factory",
   "Kazo - Kanoni Warehouse",
-  "Kazo Coffee"
+  "Kazo Coffee",
+  "Kanoni-Mbogo",
+  "Engari-Kaichumu",
+  "Engari-Kyengando",
+  "Migina",
+  "Kyampangara",
+  "Nkungu",
+  "Buremba",
+  "Kazo Town council",
+  "Burunga",
+  "Rwemikoma"
 ];
 
 const StockUpdateForm = () => {
@@ -46,7 +57,7 @@ const StockUpdateForm = () => {
     setSelectedLocation(location);
   };
 
-  const handleAuthentication = (name) => {
+  const handleAuthentication = (name, location) => {
     setManagerName(name);
     setIsAuthenticated(true);
     toast({
@@ -87,6 +98,7 @@ const StockUpdateForm = () => {
       <AuthenticationForm 
         onAuthenticate={handleAuthentication}
         title="Warehouse Manager Name"
+        selectedLocation={selectedLocation}
       />
     );
   }

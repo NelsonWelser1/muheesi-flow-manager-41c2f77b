@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,14 +27,32 @@ const COFFEE_GRADES = {
   ]
 };
 
+const STORE_LOCATIONS = [
+  "Kanoni-Mbogo",
+  "Engari-Kaichumu",
+  "Engari-Kyengando",
+  "Migina",
+  "Kyampangara",
+  "Nkungu",
+  "Buremba",
+  "Kazo Town council",
+  "Burunga",
+  "Rwemikoma"
+];
+
 const StoreManagement = ({ selectedStore }) => {
   const { toast } = useToast();
   const addCoffeeMutation = useAddKAJONCoffee();
   const [selectedCoffeeType, setSelectedCoffeeType] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [managerName, setManagerName] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState(selectedStore || '');
 
-  const handleAuthentication = (name) => {
+  const handleLocationSelect = (location) => {
+    setSelectedLocation(location);
+  };
+
+  const handleAuthentication = (name, location) => {
     setManagerName(name);
     setIsAuthenticated(true);
   };
@@ -47,11 +66,30 @@ const StoreManagement = ({ selectedStore }) => {
     });
   };
 
+  if (!selectedLocation) {
+    return (
+      <div className="space-y-4">
+        <Label>Select Store Location</Label>
+        <Select onValueChange={handleLocationSelect}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select location" />
+          </SelectTrigger>
+          <SelectContent>
+            {STORE_LOCATIONS.map(location => (
+              <SelectItem key={location} value={location}>{location}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <AuthenticationForm 
         onAuthenticate={handleAuthentication}
         title="Store Manager Name"
+        selectedLocation={selectedLocation}
       />
     );
   }
@@ -63,6 +101,11 @@ const StoreManagement = ({ selectedStore }) => {
           <div>
             <Label>Store Manager</Label>
             <Input name="manager" value={managerName} readOnly />
+          </div>
+
+          <div>
+            <Label>Store Location</Label>
+            <Input name="location" value={selectedLocation} readOnly />
           </div>
 
           <div>
