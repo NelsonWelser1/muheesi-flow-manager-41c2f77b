@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
@@ -219,7 +218,7 @@ export const useCoffeeStockTransfers = () => {
     handleTimeRangeChange,
     handleSearch,
     handleSort,
-    handleRefresh,
+    handleRefresh: fetchTransfers,
     submitTransfer,
     respondToTransfer
   };

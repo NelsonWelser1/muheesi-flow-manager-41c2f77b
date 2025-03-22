@@ -103,8 +103,9 @@ const RelocateStock = ({ isKazo }) => {
         quantity: quantity,
         unit: data.unit || 'kg',
         reason: data.reason || '',
-        sender_user_id: 'dummy-sender-id', // In a real app, this would be the authenticated user's ID
-        recipient_user_id: 'dummy-recipient-id', // In a real app, this would be looked up based on destination
+        // Use null instead of string IDs since we're not using authentication yet
+        sender_user_id: null,
+        recipient_user_id: null
       };
 
       // Submit transfer to Supabase via the hook

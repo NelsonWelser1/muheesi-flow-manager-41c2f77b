@@ -26,8 +26,9 @@ const PendingTransferNotification = ({ transfer, onAccept, onDecline }) => {
     setIsProcessing(true);
     
     try {
-      // In a real app, we would use the authenticated user's ID
-      const userId = 'dummy-recipient-id';
+      // In a real app with authentication, we would use the authenticated user's ID
+      // For now, pass null for the user ID
+      const userId = null;
       const notes = action === 'accept' 
         ? `Accepted by ${transfer.destination_location} manager` 
         : `Declined by ${transfer.destination_location} manager`;
