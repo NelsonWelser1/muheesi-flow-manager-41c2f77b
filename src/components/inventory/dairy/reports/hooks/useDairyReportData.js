@@ -47,11 +47,11 @@ export const useDairyReportData = () => {
           // Map production_line_local data to match expected format
           productionResults = localProduction.map(item => ({
             product_type: item.cheese_type || 'Cheese',
-            finished_product_amount: item.yield || 0,
+            finished_product_amount: item.expected_yield || 0,
             raw_material_used: item.milk_volume || 0,
-            efficiency_percentage: Math.round((item.yield / item.milk_volume) * 100) || 0,
+            efficiency_percentage: calculateEfficiency(item.expected_yield, item.milk_volume),
             quality_score: 85, // Default score since quality may not be in this table
-            production_date: item.date_time || item.created_at
+            production_date: item.start_time || item.created_at
           }));
         } else if (productionError) {
           console.error('Error fetching from dairy_production:', productionError);
@@ -74,7 +74,7 @@ export const useDairyReportData = () => {
               product_type: item.cheese_type || 'Cheese',
               finished_product_amount: item.expected_yield || 0,
               raw_material_used: item.milk_volume || 0,
-              efficiency_percentage: Math.round((item.expected_yield / item.milk_volume) * 100) || 0,
+              efficiency_percentage: calculateEfficiency(item.expected_yield, item.milk_volume),
               quality_score: 85, // Default score since quality may not be in this table
               production_date: item.start_time || item.created_at
             }));
@@ -84,6 +84,12 @@ export const useDairyReportData = () => {
         }
       } else {
         console.log('Found data in dairy_production:', productionResults.length, 'records');
+      }
+
+      // Helper function to calculate efficiency
+      function calculateEfficiency(yield_amount, milk_volume) {
+        if (!yield_amount || !milk_volume || milk_volume === 0) return 0;
+        return Math.round((yield_amount / milk_volume) * 100);
       }
 
       // 2. Calculate quality stats from quality-related tables or from production data
@@ -207,10 +213,10 @@ export const useDairyReportData = () => {
   const formatProductionData = (data) => {
     if (!data || data.length === 0) {
       return [
-        { product: 'Fresh Milk', quantity: 0 },
-        { product: 'Yogurt', quantity: 0 },
-        { product: 'Cheese', quantity: 0 },
-        { product: 'Butter', quantity: 0 }
+        { product: 'Fresh Milk', quantity: 0, efficiency: 0 },
+        { product: 'Yogurt', quantity: 0, efficiency: 0 },
+        { product: 'Cheese', quantity: 0, efficiency: 0 },
+        { product: 'Butter', quantity: 0, efficiency: 0 }
       ];
     }
 
@@ -227,7 +233,12 @@ export const useDairyReportData = () => {
         };
       }
       
-      productMap[productType].quantity += Number(item.finished_product_amount || item.yield || 0);
+      productMap[productType].quantity += Number(item.finished_product_amount || item.expected_yield || 0);
+      
+      // Take the highest efficiency value for the product type
+      if ((item.efficiency_percentage || 0) > productMap[productType].efficiency) {
+        productMap[productType].efficiency = item.efficiency_percentage || 0;
+      }
     });
     
     return Object.values(productMap);
