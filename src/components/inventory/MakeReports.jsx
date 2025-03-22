@@ -209,7 +209,7 @@ const MakeReports = ({
               </div>
 
               <div className="space-y-2">
-                <Label>Send Via</Label>
+                
                 <div className="flex flex-wrap gap-2">
                   
                   
