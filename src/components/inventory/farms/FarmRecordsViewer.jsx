@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/supabase";
 import CSVExportButton from "../dairy/logistics/records/components/export-buttons/CSVExportButton";
 import PDFExportButton from "../dairy/logistics/records/components/export-buttons/PDFExportButton";
 import ExcelExportButton from "../dairy/logistics/records/components/export-buttons/ExcelExportButton";
-import { exportToCSV, exportToExcel, exportToPDF } from "../../utils/coffee/coffeeExport";
+import { exportToCSV, exportToExcel, exportToPDF } from "@/utils/coffee/coffeeExport";
 
 const FarmRecordsViewer = ({ onBack, isKazo = false }) => {
   const [farmRecords, setFarmRecords] = useState([]);
