@@ -40,19 +40,28 @@ const AssociationOperations = ({ isKazo, selectedAssociation }) => {
       return;
     }
     
-    const result = await saveOperation(selectedAssociation.id);
-    
-    if (result) {
-      toast({
-        title: "Success",
-        description: "Operation saved successfully",
-        variant: "default",
-        className: "bg-green-50 border-green-300 text-green-800"
-      });
-    } else {
+    try {
+      const result = await saveOperation(selectedAssociation.id);
+      
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Operation saved successfully",
+          variant: "default",
+          className: "bg-green-50 border-green-300 text-green-800"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error || "Failed to save operation",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error('Error submitting form:', err);
       toast({
         title: "Error",
-        description: error || "Failed to save operation",
+        description: err.message || "Failed to save operation",
         variant: "destructive"
       });
     }

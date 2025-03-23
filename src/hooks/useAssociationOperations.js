@@ -1,8 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
-import { fromSupabase } from '@/integrations/supabase/utils/supabaseUtils';
-import { format, parseISO } from 'date-fns';
 
 export const useAssociationOperations = (associationId = null) => {
   const [formData, setFormData] = useState({
@@ -27,13 +25,13 @@ export const useAssociationOperations = (associationId = null) => {
     
     try {
       setLoading(true);
-      const data = await fromSupabase(
-        supabase
-          .from('association_operations')
-          .select('*')
-          .eq('association_id', id)
-          .order('created_at', { ascending: false })
-      );
+      const { data, error } = await supabase
+        .from('association_operations')
+        .select('*')
+        .eq('association_id', id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
       return data || [];
     } catch (error) {
       console.error('Error fetching operations for association:', error);
@@ -52,12 +50,7 @@ export const useAssociationOperations = (associationId = null) => {
       
       let query = supabase
         .from('association_operations')
-        .select(`
-          *,
-          associations:association_id (
-            association_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       
       // Apply status filter
@@ -95,7 +88,9 @@ export const useAssociationOperations = (associationId = null) => {
         }
       }
       
-      const data = await fromSupabase(query);
+      const { data, error } = await query;
+      
+      if (error) throw error;
       
       // Apply search filter in-memory for more complex searching
       let filteredData = data || [];
@@ -105,7 +100,6 @@ export const useAssociationOperations = (associationId = null) => {
           return (
             (op.collective_resources && op.collective_resources.toLowerCase().includes(search)) ||
             (op.shared_equipment && op.shared_equipment.toLowerCase().includes(search)) ||
-            (op.associations?.association_name && op.associations.association_name.toLowerCase().includes(search)) ||
             (op.status && op.status.toLowerCase().includes(search))
           );
         });
@@ -181,12 +175,12 @@ export const useAssociationOperations = (associationId = null) => {
         status: formData.status || 'scheduled'
       };
       
-      const result = await fromSupabase(
-        supabase
-          .from('association_operations')
-          .insert(dataToSave)
-          .select()
-      );
+      const { data, error } = await supabase
+        .from('association_operations')
+        .insert(dataToSave)
+        .select();
+      
+      if (error) throw error;
       
       // Reset form
       setFormData({
@@ -221,12 +215,12 @@ export const useAssociationOperations = (associationId = null) => {
       setSaving(true);
       setError(null);
       
-      await fromSupabase(
-        supabase
-          .from('association_operations')
-          .update(updatedData)
-          .eq('id', id)
-      );
+      const { error } = await supabase
+        .from('association_operations')
+        .update(updatedData)
+        .eq('id', id);
+      
+      if (error) throw error;
       
       // Refresh operations list
       await fetchAllOperations();
@@ -252,12 +246,12 @@ export const useAssociationOperations = (associationId = null) => {
       setSaving(true);
       setError(null);
       
-      await fromSupabase(
-        supabase
-          .from('association_operations')
-          .delete()
-          .eq('id', id)
-      );
+      const { error } = await supabase
+        .from('association_operations')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
       
       // Refresh operations list
       setOperations(operations.filter(op => op.id !== id));

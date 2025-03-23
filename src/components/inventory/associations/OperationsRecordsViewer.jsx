@@ -3,40 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, parseISO } from "date-fns";
-import { 
-  ArrowLeft, 
-  Search, 
-  Download, 
-  FileSpreadsheet, 
-  FileText, 
-  RefreshCw, 
-  Loader2, 
-  Calendar, 
-  Filter 
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, RefreshCw, Search, Download, FileDown } from "lucide-react";
 import { useAssociationOperations } from '@/hooks/useAssociationOperations';
-import { useToast } from '@/components/ui/use-toast';
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import { format } from 'date-fns';
+import { useToast } from "@/components/ui/use-toast";
 
 const OperationsRecordsViewer = ({ onBack, isKazo, associationId }) => {
   const { toast } = useToast();
@@ -53,220 +24,159 @@ const OperationsRecordsViewer = ({ onBack, isKazo, associationId }) => {
     fetchAllOperations
   } = useAssociationOperations(associationId);
 
-  // For export functionality
-  const [exportLoading, setExportLoading] = useState(false);
+  const [displayedOperations, setDisplayedOperations] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Handle search input
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
+  // Update displayed operations when operations change
+  useEffect(() => {
+    setDisplayedOperations(operations);
+  }, [operations]);
 
-  // Refresh data
+  // Handle refresh
   const handleRefresh = async () => {
+    setIsRefreshing(true);
     await fetchAllOperations({
       status: statusFilter,
       timeRange: timeRange,
       searchTerm: searchTerm
     });
+    setIsRefreshing(false);
     
     toast({
       title: "Refreshed",
-      description: "Operations records have been refreshed.",
-      duration: 2000
+      description: "Operation records have been refreshed",
     });
   };
 
-  // Export to Excel
-  const handleExportToExcel = () => {
-    setExportLoading(true);
-    
-    try {
-      const formattedData = operations.map(op => ({
-        'Association Name': op.associations?.association_name || 'N/A',
-        'Next Meeting Date': op.next_meeting_date ? format(parseISO(op.next_meeting_date), 'PPP') : 'N/A',
-        'Training Schedule': op.training_schedule ? format(parseISO(op.training_schedule), 'PPP') : 'N/A',
-        'Collective Resources': op.collective_resources || 'N/A',
-        'Shared Equipment': op.shared_equipment || 'N/A',
-        'Status': op.status || 'N/A',
-        'Created At': op.created_at ? format(parseISO(op.created_at), 'PPP') : 'N/A'
-      }));
-      
-      const worksheet = XLSX.utils.json_to_sheet(formattedData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Operations');
-      
-      XLSX.writeFile(workbook, 'operations_records.xlsx');
-      
+  // Handle export to CSV
+  const handleExportCSV = () => {
+    if (operations.length === 0) {
       toast({
-        title: "Export Successful",
-        description: "Operations records exported to Excel.",
-        duration: 3000,
-        className: "bg-green-50 border-green-300 text-green-800"
-      });
-    } catch (error) {
-      console.error('Error exporting to Excel:', error);
-      toast({
-        title: "Export Failed",
-        description: "Failed to export operations records.",
+        title: "No data",
+        description: "There are no records to export",
         variant: "destructive"
       });
-    } finally {
-      setExportLoading(false);
+      return;
     }
-  };
 
-  // Export to PDF
-  const handleExportToPDF = () => {
-    setExportLoading(true);
-    
     try {
-      const doc = new jsPDF();
-      
-      // Add title
-      doc.setFontSize(16);
-      doc.text('Association Operations Records', 14, 15);
-      doc.setFontSize(10);
-      doc.text(`Generated on ${format(new Date(), 'PPP')}`, 14, 22);
-      
-      // Format data for PDF table
-      const tableData = operations.map(op => [
-        op.associations?.association_name || 'N/A',
-        op.next_meeting_date ? format(parseISO(op.next_meeting_date), 'P') : 'N/A',
-        op.training_schedule ? format(parseISO(op.training_schedule), 'P') : 'N/A',
-        op.collective_resources || 'N/A',
-        op.shared_equipment || 'N/A',
-        op.status || 'N/A'
-      ]);
-      
-      // Create PDF table
-      doc.autoTable({
-        startY: 25,
-        head: [['Association', 'Meeting Date', 'Training Date', 'Resources', 'Equipment', 'Status']],
-        body: tableData,
-        theme: 'grid',
-        headStyles: { fillColor: [22, 163, 74] }
-      });
-      
-      doc.save('operations_records.pdf');
-      
-      toast({
-        title: "Export Successful",
-        description: "Operations records exported to PDF.",
-        duration: 3000,
-        className: "bg-green-50 border-green-300 text-green-800"
-      });
-    } catch (error) {
-      console.error('Error exporting to PDF:', error);
-      toast({
-        title: "Export Failed",
-        description: "Failed to export operations records.",
-        variant: "destructive"
-      });
-    } finally {
-      setExportLoading(false);
-    }
-  };
+      // Prepare CSV header
+      const headers = [
+        'ID',
+        'Association',
+        'Next Meeting Date',
+        'Training Schedule',
+        'Collective Resources',
+        'Shared Equipment',
+        'Status',
+        'Created',
+        'Updated'
+      ].join(',');
 
-  // Export to CSV
-  const handleExportToCSV = () => {
-    setExportLoading(true);
-    
-    try {
-      const formattedData = operations.map(op => ({
-        'Association Name': op.associations?.association_name || 'N/A',
-        'Next Meeting Date': op.next_meeting_date ? format(parseISO(op.next_meeting_date), 'PPP') : 'N/A',
-        'Training Schedule': op.training_schedule ? format(parseISO(op.training_schedule), 'PPP') : 'N/A',
-        'Collective Resources': op.collective_resources || 'N/A',
-        'Shared Equipment': op.shared_equipment || 'N/A',
-        'Status': op.status || 'N/A',
-        'Created At': op.created_at ? format(parseISO(op.created_at), 'PPP') : 'N/A'
-      }));
-      
-      const worksheet = XLSX.utils.json_to_sheet(formattedData);
-      const csv = XLSX.utils.sheet_to_csv(worksheet);
-      
+      // Prepare CSV rows
+      const rows = operations.map(op => [
+        op.id,
+        associationId,
+        op.next_meeting_date ? format(new Date(op.next_meeting_date), 'yyyy-MM-dd') : '',
+        op.training_schedule ? format(new Date(op.training_schedule), 'yyyy-MM-dd') : '',
+        `"${op.collective_resources || ''}"`,
+        `"${op.shared_equipment || ''}"`,
+        op.status,
+        op.created_at ? format(new Date(op.created_at), 'yyyy-MM-dd HH:mm') : '',
+        op.updated_at ? format(new Date(op.updated_at), 'yyyy-MM-dd HH:mm') : ''
+      ].join(','));
+
+      // Combine header and rows
+      const csv = [headers, ...rows].join('\n');
+
+      // Create a blob and download
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', 'operations_records.csv');
+      link.setAttribute('download', `operations_export_${new Date().toISOString().split('T')[0]}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast({
-        title: "Export Successful",
-        description: "Operations records exported to CSV.",
-        duration: 3000,
-        className: "bg-green-50 border-green-300 text-green-800"
+        title: "Export successful",
+        description: "Operations data exported as CSV",
       });
     } catch (error) {
       console.error('Error exporting to CSV:', error);
       toast({
-        title: "Export Failed",
-        description: "Failed to export operations records.",
+        title: "Export failed",
+        description: "Failed to export operations data",
         variant: "destructive"
       });
-    } finally {
-      setExportLoading(false);
-    }
-  };
-
-  // Status badge color mapping
-  const getStatusBadgeVariant = (status) => {
-    switch (status) {
-      case 'scheduled':
-        return 'default';
-      case 'completed':
-        return 'success';
-      case 'cancelled':
-        return 'destructive';
-      case 'postponed':
-        return 'warning';
-      default:
-        return 'secondary';
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Back to Operations Form
-        </Button>
-        <h3 className="text-xl font-semibold">Operations Records</h3>
-      </div>
-
-      <Tabs defaultValue="all" value={statusFilter} onValueChange={setStatusFilter}>
-        <div className="flex flex-col space-y-4">
-          <div className="flex justify-between items-center">
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-              <TabsTrigger value="postponed">Postponed</TabsTrigger>
-              <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-            </TabsList>
-
+    <Card>
+      <CardContent className="pt-6">
+        <div className="space-y-6">
+          <div className="flex justify-between items-center mb-4">
+            <Button 
+              variant="outline" 
+              onClick={onBack}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            <h3 className="text-lg font-semibold">Operations Records</h3>
             <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search operations..."
-                  className="pl-8 w-[250px]"
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                />
-              </div>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={handleExportCSV}
+                className="flex items-center gap-2"
+              >
+                <FileDown className="h-4 w-4" />
+                Export CSV
+              </Button>
+            </div>
+          </div>
 
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-[160px]">
-                  <div className="flex items-center">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Time Range" />
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <Select 
+                value={statusFilter} 
+                onValueChange={setStatusFilter}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="postponed">Postponed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Select 
+                value={timeRange} 
+                onValueChange={setTimeRange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by time" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Time</SelectItem>
@@ -277,135 +187,84 @@ const OperationsRecordsViewer = ({ onBack, isKazo, associationId }) => {
                   <SelectItem value="year">Last Year</SelectItem>
                 </SelectContent>
               </Select>
-
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={handleRefresh} 
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-              </Button>
-
-              <div className="flex items-center gap-1">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleExportToExcel} 
-                  className="text-xs"
-                  disabled={exportLoading || operations.length === 0}
-                >
-                  <FileSpreadsheet className="mr-1 h-4 w-4" />
-                  Excel
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleExportToPDF} 
-                  className="text-xs"
-                  disabled={exportLoading || operations.length === 0}
-                >
-                  <FileText className="mr-1 h-4 w-4" />
-                  PDF
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleExportToCSV} 
-                  className="text-xs"
-                  disabled={exportLoading || operations.length === 0}
-                >
-                  <Download className="mr-1 h-4 w-4" />
-                  CSV
-                </Button>
-              </div>
+            </div>
+            
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search operations..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
             </div>
           </div>
 
-          <TabsContent value={statusFilter} className="mt-0">
-            <Card>
-              <CardContent className="p-0">
-                {loading ? (
-                  <div className="flex justify-center items-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <span className="ml-2">Loading operations...</span>
-                  </div>
-                ) : error ? (
-                  <div className="flex justify-center items-center py-8 text-destructive">
-                    <span>Error: {error}</span>
-                  </div>
-                ) : operations.length === 0 ? (
-                  <div className="flex flex-col justify-center items-center py-12">
-                    <FileText className="h-12 w-12 text-muted-foreground mb-2" />
-                    <h3 className="text-lg font-medium">No operations found</h3>
-                    <p className="text-muted-foreground text-sm mt-1">
-                      {searchTerm 
-                        ? "Try adjusting your search or filters" 
-                        : "Start by adding operations to this association"}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Association</TableHead>
-                          <TableHead>Next Meeting</TableHead>
-                          <TableHead>Training Schedule</TableHead>
-                          <TableHead>Collective Resources</TableHead>
-                          <TableHead>Shared Equipment</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Created Date</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {operations.map((operation) => (
-                          <TableRow key={operation.id}>
-                            <TableCell className="font-medium">
-                              {operation.associations?.association_name || "N/A"}
-                            </TableCell>
-                            <TableCell>
-                              {operation.next_meeting_date 
-                                ? format(parseISO(operation.next_meeting_date), "PPP") 
-                                : "Not set"}
-                            </TableCell>
-                            <TableCell>
-                              {operation.training_schedule 
-                                ? format(parseISO(operation.training_schedule), "PPP") 
-                                : "Not set"}
-                            </TableCell>
-                            <TableCell>
-                              {operation.collective_resources || "None"}
-                            </TableCell>
-                            <TableCell>
-                              {operation.shared_equipment || "None"}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={getStatusBadgeVariant(operation.status)}>
-                                {operation.status || "N/A"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {operation.created_at 
-                                ? format(parseISO(operation.created_at), "PPP") 
-                                : "N/A"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Loading operations...</p>
+            </div>
+          ) : operations.length === 0 ? (
+            <div className="text-center py-8 bg-gray-50 rounded-md">
+              <p className="text-gray-500">No operations found</p>
+              <p className="text-gray-400 text-sm mt-1">
+                {searchTerm || statusFilter !== 'all' || timeRange !== 'all' 
+                  ? "Try adjusting your filters" 
+                  : "Create an operation to see it here"}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b">
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Meeting</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Training Schedule</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resources</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Equipment</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {operations.map((operation) => (
+                    <tr key={operation.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-2">
+                        {operation.next_meeting_date 
+                          ? format(new Date(operation.next_meeting_date), 'yyyy-MM-dd') 
+                          : '-'}
+                      </td>
+                      <td className="px-4 py-2">
+                        {operation.training_schedule 
+                          ? format(new Date(operation.training_schedule), 'yyyy-MM-dd') 
+                          : '-'}
+                      </td>
+                      <td className="px-4 py-2">{operation.collective_resources || '-'}</td>
+                      <td className="px-4 py-2">{operation.shared_equipment || '-'}</td>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          operation.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
+                          operation.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          operation.status === 'postponed' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {operation.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2">
+                        {operation.created_at 
+                          ? format(new Date(operation.created_at), 'yyyy-MM-dd HH:mm') 
+                          : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-      </Tabs>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
