@@ -9,9 +9,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, FileText, Loader2 } from "lucide-react";
-import { useAssociationOperations } from '@/hooks/useAssociationOperations';
+import { useOperationsForm } from '@/hooks/useOperationsForm';
 import { useToast } from "@/components/ui/use-toast";
 import OperationsRecordsViewer from './OperationsRecordsViewer';
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 const AssociationOperations = ({ isKazo, selectedAssociation }) => {
   const { toast } = useToast();
@@ -25,18 +26,14 @@ const AssociationOperations = ({ isKazo, selectedAssociation }) => {
     handleDateChange,
     handleInputChange,
     saveOperation
-  } = useAssociationOperations(selectedAssociation?.id);
+  } = useOperationsForm(selectedAssociation?.id);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Basic validation
     if (!selectedAssociation?.id) {
-      toast({
-        title: "Error",
-        description: "Please select an association first",
-        variant: "destructive"
-      });
+      showErrorToast(toast, "Please select an association first");
       return;
     }
     
@@ -44,26 +41,13 @@ const AssociationOperations = ({ isKazo, selectedAssociation }) => {
       const result = await saveOperation(selectedAssociation.id);
       
       if (result) {
-        toast({
-          title: "Success",
-          description: "Operation saved successfully",
-          variant: "default",
-          className: "bg-green-50 border-green-300 text-green-800"
-        });
+        showSuccessToast(toast, "Operation saved successfully");
       } else {
-        toast({
-          title: "Error",
-          description: error || "Failed to save operation",
-          variant: "destructive"
-        });
+        showErrorToast(toast, error || "Failed to save operation");
       }
     } catch (err) {
       console.error('Error submitting form:', err);
-      toast({
-        title: "Error",
-        description: err.message || "Failed to save operation",
-        variant: "destructive"
-      });
+      showErrorToast(toast, err.message || "Failed to save operation");
     }
   };
 

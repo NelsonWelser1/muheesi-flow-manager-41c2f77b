@@ -4,10 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, RefreshCw, Search, Download, FileDown } from "lucide-react";
-import { useAssociationOperations } from '@/hooks/useAssociationOperations';
+import { ArrowLeft, RefreshCw, Search, FileDown } from "lucide-react";
+import { useOperationsForm } from '@/hooks/useOperationsForm';
 import { format } from 'date-fns';
 import { useToast } from "@/components/ui/use-toast";
+import { showInfoToast, showErrorToast } from "@/components/ui/notifications";
 
 const OperationsRecordsViewer = ({ onBack, isKazo, associationId }) => {
   const { toast } = useToast();
@@ -22,15 +23,9 @@ const OperationsRecordsViewer = ({ onBack, isKazo, associationId }) => {
     setStatusFilter,
     setSearchTerm,
     fetchAllOperations
-  } = useAssociationOperations(associationId);
+  } = useOperationsForm(associationId);
 
-  const [displayedOperations, setDisplayedOperations] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Update displayed operations when operations change
-  useEffect(() => {
-    setDisplayedOperations(operations);
-  }, [operations]);
 
   // Handle refresh
   const handleRefresh = async () => {
@@ -42,20 +37,13 @@ const OperationsRecordsViewer = ({ onBack, isKazo, associationId }) => {
     });
     setIsRefreshing(false);
     
-    toast({
-      title: "Refreshed",
-      description: "Operation records have been refreshed",
-    });
+    showInfoToast(toast, "Operation records have been refreshed");
   };
 
   // Handle export to CSV
   const handleExportCSV = () => {
     if (operations.length === 0) {
-      toast({
-        title: "No data",
-        description: "There are no records to export",
-        variant: "destructive"
-      });
+      showErrorToast(toast, "There are no records to export");
       return;
     }
 
@@ -100,17 +88,10 @@ const OperationsRecordsViewer = ({ onBack, isKazo, associationId }) => {
       link.click();
       document.body.removeChild(link);
 
-      toast({
-        title: "Export successful",
-        description: "Operations data exported as CSV",
-      });
+      showInfoToast(toast, "Operations data exported as CSV");
     } catch (error) {
       console.error('Error exporting to CSV:', error);
-      toast({
-        title: "Export failed",
-        description: "Failed to export operations data",
-        variant: "destructive"
-      });
+      showErrorToast(toast, "Failed to export operations data");
     }
   };
 
