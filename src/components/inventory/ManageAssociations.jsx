@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { FileText } from "lucide-react";
 import AssociationDetails from './associations/AssociationDetails';
 import AssociationOperations from './associations/AssociationOperations';
 import AssociationAnalytics from './associations/AssociationAnalytics';
@@ -13,14 +14,22 @@ import ImageAnalysis from './farms/ImageAnalysis';
 import AssociationMembersManagement from './associations/AssociationMembersManagement';
 import AssociationCertifications from './associations/AssociationCertifications';
 import AssociationTrainingHub from './associations/AssociationTrainingHub';
+import AssociationsViewer from './associations/AssociationsViewer';
 
 const ManageAssociations = ({
   isKazo
 }) => {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [selectedAssociation, setSelectedAssociation] = useState(null);
+  const [showAssociationRecords, setShowAssociationRecords] = useState(false);
+
+  if (showAssociationRecords) {
+    return <AssociationsViewer 
+      onBack={() => setShowAssociationRecords(false)} 
+      isKazo={isKazo} 
+    />;
+  }
+
   return <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-4">
         Manage Associations - {isKazo ? 'Kazo Coffee Development Project' : 'KAJON Coffee Limited'}
@@ -34,11 +43,21 @@ const ManageAssociations = ({
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="certifications">Certifications</TabsTrigger>
           <TabsTrigger value="training">Training Hub</TabsTrigger>
-          
         </TabsList>
 
         <TabsContent value="details">
-          <h3 className="text-lg font-semibold mb-4">Association Registration Form</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Association Registration Form</h3>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={() => setShowAssociationRecords(true)}
+            >
+              <FileText className="h-4 w-4" />
+              View Associations
+            </Button>
+          </div>
           <AssociationDetails isKazo={isKazo} selectedAssociation={selectedAssociation} />
         </TabsContent>
 
