@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,9 @@ import AssociationDetails from './associations/AssociationDetails';
 import AssociationOperations from './associations/AssociationOperations';
 import AssociationAnalytics from './associations/AssociationAnalytics';
 import ImageAnalysis from './farms/ImageAnalysis';
+import AssociationMembersManagement from './associations/AssociationMembersManagement';
+import AssociationCertifications from './associations/AssociationCertifications';
+import AssociationTrainingHub from './associations/AssociationTrainingHub';
 
 const ManageAssociations = ({ isKazo }) => {
   const { toast } = useToast();
@@ -21,10 +25,13 @@ const ManageAssociations = ({ isKazo }) => {
       </h2>
 
       <Tabs defaultValue="details" className="w-full">
-        <TabsList>
+        <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="details">Association Details</TabsTrigger>
           <TabsTrigger value="operations">Operations</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="members">Members</TabsTrigger>
+          <TabsTrigger value="certifications">Certifications</TabsTrigger>
+          <TabsTrigger value="training">Training Hub</TabsTrigger>
           <TabsTrigger value="image-analysis">Image Analysis</TabsTrigger>
         </TabsList>
 
@@ -38,6 +45,18 @@ const ManageAssociations = ({ isKazo }) => {
 
         <TabsContent value="analytics">
           <AssociationAnalytics isKazo={isKazo} selectedAssociation={selectedAssociation} />
+        </TabsContent>
+
+        <TabsContent value="members">
+          <AssociationMembersManagement isKazo={isKazo} selectedAssociation={selectedAssociation} />
+        </TabsContent>
+
+        <TabsContent value="certifications">
+          <AssociationCertifications isKazo={isKazo} selectedAssociation={selectedAssociation} />
+        </TabsContent>
+
+        <TabsContent value="training">
+          <AssociationTrainingHub isKazo={isKazo} selectedAssociation={selectedAssociation} />
         </TabsContent>
 
         <TabsContent value="image-analysis">
