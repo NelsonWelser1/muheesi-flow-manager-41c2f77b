@@ -11,6 +11,7 @@ import {
 import { ArrowUp, ArrowDown, Download, Calendar, Filter } from 'lucide-react';
 
 const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
+  
   const [timeRange, setTimeRange] = useState('year');
   const [associationFilter, setAssociationFilter] = useState('all');
   
@@ -758,4 +759,4 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                             <Badge>AA/A Grade</Badge>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
-                            <div className="h
+                            <div className
