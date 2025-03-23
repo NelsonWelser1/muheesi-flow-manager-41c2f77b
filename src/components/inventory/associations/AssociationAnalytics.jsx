@@ -219,6 +219,8 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
             <TabsTrigger value="impact">Impact</TabsTrigger>
           </TabsList>
           
+          
+          
           <TabsContent value="production" className="space-y-6">
             <Card>
               <CardHeader>
@@ -757,4 +759,4 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
                             <div className="h-full bg-blue-300 w-[35%]"></div>
                           </div>
-                          <p className="text-xs text-muted
+                          <p className="text-xs
