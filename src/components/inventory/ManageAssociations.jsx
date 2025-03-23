@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,13 +12,14 @@ import ImageAnalysis from './farms/ImageAnalysis';
 import AssociationMembersManagement from './associations/AssociationMembersManagement';
 import AssociationCertifications from './associations/AssociationCertifications';
 import AssociationTrainingHub from './associations/AssociationTrainingHub';
-
-const ManageAssociations = ({ isKazo }) => {
-  const { toast } = useToast();
+const ManageAssociations = ({
+  isKazo
+}) => {
+  const {
+    toast
+  } = useToast();
   const [selectedAssociation, setSelectedAssociation] = useState(null);
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-4">
         Manage Associations - {isKazo ? 'Kazo Coffee Development Project' : 'KAJON Coffee Limited'}
       </h2>
@@ -32,7 +32,7 @@ const ManageAssociations = ({ isKazo }) => {
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="certifications">Certifications</TabsTrigger>
           <TabsTrigger value="training">Training Hub</TabsTrigger>
-          <TabsTrigger value="image-analysis">Image Analysis</TabsTrigger>
+          
         </TabsList>
 
         <TabsContent value="details">
@@ -63,8 +63,6 @@ const ManageAssociations = ({ isKazo }) => {
           <ImageAnalysis isKazo={isKazo} selectedAssociation={selectedAssociation} />
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
-
 export default ManageAssociations;
