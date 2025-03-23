@@ -1,34 +1,30 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import FarmRecordsViewer from './FarmRecordsViewer';
+import { useFarmInformation } from '@/hooks/useFarmInformation';
 
 const FarmDetails = ({ isKazo, selectedFarm }) => {
-  const [formData, setFormData] = useState({
-    managerName: '',
-    supervisorName: '',
-    farmName: '',
-    coffeeType: '',
-    farmSize: '',
-    dailyProduction: '',
-    weeklyProduction: '',
-    monthlyProduction: '',
-    quarterlyProduction: '',
-    annualProduction: '',
-  });
   const [showRecordsViewer, setShowRecordsViewer] = useState(false);
+  
+  const {
+    formData,
+    loading,
+    saving,
+    error,
+    handleInputChange,
+    handleSelectChange,
+    saveFarmInformation
+  } = useFarmInformation(selectedFarm?.id);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await saveFarmInformation();
   };
 
   if (showRecordsViewer) {
@@ -51,46 +47,51 @@ const FarmDetails = ({ isKazo, selectedFarm }) => {
             </Button>
           </div>
           
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="managerName">Farm Manager</Label>
+                <Label htmlFor="manager_name">Farm Manager</Label>
                 <Input
-                  id="managerName"
-                  name="managerName"
-                  value={formData.managerName}
+                  id="manager_name"
+                  name="manager_name"
+                  value={formData.manager_name}
                   onChange={handleInputChange}
                   placeholder="Enter farm manager name"
+                  required
                 />
               </div>
 
               <div>
-                <Label htmlFor="supervisorName">Farm Supervisor</Label>
+                <Label htmlFor="supervisor_name">Farm Supervisor</Label>
                 <Input
-                  id="supervisorName"
-                  name="supervisorName"
-                  value={formData.supervisorName}
+                  id="supervisor_name"
+                  name="supervisor_name"
+                  value={formData.supervisor_name}
                   onChange={handleInputChange}
                   placeholder="Enter farm supervisor name"
+                  required
                 />
               </div>
 
               <div>
-                <Label htmlFor="farmName">Farm Name</Label>
+                <Label htmlFor="farm_name">Farm Name</Label>
                 <Input
-                  id="farmName"
-                  name="farmName"
-                  value={formData.farmName}
+                  id="farm_name"
+                  name="farm_name"
+                  value={formData.farm_name}
                   onChange={handleInputChange}
                   placeholder="Enter farm name"
+                  required
                 />
               </div>
 
               <div>
-                <Label htmlFor="coffeeType">Coffee Type</Label>
+                <Label htmlFor="coffee_type">Coffee Type</Label>
                 <Select
-                  name="coffeeType"
-                  onValueChange={(value) => handleInputChange({ target: { name: 'coffeeType', value } })}
+                  name="coffee_type"
+                  value={formData.coffee_type}
+                  onValueChange={(value) => handleSelectChange('coffee_type', value)}
+                  required
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select coffee type" />
@@ -103,14 +104,17 @@ const FarmDetails = ({ isKazo, selectedFarm }) => {
               </div>
 
               <div>
-                <Label htmlFor="farmSize">Farm Size (Acres)</Label>
+                <Label htmlFor="farm_size">Farm Size (Acres)</Label>
                 <Input
-                  id="farmSize"
-                  name="farmSize"
+                  id="farm_size"
+                  name="farm_size"
                   type="number"
-                  value={formData.farmSize}
+                  value={formData.farm_size}
                   onChange={handleInputChange}
                   placeholder="Enter farm size"
+                  required
+                  min="0.1"
+                  step="0.1"
                 />
               </div>
             </div>
@@ -119,63 +123,92 @@ const FarmDetails = ({ isKazo, selectedFarm }) => {
               <h3 className="text-lg font-semibold">Production Metrics</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="dailyProduction">Daily Production (kg)</Label>
+                  <Label htmlFor="daily_production">Daily Production (kg)</Label>
                   <Input
-                    id="dailyProduction"
-                    name="dailyProduction"
+                    id="daily_production"
+                    name="daily_production"
                     type="number"
-                    value={formData.dailyProduction}
+                    value={formData.daily_production}
                     onChange={handleInputChange}
+                    min="0"
+                    step="0.1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="weeklyProduction">Weekly Production (kg)</Label>
+                  <Label htmlFor="weekly_production">Weekly Production (kg)</Label>
                   <Input
-                    id="weeklyProduction"
-                    name="weeklyProduction"
+                    id="weekly_production"
+                    name="weekly_production"
                     type="number"
-                    value={formData.weeklyProduction}
+                    value={formData.weekly_production}
                     onChange={handleInputChange}
+                    min="0"
+                    step="0.1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="monthlyProduction">Monthly Production (kg)</Label>
+                  <Label htmlFor="monthly_production">Monthly Production (kg)</Label>
                   <Input
-                    id="monthlyProduction"
-                    name="monthlyProduction"
+                    id="monthly_production"
+                    name="monthly_production"
                     type="number"
-                    value={formData.monthlyProduction}
+                    value={formData.monthly_production}
                     onChange={handleInputChange}
+                    min="0"
+                    step="0.1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="quarterlyProduction">Quarterly Production (kg)</Label>
+                  <Label htmlFor="quarterly_production">Quarterly Production (kg)</Label>
                   <Input
-                    id="quarterlyProduction"
-                    name="quarterlyProduction"
+                    id="quarterly_production"
+                    name="quarterly_production"
                     type="number"
-                    value={formData.quarterlyProduction}
+                    value={formData.quarterly_production}
                     onChange={handleInputChange}
+                    min="0"
+                    step="0.1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="annualProduction">Annual Production (kg)</Label>
+                  <Label htmlFor="annual_production">Annual Production (kg)</Label>
                   <Input
-                    id="annualProduction"
-                    name="annualProduction"
+                    id="annual_production"
+                    name="annual_production"
                     type="number"
-                    value={formData.annualProduction}
+                    value={formData.annual_production}
                     onChange={handleInputChange}
+                    min="0"
+                    step="0.1"
                   />
                 </div>
               </div>
             </div>
 
-            <Button type="submit" className="w-full">Save Farm Details</Button>
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                {error}
+              </div>
+            )}
+
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={saving || loading}
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>Save Farm Details</>
+              )}
+            </Button>
           </form>
         </CardContent>
       </Card>
