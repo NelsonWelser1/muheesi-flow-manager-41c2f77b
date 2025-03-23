@@ -455,7 +455,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                       <div className="space-y-3">
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>{"<"} 1 hectare</span>
+                            <span>&lt; 1 hectare</span>
                             <span>35%</span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -485,7 +485,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                         
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>{">"} 5 hectares</span>
+                            <span>&gt; 5 hectares</span>
                             <span>5%</span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -502,7 +502,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                       <div className="space-y-3">
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>Always ({">"}90%)</span>
+                            <span>Always (&gt;90%)</span>
                             <span>35%</span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -532,7 +532,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                         
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>Rare ({"<"}30%)</span>
+                            <span>Rare (&lt;30%)</span>
                             <span>10%</span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -549,7 +549,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                       <div className="space-y-3">
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>Advanced ({">"}8 trainings)</span>
+                            <span>Advanced (&gt;8 trainings)</span>
                             <span>25%</span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -579,7 +579,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                         
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>Minimal ({"<"}2 trainings)</span>
+                            <span>Minimal (&lt;2 trainings)</span>
                             <span>10%</span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -698,7 +698,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                       <div className="space-y-3">
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>High ({">"}1800m)</span>
+                            <span>High (&gt;1800m)</span>
                             <Badge className="bg-green-100 text-green-800">AA Grade</Badge>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -720,7 +720,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                         
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>Low ({"<"}1500m)</span>
+                            <span>Low (&lt;1500m)</span>
                             <Badge className="bg-amber-100 text-amber-800">B Grade</Badge>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -757,370 +757,4 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
                             <div className="h-full bg-blue-300 w-[35%]"></div>
                           </div>
-                          <p className="text-xs text-muted-foreground">Only 35% produce premium quality coffee</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Quality Defects Analysis</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={[
-                      { name: 'Insect damage', value: 28 },
-                      { name: 'Fermentation', value: 22 },
-                      { name: 'Processing', value: 18 },
-                      { name: 'Storage', value: 12 },
-                      { name: 'Immature beans', value: 10 },
-                      { name: 'Disease', value: 10 }
-                    ]} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" />
-                      <YAxis dataKey="name" type="category" />
-                      <Tooltip formatter={(value) => [`${value}%`, 'Percentage']} />
-                      <Bar dataKey="value" name="Percentage" fill="#f87171" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="financial" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Revenue Trends</CardTitle>
-                <CardDescription>Monthly revenue in UGX</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={revenueData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis tickFormatter={(value) => `${value/1000000}M`} />
-                      <Tooltip formatter={(value) => [formatCurrency(value), 'Revenue']} />
-                      <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#3b82f6" fill="#93c5fd" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Price Premium Analysis</CardTitle>
-                  <CardDescription>Price comparison by certification (UGX/kg)</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={[
-                        { name: 'Conventional', value: 10500 },
-                        { name: 'Organic', value: 13800 },
-                        { name: 'Fair Trade', value: 14200 },
-                        { name: 'Double Certified', value: 16500 }
-                      ]}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis tickFormatter={(value) => `${value/1000}K`} />
-                        <Tooltip formatter={(value) => [formatCurrency(value), 'Price']} />
-                        <Bar dataKey="value" name="Price per kg" fill="#4ade80" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Cost-Benefit Analysis</CardTitle>
-                  <CardDescription>Production cost vs. revenue per hectare</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={[
-                        { name: 'Conventional', cost: 5200000, revenue: 7350000 },
-                        { name: 'Organic', cost: 6800000, revenue: 11730000 },
-                        { name: 'Fair Trade', cost: 5500000, revenue: 9940000 },
-                        { name: 'Double Certified', cost: 7100000, revenue: 14025000 }
-                      ]}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis tickFormatter={(value) => `${value/1000000}M`} />
-                        <Tooltip formatter={(value) => [formatCurrency(value), undefined]} />
-                        <Legend />
-                        <Bar dataKey="cost" name="Cost" fill="#f87171" />
-                        <Bar dataKey="revenue" name="Revenue" fill="#4ade80" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Financial Health Indicators</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <Card>
-                    <CardContent className="p-4">
-                      <h3 className="font-medium mb-2">Average Farmer Income</h3>
-                      <div className="flex justify-between items-baseline">
-                        <p className="text-2xl font-bold">{formatCurrency(8500000)}</p>
-                        <div className="flex items-center text-green-600 text-sm">
-                          <ArrowUp size={16} className="mr-1" />
-                          <span>18.5%</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">Annual coffee income per farmer</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardContent className="p-4">
-                      <h3 className="font-medium mb-2">Cost of Production</h3>
-                      <div className="flex justify-between items-baseline">
-                        <p className="text-2xl font-bold">{formatCurrency(6200)}/kg</p>
-                        <div className="flex items-center text-red-600 text-sm">
-                          <ArrowUp size={16} className="mr-1" />
-                          <span>5.2%</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">Average cost to produce 1kg</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardContent className="p-4">
-                      <h3 className="font-medium mb-2">Gross Margin</h3>
-                      <div className="flex justify-between items-baseline">
-                        <p className="text-2xl font-bold">50.4%</p>
-                        <div className="flex items-center text-green-600 text-sm">
-                          <ArrowUp size={16} className="mr-1" />
-                          <span>3.8%</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">Average gross margin for farmers</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Market Channel Analysis</CardTitle>
-                <CardDescription>Revenue distribution by market channel</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: 'Direct Export', value: 55 },
-                          { name: 'Local Processor', value: 25 },
-                          { name: 'Specialty Market', value: 15 },
-                          { name: 'Local Consumption', value: 5 }
-                        ]}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      >
-                        <Cell fill="#3b82f6" />
-                        <Cell fill="#4ade80" />
-                        <Cell fill="#f59e0b" />
-                        <Cell fill="#8b5cf6" />
-                      </Pie>
-                      <Tooltip formatter={(value) => [`${value}%`, undefined]} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="impact" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Social Impact Indicators</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Education Access</span>
-                        <span className="text-sm">85%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-500 w-[85%]"></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Percentage of farmers' children in school</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Healthcare Access</span>
-                        <span className="text-sm">78%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 w-[78%]"></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Percentage with access to healthcare</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Food Security</span>
-                        <span className="text-sm">92%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500 w-[92%]"></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Percentage of farmers food secure year-round</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Women Empowerment</span>
-                        <span className="text-sm">65%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-pink-500 w-[65%]"></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Percentage of women in leadership positions</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Environmental Impact</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Sustainable Practices</span>
-                        <span className="text-sm">78%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500 w-[78%]"></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Farms implementing sustainable practices</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Water Conservation</span>
-                        <span className="text-sm">65%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 w-[65%]"></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Farms with water conservation systems</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Soil Health Practices</span>
-                        <span className="text-sm">82%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-500 w-[82%]"></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Farms using soil conservation methods</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Chemical Use Reduction</span>
-                        <span className="text-sm">70%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500 w-[70%]"></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Reduction in chemical use compared to baseline</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Sustainable Development Goals Impact</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Card className="border-2 border-blue-200">
-                    <CardContent className="p-4 text-center">
-                      <div className="aspect-square w-12 h-12 mx-auto mb-2 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-700 font-bold">1</span>
-                      </div>
-                      <h3 className="font-medium text-sm">No Poverty</h3>
-                      <p className="text-3xl font-bold text-blue-600 mt-2">68%</p>
-                      <p className="text-xs text-muted-foreground">Poverty reduction</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-2 border-green-200">
-                    <CardContent className="p-4 text-center">
-                      <div className="aspect-square w-12 h-12 mx-auto mb-2 bg-green-100 rounded-full flex items-center justify-center">
-                        <span className="text-green-700 font-bold">2</span>
-                      </div>
-                      <h3 className="font-medium text-sm">Zero Hunger</h3>
-                      <p className="text-3xl font-bold text-green-600 mt-2">92%</p>
-                      <p className="text-xs text-muted-foreground">Food security</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-2 border-amber-200">
-                    <CardContent className="p-4 text-center">
-                      <div className="aspect-square w-12 h-12 mx-auto mb-2 bg-amber-100 rounded-full flex items-center justify-center">
-                        <span className="text-amber-700 font-bold">4</span>
-                      </div>
-                      <h3 className="font-medium text-sm">Quality Education</h3>
-                      <p className="text-3xl font-bold text-amber-600 mt-2">85%</p>
-                      <p className="text-xs text-muted-foreground">Children in school</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-2 border-purple-200">
-                    <CardContent className="p-4 text-center">
-                      <div className="aspect-square w-12 h-12 mx-auto mb-2 bg-purple-100 rounded-full flex items-center justify-center">
-                        <span className="text-purple-700 font-bold">5</span>
-                      </div>
-                      <h3 className="font-medium text-sm">Gender Equality</h3>
-                      <p className="text-3xl font-bold text-purple-600 mt-2">65%</p>
-                      <p className="text-xs text-muted-foreground">Female leadership</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
-};
-
-export default AssociationAnalytics;
+                          <p className="text-xs text-muted
