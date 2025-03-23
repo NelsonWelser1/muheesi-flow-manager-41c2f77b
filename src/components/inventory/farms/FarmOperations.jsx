@@ -192,24 +192,6 @@ const FarmOperations = ({ isKazo, selectedFarm }) => {
             </form>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Inventory Tracking</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label>Seeds Stock (kg)</Label>
-                  <Input type="number" placeholder="Enter seeds quantity" />
-                </div>
-                <div>
-                  <Label>Fertilizer Stock (kg)</Label>
-                  <Input type="number" placeholder="Enter fertilizer quantity" />
-                </div>
-                <div>
-                  <Label>Tools Count</Label>
-                  <Input type="number" placeholder="Enter tools count" />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
               <h3 className="text-lg font-semibold">Labor Management</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
