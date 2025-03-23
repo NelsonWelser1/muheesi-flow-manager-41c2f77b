@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import ImageAnalysis from './farms/ImageAnalysis';
 import AssociationMembersManagement from './associations/AssociationMembersManagement';
 import AssociationCertifications from './associations/AssociationCertifications';
 import AssociationTrainingHub from './associations/AssociationTrainingHub';
+
 const ManageAssociations = ({
   isKazo
 }) => {
@@ -36,26 +38,32 @@ const ManageAssociations = ({
         </TabsList>
 
         <TabsContent value="details">
+          <h3 className="text-lg font-semibold mb-4">Association Registration Form</h3>
           <AssociationDetails isKazo={isKazo} selectedAssociation={selectedAssociation} />
         </TabsContent>
 
         <TabsContent value="operations">
+          <h3 className="text-lg font-semibold mb-4">Operations Form</h3>
           <AssociationOperations isKazo={isKazo} selectedAssociation={selectedAssociation} />
         </TabsContent>
 
         <TabsContent value="analytics">
+          <h3 className="text-lg font-semibold mb-4">Analytics Dashboard</h3>
           <AssociationAnalytics isKazo={isKazo} selectedAssociation={selectedAssociation} />
         </TabsContent>
 
         <TabsContent value="members">
+          <h3 className="text-lg font-semibold mb-4">Membership Management Form</h3>
           <AssociationMembersManagement isKazo={isKazo} selectedAssociation={selectedAssociation} />
         </TabsContent>
 
         <TabsContent value="certifications">
+          <h3 className="text-lg font-semibold mb-4">Certifications Form</h3>
           <AssociationCertifications isKazo={isKazo} selectedAssociation={selectedAssociation} />
         </TabsContent>
 
         <TabsContent value="training">
+          <h3 className="text-lg font-semibold mb-4">Training Hub Management</h3>
           <AssociationTrainingHub isKazo={isKazo} selectedAssociation={selectedAssociation} />
         </TabsContent>
 
@@ -65,4 +73,5 @@ const ManageAssociations = ({
       </Tabs>
     </div>;
 };
+
 export default ManageAssociations;
