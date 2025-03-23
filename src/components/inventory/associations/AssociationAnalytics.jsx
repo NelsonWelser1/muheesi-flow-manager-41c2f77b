@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +14,6 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
   const [timeRange, setTimeRange] = useState('year');
   const [associationFilter, setAssociationFilter] = useState('all');
   
-  // Sample data for charts - would be fetched from API in real implementation
   const productionData = [
     { month: 'Jan', arabica: 25000, robusta: 18000 },
     { month: 'Feb', arabica: 22000, robusta: 15000 },
@@ -457,7 +455,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                       <div className="space-y-3">
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>< 1 hectare</span>
+                            <span>{"<"} 1 hectare</span>
                             <span>35%</span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -487,7 +485,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                         
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>> 5 hectares</span>
+                            <span>{">"} 5 hectares</span>
                             <span>5%</span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -504,7 +502,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                       <div className="space-y-3">
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>Always (>90%)</span>
+                            <span>Always ({">"}90%)</span>
                             <span>35%</span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -534,7 +532,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                         
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>Rare (<30%)</span>
+                            <span>Rare ({"<"}30%)</span>
                             <span>10%</span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -551,7 +549,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                       <div className="space-y-3">
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>Advanced (>8 trainings)</span>
+                            <span>Advanced ({">"}8 trainings)</span>
                             <span>25%</span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -581,7 +579,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                         
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>Minimal (<2 trainings)</span>
+                            <span>Minimal ({"<"}2 trainings)</span>
                             <span>10%</span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -700,7 +698,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                       <div className="space-y-3">
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>High (>1800m)</span>
+                            <span>High ({">"}1800m)</span>
                             <Badge className="bg-green-100 text-green-800">AA Grade</Badge>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -722,7 +720,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                         
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span>Low (<1500m)</span>
+                            <span>Low ({"<"}1500m)</span>
                             <Badge className="bg-amber-100 text-amber-800">B Grade</Badge>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
