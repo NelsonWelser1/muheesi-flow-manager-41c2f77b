@@ -51,6 +51,16 @@ const TemplateSelector = ({ onSelectTemplate, onApplyTemplate, selectedTemplate,
     }
   };
   
+  // Helper function to get badge variant based on template type
+  const getTemplateBadgeVariant = (type) => {
+    switch(type?.toLowerCase()) {
+      case 'sms': return 'success';
+      case 'whatsapp': return 'info';
+      case 'email': return 'secondary';
+      default: return 'default';
+    }
+  };
+  
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
@@ -85,7 +95,9 @@ const TemplateSelector = ({ onSelectTemplate, onApplyTemplate, selectedTemplate,
               <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-2">
                   <h5 className="font-medium truncate">{template.name}</h5>
-                  <Badge type={template.type} />
+                  <Badge variant={getTemplateBadgeVariant(template.type)}>
+                    {template.type?.toUpperCase()}
+                  </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{template.description}</p>
                 <div className="mt-3 text-xs text-muted-foreground">
@@ -201,24 +213,6 @@ const formatVariableName = (variable) => {
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
-};
-
-// Badge component for template types
-const Badge = ({ type }) => {
-  const getTypeBadgeColor = (type) => {
-    switch(type?.toLowerCase()) {
-      case 'sms': return 'bg-purple-100 text-purple-800 hover:bg-purple-100';
-      case 'whatsapp': return 'bg-green-100 text-green-800 hover:bg-green-100';
-      case 'email': return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
-      default: return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
-    }
-  };
-  
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTypeBadgeColor(type)}`}>
-      {type?.toUpperCase()}
-    </span>
-  );
 };
 
 export default TemplateSelector;
