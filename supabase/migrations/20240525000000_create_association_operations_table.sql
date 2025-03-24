@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS association_operations (
 );
 
 -- Create indexes
-CREATE INDEX idx_association_operations_association_id ON association_operations(association_id);
-CREATE INDEX idx_association_operations_status ON association_operations(status);
-CREATE INDEX idx_association_operations_created_at ON association_operations(created_at);
+CREATE INDEX IF NOT EXISTS idx_association_operations_association_id ON association_operations(association_id);
+CREATE INDEX IF NOT EXISTS idx_association_operations_status ON association_operations(status);
+CREATE INDEX IF NOT EXISTS idx_association_operations_created_at ON association_operations(created_at);
 
 -- Create updated_at trigger
 CREATE OR REPLACE FUNCTION update_operations_updated_at_column()
@@ -27,9 +27,9 @@ BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE 'plpgsql';
 
-CREATE TRIGGER update_association_operations_updated_at
+CREATE TRIGGER IF NOT EXISTS update_association_operations_updated_at
     BEFORE UPDATE ON association_operations
     FOR EACH ROW
     EXECUTE FUNCTION update_operations_updated_at_column();
