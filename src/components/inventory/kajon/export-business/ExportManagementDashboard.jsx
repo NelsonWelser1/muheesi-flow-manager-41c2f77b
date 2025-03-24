@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from 'react-router-dom';
@@ -10,18 +11,13 @@ const ExportManagementDashboard = () => {
       title: "Coffee Export Manager",
       description: "Manage quotes, orders, invoices, and shipping documents",
       path: "export-manager"
-    },
-    {
-      title: "Factory Manager",
-      description: "Manage production, quality control, and inventory",
-      path: "factory-manager"
     }
   ];
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">KAJON Coffee Export Management</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
         {roles.map((role) => (
           <Card 
             key={role.title}
