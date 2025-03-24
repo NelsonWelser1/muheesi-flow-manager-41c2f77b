@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Users, FileText, UserPlus, Download, X, Camera, Coffee, MapPin, Phone } from "lucide-react";
+import { Search, Users, FileText, UserPlus, Download, X, Camera, Coffee, MapPin, Phone, CheckCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -29,6 +29,7 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
   const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isRegistrationSuccess, setIsRegistrationSuccess] = useState(false);
   
   const { toast } = useToast();
   
@@ -45,6 +46,17 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
     fetchMembers,
     setFormData
   } = useAssociationMembers(selectedAssociation?.id);
+  
+  // For the Registration tab form
+  const [registrationForm, setRegistrationForm] = useState({
+    fullName: '',
+    location: '',
+    phone: '',
+    farmSize: '',
+    coffeeType: 'arabica',
+    experience: '',
+    photo: null
+  });
   
   // Sort members
   const sortedMembers = [...members].sort((a, b) => {
@@ -108,6 +120,67 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
     
     if (success) {
       setIsAddMemberDialogOpen(false);
+    }
+  };
+
+  const handleRegistrationInputChange = (e) => {
+    const { name, value } = e.target;
+    setRegistrationForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleRegistrationSelectChange = (name, value) => {
+    setRegistrationForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleRegistrationPhotoChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setRegistrationForm(prev => ({
+        ...prev,
+        photo: e.target.files[0]
+      }));
+    }
+  };
+
+  const handleRegistrationSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Transfer data to the formData structure expected by saveMember
+    setFormData({
+      fullName: registrationForm.fullName,
+      location: registrationForm.location,
+      phone: registrationForm.phone,
+      farmSize: registrationForm.farmSize,
+      coffeeType: registrationForm.coffeeType,
+      experience: registrationForm.experience,
+      photo: registrationForm.photo,
+      memberLevel: 'bronze',
+      status: 'active'
+    });
+    
+    // Save the member using the existing hook function
+    const success = await saveMember();
+    
+    if (success) {
+      // Reset form
+      setRegistrationForm({
+        fullName: '',
+        location: '',
+        phone: '',
+        farmSize: '',
+        coffeeType: 'arabica',
+        experience: '',
+        photo: null
+      });
+      
+      // Show success message
+      setIsRegistrationSuccess(true);
+      setTimeout(() => setIsRegistrationSuccess(false), 5000);
     }
   };
 
@@ -377,41 +450,141 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">New Member Registration</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="farmer-name">Farmer Name</Label>
-                  <Input id="farmer-name" placeholder="Enter farmer's full name" />
-                </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input id="location" placeholder="Enter farmer's location" />
-                </div>
+                {isRegistrationSuccess && (
+                  <div className="bg-green-50 border border-green-200 rounded-md p-3 flex items-start space-x-2">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-green-800">Registration Successful</h4>
+                      <p className="text-sm text-green-700">The member has been successfully registered.</p>
+                    </div>
+                  </div>
+                )}
                 
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" placeholder="Enter farmer's phone number" />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="farm-size">Farm Size (hectares)</Label>
-                  <Input id="farm-size" type="number" step="0.1" placeholder="Enter farm size" />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="coffee-type">Coffee Type</Label>
-                  <Select defaultValue="arabica">
-                    <SelectTrigger id="coffee-type">
-                      <SelectValue placeholder="Select coffee type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="arabica">Arabica</SelectItem>
-                      <SelectItem value="robusta">Robusta</SelectItem>
-                      <SelectItem value="mixed">Mixed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <Button className="w-full">Register New Member</Button>
+                <form onSubmit={handleRegistrationSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="farmer-name">Farmer Name</Label>
+                    <Input 
+                      id="farmer-name" 
+                      name="fullName"
+                      placeholder="Enter farmer's full name" 
+                      value={registrationForm.fullName}
+                      onChange={handleRegistrationInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input 
+                      id="location" 
+                      name="location"
+                      placeholder="Enter farmer's location" 
+                      value={registrationForm.location}
+                      onChange={handleRegistrationInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input 
+                      id="phone" 
+                      name="phone"
+                      placeholder="Enter farmer's phone number" 
+                      value={registrationForm.phone}
+                      onChange={handleRegistrationInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="farm-size">Farm Size (hectares)</Label>
+                    <Input 
+                      id="farm-size" 
+                      name="farmSize"
+                      type="number" 
+                      step="0.1" 
+                      placeholder="Enter farm size" 
+                      value={registrationForm.farmSize}
+                      onChange={handleRegistrationInputChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="coffee-type">Coffee Type</Label>
+                    <Select 
+                      name="coffeeType" 
+                      value={registrationForm.coffeeType}
+                      onValueChange={(value) => handleRegistrationSelectChange('coffeeType', value)}
+                    >
+                      <SelectTrigger id="coffee-type">
+                        <SelectValue placeholder="Select coffee type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="arabica">Arabica</SelectItem>
+                        <SelectItem value="robusta">Robusta</SelectItem>
+                        <SelectItem value="mixed">Mixed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="experience">Years of Experience</Label>
+                    <Input 
+                      id="experience" 
+                      name="experience"
+                      type="number" 
+                      placeholder="Years growing coffee" 
+                      value={registrationForm.experience}
+                      onChange={handleRegistrationInputChange}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="farmer-photo">Farmer Photo</Label>
+                    <div className="mt-1 flex items-center">
+                      {!registrationForm.photo ? (
+                        <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer" onClick={() => document.getElementById('registration-photo-upload').click()}>
+                          <Camera size={24} className="text-gray-400" />
+                          <p className="mt-1 text-sm text-gray-500">Click to upload photo</p>
+                          <input
+                            id="registration-photo-upload"
+                            name="photo"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleRegistrationPhotoChange}
+                          />
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <img
+                            src={URL.createObjectURL(registrationForm.photo)}
+                            alt="Farmer preview"
+                            className="w-32 h-32 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                            onClick={() => setRegistrationForm(prev => ({ ...prev, photo: null }))}
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    disabled={saving}
+                  >
+                    {saving ? 'Registering...' : 'Register New Member'}
+                  </Button>
+                </form>
               </div>
               
               <div className="bg-slate-50 p-6 rounded-lg">
