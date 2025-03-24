@@ -64,7 +64,7 @@ const KashariFarmDashboard = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="w-full justify-start overflow-auto">
+            <TabsList className="grid grid-cols-2 md:grid-cols-8 mb-6">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="dairy">Dairy Products</TabsTrigger>
               <TabsTrigger value="production">Production</TabsTrigger>
