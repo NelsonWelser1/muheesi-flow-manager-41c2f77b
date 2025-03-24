@@ -1,74 +1,88 @@
 
 import React from 'react';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import CommunicationExportActions from './CommunicationExportActions';
 
 const CommunicationDetailsDialog = ({ message, isOpen, onClose }) => {
   if (!message) return null;
-  
-  const getStatusBadgeColor = (status) => {
-    switch(status?.toLowerCase()) {
-      case 'sent': return 'bg-green-100 text-green-800 hover:bg-green-100';
-      case 'scheduled': return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
-      case 'draft': return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100';
-      case 'failed': return 'bg-red-100 text-red-800 hover:bg-red-100';
-      default: return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'sent':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'scheduled':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'draft':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'failed':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const getTypeBadgeColor = (type) => {
-    switch(type?.toLowerCase()) {
-      case 'sms': return 'bg-purple-100 text-purple-800 hover:bg-purple-100';
-      case 'whatsapp': return 'bg-green-100 text-green-800 hover:bg-green-100';
-      case 'email': return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
-      default: return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
-    }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString() + ' ' + 
-           new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-xl flex items-center justify-between">
-            <span>{message.subject}</span>
-            <div className="flex space-x-2">
-              <Badge className={getTypeBadgeColor(message.type)}>
-                {message.type?.toUpperCase()}
-              </Badge>
-              <Badge className={getStatusBadgeColor(message.status)}>
-                {message.status?.charAt(0).toUpperCase() + message.status?.slice(1)}
-              </Badge>
-            </div>
-          </DialogTitle>
-          <DialogDescription>
-            Sent to: <span className="font-medium">{message.recipients}</span> • 
-            {message.sentDate ? ` Sent on: ${formatDate(message.sentDate)}` : ' Not sent yet'}
-            {message.sentBy ? ` • By: ${message.sentBy}` : ''}
-          </DialogDescription>
+          <DialogTitle>Message Details</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 mt-2">
-          <div className="bg-gray-50 p-4 rounded-md whitespace-pre-wrap">
-            {message.message}
+        <div className="space-y-4 my-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Subject</h4>
+              <p className="font-medium">{message.subject || 'No subject'}</p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Type</h4>
+              <p>{message.type?.toUpperCase() || 'N/A'}</p>
+            </div>
           </div>
           
-          <div className="flex justify-end">
-            <CommunicationExportActions messages={[]} selectedMessage={message} />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Recipients</h4>
+              <p>{message.recipients || 'N/A'}</p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Status</h4>
+              <Badge className={getStatusColor(message.status)}>
+                {message.status?.charAt(0).toUpperCase() + message.status?.slice(1) || 'Unknown'}
+              </Badge>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Sent Date</h4>
+              <p>
+                {message.sentDate 
+                  ? new Date(message.sentDate).toLocaleString() 
+                  : message.status === 'scheduled' ? 'Scheduled' : 'N/A'
+                }
+              </p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Sent By</h4>
+              <p>{message.sentBy || 'N/A'}</p>
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="text-sm font-medium text-gray-500">Message</h4>
+            <div className="mt-1 p-3 border rounded-md bg-gray-50">
+              <p className="whitespace-pre-line">{message.message || 'No message content'}</p>
+            </div>
           </div>
         </div>
+        
+        <DialogFooter className="flex justify-between items-center">
+          <CommunicationExportActions messages={[]} selectedMessage={message} />
+          <Button variant="outline" onClick={onClose}>Close</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

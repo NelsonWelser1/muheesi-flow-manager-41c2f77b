@@ -1,132 +1,121 @@
 
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { Eye, ArrowUp, ArrowDown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
-const CommunicationTable = ({ 
-  messages, 
-  loading, 
-  onViewDetails,
-  sortConfig,
-  onSort
-}) => {
-  const getStatusBadgeColor = (status) => {
-    switch(status?.toLowerCase()) {
-      case 'sent': return 'bg-green-100 text-green-800 hover:bg-green-100';
-      case 'scheduled': return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
-      case 'draft': return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100';
-      case 'failed': return 'bg-red-100 text-red-800 hover:bg-red-100';
-      default: return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
-    }
-  };
-
-  const getTypeBadgeColor = (type) => {
-    switch(type?.toLowerCase()) {
-      case 'sms': return 'bg-purple-100 text-purple-800 hover:bg-purple-100';
-      case 'whatsapp': return 'bg-green-100 text-green-800 hover:bg-green-100';
-      case 'email': return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
-      default: return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
-    }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString() + ' ' + 
-           new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const getSortDirection = (key) => {
-    if (sortConfig.key === key) {
-      return sortConfig.direction === 'asc' ? '↑' : '↓';
-    }
-    return '';
-  };
-
+const CommunicationTable = ({ messages, loading, onViewDetails, sortConfig, onSort }) => {
   const handleSort = (key) => {
     const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
     onSort({ key, direction });
   };
 
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return null;
+    return sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4 ml-1" /> : <ArrowDown className="h-4 w-4 ml-1" />;
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'sent':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'scheduled':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'draft':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'failed':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  if (loading) {
+    return <div className="flex justify-center py-8">Loading messages...</div>;
+  }
+
+  if (!messages || messages.length === 0) {
+    return <div className="flex justify-center py-8">No messages found</div>;
+  }
+
   return (
-    <div className="rounded-md border">
+    <div className="border rounded-md">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead 
-              className="cursor-pointer hover:bg-muted transition-colors"
+              className="cursor-pointer"
               onClick={() => handleSort('subject')}
             >
-              Subject {getSortDirection('subject')}
+              <div className="flex items-center">
+                Subject {getSortIcon('subject')}
+              </div>
             </TableHead>
             <TableHead 
-              className="cursor-pointer hover:bg-muted transition-colors"
+              className="cursor-pointer"
               onClick={() => handleSort('type')}
             >
-              Type {getSortDirection('type')}
+              <div className="flex items-center">
+                Type {getSortIcon('type')}
+              </div>
             </TableHead>
             <TableHead 
-              className="cursor-pointer hover:bg-muted transition-colors"
+              className="cursor-pointer"
               onClick={() => handleSort('recipients')}
             >
-              Recipients {getSortDirection('recipients')}
+              <div className="flex items-center">
+                Recipients {getSortIcon('recipients')}
+              </div>
             </TableHead>
             <TableHead 
-              className="cursor-pointer hover:bg-muted transition-colors"
+              className="cursor-pointer"
               onClick={() => handleSort('status')}
             >
-              Status {getSortDirection('status')}
+              <div className="flex items-center">
+                Status {getSortIcon('status')}
+              </div>
             </TableHead>
             <TableHead 
-              className="cursor-pointer hover:bg-muted transition-colors"
+              className="cursor-pointer"
               onClick={() => handleSort('sentDate')}
             >
-              Sent Date {getSortDirection('sentDate')}
+              <div className="flex items-center">
+                Sent Date {getSortIcon('sentDate')}
+              </div>
             </TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
-                Loading messages...
+          {messages.map((message) => (
+            <TableRow key={message.id}>
+              <TableCell className="font-medium">{message.subject || 'No subject'}</TableCell>
+              <TableCell>{message.type?.toUpperCase() || 'N/A'}</TableCell>
+              <TableCell>{message.recipients || 'N/A'}</TableCell>
+              <TableCell>
+                <Badge className={getStatusColor(message.status)}>
+                  {message.status?.charAt(0).toUpperCase() + message.status?.slice(1) || 'Unknown'}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                {message.sentDate 
+                  ? new Date(message.sentDate).toLocaleDateString() 
+                  : message.status === 'scheduled' ? 'Scheduled' : 'N/A'
+                }
+              </TableCell>
+              <TableCell>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onViewDetails(message)}
+                  className="flex items-center gap-1"
+                >
+                  <Eye className="h-4 w-4" /> View
+                </Button>
               </TableCell>
             </TableRow>
-          ) : messages.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
-                No messages found matching your search criteria
-              </TableCell>
-            </TableRow>
-          ) : (
-            messages.map(message => (
-              <TableRow key={message.id}>
-                <TableCell className="font-medium max-w-xs truncate" title={message.subject}>{message.subject}</TableCell>
-                <TableCell>
-                  <Badge className={getTypeBadgeColor(message.type)}>
-                    {message.type?.toUpperCase()}
-                  </Badge>
-                </TableCell>
-                <TableCell>{message.recipients}</TableCell>
-                <TableCell>
-                  <Badge className={getStatusBadgeColor(message.status)}>
-                    {message.status?.charAt(0).toUpperCase() + message.status?.slice(1)}
-                  </Badge>
-                </TableCell>
-                <TableCell>{formatDate(message.sentDate)}</TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => onViewDetails(message)}>
-                      <FileText size={14} className="mr-1" />
-                      View
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
+          ))}
         </TableBody>
       </Table>
     </div>
