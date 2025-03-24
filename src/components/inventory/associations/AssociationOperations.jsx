@@ -25,6 +25,7 @@ const AssociationOperations = ({ isKazo, selectedAssociation }) => {
     error,
     handleDateChange,
     handleInputChange,
+    handleSelectChange,
     saveOperation
   } = useOperationsForm(selectedAssociation?.id);
 
@@ -41,7 +42,7 @@ const AssociationOperations = ({ isKazo, selectedAssociation }) => {
       const result = await saveOperation(selectedAssociation.id);
       
       if (result) {
-        showSuccessToast(toast, "Operation saved successfully");
+        showSuccessToast(toast, "Operation saved successfully to database");
       } else {
         showErrorToast(toast, error || "Failed to save operation");
       }
@@ -140,6 +141,24 @@ const AssociationOperations = ({ isKazo, selectedAssociation }) => {
                   value={formData.shared_equipment} 
                   onChange={handleInputChange} 
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(value) => handleSelectChange('status', value)}
+                >
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="postponed">Postponed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
