@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { FileText } from "lucide-react";
 import AssociationDetails from './associations/AssociationDetails';
-import AssociationOperations from './associations/AssociationOperations';
 import AssociationAnalytics from './associations/AssociationAnalytics';
 import ImageAnalysis from './farms/ImageAnalysis';
 import AssociationMembersManagement from './associations/AssociationMembersManagement';
@@ -38,7 +37,6 @@ const ManageAssociations = ({
       <Tabs defaultValue="details" className="w-full">
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="details">Association Details</TabsTrigger>
-          <TabsTrigger value="operations">Operations</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="certifications">Certifications</TabsTrigger>
@@ -59,11 +57,6 @@ const ManageAssociations = ({
             </Button>
           </div>
           <AssociationDetails isKazo={isKazo} selectedAssociation={selectedAssociation} />
-        </TabsContent>
-
-        <TabsContent value="operations">
-          <h3 className="text-lg font-semibold mb-4">Operations Form</h3>
-          <AssociationOperations isKazo={isKazo} selectedAssociation={selectedAssociation} />
         </TabsContent>
 
         <TabsContent value="analytics">
