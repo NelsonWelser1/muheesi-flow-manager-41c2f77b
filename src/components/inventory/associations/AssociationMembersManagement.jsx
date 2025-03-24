@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,13 +5,29 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, Users, FileText, UserPlus, Download } from "lucide-react";
+import { Search, Users, FileText, UserPlus, Download, X, Camera, Coffee, MapPin, Phone } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
 
 const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [memberStatus, setMemberStatus] = useState('all');
+  const { toast } = useToast();
+  const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: '',
+    location: '',
+    phone: '',
+    farmSize: '',
+    coffeeType: 'arabica',
+    experience: '',
+    certifications: [],
+    photo: null
+  });
   
   // Sample members data - would come from API/database in a real app
   const members = [
@@ -50,6 +65,42 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
       case 'pending': return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
       default: return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
     }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData(prev => ({ ...prev, photo: e.target.files[0] }));
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Here you would normally send the data to your API
+    console.log("Member form submitted:", formData);
+    
+    // Show success message
+    toast({
+      title: "Member added successfully!",
+      description: `${formData.fullName} has been added to the association.`,
+    });
+    
+    // Reset form and close dialog
+    setFormData({
+      fullName: '',
+      location: '',
+      phone: '',
+      farmSize: '',
+      coffeeType: 'arabica',
+      experience: '',
+      certifications: [],
+      photo: null
+    });
+    setIsAddMemberDialogOpen(false);
   };
 
   return (
@@ -97,10 +148,203 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
                   Export
                 </Button>
                 
-                <Button className="gap-2">
-                  <UserPlus size={16} />
-                  Add Member
-                </Button>
+                <AlertDialog open={isAddMemberDialogOpen} onOpenChange={setIsAddMemberDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button className="gap-2 bg-green-600 hover:bg-green-700">
+                      <UserPlus size={16} />
+                      Add Member
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-xl">Add New Association Member</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Enter the details of the new member to add them to the association.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    
+                    <form onSubmit={handleSubmit} className="space-y-5 py-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <div className="flex flex-col gap-5">
+                            <div className="space-y-2">
+                              <Label htmlFor="fullName" className="font-medium">
+                                <span className="flex items-center gap-2">
+                                  <Users size={16} />
+                                  Full Name
+                                </span>
+                              </Label>
+                              <Input 
+                                id="fullName" 
+                                name="fullName"
+                                placeholder="Enter farmer's full name" 
+                                value={formData.fullName}
+                                onChange={handleInputChange}
+                                required
+                                className="border-gray-300"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="location" className="font-medium">
+                                <span className="flex items-center gap-2">
+                                  <MapPin size={16} />
+                                  Location
+                                </span>
+                              </Label>
+                              <Input 
+                                id="location" 
+                                name="location"
+                                placeholder="Enter farmer's location" 
+                                value={formData.location}
+                                onChange={handleInputChange}
+                                required
+                                className="border-gray-300"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="phone" className="font-medium">
+                                <span className="flex items-center gap-2">
+                                  <Phone size={16} />
+                                  Phone Number
+                                </span>
+                              </Label>
+                              <Input 
+                                id="phone" 
+                                name="phone"
+                                placeholder="Enter farmer's phone number" 
+                                value={formData.phone}
+                                onChange={handleInputChange}
+                                required
+                                className="border-gray-300"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="farm-size" className="font-medium">
+                                <span className="flex items-center gap-2">
+                                  Farm Size (hectares)
+                                </span>
+                              </Label>
+                              <Input 
+                                id="farm-size" 
+                                name="farmSize"
+                                type="number" 
+                                step="0.1" 
+                                placeholder="Enter farm size" 
+                                value={formData.farmSize}
+                                onChange={handleInputChange}
+                                required
+                                className="border-gray-300"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col gap-5">
+                          <div className="space-y-2">
+                            <Label htmlFor="coffee-type" className="font-medium">
+                              <span className="flex items-center gap-2">
+                                <Coffee size={16} />
+                                Coffee Type
+                              </span>
+                            </Label>
+                            <Select 
+                              name="coffeeType" 
+                              defaultValue={formData.coffeeType}
+                              onValueChange={(value) => setFormData(prev => ({...prev, coffeeType: value}))}
+                            >
+                              <SelectTrigger id="coffee-type" className="border-gray-300">
+                                <SelectValue placeholder="Select coffee type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="arabica">Arabica</SelectItem>
+                                <SelectItem value="robusta">Robusta</SelectItem>
+                                <SelectItem value="mixed">Mixed</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="experience" className="font-medium">
+                              Years of Experience
+                            </Label>
+                            <Input 
+                              id="experience" 
+                              name="experience"
+                              type="number" 
+                              placeholder="Years growing coffee" 
+                              value={formData.experience}
+                              onChange={handleInputChange}
+                              className="border-gray-300"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="photo" className="font-medium">
+                              <span className="flex items-center gap-2">
+                                <Camera size={16} />
+                                Farmer Photo
+                              </span>
+                            </Label>
+                            <div className="mt-1 flex items-center">
+                              {!formData.photo ? (
+                                <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer" onClick={() => document.getElementById('photo-upload').click()}>
+                                  <Camera size={24} className="text-gray-400" />
+                                  <p className="mt-1 text-sm text-gray-500">Click to upload photo</p>
+                                  <input
+                                    id="photo-upload"
+                                    name="photo"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handlePhotoChange}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="relative">
+                                  <img
+                                    src={URL.createObjectURL(formData.photo)}
+                                    alt="Farmer preview"
+                                    className="w-32 h-32 object-cover rounded-lg"
+                                  />
+                                  <button
+                                    type="button"
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                                    onClick={() => setFormData(prev => ({ ...prev, photo: null }))}
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="border-t pt-4 mt-4">
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
+                          <h4 className="font-medium text-blue-800 mb-2">Membership Information</h4>
+                          <ul className="text-sm text-blue-700 list-disc pl-5 space-y-1">
+                            <li>New members will be given a Bronze level membership by default</li>
+                            <li>Annual membership fee will be collected upon registration</li>
+                            <li>Members must agree to follow association guidelines and policies</li>
+                          </ul>
+                        </div>
+                      </div>
+                      
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction asChild>
+                          <Button type="submit" className="bg-green-600 hover:bg-green-700">
+                            Register Member
+                          </Button>
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </form>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
             
