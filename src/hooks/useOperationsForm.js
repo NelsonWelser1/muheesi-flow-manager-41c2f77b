@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
+import { fromSupabase } from '@/integrations/supabase/utils/supabaseUtils';
 
 export const useOperationsForm = (associationId = null) => {
   const [formData, setFormData] = useState({
