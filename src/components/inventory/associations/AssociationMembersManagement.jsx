@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Search, Users, FileText, UserPlus, Download, X, Camera, Coffee, MapPin, Phone } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,12 +12,25 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { useAssociationMembers } from '@/hooks/useAssociationMembers';
+import { getDateFromTimeAgo } from '@/utils/dateUtils';
+
+// Import new components
+import MemberListFilters from './members/MemberListFilters';
+import MemberListTable from './members/MemberListTable';
+import MemberExportActions from './members/MemberExportActions';
+import MemberDetailsDialog from './members/MemberDetailsDialog';
 
 const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
+  const [activeTab, setActiveTab] = useState('members');
   const [searchTerm, setSearchTerm] = useState('');
   const [memberStatus, setMemberStatus] = useState('all');
-  const { toast } = useToast();
+  const [timeRange, setTimeRange] = useState('all');
+  const [sortConfig, setSortConfig] = useState({ key: 'join_date', direction: 'desc' });
   const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  
+  const { toast } = useToast();
   
   const {
     formData,
@@ -33,34 +46,54 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
     setFormData
   } = useAssociationMembers(selectedAssociation?.id);
   
-  const filteredMembers = members.filter(member => {
+  // Sort members
+  const sortedMembers = [...members].sort((a, b) => {
+    const { key, direction } = sortConfig;
+    
+    // Handle null or undefined values
+    if (!a[key] && !b[key]) return 0;
+    if (!a[key]) return direction === 'asc' ? -1 : 1;
+    if (!b[key]) return direction === 'asc' ? 1 : -1;
+    
+    // Handle different data types
+    if (key === 'join_date' || key === 'last_delivery') {
+      return direction === 'asc' 
+        ? new Date(a[key]) - new Date(b[key])
+        : new Date(b[key]) - new Date(a[key]);
+    }
+    
+    if (key === 'farm_size' || key === 'experience') {
+      return direction === 'asc' 
+        ? Number(a[key]) - Number(b[key])
+        : Number(b[key]) - Number(a[key]);
+    }
+    
+    // Handle string comparison
+    return direction === 'asc'
+      ? a[key].localeCompare(b[key])
+      : b[key].localeCompare(a[key]);
+  });
+  
+  // Filter members based on search, status and time range
+  const filteredMembers = sortedMembers.filter(member => {
     // Filter by search term
-    const matchesSearch = member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         (member.location && member.location.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = 
+      member.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (member.location && member.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (member.phone && member.phone.includes(searchTerm));
     
     // Filter by status
     const matchesStatus = memberStatus === 'all' || member.status === memberStatus;
     
-    return matchesSearch && matchesStatus;
+    // Filter by time range
+    let matchesTimeRange = true;
+    if (timeRange !== 'all') {
+      const fromDate = getDateFromTimeAgo(timeRange);
+      matchesTimeRange = fromDate && new Date(member.join_date) >= fromDate;
+    }
+    
+    return matchesSearch && matchesStatus && matchesTimeRange;
   });
-
-  const getMembershipBadgeColor = (level) => {
-    switch(level?.toLowerCase()) {
-      case 'gold': return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100';
-      case 'silver': return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
-      case 'bronze': return 'bg-amber-100 text-amber-800 hover:bg-amber-100';
-      default: return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
-    }
-  };
-
-  const getStatusBadgeColor = (status) => {
-    switch(status?.toLowerCase()) {
-      case 'active': return 'bg-green-100 text-green-800 hover:bg-green-100';
-      case 'inactive': return 'bg-red-100 text-red-800 hover:bg-red-100';
-      case 'pending': return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
-      default: return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
-    }
-  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -78,6 +111,15 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
     }
   };
 
+  const handleViewDetails = (member) => {
+    setSelectedMember(member);
+    setIsDetailsDialogOpen(true);
+  };
+
+  const handleRefresh = () => {
+    fetchMembers();
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -85,7 +127,7 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
       </CardHeader>
       
       <CardContent>
-        <Tabs defaultValue="members" className="w-full">
+        <Tabs defaultValue="members" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList>
             <TabsTrigger value="members">Members List</TabsTrigger>
             <TabsTrigger value="registration">Member Registration</TabsTrigger>
@@ -95,33 +137,10 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
           
           <TabsContent value="members" className="space-y-4">
             <div className="flex justify-between items-center mb-4">
-              <div className="relative w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search members..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                />
-              </div>
+              <h3 className="text-lg font-medium">Association Members</h3>
               
               <div className="flex gap-2">
-                <Select defaultValue="all" onValueChange={setMemberStatus}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Button variant="outline" className="gap-2">
-                  <Download size={16} />
-                  Export
-                </Button>
+                <MemberExportActions members={filteredMembers} />
                 
                 <AlertDialog open={isAddMemberDialogOpen} onOpenChange={setIsAddMemberDialogOpen}>
                   <AlertDialogTrigger asChild>
@@ -327,67 +346,31 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
               </div>
             </div>
             
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Member ID</TableHead>
-                    <TableHead>Member Name</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Membership</TableHead>
-                    <TableHead>Farm Size (ha)</TableHead>
-                    <TableHead>Coffee Type</TableHead>
-                    <TableHead>Last Delivery</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
-                        Loading members...
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredMembers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
-                        No members found matching your search criteria
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredMembers.map(member => (
-                      <TableRow key={member.id}>
-                        <TableCell className="font-medium">{member.id.substring(0, 8)}</TableCell>
-                        <TableCell>{member.full_name}</TableCell>
-                        <TableCell>{member.location}</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusBadgeColor(member.status)}>
-                            {member.status?.charAt(0).toUpperCase() + member.status?.slice(1)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getMembershipBadgeColor(member.member_level)}>
-                            {member.member_level?.charAt(0).toUpperCase() + member.member_level?.slice(1)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{member.farm_size}</TableCell>
-                        <TableCell>{member.coffee_type}</TableCell>
-                        <TableCell>{member.last_delivery ? new Date(member.last_delivery).toLocaleDateString() : 'N/A'}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">
-                              <FileText size={14} />
-                            </Button>
-                            <Button variant="outline" size="sm">Edit</Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            <MemberListFilters
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              memberStatus={memberStatus}
+              setMemberStatus={setMemberStatus}
+              timeRange={timeRange}
+              setTimeRange={setTimeRange}
+              sortConfig={sortConfig}
+              setSortConfig={setSortConfig}
+            />
+            
+            <MemberListTable
+              members={filteredMembers}
+              loading={loading}
+              onViewDetails={handleViewDetails}
+              onRefresh={handleRefresh}
+              sortConfig={sortConfig}
+              onSort={setSortConfig}
+            />
+            
+            <MemberDetailsDialog
+              member={selectedMember}
+              isOpen={isDetailsDialogOpen}
+              onClose={() => setIsDetailsDialogOpen(false)}
+            />
           </TabsContent>
           
           <TabsContent value="registration">
@@ -585,4 +568,3 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
 };
 
 export default AssociationMembersManagement;
-

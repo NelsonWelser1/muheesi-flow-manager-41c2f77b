@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/supabase';
 import { fromSupabase } from '@/integrations/supabase/utils/supabaseUtils';
 import { useToast } from "@/components/ui/use-toast";
 import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
+import { getDateFromTimeAgo } from '@/utils/dateUtils';
 
 export const useAssociationMembers = (associationId = null) => {
   const { toast } = useToast();
@@ -24,8 +25,8 @@ export const useAssociationMembers = (associationId = null) => {
     status: 'active'
   });
 
-  // Fetch all members for the association
-  const fetchMembers = async () => {
+  // Fetch members with optional filtering
+  const fetchMembers = async ({ status, timeRange, search } = {}) => {
     try {
       setLoading(true);
       
@@ -39,6 +40,24 @@ export const useAssociationMembers = (associationId = null) => {
         query = query.eq('association_id', associationId);
       }
       
+      // Filter by status if provided
+      if (status && status !== 'all') {
+        query = query.eq('status', status);
+      }
+      
+      // Filter by time range if provided
+      if (timeRange && timeRange !== 'all') {
+        const fromDate = getDateFromTimeAgo(timeRange);
+        if (fromDate) {
+          query = query.gte('join_date', fromDate.toISOString());
+        }
+      }
+      
+      // Filter by search term if provided
+      if (search) {
+        query = query.or(`full_name.ilike.%${search}%,location.ilike.%${search}%,phone.ilike.%${search}%`);
+      }
+      
       const data = await fromSupabase(query);
       setMembers(data || []);
       return data;
@@ -47,6 +66,30 @@ export const useAssociationMembers = (associationId = null) => {
       setError(error.message);
       showErrorToast(toast, `Failed to load members: ${error.message}`);
       return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch a single member by ID
+  const fetchMemberById = async (memberId) => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('association_members')
+        .select('*')
+        .eq('id', memberId)
+        .single();
+      
+      if (error) throw error;
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching member:', error);
+      setError(error.message);
+      showErrorToast(toast, `Failed to load member: ${error.message}`);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -136,8 +179,8 @@ export const useAssociationMembers = (associationId = null) => {
         coffee_type: formData.coffeeType,
         experience: formData.experience ? parseInt(formData.experience, 10) : null,
         photo_url: photoUrl,
-        member_level: 'bronze', // Default for new members
-        status: 'active'
+        member_level: formData.memberLevel || 'bronze',
+        status: formData.status || 'active'
       };
       
       // Insert or update based on whether we have an id
@@ -187,6 +230,58 @@ export const useAssociationMembers = (associationId = null) => {
     }
   };
 
+  // Update member status
+  const updateMemberStatus = async (memberId, status) => {
+    try {
+      setSaving(true);
+      setError(null);
+      
+      await fromSupabase(
+        supabase
+          .from('association_members')
+          .update({ status })
+          .eq('id', memberId)
+      );
+      
+      showSuccessToast(toast, `Member status updated to ${status}.`);
+      await fetchMembers();
+      return true;
+    } catch (error) {
+      console.error('Error updating member status:', error);
+      setError(error.message);
+      showErrorToast(toast, error.message);
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Delete member
+  const deleteMember = async (memberId) => {
+    try {
+      setSaving(true);
+      setError(null);
+      
+      await fromSupabase(
+        supabase
+          .from('association_members')
+          .delete()
+          .eq('id', memberId)
+      );
+      
+      showSuccessToast(toast, `Member has been deleted.`);
+      await fetchMembers();
+      return true;
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      setError(error.message);
+      showErrorToast(toast, error.message);
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return {
     formData,
     members,
@@ -198,6 +293,9 @@ export const useAssociationMembers = (associationId = null) => {
     handlePhotoChange,
     saveMember,
     fetchMembers,
+    fetchMemberById,
+    updateMemberStatus,
+    deleteMember,
     setFormData
   };
 };
