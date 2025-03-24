@@ -53,10 +53,7 @@ const KAJONCoffeeLimited = () => {
                 <Globe className="h-8 w-8" />
                 <span className="text-lg font-semibold">KAJON Coffee Export Management</span>
               </Button>
-              <Button variant="outline" className="h-32 flex flex-col items-center justify-center space-y-2" onClick={() => setSelectedSystem('factory-management')}>
-                <Factory className="h-8 w-8" />
-                <span className="text-lg font-semibold">Factory Manager</span>
-              </Button>
+              
             </div>
           </CardContent>
         </Card>
