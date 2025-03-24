@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DairyManagement from './modules/DairyManagement';
-import LivestockManagement from './modules/LivestockManagement';
+import ProductionManagement from './modules/LivestockManagement';
 import BananaPlantation from './modules/BananaPlantation';
 import SalesExpenditure from './modules/SalesExpenditure';
 import EmployeeManagement from './modules/EmployeeManagement';
@@ -20,7 +21,7 @@ const KashariFarmDashboard = () => {
           <Tabs defaultValue="dairy" className="space-y-4">
             <TabsList className="w-full justify-start">
               <TabsTrigger value="dairy">Dairy Products</TabsTrigger>
-              <TabsTrigger value="livestock">Livestock</TabsTrigger>
+              <TabsTrigger value="production">Production</TabsTrigger>
               <TabsTrigger value="banana">Banana Plantation</TabsTrigger>
               <TabsTrigger value="sales">Sales & Expenditure</TabsTrigger>
               <TabsTrigger value="employees">Employees & Contractors</TabsTrigger>
@@ -32,8 +33,8 @@ const KashariFarmDashboard = () => {
               <DairyManagement />
             </TabsContent>
 
-            <TabsContent value="livestock">
-              <LivestockManagement />
+            <TabsContent value="production">
+              <ProductionManagement />
             </TabsContent>
 
             <TabsContent value="banana">
