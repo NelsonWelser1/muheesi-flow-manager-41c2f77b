@@ -1,8 +1,35 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAssociationMembers } from '@/hooks/useAssociationMembers';
 import { useToast } from "@/components/ui/use-toast";
+import { getDateFromTimeAgo } from '@/utils/dateUtils';
+import { 
+  Coffee, 
+  MapPin, 
+  Phone, 
+  Users, 
+  Camera, 
+  X, 
+  UserPlus, 
+  CheckCircle 
+} from "lucide-react";
 
 import MemberListFilters from './members/MemberListFilters';
 import MemberListTable from './members/MemberListTable';
