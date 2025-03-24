@@ -56,6 +56,10 @@ import { useDeleteInvoice } from './hooks/sales/invoices/useDeleteInvoice';
 import { useBillsExpenses } from './hooks/accounting/useBillsExpenses';
 import { usePaymentsReceipts } from './hooks/accounting/payments/usePaymentsReceipts';
 
+// Import association hooks
+import { useAssociationMembers } from '@/hooks/useAssociationMembers';
+import { useAssociationForm } from '@/hooks/useAssociationForm';
+
 // Export everything individually
 export {
     supabase,
@@ -106,4 +110,7 @@ export {
     // Accounting hooks
     useBillsExpenses,
     usePaymentsReceipts,
+    // Association hooks
+    useAssociationForm,
+    useAssociationMembers,
 };

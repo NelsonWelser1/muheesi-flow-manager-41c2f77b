@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,39 +9,34 @@ import { Search, Users, FileText, UserPlus, Download, X, Camera, Coffee, MapPin,
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import { useAssociationMembers } from '@/hooks/useAssociationMembers';
 
 const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [memberStatus, setMemberStatus] = useState('all');
   const { toast } = useToast();
   const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: '',
-    location: '',
-    phone: '',
-    farmSize: '',
-    coffeeType: 'arabica',
-    experience: '',
-    certifications: [],
-    photo: null
-  });
   
-  // Sample members data - would come from API/database in a real app
-  const members = [
-    { id: 1, name: 'John Mwesigwa', farmerId: 'KF-001', location: 'Kanoni', status: 'active', joinDate: '2023-05-10', membershipLevel: 'gold', farmSize: 5.2, coffeeType: 'Arabica', lastDelivery: '2025-02-15' },
-    { id: 2, name: 'Sarah Mirembe', farmerId: 'KF-002', location: 'Engari', status: 'active', joinDate: '2023-06-22', membershipLevel: 'silver', farmSize: 3.8, coffeeType: 'Robusta', lastDelivery: '2025-03-01' },
-    { id: 3, name: 'Moses Tumusiime', farmerId: 'KF-003', location: 'Kyampangara', status: 'pending', joinDate: '2025-01-30', membershipLevel: 'bronze', farmSize: 2.5, coffeeType: 'Arabica', lastDelivery: 'N/A' },
-    { id: 4, name: 'Peace Akankwasa', farmerId: 'KF-004', location: 'Kanoni', status: 'inactive', joinDate: '2023-04-15', membershipLevel: 'silver', farmSize: 4.1, coffeeType: 'Mixed', lastDelivery: '2024-11-10' },
-  ];
-
+  const {
+    formData,
+    members,
+    loading,
+    saving,
+    error,
+    handleInputChange,
+    handleSelectChange,
+    handlePhotoChange,
+    saveMember,
+    fetchMembers,
+    setFormData
+  } = useAssociationMembers(selectedAssociation?.id);
+  
   const filteredMembers = members.filter(member => {
     // Filter by search term
-    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         member.farmerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         (member.location && member.location.toLowerCase().includes(searchTerm.toLowerCase()));
     
     // Filter by status
     const matchesStatus = memberStatus === 'all' || member.status === memberStatus;
@@ -50,7 +45,7 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
   });
 
   const getMembershipBadgeColor = (level) => {
-    switch(level.toLowerCase()) {
+    switch(level?.toLowerCase()) {
       case 'gold': return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100';
       case 'silver': return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
       case 'bronze': return 'bg-amber-100 text-amber-800 hover:bg-amber-100';
@@ -59,7 +54,7 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
   };
 
   const getStatusBadgeColor = (status) => {
-    switch(status.toLowerCase()) {
+    switch(status?.toLowerCase()) {
       case 'active': return 'bg-green-100 text-green-800 hover:bg-green-100';
       case 'inactive': return 'bg-red-100 text-red-800 hover:bg-red-100';
       case 'pending': return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
@@ -67,40 +62,20 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handlePhotoChange = (e) => {
+  const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setFormData(prev => ({ ...prev, photo: e.target.files[0] }));
+      handlePhotoChange(e.target.files[0]);
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would normally send the data to your API
-    console.log("Member form submitted:", formData);
     
-    // Show success message
-    toast({
-      title: "Member added successfully!",
-      description: `${formData.fullName} has been added to the association.`,
-    });
+    const success = await saveMember();
     
-    // Reset form and close dialog
-    setFormData({
-      fullName: '',
-      location: '',
-      phone: '',
-      farmSize: '',
-      coffeeType: 'arabica',
-      experience: '',
-      certifications: [],
-      photo: null
-    });
-    setIsAddMemberDialogOpen(false);
+    if (success) {
+      setIsAddMemberDialogOpen(false);
+    }
   };
 
   return (
@@ -222,13 +197,13 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
                             </div>
                             
                             <div className="space-y-2">
-                              <Label htmlFor="farm-size" className="font-medium">
+                              <Label htmlFor="farmSize" className="font-medium">
                                 <span className="flex items-center gap-2">
                                   Farm Size (hectares)
                                 </span>
                               </Label>
                               <Input 
-                                id="farm-size" 
+                                id="farmSize" 
                                 name="farmSize"
                                 type="number" 
                                 step="0.1" 
@@ -244,7 +219,7 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
                         
                         <div className="flex flex-col gap-5">
                           <div className="space-y-2">
-                            <Label htmlFor="coffee-type" className="font-medium">
+                            <Label htmlFor="coffeeType" className="font-medium">
                               <span className="flex items-center gap-2">
                                 <Coffee size={16} />
                                 Coffee Type
@@ -253,9 +228,9 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
                             <Select 
                               name="coffeeType" 
                               defaultValue={formData.coffeeType}
-                              onValueChange={(value) => setFormData(prev => ({...prev, coffeeType: value}))}
+                              onValueChange={(value) => handleSelectChange('coffeeType', value)}
                             >
-                              <SelectTrigger id="coffee-type" className="border-gray-300">
+                              <SelectTrigger id="coffeeType" className="border-gray-300">
                                 <SelectValue placeholder="Select coffee type" />
                               </SelectTrigger>
                               <SelectContent>
@@ -299,7 +274,7 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
                                     type="file"
                                     accept="image/*"
                                     className="hidden"
-                                    onChange={handlePhotoChange}
+                                    onChange={handleFileChange}
                                   />
                                 </div>
                               ) : (
@@ -337,8 +312,12 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction asChild>
-                          <Button type="submit" className="bg-green-600 hover:bg-green-700">
-                            Register Member
+                          <Button 
+                            type="submit" 
+                            className="bg-green-600 hover:bg-green-700"
+                            disabled={saving}
+                          >
+                            {saving ? 'Registering...' : 'Register Member'}
                           </Button>
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -364,7 +343,13 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMembers.length === 0 ? (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
+                        Loading members...
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredMembers.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
                         No members found matching your search criteria
@@ -373,22 +358,22 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
                   ) : (
                     filteredMembers.map(member => (
                       <TableRow key={member.id}>
-                        <TableCell className="font-medium">{member.farmerId}</TableCell>
-                        <TableCell>{member.name}</TableCell>
+                        <TableCell className="font-medium">{member.id.substring(0, 8)}</TableCell>
+                        <TableCell>{member.full_name}</TableCell>
                         <TableCell>{member.location}</TableCell>
                         <TableCell>
                           <Badge className={getStatusBadgeColor(member.status)}>
-                            {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
+                            {member.status?.charAt(0).toUpperCase() + member.status?.slice(1)}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge className={getMembershipBadgeColor(member.membershipLevel)}>
-                            {member.membershipLevel.charAt(0).toUpperCase() + member.membershipLevel.slice(1)}
+                          <Badge className={getMembershipBadgeColor(member.member_level)}>
+                            {member.member_level?.charAt(0).toUpperCase() + member.member_level?.slice(1)}
                           </Badge>
                         </TableCell>
-                        <TableCell>{member.farmSize}</TableCell>
-                        <TableCell>{member.coffeeType}</TableCell>
-                        <TableCell>{member.lastDelivery}</TableCell>
+                        <TableCell>{member.farm_size}</TableCell>
+                        <TableCell>{member.coffee_type}</TableCell>
+                        <TableCell>{member.last_delivery ? new Date(member.last_delivery).toLocaleDateString() : 'N/A'}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
                             <Button variant="outline" size="sm">
@@ -600,3 +585,4 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
 };
 
 export default AssociationMembersManagement;
+
