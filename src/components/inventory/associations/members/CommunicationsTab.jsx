@@ -4,58 +4,36 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
-import { ChevronLeft, RefreshCw, Send, Clock } from "lucide-react";
-import { supabase } from '@/integrations/supabase/supabase';
-import { fromSupabase } from '@/integrations/supabase/utils/supabaseUtils';
+import { ChevronLeft, RefreshCw, Clock } from "lucide-react";
 
 import MessageForm from './communications/MessageForm';
 import TemplateSelector from './communications/TemplateSelector';
-import CommunicationRecordsViewer from './communications/CommunicationRecordsViewer';
 import CommunicationStatusTabs from './communications/CommunicationStatusTabs';
 import CommunicationTable from './communications/CommunicationTable';
 import CommunicationSearchFilters from './communications/CommunicationSearchFilters';
 import CommunicationDetailsDialog from './communications/CommunicationDetailsDialog';
+import { useMessages } from '@/hooks/useMessages';
 
 const CommunicationsTab = ({ associationId }) => {
   const [activeView, setActiveView] = useState('compose');
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [timeRange, setTimeRange] = useState('all');
   const [messageStatus, setMessageStatus] = useState('all');
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
-  const [sortConfig, setSortConfig] = useState({ key: 'sentDate', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
   const [showRecordsView, setShowRecordsView] = useState(false);
   
   const { toast } = useToast();
+  const { 
+    messages, 
+    loading, 
+    fetchMessages 
+  } = useMessages(associationId);
 
   useEffect(() => {
     fetchMessages();
   }, [associationId]);
-
-  const fetchMessages = async () => {
-    try {
-      setLoading(true);
-      
-      let query = supabase
-        .from('association_communications')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (associationId) {
-        query = query.eq('association_id', associationId);
-      }
-      
-      const data = await fromSupabase(query);
-      setMessages(data || []);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-      showErrorToast(toast, `Failed to load messages: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleMessageSent = () => {
     fetchMessages();
@@ -84,9 +62,9 @@ const CommunicationsTab = ({ associationId }) => {
     const matchesStatus = messageStatus === 'all' || message.status === messageStatus;
     
     let matchesTimeRange = true;
-    if (timeRange !== 'all' && message.sentDate) {
+    if (timeRange !== 'all' && message.created_at) {
       const fromDate = getDateFromTimeAgo(timeRange);
-      matchesTimeRange = fromDate && new Date(message.sentDate) >= fromDate;
+      matchesTimeRange = fromDate && new Date(message.created_at) >= fromDate;
     }
     
     return matchesSearch && matchesStatus && matchesTimeRange;
@@ -97,16 +75,45 @@ const CommunicationsTab = ({ associationId }) => {
     if (!a[key]) return direction === 'asc' ? -1 : 1;
     if (!b[key]) return direction === 'asc' ? 1 : -1;
     
-    if (key === 'sentDate' || key === 'created_at') {
+    if (key === 'sent_date' || key === 'created_at' || key === 'scheduled_date') {
       return direction === 'asc' 
         ? new Date(a[key]) - new Date(b[key])
         : new Date(b[key]) - new Date(a[key]);
     }
     
     return direction === 'asc'
-      ? a[key].localeCompare(b[key])
-      : b[key].localeCompare(a[key]);
+      ? a[key]?.localeCompare(b[key])
+      : b[key]?.localeCompare(a[key]);
   });
+
+  // Helper function to get date from time ago
+  const getDateFromTimeAgo = (timeAgo) => {
+    const now = new Date();
+    
+    switch (timeAgo) {
+      case 'today':
+        return new Date(now.setHours(0, 0, 0, 0));
+      case 'yesterday':
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        yesterday.setHours(0, 0, 0, 0);
+        return yesterday;
+      case 'week':
+        const week = new Date(now);
+        week.setDate(week.getDate() - 7);
+        return week;
+      case 'month':
+        const month = new Date(now);
+        month.setMonth(month.getMonth() - 1);
+        return month;
+      case 'year':
+        const year = new Date(now);
+        year.setFullYear(year.getFullYear() - 1);
+        return year;
+      default:
+        return null;
+    }
+  };
 
   if (showRecordsView) {
     return (
@@ -202,10 +209,18 @@ const CommunicationsTab = ({ associationId }) => {
         
         <TabsContent value="templates">
           <TemplateSelector 
-            associationId={associationId} 
-            onTemplateSelect={(template) => {
+            onSelectTemplate={(templateId) => {
+              // Here you would pass the selected template back to the MessageForm
+              // For now, we'll just switch to the compose tab
               setActiveView('compose');
-            }} 
+            }}
+            onApplyTemplate={(templateData) => {
+              // Handle applying the template to the MessageForm
+              setActiveView('compose');
+            }}
+            selectedTemplate={null}
+            templateVariables={{}}
+            onVariableChange={() => {}}
           />
         </TabsContent>
       </Tabs>
