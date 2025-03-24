@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/components/ui/use-toast";
-import { CalendarIcon, Plus, PlusCircle, Save, Search, Filter, BarChart, LineChart, Tractor, Plants, LineChart as LineChartIcon } from "lucide-react";
+import { CalendarIcon, Plus, PlusCircle, Save, Search, Filter, BarChart, LineChart, Tractor, Leaf, LineChart as LineChartIcon } from "lucide-react";
 import { format, subDays } from 'date-fns';
 import { LineChart as ReLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart as ReBarChart, Bar } from 'recharts';
 import { cn } from "@/lib/utils";
@@ -472,7 +471,7 @@ const BananaPlantation = () => {
                       <p className="text-sm text-muted-foreground">{plantationBlocks.length} blocks</p>
                     </div>
                     <div className="bg-green-100 p-3 rounded-full">
-                      <Plants className="h-6 w-6 text-green-600" />
+                      <Leaf className="h-6 w-6 text-green-600" />
                     </div>
                   </div>
                 </CardContent>
@@ -487,7 +486,7 @@ const BananaPlantation = () => {
                       <p className="text-sm text-muted-foreground">Banana plants</p>
                     </div>
                     <div className="bg-blue-100 p-3 rounded-full">
-                      <Plants className="h-6 w-6 text-blue-600" />
+                      <Leaf className="h-6 w-6 text-blue-600" />
                     </div>
                   </div>
                 </CardContent>
