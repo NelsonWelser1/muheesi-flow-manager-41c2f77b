@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,15 +14,12 @@ const OperationsRecordsViewer = ({ onBack, isKazo, associationId }) => {
   const { toast } = useToast();
   const {
     operations,
-    loading,
-    error,
     timeRange,
     statusFilter,
     searchTerm,
     setTimeRange,
     setStatusFilter,
-    setSearchTerm,
-    fetchAllOperations
+    setSearchTerm
   } = useOperationsForm(associationId);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -30,14 +27,11 @@ const OperationsRecordsViewer = ({ onBack, isKazo, associationId }) => {
   // Handle refresh
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await fetchAllOperations({
-      status: statusFilter,
-      timeRange: timeRange,
-      searchTerm: searchTerm
-    });
-    setIsRefreshing(false);
-    
-    showInfoToast(toast, "Operation records have been refreshed");
+    // Simulate refresh (no actual data fetching now)
+    setTimeout(() => {
+      setIsRefreshing(false);
+      showInfoToast(toast, "Operation records have been refreshed");
+    }, 500);
   };
 
   // Handle export to CSV
@@ -94,6 +88,26 @@ const OperationsRecordsViewer = ({ onBack, isKazo, associationId }) => {
       showErrorToast(toast, "Failed to export operations data");
     }
   };
+
+  // Filter operations based on current filters
+  const filteredOperations = operations.filter(operation => {
+    // Apply status filter
+    if (statusFilter !== 'all' && operation.status !== statusFilter) {
+      return false;
+    }
+    
+    // Apply search filter
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      return (
+        (operation.collective_resources && operation.collective_resources.toLowerCase().includes(search)) ||
+        (operation.shared_equipment && operation.shared_equipment.toLowerCase().includes(search)) ||
+        (operation.status && operation.status.toLowerCase().includes(search))
+      );
+    }
+    
+    return true;
+  });
 
   return (
     <Card>
@@ -181,11 +195,7 @@ const OperationsRecordsViewer = ({ onBack, isKazo, associationId }) => {
             </div>
           </div>
 
-          {loading ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">Loading operations...</p>
-            </div>
-          ) : operations.length === 0 ? (
+          {filteredOperations.length === 0 ? (
             <div className="text-center py-8 bg-gray-50 rounded-md">
               <p className="text-gray-500">No operations found</p>
               <p className="text-gray-400 text-sm mt-1">
@@ -208,7 +218,7 @@ const OperationsRecordsViewer = ({ onBack, isKazo, associationId }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {operations.map((operation) => (
+                  {filteredOperations.map((operation) => (
                     <tr key={operation.id} className="border-b hover:bg-gray-50">
                       <td className="px-4 py-2">
                         {operation.next_meeting_date 
