@@ -1,24 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Search, Users, FileText, UserPlus, Download, X, Camera, Coffee, MapPin, Phone, CheckCircle } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
-import { useToast } from "@/components/ui/use-toast";
 import { useAssociationMembers } from '@/hooks/useAssociationMembers';
-import { getDateFromTimeAgo } from '@/utils/dateUtils';
+import { useToast } from "@/components/ui/use-toast";
 
-// Import new components
 import MemberListFilters from './members/MemberListFilters';
 import MemberListTable from './members/MemberListTable';
 import MemberExportActions from './members/MemberExportActions';
 import MemberDetailsDialog from './members/MemberDetailsDialog';
+import CommunicationsTab from './members/CommunicationsTab';
 
 const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
   const [activeTab, setActiveTab] = useState('members');
@@ -47,7 +37,6 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
     setFormData
   } = useAssociationMembers(selectedAssociation?.id);
   
-  // For the Registration tab form
   const [registrationForm, setRegistrationForm] = useState({
     fullName: '',
     location: '',
@@ -58,16 +47,13 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
     photo: null
   });
   
-  // Sort members
   const sortedMembers = [...members].sort((a, b) => {
     const { key, direction } = sortConfig;
     
-    // Handle null or undefined values
     if (!a[key] && !b[key]) return 0;
     if (!a[key]) return direction === 'asc' ? -1 : 1;
     if (!b[key]) return direction === 'asc' ? 1 : -1;
     
-    // Handle different data types
     if (key === 'join_date' || key === 'last_delivery') {
       return direction === 'asc' 
         ? new Date(a[key]) - new Date(b[key])
@@ -80,24 +66,19 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
         : Number(b[key]) - Number(a[key]);
     }
     
-    // Handle string comparison
     return direction === 'asc'
       ? a[key].localeCompare(b[key])
       : b[key].localeCompare(a[key]);
   });
   
-  // Filter members based on search, status and time range
   const filteredMembers = sortedMembers.filter(member => {
-    // Filter by search term
     const matchesSearch = 
       member.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
       (member.location && member.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (member.phone && member.phone.includes(searchTerm));
     
-    // Filter by status
     const matchesStatus = memberStatus === 'all' || member.status === memberStatus;
     
-    // Filter by time range
     let matchesTimeRange = true;
     if (timeRange !== 'all') {
       const fromDate = getDateFromTimeAgo(timeRange);
@@ -150,7 +131,6 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
   const handleRegistrationSubmit = async (e) => {
     e.preventDefault();
     
-    // Transfer data to the formData structure expected by saveMember
     setFormData({
       fullName: registrationForm.fullName,
       location: registrationForm.location,
@@ -163,11 +143,9 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
       status: 'active'
     });
     
-    // Save the member using the existing hook function
     const success = await saveMember();
     
     if (success) {
-      // Reset form
       setRegistrationForm({
         fullName: '',
         location: '',
@@ -178,7 +156,6 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
         photo: null
       });
       
-      // Show success message
       setIsRegistrationSuccess(true);
       setTimeout(() => setIsRegistrationSuccess(false), 5000);
     }
@@ -656,83 +633,8 @@ const AssociationMembersManagement = ({ isKazo, selectedAssociation }) => {
             </div>
           </TabsContent>
           
-          <TabsContent value="communications">
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Communication Tools</h3>
-                <Button>Send New Message</Button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="font-medium">Mass Communication</h4>
-                  <div className="space-y-2">
-                    <Label htmlFor="message-type">Message Type</Label>
-                    <Select defaultValue="sms">
-                      <SelectTrigger id="message-type">
-                        <SelectValue placeholder="Select message type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sms">SMS</SelectItem>
-                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                        <SelectItem value="email">Email</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="recipients">Recipients</Label>
-                    <Select defaultValue="all">
-                      <SelectTrigger id="recipients">
-                        <SelectValue placeholder="Select recipients" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Members</SelectItem>
-                        <SelectItem value="active">Active Members</SelectItem>
-                        <SelectItem value="inactive">Inactive Members</SelectItem>
-                        <SelectItem value="arabica">Arabica Farmers</SelectItem>
-                        <SelectItem value="robusta">Robusta Farmers</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Message Content</Label>
-                    <textarea 
-                      id="message" 
-                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[120px]"
-                      placeholder="Enter your message content here..."
-                    />
-                  </div>
-                  
-                  <Button>Send Message</Button>
-                </div>
-                
-                <div className="space-y-4">
-                  <h4 className="font-medium">Communication Templates</h4>
-                  <Card className="cursor-pointer hover:border-primary">
-                    <CardContent className="p-4">
-                      <h5 className="font-medium">Meeting Announcement</h5>
-                      <p className="text-sm text-muted-foreground mt-1">Template for announcing association meetings</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="cursor-pointer hover:border-primary">
-                    <CardContent className="p-4">
-                      <h5 className="font-medium">Price Update</h5>
-                      <p className="text-sm text-muted-foreground mt-1">Template for coffee price updates</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="cursor-pointer hover:border-primary">
-                    <CardContent className="p-4">
-                      <h5 className="font-medium">Training Notification</h5>
-                      <p className="text-sm text-muted-foreground mt-1">Template for upcoming training sessions</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </div>
+          <TabsContent value="communications" className="space-y-4">
+            <CommunicationsTab associationId={selectedAssociation?.id} />
           </TabsContent>
         </Tabs>
       </CardContent>
