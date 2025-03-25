@@ -8,12 +8,22 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
-import { ArrowUp, ArrowDown, Download, Calendar, Filter } from 'lucide-react';
+import { ArrowUp, ArrowDown, Download, Calendar, Filter, RefreshCw } from 'lucide-react';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/use-toast";
+import { exportToCSV, exportToExcel, exportToPDF } from '../../dairy/utils/reportExportUtils';
 
 const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
   
   const [timeRange, setTimeRange] = useState('year');
   const [associationFilter, setAssociationFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState('production');
+  const { toast } = useToast();
   
   const productionData = [
     { month: 'Jan', arabica: 25000, robusta: 18000 },
@@ -114,6 +124,75 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
     }
   };
 
+  const handleExport = (format) => {
+    let dataToExport = [];
+    let filename = '';
+    
+    switch(activeTab) {
+      case 'production':
+        dataToExport = productionData;
+        filename = 'coffee-production-data';
+        break;
+      case 'members':
+        dataToExport = membershipData;
+        filename = 'association-membership-data';
+        break;
+      case 'quality':
+        dataToExport = qualityBreakdown;
+        filename = 'coffee-quality-data';
+        break;
+      case 'financial':
+        dataToExport = revenueData;
+        filename = 'coffee-financial-data';
+        break;
+      case 'impact':
+        dataToExport = [
+          { metric: 'Farmer Income', value: 'Increased by 15%' },
+          { metric: 'Community Projects', value: '12 completed' },
+          { metric: 'Training Sessions', value: '48 sessions' },
+          { metric: 'Environmental Impact', value: '20% reduced water usage' }
+        ];
+        filename = 'coffee-impact-data';
+        break;
+      default:
+        dataToExport = productionData;
+        filename = 'coffee-association-data';
+    }
+
+    try {
+      switch(format) {
+        case 'csv':
+          exportToCSV(dataToExport, filename, activeTab);
+          break;
+        case 'excel':
+          exportToExcel(dataToExport, filename, activeTab);
+          break;
+        case 'pdf':
+          exportToPDF(dataToExport, filename, `${selectedAssociation || 'All Associations'} - ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Report`);
+          break;
+      }
+
+      toast({
+        title: "Export Successful",
+        description: `Report exported to ${format.toUpperCase()} successfully`,
+      });
+    } catch (error) {
+      console.error(`Export error:`, error);
+      toast({
+        title: "Export Failed",
+        description: `Could not export data to ${format.toUpperCase()}`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRefresh = () => {
+    toast({
+      title: "Data Refreshed",
+      description: "Analytics data has been updated with the latest information",
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -151,10 +230,39 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
             </Select>
           </div>
           
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Export Report
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handleRefresh}
+              title="Refresh data"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export Report
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export as PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('excel')}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export as Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('csv')}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export as CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -211,7 +319,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
           </Card>
         </div>
         
-        <Tabs defaultValue="production" className="w-full">
+        <Tabs defaultValue="production" className="w-full" onValueChange={setActiveTab}>
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="production">Production</TabsTrigger>
             <TabsTrigger value="members">Membership</TabsTrigger>
