@@ -10,6 +10,30 @@ export const useCertifications = () => {
   const [error, setError] = useState(null);
   const { toast } = useToast();
 
+  // Helper function to determine certification status based on dates
+  const determineStatus = (cert) => {
+    if (!cert.issue_date || !cert.expiry_date) {
+      return cert.status === 'in-process' ? 'in-process' : 'pending';
+    }
+    
+    const now = new Date();
+    const expiryDate = new Date(cert.expiry_date);
+    
+    // If expiry date is in the past, it's expired
+    if (expiryDate < now) {
+      return 'expired';
+    }
+    
+    // If expiry date is within 30 days, it's expiring soon
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(now.getDate() + 30);
+    if (expiryDate <= thirtyDaysFromNow) {
+      return 'expiring-soon';
+    }
+    
+    return 'valid';
+  };
+
   // Fetch all certifications
   const fetchCertifications = async () => {
     try {
@@ -31,12 +55,23 @@ export const useCertifications = () => {
       console.log('Certifications fetched successfully:', data);
       
       // Format the date fields for display and parse JSON requirements
-      const formattedData = data.map(cert => ({
-        ...cert,
-        issueDate: cert.issue_date ? new Date(cert.issue_date) : null,
-        expiryDate: cert.expiry_date ? new Date(cert.expiry_date) : null,
-        requirements: Array.isArray(JSON.parse(cert.requirements)) ? JSON.parse(cert.requirements) : []
-      }));
+      const formattedData = data.map(cert => {
+        // Determine the current status based on dates
+        const calculatedStatus = determineStatus(cert);
+        
+        // If the status has changed, update it in the database
+        if (calculatedStatus !== cert.status) {
+          updateCertificationStatus(cert.id, calculatedStatus);
+        }
+        
+        return {
+          ...cert,
+          issueDate: cert.issue_date ? new Date(cert.issue_date) : null,
+          expiryDate: cert.expiry_date ? new Date(cert.expiry_date) : null,
+          requirements: Array.isArray(JSON.parse(cert.requirements)) ? JSON.parse(cert.requirements) : [],
+          status: calculatedStatus // Use the calculated status
+        };
+      });
       
       setCertifications(formattedData || []);
     } catch (err) {
@@ -45,6 +80,22 @@ export const useCertifications = () => {
       showErrorToast(toast, `Unexpected error: ${err.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Update the status of a certification (internal function)
+  const updateCertificationStatus = async (id, status) => {
+    try {
+      const { error } = await supabase
+        .from('association_certifications')
+        .update({ status })
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error updating certification status:', error);
+      }
+    } catch (err) {
+      console.error('Unexpected error updating certification status:', err);
     }
   };
 
@@ -87,7 +138,8 @@ export const useCertifications = () => {
         id: cert.id,
         issueDate: cert.issue_date ? new Date(cert.issue_date) : null,
         expiryDate: cert.expiry_date ? new Date(cert.expiry_date) : null,
-        requirements: Array.isArray(JSON.parse(cert.requirements)) ? JSON.parse(cert.requirements) : []
+        requirements: Array.isArray(JSON.parse(cert.requirements)) ? JSON.parse(cert.requirements) : [],
+        status: determineStatus(cert) // Use the calculated status
       }))[0];
       
       // Update the local state
@@ -145,7 +197,8 @@ export const useCertifications = () => {
         ...cert,
         issueDate: cert.issue_date ? new Date(cert.issue_date) : null,
         expiryDate: cert.expiry_date ? new Date(cert.expiry_date) : null,
-        requirements: Array.isArray(JSON.parse(cert.requirements)) ? JSON.parse(cert.requirements) : []
+        requirements: Array.isArray(JSON.parse(cert.requirements)) ? JSON.parse(cert.requirements) : [],
+        status: determineStatus(cert) // Use the calculated status
       }))[0];
       
       // Update the local state
@@ -203,6 +256,36 @@ export const useCertifications = () => {
     }
   };
 
+  // Get certification details by ID
+  const getCertificationById = (id) => {
+    return certifications.find(cert => cert.id === id) || null;
+  };
+
+  // Update certification progress
+  const updateCertificationProgress = async (id, progress) => {
+    return updateCertification(id, { progress });
+  };
+
+  // Update certification requirement status
+  const updateRequirementStatus = async (certId, reqId, status) => {
+    const certification = getCertificationById(certId);
+    if (!certification) return { success: false, error: 'Certification not found' };
+    
+    const updatedRequirements = certification.requirements.map(req => 
+      req.id === reqId ? { ...req, status } : req
+    );
+    
+    // Calculate new progress based on requirements
+    const completedCount = updatedRequirements.filter(req => req.status === 'complete').length;
+    const totalCount = updatedRequirements.length;
+    const newProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : certification.progress;
+    
+    return updateCertification(certId, { 
+      requirements: updatedRequirements,
+      progress: newProgress
+    });
+  };
+
   return {
     certifications,
     loading,
@@ -210,6 +293,9 @@ export const useCertifications = () => {
     fetchCertifications,
     createCertification,
     updateCertification,
-    deleteCertification
+    deleteCertification,
+    getCertificationById,
+    updateCertificationProgress,
+    updateRequirementStatus
   };
 };
