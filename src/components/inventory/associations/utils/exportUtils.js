@@ -2,14 +2,14 @@
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import { format as formatDate } from 'date-fns';
+import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
 
-// Format date for display
-export const formatDate = (dateString) => {
+// Format date for display (renamed to avoid conflict with import)
+export const formatDisplayDate = (dateString) => {
   if (!dateString) return '';
   try {
-    return formatDate(new Date(dateString), 'MMM dd, yyyy');
+    return format(new Date(dateString), 'MMM dd, yyyy');
   } catch (error) {
     return dateString;
   }
@@ -84,7 +84,7 @@ export const exportToPDF = (data, filename, title) => {
   
   // Add date
   doc.setFontSize(10);
-  doc.text(`Generated on: ${formatDate(new Date(), 'PPP')}`, 14, 22);
+  doc.text(`Generated on: ${format(new Date(), 'PPP')}`, 14, 22);
   
   // Convert data for table
   const headers = Object.keys(processedData[0]);
@@ -101,7 +101,7 @@ export const exportToPDF = (data, filename, title) => {
   });
   
   // Save PDF
-  doc.save(`${filename.toLowerCase().replace(/\s+/g, '_')}_${formatDate(new Date(), 'yyyy-MM-dd')}.pdf`);
+  doc.save(`${filename.toLowerCase().replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
 };
 
 // Export to Excel
@@ -117,7 +117,7 @@ export const exportToExcel = (data, filename) => {
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Analytics');
   
   // Generate and download Excel file
-  XLSX.writeFile(workbook, `${filename.toLowerCase().replace(/\s+/g, '_')}_${formatDate(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  XLSX.writeFile(workbook, `${filename.toLowerCase().replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
 };
 
 // Export to CSV
@@ -144,7 +144,7 @@ export const exportToCSV = (data, filename) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `${filename.toLowerCase().replace(/\s+/g, '_')}_${formatDate(new Date(), 'yyyy-MM-dd')}.csv`);
+  link.setAttribute('download', `${filename.toLowerCase().replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -171,7 +171,7 @@ export const captureScreenshot = async (elementId, filename, outputFormat = 'jpg
       const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
       const link = document.createElement('a');
       link.href = dataUrl;
-      link.download = `${filename.toLowerCase().replace(/\s+/g, '_')}_${formatDate(new Date(), 'yyyy-MM-dd')}.jpg`;
+      link.download = `${filename.toLowerCase().replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -189,7 +189,7 @@ export const captureScreenshot = async (elementId, filename, outputFormat = 'jpg
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`${filename.toLowerCase().replace(/\s+/g, '_')}_${formatDate(new Date(), 'yyyy-MM-dd')}.pdf`);
+      pdf.save(`${filename.toLowerCase().replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
     }
     
     return true;
