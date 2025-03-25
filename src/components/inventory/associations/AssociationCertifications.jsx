@@ -233,7 +233,7 @@ const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {cert.requirements.map(req => (
+                        {Array.isArray(cert.requirements) && cert.requirements.map(req => (
                           <TableRow key={req.id}>
                             <TableCell>{getRequirementIcon(req.status)}</TableCell>
                             <TableCell>{req.name}</TableCell>

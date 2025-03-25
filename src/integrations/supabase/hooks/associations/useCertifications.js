@@ -30,11 +30,12 @@ export const useCertifications = () => {
       
       console.log('Certifications fetched successfully:', data);
       
-      // Format the date fields for display
+      // Format the date fields for display and parse JSON requirements
       const formattedData = data.map(cert => ({
         ...cert,
         issueDate: cert.issue_date ? new Date(cert.issue_date) : null,
         expiryDate: cert.expiry_date ? new Date(cert.expiry_date) : null,
+        requirements: Array.isArray(JSON.parse(cert.requirements)) ? JSON.parse(cert.requirements) : []
       }));
       
       setCertifications(formattedData || []);
@@ -61,7 +62,7 @@ export const useCertifications = () => {
         expiry_date: certificationData.expiryDate,
         notes: certificationData.notes,
         progress: certificationData.status === 'in-process' ? 10 : 100,
-        requirements: JSON.stringify(certificationData.requirements)
+        requirements: JSON.stringify(certificationData.requirements || [])
       };
       
       console.log('Creating new certification with data:', dbCertification);
@@ -86,7 +87,7 @@ export const useCertifications = () => {
         id: cert.id,
         issueDate: cert.issue_date ? new Date(cert.issue_date) : null,
         expiryDate: cert.expiry_date ? new Date(cert.expiry_date) : null,
-        requirements: JSON.parse(cert.requirements)
+        requirements: Array.isArray(JSON.parse(cert.requirements)) ? JSON.parse(cert.requirements) : []
       }))[0];
       
       // Update the local state
@@ -144,7 +145,7 @@ export const useCertifications = () => {
         ...cert,
         issueDate: cert.issue_date ? new Date(cert.issue_date) : null,
         expiryDate: cert.expiry_date ? new Date(cert.expiry_date) : null,
-        requirements: JSON.parse(cert.requirements)
+        requirements: Array.isArray(JSON.parse(cert.requirements)) ? JSON.parse(cert.requirements) : []
       }))[0];
       
       // Update the local state
