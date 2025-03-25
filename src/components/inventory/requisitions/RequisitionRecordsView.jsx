@@ -1,94 +1,89 @@
 
 import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
+import { ArrowLeft, RefreshCcw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { useRequisitions } from '@/hooks/useRequisitions';
 import StatusTabs from './components/StatusTabs';
 import RecordsToolbar from './components/RecordsToolbar';
-import RequisitionRecordsTable from './components/RequisitionRecordsTable';
 import RequisitionExportActions from './components/RequisitionExportActions';
-import { useRequisitionRecords } from './hooks/useRequisitionRecords';
+import RequisitionRecordsTable from './components/RequisitionRecordsTable';
+import { useToast } from "@/components/ui/use-toast";
+import { Toaster } from "sonner";
 
 const RequisitionRecordsView = ({ onBack }) => {
+  const { toast } = useToast();
   const [status, setStatus] = useState('all');
-  const [timeRange, setTimeRange] = useState('week');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
-
-  const { records, isLoading, error, refreshRecords } = useRequisitionRecords({
-    status,
-    timeRange,
-    searchTerm,
-    sortConfig
-  });
+  const [timeRange, setTimeRange] = useState('all');
+  
+  const { 
+    requisitions, 
+    loading, 
+    error,
+    fetchRequisitions,
+    fetchRequisitionsByStatus,
+    fetchRequisitionsByTimeRange,
+    searchRequisitions
+  } = useRequisitions();
 
   const handleStatusChange = (newStatus) => {
     setStatus(newStatus);
-  };
-
-  const handleTimeRangeChange = (newRange) => {
-    setTimeRange(newRange);
+    fetchRequisitionsByStatus(newStatus);
   };
 
   const handleSearch = (term) => {
     setSearchTerm(term);
+    searchRequisitions(term);
+  };
+
+  const handleTimeRangeChange = (range) => {
+    setTimeRange(range);
+    fetchRequisitionsByTimeRange(range);
   };
 
   const handleRefresh = () => {
-    refreshRecords();
-  };
-
-  const handleSort = (key) => {
-    setSortConfig((prevConfig) => ({
-      key,
-      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc',
-    }));
+    fetchRequisitions();
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={onBack} className="p-2">
-            <ArrowLeft className="h-5 w-5" />
+    <div className="space-y-6">
+      <Toaster />
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="sm" onClick={onBack} className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Make Requisitions
           </Button>
           <h2 className="text-2xl font-bold">Requisition Records</h2>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={handleRefresh}
-            disabled={isLoading}
-            className="flex items-center gap-1"
+            className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCcw className="h-4 w-4" />
             Refresh
           </Button>
-          <RequisitionExportActions records={records} fileName="requisition_records" />
+          <RequisitionExportActions records={requisitions} fileName="requisition_records" />
         </div>
       </div>
 
-      <Card className="p-4">
-        <div className="space-y-4">
-          <StatusTabs status={status} onStatusChange={handleStatusChange} />
-          
-          <RecordsToolbar
-            searchTerm={searchTerm}
-            onSearch={handleSearch}
-            timeRange={timeRange}
-            onTimeRangeChange={handleTimeRangeChange}
-          />
-          
-          <RequisitionRecordsTable
-            records={records}
-            sortConfig={sortConfig}
-            onSort={handleSort}
-            isLoading={isLoading}
-            error={error}
-          />
-        </div>
-      </Card>
+      <StatusTabs status={status} onStatusChange={handleStatusChange} />
+      
+      <RecordsToolbar 
+        searchTerm={searchTerm} 
+        onSearch={handleSearch} 
+        timeRange={timeRange} 
+        onTimeRangeChange={handleTimeRangeChange} 
+      />
+      
+      <RequisitionRecordsTable 
+        records={requisitions} 
+        loading={loading} 
+        error={error} 
+      />
     </div>
   );
 };

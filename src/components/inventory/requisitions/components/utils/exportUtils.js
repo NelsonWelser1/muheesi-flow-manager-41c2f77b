@@ -1,108 +1,150 @@
 
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
+import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 
-// Format date for display
-export const formatDate = (dateString) => {
-  if (!dateString) return '';
+/**
+ * Export records to PDF
+ */
+export const exportToPDF = (records, fileName = 'export') => {
+  if (!records || records.length === 0) {
+    console.error('No records to export');
+    return;
+  }
+
   try {
-    return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.text('Requisition Records', 14, 22);
+    
+    // Add date
+    doc.setFontSize(11);
+    doc.text(`Generated: ${format(new Date(), 'PPpp')}`, 14, 30);
+    
+    const formatFieldValue = (value) => {
+      if (value === null || value === undefined) return '-';
+      if (typeof value === 'string' && value.length > 30) return value.substring(0, 27) + '...';
+      return value;
+    };
+    
+    // Prepare table data
+    const tableColumn = [
+      'Requester', 
+      'Department', 
+      'Type', 
+      'Description', 
+      'Urgency', 
+      'Status', 
+      'Date'
+    ];
+    
+    const tableRows = records.map(record => [
+      formatFieldValue(record.requester_name),
+      formatFieldValue(record.department),
+      formatFieldValue(record.requisition_type),
+      formatFieldValue(record.requisition_type === 'tools' ? record.tools_machinery : record.repairs),
+      formatFieldValue(record.urgency_level),
+      formatFieldValue(record.status),
+      formatFieldValue(format(new Date(record.created_at), 'MMM dd, yyyy p'))
+    ]);
+    
+    // Generate the table
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 40,
+      theme: 'grid',
+      styles: {
+        fontSize: 9,
+        cellPadding: 3
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240]
+      }
+    });
+    
+    // Save the PDF
+    doc.save(`${fileName}.pdf`);
   } catch (error) {
-    return dateString;
+    console.error('Error exporting to PDF:', error);
   }
 };
 
-// Process requisition data for export
-const processRequisitionData = (requisitions) => {
-  return requisitions.map(req => ({
-    'Requester': req.requester_name,
-    'Department': req.department,
-    'Type': req.requisition_type,
-    'Urgency': req.urgency,
-    'Status': req.status,
-    'Created': formatDate(req.created_at),
-    'Updated': formatDate(req.updated_at),
-    'Justification': req.justification
-  }));
+/**
+ * Export records to Excel
+ */
+export const exportToExcel = (records, fileName = 'export') => {
+  if (!records || records.length === 0) {
+    console.error('No records to export');
+    return;
+  }
+
+  try {
+    // Format data for Excel
+    const formattedData = records.map(record => ({
+      'Requester': record.requester_name || '-',
+      'Department': record.department || '-',
+      'Type': record.requisition_type || '-',
+      'Description': record.requisition_type === 'tools' ? (record.tools_machinery || '-') : (record.repairs || '-'),
+      'Justification': record.justification || '-',
+      'Urgency': record.urgency_level || '-',
+      'Status': record.status || '-',
+      'Date Submitted': format(new Date(record.created_at), 'MMM dd, yyyy p')
+    }));
+    
+    // Create workbook and worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Requisitions');
+    
+    // Save the workbook
+    XLSX.writeFile(workbook, `${fileName}.xlsx`);
+  } catch (error) {
+    console.error('Error exporting to Excel:', error);
+  }
 };
 
-// Export to CSV
-export const exportToCSV = (requisitions, filename) => {
-  if (!requisitions || requisitions.length === 0) return;
-  
-  const processedData = processRequisitionData(requisitions);
-  
-  // Create headers and rows
-  const headers = Object.keys(processedData[0]);
-  const rows = processedData.map(item => headers.map(header => item[header]));
-  
-  // Combine headers and rows
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(row => row.map(cell => 
-      cell ? `"${String(cell).replace(/"/g, '""')}"` : ''
-    ).join(','))
-  ].join('\n');
-  
-  // Create download link
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+/**
+ * Export records to CSV
+ */
+export const exportToCSV = (records, fileName = 'export') => {
+  if (!records || records.length === 0) {
+    console.error('No records to export');
+    return;
+  }
 
-// Export to Excel
-export const exportToExcel = (requisitions, filename) => {
-  if (!requisitions || requisitions.length === 0) return;
-  
-  const processedData = processRequisitionData(requisitions);
-  
-  // Create workbook and worksheet
-  const worksheet = XLSX.utils.json_to_sheet(processedData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Requisitions');
-  
-  // Generate and download Excel file
-  XLSX.writeFile(workbook, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
-};
-
-// Export to PDF
-export const exportToPDF = (requisitions, title) => {
-  if (!requisitions || requisitions.length === 0) return;
-  
-  const processedData = processRequisitionData(requisitions);
-  
-  // Create PDF document
-  const doc = new jsPDF();
-  
-  // Add title
-  doc.setFontSize(16);
-  doc.text(title, 14, 15);
-  
-  // Add date
-  doc.setFontSize(10);
-  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
-  
-  // Convert data for table
-  const headers = Object.keys(processedData[0]);
-  const rows = processedData.map(item => headers.map(header => item[header]));
-  
-  // Add table
-  doc.autoTable({
-    head: [headers],
-    body: rows,
-    startY: 25,
-    theme: 'grid',
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [71, 85, 119] }
-  });
-  
-  // Save PDF
-  doc.save(`${title.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+  try {
+    // Format data for CSV
+    const formattedData = records.map(record => ({
+      'Requester': record.requester_name || '-',
+      'Department': record.department || '-',
+      'Type': record.requisition_type || '-',
+      'Description': record.requisition_type === 'tools' ? (record.tools_machinery || '-') : (record.repairs || '-'),
+      'Justification': record.justification || '-',
+      'Urgency': record.urgency_level || '-',
+      'Status': record.status || '-',
+      'Date Submitted': format(new Date(record.created_at), 'MMM dd, yyyy p')
+    }));
+    
+    // Create workbook and worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Requisitions');
+    
+    // Save as CSV
+    XLSX.writeFile(workbook, `${fileName}.csv`, { bookType: 'csv' });
+  } catch (error) {
+    console.error('Error exporting to CSV:', error);
+  }
 };

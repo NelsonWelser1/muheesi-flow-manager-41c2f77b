@@ -1,118 +1,167 @@
 
-import React from 'react';
-import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
+import React, { useState } from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ArrowDown, ArrowUp, Download, Eye, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
 
-const RequisitionRecordsTable = ({ records, sortConfig, onSort, isLoading, error }) => {
-  const getSortIcon = (key) => {
-    if (sortConfig.key !== key) return null;
-    return sortConfig.direction === 'asc' ? (
-      <ArrowUp className="h-4 w-4 ml-1" />
-    ) : (
-      <ArrowDown className="h-4 w-4 ml-1" />
-    );
-  };
+const RequisitionRecordsTable = ({ records, loading, error }) => {
+  const [sortField, setSortField] = useState('created_at');
+  const [sortDirection, setSortDirection] = useState('desc');
 
-  const renderSortableHeader = (key, label) => (
-    <TableHead className="cursor-pointer" onClick={() => onSort(key)}>
-      <div className="flex items-center">
-        {label}
-        {getSortIcon(key)}
-      </div>
-    </TableHead>
-  );
-
-  const getStatusBadge = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'approved':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Approved</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Rejected</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Pending</Badge>;
-      case 'completed':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Completed</Badge>;
-      default:
-        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">{status || 'Unknown'}</Badge>;
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
     }
   };
 
-  if (isLoading) {
+  const sortedRecords = [...records].sort((a, b) => {
+    let aValue = a[sortField];
+    let bValue = b[sortField];
+    
+    // Handle date fields
+    if (sortField === 'created_at' || sortField === 'updated_at') {
+      aValue = new Date(aValue);
+      bValue = new Date(bValue);
+    }
+    
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'approved': return 'bg-green-100 text-green-800 border-green-300';
+      case 'rejected': return 'bg-red-100 text-red-800 border-red-300';
+      case 'completed': return 'bg-blue-100 text-blue-800 border-blue-300';
+      default: return '';
+    }
+  };
+
+  const getUrgencyColor = (urgency) => {
+    switch (urgency) {
+      case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'high': return 'bg-red-100 text-red-800 border-red-300';
+      default: return '';
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="flex justify-center items-center h-48">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Loading requisition records...</span>
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+        <span className="ml-2 text-gray-500">Loading requisitions...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center p-4 border rounded-md bg-red-50 text-red-800">
-        <p className="font-medium">Error loading requisition records</p>
-        <p className="text-sm">{error.toString()}</p>
+      <div className="flex justify-center items-center h-40 bg-red-50 text-red-700 rounded-md p-4">
+        <p>Error loading requisitions: {error}</p>
       </div>
     );
   }
 
   if (!records || records.length === 0) {
     return (
-      <div className="text-center p-8 border rounded-md bg-gray-50">
-        <p className="text-gray-500">No requisition records found.</p>
-        <p className="text-sm text-gray-400">Try changing your filters or add a new requisition.</p>
+      <div className="flex justify-center items-center h-40 bg-gray-50 rounded-md">
+        <p className="text-gray-500">No requisitions found</p>
       </div>
     );
   }
 
   return (
-    <div className="border rounded-md">
+    <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            {renderSortableHeader('requester', 'Requester')}
-            {renderSortableHeader('department', 'Department')}
-            {renderSortableHeader('requisition_type', 'Type')}
-            {renderSortableHeader('urgency', 'Urgency')}
-            {renderSortableHeader('status', 'Status')}
-            {renderSortableHeader('created_at', 'Date')}
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead 
+              onClick={() => handleSort('requester_name')}
+              className="cursor-pointer hover:bg-gray-100"
+            >
+              Requester
+              {sortField === 'requester_name' && (
+                sortDirection === 'asc' ? <ArrowUp className="inline ml-1 h-4 w-4" /> : <ArrowDown className="inline ml-1 h-4 w-4" />
+              )}
+            </TableHead>
+            <TableHead 
+              onClick={() => handleSort('department')}
+              className="cursor-pointer hover:bg-gray-100"
+            >
+              Department
+              {sortField === 'department' && (
+                sortDirection === 'asc' ? <ArrowUp className="inline ml-1 h-4 w-4" /> : <ArrowDown className="inline ml-1 h-4 w-4" />
+              )}
+            </TableHead>
+            <TableHead 
+              onClick={() => handleSort('requisition_type')}
+              className="cursor-pointer hover:bg-gray-100"
+            >
+              Type
+              {sortField === 'requisition_type' && (
+                sortDirection === 'asc' ? <ArrowUp className="inline ml-1 h-4 w-4" /> : <ArrowDown className="inline ml-1 h-4 w-4" />
+              )}
+            </TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead 
+              onClick={() => handleSort('urgency_level')}
+              className="cursor-pointer hover:bg-gray-100"
+            >
+              Urgency
+              {sortField === 'urgency_level' && (
+                sortDirection === 'asc' ? <ArrowUp className="inline ml-1 h-4 w-4" /> : <ArrowDown className="inline ml-1 h-4 w-4" />
+              )}
+            </TableHead>
+            <TableHead 
+              onClick={() => handleSort('status')}
+              className="cursor-pointer hover:bg-gray-100"
+            >
+              Status
+              {sortField === 'status' && (
+                sortDirection === 'asc' ? <ArrowUp className="inline ml-1 h-4 w-4" /> : <ArrowDown className="inline ml-1 h-4 w-4" />
+              )}
+            </TableHead>
+            <TableHead 
+              onClick={() => handleSort('created_at')}
+              className="cursor-pointer hover:bg-gray-100"
+            >
+              Date Submitted
+              {sortField === 'created_at' && (
+                sortDirection === 'asc' ? <ArrowUp className="inline ml-1 h-4 w-4" /> : <ArrowDown className="inline ml-1 h-4 w-4" />
+              )}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {records.map((record) => (
+          {sortedRecords.map((record) => (
             <TableRow key={record.id}>
-              <TableCell>{record.requester_name}</TableCell>
+              <TableCell className="font-medium">{record.requester_name}</TableCell>
               <TableCell>{record.department}</TableCell>
-              <TableCell>{record.requisition_type}</TableCell>
+              <TableCell className="capitalize">{record.requisition_type}</TableCell>
               <TableCell>
-                <Badge
-                  className={`${
-                    record.urgency === 'high'
-                      ? 'bg-red-100 text-red-800'
-                      : record.urgency === 'medium'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-green-100 text-green-800'
-                  }`}
-                >
-                  {record.urgency?.charAt(0).toUpperCase() + record.urgency?.slice(1)}
+                {record.requisition_type === 'tools' 
+                  ? (record.tools_machinery || '-') 
+                  : (record.repairs || '-')}
+              </TableCell>
+              <TableCell>
+                <Badge className={getUrgencyColor(record.urgency_level)}>
+                  {record.urgency_level}
                 </Badge>
               </TableCell>
-              <TableCell>{getStatusBadge(record.status)}</TableCell>
               <TableCell>
-                {record.created_at ? format(new Date(record.created_at), 'PPP') : 'N/A'}
+                <Badge className={getStatusColor(record.status)}>
+                  {record.status}
+                </Badge>
               </TableCell>
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <Button variant="ghost" size="icon" title="View Details">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" title="Download">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
+              <TableCell>
+                {format(new Date(record.created_at), 'MMM dd, yyyy p')}
               </TableCell>
             </TableRow>
           ))}
