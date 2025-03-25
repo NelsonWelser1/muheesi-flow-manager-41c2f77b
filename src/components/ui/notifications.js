@@ -48,3 +48,22 @@ export const showWarningToast = (toast, message) => {
     });
   }
 };
+
+export const showLoadingToast = (toast, message) => {
+  if (toastFn) {
+    return toastFn.loading(message);
+  } else if (toast) {
+    return toast({
+      title: "Loading",
+      description: message,
+      variant: "default",
+    });
+  }
+  return null;
+};
+
+export const dismissToast = (id) => {
+  if (toastFn && id) {
+    toastFn.dismiss(id);
+  }
+};

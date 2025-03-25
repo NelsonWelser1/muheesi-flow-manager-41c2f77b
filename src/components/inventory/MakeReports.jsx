@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Mail, MessageSquare, Phone, FileText } from "lucide-react";
 import KazoReportsViewer from './kajon/KazoReportsViewer';
 import { supabase } from '@/integrations/supabase/supabase';
 import { showSuccessToast, showErrorToast, showLoadingToast, dismissToast } from '@/components/ui/notifications';
+
 const MakeReports = ({
   isKazo = false
 }) => {
@@ -30,15 +32,18 @@ const MakeReports = ({
     toast
   } = useToast();
   const reportTypes = ['Daily Stock Summary', 'Weekly Inventory Report', 'Monthly Analysis', 'Quality Control Report', 'Stock Movement Report', 'Custom Report'];
+  
   useEffect(() => {
     // If we need to fetch any initial data in the future, we can add it here
   }, []);
+  
   const handleSendViaToggle = method => {
     setReport(prev => ({
       ...prev,
       sendVia: prev.sendVia.includes(method) ? prev.sendVia.filter(m => m !== method) : [...prev.sendVia, method]
     }));
   };
+  
   const validateForm = () => {
     // Check for empty fields
     if (!report.title.trim()) {
@@ -78,6 +83,7 @@ const MakeReports = ({
     }
     return true;
   };
+  
   const resetForm = () => {
     setRecipient({
       name: '',
@@ -91,6 +97,7 @@ const MakeReports = ({
       sendVia: []
     });
   };
+  
   const handleSubmit = async e => {
     e.preventDefault();
     if (!validateForm()) {
@@ -142,9 +149,11 @@ const MakeReports = ({
       setIsSubmitting(false);
     }
   };
+  
   if (showReportsViewer && isKazo) {
     return <KazoReportsViewer onBack={() => setShowReportsViewer(false)} />;
   }
+  
   return <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -209,12 +218,32 @@ const MakeReports = ({
               </div>
 
               <div className="space-y-2">
-                
+                <Label>Send Via</Label>
                 <div className="flex flex-wrap gap-2">
-                  
-                  
-                  
-                  
+                  <Button
+                    type="button"
+                    variant={report.sendVia.includes('email') ? 'default' : 'outline'}
+                    onClick={() => handleSendViaToggle('email')}
+                  >
+                    <Mail className="mr-2 h-4 w-4" />
+                    Email
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={report.sendVia.includes('sms') ? 'default' : 'outline'}
+                    onClick={() => handleSendViaToggle('sms')}
+                  >
+                    <Phone className="mr-2 h-4 w-4" />
+                    SMS
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={report.sendVia.includes('whatsapp') ? 'default' : 'outline'}
+                    onClick={() => handleSendViaToggle('whatsapp')}
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    WhatsApp
+                  </Button>
                 </div>
               </div>
             </div>
@@ -227,4 +256,5 @@ const MakeReports = ({
       </Card>
     </div>;
 };
+
 export default MakeReports;
