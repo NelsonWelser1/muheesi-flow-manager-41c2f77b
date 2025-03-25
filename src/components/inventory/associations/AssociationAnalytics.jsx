@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
-import { exportToCSV, exportToExcel, exportToPDF } from '../../dairy/utils/reportExportUtils';
+import { exportToCSV, exportToExcel, exportToPDF } from './utils/exportUtils';
 
 const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
   
@@ -127,6 +127,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
   const handleExport = (format) => {
     let dataToExport = [];
     let filename = '';
+    let title = `${selectedAssociation || 'All Associations'} - ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Report`;
     
     switch(activeTab) {
       case 'production':
@@ -162,13 +163,13 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
     try {
       switch(format) {
         case 'csv':
-          exportToCSV(dataToExport, filename, activeTab);
+          exportToCSV(dataToExport, filename);
           break;
         case 'excel':
-          exportToExcel(dataToExport, filename, activeTab);
+          exportToExcel(dataToExport, filename);
           break;
         case 'pdf':
-          exportToPDF(dataToExport, filename, `${selectedAssociation || 'All Associations'} - ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Report`);
+          exportToPDF(dataToExport, filename, title);
           break;
       }
 
@@ -180,7 +181,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
       console.error(`Export error:`, error);
       toast({
         title: "Export Failed",
-        description: `Could not export data to ${format.toUpperCase()}`,
+        description: `Could not export data to ${format.toUpperCase()}. Error: ${error.message}`,
         variant: "destructive"
       });
     }

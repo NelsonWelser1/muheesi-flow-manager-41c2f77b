@@ -22,7 +22,7 @@ export const processAnalyticsData = (data, tabType) => {
         'Month': item.month,
         'Arabica (kg)': item.arabica,
         'Robusta (kg)': item.robusta,
-        'Total (kg)': item.arabica + item.robusta
+        'Total (kg)': (item.arabica || 0) + (item.robusta || 0)
       }));
       
     case 'members':
@@ -41,7 +41,13 @@ export const processAnalyticsData = (data, tabType) => {
       return data.map(item => ({
         'Month': item.month,
         'Revenue (UGX)': item.revenue,
-        'Revenue (USD)': Math.round(item.revenue / 3700)
+        'Revenue (USD)': Math.round((item.revenue || 0) / 3700)
+      }));
+      
+    case 'impact':
+      return data.map(item => ({
+        'Metric': item.metric,
+        'Value': item.value
       }));
       
     default:
@@ -128,7 +134,7 @@ export const exportToCSV = (data, filename) => {
   const csvContent = [
     headers.join(','),
     ...rows.map(row => row.map(cell => 
-      cell ? `"${String(cell).replace(/"/g, '""')}"` : ''
+      cell !== undefined && cell !== null ? `"${String(cell).replace(/"/g, '""')}"` : ''
     ).join(','))
   ].join('\n');
   
