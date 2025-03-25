@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
+import html2canvas from 'html2canvas';
 
 // Format date for display
 export const formatDate = (dateString) => {
@@ -148,3 +149,53 @@ export const exportToCSV = (data, filename) => {
   link.click();
   document.body.removeChild(link);
 };
+
+// Take screenshot of a specific element and download
+export const captureScreenshot = async (elementId, filename, format = 'jpg') => {
+  try {
+    const element = document.getElementById(elementId);
+    if (!element) {
+      throw new Error('Element not found');
+    }
+    
+    // Use html2canvas to capture the element
+    const canvas = await html2canvas(element, {
+      scale: 2, // Higher scale for better quality
+      useCORS: true, // Enable CORS for images
+      logging: false,
+      backgroundColor: '#ffffff'
+    });
+    
+    if (format === 'jpg') {
+      // Convert to JPG and download
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `${filename.toLowerCase().replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (format === 'pdf') {
+      // Create PDF with the screenshot
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'mm'
+      });
+      
+      // Calculate dimensions to fit the page while maintaining aspect ratio
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${filename.toLowerCase().replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Screenshot capture error:', error);
+    throw error;
+  }
+};
+

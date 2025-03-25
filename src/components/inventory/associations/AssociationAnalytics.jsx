@@ -8,15 +8,20 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
-import { ArrowUp, ArrowDown, Download, Calendar, Filter, RefreshCw } from 'lucide-react';
+import { ArrowUp, ArrowDown, Download, Calendar, Filter, RefreshCw, Camera, FileImage } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
-import { exportToCSV, exportToExcel, exportToPDF } from './utils/exportUtils';
+import { exportToCSV, exportToExcel, exportToPDF, captureScreenshot } from './utils/exportUtils';
 
 const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
   
@@ -193,6 +198,30 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
       description: "Analytics data has been updated with the latest information",
     });
   };
+  
+  const handleScreenshot = async (format) => {
+    try {
+      const activeTabContent = document.getElementById(`analytics-${activeTab}`);
+      if (!activeTabContent) {
+        throw new Error('Analytics content not found');
+      }
+      
+      const filename = `${activeTab}-analytics-screenshot`;
+      await captureScreenshot(`analytics-${activeTab}`, filename, format);
+      
+      toast({
+        title: "Screenshot Captured",
+        description: `Analytics screenshot saved as ${format.toUpperCase()} successfully`,
+      });
+    } catch (error) {
+      console.error('Screenshot error:', error);
+      toast({
+        title: "Screenshot Failed",
+        description: `Could not capture screenshot: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <Card>
@@ -263,6 +292,25 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Camera className="mr-2 h-4 w-4" />
+                  Capture View
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handleScreenshot('jpg')}>
+                  <FileImage className="mr-2 h-4 w-4" />
+                  Save as JPEG
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleScreenshot('pdf')}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Save as PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         
@@ -329,7 +377,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
             <TabsTrigger value="impact">Impact</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="production" className="space-y-6">
+          <TabsContent value="production" className="space-y-6" id="analytics-production">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Coffee Production Trends</CardTitle>
@@ -478,7 +526,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
             </div>
           </TabsContent>
           
-          <TabsContent value="members" className="space-y-6">
+          <TabsContent value="members" className="space-y-6" id="analytics-members">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Membership Growth</CardTitle>
@@ -705,7 +753,7 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
             </Card>
           </TabsContent>
           
-          <TabsContent value="quality" className="space-y-6">
+          <TabsContent value="quality" className="space-y-6" id="analytics-quality">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
@@ -884,3 +932,4 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
 };
 
 export default AssociationAnalytics;
+
