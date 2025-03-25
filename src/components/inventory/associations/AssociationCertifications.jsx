@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,12 +7,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, XCircle, AlertCircle, FileText, Upload, Calendar } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import NewCertificationDialog from './certifications/NewCertificationDialog';
+import { useToast } from "@/components/ui/use-toast";
 
 const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
+  const { toast } = useToast();
   const [activeCertTab, setActiveCertTab] = useState('current');
+  const [dialogOpen, setDialogOpen] = useState(false);
   
   // Sample certification data - would come from API/database in a real app
-  const certifications = [
+  const [certifications, setCertifications] = useState([
     {
       id: 1,
       name: 'Organic Certification',
@@ -74,7 +77,11 @@ const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
         { id: 4, name: 'Record keeping', status: 'complete' }
       ]
     }
-  ];
+  ]);
+  
+  const handleAddCertification = (newCertification) => {
+    setCertifications(prev => [...prev, newCertification]);
+  };
   
   const getStatusBadge = (status) => {
     switch(status) {
@@ -146,7 +153,7 @@ const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
                 </Tabs>
               </div>
               
-              <Button>Apply for New Certification</Button>
+              <Button onClick={() => setDialogOpen(true)}>Apply for New Certification</Button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -444,6 +451,12 @@ const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
           </TabsContent>
         </Tabs>
       </CardContent>
+      
+      <NewCertificationDialog 
+        open={dialogOpen} 
+        onOpenChange={setDialogOpen}
+        onSave={handleAddCertification}
+      />
     </Card>
   );
 };
