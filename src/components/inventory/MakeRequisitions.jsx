@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -5,19 +6,41 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import { showSuccessToast } from "@/components/ui/notifications";
+import RequisitionRecordsView from './requisitions/RequisitionRecordsView';
+import { Eye } from 'lucide-react';
 
 const MakeRequisitions = () => {
   const [requisitionType, setRequisitionType] = useState('tools');
+  const [showRecords, setShowRecords] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // Handle form submission
     console.log('Requisition submitted');
+    showSuccessToast(toast, "Requisition submitted successfully");
   };
+
+  if (showRecords) {
+    return <RequisitionRecordsView onBack={() => setShowRecords(false)} />;
+  }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold mb-4">Make Requisitions</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Make Requisitions</h2>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setShowRecords(true)}
+          className="flex items-center gap-2"
+        >
+          <Eye className="h-4 w-4" />
+          View Records
+        </Button>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Tools, Machinery, and Repair Requisitions</CardTitle>
