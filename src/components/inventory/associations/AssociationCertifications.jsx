@@ -5,12 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, AlertCircle, FileText, Upload, Calendar, ChevronDown, ChevronRight, Eye, Pencil, Trash2 } from "lucide-react";
+import { CheckCircle, XCircle, AlertCircle, FileText, Upload, Calendar, ChevronDown, ChevronRight, Eye, Pencil, Trash2, Save } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import NewCertificationDialog from './certifications/NewCertificationDialog';
 import { useToast } from "@/components/ui/use-toast";
 import { useCertifications } from "@/integrations/supabase/hooks/associations/useCertifications";
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
   const { toast } = useToast();
@@ -18,6 +23,8 @@ const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedCertification, setSelectedCertification] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editedCertification, setEditedCertification] = useState(null);
   
   const { 
     certifications, 
@@ -42,7 +49,71 @@ const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
 
   const handleViewDetails = (certification) => {
     setSelectedCertification(certification);
+    setEditedCertification(null);
+    setEditMode(false);
     setDetailsDialogOpen(true);
+  };
+
+  const handleEditClick = () => {
+    setEditedCertification({
+      ...selectedCertification,
+      requirements: selectedCertification.requirements ? [...selectedCertification.requirements] : []
+    });
+    setEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditMode(false);
+    setEditedCertification(null);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const result = await updateCertification(selectedCertification.id, editedCertification);
+      if (result.success) {
+        setSelectedCertification(result.data);
+        setEditMode(false);
+        setEditedCertification(null);
+        showSuccessToast(toast, "Certification details updated successfully");
+      }
+    } catch (error) {
+      showErrorToast(toast, `Error updating certification: ${error.message}`);
+    }
+  };
+
+  const handleRequirementChange = (reqId, field, value) => {
+    if (!editedCertification) return;
+    
+    setEditedCertification(prev => ({
+      ...prev,
+      requirements: prev.requirements.map(req => 
+        req.id === reqId ? { ...req, [field]: value } : req
+      )
+    }));
+  };
+
+  const handleAddRequirement = () => {
+    if (!editedCertification) return;
+    
+    const newRequirement = {
+      id: Date.now(),
+      name: "",
+      status: "pending"
+    };
+    
+    setEditedCertification(prev => ({
+      ...prev,
+      requirements: [...prev.requirements, newRequirement]
+    }));
+  };
+
+  const handleRemoveRequirement = (reqId) => {
+    if (!editedCertification) return;
+    
+    setEditedCertification(prev => ({
+      ...prev,
+      requirements: prev.requirements.filter(req => req.id !== reqId)
+    }));
   };
 
   const handleUpdateRequirement = async (reqId, status) => {
@@ -501,16 +572,15 @@ const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
         onSave={handleAddCertification}
       />
 
-      {/* Certification Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedCertification?.name} - Certification Details
+              {editMode ? 'Edit Certification Details' : (selectedCertification?.name + ' - Certification Details')}
             </DialogTitle>
           </DialogHeader>
           
-          {selectedCertification && (
+          {selectedCertification && !editMode && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -580,19 +650,190 @@ const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
               </div>
             </div>
           )}
+
+          {selectedCertification && editMode && editedCertification && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Certification Name</Label>
+                  <Input 
+                    id="name" 
+                    value={editedCertification.name || ''} 
+                    onChange={(e) => setEditedCertification({...editedCertification, name: e.target.value})} 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="issuer">Issuer</Label>
+                  <Input 
+                    id="issuer" 
+                    value={editedCertification.issuer || ''} 
+                    onChange={(e) => setEditedCertification({...editedCertification, issuer: e.target.value})} 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <Select 
+                    value={editedCertification.status} 
+                    onValueChange={(value) => setEditedCertification({...editedCertification, status: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="valid">Valid</SelectItem>
+                      <SelectItem value="expired">Expired</SelectItem>
+                      <SelectItem value="expiring-soon">Expiring Soon</SelectItem>
+                      <SelectItem value="in-process">In Process</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="progress">Progress (%)</Label>
+                  <Input 
+                    id="progress"
+                    type="number"
+                    min="0"
+                    max="100" 
+                    value={editedCertification.progress || 0} 
+                    onChange={(e) => setEditedCertification({
+                      ...editedCertification, 
+                      progress: Math.max(0, Math.min(100, parseInt(e.target.value) || 0))
+                    })} 
+                  />
+                  <Progress value={editedCertification.progress} className="h-2 mt-2" />
+                </div>
+                <div>
+                  <Label htmlFor="issueDate">Issue Date</Label>
+                  <Input 
+                    id="issueDate" 
+                    type="date"
+                    value={editedCertification.issueDate ? new Date(editedCertification.issueDate).toISOString().split('T')[0] : ''} 
+                    onChange={(e) => setEditedCertification({...editedCertification, issueDate: e.target.value})} 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="expiryDate">Expiry Date</Label>
+                  <Input 
+                    id="expiryDate" 
+                    type="date"
+                    value={editedCertification.expiryDate ? new Date(editedCertification.expiryDate).toISOString().split('T')[0] : ''} 
+                    onChange={(e) => setEditedCertification({...editedCertification, expiryDate: e.target.value})} 
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea 
+                  id="notes" 
+                  value={editedCertification.notes || ''} 
+                  onChange={(e) => setEditedCertification({...editedCertification, notes: e.target.value})}
+                  className="min-h-[100px]" 
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <Label>Requirements</Label>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleAddRequirement}
+                  >
+                    Add Requirement
+                  </Button>
+                </div>
+                
+                {editedCertification.requirements.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[150px]">Status</TableHead>
+                        <TableHead>Requirement</TableHead>
+                        <TableHead className="w-[100px] text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {editedCertification.requirements.map(req => (
+                        <TableRow key={req.id}>
+                          <TableCell>
+                            <Select 
+                              value={req.status} 
+                              onValueChange={(value) => handleRequirementChange(req.id, 'status', value)}
+                            >
+                              <SelectTrigger className="w-[120px]">
+                                <SelectValue placeholder="Status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="in-process">In Process</SelectItem>
+                                <SelectItem value="complete">Complete</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Input 
+                              value={req.name} 
+                              onChange={(e) => handleRequirementChange(req.id, 'name', e.target.value)}
+                              placeholder="Requirement description" 
+                            />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleRemoveRequirement(req.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center p-4 border border-dashed rounded-md">
+                    <p className="text-sm text-muted-foreground">No requirements added yet</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={handleAddRequirement}
+                    >
+                      Add Your First Requirement
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           
           <DialogFooter className="flex justify-between">
-            <Button variant="outline" onClick={() => setDetailsDialogOpen(false)}>Close</Button>
-            <div className="space-x-2">
-              <Button variant="outline">
-                <Pencil size={16} className="mr-2" />
-                Edit
-              </Button>
-              <Button variant="destructive">
-                <Trash2 size={16} className="mr-2" />
-                Delete
-              </Button>
-            </div>
+            {!editMode ? (
+              <>
+                <Button variant="outline" onClick={() => setDetailsDialogOpen(false)}>Close</Button>
+                <div className="space-x-2">
+                  <Button variant="outline" onClick={handleEditClick}>
+                    <Pencil size={16} className="mr-2" />
+                    Edit
+                  </Button>
+                  <Button variant="destructive">
+                    <Trash2 size={16} className="mr-2" />
+                    Delete
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
+                <Button onClick={handleSaveEdit}>
+                  <Save size={16} className="mr-2" />
+                  Save Changes
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
