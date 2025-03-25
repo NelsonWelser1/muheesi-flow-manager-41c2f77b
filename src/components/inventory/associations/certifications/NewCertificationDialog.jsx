@@ -10,8 +10,9 @@ import { CalendarIcon, Save } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { useCertifications } from "@/integrations/supabase/hooks/associations/useCertifications";
 
 const certificationTypes = [
   "Organic Certification",
@@ -49,6 +50,10 @@ const NewCertificationDialog = ({ open, onOpenChange, onSave }) => {
     ]
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { toast } = useToast();
+  const { createCertification } = useCertifications();
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -109,26 +114,7 @@ const NewCertificationDialog = ({ open, onOpenChange, onSave }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-    
-    // Process the form data
-    const newCertification = {
-      ...formData,
-      id: Date.now(), // Generate a temporary ID
-      progress: formData.status === 'in-process' ? 10 : 100, // Set initial progress
-    };
-    
-    onSave(newCertification);
-    toast({
-      title: "New certification added",
-      description: `${formData.name} has been successfully added.`,
-    });
-    
-    // Close dialog and reset form
-    onOpenChange(false);
+  const resetForm = () => {
     setFormData({
       name: '',
       issuer: '',
@@ -141,6 +127,39 @@ const NewCertificationDialog = ({ open, onOpenChange, onSave }) => {
       ]
     });
     setErrors({});
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Save to Supabase
+      const result = await createCertification(formData);
+      
+      if (result.success) {
+        // Call the parent component's onSave if provided
+        if (onSave) {
+          onSave(result.data);
+        }
+        
+        // Close dialog and reset form
+        resetForm();
+        onOpenChange(false);
+      }
+    } catch (error) {
+      console.error("Error saving certification:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save certification. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -313,12 +332,15 @@ const NewCertificationDialog = ({ open, onOpenChange, onSave }) => {
           </div>
           
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => {
+              resetForm();
+              onOpenChange(false);
+            }}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={isSubmitting}>
               <Save className="h-4 w-4 mr-2" />
-              Save Certification
+              {isSubmitting ? "Saving..." : "Save Certification"}
             </Button>
           </DialogFooter>
         </form>

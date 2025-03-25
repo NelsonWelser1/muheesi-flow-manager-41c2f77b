@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,78 +9,30 @@ import { CheckCircle, XCircle, AlertCircle, FileText, Upload, Calendar } from "l
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import NewCertificationDialog from './certifications/NewCertificationDialog';
 import { useToast } from "@/components/ui/use-toast";
+import { useCertifications } from "@/integrations/supabase/hooks/associations/useCertifications";
 
 const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
   const { toast } = useToast();
   const [activeCertTab, setActiveCertTab] = useState('current');
   const [dialogOpen, setDialogOpen] = useState(false);
   
-  // Sample certification data - would come from API/database in a real app
-  const [certifications, setCertifications] = useState([
-    {
-      id: 1,
-      name: 'Organic Certification',
-      issuer: 'ECOCERT',
-      status: 'valid',
-      issueDate: '2024-03-15',
-      expiryDate: '2025-03-14',
-      progress: 100,
-      requirements: [
-        { id: 1, name: 'No chemical inputs', status: 'complete' },
-        { id: 2, name: 'Buffer zones', status: 'complete' },
-        { id: 3, name: 'Soil management records', status: 'complete' },
-        { id: 4, name: 'No GMO crops', status: 'complete' }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Fair Trade Certification',
-      issuer: 'FLO-CERT',
-      status: 'valid',
-      issueDate: '2024-01-20',
-      expiryDate: '2026-01-19',
-      progress: 100,
-      requirements: [
-        { id: 1, name: 'Fair prices to farmers', status: 'complete' },
-        { id: 2, name: 'Democratic organization', status: 'complete' },
-        { id: 3, name: 'No child labor', status: 'complete' },
-        { id: 4, name: 'Environmental standards', status: 'complete' }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Rainforest Alliance',
-      issuer: 'Rainforest Alliance',
-      status: 'in-process',
-      issueDate: 'Pending',
-      expiryDate: 'Pending',
-      progress: 65,
-      requirements: [
-        { id: 1, name: 'Forest conservation', status: 'complete' },
-        { id: 2, name: 'Wildlife protection', status: 'complete' },
-        { id: 3, name: 'Water conservation', status: 'in-process' },
-        { id: 4, name: 'Community relations', status: 'pending' }
-      ]
-    },
-    {
-      id: 4,
-      name: 'UTZ Certified',
-      issuer: 'UTZ',
-      status: 'expiring-soon',
-      issueDate: '2023-05-10',
-      expiryDate: '2025-05-09',
-      progress: 100,
-      requirements: [
-        { id: 1, name: 'Good agricultural practices', status: 'complete' },
-        { id: 2, name: 'Safe working conditions', status: 'complete' },
-        { id: 3, name: 'No child labor', status: 'complete' },
-        { id: 4, name: 'Record keeping', status: 'complete' }
-      ]
-    }
-  ]);
+  const { 
+    certifications, 
+    loading, 
+    error, 
+    fetchCertifications, 
+    createCertification,
+    updateCertification,
+    deleteCertification
+  } = useCertifications();
+  
+  useEffect(() => {
+    fetchCertifications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   const handleAddCertification = (newCertification) => {
-    setCertifications(prev => [...prev, newCertification]);
+    setDialogOpen(false);
   };
   
   const getStatusBadge = (status) => {
@@ -111,7 +63,6 @@ const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
     }
   };
   
-  // Filter certifications based on active tab
   const filteredCertifications = certifications.filter(cert => {
     if (activeCertTab === 'current') {
       return cert.status === 'valid' || cert.status === 'expiring-soon';
@@ -122,6 +73,40 @@ const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
     }
     return true;
   });
+
+  if (loading && certifications.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Certifications Management</CardTitle>
+          <CardDescription>Loading certifications...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error && !loading && certifications.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Certifications Management</CardTitle>
+          <CardDescription>Error loading certifications</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col justify-center items-center h-64">
+            <AlertCircle size={48} className="text-red-500 mb-4" />
+            <p className="text-red-500">{error}</p>
+            <Button onClick={fetchCertifications} className="mt-4">Retry</Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -156,50 +141,65 @@ const AssociationCertifications = ({ isKazo, selectedAssociation }) => {
               <Button onClick={() => setDialogOpen(true)}>Apply for New Certification</Button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredCertifications.map(cert => (
-                <Card key={cert.id} className="overflow-hidden">
-                  <div className={`h-2 ${cert.status === 'valid' ? 'bg-green-500' : cert.status === 'expiring-soon' ? 'bg-amber-500' : cert.status === 'in-process' ? 'bg-blue-500' : 'bg-red-500'}`}></div>
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-lg">{cert.name}</h3>
-                        <p className="text-sm text-muted-foreground">Issued by: {cert.issuer}</p>
-                      </div>
-                      {getStatusBadge(cert.status)}
-                    </div>
-                    
-                    <div className="mt-4 space-y-4">
-                      <div className="flex justify-between text-sm">
-                        <span>Issue Date: {cert.issueDate}</span>
-                        <span>Expiry Date: {cert.expiryDate}</span>
-                      </div>
-                      
-                      {cert.status === 'in-process' && (
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Application Progress</span>
-                            <span>{cert.progress}%</span>
-                          </div>
-                          <Progress value={cert.progress} className="h-2" />
+            {filteredCertifications.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <FileText size={48} className="text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium mb-2">No certifications found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {activeCertTab === 'current' 
+                    ? "There are no current certifications." 
+                    : activeCertTab === 'in-process'
+                    ? "There are no certifications in process."
+                    : "There are no expired certifications."}
+                </p>
+                <Button onClick={() => setDialogOpen(true)}>Apply for New Certification</Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filteredCertifications.map(cert => (
+                  <Card key={cert.id} className="overflow-hidden">
+                    <div className={`h-2 ${cert.status === 'valid' ? 'bg-green-500' : cert.status === 'expiring-soon' ? 'bg-amber-500' : cert.status === 'in-process' ? 'bg-blue-500' : 'bg-red-500'}`}></div>
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-lg">{cert.name}</h3>
+                          <p className="text-sm text-muted-foreground">Issued by: {cert.issuer}</p>
                         </div>
-                      )}
-                      
-                      <div className="pt-2">
-                        <Button variant="outline" size="sm" className="mr-2">
-                          <FileText size={16} className="mr-2" />
-                          View Details
-                        </Button>
-                        
-                        {cert.status === 'expiring-soon' && (
-                          <Button size="sm">Renew Certification</Button>
-                        )}
+                        {getStatusBadge(cert.status)}
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      
+                      <div className="mt-4 space-y-4">
+                        <div className="flex justify-between text-sm">
+                          <span>Issue Date: {cert.issueDate ? new Date(cert.issueDate).toLocaleDateString() : 'Pending'}</span>
+                          <span>Expiry Date: {cert.expiryDate ? new Date(cert.expiryDate).toLocaleDateString() : 'Pending'}</span>
+                        </div>
+                        
+                        {cert.status === 'in-process' && (
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Application Progress</span>
+                              <span>{cert.progress}%</span>
+                            </div>
+                            <Progress value={cert.progress} className="h-2" />
+                          </div>
+                        )}
+                        
+                        <div className="pt-2">
+                          <Button variant="outline" size="sm" className="mr-2">
+                            <FileText size={16} className="mr-2" />
+                            View Details
+                          </Button>
+                          
+                          {cert.status === 'expiring-soon' && (
+                            <Button size="sm">Renew Certification</Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="requirements" className="space-y-6">

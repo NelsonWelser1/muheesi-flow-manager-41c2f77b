@@ -59,6 +59,7 @@ import { usePaymentsReceipts } from './hooks/accounting/payments/usePaymentsRece
 // Import association hooks
 import { useAssociationMembers } from '@/hooks/useAssociationMembers';
 import { useAssociationForm } from '@/hooks/useAssociationForm';
+import { useCertifications } from './hooks/associations/useCertifications';
 
 // Export everything individually
 export {
@@ -113,4 +114,5 @@ export {
     // Association hooks
     useAssociationForm,
     useAssociationMembers,
+    useCertifications,
 };
