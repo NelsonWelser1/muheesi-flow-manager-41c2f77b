@@ -1,68 +1,127 @@
-
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from "@/components/ui/card";
+import UpdateStock from '../components/inventory/UpdateStock';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import EquatorExportManagement from '../components/inventory/kajon/equator-export/EquatorExportManagement';
-
+import { ArrowLeft, Home, LogOut, Clock } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+const companies = [{
+  name: "Grand Berna Dairies",
+  description: "Raw Milk, Processed Milk, Cheese, Yogurt, Packed Meat of Beef, Pork, and Goat. Factories in Kyiboga and Mbarara with various outlets.",
+  component: "grand-berna"
+}, {
+  name: "KAJON Coffee Limited",
+  description: "Robusta and Arabica Coffee, Kakyinga Coffee Farm, Kakyinga Factory, JBER, and additional stores and projects.",
+  component: "kajon-coffee"
+}, {
+  name: "Kyalima Farmers Limited",
+  description: "Assets and Cooperations, Agri-Business.",
+  component: "kyalima-farmers"
+}, {
+  name: "Kashari Mixed Farm",
+  description: "Integrated farm in Mbarara managing dairy products, livestock, banana plantation, and scholarship programs.",
+  component: "kashari-mixed-farm",
+  contact: "+256 782 222993",
+  manager: "Asiimwe Daniel",
+  location: "Mbarara"
+}, {
+  name: "Bukomero Dairy Farm",
+  description: "Specialized dairy farm focusing on milk production, livestock management, silage making, and comprehensive financial tracking.",
+  component: "bukomero-dairy",
+  manager: "Manager Boaz",
+  contact: "+256 772 674060",
+  location: "Bukomero, Kyiboga District",
+  financials: {
+    milkSales: "UGX 3,140,000",
+    livestockSales: "UGX 67,900,000",
+    expenses: "UGX 2,000,000"
+  }
+}];
 const ManageInventory = () => {
+  const [selectedCompany, setSelectedCompany] = useState(null);
   const navigate = useNavigate();
-  const [activeApp, setActiveApp] = useState(null);
-
-  const inventoryApps = [
-    {
-      title: "Kazon Coffee Project",
-      description: "Manage Kazon Coffee Project inventory, stock levels, and distribution",
-      path: "/manage-inventory/kazon-coffee"
-    },
-    {
-      title: "Dairy Cheese Factory",
-      description: "Manage dairy cheese factory inventory, production, and distribution",
-      path: "/manage-inventory/dairy-cheese"
-    },
-    {
-      title: "Equator Coffee Export Management System",
-      description: "Comprehensive export management system for coffee trading and international sales",
-      component: EquatorExportManagement
-    }
-  ];
-
-  const handleAppSelection = (app, index) => {
-    if (app.path) {
-      navigate(app.path);
-    } else if (app.component) {
-      setActiveApp(index);
+  const currentUser = {
+    name: "John Doe",
+    role: "Inventory Manager"
+  };
+  const handleCompanyClick = company => {
+    if (company.component === 'kashari-mixed-farm') {
+      navigate('/manage-inventory/kashari-farm');
+    } else if (company.component === 'bukomero-dairy') {
+      navigate('/manage-inventory/bukomero-dairy');
+    } else {
+      setSelectedCompany(company);
     }
   };
-
-  return (
-    <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-3xl font-bold mb-6">Inventory Management</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {inventoryApps.map((app, index) => (
-          <Card 
-            key={index}
-            className="cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => handleAppSelection(app, index)}
-          >
-            <CardContent className="p-6">
-              <h2 className="text-xl font-semibold mb-2">{app.title}</h2>
-              <p className="text-gray-600 mb-4">{app.description}</p>
-              <Button>Open Application</Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      
-      {activeApp !== null && inventoryApps[activeApp].component && (
-        <div className="mt-8">
-          <h2 className="text-2xl font-semibold mb-4">{inventoryApps[activeApp].title}</h2>
-          {React.createElement(inventoryApps[activeApp].component)}
+  const handleBackToCompanies = () => {
+    setSelectedCompany(null);
+  };
+  if (selectedCompany) {
+    return <div className="container mx-auto p-4">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" onClick={handleBackToCompanies}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Companies
+            </Button>
+            <h1 className="text-3xl font-bold">{selectedCompany.name}</h1>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-600">
+              <div>{currentUser.name}</div>
+              <div>{currentUser.role}</div>
+            </div>
+            <div className="text-sm text-gray-600">
+              <Clock className="inline mr-2" />
+              {format(new Date(), 'PPpp')}
+            </div>
+            <Button variant="outline" onClick={() => navigate('/home')}>
+              <Home className="h-4 w-4 mr-2" />
+              Home
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/logout')}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Log Out
+            </Button>
+          </div>
         </div>
-      )}
-    </div>
-  );
-};
 
+        <Card className="w-full">
+          <CardContent className="p-6">
+            <UpdateStock defaultTab={selectedCompany.component} />
+          </CardContent>
+        </Card>
+      </div>;
+  }
+  return <div className="container mx-auto p-4">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Manage Inventory</h1>
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-600">
+            <Clock className="inline mr-2" />
+            {format(new Date(), 'PPpp')}
+          </div>
+          <Button variant="outline" onClick={() => navigate('/home')}>
+            <Home className="h-4 w-4 mr-2" />
+            Home
+          </Button>
+        </div>
+      </div>
+      <div className="flex flex-col space-y-4">
+        {companies.map(company => <Card key={company.name} onClick={() => handleCompanyClick(company)} className="w-full cursor-pointer hover:shadow-lg transition-shadow bg-[#e7f5e7]">
+            <CardHeader className="my-[10px] bg-[#f6f9f6] rounded-none">
+              <CardTitle className="flex justify-between items-start">
+                <span>{company.name}</span>
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-2">{company.description}</p>
+              {(company.manager || company.contact || company.location) && <div className="mt-2 text-sm">
+                  {company.manager && <p><strong>Manager:</strong> {company.manager}</p>}
+                  {company.contact && <p><strong>Contact:</strong> {company.contact}</p>}
+                  {company.location && <p><strong>Location:</strong> {company.location}</p>}
+                </div>}
+            </CardHeader>
+          </Card>)}
+      </div>
+    </div>;
+};
 export default ManageInventory;
