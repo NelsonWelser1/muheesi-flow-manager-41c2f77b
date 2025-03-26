@@ -218,6 +218,7 @@ export const useCoffeeStockTransfers = () => {
     handleSearch,
     handleSort,
     handleRefresh,
+    fetchTransfers,
     submitTransfer
   };
 };
