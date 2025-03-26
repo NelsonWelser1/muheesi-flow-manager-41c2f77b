@@ -44,7 +44,7 @@ const KAJONCoffeeLimited = () => {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-[2px] bg-yellow-50">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-yellow-50 px-[240px] py-[30px] mx-[145px] my-0">
               <Button variant="outline" className="h-32 flex flex-col items-center justify-center space-y-2" onClick={() => setSelectedSystem('coffee-management')}>
                 <Coffee className="h-8 w-8" />
                 <span className="text-lg font-semibold">KAJON Coffee Limited Management</span>
