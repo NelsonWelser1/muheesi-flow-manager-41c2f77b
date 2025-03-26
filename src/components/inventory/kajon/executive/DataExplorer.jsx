@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,8 +11,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { useDebounce } from '@/hooks/useDebounce';
 import { exportToCSV, exportToExcel, exportToPDF } from '@/utils/coffee/coffeeExport';
 
-const DataExplorer = ({ dataSources, fetchData }) => {
-  const [selectedDataSource, setSelectedDataSource] = useState(dataSources[0]);
+const DataExplorer = ({ dataSources = [], fetchData }) => {
+  const [selectedDataSource, setSelectedDataSource] = useState(dataSources && dataSources.length > 0 ? dataSources[0] : '');
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,6 +23,8 @@ const DataExplorer = ({ dataSources, fetchData }) => {
   const columns = React.useMemo(() => {
     if (!data || data.length === 0) return [];
     const firstItem = data[0];
+    if (!firstItem) return [];
+    
     return Object.keys(firstItem).map(key => ({
       accessorKey: key,
       header: key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase()),
@@ -29,10 +32,12 @@ const DataExplorer = ({ dataSources, fetchData }) => {
   }, [data]);
 
   const fetchDataFromSource = useCallback(async (source) => {
+    if (!source) return;
+    
     setIsLoading(true);
     try {
       const fetchedData = await fetchData(source);
-      setData(fetchedData);
+      setData(Array.isArray(fetchedData) ? fetchedData : []);
     } catch (error) {
       console.error("Failed to fetch data:", error);
       toast({
@@ -61,7 +66,10 @@ const DataExplorer = ({ dataSources, fetchData }) => {
     const lowerCaseSearchTerm = debouncedSearchTerm.toLowerCase();
     const results = data.filter(item =>
       Object.values(item).some(value =>
-        typeof value === 'string' && value.toLowerCase().includes(lowerCaseSearchTerm)
+        value !== null && 
+        value !== undefined && 
+        typeof value === 'string' && 
+        value.toLowerCase().includes(lowerCaseSearchTerm)
       )
     );
     setFilteredData(results);
@@ -82,11 +90,13 @@ const DataExplorer = ({ dataSources, fetchData }) => {
     }
 
     try {
-      const exportFilename = `${selectedDataSource.toLowerCase().replace(/\s+/g, '-')}-data`;
+      // Make sure selectedDataSource is a string before using string methods
+      const sourceName = typeof selectedDataSource === 'string' ? selectedDataSource : 'data';
+      const exportFilename = `${sourceName.toLowerCase().replace(/\s+/g, '-')}-data`;
       
       switch (format) {
         case 'pdf':
-          exportToPDF(filteredData, exportFilename, selectedDataSource.toLowerCase());
+          exportToPDF(filteredData, exportFilename, sourceName.toLowerCase());
           break;
         case 'excel':
           exportToExcel(filteredData, exportFilename);
@@ -126,7 +136,7 @@ const DataExplorer = ({ dataSources, fetchData }) => {
                 <SelectValue placeholder="Select a data source" />
               </SelectTrigger>
               <SelectContent>
-                {dataSources.map((source) => (
+                {Array.isArray(dataSources) && dataSources.map((source) => (
                   <SelectItem key={source} value={source}>
                     {source}
                   </SelectItem>
@@ -169,19 +179,23 @@ const DataExplorer = ({ dataSources, fetchData }) => {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center">Loading...</TableCell>
+                    <TableCell colSpan={columns.length || 1} className="text-center">Loading...</TableCell>
                   </TableRow>
                 ) : filteredData && filteredData.length > 0 ? (
                   filteredData.map((row, index) => (
                     <TableRow key={index}>
                       {columns.map((column) => (
-                        <TableCell key={column.accessorKey}>{String(row[column.accessorKey])}</TableCell>
+                        <TableCell key={column.accessorKey}>
+                          {row[column.accessorKey] !== null && row[column.accessorKey] !== undefined 
+                            ? String(row[column.accessorKey]) 
+                            : ''}
+                        </TableCell>
                       ))}
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center">No results found.</TableCell>
+                    <TableCell colSpan={columns.length || 1} className="text-center">No results found.</TableCell>
                   </TableRow>
                 )}
               </TableBody>
