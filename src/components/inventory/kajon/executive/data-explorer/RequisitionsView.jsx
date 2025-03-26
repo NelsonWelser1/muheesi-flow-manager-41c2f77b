@@ -2,142 +2,64 @@
 import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { List, RefreshCcw, Download, Filter, Wrench, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { List, RefreshCcw, Download, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from '@/integrations/supabase/supabase';
+import { useRequisitions } from '@/hooks/useRequisitions';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { exportToPDF, exportToExcel, exportToCSV } from '@/utils/coffee/coffeeExport';
 
-const RequisitionsView = ({ isLoading, handleRefresh }) => {
-  const [requisitions, setRequisitions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+const RequisitionsView = ({ isLoading: parentLoading, handleRefresh: parentRefresh, timeRange, searchTerm, onExport }) => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [urgencyFilter, setUrgencyFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState({ field: 'created_at', ascending: false });
+  
+  const {
+    requisitions,
+    loading,
+    error,
+    fetchRequisitions
+  } = useRequisitions();
 
-  const fetchRequisitions = async () => {
-    setLoading(true);
-    try {
-      // In a real implementation, we would fetch actual requisition data from Supabase
-      // For now, we'll use mock data since the table may not exist yet
-      
-      // Mock requisition data
-      const mockRequisitions = [
-        {
-          id: 1,
-          requesterName: 'David Muwanguzi',
-          department: 'Coffee Processing',
-          requisitionType: 'tools',
-          tools: 'Coffee Moisture Meter, Digital Scale 100kg',
-          repairs: '',
-          justification: 'Need accurate moisture measurement during harvest season.',
-          urgencyLevel: 'high',
-          status: 'approved',
-          approvedBy: 'John Mugisha',
-          approvedDate: '2024-06-30T14:20:00Z',
-          created_at: '2024-06-25T09:15:00Z'
-        },
-        {
-          id: 2,
-          requesterName: 'Sarah Kyomuhendo',
-          department: 'Quality Control',
-          requisitionType: 'tools',
-          tools: 'Cupping Equipment Set, Sample Roaster',
-          repairs: '',
-          justification: 'For quality assessment of latest batch of Arabica.',
-          urgencyLevel: 'medium',
-          status: 'pending',
-          approvedBy: '',
-          approvedDate: '',
-          created_at: '2024-07-01T11:30:00Z'
-        },
-        {
-          id: 3,
-          requesterName: 'Robert Asiimwe',
-          department: 'Storage & Warehouse',
-          requisitionType: 'repairs',
-          tools: '',
-          repairs: 'Coffee Sorting Machine - Motor overheating issue',
-          justification: 'Machine shuts down after 2 hours. Affects processing capacity during peak season.',
-          urgencyLevel: 'high',
-          status: 'in-progress',
-          approvedBy: 'John Mugisha',
-          approvedDate: '2024-06-28T10:45:00Z',
-          created_at: '2024-06-27T08:20:00Z'
-        },
-        {
-          id: 4,
-          requesterName: 'Mary Namuli',
-          department: 'Farm Management',
-          requisitionType: 'tools',
-          tools: 'Pruning Shears (10 sets), Harvesting Baskets (20)',
-          repairs: '',
-          justification: 'Preparation for upcoming harvest season in Kanoni area.',
-          urgencyLevel: 'low',
-          status: 'declined',
-          approvedBy: 'Peter Mutebi',
-          approvedDate: '2024-06-15T15:30:00Z',
-          created_at: '2024-06-12T09:45:00Z'
-        }
-      ];
-      
-      // Apply filters
-      let filteredData = mockRequisitions;
-      
-      // Apply search filter
-      if (searchTerm) {
-        const lowercaseSearch = searchTerm.toLowerCase();
-        filteredData = filteredData.filter(item => 
-          item.requesterName?.toLowerCase().includes(lowercaseSearch) ||
-          item.department?.toLowerCase().includes(lowercaseSearch) ||
-          item.tools?.toLowerCase().includes(lowercaseSearch) ||
-          item.repairs?.toLowerCase().includes(lowercaseSearch) ||
-          item.justification?.toLowerCase().includes(lowercaseSearch)
-        );
-      }
-      
-      // Apply status filter
-      if (statusFilter !== 'all') {
-        filteredData = filteredData.filter(item => item.status === statusFilter);
-      }
-      
-      // Apply type filter
-      if (typeFilter !== 'all') {
-        filteredData = filteredData.filter(item => item.requisitionType === typeFilter);
-      }
-      
-      // Apply urgency filter
-      if (urgencyFilter !== 'all') {
-        filteredData = filteredData.filter(item => item.urgencyLevel === urgencyFilter);
-      }
-      
-      // Sort the data
-      filteredData.sort((a, b) => {
-        const aValue = a[sortConfig.field] || '';
-        const bValue = b[sortConfig.field] || '';
-        
-        if (aValue < bValue) {
-          return sortConfig.ascending ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.ascending ? 1 : -1;
-        }
-        return 0;
-      });
-      
-      setRequisitions(filteredData);
-    } catch (error) {
-      console.error('Error fetching requisitions:', error);
-    } finally {
-      setLoading(false);
-    }
+  // Fetch requisitions when filters change
+  useEffect(() => {
+    fetchRequisitions({ 
+      timeRange, 
+      searchTerm, 
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      requisitionType: typeFilter !== 'all' ? typeFilter : undefined
+    });
+  }, [timeRange, searchTerm, statusFilter, typeFilter]);
+
+  const handleSort = (field) => {
+    setSortConfig(prevConfig => ({
+      field,
+      ascending: prevConfig.field === field ? !prevConfig.ascending : true
+    }));
   };
 
-  useEffect(() => {
-    fetchRequisitions();
-  }, [searchTerm, statusFilter, typeFilter, urgencyFilter, sortConfig]);
+  // Apply client-side sorting
+  const sortedRequisitions = React.useMemo(() => {
+    if (!requisitions) return [];
+    
+    return [...requisitions].sort((a, b) => {
+      const aValue = a[sortConfig.field] || '';
+      const bValue = b[sortConfig.field] || '';
+      
+      if (aValue < bValue) {
+        return sortConfig.ascending ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.ascending ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [requisitions, sortConfig]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -151,7 +73,26 @@ const RequisitionsView = ({ isLoading, handleRefresh }) => {
     }).format(date);
   };
 
-  // Function to render status badge
+  // Handle local exports
+  const handleExport = (format) => {
+    const filename = `requisitions_${new Date().toISOString().split('T')[0]}`;
+    
+    switch (format) {
+      case 'pdf':
+        exportToPDF(sortedRequisitions, filename, 'requisitions');
+        break;
+      case 'excel':
+        exportToExcel(sortedRequisitions, filename);
+        break;
+      case 'csv':
+        exportToCSV(sortedRequisitions, filename);
+        break;
+      default:
+        console.error('Unsupported export format:', format);
+    }
+  };
+
+  // Function to render the status badge
   const getStatusBadge = (status) => {
     switch (status?.toLowerCase()) {
       case 'approved':
@@ -159,29 +100,23 @@ const RequisitionsView = ({ isLoading, handleRefresh }) => {
         return (
           <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
             <CheckCircle className="h-3 w-3" />
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {status}
           </Badge>
         );
       case 'pending':
-        return (
-          <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            Pending
-          </Badge>
-        );
-      case 'in-progress':
+      case 'in progress':
         return (
           <Badge className="bg-amber-100 text-amber-800 flex items-center gap-1">
-            <Wrench className="h-3 w-3" />
-            In Progress
+            <Clock className="h-3 w-3" />
+            {status}
           </Badge>
         );
-      case 'declined':
       case 'rejected':
+      case 'declined':
         return (
           <Badge className="bg-red-100 text-red-800 flex items-center gap-1">
             <AlertTriangle className="h-3 w-3" />
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {status}
           </Badge>
         );
       default:
@@ -191,30 +126,31 @@ const RequisitionsView = ({ isLoading, handleRefresh }) => {
     }
   };
 
-  // Function to render urgency badge
+  // Function to render the urgency badge
   const getUrgencyBadge = (urgency) => {
     switch (urgency?.toLowerCase()) {
       case 'high':
+      case 'critical':
         return (
           <Badge className="bg-red-100 text-red-800">
-            High
+            {urgency}
           </Badge>
         );
       case 'medium':
         return (
           <Badge className="bg-amber-100 text-amber-800">
-            Medium
+            {urgency}
           </Badge>
         );
       case 'low':
         return (
           <Badge className="bg-green-100 text-green-800">
-            Low
+            {urgency}
           </Badge>
         );
       default:
         return (
-          <Badge variant="outline">{urgency || 'Unknown'}</Badge>
+          <Badge variant="outline">{urgency || 'Normal'}</Badge>
         );
     }
   };
@@ -222,11 +158,16 @@ const RequisitionsView = ({ isLoading, handleRefresh }) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Kazo Coffee Project Requisitions</h2>
+        <h2 className="text-xl font-semibold">Kazo Coffee Requisitions</h2>
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={fetchRequisitions}
+          onClick={() => fetchRequisitions({ 
+            timeRange, 
+            searchTerm, 
+            status: statusFilter !== 'all' ? statusFilter : undefined,
+            requisitionType: typeFilter !== 'all' ? typeFilter : undefined
+          })}
           disabled={loading}
         >
           <RefreshCcw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -234,18 +175,8 @@ const RequisitionsView = ({ isLoading, handleRefresh }) => {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-3 mb-4">
-        <div className="flex-1 min-w-[200px]">
-          <Input
-            type="text"
-            placeholder="Search requisitions..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full"
-          />
-        </div>
-        
-        <div className="w-[140px]">
+      <div className="flex flex-wrap gap-4 mb-4">
+        <div className="w-40">
           <Select 
             value={statusFilter} 
             onValueChange={setStatusFilter}
@@ -257,14 +188,13 @@ const RequisitionsView = ({ isLoading, handleRefresh }) => {
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="in-progress">In Progress</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="declined">Declined</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
             </SelectContent>
           </Select>
         </div>
         
-        <div className="w-[140px]">
+        <div className="w-40">
           <Select 
             value={typeFilter} 
             onValueChange={setTypeFilter}
@@ -275,36 +205,37 @@ const RequisitionsView = ({ isLoading, handleRefresh }) => {
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="tools">Tools</SelectItem>
+              <SelectItem value="machinery">Machinery</SelectItem>
               <SelectItem value="repairs">Repairs</SelectItem>
+              <SelectItem value="supplies">Supplies</SelectItem>
             </SelectContent>
           </Select>
         </div>
         
-        <div className="w-[140px]">
-          <Select 
-            value={urgencyFilter} 
-            onValueChange={setUrgencyFilter}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Urgency" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Urgency</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex items-center gap-1"
-        >
-          <Download className="h-4 w-4" />
-          Export
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1"
+              disabled={!sortedRequisitions.length}
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => handleExport('pdf')}>
+              Export as PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport('excel')}>
+              Export as Excel
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport('csv')}>
+              Export as CSV
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {loading ? (
@@ -312,7 +243,7 @@ const RequisitionsView = ({ isLoading, handleRefresh }) => {
           <div className="animate-spin h-8 w-8 border-4 border-amber-500 rounded-full border-t-transparent"></div>
           <p className="ml-2 text-amber-800">Loading requisitions...</p>
         </div>
-      ) : requisitions.length === 0 ? (
+      ) : sortedRequisitions.length === 0 ? (
         <div className="bg-gray-50 p-8 rounded-lg border border-gray-200 text-center">
           <List className="h-12 w-12 mx-auto text-amber-400 mb-3" />
           <h3 className="text-lg font-medium text-gray-700 mb-1">No Requisitions Found</h3>
@@ -323,54 +254,53 @@ const RequisitionsView = ({ isLoading, handleRefresh }) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[180px]">
-                  <Button variant="ghost" size="sm" onClick={() => setSortConfig({ field: 'created_at', ascending: !sortConfig.ascending })} className="flex items-center">
+                <TableHead className="w-[150px]">
+                  <Button variant="ghost" size="sm" onClick={() => handleSort('created_at')} className="flex items-center">
                     Date
                   </Button>
                 </TableHead>
                 <TableHead>
-                  <Button variant="ghost" size="sm" onClick={() => setSortConfig({ field: 'requesterName', ascending: !sortConfig.ascending })} className="flex items-center">
+                  <Button variant="ghost" size="sm" onClick={() => handleSort('requester_name')} className="flex items-center">
                     Requester
                   </Button>
                 </TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Items / Repairs Needed</TableHead>
-                <TableHead>Urgency</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Approval</TableHead>
+                <TableHead>
+                  <Button variant="ghost" size="sm" onClick={() => handleSort('department')} className="flex items-center">
+                    Department
+                  </Button>
+                </TableHead>
+                <TableHead>
+                  <Button variant="ghost" size="sm" onClick={() => handleSort('requisition_type')} className="flex items-center">
+                    Type
+                  </Button>
+                </TableHead>
+                <TableHead>Details</TableHead>
+                <TableHead>
+                  <Button variant="ghost" size="sm" onClick={() => handleSort('urgency_level')} className="flex items-center">
+                    Urgency
+                  </Button>
+                </TableHead>
+                <TableHead>
+                  <Button variant="ghost" size="sm" onClick={() => handleSort('status')} className="flex items-center">
+                    Status
+                  </Button>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {requisitions.map((req) => (
+              {sortedRequisitions.map((req) => (
                 <TableRow key={req.id}>
                   <TableCell className="font-medium">{formatDate(req.created_at)}</TableCell>
-                  <TableCell>{req.requesterName}</TableCell>
+                  <TableCell>{req.requester_name}</TableCell>
                   <TableCell>{req.department}</TableCell>
-                  <TableCell>
-                    {req.requisitionType === 'tools' ? (
-                      <Badge className="bg-blue-100 text-blue-800">Tools</Badge>
-                    ) : (
-                      <Badge className="bg-purple-100 text-purple-800">Repairs</Badge>
-                    )}
-                  </TableCell>
+                  <TableCell>{req.requisition_type}</TableCell>
                   <TableCell>
                     <span className="line-clamp-2 text-sm">
-                      {req.requisitionType === 'tools' ? req.tools : req.repairs}
+                      {req.tools_machinery || req.repairs || req.justification || 'No details provided'}
                     </span>
                   </TableCell>
-                  <TableCell>{getUrgencyBadge(req.urgencyLevel)}</TableCell>
+                  <TableCell>{getUrgencyBadge(req.urgency_level)}</TableCell>
                   <TableCell>{getStatusBadge(req.status)}</TableCell>
-                  <TableCell>
-                    {req.approvedBy ? (
-                      <div className="flex flex-col">
-                        <span className="text-sm">{req.approvedBy}</span>
-                        <span className="text-xs text-gray-500">{formatDate(req.approvedDate)}</span>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-500">Not yet approved</span>
-                    )}
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

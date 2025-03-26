@@ -20,13 +20,31 @@ export const useFarmData = () => {
         .select('*')
         .order('created_at', { ascending: false });
       
-      // Apply filters if provided
+      // Apply time range filter if provided
+      if (filters.timeRange && filters.timeRange !== 'all') {
+        const timeMap = {
+          'hour': 1/24,
+          'day': 1,
+          'week': 7,
+          'month': 30,
+          'year': 365
+        };
+        
+        if (timeMap[filters.timeRange]) {
+          const startDate = new Date();
+          startDate.setDate(startDate.getDate() - timeMap[filters.timeRange]);
+          query = query.gte('created_at', startDate.toISOString());
+        }
+      }
+      
+      // Apply search filter if provided
       if (filters.searchTerm) {
         query = query.or(`
           farm_name.ilike.%${filters.searchTerm}%,
           manager_name.ilike.%${filters.searchTerm}%,
           supervisor_name.ilike.%${filters.searchTerm}%,
-          coffee_type.ilike.%${filters.searchTerm}%
+          coffee_type.ilike.%${filters.searchTerm}%,
+          location.ilike.%${filters.searchTerm}%
         `);
       }
       

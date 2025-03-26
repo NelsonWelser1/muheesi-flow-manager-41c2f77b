@@ -6,55 +6,34 @@ import { Input } from "@/components/ui/input";
 import { FileText, RefreshCcw, Download, MessageSquare, Mail, Phone } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from '@/integrations/supabase/supabase';
+import { useReportsData } from '@/hooks/useReportsData';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { exportToPDF, exportToExcel, exportToCSV } from '@/utils/coffee/coffeeExport';
 
-const ReportsView = ({ isLoading, handleRefresh }) => {
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ field: 'created_at', ascending: false });
+const ReportsView = ({ isLoading: parentLoading, handleRefresh: parentRefresh, timeRange, searchTerm, onExport }) => {
   const [typeFilter, setTypeFilter] = useState('all');
-
-  const fetchReports = async () => {
-    setLoading(true);
-    try {
-      // Query Supabase for reports
-      let query = supabase
-        .from('kazo_coffee_reports')
-        .select('*')
-        .order(sortConfig.field, { ascending: sortConfig.ascending });
-      
-      // Apply type filter if not 'all'
-      if (typeFilter !== 'all') {
-        query = query.eq('report_type', typeFilter);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Error fetching reports:', error);
-        throw error;
-      }
-      
-      // Apply search filter client-side
-      let filteredData = data;
-      if (searchTerm) {
-        const lowercaseSearch = searchTerm.toLowerCase();
-        filteredData = data.filter(report => 
-          report.title?.toLowerCase().includes(lowercaseSearch) ||
-          report.content?.toLowerCase().includes(lowercaseSearch) ||
-          report.recipient_name?.toLowerCase().includes(lowercaseSearch) ||
-          report.report_type?.toLowerCase().includes(lowercaseSearch)
-        );
-      }
-      
-      setReports(filteredData || []);
-    } catch (error) {
-      console.error('Error in fetchReports:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [sortConfig, setSortConfig] = useState({ field: 'created_at', ascending: false });
+  
+  const {
+    reports,
+    loading,
+    error,
+    fetchReports
+  } = useReportsData();
+  
+  // Fetch reports when filters change
+  useEffect(() => {
+    fetchReports({ 
+      timeRange, 
+      searchTerm, 
+      reportType: typeFilter 
+    });
+  }, [timeRange, searchTerm, typeFilter]);
 
   // Sort handler
   const handleSort = (field) => {
@@ -64,9 +43,23 @@ const ReportsView = ({ isLoading, handleRefresh }) => {
     }));
   };
 
-  useEffect(() => {
-    fetchReports();
-  }, [sortConfig, typeFilter, searchTerm]);
+  // Apply client-side sorting
+  const sortedReports = React.useMemo(() => {
+    if (!reports) return [];
+    
+    return [...reports].sort((a, b) => {
+      const aValue = a[sortConfig.field] || '';
+      const bValue = b[sortConfig.field] || '';
+      
+      if (aValue < bValue) {
+        return sortConfig.ascending ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.ascending ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [reports, sortConfig]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -108,6 +101,25 @@ const ReportsView = ({ isLoading, handleRefresh }) => {
     );
   };
 
+  // Handle local exports
+  const handleExport = (format) => {
+    const filename = `coffee_reports_${new Date().toISOString().split('T')[0]}`;
+    
+    switch (format) {
+      case 'pdf':
+        exportToPDF(sortedReports, filename, 'reports');
+        break;
+      case 'excel':
+        exportToExcel(sortedReports, filename);
+        break;
+      case 'csv':
+        exportToCSV(sortedReports, filename);
+        break;
+      default:
+        console.error('Unsupported export format:', format);
+    }
+  };
+
   const reportTypes = [
     'All Types',
     'Daily Stock Summary',
@@ -125,7 +137,7 @@ const ReportsView = ({ isLoading, handleRefresh }) => {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={fetchReports}
+          onClick={() => fetchReports({ timeRange, searchTerm, reportType: typeFilter })}
           disabled={loading}
         >
           <RefreshCcw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -133,16 +145,7 @@ const ReportsView = ({ isLoading, handleRefresh }) => {
         </Button>
       </div>
 
-      <div className="flex space-x-4 mb-4">
-        <div className="relative flex-1">
-          <Input
-            type="text"
-            placeholder="Search reports..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pr-10"
-          />
-        </div>
+      <div className="flex flex-wrap gap-2 mb-4">
         <div className="w-48">
           <Select 
             value={typeFilter} 
@@ -159,14 +162,31 @@ const ReportsView = ({ isLoading, handleRefresh }) => {
             </SelectContent>
           </Select>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex items-center gap-1"
-        >
-          <Download className="h-4 w-4" />
-          Export
-        </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1"
+              disabled={!sortedReports.length}
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => handleExport('pdf')}>
+              Export as PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport('excel')}>
+              Export as Excel
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport('csv')}>
+              Export as CSV
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {loading ? (
@@ -174,7 +194,7 @@ const ReportsView = ({ isLoading, handleRefresh }) => {
           <div className="animate-spin h-8 w-8 border-4 border-amber-500 rounded-full border-t-transparent"></div>
           <p className="ml-2 text-amber-800">Loading reports...</p>
         </div>
-      ) : reports.length === 0 ? (
+      ) : sortedReports.length === 0 ? (
         <div className="bg-gray-50 p-8 rounded-lg border border-gray-200 text-center">
           <FileText className="h-12 w-12 mx-auto text-amber-400 mb-3" />
           <h3 className="text-lg font-medium text-gray-700 mb-1">No Reports Found</h3>
@@ -210,7 +230,7 @@ const ReportsView = ({ isLoading, handleRefresh }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {reports.map((report) => (
+              {sortedReports.map((report) => (
                 <TableRow key={report.id}>
                   <TableCell className="font-medium">{formatDate(report.created_at)}</TableCell>
                   <TableCell>{report.title}</TableCell>

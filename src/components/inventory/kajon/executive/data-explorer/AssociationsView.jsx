@@ -2,14 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Users, RefreshCcw, Download, Filter, Coffee } from 'lucide-react';
+import { Users, RefreshCcw, Download, Coffee } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAssociationsData } from '@/hooks/useAssociationsData';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { exportToPDF, exportToExcel, exportToCSV } from '@/utils/coffee/coffeeExport';
 
-const AssociationsView = ({ isLoading: parentLoading, handleRefresh: parentRefresh }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+const AssociationsView = ({ isLoading: parentLoading, handleRefresh: parentRefresh, timeRange, searchTerm, onExport }) => {
   const [associationTypeFilter, setAssociationTypeFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState({ field: 'created_at', ascending: false });
   
@@ -20,15 +25,14 @@ const AssociationsView = ({ isLoading: parentLoading, handleRefresh: parentRefre
     fetchAssociations 
   } = useAssociationsData();
 
-  const handleSearch = (term) => {
-    setSearchTerm(term);
-    fetchAssociations({ searchTerm: term, associationType: associationTypeFilter });
-  };
-
-  const handleAssociationTypeChange = (type) => {
-    setAssociationTypeFilter(type);
-    fetchAssociations({ searchTerm, associationType: type });
-  };
+  // Fetch associations when filters change
+  useEffect(() => {
+    fetchAssociations({ 
+      timeRange, 
+      searchTerm, 
+      associationType: associationTypeFilter 
+    });
+  }, [timeRange, searchTerm, associationTypeFilter]);
 
   const handleSort = (field) => {
     setSortConfig(prevConfig => ({
@@ -37,11 +41,23 @@ const AssociationsView = ({ isLoading: parentLoading, handleRefresh: parentRefre
     }));
   };
 
-  useEffect(() => {
-    // Sort the data client-side based on sort config
-    // This is just for client-side sorting visualization
-    // The actual data fetching with server-side sorting is happening in the hook
-  }, [sortConfig]);
+  // Apply client-side sorting
+  const sortedAssociations = React.useMemo(() => {
+    if (!associations) return [];
+    
+    return [...associations].sort((a, b) => {
+      const aValue = a[sortConfig.field] || '';
+      const bValue = b[sortConfig.field] || '';
+      
+      if (aValue < bValue) {
+        return sortConfig.ascending ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.ascending ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [associations, sortConfig]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -51,6 +67,25 @@ const AssociationsView = ({ isLoading: parentLoading, handleRefresh: parentRefre
       month: 'short',
       day: '2-digit'
     }).format(date);
+  };
+
+  // Handle local exports
+  const handleExport = (format) => {
+    const filename = `coffee_associations_${new Date().toISOString().split('T')[0]}`;
+    
+    switch (format) {
+      case 'pdf':
+        exportToPDF(sortedAssociations, filename, 'associations');
+        break;
+      case 'excel':
+        exportToExcel(sortedAssociations, filename);
+        break;
+      case 'csv':
+        exportToCSV(sortedAssociations, filename);
+        break;
+      default:
+        console.error('Unsupported export format:', format);
+    }
   };
 
   // Function to render the association type badge
@@ -119,7 +154,7 @@ const AssociationsView = ({ isLoading: parentLoading, handleRefresh: parentRefre
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={fetchAssociations}
+          onClick={() => fetchAssociations({ timeRange, searchTerm, associationType: associationTypeFilter })}
           disabled={loading}
         >
           <RefreshCcw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -128,19 +163,10 @@ const AssociationsView = ({ isLoading: parentLoading, handleRefresh: parentRefre
       </div>
 
       <div className="flex space-x-4 mb-4">
-        <div className="relative flex-1">
-          <Input
-            type="text"
-            placeholder="Search associations..."
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pr-10"
-          />
-        </div>
         <div className="w-48">
           <Select 
             value={associationTypeFilter} 
-            onValueChange={handleAssociationTypeChange}
+            onValueChange={setAssociationTypeFilter}
           >
             <SelectTrigger>
               <SelectValue placeholder="Filter by type" />
@@ -153,14 +179,31 @@ const AssociationsView = ({ isLoading: parentLoading, handleRefresh: parentRefre
             </SelectContent>
           </Select>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex items-center gap-1"
-        >
-          <Download className="h-4 w-4" />
-          Export
-        </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1"
+              disabled={!sortedAssociations.length}
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => handleExport('pdf')}>
+              Export as PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport('excel')}>
+              Export as Excel
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport('csv')}>
+              Export as CSV
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {loading ? (
@@ -168,7 +211,7 @@ const AssociationsView = ({ isLoading: parentLoading, handleRefresh: parentRefre
           <div className="animate-spin h-8 w-8 border-4 border-amber-500 rounded-full border-t-transparent"></div>
           <p className="ml-2 text-amber-800">Loading associations...</p>
         </div>
-      ) : associations.length === 0 ? (
+      ) : sortedAssociations.length === 0 ? (
         <div className="bg-gray-50 p-8 rounded-lg border border-gray-200 text-center">
           <Users className="h-12 w-12 mx-auto text-amber-400 mb-3" />
           <h3 className="text-lg font-medium text-gray-700 mb-1">No Associations Found</h3>
@@ -205,7 +248,7 @@ const AssociationsView = ({ isLoading: parentLoading, handleRefresh: parentRefre
               </TableRow>
             </TableHeader>
             <TableBody>
-              {associations.map((association) => (
+              {sortedAssociations.map((association) => (
                 <TableRow key={association.id}>
                   <TableCell className="font-medium">{association.association_name}</TableCell>
                   <TableCell>{association.registration_number}</TableCell>
