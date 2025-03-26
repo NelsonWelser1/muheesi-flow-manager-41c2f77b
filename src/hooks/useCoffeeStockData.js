@@ -14,13 +14,13 @@ export const useCoffeeStockData = () => {
     setError(null);
     
     try {
-      // Query the coffee_stock table - this table is used by ReceiveNewStock component
+      // Query the coffee stock data table
       let query = supabase
         .from('coffee_stock')
         .select('*')
         .order('created_at', { ascending: false });
-      
-      // Apply filters if provided
+        
+      // Apply time range filter if provided
       if (filters.timeRange && filters.timeRange !== 'all') {
         const timeMap = {
           'hour': 1/24,
@@ -37,25 +37,26 @@ export const useCoffeeStockData = () => {
         }
       }
       
+      // Apply status filter if provided
       if (filters.status && filters.status !== 'all') {
         query = query.eq('status', filters.status);
       }
       
-      if (filters.location && filters.location !== 'all') {
-        query = query.eq('location', filters.location);
+      // Apply location filter if provided
+      if (filters.location) {
+        query = query.ilike('location', `%${filters.location}%`);
       }
       
-      if (filters.coffeeType && filters.coffeeType !== 'all') {
-        query = query.eq('coffee_type', filters.coffeeType);
-      }
-      
+      // Apply search filter if provided - using individual filters instead of OR
       if (filters.searchTerm) {
-        query = query.or(`
-          coffee_type.ilike.%${filters.searchTerm}%,
-          quality_grade.ilike.%${filters.searchTerm}%,
-          location.ilike.%${filters.searchTerm}%,
-          manager.ilike.%${filters.searchTerm}%
-        `);
+        const searchTerm = filters.searchTerm.trim();
+        // Apply search to all fields individually
+        query = query.or(
+          `coffee_type.ilike.%${searchTerm}%,` +
+          `quality_grade.ilike.%${searchTerm}%,` +
+          `location.ilike.%${searchTerm}%,` +
+          `manager.ilike.%${searchTerm}%`
+        );
       }
       
       const { data, error } = await query;
@@ -69,9 +70,9 @@ export const useCoffeeStockData = () => {
       return data;
     } catch (err) {
       console.error('Error fetching coffee stock data:', err);
-      setError(err.message);
+      setError(err);
       toast({
-        title: "Error fetching data",
+        title: "Error fetching coffee stock data",
         description: err.message,
         variant: "destructive"
       });
@@ -81,19 +82,16 @@ export const useCoffeeStockData = () => {
     }
   };
 
-  // Fix: Prevent effect from creating an endless loop
+  // Initial fetch on mount
   useEffect(() => {
-    // Initial fetch only, without depending on changing filters
     fetchCoffeeStockData();
-    // Empty dependency array means this runs once on mount
   }, []);
 
   return {
     stockData,
     isLoading,
     error,
-    fetchCoffeeStockData,
-    refresh: () => fetchCoffeeStockData()
+    fetchCoffeeStockData
   };
 };
 

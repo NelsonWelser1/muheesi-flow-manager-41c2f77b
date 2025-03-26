@@ -39,12 +39,13 @@ export const useFarmData = () => {
       
       // Apply search filter if provided
       if (filters.searchTerm) {
+        const searchTerm = filters.searchTerm.trim();
         query = query.or(
-          `farm_name.ilike.%${filters.searchTerm}%,` +
-          `manager_name.ilike.%${filters.searchTerm}%,` +
-          `supervisor_name.ilike.%${filters.searchTerm}%,` +
-          `coffee_type.ilike.%${filters.searchTerm}%,` +
-          `location.ilike.%${filters.searchTerm}%`
+          `farm_name.ilike.%${searchTerm}%,` +
+          `manager_name.ilike.%${searchTerm}%,` +
+          `supervisor_name.ilike.%${searchTerm}%,` +
+          `coffee_type.ilike.%${searchTerm}%,` +
+          `location.ilike.%${searchTerm}%`
         );
       }
       

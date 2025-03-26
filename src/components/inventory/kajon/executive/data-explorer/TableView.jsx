@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Table,
@@ -208,7 +209,7 @@ const TableView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
     return (
       <div className="bg-red-50 p-4 rounded-md border border-red-200">
         <h3 className="text-red-800 font-medium">Error loading data</h3>
-        <p className="text-red-600">{transfersError || stockError}</p>
+        <p className="text-red-600">{transfersError?.message || stockError?.message}</p>
         <Button 
           onClick={handleRefresh} 
           className="mt-2 bg-red-100 text-red-800 hover:bg-red-200"

@@ -39,12 +39,13 @@ export const useAssociationsData = () => {
       
       // Apply search filter if provided
       if (filters.searchTerm) {
+        const searchTerm = filters.searchTerm.trim();
         query = query.or(
-          `association_name.ilike.%${filters.searchTerm}%,` +
-          `registration_number.ilike.%${filters.searchTerm}%,` +
-          `association_type.ilike.%${filters.searchTerm}%,` +
-          `coffee_types.ilike.%${filters.searchTerm}%,` +
-          `location.ilike.%${filters.searchTerm}%`
+          `association_name.ilike.%${searchTerm}%,` +
+          `registration_number.ilike.%${searchTerm}%,` +
+          `association_type.ilike.%${searchTerm}%,` +
+          `coffee_types.ilike.%${searchTerm}%,` +
+          `location.ilike.%${searchTerm}%`
         );
       }
       
