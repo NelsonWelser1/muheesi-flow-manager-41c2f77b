@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import OrderMetrics from './OrderMetrics';
 import OrdersTable from './OrdersTable';
 
-const OrdersList = ({ orders, onCreateOrder }) => {
+const OrdersList = ({ orders, onCreateOrder, viewOnly = false }) => {
   return (
     <div className="space-y-6">
       <OrderMetrics />
@@ -20,7 +21,9 @@ const OrdersList = ({ orders, onCreateOrder }) => {
           <Button variant="outline" size="sm">Unpaid</Button>
           <Button variant="outline" size="sm">Open</Button>
           <Button variant="outline" size="sm">Closed</Button>
-          <Button variant="outline" size="sm"><Plus className="h-4 w-4" /></Button>
+          {!viewOnly && (
+            <Button variant="outline" size="sm"><Plus className="h-4 w-4" /></Button>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm">
@@ -29,7 +32,9 @@ const OrdersList = ({ orders, onCreateOrder }) => {
           </Button>
           <Button variant="outline" size="sm">Export</Button>
           <Button variant="outline" size="sm">More actions</Button>
-          <Button size="sm" onClick={onCreateOrder}>Create order</Button>
+          {!viewOnly && (
+            <Button size="sm" onClick={onCreateOrder}>Create order</Button>
+          )}
         </div>
       </div>
 
@@ -47,7 +52,7 @@ const OrdersList = ({ orders, onCreateOrder }) => {
       </div>
 
       {/* Orders Table */}
-      <OrdersTable orders={orders} />
+      <OrdersTable orders={orders} viewOnly={viewOnly} />
     </div>
   );
 };
