@@ -18,7 +18,7 @@ import { fromSupabase } from '@/integrations/supabase/utils/supabaseUtils';
 import CSVExportButton from '@/components/inventory/dairy/logistics/records/components/export-buttons/CSVExportButton';
 import PDFExportButton from '@/components/inventory/dairy/logistics/records/components/export-buttons/PDFExportButton';
 import ExcelExportButton from '@/components/inventory/dairy/logistics/records/components/export-buttons/ExcelExportButton';
-import { exportToCSV, exportToExcel, exportToPDF } from '@/components/inventory/dairy/logistics/records/utils/exportUtils';
+import { exportToCSV, exportToExcel, exportToPDF } from '@/utils/coffee/coffeeExport';
 import { format } from 'date-fns';
 
 const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
@@ -38,8 +38,9 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
     setError(null);
     
     try {
+      // Use coffee_stock table instead of coffee_inventory based on console logs
       let query = supabase
-        .from('coffee_inventory')
+        .from('coffee_stock')
         .select('*');
       
       // Apply status filter if not 'all'
@@ -80,8 +81,31 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
       // Sort the results
       query = query.order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
       
-      const data = await fromSupabase(query);
-      setCoffeeRecords(data || []);
+      const { data, error: fetchError } = await query;
+      
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      // Map coffee_stock data to expected format
+      const transformedData = (data || []).map(item => ({
+        id: item.id || `temp-${Math.random().toString(36).substring(2, 9)}`,
+        coffeeType: item.coffee_type || 'Unknown',
+        qualityGrade: item.quality_grade || 'N/A',
+        quantity: item.quantity || 0,
+        unit: item.unit || 'kg',
+        buying_price: item.buying_price || 0,
+        currency: item.currency || 'UGX',
+        location: item.location || 'Unknown',
+        source: item.source || 'N/A',
+        status: item.status || 'active',
+        manager: item.manager || 'N/A',
+        created_at: item.created_at || new Date().toISOString(),
+        updated_at: item.updated_at || item.created_at || new Date().toISOString(),
+        notes: item.notes || '',
+      }));
+      
+      setCoffeeRecords(transformedData);
     } catch (err) {
       console.error('Error fetching coffee inventory records:', err);
       setError('Failed to load coffee inventory records. Please try again later.');
@@ -116,7 +140,7 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
     try {
       return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
     } catch (error) {
-      return dateString;
+      return dateString || 'N/A';
     }
   };
 
@@ -137,7 +161,7 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
 
   // Handle export buttons
   const handleExportToPDF = () => {
-    exportToPDF(filteredRecords, 'Coffee Inventory Records');
+    exportToPDF(filteredRecords, 'Coffee Inventory Records', 'inventory');
   };
 
   const handleExportToExcel = () => {
@@ -150,6 +174,12 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
 
   // Render status badge
   const renderStatusBadge = (status) => {
+    if (!status) return (
+      <span className="px-2 py-1 text-xs rounded-full border bg-gray-100 text-gray-800 border-gray-200">
+        Unknown
+      </span>
+    );
+    
     const statusColors = {
       active: 'bg-green-100 text-green-800 border-green-200',
       pending: 'bg-blue-100 text-blue-800 border-blue-200',
@@ -167,7 +197,7 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
 
   // Calculate total value of filtered inventory
   const totalInventoryValue = filteredRecords.reduce((sum, record) => {
-    const itemValue = record.buying_price * record.quantity;
+    const itemValue = (parseFloat(record.buying_price) || 0) * (parseFloat(record.quantity) || 0);
     return sum + (isNaN(itemValue) ? 0 : itemValue);
   }, 0);
 
@@ -412,7 +442,7 @@ const CoffeeInventoryRecords = ({ onBack, isKazo = false }) => {
                       <TableCell className="font-medium">{formatDate(record.created_at)}</TableCell>
                       <TableCell>{record.coffeeType || 'N/A'}</TableCell>
                       <TableCell>{record.qualityGrade || 'N/A'}</TableCell>
-                      <TableCell>{record.quantity} {record.unit || 'kg'}</TableCell>
+                      <TableCell>{record.quantity || 0} {record.unit || 'kg'}</TableCell>
                       <TableCell>{formatCurrency(record.buying_price, record.currency)}</TableCell>
                       <TableCell>{record.location || 'N/A'}</TableCell>
                       <TableCell>{record.source || 'N/A'}</TableCell>
