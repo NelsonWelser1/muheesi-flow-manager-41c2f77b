@@ -11,107 +11,70 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Clock, AlertTriangle, Coffee, ArrowUpDown } from 'lucide-react';
-import { useCoffeeStockData } from '@/hooks/useCoffeeStockData';
-import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
+import { filterDataByOperationType } from '@/utils/coffee/coffeeDataFilters';
 
-const TableView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operationType }) => {
-  const {
-    transfers,
-    loading: transfersLoading,
-    error: transfersError,
-    fetchTransfers
-  } = useCoffeeStockTransfers();
-
-  const { 
-    stockData, 
-    isLoading: stockLoading, 
-    error: stockError, 
-    fetchCoffeeStockData 
-  } = useCoffeeStockData();
-  
+const TableView = ({ 
+  data = [], 
+  isLoading = false, 
+  error = null, 
+  handleRefresh, 
+  title = "Coffee Stock Data",
+  sourceTable = "coffee_stock",
+  timeRange,
+  searchTerm,
+  operationType,
+  filterStatus,
+  filterPartner 
+}) => {
   const [filteredData, setFilteredData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ field: 'created_at', ascending: false });
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      
-      try {
-        const filters = {
-          timeRange,
-          status: statusFilter,
-          searchTerm,
-          location: categoryFilter !== 'all' ? categoryFilter : undefined
-        };
+    if (!data) return;
+    
+    // Apply operation type filter
+    let filtered = data;
+    
+    // If specific operation type is provided, filter the data
+    if (operationType && operationType !== 'all') {
+      filtered = filterDataByOperationType(filtered, operationType);
+    }
+    
+    // Apply specific status filter if provided
+    if (filterStatus) {
+      filtered = filtered.filter(item => item.status === filterStatus);
+    }
+    
+    // Apply partner filter if provided
+    if (filterPartner !== undefined) {
+      filtered = filtered.filter(item => !!item.is_partner_transfer === filterPartner);
+    }
+    
+    // Apply search filter if there's a search term
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(item => {
+        const searchableFields = [
+          'coffee_type', 'quality_grade', 'location', 'source_location', 
+          'destination_location', 'manager', 'buyer_name', 'name'
+        ];
         
-        await Promise.all([
-          fetchCoffeeStockData(filters),
-          fetchTransfers(filters)
-        ]);
-      } catch (error) {
-        console.error("Error loading data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadData();
-  }, [timeRange, statusFilter, searchTerm, categoryFilter, operationType]);
-
-  useEffect(() => {
-    let combinedData = [];
-    
-    if (!operationType || operationType === 'all' || operationType === 'receive-partner') {
-      const mappedTransfers = transfers.map(transfer => ({
-        ...transfer,
-        operationType: 'receive-partner',
-        operationName: 'Receive Partner Stock',
-        itemName: transfer.coffee_type || 'Coffee',
-        quantity: transfer.quantity,
-        location: transfer.destination_location || transfer.source_location,
-        date: transfer.created_at
-      }));
-      combinedData = [...combinedData, ...mappedTransfers];
-    }
-    
-    if (!operationType || operationType === 'all' || operationType === 'receive-new') {
-      const mappedStockData = stockData.map(item => ({
-        id: item.id,
-        operationType: 'receive-new',
-        operationName: 'Receive New Stock',
-        coffee_type: item.coffee_type || 'Coffee',
-        quality_grade: item.quality_grade || 'Standard',
-        quantity: item.quantity,
-        unit: item.unit || 'kg',
-        location: item.location,
-        manager: item.manager || 'System',
-        status: item.status || 'completed',
-        date: item.created_at,
-        created_at: item.created_at,
-        humidity: item.humidity,
-        buying_price: item.buying_price,
-        currency: item.currency,
-        source: item.source
-      }));
-      
-      combinedData = [...combinedData, ...mappedStockData];
-    }
-    
-    if (categoryFilter && categoryFilter !== 'all') {
-      combinedData = combinedData.filter(item => {
-        const location = (item.location || '').toLowerCase();
-        return location.includes(categoryFilter.toLowerCase());
+        return searchableFields.some(field => {
+          return item[field] && item[field].toString().toLowerCase().includes(search);
+        });
       });
     }
     
-    if (operationType && operationType !== 'all') {
-      combinedData = combinedData.filter(item => item.operationType === operationType);
-    }
-    
-    const sortedData = [...combinedData].sort((a, b) => {
-      const aValue = a[sortConfig.field] || '';
-      const bValue = b[sortConfig.field] || '';
+    // Sort the data
+    const sortedData = [...filtered].sort((a, b) => {
+      let aValue = a[sortConfig.field];
+      let bValue = b[sortConfig.field];
+      
+      // Handle dates
+      if (sortConfig.field === 'created_at' || sortConfig.field === 'date' || sortConfig.field.includes('date')) {
+        aValue = aValue ? new Date(aValue).getTime() : 0;
+        bValue = bValue ? new Date(bValue).getTime() : 0;
+      }
       
       if (aValue < bValue) {
         return sortConfig.ascending ? -1 : 1;
@@ -123,18 +86,13 @@ const TableView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
     });
     
     setFilteredData(sortedData);
-  }, [transfers, stockData, categoryFilter, operationType, sortConfig]);
+  }, [data, sortConfig, searchTerm, operationType, filterStatus, filterPartner]);
 
   const handleSort = (field) => {
     setSortConfig(prevConfig => ({
       field,
       ascending: prevConfig.field === field ? !prevConfig.ascending : true
     }));
-  };
-
-  const handleRefresh = () => {
-    fetchCoffeeStockData();
-    fetchTransfers();
   };
 
   const getStatusBadge = (status) => {
@@ -169,18 +127,34 @@ const TableView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
     }
   };
 
-  const getOperationBadge = (operationType) => {
+  const getOperationBadge = (item) => {
+    // Determine operation type based on data structure and source table
+    let operationType = item.operation_type;
+    
+    if (!operationType) {
+      if (sourceTable === 'coffee_sales') {
+        operationType = 'sell';
+      } else if (sourceTable === 'coffee_stock') {
+        operationType = 'receive-new';
+      } else if (sourceTable === 'coffee_stock_transfers') {
+        operationType = item.is_partner_transfer ? 'receive-partner' : 'relocate';
+      }
+    }
+    
     switch (operationType) {
       case 'receive-new':
         return <Badge className="bg-green-100 text-green-800">Receive New</Badge>;
       case 'sell':
+      case 'sell-stock':
         return <Badge className="bg-blue-100 text-blue-800">Sell</Badge>;
       case 'relocate':
+      case 'relocate-stock':
         return <Badge className="bg-purple-100 text-purple-800">Relocate</Badge>;
       case 'receive-partner':
+      case 'partner-stock':
         return <Badge className="bg-amber-100 text-amber-800">Receive Partner</Badge>;
       default:
-        return <Badge variant="outline">{operationType}</Badge>;
+        return <Badge variant="outline">{operationType || "Unknown"}</Badge>;
     }
   };
 
@@ -196,20 +170,37 @@ const TableView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
     }).format(date);
   };
 
-  if (loading || transfersLoading || stockLoading) {
+  // Get location display value based on operation type and source table
+  const getLocationDisplay = (item) => {
+    if (sourceTable === 'coffee_stock_transfers') {
+      if (item.is_partner_transfer) {
+        return item.destination_location || 'Unknown';
+      } else {
+        return `${item.source_location || 'Unknown'} → ${item.destination_location || 'Unknown'}`;
+      }
+    }
+    return item.location || 'Unknown';
+  };
+
+  // Get quantity display with units
+  const getQuantityDisplay = (item) => {
+    return `${item.quantity || 0} ${item.unit || 'kg'}`;
+  };
+
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin h-8 w-8 border-4 border-amber-500 rounded-full border-t-transparent"></div>
-        <p className="ml-2 text-amber-800">Loading coffee stock data...</p>
+        <p className="ml-2 text-amber-800">Loading coffee data...</p>
       </div>
     );
   }
 
-  if (transfersError || stockError) {
+  if (error) {
     return (
       <div className="bg-red-50 p-4 rounded-md border border-red-200">
         <h3 className="text-red-800 font-medium">Error loading data</h3>
-        <p className="text-red-600">{transfersError?.message || stockError?.message}</p>
+        <p className="text-red-600">{error?.message || error}</p>
         <Button 
           onClick={handleRefresh} 
           className="mt-2 bg-red-100 text-red-800 hover:bg-red-200"
@@ -237,7 +228,7 @@ const TableView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px]">
-              <Button variant="ghost" size="sm" onClick={() => handleSort('date')} className="flex items-center">
+              <Button variant="ghost" size="sm" onClick={() => handleSort('created_at')} className="flex items-center">
                 Date
                 <ArrowUpDown className="ml-2 h-3 w-3" />
               </Button>
@@ -273,8 +264,8 @@ const TableView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
         <TableBody>
           {filteredData.map((item) => (
             <TableRow key={item.id}>
-              <TableCell className="font-medium">{formatDate(item.date)}</TableCell>
-              <TableCell>{getOperationBadge(item.operationType)}</TableCell>
+              <TableCell className="font-medium">{formatDate(item.created_at || item.date)}</TableCell>
+              <TableCell>{getOperationBadge(item)}</TableCell>
               <TableCell>
                 <div className="flex items-center">
                   <Coffee className={`h-4 w-4 ${
@@ -283,8 +274,8 @@ const TableView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
                   <span>{item.coffee_type || 'Coffee'}</span>
                 </div>
               </TableCell>
-              <TableCell>{item.quantity} {item.unit || 'kg'}</TableCell>
-              <TableCell>{item.location || 'Unknown'}</TableCell>
+              <TableCell>{getQuantityDisplay(item)}</TableCell>
+              <TableCell>{getLocationDisplay(item)}</TableCell>
               <TableCell>{getStatusBadge(item.status)}</TableCell>
               <TableCell>{item.manager || 'System'}</TableCell>
             </TableRow>

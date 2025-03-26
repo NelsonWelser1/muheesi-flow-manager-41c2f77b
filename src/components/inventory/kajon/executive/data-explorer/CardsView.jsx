@@ -1,134 +1,76 @@
+
 import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock, AlertTriangle, Coffee, ArrowRight, CalendarDays, Map, User, Truck, Package, ShoppingCart, ArrowLeftRight } from 'lucide-react';
-import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
-import { useCoffeeStockData } from '@/hooks/useCoffeeStockData';
+import { filterDataByOperationType } from '@/utils/coffee/coffeeDataFilters';
 
-const CardsView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operationType }) => {
-  const {
-    transfers,
-    loading: transfersLoading,
-    error: transfersError,
-    fetchTransfers
-  } = useCoffeeStockTransfers();
-
-  const { 
-    stockData, 
-    isLoading: stockLoading, 
-    error: stockError, 
-    fetchCoffeeStockData 
-  } = useCoffeeStockData();
-  
+const CardsView = ({ 
+  data = [], 
+  isLoading = false, 
+  error = null, 
+  handleRefresh, 
+  title = "Coffee Stock Data",
+  sourceTable = "coffee_stock",
+  timeRange,
+  searchTerm,
+  operationType,
+  filterStatus,
+  filterPartner 
+}) => {
   const [filteredData, setFilteredData] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      
-      try {
-        const filters = {
-          timeRange,
-          status: statusFilter,
-          searchTerm,
-          location: categoryFilter !== 'all' ? categoryFilter : undefined
-        };
-        
-        await Promise.all([
-          fetchCoffeeStockData(filters),
-          fetchTransfers(filters)
-        ]);
-      } catch (error) {
-        console.error("Error loading data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!data) return;
     
-    loadData();
-  }, [timeRange, statusFilter, searchTerm, categoryFilter, operationType]);
-
-  useEffect(() => {
-    let combinedData = [];
+    // Apply operation type filter
+    let filtered = data;
     
-    if (!operationType || operationType === 'all' || operationType === 'receive-partner') {
-      const mappedTransfers = transfers.map(transfer => ({
-        ...transfer,
-        operationType: 'receive-partner',
-        operationName: 'Receive Partner Stock',
-        itemName: transfer.coffee_type || 'Coffee',
-        quantity: transfer.quantity,
-        location: transfer.destination_location || transfer.source_location,
-        date: transfer.created_at
-      }));
-      combinedData = [...combinedData, ...mappedTransfers];
+    // If specific operation type is provided, filter the data
+    if (operationType && operationType !== 'all') {
+      filtered = filterDataByOperationType(filtered, operationType);
     }
     
-    if (!operationType || operationType === 'all' || ['receive-new', 'sell', 'relocate'].includes(operationType)) {
-      const mappedStockData = stockData.map(item => {
-        let opType = 'receive-new'; // Default
-        let opName = 'Receive New Stock';
-        
-        if (item.name && item.name.toLowerCase().includes('sale')) {
-          opType = 'sell';
-          opName = 'Sell Current Stock';
-        } else if (item.name && item.name.toLowerCase().includes('transfer')) {
-          opType = 'relocate';
-          opName = 'Relocate Stock';
-        } else if (item.source === 'transfers') {
-          opType = 'receive-partner';
-          opName = 'Receive Partner Stock';
-        }
-        
-        if (operationType && operationType !== 'all' && opType !== operationType) {
-          return null;
-        }
-        
-        return {
-          id: item.id,
-          operationType: opType,
-          operationName: opName,
-          itemName: item.name || 'Coffee',
-          coffee_type: item.coffee_type || 'Coffee',
-          quality_grade: item.quality_grade || 'Standard',
-          quantity: item.quantity,
-          unit: item.unit || 'kg',
-          location: item.location,
-          source_location: item.source || item.location,
-          destination_location: item.location,
-          manager: item.manager || 'System',
-          status: item.status || 'completed',
-          created_at: item.created_at
-        };
-      }).filter(Boolean);
-      
-      combinedData = [...combinedData, ...mappedStockData];
+    // Apply specific status filter if provided
+    if (filterStatus) {
+      filtered = filtered.filter(item => item.status === filterStatus);
     }
     
-    if (categoryFilter && categoryFilter !== 'all') {
-      combinedData = combinedData.filter(item => {
-        const location = (item.location || '').toLowerCase();
-        return location.includes(categoryFilter.toLowerCase());
+    // Apply partner filter if provided
+    if (filterPartner !== undefined) {
+      filtered = filtered.filter(item => !!item.is_partner_transfer === filterPartner);
+    }
+    
+    // Apply search filter if there's a search term
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(item => {
+        const searchableFields = [
+          'coffee_type', 'quality_grade', 'location', 'source_location', 
+          'destination_location', 'manager', 'buyer_name', 'name'
+        ];
+        
+        return searchableFields.some(field => {
+          return item[field] && item[field].toString().toLowerCase().includes(search);
+        });
       });
     }
     
-    const sortedData = [...combinedData].sort((a, b) => {
-      return new Date(b.created_at) - new Date(a.created_at);
+    // Sort by creation date
+    const sortedData = [...filtered].sort((a, b) => {
+      const dateA = new Date(a.created_at || a.date || 0);
+      const dateB = new Date(b.created_at || b.date || 0);
+      return dateB - dateA;
     });
     
     setFilteredData(sortedData);
-  }, [transfers, stockData, operationType, categoryFilter]);
-
-  const handleRefresh = () => {
-    fetchCoffeeStockData();
-    fetchTransfers();
-  };
+  }, [data, searchTerm, operationType, filterStatus, filterPartner]);
 
   const getStatusBadge = (status) => {
     switch (status) {
       case 'received':
       case 'completed':
+      case 'active':
         return (
           <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
             <CheckCircle className="h-3 w-3" />
@@ -156,14 +98,30 @@ const CardsView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
     }
   };
 
-  const getOperationIcon = (operationType) => {
-    switch (operationType) {
+  const getOperationIcon = (item) => {
+    // Determine operation type based on data structure and source table
+    let opType = item.operation_type;
+    
+    if (!opType) {
+      if (sourceTable === 'coffee_sales') {
+        opType = 'sell-stock';
+      } else if (sourceTable === 'coffee_stock') {
+        opType = 'receive-new';
+      } else if (sourceTable === 'coffee_stock_transfers') {
+        opType = item.is_partner_transfer ? 'partner-stock' : 'relocate-stock';
+      }
+    }
+    
+    switch (opType) {
       case 'receive-new':
         return <Package className="h-5 w-5 text-green-600" />;
+      case 'sell-stock':
       case 'sell':
         return <ShoppingCart className="h-5 w-5 text-blue-600" />;
+      case 'relocate-stock':
       case 'relocate':
         return <ArrowLeftRight className="h-5 w-5 text-purple-600" />;
+      case 'partner-stock':
       case 'receive-partner':
         return <Truck className="h-5 w-5 text-amber-600" />;
       default:
@@ -171,22 +129,70 @@ const CardsView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
     }
   };
 
-  const getCardColorClass = (operationType, coffeeType) => {
-    const isArabica = coffeeType?.toLowerCase().includes('arabica');
+  const getOperationName = (item) => {
+    // Determine operation type based on data structure and source table
+    let opType = item.operation_type;
     
-    switch (operationType) {
+    if (!opType) {
+      if (sourceTable === 'coffee_sales') {
+        opType = 'sell-stock';
+      } else if (sourceTable === 'coffee_stock') {
+        opType = 'receive-new';
+      } else if (sourceTable === 'coffee_stock_transfers') {
+        opType = item.is_partner_transfer ? 'partner-stock' : 'relocate-stock';
+      }
+    }
+    
+    switch (opType) {
+      case 'receive-new':
+        return "Receive New Stock";
+      case 'sell-stock':
+      case 'sell':
+        return "Sell Current Stock";
+      case 'relocate-stock':
+      case 'relocate':
+        return "Relocate Stock";
+      case 'partner-stock':
+      case 'receive-partner':
+        return "Partner Stock Transfer";
+      default:
+        return "Coffee Operation";
+    }
+  };
+
+  const getCardColorClass = (item) => {
+    const coffeeType = item.coffee_type || '';
+    const isArabica = coffeeType.toLowerCase().includes('arabica');
+    
+    // Determine operation type
+    let opType = item.operation_type;
+    
+    if (!opType) {
+      if (sourceTable === 'coffee_sales') {
+        opType = 'sell-stock';
+      } else if (sourceTable === 'coffee_stock') {
+        opType = 'receive-new';
+      } else if (sourceTable === 'coffee_stock_transfers') {
+        opType = item.is_partner_transfer ? 'partner-stock' : 'relocate-stock';
+      }
+    }
+    
+    switch (opType) {
       case 'receive-new':
         return isArabica 
           ? 'bg-gradient-to-br from-green-50 to-white border-green-200' 
           : 'bg-gradient-to-br from-green-50 to-white border-green-200';
+      case 'sell-stock':
       case 'sell':
         return isArabica 
           ? 'bg-gradient-to-br from-blue-50 to-white border-blue-200' 
           : 'bg-gradient-to-br from-blue-50 to-white border-blue-200';
+      case 'relocate-stock':
       case 'relocate':
         return isArabica 
           ? 'bg-gradient-to-br from-purple-50 to-white border-purple-200' 
           : 'bg-gradient-to-br from-purple-50 to-white border-purple-200';
+      case 'partner-stock':
       case 'receive-partner':
       default:
         return isArabica 
@@ -207,20 +213,49 @@ const CardsView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
     }).format(date);
   };
 
-  if (loading || transfersLoading || stockLoading) {
+  // Get source and destination locations based on operation type
+  const getSourceLocation = (item) => {
+    if (sourceTable === 'coffee_stock_transfers') {
+      return item.source_location || 'Unknown';
+    }
+    
+    if (sourceTable === 'coffee_sales') {
+      return item.location || 'Unknown';
+    }
+    
+    if (sourceTable === 'coffee_stock') {
+      return item.source || item.location || 'Unknown';
+    }
+    
+    return item.source_location || item.source || item.location || 'Unknown';
+  };
+  
+  const getDestinationLocation = (item) => {
+    if (sourceTable === 'coffee_stock_transfers') {
+      return item.destination_location || 'Unknown';
+    }
+    
+    if (sourceTable === 'coffee_sales') {
+      return item.buyer_name || 'Customer';
+    }
+    
+    return item.destination_location || item.location || 'Same';
+  };
+
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin h-8 w-8 border-4 border-amber-500 rounded-full border-t-transparent"></div>
-        <p className="ml-2 text-amber-800">Loading coffee stock data...</p>
+        <p className="ml-2 text-amber-800">Loading coffee data...</p>
       </div>
     );
   }
 
-  if (transfersError || stockError) {
+  if (error) {
     return (
       <div className="bg-red-50 p-4 rounded-md border border-red-200">
         <h3 className="text-red-800 font-medium">Error loading data</h3>
-        <p className="text-red-600">{transfersError || stockError}</p>
+        <p className="text-red-600">{error?.message || error}</p>
         <Button 
           onClick={handleRefresh} 
           className="mt-2 bg-red-100 text-red-800 hover:bg-red-200"
@@ -247,14 +282,14 @@ const CardsView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
       {filteredData.map(item => (
         <div 
           key={item.id} 
-          className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${getCardColorClass(item.operationType, item.coffee_type)}`}
+          className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${getCardColorClass(item)}`}
         >
           <div className="flex justify-between items-start mb-3">
             <div>
               <div className="flex items-center">
-                {getOperationIcon(item.operationType)}
+                {getOperationIcon(item)}
                 <h3 className="font-medium ml-2">
-                  {item.operationName}
+                  {getOperationName(item)}
                 </h3>
               </div>
               <div className="flex items-center mt-1">
@@ -272,7 +307,7 @@ const CardsView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
               <Map className="h-4 w-4 text-gray-400 mt-0.5" />
               <div>
                 <p className="text-xs text-gray-500">Source</p>
-                <p className="text-sm font-medium">{item.source_location || item.location || 'Unknown'}</p>
+                <p className="text-sm font-medium">{getSourceLocation(item)}</p>
               </div>
             </div>
             
@@ -280,7 +315,7 @@ const CardsView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
               <Truck className="h-4 w-4 text-gray-400 mt-0.5" />
               <div>
                 <p className="text-xs text-gray-500">Destination</p>
-                <p className="text-sm font-medium">{item.destination_location || item.location || 'Same'}</p>
+                <p className="text-sm font-medium">{getDestinationLocation(item)}</p>
               </div>
             </div>
             
@@ -288,7 +323,7 @@ const CardsView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operat
               <CalendarDays className="h-4 w-4 text-gray-400 mt-0.5" />
               <div>
                 <p className="text-xs text-gray-500">Created</p>
-                <p className="text-sm">{formatDate(item.created_at)}</p>
+                <p className="text-sm">{formatDate(item.created_at || item.date)}</p>
               </div>
             </div>
             

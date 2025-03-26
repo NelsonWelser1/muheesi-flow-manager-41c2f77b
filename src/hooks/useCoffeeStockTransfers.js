@@ -54,6 +54,18 @@ export const useCoffeeStockTransfers = () => {
         query = query.eq('is_partner_transfer', filters.isPartnerTransfer);
       }
       
+      // Apply operation type filter if provided
+      if (filters.operationType) {
+        // For relocate-stock, filter out is_partner_transfer = true entries
+        if (filters.operationType === 'relocate-stock') {
+          query = query.eq('is_partner_transfer', false);
+        }
+        // For partner-stock, ensure is_partner_transfer = true
+        else if (filters.operationType === 'partner-stock') {
+          query = query.eq('is_partner_transfer', true);
+        }
+      }
+      
       // Apply location filter if provided
       if (filters.location) {
         query = query.or(`source_location.ilike.%${filters.location}%,destination_location.ilike.%${filters.location}%`);
@@ -90,6 +102,8 @@ export const useCoffeeStockTransfers = () => {
         is_partner_transfer: !!item.is_partner_transfer,
         created_at: item.created_at || new Date().toISOString(),
         updated_at: item.updated_at || item.created_at || new Date().toISOString(),
+        // Add operation type for better filtering
+        operation_type: item.is_partner_transfer ? 'partner-stock' : 'relocate-stock',
         ...item  // Keep all original properties
       }));
       
@@ -161,10 +175,16 @@ export const useCoffeeStockTransfers = () => {
   // Submit a new transfer
   const submitTransfer = async (transferData) => {
     try {
+      // Set is_partner_transfer based on transferData
+      const isPartnerTransfer = transferData.hasOwnProperty('is_partner_transfer') 
+        ? transferData.is_partner_transfer 
+        : false;
+        
       const { data, error } = await supabase
         .from('coffee_stock_transfers')
         .insert([{
           ...transferData,
+          is_partner_transfer: isPartnerTransfer,
           status: 'pending',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -183,6 +203,47 @@ export const useCoffeeStockTransfers = () => {
       console.error('Error creating transfer:', err);
       toast({
         title: "Error creating transfer",
+        description: err.message,
+        variant: "destructive"
+      });
+      throw err;
+    }
+  };
+
+  // Update a transfer status
+  const updateTransferStatus = async (id, status, notes = '') => {
+    try {
+      const { data, error } = await supabase
+        .from('coffee_stock_transfers')
+        .update({ 
+          status, 
+          notes: notes,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', id)
+        .select();
+      
+      if (error) throw error;
+      
+      toast({
+        title: `Transfer ${status}`,
+        description: `Stock transfer request has been ${status}`,
+      });
+      
+      // Update local state
+      setTransfers(prevTransfers => 
+        prevTransfers.map(transfer => 
+          transfer.id === id 
+            ? { ...transfer, status, notes, updated_at: new Date().toISOString() } 
+            : transfer
+        )
+      );
+      
+      return data;
+    } catch (err) {
+      console.error('Error updating transfer status:', err);
+      toast({
+        title: "Error updating transfer",
         description: err.message,
         variant: "destructive"
       });
@@ -219,7 +280,8 @@ export const useCoffeeStockTransfers = () => {
     handleSort,
     handleRefresh,
     fetchTransfers,
-    submitTransfer
+    submitTransfer,
+    updateTransferStatus
   };
 };
 

@@ -37,13 +37,15 @@ import CardsView from './data-explorer/CardsView';
 // Import hooks for data fetching
 import { useCoffeeStockData } from '@/hooks/useCoffeeStockData';
 import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
+import { useCoffeeSales } from '@/hooks/useCoffeeSales';
 import { useRequisitions } from '@/hooks/useRequisitions';
 import { useFarmData } from '@/hooks/useFarmData';
 import { useAssociationsData } from '@/hooks/useAssociationsData';
 import { useReportsData } from '@/hooks/useReportsData';
 
-// Import export utilities
+// Import utils
 import { exportToPDF, exportToExcel, exportToCSV } from '@/utils/coffee/coffeeExport';
+import { filterDataByOperationType, getTableForOperationType } from '@/utils/coffee/coffeeDataFilters';
 
 const DataExplorer = () => {
   const [viewMode, setViewMode] = useState('table');
@@ -54,8 +56,24 @@ const DataExplorer = () => {
   const [timeRange, setTimeRange] = useState('all');
   
   // Fetch data using custom hooks
-  const { stockData: coffeeStockData, isLoading: isLoadingStock, fetchCoffeeStockData } = useCoffeeStockData();
-  const { transfers: stockTransfers, loading: isLoadingTransfers, fetchTransfers } = useCoffeeStockTransfers();
+  const { 
+    stockData: newStockData, 
+    isLoading: isLoadingNewStock, 
+    fetchCoffeeStockData 
+  } = useCoffeeStockData();
+  
+  const { 
+    salesRecords: salesData, 
+    isLoading: isLoadingSales,
+    refetchSales: fetchSalesData
+  } = useCoffeeSales();
+  
+  const { 
+    transfers: stockTransfers, 
+    loading: isLoadingTransfers, 
+    fetchTransfers 
+  } = useCoffeeStockTransfers();
+  
   const { requisitions, loading: isLoadingRequisitions, fetchRequisitions } = useRequisitions();
   const { farms, loading: isLoadingFarms, fetchFarmData } = useFarmData();
   const { associations, loading: isLoadingAssociations, fetchAssociations } = useAssociationsData();
@@ -67,45 +85,52 @@ const DataExplorer = () => {
   }, [timeRange, searchTerm]);
 
   const applyFilters = async () => {
+    setIsRefreshing(true);
     const filters = {
       timeRange,
       searchTerm: searchTerm.trim() || undefined
     };
-
-    // Apply filters based on active tab
-    switch (activeTab) {
-      case 'receive-new':
-        await fetchCoffeeStockData(filters);
-        break;
-      case 'sell-stock':
-        await fetchCoffeeStockData({...filters, status: 'sold'});
-        break;
-      case 'relocate-stock':
-        await fetchTransfers(filters);
-        break;
-      case 'partner-stock':
-        await fetchTransfers({...filters, isPartnerTransfer: true});
-        break;
-      case 'reports':
-        await fetchReports(filters);
-        break;
-      case 'more':
-        switch (activeSubTab) {
-          case 'requisitions':
-            await fetchRequisitions(filters);
-            break;
-          case 'farm-info':
-            await fetchFarmData(filters);
-            break;
-          case 'associations':
-            await fetchAssociations(filters);
-            break;
-          default:
-            break;
-        }
-        break;
-      default:
-        break;
+    
+    try {
+      // Apply filters based on active tab
+      switch (activeTab) {
+        case 'receive-new':
+          await fetchCoffeeStockData(filters);
+          break;
+        case 'sell-stock':
+          await fetchSalesData();
+          break;
+        case 'relocate-stock':
+          await fetchTransfers({...filters, operationType: 'relocate-stock'});
+          break;
+        case 'partner-stock':
+          await fetchTransfers({...filters, isPartnerTransfer: true});
+          break;
+        case 'reports':
+          await fetchReports(filters);
+          break;
+        case 'more':
+          switch (activeSubTab) {
+            case 'requisitions':
+              await fetchRequisitions(filters);
+              break;
+            case 'farm-info':
+              await fetchFarmData(filters);
+              break;
+            case 'associations':
+              await fetchAssociations(filters);
+              break;
+            default:
+              break;
+          }
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error("Error applying filters:", error);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -129,10 +154,10 @@ const DataExplorer = () => {
         fetchCoffeeStockData(filters);
         break;
       case 'sell-stock':
-        fetchCoffeeStockData({...filters, status: 'sold'});
+        fetchSalesData();
         break;
       case 'relocate-stock':
-        fetchTransfers(filters);
+        fetchTransfers({...filters, operationType: 'relocate-stock'});
         break;
       case 'partner-stock':
         fetchTransfers({...filters, isPartnerTransfer: true});
@@ -188,13 +213,13 @@ const DataExplorer = () => {
   const getActiveFilteredData = () => {
     switch (activeTab) {
       case 'receive-new':
-        return coffeeStockData;
+        return newStockData;
       case 'sell-stock':
-        return coffeeStockData.filter(item => item.status === 'sold');
+        return salesData;
       case 'relocate-stock':
-        return stockTransfers;
+        return filterDataByOperationType(stockTransfers, 'relocate-stock');
       case 'partner-stock':
-        return stockTransfers.filter(item => item.is_partner_transfer === true);
+        return filterDataByOperationType(stockTransfers, 'partner-stock');
       case 'reports':
         return reports;
       case 'more':
@@ -265,6 +290,55 @@ const DataExplorer = () => {
         break;
       default:
         console.error('Unsupported export format:', format);
+    }
+  };
+
+  // Get the appropriate data and loading state for the current tab
+  const getTabData = () => {
+    switch (activeTab) {
+      case 'receive-new':
+        return {
+          data: newStockData,
+          isLoading: isLoadingNewStock,
+          handleRefresh: fetchCoffeeStockData,
+          title: "Receive New Coffee Stock",
+          sourceTable: "coffee_stock"
+        };
+      case 'sell-stock':
+        return {
+          data: salesData,
+          isLoading: isLoadingSales,
+          handleRefresh: fetchSalesData,
+          title: "Sell Coffee Stock",
+          sourceTable: "coffee_sales"
+        };
+      case 'relocate-stock':
+        return {
+          data: filterDataByOperationType(stockTransfers, 'relocate-stock'),
+          isLoading: isLoadingTransfers,
+          handleRefresh: () => fetchTransfers({operationType: 'relocate-stock'}),
+          title: "Relocate Coffee Stock",
+          sourceTable: "coffee_stock_transfers",
+          operationType: "relocate-stock"
+        };
+      case 'partner-stock':
+        return {
+          data: filterDataByOperationType(stockTransfers, 'partner-stock'),
+          isLoading: isLoadingTransfers,
+          handleRefresh: () => fetchTransfers({isPartnerTransfer: true}),
+          title: "Partner Stock Transfers",
+          sourceTable: "coffee_stock_transfers",
+          filterPartner: true,
+          operationType: "partner-stock"
+        };
+      default:
+        return {
+          data: [],
+          isLoading: false,
+          handleRefresh: () => {},
+          title: "Unknown Data",
+          sourceTable: ""
+        };
     }
   };
 
@@ -381,105 +455,26 @@ const DataExplorer = () => {
           </DropdownMenu>
         </div>
 
-        <TabsContent value="receive-new">
-          {viewMode === 'table' ? (
-            <TableView 
-              data={coffeeStockData} 
-              isLoading={isLoadingStock} 
-              handleRefresh={fetchCoffeeStockData} 
-              title="Receive New Coffee Stock"
-              sourceTable="coffee_stock"
-              timeRange={timeRange}
-              searchTerm={searchTerm}
-            />
-          ) : (
-            <CardsView 
-              data={coffeeStockData} 
-              isLoading={isLoadingStock} 
-              handleRefresh={fetchCoffeeStockData} 
-              title="Receive New Coffee Stock"
-              sourceTable="coffee_stock"
-              timeRange={timeRange}
-              searchTerm={searchTerm}
-            />
-          )}
-        </TabsContent>
-
-        <TabsContent value="sell-stock">
-          {viewMode === 'table' ? (
-            <TableView 
-              data={coffeeStockData.filter(item => item.status === 'sold')} 
-              isLoading={isLoadingStock} 
-              handleRefresh={fetchCoffeeStockData} 
-              title="Sell Coffee Stock"
-              sourceTable="coffee_stock"
-              filterStatus="sold"
-              timeRange={timeRange}
-              searchTerm={searchTerm}
-            />
-          ) : (
-            <CardsView 
-              data={coffeeStockData.filter(item => item.status === 'sold')} 
-              isLoading={isLoadingStock} 
-              handleRefresh={fetchCoffeeStockData} 
-              title="Sell Coffee Stock"
-              sourceTable="coffee_stock"
-              filterStatus="sold"
-              timeRange={timeRange}
-              searchTerm={searchTerm}
-            />
-          )}
-        </TabsContent>
-
-        <TabsContent value="relocate-stock">
-          {viewMode === 'table' ? (
-            <TableView 
-              data={stockTransfers} 
-              isLoading={isLoadingTransfers} 
-              handleRefresh={fetchTransfers} 
-              title="Relocate Coffee Stock"
-              sourceTable="coffee_stock_transfers"
-              timeRange={timeRange}
-              searchTerm={searchTerm}
-            />
-          ) : (
-            <CardsView 
-              data={stockTransfers} 
-              isLoading={isLoadingTransfers} 
-              handleRefresh={fetchTransfers} 
-              title="Relocate Coffee Stock"
-              sourceTable="coffee_stock_transfers"
-              timeRange={timeRange}
-              searchTerm={searchTerm}
-            />
-          )}
-        </TabsContent>
-
-        <TabsContent value="partner-stock">
-          {viewMode === 'table' ? (
-            <TableView 
-              data={stockTransfers.filter(item => item.is_partner_transfer === true)} 
-              isLoading={isLoadingTransfers} 
-              handleRefresh={fetchTransfers} 
-              title="Partner Stock Transfers"
-              sourceTable="coffee_stock_transfers"
-              filterPartner={true}
-              timeRange={timeRange}
-              searchTerm={searchTerm}
-            />
-          ) : (
-            <CardsView 
-              data={stockTransfers.filter(item => item.is_partner_transfer === true)} 
-              isLoading={isLoadingTransfers} 
-              handleRefresh={fetchTransfers} 
-              title="Partner Stock Transfers"
-              sourceTable="coffee_stock_transfers"
-              filterPartner={true}
-              timeRange={timeRange}
-              searchTerm={searchTerm}
-            />
-          )}
-        </TabsContent>
+        {/* Main content tabs */}
+        {['receive-new', 'sell-stock', 'relocate-stock', 'partner-stock'].includes(activeTab) && (
+          <TabsContent value={activeTab}>
+            {viewMode === 'table' ? (
+              <TableView 
+                {...getTabData()}
+                timeRange={timeRange}
+                searchTerm={searchTerm}
+                operationType={activeTab}
+              />
+            ) : (
+              <CardsView 
+                {...getTabData()}
+                timeRange={timeRange}
+                searchTerm={searchTerm}
+                operationType={activeTab}
+              />
+            )}
+          </TabsContent>
+        )}
 
         <TabsContent value="reports">
           <ReportsView 
@@ -545,4 +540,3 @@ const DataExplorer = () => {
 };
 
 export default DataExplorer;
-
