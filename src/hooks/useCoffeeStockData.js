@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 
@@ -18,7 +17,7 @@ const KAZO_LOCATIONS = [
   "Rwemikoma"
 ];
 
-const useCoffeeStockData = (isKazo = false) => {
+export const useCoffeeStockData = (isKazo = false) => {
   const [stockData, setStockData] = useState([]);
   const [locationData, setLocationData] = useState([]);
   const [historicalData, setHistoricalData] = useState([]);
