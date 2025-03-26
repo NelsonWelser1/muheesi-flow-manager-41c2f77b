@@ -1,109 +1,117 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  Search, Plus, Filter, MapPin, Calendar, Ship, Package, 
-  Truck, ArrowRight, FileText, CheckCircle, Clock, AlertCircle
+  Search, Plus, FileText, Download, Eye, 
+  Ship, MapPin, Calendar, Clock, Filter,
+  ExternalLink, CheckCircle, AlertCircle, Package
 } from 'lucide-react';
 
+// Sample shipment data
+const shipments = [
+  {
+    id: 'EQ-2453',
+    destination: 'Hamburg, Germany',
+    client: 'European Coffee Roasters GmbH',
+    departureDate: '2023-12-10',
+    status: 'in-transit',
+    eta: '2024-01-15',
+    container: '20ft',
+    volume: '18 tons',
+    vessel: 'MSC Augusta',
+    route: 'Mombasa → Suez Canal → Rotterdam → Hamburg',
+    lastUpdate: '2023-12-25'
+  },
+  {
+    id: 'EQ-2455',
+    destination: 'New York, USA',
+    client: 'Artisan Bean Co.',
+    departureDate: '2023-12-18',
+    status: 'loading',
+    eta: '2024-01-25',
+    container: '40ft',
+    volume: '24 tons',
+    vessel: 'Maersk Nebula',
+    route: 'Mombasa → Cape Town → New York',
+    lastUpdate: '2023-12-24'
+  },
+  {
+    id: 'EQ-2458',
+    destination: 'Tokyo, Japan',
+    client: 'Tokyo Coffee Imports',
+    departureDate: '2024-01-05',
+    status: 'preparing',
+    eta: '2024-02-10',
+    container: '20ft',
+    volume: '16 tons',
+    vessel: 'NYK Hermes',
+    route: 'Mombasa → Singapore → Tokyo',
+    lastUpdate: '2023-12-20'
+  },
+  {
+    id: 'EQ-2451',
+    destination: 'Dubai, UAE',
+    client: 'Middle East Coffee Trading LLC',
+    departureDate: '2023-11-15',
+    status: 'delivered',
+    eta: '2023-12-10',
+    container: '40ft',
+    volume: '22 tons',
+    vessel: 'CMA CGM Rhone',
+    route: 'Mombasa → Jeddah → Dubai',
+    lastUpdate: '2023-12-12'
+  },
+  {
+    id: 'EQ-2460',
+    destination: 'Amsterdam, Netherlands',
+    client: 'Nordic Coffee Collective',
+    departureDate: '2024-01-10',
+    status: 'scheduled',
+    eta: '2024-02-05',
+    container: '20ft',
+    volume: '15 tons',
+    vessel: 'MSC Sarah',
+    route: 'Mombasa → Suez Canal → Rotterdam → Amsterdam',
+    lastUpdate: '2023-12-22'
+  }
+];
+
+const statusColors = {
+  'in-transit': "bg-blue-100 text-blue-800",
+  'loading': "bg-amber-100 text-amber-800",
+  'preparing': "bg-purple-100 text-purple-800",
+  'delivered': "bg-green-100 text-green-800",
+  'scheduled': "bg-gray-100 text-gray-800",
+  'delayed': "bg-red-100 text-red-800"
+};
+
+const statusLabels = {
+  'in-transit': "In Transit",
+  'loading': "Loading",
+  'preparing': "Preparing",
+  'delivered': "Delivered",
+  'scheduled': "Scheduled",
+  'delayed': "Delayed"
+};
+
 const ShipmentTracking = () => {
-  // Sample shipments data
-  const shipments = [
-    {
-      id: 'EQ-2453',
-      destination: 'Hamburg, Germany',
-      client: 'European Coffee Roasters GmbH',
-      contract: 'CNT-1001',
-      status: 'in-transit',
-      eta: '2023-12-25',
-      volume: '18 tons',
-      carrier: 'Maersk Line',
-      vessel: 'MSC Hamburg',
-      departureDate: '2023-12-05',
-      departurePort: 'Mombasa, Kenya'
-    },
-    {
-      id: 'EQ-2455',
-      destination: 'New York, USA',
-      client: 'Artisan Bean Co.',
-      contract: 'CNT-1002',
-      status: 'loading',
-      eta: '2024-01-15',
-      volume: '24 tons',
-      carrier: 'Mediterranean Shipping Company',
-      vessel: 'MSC Beatrice',
-      departureDate: '2023-12-28',
-      departurePort: 'Mombasa, Kenya'
-    },
-    {
-      id: 'EQ-2458',
-      destination: 'Tokyo, Japan',
-      client: 'Tokyo Coffee Imports',
-      contract: 'CNT-1003',
-      status: 'preparing',
-      eta: '2024-01-30',
-      volume: '16 tons',
-      carrier: 'Ocean Network Express',
-      vessel: 'TBD',
-      departureDate: '2024-01-05',
-      departurePort: 'Mombasa, Kenya'
-    },
-    {
-      id: 'EQ-2452',
-      destination: 'Dubai, UAE',
-      client: 'Middle East Coffee Trading LLC',
-      contract: 'CNT-1004',
-      status: 'delivered',
-      eta: '2023-11-20',
-      volume: '20 tons',
-      carrier: 'CMA CGM',
-      vessel: 'CMA CGM Titus',
-      departureDate: '2023-10-25',
-      departurePort: 'Mombasa, Kenya'
-    },
-    {
-      id: 'EQ-2450',
-      destination: 'Stockholm, Sweden',
-      client: 'Nordic Coffee Collective',
-      contract: 'CNT-1005',
-      status: 'delayed',
-      eta: '2023-12-30',
-      volume: '10 tons',
-      carrier: 'Hapag-Lloyd',
-      vessel: 'Seoul Express',
-      departureDate: '2023-11-20',
-      departurePort: 'Mombasa, Kenya'
-    }
-  ];
-
-  const statusColors = {
-    'in-transit': "bg-blue-100 text-blue-800",
-    'loading': "bg-purple-100 text-purple-800",
-    'preparing': "bg-amber-100 text-amber-800",
-    'delivered': "bg-green-100 text-green-800",
-    'delayed': "bg-red-100 text-red-800",
-    'customs': "bg-indigo-100 text-indigo-800"
-  };
+  const [filterStatus, setFilterStatus] = useState('all');
   
-  const statusIcons = {
-    'in-transit': <Ship className="h-4 w-4 mr-1" />,
-    'loading': <Package className="h-4 w-4 mr-1" />,
-    'preparing': <FileText className="h-4 w-4 mr-1" />,
-    'delivered': <CheckCircle className="h-4 w-4 mr-1" />,
-    'delayed': <AlertCircle className="h-4 w-4 mr-1" />,
-    'customs': <Truck className="h-4 w-4 mr-1" />
-  };
-
+  const filteredShipments = filterStatus === 'all' 
+    ? shipments 
+    : shipments.filter(shipment => shipment.status === filterStatus);
+  
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div className="flex-1">
           <h2 className="text-xl font-semibold">Shipment Tracking</h2>
-          <p className="text-gray-500 text-sm">Monitor and manage coffee export shipments</p>
+          <p className="text-gray-500 text-sm">Monitor and manage global coffee shipments</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="flex items-center gap-1">
@@ -121,64 +129,87 @@ const ShipmentTracking = () => {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="bg-blue-50">
           <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="bg-blue-100 h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-2">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-blue-700">In Transit</p>
+                <p className="text-2xl font-bold text-blue-900">3</p>
+              </div>
+              <div className="bg-blue-100 p-2 rounded-full">
                 <Ship className="h-5 w-5 text-blue-700" />
               </div>
-              <p className="text-sm text-blue-700">In Transit</p>
-              <p className="text-2xl font-bold text-blue-900">1</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-purple-50">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="bg-purple-100 h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Package className="h-5 w-5 text-purple-700" />
-              </div>
-              <p className="text-sm text-purple-700">Loading</p>
-              <p className="text-2xl font-bold text-purple-900">1</p>
             </div>
           </CardContent>
         </Card>
         
         <Card className="bg-amber-50">
           <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="bg-amber-100 h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-2">
-                <FileText className="h-5 w-5 text-amber-700" />
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-amber-700">Loading</p>
+                <p className="text-2xl font-bold text-amber-900">1</p>
               </div>
-              <p className="text-sm text-amber-700">Preparing</p>
-              <p className="text-2xl font-bold text-amber-900">1</p>
+              <div className="bg-amber-100 p-2 rounded-full">
+                <Package className="h-5 w-5 text-amber-700" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-purple-50">
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-purple-700">Preparing</p>
+                <p className="text-2xl font-bold text-purple-900">1</p>
+              </div>
+              <div className="bg-purple-100 p-2 rounded-full">
+                <Clock className="h-5 w-5 text-purple-700" />
+              </div>
             </div>
           </CardContent>
         </Card>
         
         <Card className="bg-green-50">
           <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="bg-green-100 h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-2">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-green-700">Delivered</p>
+                <p className="text-2xl font-bold text-green-900">8</p>
+              </div>
+              <div className="bg-green-100 p-2 rounded-full">
                 <CheckCircle className="h-5 w-5 text-green-700" />
               </div>
-              <p className="text-sm text-green-700">Delivered</p>
-              <p className="text-2xl font-bold text-green-900">1</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-red-50">
+        <Card className="bg-gray-50">
           <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="bg-red-100 h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-2">
-                <AlertCircle className="h-5 w-5 text-red-700" />
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-gray-700">Scheduled</p>
+                <p className="text-2xl font-bold text-gray-900">2</p>
               </div>
-              <p className="text-sm text-red-700">Delayed</p>
-              <p className="text-2xl font-bold text-red-900">1</p>
+              <div className="bg-gray-100 p-2 rounded-full">
+                <Calendar className="h-5 w-5 text-gray-700" />
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
+      
+      {/* Urgent Alert */}
+      <Card className="border-orange-200 bg-orange-50">
+        <CardContent className="pt-6 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-orange-600" />
+          <span className="text-orange-800">
+            Shipment EQ-2453 requires urgent documentation - Due in 48 hours
+          </span>
+          <Button size="sm" variant="outline" className="ml-auto border-orange-300 text-orange-700 hover:bg-orange-100">
+            View Details
+          </Button>
+        </CardContent>
+      </Card>
       
       {/* Shipments Table */}
       <Card>
@@ -186,11 +217,27 @@ const ShipmentTracking = () => {
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2">
               <Ship className="h-5 w-5 text-blue-600" />
-              <span>Shipment Tracking</span>
+              <span>Active Shipments</span>
             </CardTitle>
-            <div className="flex items-center relative w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-              <Input placeholder="Search shipments..." className="pl-8" />
+            <div className="flex items-center gap-3">
+              <div className="flex items-center relative w-64">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                <Input placeholder="Search shipments..." className="pl-8" />
+              </div>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="in-transit">In Transit</SelectItem>
+                  <SelectItem value="loading">Loading</SelectItem>
+                  <SelectItem value="preparing">Preparing</SelectItem>
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value="delivered">Delivered</SelectItem>
+                  <SelectItem value="delayed">Delayed</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
@@ -203,56 +250,40 @@ const ShipmentTracking = () => {
                   <TableHead>Destination</TableHead>
                   <TableHead>Client</TableHead>
                   <TableHead>Volume</TableHead>
-                  <TableHead>Carrier</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Vessel</TableHead>
+                  <TableHead>Departure</TableHead>
                   <TableHead>ETA</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {shipments.map((shipment) => (
+                {filteredShipments.map((shipment) => (
                   <TableRow key={shipment.id}>
                     <TableCell className="font-medium">{shipment.id}</TableCell>
-                    <TableCell>
-                      <div className="flex items-start gap-1">
-                        <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
-                        <div>
-                          <div>{shipment.destination}</div>
-                          <div className="text-xs text-gray-500">From: {shipment.departurePort}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>{shipment.client}</div>
-                      <div className="text-xs text-gray-500">{shipment.contract}</div>
-                    </TableCell>
+                    <TableCell>{shipment.destination}</TableCell>
+                    <TableCell>{shipment.client}</TableCell>
                     <TableCell>{shipment.volume}</TableCell>
-                    <TableCell>
-                      <div>{shipment.carrier}</div>
-                      <div className="text-xs text-gray-500">{shipment.vessel}</div>
-                    </TableCell>
+                    <TableCell>{shipment.vessel}</TableCell>
+                    <TableCell>{shipment.departureDate}</TableCell>
+                    <TableCell>{shipment.eta}</TableCell>
                     <TableCell>
                       <Badge className={statusColors[shipment.status]}>
-                        <div className="flex items-center">
-                          {statusIcons[shipment.status]}
-                          <span>
-                            {shipment.status === 'in-transit' ? 'In Transit' :
-                             shipment.status.charAt(0).toUpperCase() + shipment.status.slice(1)}
-                          </span>
-                        </div>
+                        {statusLabels[shipment.status]}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4 text-gray-500" />
-                        <span>{shipment.eta}</span>
-                      </div>
-                    </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                        <span>Details</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon">
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -262,80 +293,26 @@ const ShipmentTracking = () => {
         </CardContent>
       </Card>
       
-      {/* Shipment Timeline */}
+      {/* Shipment Map Placeholder */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-blue-600" />
-            <span>Active Shipment Timeline - EQ-2453</span>
+            <MapPin className="h-5 w-5 text-blue-600" />
+            <span>Global Shipment Map</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="relative">
-            <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-blue-200"></div>
-            
-            <div className="space-y-6">
-              {[
-                { 
-                  date: '2023-12-05', 
-                  event: 'Departed from Port of Mombasa', 
-                  details: 'Vessel: MSC Hamburg, Container: MSDU7654321',
-                  status: 'complete'
-                },
-                { 
-                  date: '2023-12-11', 
-                  event: 'Passed Suez Canal', 
-                  details: 'Transit completed in 2 days',
-                  status: 'complete'
-                },
-                { 
-                  date: '2023-12-18', 
-                  event: 'Mediterranean Sea Transit', 
-                  details: 'Current position: 36.5°N, 15.2°E',
-                  status: 'in-progress'
-                },
-                { 
-                  date: '2023-12-25', 
-                  event: 'Scheduled Arrival at Hamburg Port', 
-                  details: 'Terminal: Hamburger Hafen und Logistik AG',
-                  status: 'pending'
-                },
-                { 
-                  date: '2023-12-27', 
-                  event: 'Customs Clearance', 
-                  details: 'Documentation prepared and submitted',
-                  status: 'pending'
-                },
-                { 
-                  date: '2023-12-30', 
-                  event: 'Delivery to Client Warehouse', 
-                  details: 'European Coffee Roasters GmbH, Hamburg',
-                  status: 'pending'
-                }
-              ].map((item, index) => (
-                <div key={index} className="relative pl-10">
-                  <div className={`absolute left-0 rounded-full h-10 w-10 flex items-center justify-center 
-                    ${item.status === 'complete' ? 'bg-green-100' : 
-                      item.status === 'in-progress' ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                    {item.status === 'complete' ? (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                    ) : item.status === 'in-progress' ? (
-                      <Ship className="h-5 w-5 text-blue-600" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-gray-400" />
-                    )}
-                  </div>
-                  
-                  <div>
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 text-gray-500 mr-1" />
-                      <span className="text-sm text-gray-500">{item.date}</span>
-                    </div>
-                    <h4 className="font-medium mt-1">{item.event}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{item.details}</p>
-                  </div>
-                </div>
-              ))}
+          <div className="bg-slate-100 h-80 flex items-center justify-center rounded-md">
+            <div className="text-center">
+              <MapPin className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-600">Interactive Global Shipment Map</h3>
+              <p className="text-sm text-slate-500 max-w-md">
+                Track shipments in real-time across global trade routes
+              </p>
+              <Button variant="outline" className="mt-4">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open Full Map
+              </Button>
             </div>
           </div>
         </CardContent>
