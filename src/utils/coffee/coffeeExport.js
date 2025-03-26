@@ -246,11 +246,11 @@ export const exportToPDF = (data, filename = 'export', type = '') => {
   const columns = getColumnsForType(type, data);
   const rows = getRowsForType(type, data, columns);
   
-  // Create the table
+  // Create the table - fixed issue with autoTable
   doc.autoTable({
-    startY: 30,
     head: [columns],
     body: rows,
+    startY: 30,
     headStyles: {
       fillColor: [41, 128, 185],
       textColor: 255,
