@@ -1,29 +1,33 @@
 
 import React, { useState, useEffect } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown, CheckCircle, Clock, AlertTriangle, PackageCheck } from 'lucide-react';
-import CSVExportButton from "@/components/inventory/dairy/logistics/records/components/export-buttons/CSVExportButton";
-import ExcelExportButton from "@/components/inventory/dairy/logistics/records/components/export-buttons/ExcelExportButton";
-import PDFExportButton from "@/components/inventory/dairy/logistics/records/components/export-buttons/PDFExportButton";
+import { CheckCircle, Clock, AlertTriangle, Coffee, ArrowUpDown } from 'lucide-react';
+import { useCoffeeStockData } from '@/hooks/useCoffeeStockData';
 import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
-import { useToast } from '@/components/ui/use-toast';
-import { exportToCSV, exportToExcel, exportToPDF } from '@/utils/coffee/coffeeExport';
 
-const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFilter }) => {
-  const { toast } = useToast();
+const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFilter, operationType }) => {
   const {
     transfers,
     loading: transfersLoading,
-    error,
+    error: transfersError,
     handleTimeRangeChange,
     handleStatusChange,
     handleSearch,
     handleRefresh
   } = useCoffeeStockTransfers();
 
-  const [sortedTransfers, setSortedTransfers] = useState([]);
+  const { stockData, isLoading: stockLoading, error: stockError } = useCoffeeStockData();
+  
+  const [filteredData, setFilteredData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ field: 'created_at', ascending: false });
 
   useEffect(() => {
@@ -40,22 +44,91 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
       handleSearch(searchTerm);
     }
     
-    // This would be implemented in a real app to filter by category
-    // For now we'll just use the existing transfers
+    // Combine and filter data based on operation type
+    let combinedData = [];
     
-    // Sort the data
-    const sorted = [...transfers].sort((a, b) => {
-      if (a[sortConfig.field] < b[sortConfig.field]) {
+    // Process transfer data (for "Receive Partner Stock")
+    if (!operationType || operationType === 'all' || operationType === 'receive-partner') {
+      const mappedTransfers = transfers.map(transfer => ({
+        ...transfer,
+        operationType: 'receive-partner',
+        operationName: 'Receive Partner Stock',
+        itemName: transfer.coffee_type || 'Coffee',
+        quantity: transfer.quantity,
+        location: transfer.destination_location || transfer.source_location,
+        date: transfer.created_at
+      }));
+      combinedData = [...combinedData, ...mappedTransfers];
+    }
+    
+    // Process stock data for other operation types
+    if (!operationType || operationType === 'all' || ['receive-new', 'sell', 'relocate'].includes(operationType)) {
+      const mappedStockData = stockData.map(item => {
+        // Determine operation type based on source/name/metadata
+        let opType = 'receive-new'; // Default
+        let opName = 'Receive New Stock';
+        
+        if (item.name && item.name.toLowerCase().includes('sale')) {
+          opType = 'sell';
+          opName = 'Sell Current Stock';
+        } else if (item.name && item.name.toLowerCase().includes('transfer')) {
+          opType = 'relocate';
+          opName = 'Relocate Stock';
+        } else if (item.source === 'transfers') {
+          opType = 'receive-partner';
+          opName = 'Receive Partner Stock';
+        }
+        
+        // Only include if it matches the operation type filter
+        if (operationType && operationType !== 'all' && opType !== operationType) {
+          return null;
+        }
+        
+        return {
+          id: item.id,
+          operationType: opType,
+          operationName: opName,
+          itemName: item.name || 'Coffee',
+          coffee_type: item.type || 'Coffee',
+          quality_grade: item.grade || 'Standard',
+          quantity: item.current_stock,
+          unit: 'kg',
+          location: item.location,
+          manager: item.manager || 'System',
+          status: item.health === 'good' ? 'completed' : 
+                 item.health === 'warning' ? 'pending' : 'declined',
+          date: item.updated_at,
+          created_at: item.updated_at
+        };
+      }).filter(Boolean);
+      
+      combinedData = [...combinedData, ...mappedStockData];
+    }
+    
+    // Apply category filter if specified
+    if (categoryFilter && categoryFilter !== 'all') {
+      combinedData = combinedData.filter(item => {
+        const location = (item.location || '').toLowerCase();
+        return location.includes(categoryFilter.toLowerCase());
+      });
+    }
+    
+    // Sort the combined data
+    const sortedData = [...combinedData].sort((a, b) => {
+      const aValue = a[sortConfig.field] || '';
+      const bValue = b[sortConfig.field] || '';
+      
+      if (aValue < bValue) {
         return sortConfig.ascending ? -1 : 1;
       }
-      if (a[sortConfig.field] > b[sortConfig.field]) {
+      if (aValue > bValue) {
         return sortConfig.ascending ? 1 : -1;
       }
       return 0;
     });
     
-    setSortedTransfers(sorted);
-  }, [transfers, timeRange, statusFilter, searchTerm, categoryFilter, sortConfig]);
+    setFilteredData(sortedData);
+  }, [transfers, stockData, timeRange, statusFilter, searchTerm, categoryFilter, operationType, sortConfig]);
 
   const handleSort = (field) => {
     setSortConfig(prevConfig => ({
@@ -64,37 +137,14 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
     }));
   };
 
-  const handleExportCSV = () => {
-    exportToCSV(sortedTransfers, 'coffee-stock-transfers');
-    toast({
-      title: "Export Successful",
-      description: "Data exported to CSV format",
-    });
-  };
-
-  const handleExportExcel = () => {
-    exportToExcel(sortedTransfers, 'coffee-stock-transfers');
-    toast({
-      title: "Export Successful",
-      description: "Data exported to Excel format",
-    });
-  };
-
-  const handleExportPDF = () => {
-    exportToPDF(sortedTransfers, 'coffee-stock-transfers', 'Coffee Stock Transfers Report');
-    toast({
-      title: "Export Successful",
-      description: "Data exported to PDF format",
-    });
-  };
-
   const getStatusBadge = (status) => {
     switch (status) {
       case 'received':
+      case 'completed':
         return (
           <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
             <CheckCircle className="h-3 w-3" />
-            Received
+            Completed
           </Badge>
         );
       case 'pending':
@@ -111,13 +161,6 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
             Declined
           </Badge>
         );
-      case 'processing':
-        return (
-          <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
-            <PackageCheck className="h-3 w-3" />
-            Processing
-          </Badge>
-        );
       default:
         return (
           <Badge variant="outline">{status}</Badge>
@@ -125,7 +168,23 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
     }
   };
 
+  const getOperationBadge = (operationType) => {
+    switch (operationType) {
+      case 'receive-new':
+        return <Badge className="bg-green-100 text-green-800">Receive New</Badge>;
+      case 'sell':
+        return <Badge className="bg-blue-100 text-blue-800">Sell</Badge>;
+      case 'relocate':
+        return <Badge className="bg-purple-100 text-purple-800">Relocate</Badge>;
+      case 'receive-partner':
+        return <Badge className="bg-amber-100 text-amber-800">Receive Partner</Badge>;
+      default:
+        return <Badge variant="outline">{operationType}</Badge>;
+    }
+  };
+
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
@@ -136,7 +195,7 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
     }).format(date);
   };
 
-  if (transfersLoading || isLoading) {
+  if (isLoading || transfersLoading || stockLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin h-8 w-8 border-4 border-amber-500 rounded-full border-t-transparent"></div>
@@ -145,11 +204,11 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
     );
   }
 
-  if (error) {
+  if (transfersError || stockError) {
     return (
       <div className="bg-red-50 p-4 rounded-md border border-red-200">
         <h3 className="text-red-800 font-medium">Error loading data</h3>
-        <p className="text-red-600">{error}</p>
+        <p className="text-red-600">{transfersError || stockError}</p>
         <Button 
           onClick={handleRefresh} 
           className="mt-2 bg-red-100 text-red-800 hover:bg-red-200"
@@ -160,133 +219,77 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
     );
   }
 
+  if (filteredData.length === 0) {
+    return (
+      <div className="bg-gray-50 p-8 rounded-lg border border-gray-200 text-center">
+        <Coffee className="h-12 w-12 mx-auto text-amber-400 mb-3" />
+        <h3 className="text-lg font-medium text-gray-700 mb-1">No Coffee Data Found</h3>
+        <p className="text-gray-500 mb-4">Try adjusting your filters or search criteria.</p>
+        <Button onClick={handleRefresh}>Refresh Data</Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between">
-        <h3 className="text-lg font-medium text-gray-700">
-          Coffee Stock Transfer Records
-        </h3>
-        <div className="flex space-x-2">
-          <CSVExportButton onClick={handleExportCSV} />
-          <ExcelExportButton onClick={handleExportExcel} />
-          <PDFExportButton onClick={handleExportPDF} />
-        </div>
-      </div>
-      
-      <div className="border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[100px]">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('created_at')}
-                  className="flex items-center text-xs font-medium"
-                >
-                  Date
-                  <ArrowUpDown className="ml-1 h-3 w-3" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('coffee_type')}
-                  className="flex items-center text-xs font-medium"
-                >
-                  Coffee Type
-                  <ArrowUpDown className="ml-1 h-3 w-3" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('quality_grade')}
-                  className="flex items-center text-xs font-medium"
-                >
-                  Grade
-                  <ArrowUpDown className="ml-1 h-3 w-3" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('quantity')}
-                  className="flex items-center text-xs font-medium"
-                >
-                  Volume
-                  <ArrowUpDown className="ml-1 h-3 w-3" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('source_location')}
-                  className="flex items-center text-xs font-medium"
-                >
-                  Source
-                  <ArrowUpDown className="ml-1 h-3 w-3" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('destination_location')}
-                  className="flex items-center text-xs font-medium"
-                >
-                  Destination
-                  <ArrowUpDown className="ml-1 h-3 w-3" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('manager')}
-                  className="flex items-center text-xs font-medium"
-                >
-                  Manager
-                  <ArrowUpDown className="ml-1 h-3 w-3" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort('status')}
-                  className="flex items-center text-xs font-medium"
-                >
-                  Status
-                  <ArrowUpDown className="ml-1 h-3 w-3" />
-                </Button>
-              </TableHead>
+    <div className="border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">
+              <Button variant="ghost" size="sm" onClick={() => handleSort('date')} className="flex items-center">
+                Date
+                <ArrowUpDown className="ml-2 h-3 w-3" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button variant="ghost" size="sm" onClick={() => handleSort('operationName')} className="flex items-center">
+                Operation
+                <ArrowUpDown className="ml-2 h-3 w-3" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button variant="ghost" size="sm" onClick={() => handleSort('coffee_type')} className="flex items-center">
+                Coffee Type
+                <ArrowUpDown className="ml-2 h-3 w-3" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button variant="ghost" size="sm" onClick={() => handleSort('quantity')} className="flex items-center">
+                Quantity
+                <ArrowUpDown className="ml-2 h-3 w-3" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button variant="ghost" size="sm" onClick={() => handleSort('location')} className="flex items-center">
+                Location
+                <ArrowUpDown className="ml-2 h-3 w-3" />
+              </Button>
+            </TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Manager</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredData.map((item) => (
+            <TableRow key={item.id}>
+              <TableCell className="font-medium">{formatDate(item.date)}</TableCell>
+              <TableCell>{getOperationBadge(item.operationType)}</TableCell>
+              <TableCell>
+                <div className="flex items-center">
+                  <Coffee className={`h-4 w-4 ${
+                    item.coffee_type?.toLowerCase().includes('arabica') ? 'text-green-600' : 'text-amber-600'
+                  } mr-2`} />
+                  <span>{item.coffee_type || 'Coffee'}</span>
+                </div>
+              </TableCell>
+              <TableCell>{item.quantity} {item.unit || 'kg'}</TableCell>
+              <TableCell>{item.location || 'Unknown'}</TableCell>
+              <TableCell>{getStatusBadge(item.status)}</TableCell>
+              <TableCell>{item.manager || 'System'}</TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedTransfers.length > 0 ? (
-              sortedTransfers.map((transfer) => (
-                <TableRow key={transfer.id}>
-                  <TableCell className="font-medium">{formatDate(transfer.created_at)}</TableCell>
-                  <TableCell>
-                    {transfer.coffee_type === 'arabica' 
-                      ? <span className="text-green-700">Arabica</span> 
-                      : <span className="text-amber-700">Robusta</span>}
-                  </TableCell>
-                  <TableCell>{transfer.quality_grade}</TableCell>
-                  <TableCell>{transfer.quantity} {transfer.unit}</TableCell>
-                  <TableCell>{transfer.source_location}</TableCell>
-                  <TableCell>{transfer.destination_location}</TableCell>
-                  <TableCell>{transfer.manager}</TableCell>
-                  <TableCell>{getStatusBadge(transfer.status)}</TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
-                  No records found
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

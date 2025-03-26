@@ -16,6 +16,9 @@ import PerformanceMetrics from './PerformanceMetrics';
 import QualityInsights from './QualityInsights';
 import StrategicActions from './StrategicActions';
 import DataExplorer from './DataExplorer';
+import QualityManagement from './QualityManagement';
+import LogisticsManagement from './LogisticsManagement';
+import ExportBusinessAnalytics from './ExportBusinessAnalytics';
 
 const ExecutiveDashboard = () => {
   return (
@@ -57,39 +60,15 @@ const ExecutiveDashboard = () => {
         </TabsContent>
         
         <TabsContent value="quality" className="space-y-4">
-          <div className="min-h-[400px] rounded-md flex items-center justify-center bg-gray-50 border border-dashed">
-            <div className="text-center p-6">
-              <CupSoda className="h-12 w-12 text-amber-500 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-gray-700 mb-1">Quality Management Module</h3>
-              <p className="text-gray-500 max-w-md">
-                Detailed quality metrics, cupping scores, and certification tracking for all coffee batches.
-              </p>
-            </div>
-          </div>
+          <QualityManagement />
         </TabsContent>
         
         <TabsContent value="logistics" className="space-y-4">
-          <div className="min-h-[400px] rounded-md flex items-center justify-center bg-gray-50 border border-dashed">
-            <div className="text-center p-6">
-              <Truck className="h-12 w-12 text-amber-500 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-gray-700 mb-1">Logistics Management Module</h3>
-              <p className="text-gray-500 max-w-md">
-                Track coffee shipments, manage transportation networks, and optimize delivery routes.
-              </p>
-            </div>
-          </div>
+          <LogisticsManagement />
         </TabsContent>
         
         <TabsContent value="export" className="space-y-4">
-          <div className="min-h-[400px] rounded-md flex items-center justify-center bg-gray-50 border border-dashed">
-            <div className="text-center p-6">
-              <Globe className="h-12 w-12 text-amber-500 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-gray-700 mb-1">Export Business Analytics</h3>
-              <p className="text-gray-500 max-w-md">
-                International market analysis, export performance metrics, and customer relationship management.
-              </p>
-            </div>
-          </div>
+          <ExportBusinessAnalytics />
         </TabsContent>
       </Tabs>
     </div>

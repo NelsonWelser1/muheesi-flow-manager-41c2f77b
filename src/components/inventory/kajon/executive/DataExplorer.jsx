@@ -14,7 +14,12 @@ import {
   MapPin,
   BarChart3,
   Calendar,
-  Search
+  Search,
+  Package,
+  ShoppingCart,
+  ArrowLeftRight,
+  Truck,
+  CoffeeIcon
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +39,7 @@ const DataExplorer = () => {
   const [timeRangeFilter, setTimeRangeFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [operationTypeFilter, setOperationTypeFilter] = useState('all');
 
   const handleRefresh = () => {
     setIsLoading(true);
@@ -79,78 +85,149 @@ const DataExplorer = () => {
 
         <CardContent>
           {/* Data Filters */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Time Range</label>
-              <div className="flex bg-gray-100 rounded-md p-1">
-                {['hour', 'day', 'week', 'month', 'year', 'all'].map((range) => (
+          <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Time Range</label>
+                <div className="flex bg-gray-100 rounded-md p-1">
+                  {['hour', 'day', 'week', 'month', 'year', 'all'].map((range) => (
+                    <Button 
+                      key={range}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "text-xs flex-1 h-7",
+                        timeRangeFilter === range ? "bg-white shadow-sm" : "hover:bg-gray-200"
+                      )}
+                      onClick={() => setTimeRangeFilter(range)}
+                    >
+                      {range.charAt(0).toUpperCase() + range.slice(1)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Operation Type</label>
+                <div className="flex overflow-x-auto bg-gray-100 rounded-md p-1">
                   <Button 
-                    key={range}
                     variant="ghost"
                     size="sm"
                     className={cn(
                       "text-xs flex-1 h-7",
-                      timeRangeFilter === range ? "bg-white shadow-sm" : "hover:bg-gray-200"
+                      operationTypeFilter === 'all' ? "bg-white shadow-sm" : "hover:bg-gray-200"
                     )}
-                    onClick={() => setTimeRangeFilter(range)}
+                    onClick={() => setOperationTypeFilter('all')}
                   >
-                    {range.charAt(0).toUpperCase() + range.slice(1)}
+                    All Types
                   </Button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Location Type</label>
-              <div className="flex bg-gray-100 rounded-md p-1">
-                {['all', 'farm', 'store', 'factory', 'warehouse'].map((category) => (
                   <Button 
-                    key={category}
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "text-xs flex-1 h-7",
-                      categoryFilter === category ? "bg-white shadow-sm" : "hover:bg-gray-200"
+                      "text-xs flex-1 h-7 flex gap-1 items-center whitespace-nowrap",
+                      operationTypeFilter === 'receive-new' ? "bg-white shadow-sm" : "hover:bg-gray-200"
                     )}
-                    onClick={() => setCategoryFilter(category)}
+                    onClick={() => setOperationTypeFilter('receive-new')}
                   >
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                    <Package className="h-3 w-3" />
+                    Receive New
                   </Button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
-              <div className="flex bg-gray-100 rounded-md p-1">
-                {['all', 'pending', 'received', 'shipped', 'processed'].map((status) => (
                   <Button 
-                    key={status}
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "text-xs flex-1 h-7",
-                      statusFilter === status ? "bg-white shadow-sm" : "hover:bg-gray-200"
+                      "text-xs flex-1 h-7 flex gap-1 items-center whitespace-nowrap",
+                      operationTypeFilter === 'sell' ? "bg-white shadow-sm" : "hover:bg-gray-200"
                     )}
-                    onClick={() => setStatusFilter(status)}
+                    onClick={() => setOperationTypeFilter('sell')}
                   >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                    <ShoppingCart className="h-3 w-3" />
+                    Sell Stock
                   </Button>
-                ))}
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "text-xs flex-1 h-7 flex gap-1 items-center whitespace-nowrap",
+                      operationTypeFilter === 'relocate' ? "bg-white shadow-sm" : "hover:bg-gray-200"
+                    )}
+                    onClick={() => setOperationTypeFilter('relocate')}
+                  >
+                    <ArrowLeftRight className="h-3 w-3" />
+                    Relocate
+                  </Button>
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "text-xs flex-1 h-7 flex gap-1 items-center whitespace-nowrap",
+                      operationTypeFilter === 'receive-partner' ? "bg-white shadow-sm" : "hover:bg-gray-200"
+                    )}
+                    onClick={() => setOperationTypeFilter('receive-partner')}
+                  >
+                    <Truck className="h-3 w-3" />
+                    Partner Stock
+                  </Button>
+                </div>
               </div>
             </div>
             
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Search</label>
-              <div className="relative">
-                <Search className="h-4 w-4 absolute left-2 top-2.5 text-gray-500" />
-                <input
-                  type="text"
-                  className="w-full pl-8 pr-4 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="Search by any field..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Location Type</label>
+                <div className="flex bg-gray-100 rounded-md p-1">
+                  {['all', 'farm', 'store', 'factory', 'warehouse'].map((category) => (
+                    <Button 
+                      key={category}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "text-xs flex-1 h-7",
+                        categoryFilter === category ? "bg-white shadow-sm" : "hover:bg-gray-200"
+                      )}
+                      onClick={() => setCategoryFilter(category)}
+                    >
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Status</label>
+                  <div className="flex bg-gray-100 rounded-md p-1">
+                    {['all', 'pending', 'completed', 'declined'].map((status) => (
+                      <Button 
+                        key={status}
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "text-xs flex-1 h-7",
+                          statusFilter === status ? "bg-white shadow-sm" : "hover:bg-gray-200"
+                        )}
+                        onClick={() => setStatusFilter(status)}
+                      >
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Search</label>
+                  <div className="relative">
+                    <Search className="h-4 w-4 absolute left-2 top-2.5 text-gray-500" />
+                    <input
+                      type="text"
+                      className="w-full pl-8 pr-4 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      placeholder="Search by any field..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -188,6 +265,7 @@ const DataExplorer = () => {
                 statusFilter={statusFilter}
                 searchTerm={searchTerm}
                 categoryFilter={categoryFilter}
+                operationType={operationTypeFilter}
               />
             </TabsContent>
             
@@ -198,6 +276,7 @@ const DataExplorer = () => {
                 statusFilter={statusFilter}
                 searchTerm={searchTerm}
                 categoryFilter={categoryFilter}
+                operationType={operationTypeFilter}
               />
             </TabsContent>
             
@@ -208,6 +287,7 @@ const DataExplorer = () => {
                 statusFilter={statusFilter}
                 searchTerm={searchTerm}
                 categoryFilter={categoryFilter}
+                operationType={operationTypeFilter}
               />
             </TabsContent>
             
@@ -218,6 +298,7 @@ const DataExplorer = () => {
                 statusFilter={statusFilter}
                 searchTerm={searchTerm}
                 categoryFilter={categoryFilter}
+                operationType={operationTypeFilter}
               />
             </TabsContent>
           </Tabs>
