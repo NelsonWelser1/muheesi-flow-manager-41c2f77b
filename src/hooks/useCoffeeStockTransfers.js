@@ -2,6 +2,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { 
+  filterPartnerStockTransfers, 
+  filterRelocationTransfers 
+} from '@/utils/coffee/coffeeDataFilters';
 
 export const useCoffeeStockTransfers = () => {
   const [transfers, setTransfers] = useState([]);
@@ -49,23 +53,6 @@ export const useCoffeeStockTransfers = () => {
         query = query.eq('status', filters.status);
       }
       
-      // Apply partner transfer filter if provided
-      if (filters.isPartnerTransfer !== undefined) {
-        query = query.eq('is_partner_transfer', filters.isPartnerTransfer);
-      }
-      
-      // Apply operation type filter if provided
-      if (filters.operationType) {
-        // For relocate-stock, filter out is_partner_transfer = true entries
-        if (filters.operationType === 'relocate-stock') {
-          query = query.eq('is_partner_transfer', false);
-        }
-        // For partner-stock, ensure is_partner_transfer = true
-        else if (filters.operationType === 'partner-stock') {
-          query = query.eq('is_partner_transfer', true);
-        }
-      }
-      
       // Apply location filter if provided
       if (filters.location) {
         query = query.or(`source_location.ilike.%${filters.location}%,destination_location.ilike.%${filters.location}%`);
@@ -99,17 +86,26 @@ export const useCoffeeStockTransfers = () => {
         quantity: item.quantity || 0,
         status: item.status || 'pending',
         manager: item.manager || 'N/A',
-        is_partner_transfer: !!item.is_partner_transfer,
         created_at: item.created_at || new Date().toISOString(),
         updated_at: item.updated_at || item.created_at || new Date().toISOString(),
-        // Add operation type for better filtering
-        operation_type: item.is_partner_transfer ? 'partner-stock' : 'relocate-stock',
+        // Calculate operation type based on data patterns
+        operation_type: filters.operationType || 
+          (filters.isPartnerTransfer ? 'partner-stock' : 'relocate-stock'),
         ...item  // Keep all original properties
       }));
       
-      setTransfers(processedData);
-      console.log('Fetched coffee transfers data:', processedData);
-      return processedData;
+      // Apply special filters based on operation type
+      let filteredData = processedData;
+      
+      if (filters.operationType === 'partner-stock' || filters.isPartnerTransfer) {
+        filteredData = filterPartnerStockTransfers(processedData);
+      } else if (filters.operationType === 'relocate-stock' && !filters.isPartnerTransfer) {
+        filteredData = filterRelocationTransfers(processedData);
+      }
+      
+      setTransfers(filteredData);
+      console.log('Fetched coffee transfers data:', filteredData);
+      return filteredData;
     } catch (err) {
       console.error('Error fetching transfers:', err);
       setError(err.message || "Failed to fetch transfers");
@@ -175,16 +171,10 @@ export const useCoffeeStockTransfers = () => {
   // Submit a new transfer
   const submitTransfer = async (transferData) => {
     try {
-      // Set is_partner_transfer based on transferData
-      const isPartnerTransfer = transferData.hasOwnProperty('is_partner_transfer') 
-        ? transferData.is_partner_transfer 
-        : false;
-        
       const { data, error } = await supabase
         .from('coffee_stock_transfers')
         .insert([{
           ...transferData,
-          is_partner_transfer: isPartnerTransfer,
           status: 'pending',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -218,7 +208,9 @@ export const useCoffeeStockTransfers = () => {
         .update({ 
           status, 
           notes: notes,
-          updated_at: new Date().toISOString() 
+          updated_at: new Date().toISOString(),
+          ...(status === 'received' ? { received_at: new Date().toISOString() } : {}),
+          ...(status === 'declined' ? { declined_at: new Date().toISOString() } : {})
         })
         .eq('id', id)
         .select();
@@ -234,7 +226,14 @@ export const useCoffeeStockTransfers = () => {
       setTransfers(prevTransfers => 
         prevTransfers.map(transfer => 
           transfer.id === id 
-            ? { ...transfer, status, notes, updated_at: new Date().toISOString() } 
+            ? { 
+                ...transfer, 
+                status, 
+                notes, 
+                updated_at: new Date().toISOString(),
+                ...(status === 'received' ? { received_at: new Date().toISOString() } : {}),
+                ...(status === 'declined' ? { declined_at: new Date().toISOString() } : {})
+              } 
             : transfer
         )
       );
@@ -249,6 +248,23 @@ export const useCoffeeStockTransfers = () => {
       });
       throw err;
     }
+  };
+
+  // Fetch partner transfers specifically
+  const fetchPartnerTransfers = async (location) => {
+    return fetchTransfers({ 
+      operationType: 'partner-stock',
+      isPartnerTransfer: true,
+      location
+    });
+  };
+
+  // Fetch relocation transfers specifically
+  const fetchRelocationTransfers = async () => {
+    return fetchTransfers({ 
+      operationType: 'relocate-stock',
+      isPartnerTransfer: false 
+    });
   };
 
   // Manual refresh function
@@ -280,6 +296,8 @@ export const useCoffeeStockTransfers = () => {
     handleSort,
     handleRefresh,
     fetchTransfers,
+    fetchPartnerTransfers,
+    fetchRelocationTransfers,
     submitTransfer,
     updateTransferStatus
   };

@@ -11,7 +11,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Clock, AlertTriangle, Coffee, ArrowUpDown } from 'lucide-react';
-import { filterDataByOperationType } from '@/utils/coffee/coffeeDataFilters';
+import { 
+  filterDataByOperationType, 
+  filterPartnerStockTransfers,
+  filterRelocationTransfers
+} from '@/utils/coffee/coffeeDataFilters';
 
 const TableView = ({ 
   data = [], 
@@ -37,7 +41,17 @@ const TableView = ({
     
     // If specific operation type is provided, filter the data
     if (operationType && operationType !== 'all') {
-      filtered = filterDataByOperationType(filtered, operationType);
+      switch(operationType) {
+        case 'partner-stock':
+          filtered = filterPartnerStockTransfers(filtered);
+          break;
+        case 'relocate-stock':
+          filtered = filterRelocationTransfers(filtered);
+          break;
+        default:
+          filtered = filterDataByOperationType(filtered, operationType);
+          break;
+      }
     }
     
     // Apply specific status filter if provided
@@ -47,7 +61,11 @@ const TableView = ({
     
     // Apply partner filter if provided
     if (filterPartner !== undefined) {
-      filtered = filtered.filter(item => !!item.is_partner_transfer === filterPartner);
+      if (operationType === 'partner-stock') {
+        filtered = filterPartnerStockTransfers(filtered);
+      } else if (operationType === 'relocate-stock') {
+        filtered = filterRelocationTransfers(filtered);
+      }
     }
     
     // Apply search filter if there's a search term
@@ -133,11 +151,13 @@ const TableView = ({
     
     if (!operationType) {
       if (sourceTable === 'coffee_sales') {
-        operationType = 'sell';
+        operationType = 'sell-stock';
       } else if (sourceTable === 'coffee_stock') {
         operationType = 'receive-new';
       } else if (sourceTable === 'coffee_stock_transfers') {
-        operationType = item.is_partner_transfer ? 'receive-partner' : 'relocate';
+        // For transfers, distinguish between partner and relocation
+        const isPartnerTransfer = filterPartnerStockTransfers([item]).length > 0;
+        operationType = isPartnerTransfer ? 'partner-stock' : 'relocate-stock';
       }
     }
     
@@ -173,7 +193,8 @@ const TableView = ({
   // Get location display value based on operation type and source table
   const getLocationDisplay = (item) => {
     if (sourceTable === 'coffee_stock_transfers') {
-      if (item.is_partner_transfer) {
+      // For partner transfers, focus on destination (receiving location)
+      if (operationType === 'partner-stock' || filterPartnerStockTransfers([item]).length > 0) {
         return item.destination_location || 'Unknown';
       } else {
         return `${item.source_location || 'Unknown'} → ${item.destination_location || 'Unknown'}`;
