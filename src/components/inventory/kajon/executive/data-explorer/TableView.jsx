@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Table,
@@ -14,48 +13,54 @@ import { CheckCircle, Clock, AlertTriangle, Coffee, ArrowUpDown } from 'lucide-r
 import { useCoffeeStockData } from '@/hooks/useCoffeeStockData';
 import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
 
-const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFilter, operationType }) => {
+const TableView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operationType }) => {
   const {
     transfers,
     loading: transfersLoading,
     error: transfersError,
-    handleTimeRangeChange,
-    handleStatusChange,
-    handleSearch,
-    handleRefresh
+    fetchTransfers
   } = useCoffeeStockTransfers();
 
-  const { stockData, isLoading: stockLoading, error: stockError, fetchCoffeeStockData } = useCoffeeStockData();
+  const { 
+    stockData, 
+    isLoading: stockLoading, 
+    error: stockError, 
+    fetchCoffeeStockData 
+  } = useCoffeeStockData();
   
   const [filteredData, setFilteredData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ field: 'created_at', ascending: false });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Apply filters based on props and fetch data
-    if (timeRange && timeRange !== 'all') {
-      handleTimeRangeChange(timeRange);
-    }
+    const loadData = async () => {
+      setLoading(true);
+      
+      try {
+        const filters = {
+          timeRange,
+          status: statusFilter,
+          searchTerm,
+          location: categoryFilter !== 'all' ? categoryFilter : undefined
+        };
+        
+        await Promise.all([
+          fetchCoffeeStockData(filters),
+          fetchTransfers(filters)
+        ]);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    if (statusFilter && statusFilter !== 'all') {
-      handleStatusChange(statusFilter);
-    }
-    
-    if (searchTerm) {
-      handleSearch(searchTerm);
-    }
-    
-    // Fetch stock data with filters
-    fetchCoffeeStockData({
-      timeRange,
-      status: statusFilter,
-      searchTerm,
-      location: categoryFilter !== 'all' ? categoryFilter : null
-    });
-    
-    // Process and combine data based on operation type
+    loadData();
+  }, [timeRange, statusFilter, searchTerm, categoryFilter, operationType]);
+
+  useEffect(() => {
     let combinedData = [];
     
-    // Process transfer data (for "Receive Partner Stock")
     if (!operationType || operationType === 'all' || operationType === 'receive-partner') {
       const mappedTransfers = transfers.map(transfer => ({
         ...transfer,
@@ -69,10 +74,7 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
       combinedData = [...combinedData, ...mappedTransfers];
     }
     
-    // Process stock data for other operation types
     if (!operationType || operationType === 'all' || operationType === 'receive-new') {
-      // Map coffee_stock data to a common format
-      // These are entries from the "Receive New Stock" feature
       const mappedStockData = stockData.map(item => ({
         id: item.id,
         operationType: 'receive-new',
@@ -95,7 +97,6 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
       combinedData = [...combinedData, ...mappedStockData];
     }
     
-    // Apply category filter if specified
     if (categoryFilter && categoryFilter !== 'all') {
       combinedData = combinedData.filter(item => {
         const location = (item.location || '').toLowerCase();
@@ -103,12 +104,10 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
       });
     }
     
-    // Apply operation type filter if specified
     if (operationType && operationType !== 'all') {
       combinedData = combinedData.filter(item => item.operationType === operationType);
     }
     
-    // Sort the combined data
     const sortedData = [...combinedData].sort((a, b) => {
       const aValue = a[sortConfig.field] || '';
       const bValue = b[sortConfig.field] || '';
@@ -123,23 +122,18 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
     });
     
     setFilteredData(sortedData);
-  }, [
-    transfers, 
-    stockData, 
-    timeRange, 
-    statusFilter, 
-    searchTerm, 
-    categoryFilter, 
-    operationType, 
-    sortConfig, 
-    fetchCoffeeStockData
-  ]);
+  }, [transfers, stockData, categoryFilter, operationType, sortConfig]);
 
   const handleSort = (field) => {
     setSortConfig(prevConfig => ({
       field,
       ascending: prevConfig.field === field ? !prevConfig.ascending : true
     }));
+  };
+
+  const handleRefresh = () => {
+    fetchCoffeeStockData();
+    fetchTransfers();
   };
 
   const getStatusBadge = (status) => {
@@ -201,7 +195,7 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
     }).format(date);
   };
 
-  if (isLoading || transfersLoading || stockLoading) {
+  if (loading || transfersLoading || stockLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin h-8 w-8 border-4 border-amber-500 rounded-full border-t-transparent"></div>

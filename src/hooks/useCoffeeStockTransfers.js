@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
+import { useToast } from '@/components/ui/use-toast';
 
 export const useCoffeeStockTransfers = () => {
   const [transfers, setTransfers] = useState([]);
@@ -11,12 +12,16 @@ export const useCoffeeStockTransfers = () => {
     status: 'all',
     searchTerm: ''
   });
+  const { toast } = useToast();
 
-  const fetchTransfers = async () => {
+  const fetchTransfers = async (customFilters = null) => {
     setLoading(true);
     setError(null);
     
     try {
+      // Use provided custom filters or default to component state filters
+      const activeFilters = customFilters || filters;
+      
       // Query the coffee_stock_transfers table
       let query = supabase
         .from('coffee_stock_transfers')
@@ -24,7 +29,7 @@ export const useCoffeeStockTransfers = () => {
         .order('created_at', { ascending: false });
       
       // Apply time range filter
-      if (filters.timeRange && filters.timeRange !== 'all') {
+      if (activeFilters.timeRange && activeFilters.timeRange !== 'all') {
         const timeMap = {
           'hour': 1/24,
           'day': 1,
@@ -33,26 +38,31 @@ export const useCoffeeStockTransfers = () => {
           'year': 365
         };
         
-        if (timeMap[filters.timeRange]) {
+        if (timeMap[activeFilters.timeRange]) {
           const startDate = new Date();
-          startDate.setDate(startDate.getDate() - timeMap[filters.timeRange]);
+          startDate.setDate(startDate.getDate() - timeMap[activeFilters.timeRange]);
           query = query.gte('created_at', startDate.toISOString());
         }
       }
       
       // Apply status filter
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+      if (activeFilters.status && activeFilters.status !== 'all') {
+        query = query.eq('status', activeFilters.status);
+      }
+      
+      // Apply location filter if provided
+      if (activeFilters.location && activeFilters.location !== 'all') {
+        query = query.eq('destination_location', activeFilters.location);
       }
       
       // Apply search filter
-      if (filters.searchTerm) {
+      if (activeFilters.searchTerm) {
         query = query.or(`
-          coffee_type.ilike.%${filters.searchTerm}%,
-          quality_grade.ilike.%${filters.searchTerm}%,
-          source_location.ilike.%${filters.searchTerm}%,
-          destination_location.ilike.%${filters.searchTerm}%,
-          manager.ilike.%${filters.searchTerm}%
+          coffee_type.ilike.%${activeFilters.searchTerm}%,
+          quality_grade.ilike.%${activeFilters.searchTerm}%,
+          source_location.ilike.%${activeFilters.searchTerm}%,
+          destination_location.ilike.%${activeFilters.searchTerm}%,
+          manager.ilike.%${activeFilters.searchTerm}%
         `);
       }
       
@@ -68,6 +78,11 @@ export const useCoffeeStockTransfers = () => {
     } catch (err) {
       console.error('Error fetching transfers:', err);
       setError(err.message);
+      toast({
+        title: "Error fetching transfers",
+        description: err.message,
+        variant: "destructive"
+      });
       return [];
     } finally {
       setLoading(false);
@@ -91,10 +106,15 @@ export const useCoffeeStockTransfers = () => {
     fetchTransfers();
   };
 
-  // Effect to fetch data when filters change
+  // Effect to fetch data when filters change - with proper dependency array
   useEffect(() => {
     fetchTransfers();
-  }, [filters]);
+  }, [filters.timeRange, filters.status, filters.searchTerm]);
+
+  // Initial fetch, only once on mount
+  useEffect(() => {
+    fetchTransfers();
+  }, []);
 
   return {
     transfers,
@@ -104,7 +124,8 @@ export const useCoffeeStockTransfers = () => {
     handleTimeRangeChange,
     handleStatusChange,
     handleSearch,
-    handleRefresh
+    handleRefresh,
+    fetchTransfers
   };
 };
 

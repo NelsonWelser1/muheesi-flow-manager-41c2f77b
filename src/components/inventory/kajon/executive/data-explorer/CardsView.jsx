@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,39 +5,53 @@ import { CheckCircle, Clock, AlertTriangle, Coffee, ArrowRight, CalendarDays, Ma
 import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
 import { useCoffeeStockData } from '@/hooks/useCoffeeStockData';
 
-const CardsView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFilter, operationType }) => {
+const CardsView = ({ timeRange, statusFilter, searchTerm, categoryFilter, operationType }) => {
   const {
     transfers,
     loading: transfersLoading,
     error: transfersError,
-    handleTimeRangeChange,
-    handleStatusChange,
-    handleSearch,
-    handleRefresh
+    fetchTransfers
   } = useCoffeeStockTransfers();
 
-  const { stockData, isLoading: stockLoading, error: stockError } = useCoffeeStockData();
+  const { 
+    stockData, 
+    isLoading: stockLoading, 
+    error: stockError, 
+    fetchCoffeeStockData 
+  } = useCoffeeStockData();
   
   const [filteredData, setFilteredData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Apply filters based on props
-    if (timeRange && timeRange !== 'all') {
-      handleTimeRangeChange(timeRange);
-    }
+    const loadData = async () => {
+      setLoading(true);
+      
+      try {
+        const filters = {
+          timeRange,
+          status: statusFilter,
+          searchTerm,
+          location: categoryFilter !== 'all' ? categoryFilter : undefined
+        };
+        
+        await Promise.all([
+          fetchCoffeeStockData(filters),
+          fetchTransfers(filters)
+        ]);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    if (statusFilter && statusFilter !== 'all') {
-      handleStatusChange(statusFilter);
-    }
-    
-    if (searchTerm) {
-      handleSearch(searchTerm);
-    }
-    
-    // Combine and filter data based on operation type
+    loadData();
+  }, [timeRange, statusFilter, searchTerm, categoryFilter, operationType]);
+
+  useEffect(() => {
     let combinedData = [];
     
-    // Process transfer data (for "Receive Partner Stock")
     if (!operationType || operationType === 'all' || operationType === 'receive-partner') {
       const mappedTransfers = transfers.map(transfer => ({
         ...transfer,
@@ -52,10 +65,8 @@ const CardsView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
       combinedData = [...combinedData, ...mappedTransfers];
     }
     
-    // Process stock data for other operation types
     if (!operationType || operationType === 'all' || ['receive-new', 'sell', 'relocate'].includes(operationType)) {
       const mappedStockData = stockData.map(item => {
-        // Determine operation type based on source/name/metadata
         let opType = 'receive-new'; // Default
         let opName = 'Receive New Stock';
         
@@ -70,7 +81,6 @@ const CardsView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
           opName = 'Receive Partner Stock';
         }
         
-        // Only include if it matches the operation type filter
         if (operationType && operationType !== 'all' && opType !== operationType) {
           return null;
         }
@@ -80,24 +90,22 @@ const CardsView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
           operationType: opType,
           operationName: opName,
           itemName: item.name || 'Coffee',
-          coffee_type: item.type || 'Coffee',
-          quality_grade: item.grade || 'Standard',
-          quantity: item.current_stock,
-          unit: 'kg',
+          coffee_type: item.coffee_type || 'Coffee',
+          quality_grade: item.quality_grade || 'Standard',
+          quantity: item.quantity,
+          unit: item.unit || 'kg',
           location: item.location,
-          source_location: item.location,
+          source_location: item.source || item.location,
           destination_location: item.location,
           manager: item.manager || 'System',
-          status: item.health === 'good' ? 'completed' : 
-                 item.health === 'warning' ? 'pending' : 'declined',
-          created_at: item.updated_at
+          status: item.status || 'completed',
+          created_at: item.created_at
         };
       }).filter(Boolean);
       
       combinedData = [...combinedData, ...mappedStockData];
     }
     
-    // Apply category filter if specified
     if (categoryFilter && categoryFilter !== 'all') {
       combinedData = combinedData.filter(item => {
         const location = (item.location || '').toLowerCase();
@@ -105,13 +113,17 @@ const CardsView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
       });
     }
     
-    // Sort by created_at descending
     const sortedData = [...combinedData].sort((a, b) => {
       return new Date(b.created_at) - new Date(a.created_at);
     });
     
     setFilteredData(sortedData);
-  }, [transfers, stockData, timeRange, statusFilter, searchTerm, categoryFilter, operationType]);
+  }, [transfers, stockData, operationType, categoryFilter]);
+
+  const handleRefresh = () => {
+    fetchCoffeeStockData();
+    fetchTransfers();
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -195,7 +207,7 @@ const CardsView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
     }).format(date);
   };
 
-  if (isLoading || transfersLoading || stockLoading) {
+  if (loading || transfersLoading || stockLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin h-8 w-8 border-4 border-amber-500 rounded-full border-t-transparent"></div>

@@ -81,8 +81,11 @@ export const useCoffeeStockData = () => {
     }
   };
 
+  // Fix: Prevent effect from creating an endless loop
   useEffect(() => {
+    // Initial fetch only, without depending on changing filters
     fetchCoffeeStockData();
+    // Empty dependency array means this runs once on mount
   }, []);
 
   return {

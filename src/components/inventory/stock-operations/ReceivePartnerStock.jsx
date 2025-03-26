@@ -1,8 +1,9 @@
+
 import React from 'react';
-import StockUpdateForm from '../kajon/StockUpdateForm';
+import KajonReceivePartnerStock from '../kajon/stock-operations/ReceivePartnerStock';
 
 const ReceivePartnerStock = ({ isKazo }) => {
-  return <StockUpdateForm />;
+  return <KajonReceivePartnerStock isKazo={isKazo} />;
 };
 
 export default ReceivePartnerStock;

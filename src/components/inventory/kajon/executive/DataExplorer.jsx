@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,7 +39,6 @@ import RequisitionsView from './data-explorer/RequisitionsView';
 const DataExplorer = () => {
   const [activeView, setActiveView] = useState('table');
   const [activeFeature, setActiveFeature] = useState('operations');
-  const [isLoading, setIsLoading] = useState(false);
   
   // Filter states
   const [dateRange, setDateRange] = useState({ from: null, to: null });
@@ -49,12 +47,13 @@ const DataExplorer = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [operationTypeFilter, setOperationTypeFilter] = useState('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = () => {
-    setIsLoading(true);
-    // Simulate data refresh
+    setIsRefreshing(true);
+    // Reset after a moment to simulate refresh
     setTimeout(() => {
-      setIsLoading(false);
+      setIsRefreshing(false);
     }, 800);
   };
 
@@ -78,9 +77,9 @@ const DataExplorer = () => {
                 variant="outline" 
                 size="sm" 
                 onClick={handleRefresh}
-                disabled={isLoading}
+                disabled={isRefreshing}
               >
-                <RefreshCcw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
+                <RefreshCcw className={cn("h-4 w-4 mr-2", isRefreshing && "animate-spin")} />
                 Refresh Data
               </Button>
               <div className="flex space-x-1">
@@ -302,7 +301,6 @@ const DataExplorer = () => {
                 
                 <TabsContent value="table" className="space-y-4">
                   <TableView 
-                    isLoading={isLoading} 
                     timeRange={timeRangeFilter}
                     statusFilter={statusFilter}
                     searchTerm={searchTerm}
@@ -313,7 +311,6 @@ const DataExplorer = () => {
                 
                 <TabsContent value="cards" className="space-y-4">
                   <CardsView 
-                    isLoading={isLoading} 
                     timeRange={timeRangeFilter}
                     statusFilter={statusFilter}
                     searchTerm={searchTerm}
@@ -324,7 +321,6 @@ const DataExplorer = () => {
                 
                 <TabsContent value="location" className="space-y-4">
                   <LocationView 
-                    isLoading={isLoading} 
                     timeRange={timeRangeFilter}
                     statusFilter={statusFilter}
                     searchTerm={searchTerm}
@@ -335,7 +331,6 @@ const DataExplorer = () => {
                 
                 <TabsContent value="insights" className="space-y-4">
                   <InsightsView 
-                    isLoading={isLoading} 
                     timeRange={timeRangeFilter}
                     statusFilter={statusFilter}
                     searchTerm={searchTerm}
