@@ -1,7 +1,7 @@
-
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { generateAndDownloadPDF, createPDF } from '../exports/pdfExportUtils';
 
 // Helper to format date objects to readable strings
 const formatDate = (dateString) => {
@@ -271,62 +271,27 @@ export const exportToPDF = (data, filename = 'export', type = '') => {
   }
 
   try {
-    // Initialize PDF document
-    const doc = new jsPDF();
-    
     // Convert type to title case
     const title = type 
       ? type.charAt(0).toUpperCase() + type.slice(1) + ' Report'
       : 'Data Report';
     
-    // Add title
-    doc.setFontSize(16);
-    doc.text(title, 14, 15);
-    doc.setFontSize(10);
-    doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 22);
-    
     // Get columns and rows based on data type
     const columns = getColumnsForType(type, data);
     if (!columns.length) {
       console.error('No columns found for PDF export');
-      doc.text('Error: No columns found for export', 14, 30);
-      doc.save(`${filename}-error.pdf`);
       return;
     }
     
     const rows = getRowsForType(type, data, columns);
     if (!rows.length) {
       console.error('No rows found for PDF export');
-      doc.text('Error: No data found for export', 14, 30);
-      doc.save(`${filename}-error.pdf`);
       return;
     }
     
-    // Create the table - fixed issue with autoTable
-    doc.autoTable({
-      head: [columns],
-      body: rows,
-      startY: 30,
-      headStyles: {
-        fillColor: [41, 128, 185],
-        textColor: 255,
-        fontStyle: 'bold'
-      },
-      alternateRowStyles: {
-        fillColor: [240, 240, 240]
-      },
-      margin: { top: 30 },
-      styles: {
-        overflow: 'linebreak',
-        cellWidth: 'auto'
-      },
-      columnStyles: {
-        text: { cellWidth: 'auto' }
-      }
-    });
+    // Generate and download PDF
+    generateAndDownloadPDF(data, filename, title, columns, rows);
     
-    // Save the PDF
-    doc.save(`${filename}.pdf`);
   } catch (error) {
     console.error('Error exporting to PDF:', error);
   }
