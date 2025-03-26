@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,13 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from 'date-fns';
 import { CalendarIcon, Clock, MapPin, Users, FileText, Play, Award, ChevronRight, Filter } from 'lucide-react';
+import ScheduleTrainingDialog from './training/ScheduleTrainingDialog';
 
 const AssociationTrainingHub = ({ isKazo, selectedAssociation }) => {
   const [date, setDate] = useState(new Date());
   const [filterCategory, setFilterCategory] = useState('all');
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   
   // Sample training data - would come from API/database in a real app
-  const trainings = [
+  const [trainings, setTrainings] = useState([
     {
       id: 1,
       title: 'Coffee Processing Techniques',
@@ -85,7 +86,12 @@ const AssociationTrainingHub = ({ isKazo, selectedAssociation }) => {
       maxMembers: 40,
       resources: ['water_management_guide.pdf', 'workshop_slides.pdf']
     }
-  ];
+  ]);
+  
+  // Function to handle adding a new training
+  const handleAddTraining = (newTraining) => {
+    setTrainings(prev => [...prev, newTraining]);
+  };
   
   // Filter trainings based on category
   const filteredTrainings = trainings.filter(training => 
@@ -195,7 +201,7 @@ const AssociationTrainingHub = ({ isKazo, selectedAssociation }) => {
               <div className="w-full md:w-2/3 space-y-6">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-medium">Upcoming Trainings</h3>
-                  <Button>Schedule New Training</Button>
+                  <Button onClick={() => setIsScheduleDialogOpen(true)}>Schedule New Training</Button>
                 </div>
                 
                 {upcomingTrainings.length === 0 ? (
@@ -746,6 +752,12 @@ const AssociationTrainingHub = ({ isKazo, selectedAssociation }) => {
           </TabsContent>
         </Tabs>
       </CardContent>
+      
+      <ScheduleTrainingDialog 
+        open={isScheduleDialogOpen} 
+        onOpenChange={setIsScheduleDialogOpen}
+        onSuccess={handleAddTraining}
+      />
     </Card>
   );
 };
