@@ -4,12 +4,11 @@ import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
 import PendingTransferNotification from './notifications/PendingTransferNotification';
 
 const PendingTransfers = ({ location, onlyShow = false }) => {
-  const { transfers, loading, error, handleStatusChange, handleRefresh } = useCoffeeStockTransfers();
+  const { transfers, loading, error, handleRefresh } = useCoffeeStockTransfers();
   const [pendingTransfers, setPendingTransfers] = useState([]);
 
-  // Set status filter to 'pending' on component mount
+  // Set initial data and refresh periodically
   useEffect(() => {
-    handleStatusChange('pending');
     // Initial data fetch
     handleRefresh();
     
