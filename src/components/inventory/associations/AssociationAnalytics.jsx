@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
+  LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, Scatter
 } from 'recharts';
-import { ArrowUp, ArrowDown, Download, Calendar, Filter, RefreshCw, Camera, FileImage } from 'lucide-react';
+import { ArrowUp, ArrowDown, Download, Calendar, Filter, RefreshCw, Camera, FileImage, DollarSign, TrendingUp, TrendingDown, ChartBar, ChartPie } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -96,6 +96,77 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
     { id: 'kanoni', name: 'Kanoni Farmers Association' },
     { id: 'engari', name: 'Engari Coffee Cooperative' },
     { id: 'kyampangara', name: 'Kyampangara Farmers Group' }
+  ];
+  
+  // New financial data
+  const financialData = [
+    { quarter: 'Q1', revenue: 145000000, expenses: 98000000, profit: 47000000 },
+    { quarter: 'Q2', revenue: 187000000, expenses: 110000000, profit: 77000000 },
+    { quarter: 'Q3', revenue: 210000000, expenses: 125000000, profit: 85000000 },
+    { quarter: 'Q4', revenue: 248000000, expenses: 140000000, profit: 108000000 }
+  ];
+
+  const profitLossData = [
+    { year: '2021', profit: 185000000 },
+    { year: '2022', profit: 210000000 },
+    { year: '2023', profit: 280000000 },
+    { year: '2024', profit: 317000000 },
+  ];
+
+  const costBreakdownData = [
+    { name: 'Processing', value: 30 },
+    { name: 'Labor', value: 25 },
+    { name: 'Transport', value: 15 },
+    { name: 'Materials', value: 20 },
+    { name: 'Admin', value: 10 }
+  ];
+
+  const COST_COLORS = ['#4ade80', '#a3e635', '#facc15', '#fb923c', '#f87171'];
+
+  const priceFluctuationsData = [
+    { month: 'Jan', arabica: 12000, robusta: 9000 },
+    { month: 'Feb', arabica: 12500, robusta: 9200 },
+    { month: 'Mar', arabica: 13200, robusta: 9500 },
+    { month: 'Apr', arabica: 14000, robusta: 9800 },
+    { month: 'May', arabica: 15000, robusta: 10000 },
+    { month: 'Jun', arabica: 14800, robusta: 10200 },
+    { month: 'Jul', arabica: 14500, robusta: 10300 },
+    { month: 'Aug', arabica: 14200, robusta: 10100 },
+    { month: 'Sep', arabica: 14800, robusta: 10500 },
+    { month: 'Oct', arabica: 15200, robusta: 10700 },
+    { month: 'Nov', arabica: 15500, robusta: 10800 },
+    { month: 'Dec', arabica: 16000, robusta: 11000 }
+  ];
+
+  // New impact data
+  const environmentalImpactData = [
+    { year: '2021', waterUsage: 100, carbonFootprint: 100, renewableEnergy: 20 },
+    { year: '2022', waterUsage: 85, carbonFootprint: 90, renewableEnergy: 30 },
+    { year: '2023', waterUsage: 70, carbonFootprint: 75, renewableEnergy: 45 },
+    { year: '2024', waterUsage: 60, carbonFootprint: 65, renewableEnergy: 65 }
+  ];
+
+  const socialImpactData = [
+    { category: 'Education', projects: 12, beneficiaries: 1250, investment: 45000000 },
+    { category: 'Healthcare', projects: 8, beneficiaries: 3200, investment: 68000000 },
+    { category: 'Infrastructure', projects: 5, beneficiaries: 7500, investment: 85000000 },
+    { category: 'Water & Sanitation', projects: 7, beneficiaries: 5200, investment: 52000000 }
+  ];
+
+  const farmerIncomeData = [
+    { year: '2021', average: 2800000, minimum: 1500000, maximum: 5200000 },
+    { year: '2022', average: 3200000, minimum: 1800000, maximum: 5800000 },
+    { year: '2023', average: 3800000, minimum: 2300000, maximum: 6500000 },
+    { year: '2024', average: 4500000, minimum: 2800000, maximum: 7200000 }
+  ];
+
+  const sdgImpactData = [
+    { sdg: 'No Poverty', score: 75 },
+    { sdg: 'Zero Hunger', score: 80 },
+    { sdg: 'Good Health', score: 65 },
+    { sdg: 'Quality Education', score: 70 },
+    { sdg: 'Gender Equality', score: 60 },
+    { sdg: 'Clean Water', score: 85 }
   ];
   
   const formatCurrency = (value) => {
@@ -925,6 +996,466 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
               </CardContent>
             </Card>
           </TabsContent>
+          
+          <TabsContent value="financial" className="space-y-6" id="analytics-financial">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Annual Revenue</p>
+                      <h3 className="text-2xl font-bold">{formatCurrency(790000000)}</h3>
+                    </div>
+                    <DollarSign className="h-5 w-5 text-green-500" />
+                  </div>
+                  <div className="flex items-center text-green-600 text-sm mt-2">
+                    <TrendingUp className="mr-1 h-4 w-4" />
+                    <span>18.5% from last year</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Average Price</p>
+                      <h3 className="text-2xl font-bold">{formatCurrency(14700)}/kg</h3>
+                    </div>
+                    <ChartBar className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="flex items-center text-green-600 text-sm mt-2">
+                    <TrendingUp className="mr-1 h-4 w-4" />
+                    <span>11.2% from last year</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Expenses</p>
+                      <h3 className="text-2xl font-bold">{formatCurrency(473000000)}</h3>
+                    </div>
+                    <TrendingDown className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div className="flex items-center text-red-600 text-sm mt-2">
+                    <TrendingUp className="mr-1 h-4 w-4" />
+                    <span>8.4% from last year</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Net Profit</p>
+                      <h3 className="text-2xl font-bold">{formatCurrency(317000000)}</h3>
+                    </div>
+                    <ChartPie className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <div className="flex items-center text-green-600 text-sm mt-2">
+                    <TrendingUp className="mr-1 h-4 w-4" />
+                    <span>13.2% from last year</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Quarterly Revenue & Expenses</CardTitle>
+                  <CardDescription>Financial performance breakdown by quarter (UGX)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[350px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={financialData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="quarter" />
+                        <YAxis tickFormatter={(value) => {
+                          return (value / 1000000).toFixed(0) + 'M';
+                        }} />
+                        <Tooltip formatter={(value) => [`${formatCurrency(value)}`, undefined]} />
+                        <Legend />
+                        <Bar dataKey="revenue" name="Revenue" fill="#4ade80" />
+                        <Bar dataKey="expenses" name="Expenses" fill="#f87171" />
+                        <Bar dataKey="profit" name="Profit" fill="#a855f7" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Cost Breakdown</CardTitle>
+                  <CardDescription>Distribution of major expenses</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[350px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={costBreakdownData}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={100}
+                          fill="#8884d8"
+                          dataKey="value"
+                          label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {costBreakdownData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COST_COLORS[index % COST_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => [`${value}%`, undefined]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Annual Profit Trend</CardTitle>
+                  <CardDescription>Year-over-year profit growth (UGX)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={profitLossData}>
+                        <defs>
+                          <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#4ade80" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#4ade80" stopOpacity={0.2}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="year" />
+                        <YAxis tickFormatter={(value) => {
+                          return (value / 1000000).toFixed(0) + 'M';
+                        }} />
+                        <Tooltip formatter={(value) => [`${formatCurrency(value)}`, 'Profit']} />
+                        <Area type="monotone" dataKey="profit" stroke="#4ade80" fillOpacity={1} fill="url(#colorProfit)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Price Fluctuations</CardTitle>
+                  <CardDescription>Monthly price trends by coffee type (UGX/kg)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={priceFluctuationsData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [`${formatCurrency(value)}/kg`, undefined]} />
+                        <Legend />
+                        <Line type="monotone" dataKey="arabica" name="Arabica" stroke="#4ade80" strokeWidth={2} />
+                        <Line type="monotone" dataKey="robusta" name="Robusta" stroke="#a3e635" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Financial Performance Indicators</CardTitle>
+                <CardDescription>Key financial metrics and ratios</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <h3 className="font-medium mb-2">Profit Margin</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Current</span>
+                          <Badge className="bg-green-100 text-green-800">40.1%</Badge>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-green-500 w-[40.1%]"></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Target: 42%</span>
+                          <span>Last Year: 38.2%</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4">
+                      <h3 className="font-medium mb-2">Cost-to-Revenue Ratio</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Current</span>
+                          <Badge className="bg-amber-100 text-amber-800">59.9%</Badge>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-amber-500 w-[59.9%]"></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Target: 58%</span>
+                          <span>Last Year: 61.8%</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4">
+                      <h3 className="font-medium mb-2">Return on Investment</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Current</span>
+                          <Badge className="bg-blue-100 text-blue-800">32.5%</Badge>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-500 w-[32.5%]"></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Target: 35%</span>
+                          <span>Last Year: 29.8%</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="impact" className="space-y-6" id="analytics-impact">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Water Usage Reduction</p>
+                      <h3 className="text-2xl font-bold">40%</h3>
+                    </div>
+                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span className="text-blue-600 text-xs font-bold">H₂O</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Compared to 2021 baseline</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Carbon Footprint Reduction</p>
+                      <h3 className="text-2xl font-bold">35%</h3>
+                    </div>
+                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <span className="text-green-600 text-xs font-bold">CO₂</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Compared to 2021 baseline</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Community Projects</p>
+                      <h3 className="text-2xl font-bold">32</h3>
+                    </div>
+                    <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+                      <span className="text-purple-600 text-xs font-bold">SDG</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Implemented since 2021</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Farmer Income Growth</p>
+                      <h3 className="text-2xl font-bold">60.7%</h3>
+                    </div>
+                    <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
+                      <span className="text-amber-600 text-xs font-bold">$</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Since program inception</p>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Environmental Impact Trends</CardTitle>
+                  <CardDescription>Sustainability metrics over time (% change from baseline)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[350px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={environmentalImpactData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="year" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="waterUsage" name="Water Usage" stroke="#3b82f6" strokeWidth={2} />
+                        <Line type="monotone" dataKey="carbonFootprint" name="Carbon Footprint" stroke="#f87171" strokeWidth={2} />
+                        <Line type="monotone" dataKey="renewableEnergy" name="Renewable Energy" stroke="#4ade80" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Farmer Income Distribution</CardTitle>
+                  <CardDescription>Annual income levels (UGX)</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[350px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={farmerIncomeData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="year" />
+                        <YAxis tickFormatter={(value) => {
+                          return (value / 1000000).toFixed(1) + 'M';
+                        }} />
+                        <Tooltip formatter={(value) => [`${formatCurrency(value)}`, undefined]} />
+                        <Legend />
+                        <Bar dataKey="average" name="Average Income" fill="#4ade80" />
+                        <Line type="monotone" dataKey="minimum" name="Minimum Income" stroke="#f87171" strokeWidth={2} />
+                        <Line type="monotone" dataKey="maximum" name="Maximum Income" stroke="#3b82f6" strokeWidth={2} />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Social Impact Projects</CardTitle>
+                  <CardDescription>Community development initiatives</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[350px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={socialImpactData} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis dataKey="category" type="category" width={100} />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="projects" name="Projects" fill="#a855f7" />
+                        <Bar dataKey="beneficiaries" name="Beneficiaries" fill="#3b82f6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">SDG Alignment Scores</CardTitle>
+                  <CardDescription>Contribution to UN Sustainable Development Goals</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[350px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={sdgImpactData} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis dataKey="sdg" type="category" width={110} />
+                        <Tooltip />
+                        <Bar dataKey="score" name="Score" fill="#4ade80">
+                          {sdgImpactData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.score > 75 ? '#4ade80' : entry.score > 65 ? '#facc15' : '#f87171'} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Impact Success Stories</CardTitle>
+                <CardDescription>Key achievements and milestones</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <Card className="overflow-hidden border-0 shadow-md">
+                    <div className="h-3 bg-green-500"></div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold text-lg mb-2">Increased Farmer Resilience</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Diversification programs have helped 78% of farmers develop alternative income sources, 
+                        reducing vulnerability to coffee price fluctuations.
+                      </p>
+                      <div className="mt-3 flex justify-between items-center">
+                        <Badge className="bg-green-100 text-green-800">Economic Impact</Badge>
+                        <span className="text-xs text-muted-foreground">2023-2024</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="overflow-hidden border-0 shadow-md">
+                    <div className="h-3 bg-blue-500"></div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold text-lg mb-2">Water Conservation Project</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Implementation of water-efficient processing techniques has saved over 
+                        45 million liters of water annually across member farms.
+                      </p>
+                      <div className="mt-3 flex justify-between items-center">
+                        <Badge className="bg-blue-100 text-blue-800">Environmental Impact</Badge>
+                        <span className="text-xs text-muted-foreground">2022-2024</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="overflow-hidden border-0 shadow-md">
+                    <div className="h-3 bg-purple-500"></div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold text-lg mb-2">Youth & Women Empowerment</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Dedicated training programs have increased women's participation in 
+                        leadership roles by 65% and youth retention in farming by 48%.
+                      </p>
+                      <div className="mt-3 flex justify-between items-center">
+                        <Badge className="bg-purple-100 text-purple-800">Social Impact</Badge>
+                        <span className="text-xs text-muted-foreground">2021-2024</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
@@ -932,4 +1463,3 @@ const AssociationAnalytics = ({ isKazo, selectedAssociation }) => {
 };
 
 export default AssociationAnalytics;
-
