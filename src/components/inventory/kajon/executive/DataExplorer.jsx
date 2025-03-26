@@ -1,368 +1,261 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  ArrowUpDown, 
-  RefreshCcw, 
   FileText, 
-  FileSpreadsheet, 
-  Download,
-  LayoutList,
-  Table as TableIcon,
-  MapPin,
-  BarChart3,
-  Calendar,
-  Search,
-  Package,
-  ShoppingCart,
-  ArrowLeftRight,
-  Truck,
-  CoffeeIcon,
-  FileBarChart,
+  Coffee, 
+  RefreshCcw, 
+  Clock, 
+  Repeat, 
+  UserPlus, 
   Warehouse,
-  Users,
-  List
+  Sheet, 
+  List,
+  Users
 } from 'lucide-react';
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 
 import TableView from './data-explorer/TableView';
-import CardsView from './data-explorer/CardsView';
-import LocationView from './data-explorer/LocationView';
-import InsightsView from './data-explorer/InsightsView';
 import ReportsView from './data-explorer/ReportsView';
-import FarmInformationView from './data-explorer/FarmInformationView';
-import AssociationView from './data-explorer/AssociationView';
 import RequisitionsView from './data-explorer/RequisitionsView';
+import FarmInformationView from './data-explorer/FarmInformationView';
+import AssociationsView from './data-explorer/AssociationsView';
+import CardsView from './data-explorer/CardsView';
+
+// Import hooks for data fetching
+import { useCoffeeStockData } from '@/hooks/useCoffeeStockData';
+import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
+import { useRequisitions } from '@/hooks/useRequisitions';
+import { useFarmData } from '@/hooks/useFarmData';
+import { useAssociationsData } from '@/hooks/useAssociationsData';
+import { useReportsData } from '@/hooks/useReportsData';
 
 const DataExplorer = () => {
-  const [activeView, setActiveView] = useState('table');
-  const [activeFeature, setActiveFeature] = useState('operations');
-  
-  // Filter states
-  const [dateRange, setDateRange] = useState({ from: null, to: null });
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [timeRangeFilter, setTimeRangeFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [operationTypeFilter, setOperationTypeFilter] = useState('all');
+  const [viewMode, setViewMode] = useState('table');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Fetch data using custom hooks
+  const { stockData: coffeeStockData, isLoading: isLoadingStock, fetchCoffeeStockData } = useCoffeeStockData();
+  const { transfers: stockTransfers, loading: isLoadingTransfers, fetchTransfers } = useCoffeeStockTransfers();
+  const { requisitions, loading: isLoadingRequisitions, fetchRequisitions } = useRequisitions();
+  const { farms, loading: isLoadingFarms, fetchFarmData } = useFarmData();
+  const { associations, loading: isLoadingAssociations, fetchAssociations } = useAssociationsData();
+  const { reports, loading: isLoadingReports, fetchReports } = useReportsData();
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    // Reset after a moment to simulate refresh
-    setTimeout(() => {
+    try {
+      await Promise.all([
+        fetchCoffeeStockData(),
+        fetchTransfers(),
+        fetchRequisitions(),
+        fetchFarmData(),
+        fetchAssociations(),
+        fetchReports()
+      ]);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
       setIsRefreshing(false);
-    }, 800);
+    }
   };
-
-  // Define feature tabs for the main navigation
-  const featureTabs = [
-    { id: 'operations', label: 'Coffee Operations', icon: CoffeeIcon },
-    { id: 'reports', label: 'Reports', icon: FileText },
-    { id: 'farm', label: 'Farm Information', icon: Warehouse },
-    { id: 'association', label: 'Association', icon: Users },
-    { id: 'requisitions', label: 'Requisitions', icon: List }
-  ];
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-center">
-            <CardTitle>Kazo Coffee Project Data Explorer</CardTitle>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-              >
-                <RefreshCcw className={cn("h-4 w-4 mr-2", isRefreshing && "animate-spin")} />
-                Refresh Data
-              </Button>
-              <div className="flex space-x-1">
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <FileText className="h-4 w-4" />
-                  PDF
-                </Button>
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <FileSpreadsheet className="h-4 w-4" />
-                  Excel
-                </Button>
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <Download className="h-4 w-4" />
-                  CSV
-                </Button>
-              </div>
-            </div>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Data Explorer</h2>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-2"
+        >
+          <RefreshCcw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh Data
+        </Button>
+      </div>
+
+      <Tabs defaultValue="receive-new">
+        <div className="flex justify-between items-center mb-4">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="receive-new" className="flex items-center gap-2">
+              <Coffee className="h-4 w-4" />
+              <span>Receive New</span>
+            </TabsTrigger>
+            <TabsTrigger value="sell-stock" className="flex items-center gap-2">
+              <Sheet className="h-4 w-4" />
+              <span>Sell Stock</span>
+            </TabsTrigger>
+            <TabsTrigger value="relocate-stock" className="flex items-center gap-2">
+              <Repeat className="h-4 w-4" />
+              <span>Relocate Stock</span>
+            </TabsTrigger>
+            <TabsTrigger value="partner-stock" className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              <span>Partner Stock</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <span>Reports</span>
+            </TabsTrigger>
+            <TabsTrigger value="more" className="flex items-center gap-2">
+              <List className="h-4 w-4" />
+              <span>More</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          <div className="flex gap-2 ml-4">
+            <Button 
+              variant={viewMode === 'table' ? 'default' : 'outline'} 
+              size="sm" 
+              onClick={() => setViewMode('table')}
+            >
+              Table
+            </Button>
+            <Button 
+              variant={viewMode === 'cards' ? 'default' : 'outline'} 
+              size="sm" 
+              onClick={() => setViewMode('cards')}
+            >
+              Cards
+            </Button>
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent>
-          {/* Feature Tabs Navigation */}
-          <Tabs
-            defaultValue="operations"
-            value={activeFeature}
-            onValueChange={setActiveFeature}
-            className="space-y-4 mb-6"
-          >
-            <TabsList className="grid grid-cols-5 h-14">
-              {featureTabs.map((tab) => (
-                <TabsTrigger 
-                  key={tab.id} 
-                  value={tab.id} 
-                  className="flex flex-col items-center py-1 h-full"
-                >
-                  <tab.icon className="h-5 w-5 mb-1" />
-                  <span className="text-xs font-medium">{tab.label}</span>
-                </TabsTrigger>
-              ))}
+        <TabsContent value="receive-new">
+          {viewMode === 'table' ? (
+            <TableView 
+              data={coffeeStockData} 
+              isLoading={isLoadingStock} 
+              handleRefresh={fetchCoffeeStockData} 
+              title="Receive New Coffee Stock"
+              sourceTable="coffee_stock"
+            />
+          ) : (
+            <CardsView 
+              data={coffeeStockData} 
+              isLoading={isLoadingStock} 
+              handleRefresh={fetchCoffeeStockData} 
+              title="Receive New Coffee Stock"
+              sourceTable="coffee_stock"
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="sell-stock">
+          {viewMode === 'table' ? (
+            <TableView 
+              data={coffeeStockData.filter(item => item.status === 'sold')} 
+              isLoading={isLoadingStock} 
+              handleRefresh={fetchCoffeeStockData} 
+              title="Sell Coffee Stock"
+              sourceTable="coffee_stock"
+              filterStatus="sold"
+            />
+          ) : (
+            <CardsView 
+              data={coffeeStockData.filter(item => item.status === 'sold')} 
+              isLoading={isLoadingStock} 
+              handleRefresh={fetchCoffeeStockData} 
+              title="Sell Coffee Stock"
+              sourceTable="coffee_stock"
+              filterStatus="sold"
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="relocate-stock">
+          {viewMode === 'table' ? (
+            <TableView 
+              data={stockTransfers} 
+              isLoading={isLoadingTransfers} 
+              handleRefresh={fetchTransfers} 
+              title="Relocate Coffee Stock"
+              sourceTable="coffee_stock_transfers"
+            />
+          ) : (
+            <CardsView 
+              data={stockTransfers} 
+              isLoading={isLoadingTransfers} 
+              handleRefresh={fetchTransfers} 
+              title="Relocate Coffee Stock"
+              sourceTable="coffee_stock_transfers"
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="partner-stock">
+          {viewMode === 'table' ? (
+            <TableView 
+              data={stockTransfers.filter(item => item.is_partner_transfer === true)} 
+              isLoading={isLoadingTransfers} 
+              handleRefresh={fetchTransfers} 
+              title="Partner Stock Transfers"
+              sourceTable="coffee_stock_transfers"
+              filterPartner={true}
+            />
+          ) : (
+            <CardsView 
+              data={stockTransfers.filter(item => item.is_partner_transfer === true)} 
+              isLoading={isLoadingTransfers} 
+              handleRefresh={fetchTransfers} 
+              title="Partner Stock Transfers"
+              sourceTable="coffee_stock_transfers"
+              filterPartner={true}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <ReportsView 
+            isLoading={isLoadingReports} 
+            handleRefresh={fetchReports} 
+          />
+        </TabsContent>
+
+        <TabsContent value="more">
+          <Tabs defaultValue="requisitions">
+            <TabsList className="mb-4">
+              <TabsTrigger value="requisitions" className="flex items-center gap-2">
+                <List className="h-4 w-4" />
+                <span>Requisitions</span>
+              </TabsTrigger>
+              <TabsTrigger value="farm-info" className="flex items-center gap-2">
+                <Warehouse className="h-4 w-4" />
+                <span>Farm Information</span>
+              </TabsTrigger>
+              <TabsTrigger value="associations" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>Associations</span>
+              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="requisitions">
+              <RequisitionsView 
+                isLoading={isLoadingRequisitions} 
+                handleRefresh={fetchRequisitions} 
+              />
+            </TabsContent>
+
+            <TabsContent value="farm-info">
+              <FarmInformationView 
+                isLoading={isLoadingFarms} 
+                handleRefresh={fetchFarmData} 
+              />
+            </TabsContent>
+
+            <TabsContent value="associations">
+              <AssociationsView 
+                isLoading={isLoadingAssociations} 
+                handleRefresh={fetchAssociations} 
+              />
+            </TabsContent>
           </Tabs>
-
-          {/* Operations Data Feature */}
-          {activeFeature === 'operations' && (
-            <>
-              {/* Data Filters */}
-              <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Time Range</label>
-                    <div className="flex bg-gray-100 rounded-md p-1">
-                      {['hour', 'day', 'week', 'month', 'year', 'all'].map((range) => (
-                        <Button 
-                          key={range}
-                          variant="ghost"
-                          size="sm"
-                          className={cn(
-                            "text-xs flex-1 h-7",
-                            timeRangeFilter === range ? "bg-white shadow-sm" : "hover:bg-gray-200"
-                          )}
-                          onClick={() => setTimeRangeFilter(range)}
-                        >
-                          {range.charAt(0).toUpperCase() + range.slice(1)}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Operation Type</label>
-                    <div className="flex overflow-x-auto bg-gray-100 rounded-md p-1">
-                      <Button 
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          "text-xs flex-1 h-7",
-                          operationTypeFilter === 'all' ? "bg-white shadow-sm" : "hover:bg-gray-200"
-                        )}
-                        onClick={() => setOperationTypeFilter('all')}
-                      >
-                        All Types
-                      </Button>
-                      <Button 
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          "text-xs flex-1 h-7 flex gap-1 items-center whitespace-nowrap",
-                          operationTypeFilter === 'receive-new' ? "bg-white shadow-sm" : "hover:bg-gray-200"
-                        )}
-                        onClick={() => setOperationTypeFilter('receive-new')}
-                      >
-                        <Package className="h-3 w-3" />
-                        Receive New
-                      </Button>
-                      <Button 
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          "text-xs flex-1 h-7 flex gap-1 items-center whitespace-nowrap",
-                          operationTypeFilter === 'sell' ? "bg-white shadow-sm" : "hover:bg-gray-200"
-                        )}
-                        onClick={() => setOperationTypeFilter('sell')}
-                      >
-                        <ShoppingCart className="h-3 w-3" />
-                        Sell Stock
-                      </Button>
-                      <Button 
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          "text-xs flex-1 h-7 flex gap-1 items-center whitespace-nowrap",
-                          operationTypeFilter === 'relocate' ? "bg-white shadow-sm" : "hover:bg-gray-200"
-                        )}
-                        onClick={() => setOperationTypeFilter('relocate')}
-                      >
-                        <ArrowLeftRight className="h-3 w-3" />
-                        Relocate
-                      </Button>
-                      <Button 
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          "text-xs flex-1 h-7 flex gap-1 items-center whitespace-nowrap",
-                          operationTypeFilter === 'receive-partner' ? "bg-white shadow-sm" : "hover:bg-gray-200"
-                        )}
-                        onClick={() => setOperationTypeFilter('receive-partner')}
-                      >
-                        <Truck className="h-3 w-3" />
-                        Partner Stock
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Location Type</label>
-                    <div className="flex bg-gray-100 rounded-md p-1">
-                      {['all', 'farm', 'store', 'factory', 'warehouse'].map((category) => (
-                        <Button 
-                          key={category}
-                          variant="ghost"
-                          size="sm"
-                          className={cn(
-                            "text-xs flex-1 h-7",
-                            categoryFilter === category ? "bg-white shadow-sm" : "hover:bg-gray-200"
-                          )}
-                          onClick={() => setCategoryFilter(category)}
-                        >
-                          {category.charAt(0).toUpperCase() + category.slice(1)}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Status</label>
-                      <div className="flex bg-gray-100 rounded-md p-1">
-                        {['all', 'pending', 'completed', 'declined'].map((status) => (
-                          <Button 
-                            key={status}
-                            variant="ghost"
-                            size="sm"
-                            className={cn(
-                              "text-xs flex-1 h-7",
-                              statusFilter === status ? "bg-white shadow-sm" : "hover:bg-gray-200"
-                            )}
-                            onClick={() => setStatusFilter(status)}
-                          >
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Search</label>
-                      <div className="relative">
-                        <Search className="h-4 w-4 absolute left-2 top-2.5 text-gray-500" />
-                        <input
-                          type="text"
-                          className="w-full pl-8 pr-4 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                          placeholder="Search by any field..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* View Selector Tabs for Operations */}
-              <Tabs
-                defaultValue="table"
-                value={activeView}
-                onValueChange={setActiveView}
-                className="space-y-4"
-              >
-                <TabsList className="grid grid-cols-4 h-12">
-                  <TabsTrigger value="table" className="flex items-center gap-2">
-                    <TableIcon className="h-4 w-4" />
-                    <span>Table View</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="cards" className="flex items-center gap-2">
-                    <LayoutList className="h-4 w-4" />
-                    <span>Cards View</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="location" className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    <span>Location View</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="insights" className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    <span>Insights</span>
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="table" className="space-y-4">
-                  <TableView 
-                    timeRange={timeRangeFilter}
-                    statusFilter={statusFilter}
-                    searchTerm={searchTerm}
-                    categoryFilter={categoryFilter}
-                    operationType={operationTypeFilter}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="cards" className="space-y-4">
-                  <CardsView 
-                    timeRange={timeRangeFilter}
-                    statusFilter={statusFilter}
-                    searchTerm={searchTerm}
-                    categoryFilter={categoryFilter}
-                    operationType={operationTypeFilter}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="location" className="space-y-4">
-                  <LocationView 
-                    timeRange={timeRangeFilter}
-                    statusFilter={statusFilter}
-                    searchTerm={searchTerm}
-                    categoryFilter={categoryFilter}
-                    operationType={operationTypeFilter}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="insights" className="space-y-4">
-                  <InsightsView 
-                    timeRange={timeRangeFilter}
-                    statusFilter={statusFilter}
-                    searchTerm={searchTerm}
-                    categoryFilter={categoryFilter}
-                    operationType={operationTypeFilter}
-                  />
-                </TabsContent>
-              </Tabs>
-            </>
-          )}
-
-          {/* Reports Feature */}
-          {activeFeature === 'reports' && (
-            <ReportsView isLoading={isLoading} handleRefresh={handleRefresh} />
-          )}
-
-          {/* Farm Information Feature */}
-          {activeFeature === 'farm' && (
-            <FarmInformationView isLoading={isLoading} handleRefresh={handleRefresh} />
-          )}
-
-          {/* Association Feature */}
-          {activeFeature === 'association' && (
-            <AssociationView isLoading={isLoading} handleRefresh={handleRefresh} />
-          )}
-
-          {/* Requisitions Feature */}
-          {activeFeature === 'requisitions' && (
-            <RequisitionsView isLoading={isLoading} handleRefresh={handleRefresh} />
-          )}
-        </CardContent>
-      </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
