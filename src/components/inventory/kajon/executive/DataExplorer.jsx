@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,7 +20,7 @@ import {
   Truck,
   CoffeeIcon,
   FileBarChart,
-  Farm,
+  Warehouse,
   Users,
   List
 } from 'lucide-react';
@@ -62,7 +61,7 @@ const DataExplorer = () => {
   const featureTabs = [
     { id: 'operations', label: 'Coffee Operations', icon: CoffeeIcon },
     { id: 'reports', label: 'Reports', icon: FileText },
-    { id: 'farm', label: 'Farm Information', icon: Farm },
+    { id: 'farm', label: 'Farm Information', icon: Warehouse },
     { id: 'association', label: 'Association', icon: Users },
     { id: 'requisitions', label: 'Requisitions', icon: List }
   ];
@@ -373,3 +372,4 @@ const DataExplorer = () => {
 };
 
 export default DataExplorer;
+
