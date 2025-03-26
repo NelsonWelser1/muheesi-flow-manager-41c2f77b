@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Farm, Sprout, Calendar, User, RefreshCcw, Download, Filter, Coffee } from 'lucide-react';
+import { Warehouse, Sprout, Calendar, User, RefreshCcw, Download, Filter, Coffee } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from '@/integrations/supabase/supabase';
@@ -318,7 +317,7 @@ const FarmInformationView = ({ isLoading, handleRefresh }) => {
       <Tabs defaultValue="farm-info" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="farm-info" className="flex items-center gap-2">
-            <Farm className="h-4 w-4" />
+            <Warehouse className="h-4 w-4" />
             Farm Information
           </TabsTrigger>
           <TabsTrigger value="schedule" className="flex items-center gap-2">
@@ -335,7 +334,7 @@ const FarmInformationView = ({ isLoading, handleRefresh }) => {
             </div>
           ) : farms.length === 0 ? (
             <div className="bg-gray-50 p-8 rounded-lg border border-gray-200 text-center">
-              <Farm className="h-12 w-12 mx-auto text-amber-400 mb-3" />
+              <Warehouse className="h-12 w-12 mx-auto text-amber-400 mb-3" />
               <h3 className="text-lg font-medium text-gray-700 mb-1">No Farm Information Found</h3>
               <p className="text-gray-500 mb-4">Try adjusting your search criteria.</p>
             </div>
@@ -468,3 +467,4 @@ const FarmInformationView = ({ isLoading, handleRefresh }) => {
 };
 
 export default FarmInformationView;
+
