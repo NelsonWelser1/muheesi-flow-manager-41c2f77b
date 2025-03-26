@@ -31,7 +31,7 @@ const ManageAssociations = ({
 
   return <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-4">
-        Manage Associations - {isKazo ? 'Kazo Coffee Development Project' : 'KAJON Coffee Limited'}
+        Manage Associations - Kazo Coffee Development Project
       </h2>
 
       <Tabs defaultValue="details" className="w-full">

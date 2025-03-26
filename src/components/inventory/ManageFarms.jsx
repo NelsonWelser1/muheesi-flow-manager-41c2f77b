@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,7 +13,7 @@ const ManageFarms = ({
   return <Card className="w-full">
       <CardHeader>
         <CardTitle>
-          {isKazo ? "Kazo Coffee Development Project Farms" : "KAJON Coffee Limited Farms"}
+          Kazo Coffee Development Project Farms
         </CardTitle>
       </CardHeader>
       <CardContent>
