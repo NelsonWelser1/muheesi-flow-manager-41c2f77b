@@ -25,13 +25,13 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
     handleRefresh
   } = useCoffeeStockTransfers();
 
-  const { stockData, isLoading: stockLoading, error: stockError } = useCoffeeStockData();
+  const { stockData, isLoading: stockLoading, error: stockError, fetchCoffeeStockData } = useCoffeeStockData();
   
   const [filteredData, setFilteredData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ field: 'created_at', ascending: false });
 
   useEffect(() => {
-    // Apply filters based on props
+    // Apply filters based on props and fetch data
     if (timeRange && timeRange !== 'all') {
       handleTimeRangeChange(timeRange);
     }
@@ -44,7 +44,15 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
       handleSearch(searchTerm);
     }
     
-    // Combine and filter data based on operation type
+    // Fetch stock data with filters
+    fetchCoffeeStockData({
+      timeRange,
+      status: statusFilter,
+      searchTerm,
+      location: categoryFilter !== 'all' ? categoryFilter : null
+    });
+    
+    // Process and combine data based on operation type
     let combinedData = [];
     
     // Process transfer data (for "Receive Partner Stock")
@@ -62,45 +70,27 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
     }
     
     // Process stock data for other operation types
-    if (!operationType || operationType === 'all' || ['receive-new', 'sell', 'relocate'].includes(operationType)) {
-      const mappedStockData = stockData.map(item => {
-        // Determine operation type based on source/name/metadata
-        let opType = 'receive-new'; // Default
-        let opName = 'Receive New Stock';
-        
-        if (item.name && item.name.toLowerCase().includes('sale')) {
-          opType = 'sell';
-          opName = 'Sell Current Stock';
-        } else if (item.name && item.name.toLowerCase().includes('transfer')) {
-          opType = 'relocate';
-          opName = 'Relocate Stock';
-        } else if (item.source === 'transfers') {
-          opType = 'receive-partner';
-          opName = 'Receive Partner Stock';
-        }
-        
-        // Only include if it matches the operation type filter
-        if (operationType && operationType !== 'all' && opType !== operationType) {
-          return null;
-        }
-        
-        return {
-          id: item.id,
-          operationType: opType,
-          operationName: opName,
-          itemName: item.name || 'Coffee',
-          coffee_type: item.type || 'Coffee',
-          quality_grade: item.grade || 'Standard',
-          quantity: item.current_stock,
-          unit: 'kg',
-          location: item.location,
-          manager: item.manager || 'System',
-          status: item.health === 'good' ? 'completed' : 
-                 item.health === 'warning' ? 'pending' : 'declined',
-          date: item.updated_at,
-          created_at: item.updated_at
-        };
-      }).filter(Boolean);
+    if (!operationType || operationType === 'all' || operationType === 'receive-new') {
+      // Map coffee_stock data to a common format
+      // These are entries from the "Receive New Stock" feature
+      const mappedStockData = stockData.map(item => ({
+        id: item.id,
+        operationType: 'receive-new',
+        operationName: 'Receive New Stock',
+        coffee_type: item.coffee_type || 'Coffee',
+        quality_grade: item.quality_grade || 'Standard',
+        quantity: item.quantity,
+        unit: item.unit || 'kg',
+        location: item.location,
+        manager: item.manager || 'System',
+        status: item.status || 'completed',
+        date: item.created_at,
+        created_at: item.created_at,
+        humidity: item.humidity,
+        buying_price: item.buying_price,
+        currency: item.currency,
+        source: item.source
+      }));
       
       combinedData = [...combinedData, ...mappedStockData];
     }
@@ -111,6 +101,11 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
         const location = (item.location || '').toLowerCase();
         return location.includes(categoryFilter.toLowerCase());
       });
+    }
+    
+    // Apply operation type filter if specified
+    if (operationType && operationType !== 'all') {
+      combinedData = combinedData.filter(item => item.operationType === operationType);
     }
     
     // Sort the combined data
@@ -128,7 +123,17 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
     });
     
     setFilteredData(sortedData);
-  }, [transfers, stockData, timeRange, statusFilter, searchTerm, categoryFilter, operationType, sortConfig]);
+  }, [
+    transfers, 
+    stockData, 
+    timeRange, 
+    statusFilter, 
+    searchTerm, 
+    categoryFilter, 
+    operationType, 
+    sortConfig, 
+    fetchCoffeeStockData
+  ]);
 
   const handleSort = (field) => {
     setSortConfig(prevConfig => ({
@@ -141,6 +146,7 @@ const TableView = ({ isLoading, timeRange, statusFilter, searchTerm, categoryFil
     switch (status) {
       case 'received':
       case 'completed':
+      case 'active':
         return (
           <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
             <CheckCircle className="h-3 w-3" />
