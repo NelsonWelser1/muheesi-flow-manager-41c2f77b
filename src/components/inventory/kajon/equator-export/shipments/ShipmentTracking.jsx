@@ -1,493 +1,381 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Table, TableHeader, TableBody, TableRow, 
-  TableHead, TableCell 
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Search, Plus, Map, Ship, Package, TrendingUp,
-  Filter, Clock, Anchor, Globe, ArrowRight
-} from 'lucide-react';
-
-// Status colors for shipments
-const shipmentStatusColors = {
-  'in transit': "bg-blue-100 text-blue-800",
-  'loading': "bg-amber-100 text-amber-800",
-  'preparing': "bg-purple-100 text-purple-800",
-  'delivered': "bg-green-100 text-green-800",
-  'delayed': "bg-red-100 text-red-800",
-  'cleared': "bg-teal-100 text-teal-800",
-};
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { Truck, Ship, Package, Plus, Search, Calendar, MapPin, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 
 const ShipmentTracking = () => {
-  const [activeShipment, setActiveShipment] = useState(null);
+  const [activeTab, setActiveTab] = useState('active');
+  const [searchTerm, setSearchTerm] = useState('');
   
-  // Sample shipment data
   const shipments = [
     {
       id: 'EQ-2453',
-      reference: 'CNT-1001-S1',
-      client: 'European Coffee Roasters GmbH',
       destination: 'Hamburg, Germany',
-      departurePort: 'Mombasa, Kenya',
-      date: '2023-12-01',
-      eta: '2023-12-20',
-      status: 'in transit',
-      container: '20ft (ECRU7821345)',
+      status: 'in_transit',
+      progress: 60,
+      eta: '2023-12-15',
       volume: '18 tons',
-      coffeeType: 'Arabica - AA Grade',
-      value: '$120,000',
-      documents: {
-        bill: true,
-        phyto: true,
-        origin: true,
-        quality: true,
-        customs: true
-      },
-      timeline: [
-        { date: '2023-11-25', event: 'Documents prepared', status: 'completed' },
-        { date: '2023-11-28', event: 'Quality certification issued', status: 'completed' },
-        { date: '2023-12-01', event: 'Container loaded at origin', status: 'completed' },
-        { date: '2023-12-03', event: 'Vessel departed', status: 'completed' },
-        { date: '2023-12-15', event: 'Transit through Suez Canal', status: 'in progress' },
-        { date: '2023-12-20', event: 'Expected arrival at destination', status: 'pending' },
-        { date: '2023-12-22', event: 'Customs clearance', status: 'pending' },
-        { date: '2023-12-24', event: 'Delivery to client', status: 'pending' }
+      container: '20ft',
+      buyer: 'European Coffee Imports Ltd',
+      coffee: 'Arabica AA Grade',
+      departure: '2023-11-25',
+      trackingEvents: [
+        { date: '2023-11-25', event: 'Departed from Mombasa Port', location: 'Mombasa, Kenya' },
+        { date: '2023-11-30', event: 'Arrived at Suez Canal', location: 'Suez Canal, Egypt' },
+        { date: '2023-12-05', event: 'Departed Suez Canal', location: 'Suez Canal, Egypt' },
+        { date: '2023-12-10', event: 'Mediterranean Sea Transit', location: 'Mediterranean Sea' }
       ]
     },
     {
       id: 'EQ-2455',
-      reference: 'CNT-1002-S1',
-      client: 'Artisan Bean Co.',
       destination: 'New York, USA',
-      departurePort: 'Mombasa, Kenya',
-      date: '2023-12-10',
-      eta: '2024-01-05',
       status: 'loading',
-      container: '40ft (ARBN9283716)',
+      progress: 20,
+      eta: '2024-01-10',
       volume: '24 tons',
-      coffeeType: 'Mixed Arabica/Robusta',
-      value: '$92,500',
-      documents: {
-        bill: true,
-        phyto: true,
-        origin: true,
-        quality: true,
-        customs: false
-      }
+      container: '40ft',
+      buyer: 'North American Roasters',
+      coffee: 'Mixed Arabica & Robusta',
+      departure: '2023-12-18',
+      trackingEvents: [
+        { date: '2023-12-01', event: 'Quality Check Completed', location: 'Kampala, Uganda' },
+        { date: '2023-12-05', event: 'Customs Documentation Submitted', location: 'Kampala, Uganda' },
+        { date: '2023-12-10', event: 'Container Loading Initiated', location: 'Mombasa, Kenya' }
+      ]
     },
     {
       id: 'EQ-2458',
-      reference: 'CNT-1003-S1',
-      client: 'Tokyo Coffee Imports',
       destination: 'Tokyo, Japan',
-      departurePort: 'Mombasa, Kenya',
-      date: '2023-12-15',
-      eta: '2024-01-15',
       status: 'preparing',
-      container: '20ft (TCIJ8276591)',
+      progress: 10,
+      eta: '2024-01-25',
       volume: '16 tons',
-      coffeeType: 'Robusta - Premium',
-      value: '$78,300',
-      documents: {
-        bill: true,
-        phyto: false,
-        origin: true,
-        quality: false,
-        customs: false
-      }
+      container: '20ft',
+      buyer: 'Asian Coffee Trading Co.',
+      coffee: 'Robusta Premium Grade',
+      departure: '2023-12-30',
+      trackingEvents: [
+        { date: '2023-12-01', event: 'Purchase Order Confirmed', location: 'Kampala, Uganda' },
+        { date: '2023-12-05', event: 'Packaging Materials Ordered', location: 'Kampala, Uganda' }
+      ]
     },
     {
-      id: 'EQ-2448',
-      reference: 'CNT-998-S2',
-      client: 'Café Parisien',
-      destination: 'Marseille, France',
-      departurePort: 'Mombasa, Kenya',
-      date: '2023-11-15',
-      eta: '2023-12-10',
-      status: 'delayed',
-      container: '20ft (CPFR5432198)',
-      volume: '14 tons',
-      coffeeType: 'Arabica - Premium',
-      value: '$95,000',
-      documents: {
-        bill: true,
-        phyto: true,
-        origin: true,
-        quality: true,
-        customs: true
-      }
+      id: 'EQ-2449',
+      destination: 'Dubai, UAE',
+      status: 'completed',
+      progress: 100,
+      eta: '2023-11-15',
+      volume: '12 tons',
+      container: '20ft',
+      buyer: 'Middle East Distributors',
+      coffee: 'Arabica A Grade',
+      departure: '2023-10-20',
+      trackingEvents: [
+        { date: '2023-10-20', event: 'Departed from Mombasa Port', location: 'Mombasa, Kenya' },
+        { date: '2023-10-28', event: 'Arrived at Hormuz Strait', location: 'Hormuz Strait' },
+        { date: '2023-11-05', event: 'Arrived at Jebel Ali Port', location: 'Dubai, UAE' },
+        { date: '2023-11-08', event: 'Customs Clearance Completed', location: 'Dubai, UAE' },
+        { date: '2023-11-15', event: 'Delivered to Buyer Warehouse', location: 'Dubai, UAE' }
+      ]
     },
     {
-      id: 'EQ-2445',
-      reference: 'CNT-996-S1',
-      client: 'Nordic Coffee Collective',
-      destination: 'Stockholm, Sweden',
-      departurePort: 'Mombasa, Kenya',
-      date: '2023-11-05',
-      eta: '2023-11-30',
-      status: 'delivered',
-      container: '20ft (NCCS1234567)',
-      volume: '10 tons',
-      coffeeType: 'Arabica - AA Grade',
-      value: '$65,200',
-      documents: {
-        bill: true,
-        phyto: true,
-        origin: true,
-        quality: true,
-        customs: true
-      }
+      id: 'EQ-2451',
+      destination: 'Amsterdam, Netherlands',
+      status: 'completed',
+      progress: 100,
+      eta: '2023-10-30',
+      volume: '20 tons',
+      container: '20ft',
+      buyer: 'Dutch Coffee Traders',
+      coffee: 'Organic Arabica',
+      departure: '2023-09-25',
+      trackingEvents: [
+        { date: '2023-09-25', event: 'Departed from Mombasa Port', location: 'Mombasa, Kenya' },
+        { date: '2023-10-05', event: 'Suez Canal Transit', location: 'Suez Canal, Egypt' },
+        { date: '2023-10-15', event: 'Mediterranean Sea Transit', location: 'Mediterranean Sea' },
+        { date: '2023-10-22', event: 'Arrived at Rotterdam Port', location: 'Rotterdam, Netherlands' },
+        { date: '2023-10-25', event: 'Customs Clearance Completed', location: 'Rotterdam, Netherlands' },
+        { date: '2023-10-30', event: 'Delivered to Buyer Warehouse', location: 'Amsterdam, Netherlands' }
+      ]
     }
   ];
-
-  return (
-    <div className="space-y-6">
-      {activeShipment ? (
-        <ShipmentDetail 
-          shipment={shipments.find(s => s.id === activeShipment)} 
-          onBack={() => setActiveShipment(null)} 
-        />
-      ) : (
-        <>
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold">Shipment Tracking</h2>
-              <p className="text-gray-500 text-sm">Track and manage export shipments</p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex items-center gap-1">
-                <Filter className="h-4 w-4" />
-                <span>Filter</span>
-              </Button>
-              <Button className="flex items-center gap-1">
-                <Plus className="h-4 w-4" />
-                <span>New Shipment</span>
-              </Button>
-            </div>
-          </div>
-          
-          {/* Shipment Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-blue-50">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-blue-700">Total Shipments</p>
-                    <p className="text-2xl font-bold text-blue-900">15</p>
-                  </div>
-                  <div className="bg-blue-100 p-2 rounded-full">
-                    <Ship className="h-5 w-5 text-blue-700" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-green-50">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-green-700">Delivered</p>
-                    <p className="text-2xl font-bold text-green-900">8</p>
-                  </div>
-                  <div className="bg-green-100 p-2 rounded-full">
-                    <Package className="h-5 w-5 text-green-700" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-amber-50">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-amber-700">In Transit</p>
-                    <p className="text-2xl font-bold text-amber-900">5</p>
-                  </div>
-                  <div className="bg-amber-100 p-2 rounded-full">
-                    <Globe className="h-5 w-5 text-amber-700" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-purple-50">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-purple-700">Preparing</p>
-                    <p className="text-2xl font-bold text-purple-900">2</p>
-                  </div>
-                  <div className="bg-purple-100 p-2 rounded-full">
-                    <Clock className="h-5 w-5 text-purple-700" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Shipments Table */}
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="flex items-center gap-2">
-                  <Ship className="h-5 w-5 text-blue-600" />
-                  <span>Active Shipments</span>
-                </CardTitle>
-                <div className="flex items-center relative w-64">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                  <Input placeholder="Search shipments..." className="pl-8" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="all">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="in-transit">In Transit</TabsTrigger>
-                  <TabsTrigger value="loading">Loading</TabsTrigger>
-                  <TabsTrigger value="preparing">Preparing</TabsTrigger>
-                  <TabsTrigger value="delivered">Delivered</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="all" className="space-y-4">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[100px]">Shipment ID</TableHead>
-                          <TableHead>Client</TableHead>
-                          <TableHead>Destination</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>ETA</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Volume</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {shipments.map((shipment) => (
-                          <TableRow key={shipment.id} className="cursor-pointer hover:bg-gray-50" 
-                            onClick={() => setActiveShipment(shipment.id)}>
-                            <TableCell className="font-medium">{shipment.id}</TableCell>
-                            <TableCell>{shipment.client}</TableCell>
-                            <TableCell>{shipment.destination}</TableCell>
-                            <TableCell>{shipment.date}</TableCell>
-                            <TableCell>{shipment.eta}</TableCell>
-                            <TableCell>
-                              <Badge className={shipmentStatusColors[shipment.status]}>
-                                {shipment.status.charAt(0).toUpperCase() + shipment.status.slice(1)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{shipment.volume}</TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="sm" onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveShipment(shipment.id);
-                              }}>
-                                View Details
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="in-transit">
-                  <div className="p-4 text-center text-gray-500">
-                    Showing In Transit shipments
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="loading">
-                  <div className="p-4 text-center text-gray-500">
-                    Showing Loading shipments
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="preparing">
-                  <div className="p-4 text-center text-gray-500">
-                    Showing Preparing shipments
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="delivered">
-                  <div className="p-4 text-center text-gray-500">
-                    Showing Delivered shipments
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </>
-      )}
-    </div>
-  );
-};
-
-// Shipment Detail Component
-const ShipmentDetail = ({ shipment, onBack }) => {
-  if (!shipment) return null;
+  
+  const filteredShipments = shipments.filter(shipment => {
+    // Filter by status
+    if (activeTab === 'active' && (shipment.status === 'completed')) {
+      return false;
+    }
+    
+    if (activeTab === 'completed' && (shipment.status !== 'completed')) {
+      return false;
+    }
+    
+    // Filter by search term
+    if (searchTerm && !shipment.id.toLowerCase().includes(searchTerm.toLowerCase()) && 
+        !shipment.destination.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !shipment.buyer.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    return true;
+  });
+  
+  const getStatusBadge = (status) => {
+    switch(status) {
+      case 'in_transit':
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">In Transit</Badge>;
+      case 'loading':
+        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Loading</Badge>;
+      case 'preparing':
+        return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">Preparing</Badge>;
+      case 'completed':
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Completed</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
+  };
+  
+  const getStatusIcon = (status) => {
+    switch(status) {
+      case 'in_transit':
+        return <Ship className="h-5 w-5 text-blue-600" />;
+      case 'loading':
+        return <Package className="h-5 w-5 text-amber-600" />;
+      case 'preparing':
+        return <Clock className="h-5 w-5 text-purple-600" />;
+      case 'completed':
+        return <CheckCircle className="h-5 w-5 text-green-600" />;
+      default:
+        return <Package className="h-5 w-5" />;
+    }
+  };
   
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={onBack}>
-            Back
-          </Button>
-          <h2 className="text-xl font-semibold">Shipment {shipment.id}</h2>
-          <Badge className={shipmentStatusColors[shipment.status]}>
-            {shipment.status.charAt(0).toUpperCase() + shipment.status.slice(1)}
-          </Badge>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline">Generate Report</Button>
-          <Button>Update Status</Button>
-        </div>
+        <h2 className="text-xl font-semibold">Shipment Tracking</h2>
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          New Shipment
+        </Button>
       </div>
       
-      {/* Shipment Overview */}
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Shipment Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-4">
-              <div>
-                <div className="text-sm text-gray-500">Client</div>
-                <div className="font-medium">{shipment.client}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-500">Contract Reference</div>
-                <div className="font-medium">{shipment.reference}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-500">Coffee Type</div>
-                <div className="font-medium">{shipment.coffeeType}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-500">Value</div>
-                <div className="font-medium">{shipment.value}</div>
-              </div>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative flex-grow">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search shipments..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            
-            <div className="space-y-4">
-              <div>
-                <div className="text-sm text-gray-500">Container</div>
-                <div className="font-medium">{shipment.container}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-500">Volume</div>
-                <div className="font-medium">{shipment.volume}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-500">Departure Date</div>
-                <div className="font-medium">{shipment.date}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-500">ETA</div>
-                <div className="font-medium">{shipment.eta}</div>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <div className="text-sm text-gray-500">Departure Port</div>
-                <div className="font-medium">{shipment.departurePort}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-500">Destination</div>
-                <div className="font-medium">{shipment.destination}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-500">Required Documents</div>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  <Badge variant={shipment.documents.bill ? "default" : "outline"}>
-                    Bill of Lading
-                  </Badge>
-                  <Badge variant={shipment.documents.phyto ? "default" : "outline"}>
-                    Phytosanitary
-                  </Badge>
-                  <Badge variant={shipment.documents.origin ? "default" : "outline"}>
-                    Certificate of Origin
-                  </Badge>
-                  <Badge variant={shipment.documents.quality ? "default" : "outline"}>
-                    Quality Certificate
-                  </Badge>
-                  <Badge variant={shipment.documents.customs ? "default" : "outline"}>
-                    Customs Declaration
-                  </Badge>
-                </div>
-              </div>
-            </div>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Filter by Date
+            </Button>
           </div>
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid grid-cols-2 mb-4">
+              <TabsTrigger value="active" className="flex items-center gap-1">
+                <Ship className="h-4 w-4" />
+                Active Shipments
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="flex items-center gap-1">
+                <CheckCircle className="h-4 w-4" />
+                Completed Shipments
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="active" className="space-y-6">
+              {filteredShipments.map((shipment) => (
+                <Card key={shipment.id} className="mb-4 overflow-hidden">
+                  <CardHeader className="pb-2 bg-gray-50 border-b">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-gray-100 p-2 rounded-full">
+                          {getStatusIcon(shipment.status)}
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">Shipment {shipment.id}</CardTitle>
+                          <p className="text-sm text-gray-500">{shipment.coffee} • {shipment.volume}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {getStatusBadge(shipment.status)}
+                        <p className="text-sm text-gray-500 mt-1">ETA: {shipment.eta}</p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm text-gray-500 mb-1">
+                        <span>Progress</span>
+                        <span>{shipment.progress}%</span>
+                      </div>
+                      <Progress value={shipment.progress} className="h-2" />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-2">Shipment Details</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">Destination</p>
+                              <p className="text-sm text-gray-600">{shipment.destination}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Truck className="h-4 w-4 text-gray-400 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">Container</p>
+                              <p className="text-sm text-gray-600">{shipment.container} • {shipment.volume}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Calendar className="h-4 w-4 text-gray-400 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">Departure Date</p>
+                              <p className="text-sm text-gray-600">{shipment.departure}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-2">Tracking History</h4>
+                        <div className="space-y-3">
+                          {shipment.trackingEvents.slice(0, 3).map((event, index) => (
+                            <div key={index} className="relative pl-5 pb-3">
+                              <div className="absolute left-0 top-1.5 w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                              {index < shipment.trackingEvents.length - 1 && (
+                                <div className="absolute left-0.5 top-3 bottom-0 w-0.5 bg-gray-200"></div>
+                              )}
+                              <p className="text-sm font-medium">{event.event}</p>
+                              <p className="text-xs text-gray-500">{event.date} • {event.location}</p>
+                            </div>
+                          ))}
+                          {shipment.trackingEvents.length > 3 && (
+                            <Button variant="link" size="sm" className="text-xs mt-1 h-auto p-0">
+                              View complete history
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end gap-2 pt-2 border-t">
+                      <Button variant="outline" size="sm">Track Details</Button>
+                      <Button variant="outline" size="sm">View Documents</Button>
+                      <Button size="sm">Manage Shipment</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+            
+            <TabsContent value="completed" className="space-y-6">
+              {filteredShipments.map((shipment) => (
+                <Card key={shipment.id} className="mb-4 overflow-hidden">
+                  <CardHeader className="pb-2 bg-gray-50 border-b">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-green-100 p-2 rounded-full">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">Shipment {shipment.id}</CardTitle>
+                          <p className="text-sm text-gray-500">{shipment.coffee} • {shipment.volume}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {getStatusBadge(shipment.status)}
+                        <p className="text-sm text-gray-500 mt-1">Delivered: {shipment.eta}</p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-2">Shipment Details</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">Destination</p>
+                              <p className="text-sm text-gray-600">{shipment.destination}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Truck className="h-4 w-4 text-gray-400 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">Container</p>
+                              <p className="text-sm text-gray-600">{shipment.container} • {shipment.volume}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Calendar className="h-4 w-4 text-gray-400 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">Departure Date</p>
+                              <p className="text-sm text-gray-600">{shipment.departure}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-2">Final Delivery Status</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-green-600">
+                            <CheckCircle className="h-4 w-4" />
+                            <p className="text-sm font-medium">Successfully Delivered</p>
+                          </div>
+                          <p className="text-sm text-gray-600">Delivered to {shipment.buyer} on {shipment.eta}</p>
+                          <p className="text-sm text-gray-600">All customs clearance and documentation complete.</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end gap-2 pt-2 border-t">
+                      <Button variant="outline" size="sm">Download Report</Button>
+                      <Button variant="outline" size="sm">View Documents</Button>
+                      <Button size="sm">Shipment Details</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
       
-      {/* Shipment Timeline */}
-      {shipment.timeline && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-blue-600" />
-              <span>Shipment Timeline</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <div className="absolute top-0 bottom-0 left-6 w-0.5 bg-gray-200"></div>
-              <div className="space-y-6">
-                {shipment.timeline.map((event, index) => (
-                  <div key={index} className="relative flex items-start gap-4">
-                    <div className={`z-10 flex items-center justify-center w-12 h-12 rounded-full ${
-                      event.status === 'completed' ? 'bg-green-100' : 
-                      event.status === 'in progress' ? 'bg-blue-100' : 'bg-gray-100'
-                    }`}>
-                      <div className={`h-3 w-3 rounded-full ${
-                        event.status === 'completed' ? 'bg-green-600' : 
-                        event.status === 'in progress' ? 'bg-blue-600' : 'bg-gray-400'
-                      }`} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between">
-                        <p className="font-medium">
-                          {event.event}
-                        </p>
-                        <Badge className={
-                          event.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                          event.status === 'in progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                        }>
-                          {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-500">
-                        {event.date}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <div className="bg-amber-100 p-2 rounded-full">
+            <AlertTriangle className="h-5 w-5 text-amber-600" />
+          </div>
+          <div>
+            <p className="font-medium text-amber-800">Shipment EQ-2453 Requires Attention</p>
+            <p className="text-sm text-amber-700 mt-1">
+              Documentation for shipment EQ-2453 is incomplete. Customs clearance at Suez Canal may be delayed. 
+              Please update missing documentation within 48 hours.
+            </p>
+            <Button size="sm" variant="outline" className="mt-2 border-amber-300 text-amber-700 hover:bg-amber-100">
+              Review Documents
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

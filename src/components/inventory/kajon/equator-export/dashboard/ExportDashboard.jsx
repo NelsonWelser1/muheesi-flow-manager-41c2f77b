@@ -18,7 +18,7 @@ import {
   Cell,
   Legend
 } from 'recharts';
-import { Activity, TrendingUp, CircleDollarSign, Map, Calendar } from 'lucide-react';
+import { Activity, TrendingUp, CircleDollarSign, Map, Calendar, Ship } from 'lucide-react';
 
 // Sample data for charts
 const monthlyExports = [

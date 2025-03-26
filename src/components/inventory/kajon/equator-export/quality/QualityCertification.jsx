@@ -1,319 +1,500 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { 
-  CheckSquare, BarChart, Coffee, Award, 
-  BarChart3, Plus, ArrowRight, FileText
+  CheckSquare, Search, Plus, Calendar, Info, 
+  Award, CheckCircle2, Clock, XCircle, Filter, 
+  Coffee, Beaker, FileCheck, ThumbsUp
 } from 'lucide-react';
-import { 
-  RadarChart, PolarGrid, PolarAngleAxis, 
-  PolarRadiusAxis, Radar, ResponsiveContainer,
-  LineChart, Line, XAxis, YAxis, Tooltip, 
-  CartesianGrid, Legend
-} from 'recharts';
-
-// Sample quality data for radar chart
-const qualityScores = [
-  { attribute: 'Aroma', arabica: 8.5, robusta: 7.2 },
-  { attribute: 'Flavor', arabica: 8.7, robusta: 7.0 },
-  { attribute: 'Aftertaste', arabica: 8.3, robusta: 6.8 },
-  { attribute: 'Acidity', arabica: 8.6, robusta: 6.5 },
-  { attribute: 'Body', arabica: 8.2, robusta: 8.1 },
-  { attribute: 'Balance', arabica: 8.4, robusta: 7.3 },
-  { attribute: 'Uniformity', arabica: 9.2, robusta: 8.5 },
-  { attribute: 'Clean Cup', arabica: 9.0, robusta: 8.2 },
-  { attribute: 'Sweetness', arabica: 8.8, robusta: 7.0 },
-];
-
-// Sample quality trend data
-const qualityTrendData = [
-  { month: 'Jan', arabica: 84, robusta: 74 },
-  { month: 'Feb', arabica: 85, robusta: 75 },
-  { month: 'Mar', arabica: 83, robusta: 73 },
-  { month: 'Apr', arabica: 86, robusta: 76 },
-  { month: 'May', arabica: 85, robusta: 75 },
-  { month: 'Jun', arabica: 87, robusta: 77 },
-  { month: 'Jul', arabica: 88, robusta: 78 },
-  { month: 'Aug', arabica: 87, robusta: 77 },
-  { month: 'Sep', arabica: 86, robusta: 76 },
-  { month: 'Oct', arabica: 89, robusta: 79 },
-  { month: 'Nov', arabica: 88, robusta: 78 },
-  { month: 'Dec', arabica: 90, robusta: 80 },
-];
-
-// Sample certifications data
-const certifications = [
-  {
-    id: 'CERT-1001',
-    name: 'Q-Grader Certification - Arabica',
-    score: 86.5,
-    status: 'approved',
-    date: '2023-12-01',
-    expiry: '2024-12-01',
-    issuer: 'Coffee Quality Institute',
-    batch: 'AR-2023-456'
-  },
-  {
-    id: 'CERT-1002',
-    name: 'Q-Grader Certification - Robusta',
-    score: 78.2,
-    status: 'approved',
-    date: '2023-12-01',
-    expiry: '2024-12-01',
-    issuer: 'Coffee Quality Institute',
-    batch: 'RB-2023-789'
-  },
-  {
-    id: 'CERT-1003',
-    name: 'Organic Certification',
-    score: null,
-    status: 'pending',
-    date: '2023-12-10',
-    expiry: 'N/A',
-    issuer: 'USDA Organic',
-    batch: 'Multiple'
-  },
-  {
-    id: 'CERT-1004',
-    name: 'Specialty Coffee Association Grade',
-    score: 85.7,
-    status: 'approved',
-    date: '2023-11-15',
-    expiry: '2024-11-15',
-    issuer: 'SCA',
-    batch: 'AR-2023-456'
-  },
-  {
-    id: 'CERT-1005',
-    name: 'Rainforest Alliance',
-    score: null,
-    status: 'pending',
-    date: '2023-12-15',
-    expiry: 'N/A',
-    issuer: 'Rainforest Alliance',
-    batch: 'Multiple'
-  },
-];
-
-// Status colors
-const statusColors = {
-  approved: "bg-green-100 text-green-800",
-  pending: "bg-amber-100 text-amber-800",
-  expired: "bg-red-100 text-red-800",
-  rejected: "bg-red-100 text-red-800"
-};
 
 const QualityCertification = () => {
+  const [activeTab, setActiveTab] = useState('pending');
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Sample quality certification data
+  const certifications = [
+    {
+      id: 'QC-001',
+      batchId: 'BATCH-2453-A',
+      coffeeType: 'Arabica AA Grade',
+      shipment: 'EQ-2453',
+      destination: 'Hamburg, Germany',
+      testDate: '2023-11-25',
+      expiryDate: '2024-11-25',
+      status: 'approved',
+      score: 85,
+      certifier: 'Uganda Coffee Development Authority',
+      metrics: {
+        aroma: 8.5,
+        flavor: 8.2,
+        acidity: 8.0,
+        body: 8.4,
+        balance: 8.5,
+        uniformity: 10,
+        cleanCup: 10,
+        sweetness: 10,
+        overall: 8.4
+      },
+      notes: 'Excellent quality with bright acidity and citrus notes. Clean cup with good body and balance.'
+    },
+    {
+      id: 'QC-002',
+      batchId: 'BATCH-2453-B',
+      coffeeType: 'Arabica AA Grade',
+      shipment: 'EQ-2453',
+      destination: 'Hamburg, Germany',
+      testDate: '2023-11-25',
+      expiryDate: '2024-11-25',
+      status: 'pending',
+      certifier: 'Uganda Coffee Development Authority',
+      notes: 'Sample submitted for testing on November 25th. Awaiting results.'
+    },
+    {
+      id: 'QC-003',
+      batchId: 'BATCH-2455-A',
+      coffeeType: 'Robusta Premium Grade',
+      shipment: 'EQ-2455',
+      destination: 'New York, USA',
+      testDate: '2023-12-01',
+      expiryDate: '2024-12-01',
+      status: 'pending',
+      certifier: 'Coffee Quality Institute',
+      notes: 'Sample submitted for testing on December 1st. Awaiting results.'
+    },
+    {
+      id: 'QC-004',
+      batchId: 'BATCH-2455-B',
+      coffeeType: 'Robusta Standard Grade',
+      shipment: 'EQ-2455',
+      destination: 'New York, USA',
+      testDate: '2023-12-01',
+      expiryDate: '2024-12-01',
+      status: 'rejected',
+      certifier: 'Coffee Quality Institute',
+      rejectionReason: 'High moisture content (13.2%). Exceeds maximum allowable limit of 12.5%.',
+      notes: 'Batch requires additional drying before resubmission for certification.'
+    },
+    {
+      id: 'QC-005',
+      batchId: 'BATCH-2458-A',
+      coffeeType: 'Arabica A Grade',
+      shipment: 'EQ-2458',
+      destination: 'Tokyo, Japan',
+      testDate: '2023-12-05',
+      expiryDate: '2024-12-05',
+      status: 'approved',
+      score: 82,
+      certifier: 'Uganda Coffee Development Authority',
+      metrics: {
+        aroma: 8.0,
+        flavor: 7.8,
+        acidity: 8.2,
+        body: 8.0,
+        balance: 8.1,
+        uniformity: 10,
+        cleanCup: 10,
+        sweetness: 10,
+        overall: 7.9
+      },
+      notes: 'Good quality with consistent flavor profile. Suitable for Japanese market preferences.'
+    }
+  ];
+  
+  // Filter certifications based on active tab and search term
+  const filteredCertifications = certifications.filter(cert => {
+    // Filter by tab
+    if (activeTab === 'pending' && cert.status !== 'pending') {
+      return false;
+    }
+    
+    if (activeTab === 'approved' && cert.status !== 'approved') {
+      return false;
+    }
+    
+    if (activeTab === 'rejected' && cert.status !== 'rejected') {
+      return false;
+    }
+    
+    // Filter by search term
+    if (searchTerm && !cert.batchId.toLowerCase().includes(searchTerm.toLowerCase()) && 
+        !cert.coffeeType.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !cert.shipment.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    return true;
+  });
+  
+  const getStatusBadge = (status) => {
+    switch(status) {
+      case 'pending':
+        return <Badge className="bg-amber-100 text-amber-800">Pending</Badge>;
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-800">Approved</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
+  };
+  
+  const getStatusIcon = (status) => {
+    switch(status) {
+      case 'pending':
+        return <Clock className="h-5 w-5 text-amber-600" />;
+      case 'approved':
+        return <CheckCircle2 className="h-5 w-5 text-green-600" />;
+      case 'rejected':
+        return <XCircle className="h-5 w-5 text-red-600" />;
+      default:
+        return <CheckSquare className="h-5 w-5" />;
+    }
+  };
+  
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <div className="flex-1">
-          <h2 className="text-xl font-semibold">Quality Certification</h2>
-          <p className="text-gray-500 text-sm">Manage coffee quality testing and certification</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex items-center gap-1">
-            <FileText className="h-4 w-4" />
-            <span>Export Report</span>
-          </Button>
-          <Button className="flex items-center gap-1">
-            <Plus className="h-4 w-4" />
-            <span>New Certification</span>
-          </Button>
-        </div>
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Quality Certification Management</h2>
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          New Certification Request
+        </Button>
       </div>
       
-      {/* Quality Metrics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-amber-50">
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-amber-700">Arabica Score</p>
-                <p className="text-2xl font-bold text-amber-900">86.5 / 100</p>
-                <p className="text-xs text-amber-700">Specialty Grade</p>
-              </div>
-              <div className="bg-amber-100 p-2 rounded-full">
-                <Coffee className="h-5 w-5 text-amber-700" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-green-50">
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-green-700">Robusta Score</p>
-                <p className="text-2xl font-bold text-green-900">78.2 / 100</p>
-                <p className="text-xs text-green-700">Premium Grade</p>
-              </div>
-              <div className="bg-green-100 p-2 rounded-full">
-                <Coffee className="h-5 w-5 text-green-700" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-blue-700">Certifications</p>
-                <p className="text-2xl font-bold text-blue-900">3 Active</p>
-                <p className="text-xs text-blue-700">2 Pending</p>
-              </div>
-              <div className="bg-blue-100 p-2 rounded-full">
-                <Award className="h-5 w-5 text-blue-700" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Quality Profile - Radar Chart */}
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <BarChart className="h-5 w-5 text-blue-600" />
-            <span>Coffee Quality Profile</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="py-4">
-          <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={qualityScores}>
-                <PolarGrid />
-                <PolarAngleAxis dataKey="attribute" />
-                <PolarRadiusAxis angle={30} domain={[0, 10]} />
-                <Radar
-                  name="Arabica"
-                  dataKey="arabica"
-                  stroke="#805AD5"
-                  fill="#805AD5"
-                  fillOpacity={0.2}
-                />
-                <Radar
-                  name="Robusta"
-                  dataKey="robusta"
-                  stroke="#22C55E"
-                  fill="#22C55E"
-                  fillOpacity={0.2}
-                />
-                <Legend />
-              </RadarChart>
-            </ResponsiveContainer>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative flex-grow">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search certifications..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                Filters
+              </Button>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Coffee className="h-4 w-4" />
+                By Coffee Type
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Quality Trend */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-blue-600" />
-            <span>Quality Score Trends (12 Months)</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={qualityTrendData}
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis domain={[60, 100]} />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="arabica"
-                  name="Arabica"
-                  stroke="#805AD5"
-                  activeDot={{ r: 8 }}
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="robusta"
-                  name="Robusta"
-                  stroke="#22C55E"
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Certifications Table */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <CheckSquare className="h-5 w-5 text-blue-600" />
-            <span>Certification Documents</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Cert ID</TableHead>
-                  <TableHead>Certification</TableHead>
-                  <TableHead>Batch</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Issued</TableHead>
-                  <TableHead>Expires</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {certifications.map((cert) => (
-                  <TableRow key={cert.id}>
-                    <TableCell className="font-medium">{cert.id}</TableCell>
-                    <TableCell>
-                      <div>{cert.name}</div>
-                      <div className="text-xs text-gray-500">{cert.issuer}</div>
-                    </TableCell>
-                    <TableCell>{cert.batch}</TableCell>
-                    <TableCell>
-                      {cert.score ? (
-                        <Badge className="bg-purple-100 text-purple-800">
-                          {cert.score} / 100
-                        </Badge>
-                      ) : (
-                        <span className="text-gray-500">N/A</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{cert.date}</TableCell>
-                    <TableCell>{cert.expiry}</TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[cert.status]}>
-                        {cert.status.charAt(0).toUpperCase() + cert.status.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                        <span>View</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid grid-cols-4 mb-4">
+              <TabsTrigger value="all" className="flex items-center gap-1">
+                <CheckSquare className="h-4 w-4" />
+                All Certifications
+              </TabsTrigger>
+              <TabsTrigger value="pending" className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                Pending
+              </TabsTrigger>
+              <TabsTrigger value="approved" className="flex items-center gap-1">
+                <CheckCircle2 className="h-4 w-4" />
+                Approved
+              </TabsTrigger>
+              <TabsTrigger value="rejected" className="flex items-center gap-1">
+                <XCircle className="h-4 w-4" />
+                Rejected
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all" className="space-y-4">
+              <div className="border rounded-lg overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Certificate ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coffee Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shipment</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Test Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredCertifications.map((cert) => (
+                      <tr key={cert.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{cert.id}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cert.batchId}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cert.coffeeType}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cert.shipment}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cert.testDate}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {cert.score ? `${cert.score}/100` : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(cert.status)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div className="flex space-x-2">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <FileCheck className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Info className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="pending" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredCertifications.map((cert) => (
+                  <Card key={cert.id} className="overflow-hidden">
+                    <div className="flex items-center justify-between border-b p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-amber-100 p-2 rounded-full">
+                          <Clock className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{cert.batchId}</h3>
+                          <p className="text-xs text-gray-500">{cert.coffeeType}</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-amber-100 text-amber-800">Pending</Badge>
+                    </div>
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Certificate ID:</span>
+                          <span className="font-medium">{cert.id}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Shipment:</span>
+                          <span className="font-medium">{cert.shipment}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Destination:</span>
+                          <span className="font-medium">{cert.destination}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Test Date:</span>
+                          <span className="font-medium">{cert.testDate}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Certifying Body:</span>
+                          <span className="font-medium">{cert.certifier}</span>
+                        </div>
+                        <div className="mt-2 p-2 bg-gray-50 border border-gray-100 rounded-md">
+                          <p className="text-xs text-gray-700">
+                            <span className="font-medium">Notes:</span> {cert.notes}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex justify-end mt-4 pt-3 border-t gap-2">
+                        <Button variant="outline" size="sm">Update Status</Button>
+                        <Button size="sm">View Details</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="approved" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredCertifications.map((cert) => (
+                  <Card key={cert.id} className="overflow-hidden">
+                    <div className="flex items-center justify-between border-b p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-green-100 p-2 rounded-full">
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{cert.batchId}</h3>
+                          <p className="text-xs text-gray-500">{cert.coffeeType}</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Approved</Badge>
+                    </div>
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="text-gray-500">Quality Score:</span>
+                          <span className="font-medium text-green-700">{cert.score}/100</span>
+                        </div>
+                        
+                        {cert.metrics && (
+                          <div className="space-y-2 bg-gray-50 p-3 rounded-lg mb-2">
+                            <h4 className="text-sm font-medium text-gray-700">Quality Metrics</h4>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                              {Object.entries(cert.metrics).map(([key, value]) => (
+                                <div key={key} className="text-xs">
+                                  <div className="flex justify-between mb-1">
+                                    <span className="capitalize">{key}:</span>
+                                    <span>{value}</span>
+                                  </div>
+                                  <Progress value={value * 10} className="h-1" />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Certificate ID:</span>
+                          <span className="font-medium">{cert.id}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Shipment:</span>
+                          <span className="font-medium">{cert.shipment}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Destination:</span>
+                          <span className="font-medium">{cert.destination}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Test Date:</span>
+                          <span className="font-medium">{cert.testDate}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Expiry Date:</span>
+                          <span className="font-medium">{cert.expiryDate}</span>
+                        </div>
+                        <div className="mt-2 p-2 bg-green-50 border border-green-100 rounded-md">
+                          <p className="text-xs text-green-700">
+                            <span className="font-medium">Tasting Notes:</span> {cert.notes}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex justify-end mt-4 pt-3 border-t gap-2">
+                        <Button variant="outline" size="sm" className="flex items-center gap-1">
+                          <Award className="h-3 w-3" />
+                          Certificate
+                        </Button>
+                        <Button size="sm">View Details</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="rejected" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredCertifications.map((cert) => (
+                  <Card key={cert.id} className="overflow-hidden">
+                    <div className="flex items-center justify-between border-b p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-red-100 p-2 rounded-full">
+                          <XCircle className="h-5 w-5 text-red-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{cert.batchId}</h3>
+                          <p className="text-xs text-gray-500">{cert.coffeeType}</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-red-100 text-red-800">Rejected</Badge>
+                    </div>
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Certificate ID:</span>
+                          <span className="font-medium">{cert.id}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Shipment:</span>
+                          <span className="font-medium">{cert.shipment}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Destination:</span>
+                          <span className="font-medium">{cert.destination}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Test Date:</span>
+                          <span className="font-medium">{cert.testDate}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Certifying Body:</span>
+                          <span className="font-medium">{cert.certifier}</span>
+                        </div>
+                        <div className="mt-2 p-2 bg-red-50 border border-red-100 rounded-md">
+                          <p className="text-xs text-red-700">
+                            <span className="font-medium">Rejection Reason:</span> {cert.rejectionReason}
+                          </p>
+                        </div>
+                        <div className="mt-2 p-2 bg-gray-50 border border-gray-100 rounded-md">
+                          <p className="text-xs text-gray-700">
+                            <span className="font-medium">Notes:</span> {cert.notes}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex justify-end mt-4 pt-3 border-t gap-2">
+                        <Button variant="outline" size="sm">Resubmit</Button>
+                        <Button size="sm">View Details</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+      
+      <Card className="bg-gradient-to-r from-blue-50 to-white">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ThumbsUp className="h-5 w-5 text-blue-600" />
+            Quality Certification Best Practices
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-4 rounded-lg border shadow-sm">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-blue-100 p-2 rounded-full">
+                  <Coffee className="h-4 w-4 text-blue-600" />
+                </div>
+                <h3 className="font-medium">Sample Preparation</h3>
+              </div>
+              <p className="text-sm text-gray-600">
+                Ensure samples are properly prepared and packaged. Use airtight containers and include at least 300g of green coffee.
+              </p>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border shadow-sm">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-blue-100 p-2 rounded-full">
+                  <Beaker className="h-4 w-4 text-blue-600" />
+                </div>
+                <h3 className="font-medium">Testing Parameters</h3>
+              </div>
+              <p className="text-sm text-gray-600">
+                Maintain optimal moisture content (9.5-12.5%) and screen size consistency before submitting samples for testing.
+              </p>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border shadow-sm">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-blue-100 p-2 rounded-full">
+                  <Calendar className="h-4 w-4 text-blue-600" />
+                </div>
+                <h3 className="font-medium">Certification Timeline</h3>
+              </div>
+              <p className="text-sm text-gray-600">
+                Submit samples at least 14 days before required certification date to allow for testing, potential resubmission, and documentation.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
