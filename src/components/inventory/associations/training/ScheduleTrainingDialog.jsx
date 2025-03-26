@@ -2,17 +2,16 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/supabase";
+import { useAssociationTrainings } from "@/integrations/supabase";
 import FormField from "@/components/inventory/dairy/sales/forms/components/FormField";
 
-const ScheduleTrainingDialog = ({ open, onOpenChange, onSuccess }) => {
+const ScheduleTrainingDialog = ({ open, onOpenChange, onSuccess, associationId }) => {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createTraining, loading: isSubmitting } = useAssociationTrainings();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -21,7 +20,7 @@ const ScheduleTrainingDialog = ({ open, onOpenChange, onSuccess }) => {
     time: '',
     location: '',
     trainer: '',
-    maxMembers: 50,
+    max_members: 50,
     notes: ''
   });
 
@@ -50,7 +49,7 @@ const ScheduleTrainingDialog = ({ open, onOpenChange, onSuccess }) => {
       }
     }
 
-    if (formData.maxMembers <= 0) {
+    if (formData.max_members <= 0) {
       toast({
         title: "Invalid number of participants",
         description: "Maximum participants must be at least 1",
@@ -67,53 +66,49 @@ const ScheduleTrainingDialog = ({ open, onOpenChange, onSuccess }) => {
     
     if (!validateForm()) return;
     
-    setIsSubmitting(true);
+    // Prepare the data for submission to Supabase
+    const trainingData = {
+      ...formData,
+      association_id: associationId || null,
+      enrolled_members: 0,
+      status: 'upcoming'
+    };
     
     try {
-      // In a real implementation, we would save to the database here
-      console.log("Submitting training data:", formData);
+      // Save the training to Supabase
+      const { success, data, error } = await createTraining(trainingData);
       
-      // Simulate a database call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Success notification
-      toast({
-        title: "Training scheduled successfully",
-        description: `"${formData.title}" has been scheduled for ${formData.date}`,
-      });
-      
-      // Reset form and close dialog
-      setFormData({
-        title: '',
-        description: '',
-        category: 'farming',
-        date: '',
-        time: '',
-        location: '',
-        trainer: '',
-        maxMembers: 50,
-        notes: ''
-      });
-      
-      if (onSuccess) {
-        onSuccess({
-          ...formData,
-          id: Math.floor(Math.random() * 1000) + 6, // Generate a random ID for the mock data
-          enrolledMembers: 0,
-          status: 'upcoming'
+      if (success) {
+        // Reset form data
+        setFormData({
+          title: '',
+          description: '',
+          category: 'farming',
+          date: '',
+          time: '',
+          location: '',
+          trainer: '',
+          max_members: 50,
+          notes: ''
         });
+        
+        // Call the onSuccess callback with the new training data
+        if (onSuccess) {
+          onSuccess(data);
+        }
+        
+        // Close the dialog
+        onOpenChange(false);
+      } else {
+        console.error("Error from createTraining:", error);
       }
-      
-      onOpenChange(false);
     } catch (error) {
-      console.error("Error scheduling training:", error);
+      console.error("Unexpected error in handleSubmit:", error);
       toast({
         title: "Failed to schedule training",
         description: error.message || "An unexpected error occurred",
         variant: "destructive"
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -203,8 +198,8 @@ const ScheduleTrainingDialog = ({ open, onOpenChange, onSuccess }) => {
             <FormField label="Maximum Participants">
               <Input 
                 type="number"
-                value={formData.maxMembers}
-                onChange={(e) => handleInputChange('maxMembers', parseInt(e.target.value) || 0)}
+                value={formData.max_members}
+                onChange={(e) => handleInputChange('max_members', parseInt(e.target.value) || 0)}
                 placeholder="Maximum number of participants"
               />
             </FormField>
