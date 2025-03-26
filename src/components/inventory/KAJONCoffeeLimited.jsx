@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Coffee, Globe, Factory, BarChart3, TrendingUp, AlertCircle, Calendar, Ship } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { useLocation } from 'react-router-dom';
 import StockOperations from './stock-operations/StockOperations';
 import ViewCurrentStock from './ViewCurrentStock';
 import MakeReports from './MakeReports';
@@ -20,8 +21,16 @@ import EquatorExportManagement from './kajon/equator-export/EquatorExportManagem
 
 const KAJONCoffeeLimited = () => {
   const { toast } = useToast();
+  const location = useLocation();
   const [selectedInterface, setSelectedInterface] = useState(null);
   const [selectedSystem, setSelectedSystem] = useState(null);
+  
+  // Check if there's a pre-selected interface from navigation state
+  useEffect(() => {
+    if (location.state?.selectedInterface) {
+      setSelectedInterface(location.state.selectedInterface);
+    }
+  }, [location.state]);
   
   const handleBack = () => {
     if (selectedSystem) {

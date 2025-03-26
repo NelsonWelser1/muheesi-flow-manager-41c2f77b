@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import UpdateStock from '../components/inventory/UpdateStock';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +37,15 @@ const companies = [{
     livestockSales: "UGX 67,900,000",
     expenses: "UGX 2,000,000"
   }
+}, {
+  name: "Equator Coffee Export",
+  description: "Global export management system for coffee trading, contracts, shipments, market analysis, and international compliance.",
+  component: "equator-export",
+  manager: "Sarah Kimani",
+  contact: "+256 780 123456",
+  location: "Kampala"
 }];
+
 const ManageInventory = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const navigate = useNavigate();
@@ -44,18 +53,24 @@ const ManageInventory = () => {
     name: "John Doe",
     role: "Inventory Manager"
   };
+  
   const handleCompanyClick = company => {
     if (company.component === 'kashari-mixed-farm') {
       navigate('/manage-inventory/kashari-farm');
     } else if (company.component === 'bukomero-dairy') {
       navigate('/manage-inventory/bukomero-dairy');
+    } else if (company.component === 'equator-export') {
+      // Navigate directly to KAJON with Equator Export Management pre-selected
+      navigate('/manage-inventory/kajon-coffee', { state: { selectedInterface: 'equator' } });
     } else {
       setSelectedCompany(company);
     }
   };
+  
   const handleBackToCompanies = () => {
     setSelectedCompany(null);
   };
+  
   if (selectedCompany) {
     return <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
@@ -93,6 +108,7 @@ const ManageInventory = () => {
         </Card>
       </div>;
   }
+  
   return <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Manage Inventory</h1>
@@ -124,4 +140,5 @@ const ManageInventory = () => {
       </div>
     </div>;
 };
+
 export default ManageInventory;
