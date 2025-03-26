@@ -142,7 +142,7 @@ const GlobalMarketInsights = () => {
                   type="monotone" 
                   dataKey="robusta" 
                   name="Robusta"
-                  stroke="#d97706" 
+                  stroke="#82ca9d" 
                   strokeWidth={2}
                 />
               </LineChart>
@@ -174,6 +174,7 @@ const GlobalMarketInsights = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
+                <YAxis yAxisId="right" orientation="right" />
                 <Tooltip />
                 <Legend />
                 <Bar 
@@ -194,7 +195,7 @@ const GlobalMarketInsights = () => {
                   name="Arabica Price ($/kg)" 
                   stroke="#4f46e5"
                   strokeWidth={2}
-                  yAxisId={1}
+                  yAxisId="right"
                 />
               </ComposedChart>
             </ResponsiveContainer>
