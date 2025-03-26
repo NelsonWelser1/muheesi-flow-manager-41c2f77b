@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import EquatorExportManagement from '../components/inventory/kajon/equator-expor
 
 const ManageInventory = () => {
   const navigate = useNavigate();
+  const [activeApp, setActiveApp] = useState(null);
 
   const inventoryApps = [
     {
@@ -26,9 +27,11 @@ const ManageInventory = () => {
     }
   ];
 
-  const handleAppSelection = (app) => {
+  const handleAppSelection = (app, index) => {
     if (app.path) {
       navigate(app.path);
+    } else if (app.component) {
+      setActiveApp(index);
     }
   };
 
@@ -40,24 +43,22 @@ const ManageInventory = () => {
         {inventoryApps.map((app, index) => (
           <Card 
             key={index}
-            className={`${app.component ? '' : 'cursor-pointer hover:shadow-lg transition-shadow'}`}
-            onClick={app.component ? undefined : () => handleAppSelection(app)}
+            className="cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => handleAppSelection(app, index)}
           >
             <CardContent className="p-6">
               <h2 className="text-xl font-semibold mb-2">{app.title}</h2>
               <p className="text-gray-600 mb-4">{app.description}</p>
-              {!app.component && (
-                <Button>Open Application</Button>
-              )}
+              <Button>Open Application</Button>
             </CardContent>
           </Card>
         ))}
       </div>
       
-      {inventoryApps.find(app => app.component) && (
+      {activeApp !== null && inventoryApps[activeApp].component && (
         <div className="mt-8">
-          <h2 className="text-2xl font-semibold mb-4">Equator Coffee Export Management System</h2>
-          <EquatorExportManagement />
+          <h2 className="text-2xl font-semibold mb-4">{inventoryApps[activeApp].title}</h2>
+          {React.createElement(inventoryApps[activeApp].component)}
         </div>
       )}
     </div>
