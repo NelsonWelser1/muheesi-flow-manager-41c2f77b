@@ -42,22 +42,22 @@ export const useCoffeeStockTransfers = () => {
         query = query.eq('status', filters.status);
       }
       
+      // Apply partner transfer filter if provided
+      if (filters.isPartnerTransfer !== undefined) {
+        query = query.eq('is_partner_transfer', filters.isPartnerTransfer);
+      }
+      
       // Apply location filter if provided
       if (filters.location) {
         query = query.or(`source_location.ilike.%${filters.location}%,destination_location.ilike.%${filters.location}%`);
       }
       
-      // Apply search filter if provided - using individual filters instead of OR
+      // Apply search filter if provided - using proper OR filter syntax
       if (filters.searchTerm) {
         const searchTerm = filters.searchTerm.trim();
-        // Apply search to all fields individually
-        query = query.or(
-          `coffee_type.ilike.%${searchTerm}%,` +
-          `quality_grade.ilike.%${searchTerm}%,` +
-          `source_location.ilike.%${searchTerm}%,` +
-          `destination_location.ilike.%${searchTerm}%,` +
-          `manager.ilike.%${searchTerm}%`
-        );
+        if (searchTerm) {
+          query = query.or(`coffee_type.ilike.%${searchTerm}%,quality_grade.ilike.%${searchTerm}%,source_location.ilike.%${searchTerm}%,destination_location.ilike.%${searchTerm}%,manager.ilike.%${searchTerm}%`);
+        }
       }
       
       const { data, error } = await query;
@@ -66,9 +66,29 @@ export const useCoffeeStockTransfers = () => {
         throw error;
       }
       
-      setTransfers(data || []);
-      console.log('Fetched coffee transfers data:', data);
-      return data;
+      // Ensure we don't have any undefined or null items
+      const validData = (data || []).filter(item => item !== null && item !== undefined);
+      
+      // Add default properties to prevent "x is undefined" errors
+      const processedData = validData.map(item => ({
+        id: item.id || `transfer-${Math.random().toString(36).substring(2, 9)}`,
+        name: item.name || `${item.coffee_type || 'Coffee'} Transfer`,
+        coffee_type: item.coffee_type || 'Unknown Type',
+        quality_grade: item.quality_grade || 'N/A',
+        source_location: item.source_location || 'Unknown Source',
+        destination_location: item.destination_location || 'Unknown Destination',
+        quantity: item.quantity || 0,
+        status: item.status || 'pending',
+        manager: item.manager || 'N/A',
+        is_partner_transfer: !!item.is_partner_transfer,
+        created_at: item.created_at || new Date().toISOString(),
+        updated_at: item.updated_at || item.created_at || new Date().toISOString(),
+        ...item  // Keep all original properties
+      }));
+      
+      setTransfers(processedData);
+      console.log('Fetched coffee transfers data:', processedData);
+      return processedData;
     } catch (err) {
       console.error('Error fetching transfers:', err);
       setError(err);

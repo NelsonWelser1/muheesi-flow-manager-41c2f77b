@@ -40,13 +40,9 @@ export const useAssociationsData = () => {
       // Apply search filter if provided
       if (filters.searchTerm) {
         const searchTerm = filters.searchTerm.trim();
-        query = query.or(
-          `association_name.ilike.%${searchTerm}%,` +
-          `registration_number.ilike.%${searchTerm}%,` +
-          `association_type.ilike.%${searchTerm}%,` +
-          `coffee_types.ilike.%${searchTerm}%,` +
-          `location.ilike.%${searchTerm}%`
-        );
+        if (searchTerm) {
+          query = query.or(`association_name.ilike.%${searchTerm}%,registration_number.ilike.%${searchTerm}%,association_type.ilike.%${searchTerm}%,coffee_types.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%`);
+        }
       }
       
       if (filters.associationType && filters.associationType !== 'all') {
@@ -59,9 +55,27 @@ export const useAssociationsData = () => {
         throw error;
       }
       
-      setAssociations(data || []);
-      console.log('Fetched associations data:', data);
-      return data;
+      // Ensure we don't have any undefined or null items
+      const validData = (data || []).filter(item => item !== null && item !== undefined);
+      
+      // Add default properties to prevent "x is undefined" errors
+      const processedData = validData.map(item => ({
+        id: item.id || `assoc-${Math.random().toString(36).substring(2, 9)}`,
+        name: item.association_name || 'Unnamed Association',
+        association_name: item.association_name || 'Unnamed Association',
+        registration_number: item.registration_number || 'N/A',
+        association_type: item.association_type || 'Unknown Type',
+        coffee_types: item.coffee_types || 'Unknown',
+        location: item.location || 'Unknown Location',
+        members_count: item.members_count || 0,
+        created_at: item.created_at || new Date().toISOString(),
+        updated_at: item.updated_at || item.created_at || new Date().toISOString(),
+        ...item  // Keep all original properties
+      }));
+      
+      setAssociations(processedData);
+      console.log('Fetched associations data:', processedData);
+      return processedData;
     } catch (err) {
       console.error('Error fetching associations:', err);
       setError(err.message);

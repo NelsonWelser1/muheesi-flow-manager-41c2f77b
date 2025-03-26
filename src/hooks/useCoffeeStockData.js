@@ -47,16 +47,12 @@ export const useCoffeeStockData = () => {
         query = query.ilike('location', `%${filters.location}%`);
       }
       
-      // Apply search filter if provided - using individual filters instead of OR
+      // Apply search filter if provided - using proper OR filter syntax
       if (filters.searchTerm) {
         const searchTerm = filters.searchTerm.trim();
-        // Apply search to all fields individually
-        query = query.or(
-          `coffee_type.ilike.%${searchTerm}%,` +
-          `quality_grade.ilike.%${searchTerm}%,` +
-          `location.ilike.%${searchTerm}%,` +
-          `manager.ilike.%${searchTerm}%`
-        );
+        if (searchTerm) {
+          query = query.or(`coffee_type.ilike.%${searchTerm}%,quality_grade.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%,manager.ilike.%${searchTerm}%`);
+        }
       }
       
       const { data, error } = await query;
@@ -65,9 +61,30 @@ export const useCoffeeStockData = () => {
         throw error;
       }
       
-      setStockData(data || []);
-      console.log('Fetched coffee stock data:', data);
-      return data;
+      // Ensure we don't have any undefined or null items
+      const validData = (data || []).filter(item => item !== null && item !== undefined);
+      
+      // Add default properties to prevent "x is undefined" errors
+      const processedData = validData.map(item => ({
+        id: item.id || `item-${Math.random().toString(36).substring(2, 9)}`,
+        name: item.name || item.coffee_type || 'Unnamed Coffee',
+        type: item.coffee_type || item.type || 'Unknown Type',
+        grade: item.quality_grade || item.grade || 'N/A',
+        location: item.location || 'Unknown Location',
+        current_stock: item.current_stock || item.quantity || 0,
+        max_capacity: item.max_capacity || 1000,
+        health: item.health || 'good',
+        trend: item.trend || 'stable',
+        status: item.status || 'in_stock',
+        manager: item.manager || 'N/A',
+        updated_at: item.updated_at || item.created_at || new Date().toISOString(),
+        created_at: item.created_at || new Date().toISOString(),
+        ...item  // Keep all original properties
+      }));
+      
+      setStockData(processedData);
+      console.log('Fetched coffee stock data:', processedData);
+      return processedData;
     } catch (err) {
       console.error('Error fetching coffee stock data:', err);
       setError(err);
@@ -82,6 +99,43 @@ export const useCoffeeStockData = () => {
     }
   };
 
+  // Add mock location and historical data for charts
+  const locationData = [
+    {
+      name: 'Kampala Store',
+      stockLevel: 2100,
+      maxCapacity: 3000,
+      stockTypes: ['Arabica', 'Robusta']
+    },
+    {
+      name: 'JBER',
+      stockLevel: 1200,
+      maxCapacity: 2500,
+      stockTypes: ['Arabica', 'Robusta']
+    },
+    {
+      name: 'Mbarara Warehouse',
+      stockLevel: 950,
+      maxCapacity: 1800,
+      stockTypes: ['Arabica', 'Robusta']
+    },
+    {
+      name: 'Kakyinga Factory',
+      stockLevel: 750,
+      maxCapacity: 1000,
+      stockTypes: ['Robusta']
+    }
+  ];
+  
+  const historicalData = [
+    { month: 'Jan', arabica: 300, robusta: 400 },
+    { month: 'Feb', arabica: 500, robusta: 700 },
+    { month: 'Mar', arabica: 700, robusta: 600 },
+    { month: 'Apr', arabica: 900, robusta: 800 },
+    { month: 'May', arabica: 1500, robusta: 1000 },
+    { month: 'Jun', arabica: 1200, robusta: 1100 }
+  ];
+
   // Initial fetch on mount
   useEffect(() => {
     fetchCoffeeStockData();
@@ -89,6 +143,8 @@ export const useCoffeeStockData = () => {
 
   return {
     stockData,
+    locationData,
+    historicalData,
     isLoading,
     error,
     fetchCoffeeStockData
