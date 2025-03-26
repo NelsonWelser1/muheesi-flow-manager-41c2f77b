@@ -21,7 +21,7 @@ const processDataForExport = (data, type) => {
   return data.map(item => {
     const processedItem = { ...item };
     
-    // Format date fields
+    // Format dates for specific types
     if (processedItem.created_at) {
       processedItem.created_at = formatDate(processedItem.created_at);
     }
@@ -69,7 +69,7 @@ const getColumnsForType = (type, data) => {
       return ['Requester', 'Department', 'Type', 'Urgency', 'Status', 'Created Date', 'Details'];
     default:
       // Dynamically build columns from data
-      return Object.keys(firstItem)
+      return Object.keys(firstItem || {})
         .filter(key => key !== 'id' && key !== 'user_id') // Filter out unnecessary columns
         .map(key => {
           // Convert snake_case to Title Case
@@ -166,7 +166,7 @@ export const exportToCSV = (data, filename = 'export') => {
   const processedData = processDataForExport(data);
   
   // Convert data to CSV format
-  const header = Object.keys(processedData[0]);
+  const header = Object.keys(processedData[0] || {});
   const csvRows = [
     header.join(','), // Header row
     ...processedData.map(row => 
@@ -246,7 +246,7 @@ export const exportToPDF = (data, filename = 'export', type = '') => {
   const columns = getColumnsForType(type, data);
   const rows = getRowsForType(type, data, columns);
   
-  // Create the table - fixed issue with autoTable
+  // Create the table
   doc.autoTable({
     head: [columns],
     body: rows,
@@ -263,9 +263,6 @@ export const exportToPDF = (data, filename = 'export', type = '') => {
     styles: {
       overflow: 'linebreak',
       cellWidth: 'auto'
-    },
-    columnStyles: {
-      text: { cellWidth: 'auto' }
     }
   });
   
