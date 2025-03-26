@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Coffee, Globe, Factory, BarChart3, TrendingUp, AlertCircle, Calendar } from 'lucide-react';
+import { ArrowLeft, Coffee, Globe, Factory, BarChart3, TrendingUp, AlertCircle, Calendar, Ship } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import StockOperations from './stock-operations/StockOperations';
 import ViewCurrentStock from './ViewCurrentStock';
@@ -16,6 +16,7 @@ import KazoCoffeeProject from './kajon/KazoCoffeeProject';
 import ExecutiveDashboard from './kajon/executive/ExecutiveDashboard';
 import CoffeeExportDashboard from './kajon/export-business/CoffeeExportDashboard';
 import HullingGrading from './kajon/export-business/HullingGrading';
+import EquatorExportManagement from './kajon/equator-export/EquatorExportManagement';
 
 const KAJONCoffeeLimited = () => {
   const { toast } = useToast();
@@ -34,7 +35,7 @@ const KAJONCoffeeLimited = () => {
     return (
       <Card>
         <CardContent className="space-y-4 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* KAJON Coffee Limited - Executive Management */}
             <div className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl h-[250px]">
               <div className="absolute inset-0 bg-gradient-to-br from-amber-800/90 to-amber-950/95 opacity-90 transition-opacity group-hover:opacity-100"></div>
@@ -75,6 +76,28 @@ const KAJONCoffeeLimited = () => {
                 </p>
                 <div className="absolute bottom-4 left-4 bg-green-700/60 text-green-100 px-2 py-1 rounded-md text-xs">
                   Operational Level
+                </div>
+              </Button>
+            </div>
+            
+            {/* Equator Coffee Export Management System - New Tile */}
+            <div className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl h-[250px]">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-800/90 to-blue-950/95 opacity-90 transition-opacity group-hover:opacity-100"></div>
+              <div className="absolute inset-0 bg-[url('/combined-logo.png')] bg-center bg-no-repeat bg-contain opacity-10"></div>
+              <Button 
+                variant="link" 
+                onClick={() => setSelectedInterface('equator')}
+                className="relative h-full w-full flex flex-col items-center justify-center space-y-4 text-white border-0"
+              >
+                <div className="rounded-full bg-blue-700/50 p-4 mb-2 backdrop-blur-sm transition-all duration-300 group-hover:bg-blue-600/70">
+                  <Ship className="h-12 w-12" />
+                </div>
+                <span className="text-2xl font-bold tracking-wide">Equator Coffee Export</span>
+                <p className="text-sm font-light max-w-[80%] text-center text-blue-100 opacity-90">
+                  Global Export Management System
+                </p>
+                <div className="absolute bottom-4 left-4 bg-blue-700/60 text-blue-100 px-2 py-1 rounded-md text-xs">
+                  International Trade
                 </div>
               </Button>
             </div>
@@ -155,7 +178,9 @@ const KAJONCoffeeLimited = () => {
                   selectedSystem === 'export-analytics' ? 
                     'KAJON Export Analytics' : 
                     'KAJON Coffee Factory Management' 
-                : 'Kazo Coffee Development Project'}
+                : selectedInterface === 'kazo' ? 
+                  'Kazo Coffee Development Project' 
+                : 'Equator Coffee Export Management System'}
             </h2>
             <Button variant="ghost" onClick={handleBack} className="p-2">
               <ArrowLeft className="h-5 w-5" />
@@ -170,8 +195,10 @@ const KAJONCoffeeLimited = () => {
             ) : (
               <HullingGrading viewOnly={true} />
             )
-          ) : (
+          ) : selectedInterface === 'kazo' ? (
             <KazoCoffeeProject />
+          ) : (
+            <EquatorExportManagement />
           )}
         </CardContent>
       </Card>
