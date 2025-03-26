@@ -4,7 +4,7 @@ import { useCoffeeStockTransfers } from '@/hooks/useCoffeeStockTransfers';
 import PendingTransferNotification from './notifications/PendingTransferNotification';
 
 const PendingTransfers = ({ location, onlyShow = false }) => {
-  const { transfers, loading, error, handleRefresh } = useCoffeeStockTransfers();
+  const { transfers, loading, error, fetchTransfers, handleRefresh } = useCoffeeStockTransfers();
   const [pendingTransfers, setPendingTransfers] = useState([]);
 
   // Set initial data and refresh periodically

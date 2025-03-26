@@ -7,6 +7,13 @@ export const useCoffeeStockTransfers = () => {
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [timeRange, setTimeRange] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState({
+    field: 'created_at',
+    ascending: false
+  });
   const { toast } = useToast();
 
   const fetchTransfers = async (filters = {}) => {
@@ -91,10 +98,10 @@ export const useCoffeeStockTransfers = () => {
       return processedData;
     } catch (err) {
       console.error('Error fetching transfers:', err);
-      setError(err);
+      setError(err.message || "Failed to fetch transfers");
       toast({
         title: "Error fetching transfers",
-        description: err.message,
+        description: err.message || "Failed to fetch transfers",
         variant: "destructive"
       });
       return [];
@@ -103,16 +110,115 @@ export const useCoffeeStockTransfers = () => {
     }
   };
 
+  // Handle status filter change
+  const handleStatusChange = (status) => {
+    setStatusFilter(status);
+    fetchTransfers({ 
+      status, 
+      timeRange, 
+      searchTerm, 
+      sortConfig 
+    });
+  };
+
+  // Handle time range filter change
+  const handleTimeRangeChange = (range) => {
+    setTimeRange(range);
+    fetchTransfers({ 
+      status: statusFilter, 
+      timeRange: range, 
+      searchTerm, 
+      sortConfig 
+    });
+  };
+
+  // Handle search
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    fetchTransfers({ 
+      status: statusFilter, 
+      timeRange, 
+      searchTerm: term, 
+      sortConfig 
+    });
+  };
+
+  // Handle sorting
+  const handleSort = (field) => {
+    const isAsc = sortConfig.field === field && !sortConfig.ascending;
+    setSortConfig({ field, ascending: isAsc });
+    
+    // Sort transfers locally without refetching
+    const sortedTransfers = [...transfers].sort((a, b) => {
+      if (a[field] < b[field]) return isAsc ? -1 : 1;
+      if (a[field] > b[field]) return isAsc ? 1 : -1;
+      return 0;
+    });
+    
+    setTransfers(sortedTransfers);
+  };
+
+  // Submit a new transfer
+  const submitTransfer = async (transferData) => {
+    try {
+      const { data, error } = await supabase
+        .from('coffee_stock_transfers')
+        .insert([{
+          ...transferData,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select();
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Transfer created",
+        description: "Stock transfer request submitted successfully",
+      });
+      
+      return data;
+    } catch (err) {
+      console.error('Error creating transfer:', err);
+      toast({
+        title: "Error creating transfer",
+        description: err.message,
+        variant: "destructive"
+      });
+      throw err;
+    }
+  };
+
+  // Manual refresh function
+  const handleRefresh = () => {
+    return fetchTransfers({ 
+      status: statusFilter, 
+      timeRange, 
+      searchTerm, 
+      sortConfig 
+    });
+  };
+
   // Initial fetch on mount
   useEffect(() => {
-    fetchTransfers();
+    handleRefresh();
   }, []);
 
   return {
     transfers,
     loading,
     error,
-    fetchTransfers
+    statusFilter,
+    timeRange,
+    searchTerm,
+    sortConfig,
+    handleStatusChange,
+    handleTimeRangeChange,
+    handleSearch,
+    handleSort,
+    handleRefresh,
+    submitTransfer
   };
 };
 
