@@ -8,7 +8,7 @@ import {
   Ship, Globe, FileText, TrendingUp, Users, Briefcase, 
   Package, Truck, AlertCircle, ClipboardCheck, DollarSign,
   BarChart3, Scale, Files, Calendar, Map, CheckSquare, 
-  CreditCard, BarChart, ShoppingCart
+  CreditCard, BarChart, ShoppingCart, ClipboardList
 } from 'lucide-react';
 import ExportDashboard from './dashboard/ExportDashboard';
 import ContractManagement from './contracts/ContractManagement';
@@ -18,6 +18,7 @@ import ComplianceDocuments from './compliance/ComplianceDocuments';
 import QualityCertification from './quality/QualityCertification';
 import FinanceManagement from './finance/FinanceManagement';
 import SalesMarketing from './sales/SalesMarketing';
+import OrderManagement from './order/OrderManagement';
 
 const EquatorExportManagement = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -105,7 +106,7 @@ const EquatorExportManagement = () => {
       
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-8 h-auto">
+        <TabsList className="grid grid-cols-2 md:grid-cols-9 h-auto">
           <TabsTrigger value="dashboard" className="flex flex-col py-2 gap-1">
             <BarChart3 className="h-4 w-4" />
             <span>Dashboard</span>
@@ -137,6 +138,10 @@ const EquatorExportManagement = () => {
           <TabsTrigger value="sales" className="flex flex-col py-2 gap-1">
             <ShoppingCart className="h-4 w-4" />
             <span>Sales</span>
+          </TabsTrigger>
+          <TabsTrigger value="order" className="flex flex-col py-2 gap-1">
+            <ClipboardList className="h-4 w-4" />
+            <span>Order</span>
           </TabsTrigger>
         </TabsList>
         
@@ -170,6 +175,10 @@ const EquatorExportManagement = () => {
         
         <TabsContent value="sales" className="space-y-4">
           <SalesMarketing />
+        </TabsContent>
+        
+        <TabsContent value="order" className="space-y-4">
+          <OrderManagement />
         </TabsContent>
       </Tabs>
     </div>
