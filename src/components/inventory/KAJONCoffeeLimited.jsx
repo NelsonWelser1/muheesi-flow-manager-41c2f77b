@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,12 +14,14 @@ import MakeRequisitions from './MakeRequisitions';
 import KazoCoffeeProject from './kajon/KazoCoffeeProject';
 import CoffeeExportDashboard from './kajon/export-business/CoffeeExportDashboard';
 import HullingGrading from './kajon/export-business/HullingGrading';
+
 const KAJONCoffeeLimited = () => {
   const {
     toast
   } = useToast();
   const [selectedInterface, setSelectedInterface] = useState(null);
   const [selectedSystem, setSelectedSystem] = useState(null);
+  
   const handleBack = () => {
     if (selectedSystem) {
       setSelectedSystem(null);
@@ -26,6 +29,7 @@ const KAJONCoffeeLimited = () => {
       setSelectedInterface(null);
     }
   };
+  
   if (!selectedInterface) {
     return <Card>
         <CardContent className="space-y-4 pt-6">
@@ -34,6 +38,7 @@ const KAJONCoffeeLimited = () => {
         </CardContent>
       </Card>;
   }
+  
   if (selectedInterface === 'kajon' && !selectedSystem) {
     return <div className="space-y-6">
         <Card>
@@ -44,21 +49,51 @@ const KAJONCoffeeLimited = () => {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mx-[145px] my-0 bg-slate-50 py-[45px] px-[200px]">
-              <Button variant="outline" className="h-32 flex flex-col items-center justify-center space-y-2" onClick={() => setSelectedSystem('coffee-management')}>
-                <Coffee className="h-8 w-8" />
-                <span className="text-lg font-semibold">KAJON Coffee Limited Management</span>
-              </Button>
-              <Button variant="outline" className="h-32 flex flex-col items-center justify-center space-y-2" onClick={() => setSelectedSystem('export-management')}>
-                <Globe className="h-8 w-8" />
-                <span className="text-lg font-semibold">KAJON Coffee Export Management</span>
-              </Button>
-              
+            
+            <div className="flex justify-center">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+                <div className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl">
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-800/80 to-amber-950/90 opacity-90 transition-opacity group-hover:opacity-100"></div>
+                  <div className="absolute inset-0 bg-[url('/combined-logo.png')] bg-center bg-no-repeat bg-contain opacity-10"></div>
+                  <Button 
+                    variant="link" 
+                    onClick={() => setSelectedSystem('coffee-management')}
+                    className="relative h-48 w-full flex flex-col items-center justify-center space-y-3 text-white border-0"
+                  >
+                    <div className="rounded-full bg-amber-700/50 p-4 mb-2 backdrop-blur-sm transition-all duration-300 group-hover:bg-amber-600/70">
+                      <Coffee className="h-12 w-12" />
+                    </div>
+                    <span className="text-2xl font-bold tracking-wide">Coffee Management</span>
+                    <p className="text-sm font-light max-w-[80%] text-center text-amber-100 opacity-90">
+                      Manage inventory, farms, and associations
+                    </p>
+                  </Button>
+                </div>
+                
+                <div className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-800/80 to-blue-950/90 opacity-90 transition-opacity group-hover:opacity-100"></div>
+                  <div className="absolute inset-0 bg-[url('/combined-logo.png')] bg-center bg-no-repeat bg-contain opacity-10"></div>
+                  <Button 
+                    variant="link" 
+                    onClick={() => setSelectedSystem('export-management')}
+                    className="relative h-48 w-full flex flex-col items-center justify-center space-y-3 text-white border-0"
+                  >
+                    <div className="rounded-full bg-blue-700/50 p-4 mb-2 backdrop-blur-sm transition-all duration-300 group-hover:bg-blue-600/70">
+                      <Globe className="h-12 w-12" />
+                    </div>
+                    <span className="text-2xl font-bold tracking-wide">Export Management</span>
+                    <p className="text-sm font-light max-w-[80%] text-center text-blue-100 opacity-90">
+                      Manage quotes, orders and shipping
+                    </p>
+                  </Button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>;
   }
+  
   return <div className="space-y-6">
       <Card>
         <CardContent className="pt-6">
@@ -109,4 +144,5 @@ const KAJONCoffeeLimited = () => {
       </Card>
     </div>;
 };
+
 export default KAJONCoffeeLimited;
