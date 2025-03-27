@@ -1,7 +1,38 @@
-
 import React from 'react';
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
-const FreshProduceTemplate = () => {
+const FreshProduceTemplate = ({ editMode = false, data = {}, onDataChange = () => {} }) => {
+  // Helper function to render editable or display content
+  const EditableField = ({ field, defaultValue, isMultiline = false }) => {
+    const value = data[field] || defaultValue;
+    
+    if (editMode) {
+      if (isMultiline) {
+        return (
+          <Textarea
+            value={value}
+            onChange={(e) => onDataChange(field, e.target.value)}
+            className="w-full min-h-[80px] border border-amber-300 p-2"
+          />
+        );
+      }
+      return (
+        <Input
+          value={value}
+          onChange={(e) => onDataChange(field, e.target.value)}
+          className="border border-amber-300 p-1"
+        />
+      );
+    }
+    
+    return isMultiline ? (
+      <p className="text-sm">{value}</p>
+    ) : (
+      <span>{value}</span>
+    );
+  };
+
   return (
     <div className="max-w-4xl mx-auto bg-white p-8 border border-gray-200 shadow-sm print:shadow-none print:border-none">
       {/* Company Header */}
@@ -21,8 +52,12 @@ const FreshProduceTemplate = () => {
         </div>
         <div className="text-right">
           <h1 className="text-2xl font-bold text-amber-700">FRESH PRODUCE EXPORT CONTRACT</h1>
-          <p className="text-sm text-gray-600 mt-2">Contract #: KCL-FP-2024-[XXXX]</p>
-          <p className="text-sm text-gray-600">Date: [Current Date]</p>
+          <p className="text-sm text-gray-600 mt-2">
+            Contract #: <EditableField field="contractNumber" defaultValue="KCL-FP-2024-[XXXX]" />
+          </p>
+          <p className="text-sm text-gray-600">
+            Date: <EditableField field="currentDate" defaultValue="[Current Date]" />
+          </p>
         </div>
       </div>
 
@@ -38,14 +73,20 @@ const FreshProduceTemplate = () => {
           </div>
           <div>
             <h4 className="font-semibold">BUYER:</h4>
-            <p className="text-sm">[Buyer Company Name]</p>
-            <p className="text-sm">[Buyer Address]</p>
-            <p className="text-sm">[Buyer Registration #]</p>
+            <p className="text-sm">
+              <EditableField field="buyerName" defaultValue="[Buyer Company Name]" />
+            </p>
+            <p className="text-sm">
+              <EditableField field="buyerAddress" defaultValue="[Buyer Address]" />
+            </p>
+            <p className="text-sm">
+              Registration #: <EditableField field="buyerRegistration" defaultValue="[Buyer Registration #]" />
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Product Details */}
+      {/* Product Details - Making table cells editable */}
       <div className="mb-6">
         <h3 className="text-lg font-bold mb-2 text-amber-700">PRODUCT DETAILS</h3>
         <table className="w-full border-collapse">
@@ -61,72 +102,122 @@ const FreshProduceTemplate = () => {
           </thead>
           <tbody>
             <tr>
-              <td className="border border-gray-300 p-2">Pineapples</td>
-              <td className="border border-gray-300 p-2">Sweet Gold</td>
-              <td className="border border-gray-300 p-2">8,000</td>
-              <td className="border border-gray-300 p-2">Grade A, Size 7-8</td>
-              <td className="border border-gray-300 p-2">USD 1.15</td>
-              <td className="border border-gray-300 p-2">USD 9,200.00</td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product1Description" defaultValue="Pineapples" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product1Variety" defaultValue="Sweet Gold" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product1Quantity" defaultValue="8,000" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product1Grade" defaultValue="Grade A, Size 7-8" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product1Price" defaultValue="USD 1.15" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product1Total" defaultValue="USD 9,200.00" />
+              </td>
             </tr>
             <tr>
-              <td className="border border-gray-300 p-2">Hot Peppers</td>
-              <td className="border border-gray-300 p-2">Scotch Bonnet</td>
-              <td className="border border-gray-300 p-2">3,500</td>
-              <td className="border border-gray-300 p-2">Export Quality</td>
-              <td className="border border-gray-300 p-2">USD 2.40</td>
-              <td className="border border-gray-300 p-2">USD 8,400.00</td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product2Description" defaultValue="Hot Peppers" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product2Variety" defaultValue="Scotch Bonnet" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product2Quantity" defaultValue="3,500" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product2Grade" defaultValue="Export Quality" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product2Price" defaultValue="USD 2.40" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product2Total" defaultValue="USD 8,400.00" />
+              </td>
             </tr>
             <tr>
-              <td className="border border-gray-300 p-2">Passion Fruits</td>
-              <td className="border border-gray-300 p-2">Purple Granadilla</td>
-              <td className="border border-gray-300 p-2">5,000</td>
-              <td className="border border-gray-300 p-2">Grade A</td>
-              <td className="border border-gray-300 p-2">USD 2.80</td>
-              <td className="border border-gray-300 p-2">USD 14,000.00</td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product3Description" defaultValue="Passion Fruits" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product3Variety" defaultValue="Purple Granadilla" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product3Quantity" defaultValue="5,000" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product3Grade" defaultValue="Grade A" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product3Price" defaultValue="USD 2.80" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product3Total" defaultValue="USD 14,000.00" />
+              </td>
             </tr>
           </tbody>
           <tfoot>
             <tr className="bg-amber-50">
               <td colSpan="5" className="border border-gray-300 p-2 font-bold text-right">Total Contract Value:</td>
-              <td className="border border-gray-300 p-2 font-bold">USD 31,600.00</td>
+              <td className="border border-gray-300 p-2 font-bold">
+                <EditableField field="totalValue" defaultValue="USD 31,600.00" />
+              </td>
             </tr>
           </tfoot>
         </table>
       </div>
 
-      {/* Quality & Packaging Specifications */}
+      {/* Make some key sections editable - just as examples */}
       <div className="mb-6">
         <h3 className="text-lg font-bold mb-2 text-amber-700">QUALITY & PACKAGING SPECIFICATIONS</h3>
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="border rounded p-3 bg-gray-50">
             <p className="font-semibold">Pineapples:</p>
-            <ul className="text-sm list-disc pl-4">
-              <li>Maturity: 1/4 to 1/2 shell color</li>
-              <li>Brix level: min 13°</li>
-              <li>Free from damage and decay</li>
-              <li>Packaging: Single-layer cartons</li>
-              <li>Units per carton: 6-8 based on size</li>
-            </ul>
+            <div className={editMode ? "space-y-2" : ""}>
+              <EditableField 
+                field="pineapplesSpecs" 
+                defaultValue="Maturity: 1/4 to 1/2 shell color
+Brix level: min 13°
+Free from damage and decay
+Packaging: Single-layer cartons
+Units per carton: 6-8 based on size" 
+                isMultiline={true}
+              />
+            </div>
           </div>
           <div className="border rounded p-3 bg-gray-50">
             <p className="font-semibold">Hot Peppers:</p>
-            <ul className="text-sm list-disc pl-4">
-              <li>Bright, firm, well-formed</li>
-              <li>Free from damage and decay</li>
-              <li>Size: 4-6 cm in length</li>
-              <li>Packaging: 5kg cartons</li>
-              <li>Lined with perforated plastic</li>
-            </ul>
+            <div className={editMode ? "space-y-2" : ""}>
+              <EditableField 
+                field="peppersSpecs" 
+                defaultValue="Bright, firm, well-formed
+Free from damage and decay
+Size: 4-6 cm in length
+Packaging: 5kg cartons
+Lined with perforated plastic" 
+                isMultiline={true}
+              />
+            </div>
           </div>
           <div className="border rounded p-3 bg-gray-50">
             <p className="font-semibold">Passion Fruits:</p>
-            <ul className="text-sm list-disc pl-4">
-              <li>Maturity: 80-100%</li>
-              <li>Size: 45-65mm diameter</li>
-              <li>Smooth skin, minimal wrinkles</li>
-              <li>Packaging: 2kg plastic clamshells</li>
-              <li>12 clamshells per carton</li>
-            </ul>
+            <div className={editMode ? "space-y-2" : ""}>
+              <EditableField 
+                field="passionFruitSpecs" 
+                defaultValue="Maturity: 80-100%
+Size: 45-65mm diameter
+Smooth skin, minimal wrinkles
+Packaging: 2kg plastic clamshells
+12 clamshells per carton" 
+                isMultiline={true}
+              />
+            </div>
           </div>
         </div>
         <p className="text-sm mt-4 font-semibold">Special Packaging Requirements:</p>
@@ -181,38 +272,54 @@ const FreshProduceTemplate = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="font-semibold">Shipping Method:</p>
-            <p className="text-sm">Air Freight</p>
+            <p className="text-sm">
+              <EditableField field="shippingMethod" defaultValue="Air Freight" />
+            </p>
             
             <p className="font-semibold mt-2">Departure Airport:</p>
-            <p className="text-sm">Entebbe International Airport, Uganda</p>
+            <p className="text-sm">
+              <EditableField field="departureAirport" defaultValue="Entebbe International Airport, Uganda" />
+            </p>
             
             <p className="font-semibold mt-2">Transit Time:</p>
-            <p className="text-sm">24-48 hours from departure</p>
+            <p className="text-sm">
+              <EditableField field="transitTime" defaultValue="24-48 hours from departure" />
+            </p>
           </div>
           <div>
             <p className="font-semibold">Incoterm:</p>
-            <p className="text-sm">CIP London Heathrow</p>
+            <p className="text-sm">
+              <EditableField field="incoterm" defaultValue="CIP London Heathrow" />
+            </p>
             
             <p className="font-semibold mt-2">Shipment Schedule:</p>
-            <p className="text-sm">Every Tuesday and Friday</p>
+            <p className="text-sm">
+              <EditableField field="shipmentSchedule" defaultValue="Every Tuesday and Friday" />
+            </p>
             
             <p className="font-semibold mt-2">First Shipment Date:</p>
-            <p className="text-sm">August 15, 2024</p>
+            <p className="text-sm">
+              <EditableField field="firstShipmentDate" defaultValue="August 15, 2024" />
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Payment Terms */}
+      {/* Just adding a few more editable sections */}
       <div className="mb-6">
         <h3 className="text-lg font-bold mb-2 text-amber-700">PAYMENT TERMS</h3>
         <div className="border rounded p-3 bg-gray-50">
-          <ul className="text-sm list-disc pl-4">
-            <li>First shipment: 100% payment upon receipt and inspection at destination</li>
-            <li>Subsequent shipments: 50% advance payment, 50% within 7 days of receipt</li>
-            <li>Payment by telegraphic transfer to seller's designated account</li>
-            <li>All bank charges outside Uganda to be borne by the buyer</li>
-            <li>Late payment subject to 1.5% interest per month on outstanding amount</li>
-          </ul>
+          <div className={editMode ? "space-y-2" : ""}>
+            <EditableField 
+              field="paymentTerms" 
+              defaultValue="First shipment: 100% payment upon receipt and inspection at destination
+Subsequent shipments: 50% advance payment, 50% within 7 days of receipt
+Payment by telegraphic transfer to seller's designated account
+All bank charges outside Uganda to be borne by the buyer
+Late payment subject to 1.5% interest per month on outstanding amount" 
+              isMultiline={true}
+            />
+          </div>
         </div>
       </div>
 

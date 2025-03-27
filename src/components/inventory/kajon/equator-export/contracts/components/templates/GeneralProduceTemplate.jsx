@@ -1,7 +1,38 @@
-
 import React from 'react';
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
-const GeneralProduceTemplate = () => {
+const GeneralProduceTemplate = ({ editMode = false, data = {}, onDataChange = () => {} }) => {
+  // Helper function to render editable or display content
+  const EditableField = ({ field, defaultValue, isMultiline = false }) => {
+    const value = data[field] || defaultValue;
+    
+    if (editMode) {
+      if (isMultiline) {
+        return (
+          <Textarea
+            value={value}
+            onChange={(e) => onDataChange(field, e.target.value)}
+            className="w-full min-h-[80px] border border-green-300 p-2"
+          />
+        );
+      }
+      return (
+        <Input
+          value={value}
+          onChange={(e) => onDataChange(field, e.target.value)}
+          className="border border-green-300 p-1"
+        />
+      );
+    }
+    
+    return isMultiline ? (
+      <p className="text-sm">{value}</p>
+    ) : (
+      <span>{value}</span>
+    );
+  };
+
   return (
     <div className="max-w-4xl mx-auto bg-white p-8 border border-gray-200 shadow-sm print:shadow-none print:border-none">
       {/* Company Header */}
@@ -21,8 +52,12 @@ const GeneralProduceTemplate = () => {
         </div>
         <div className="text-right">
           <h1 className="text-2xl font-bold text-green-800">GENERAL PRODUCE EXPORT CONTRACT</h1>
-          <p className="text-sm text-gray-600 mt-2">Contract #: KCL-GP-2024-[XXXX]</p>
-          <p className="text-sm text-gray-600">Date: [Current Date]</p>
+          <p className="text-sm text-gray-600 mt-2">
+            Contract #: <EditableField field="contractNumber" defaultValue="KCL-GP-2024-[XXXX]" />
+          </p>
+          <p className="text-sm text-gray-600">
+            Date: <EditableField field="currentDate" defaultValue="[Current Date]" />
+          </p>
         </div>
       </div>
 
@@ -38,9 +73,15 @@ const GeneralProduceTemplate = () => {
           </div>
           <div>
             <h4 className="font-semibold">BUYER:</h4>
-            <p className="text-sm">[Buyer Company Name]</p>
-            <p className="text-sm">[Buyer Address]</p>
-            <p className="text-sm">[Buyer Registration #]</p>
+            <p className="text-sm">
+              <EditableField field="buyerName" defaultValue="[Buyer Company Name]" />
+            </p>
+            <p className="text-sm">
+              <EditableField field="buyerAddress" defaultValue="[Buyer Address]" />
+            </p>
+            <p className="text-sm">
+              Registration #: <EditableField field="buyerRegistration" defaultValue="[Buyer Registration #]" />
+            </p>
           </div>
         </div>
       </div>
@@ -61,34 +102,72 @@ const GeneralProduceTemplate = () => {
           </thead>
           <tbody>
             <tr>
-              <td className="border border-gray-300 p-2">Sesame Seeds</td>
-              <td className="border border-gray-300 p-2">Northern Uganda</td>
-              <td className="border border-gray-300 p-2">25</td>
-              <td className="border border-gray-300 p-2">Hulled White</td>
-              <td className="border border-gray-300 p-2">USD 1,850</td>
-              <td className="border border-gray-300 p-2">USD 46,250.00</td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product1Description" defaultValue="Sesame Seeds" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product1Origin" defaultValue="Northern Uganda" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product1Quantity" defaultValue="25" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product1Grade" defaultValue="Hulled White" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product1Price" defaultValue="USD 1,850" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product1Total" defaultValue="USD 46,250.00" />
+              </td>
             </tr>
             <tr>
-              <td className="border border-gray-300 p-2">Soybean</td>
-              <td className="border border-gray-300 p-2">Eastern Uganda</td>
-              <td className="border border-gray-300 p-2">35</td>
-              <td className="border border-gray-300 p-2">Grade A</td>
-              <td className="border border-gray-300 p-2">USD 950</td>
-              <td className="border border-gray-300 p-2">USD 33,250.00</td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product2Description" defaultValue="Soybean" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product2Origin" defaultValue="Eastern Uganda" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product2Quantity" defaultValue="35" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product2Grade" defaultValue="Grade A" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product2Price" defaultValue="USD 950" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product2Total" defaultValue="USD 33,250.00" />
+              </td>
             </tr>
             <tr>
-              <td className="border border-gray-300 p-2">Maize</td>
-              <td className="border border-gray-300 p-2">Central Uganda</td>
-              <td className="border border-gray-300 p-2">50</td>
-              <td className="border border-gray-300 p-2">Grade 1</td>
-              <td className="border border-gray-300 p-2">USD 480</td>
-              <td className="border border-gray-300 p-2">USD 24,000.00</td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product3Description" defaultValue="Maize" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product3Origin" defaultValue="Central Uganda" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product3Quantity" defaultValue="50" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product3Grade" defaultValue="Grade 1" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product3Price" defaultValue="USD 480" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="product3Total" defaultValue="USD 24,000.00" />
+              </td>
             </tr>
           </tbody>
           <tfoot>
             <tr className="bg-green-50">
               <td colSpan="5" className="border border-gray-300 p-2 font-bold text-right">Total Contract Value:</td>
-              <td className="border border-gray-300 p-2 font-bold">USD 103,500.00</td>
+              <td className="border border-gray-300 p-2 font-bold">
+                <EditableField field="totalValue" defaultValue="USD 103,500.00" />
+              </td>
             </tr>
           </tfoot>
         </table>
@@ -100,33 +179,45 @@ const GeneralProduceTemplate = () => {
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="border rounded p-3 bg-gray-50">
             <p className="font-semibold">Sesame Seeds:</p>
-            <ul className="text-sm list-disc pl-4">
-              <li>Moisture content: max 8%</li>
-              <li>Purity: min 99.5%</li>
-              <li>Foreign matter: max 0.5%</li>
-              <li>Oil content: min 50%</li>
-              <li>Free from live insects</li>
-            </ul>
+            <div className={editMode ? "space-y-2" : ""}>
+              <EditableField 
+                field="sesameSpecs" 
+                defaultValue="Moisture content: max 8%
+Purity: min 99.5%
+Foreign matter: max 0.5%
+Oil content: min 50%
+Free from live insects" 
+                isMultiline={true}
+              />
+            </div>
           </div>
           <div className="border rounded p-3 bg-gray-50">
             <p className="font-semibold">Soybean:</p>
-            <ul className="text-sm list-disc pl-4">
-              <li>Moisture content: max 12%</li>
-              <li>Foreign matter: max 1%</li>
-              <li>Damaged beans: max 2%</li>
-              <li>Protein content: min 36%</li>
-              <li>Free from GMO</li>
-            </ul>
+            <div className={editMode ? "space-y-2" : ""}>
+              <EditableField 
+                field="soybeanSpecs" 
+                defaultValue="Moisture content: max 12%
+Foreign matter: max 1%
+Damaged beans: max 2%
+Protein content: min 36%
+Free from GMO" 
+                isMultiline={true}
+              />
+            </div>
           </div>
           <div className="border rounded p-3 bg-gray-50">
             <p className="font-semibold">Maize:</p>
-            <ul className="text-sm list-disc pl-4">
-              <li>Moisture content: max 13.5%</li>
-              <li>Foreign matter: max 1%</li>
-              <li>Broken kernels: max 3%</li>
-              <li>Discolored: max 2%</li>
-              <li>Aflatoxin: max 10 ppb</li>
-            </ul>
+            <div className={editMode ? "space-y-2" : ""}>
+              <EditableField 
+                field="maizeSpecs" 
+                defaultValue="Moisture content: max 13.5%
+Foreign matter: max 1%
+Broken kernels: max 3%
+Discolored: max 2%
+Aflatoxin: max 10 ppb" 
+                isMultiline={true}
+              />
+            </div>
           </div>
         </div>
         <p className="text-sm">
@@ -140,23 +231,35 @@ const GeneralProduceTemplate = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="font-semibold">Incoterm:</p>
-            <p className="text-sm">CIF Rotterdam</p>
+            <p className="text-sm">
+              <EditableField field="incoterm" defaultValue="CIF Rotterdam" />
+            </p>
             
             <p className="font-semibold mt-2">Packaging:</p>
-            <p className="text-sm">25kg/50kg polypropylene bags in container</p>
+            <p className="text-sm">
+              <EditableField field="packaging" defaultValue="25kg/50kg polypropylene bags in container" />
+            </p>
             
             <p className="font-semibold mt-2">Loading Port:</p>
-            <p className="text-sm">Mombasa, Kenya</p>
+            <p className="text-sm">
+              <EditableField field="loadingPort" defaultValue="Mombasa, Kenya" />
+            </p>
           </div>
           <div>
             <p className="font-semibold">Destination:</p>
-            <p className="text-sm">Rotterdam, Netherlands</p>
+            <p className="text-sm">
+              <EditableField field="destination" defaultValue="Rotterdam, Netherlands" />
+            </p>
             
             <p className="font-semibold mt-2">Latest Shipment Date:</p>
-            <p className="text-sm">November 30, 2024</p>
+            <p className="text-sm">
+              <EditableField field="shipmentDate" defaultValue="November 30, 2024" />
+            </p>
             
             <p className="font-semibold mt-2">Delivery Timeline:</p>
-            <p className="text-sm">35-50 days from loading</p>
+            <p className="text-sm">
+              <EditableField field="deliveryTimeline" defaultValue="35-50 days from loading" />
+            </p>
           </div>
         </div>
       </div>
@@ -165,14 +268,18 @@ const GeneralProduceTemplate = () => {
       <div className="mb-6">
         <h3 className="text-lg font-bold mb-2 text-green-800">PAYMENT TERMS</h3>
         <div className="border rounded p-3 bg-gray-50">
-          <ul className="text-sm list-disc pl-4">
-            <li>20% advance payment upon contract signing</li>
-            <li>80% balance against presentation of shipping documents</li>
-            <li>Payment by irrevocable Letter of Credit at sight</li>
-            <li>L/C to be issued by buyer's bank within 14 days of contract signing</li>
-            <li>L/C to be confirmed by Stanbic Bank, Kampala</li>
-            <li>All banking charges outside Uganda to be borne by the Buyer</li>
-          </ul>
+          <div className={editMode ? "space-y-2" : ""}>
+            <EditableField 
+              field="paymentTerms" 
+              defaultValue="20% advance payment upon contract signing
+80% balance against presentation of shipping documents
+Payment by irrevocable Letter of Credit at sight
+L/C to be issued by buyer's bank within 14 days of contract signing
+L/C to be confirmed by Stanbic Bank, Kampala
+All banking charges outside Uganda to be borne by the Buyer" 
+              isMultiline={true}
+            />
+          </div>
         </div>
       </div>
 
@@ -203,13 +310,17 @@ const GeneralProduceTemplate = () => {
       <div className="mb-6">
         <h3 className="text-lg font-bold mb-2 text-green-800">SPECIAL CONDITIONS</h3>
         <div className="border rounded p-3 bg-gray-50">
-          <ul className="text-sm list-disc pl-4">
-            <li>Seller guarantees products are grown in compliance with Global GAP standards</li>
-            <li>Products are certified free from GMO content</li>
-            <li>Products comply with maximum residue limits (MRLs) as per EU regulations</li>
-            <li>Organic certification provided where applicable</li>
-            <li>Traceability information to be provided with shipment</li>
-          </ul>
+          <div className={editMode ? "space-y-2" : ""}>
+            <EditableField 
+              field="specialConditions" 
+              defaultValue="Seller guarantees products are grown in compliance with Global GAP standards
+Products are certified free from GMO content
+Products comply with maximum residue limits (MRLs) as per EU regulations
+Organic certification provided where applicable
+Traceability information to be provided with shipment" 
+              isMultiline={true}
+            />
+          </div>
         </div>
       </div>
 

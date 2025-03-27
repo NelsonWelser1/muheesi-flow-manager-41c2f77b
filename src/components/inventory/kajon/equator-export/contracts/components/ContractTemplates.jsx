@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Printer, Eye } from 'lucide-react';
+import { ArrowLeft, Download, Printer, Eye, Edit, Save, RotateCcw } from 'lucide-react';
+import { Textarea } from "@/components/ui/textarea";
 import CoffeeContractTemplate from './templates/CoffeeContractTemplate';
 import GeneralProduceTemplate from './templates/GeneralProduceTemplate';
 import FreshProduceTemplate from './templates/FreshProduceTemplate';
@@ -12,11 +13,21 @@ import '../styles/PrintStyles.css';
 const ContractTemplates = ({ onBack }) => {
   const [activeTemplate, setActiveTemplate] = useState(null);
   const [selectedTab, setSelectedTab] = useState("coffee");
+  const [editMode, setEditMode] = useState(false);
+  const [editableData, setEditableData] = useState({
+    coffee: null,
+    general: null,
+    fresh: null
+  });
 
   // When printing, add a class to the body element to apply print-specific styles
   useEffect(() => {
     const beforePrint = () => {
       document.body.classList.add('printing');
+      // Temporarily disable edit mode during printing
+      if (editMode) {
+        setEditMode(false);
+      }
     };
     
     const afterPrint = () => {
@@ -30,13 +41,38 @@ const ContractTemplates = ({ onBack }) => {
       window.removeEventListener('beforeprint', beforePrint);
       window.removeEventListener('afterprint', afterPrint);
     };
-  }, []);
+  }, [editMode]);
+
+  // Load default template data when a template is first viewed
+  useEffect(() => {
+    if (activeTemplate && !editableData[activeTemplate]) {
+      // Initialize with default template data structure
+      // This would normally be loaded from the actual template
+      const defaultData = {
+        buyerName: '[Buyer Company Name]',
+        buyerAddress: '[Buyer Address]',
+        buyerRegistration: '[Buyer Registration #]',
+        contractNumber: activeTemplate === 'coffee' ? 'KCL-2024-[XXXX]' : 
+                        activeTemplate === 'general' ? 'KCL-GP-2024-[XXXX]' : 
+                        'KCL-FP-2024-[XXXX]',
+        currentDate: '[Current Date]',
+        // Add more fields as needed for each template
+      };
+      
+      setEditableData(prev => ({
+        ...prev,
+        [activeTemplate]: defaultData
+      }));
+    }
+  }, [activeTemplate, editableData]);
 
   const handleViewTemplate = (templateType) => {
     setActiveTemplate(templateType);
   };
 
   const handlePrint = () => {
+    // Temporarily disable edit mode for printing
+    setEditMode(false);
     window.print();
   };
 
@@ -45,6 +81,57 @@ const ContractTemplates = ({ onBack }) => {
     console.log("Download PDF functionality would be implemented here");
     // Placeholder for actual PDF generation
     alert("PDF download feature will be implemented with backend integration");
+  };
+
+  const toggleEditMode = () => {
+    setEditMode(prev => !prev);
+  };
+
+  const handleDataChange = (field, value) => {
+    if (!activeTemplate) return;
+    
+    setEditableData(prev => ({
+      ...prev,
+      [activeTemplate]: {
+        ...prev[activeTemplate],
+        [field]: value
+      }
+    }));
+  };
+
+  const resetTemplate = () => {
+    if (!activeTemplate) return;
+    
+    // Reset the active template to initial state
+    setEditableData(prev => ({
+      ...prev,
+      [activeTemplate]: null
+    }));
+    
+    // This will trigger the useEffect to reload default data
+  };
+
+  // Render the selected template with proper data
+  const renderTemplate = () => {
+    if (!activeTemplate) return null;
+    
+    // Pass the editable data to the template components
+    const templateProps = {
+      editMode,
+      data: editableData[activeTemplate] || {},
+      onDataChange: handleDataChange
+    };
+    
+    switch(activeTemplate) {
+      case "coffee":
+        return <CoffeeContractTemplate {...templateProps} />;
+      case "general":
+        return <GeneralProduceTemplate {...templateProps} />;
+      case "fresh":
+        return <FreshProduceTemplate {...templateProps} />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -58,21 +145,52 @@ const ContractTemplates = ({ onBack }) => {
         <div className="flex gap-2">
           {activeTemplate && (
             <>
-              <Button 
-                variant="outline" 
-                onClick={handlePrint}
-                className="flex items-center gap-1"
-              >
-                <Printer className="h-4 w-4" />
-                <span>Print</span>
-              </Button>
-              <Button 
-                onClick={handleDownloadPDF}
-                className="flex items-center gap-1"
-              >
-                <Download className="h-4 w-4" />
-                <span>Download PDF</span>
-              </Button>
+              {editMode ? (
+                <>
+                  <Button 
+                    variant="outline" 
+                    onClick={resetTemplate}
+                    className="flex items-center gap-1"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    <span>Reset</span>
+                  </Button>
+                  <Button 
+                    onClick={toggleEditMode}
+                    className="flex items-center gap-1"
+                    variant="default"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>Done Editing</span>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    variant="outline" 
+                    onClick={toggleEditMode}
+                    className="flex items-center gap-1"
+                  >
+                    <Edit className="h-4 w-4" />
+                    <span>Edit Template</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handlePrint}
+                    className="flex items-center gap-1"
+                  >
+                    <Printer className="h-4 w-4" />
+                    <span>Print</span>
+                  </Button>
+                  <Button 
+                    onClick={handleDownloadPDF}
+                    className="flex items-center gap-1"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Download PDF</span>
+                  </Button>
+                </>
+              )}
             </>
           )}
         </div>
@@ -80,9 +198,7 @@ const ContractTemplates = ({ onBack }) => {
 
       {activeTemplate ? (
         <div className="print-container">
-          {activeTemplate === "coffee" && <CoffeeContractTemplate />}
-          {activeTemplate === "general" && <GeneralProduceTemplate />}
-          {activeTemplate === "fresh" && <FreshProduceTemplate />}
+          {renderTemplate()}
           
           <div className="mt-6 flex justify-center print:hidden">
             <Button variant="outline" onClick={() => setActiveTemplate(null)}>
