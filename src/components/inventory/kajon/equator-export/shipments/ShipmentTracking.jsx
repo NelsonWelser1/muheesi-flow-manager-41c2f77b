@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -9,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   Search, Plus, FileText, Download, Eye, 
   Ship, MapPin, Calendar, Clock, Filter,
-  ExternalLink, CheckCircle, AlertCircle, Package
+  ExternalLink, CheckCircle, AlertCircle, Package,
+  FileCode
 } from 'lucide-react';
+import ShipmentTemplates from './components/ShipmentTemplates';
 
 // Sample shipment data
 const shipments = [
@@ -101,10 +102,15 @@ const statusLabels = {
 
 const ShipmentTracking = () => {
   const [filterStatus, setFilterStatus] = useState('all');
+  const [showTemplates, setShowTemplates] = useState(false);
   
   const filteredShipments = filterStatus === 'all' 
     ? shipments 
     : shipments.filter(shipment => shipment.status === filterStatus);
+  
+  if (showTemplates) {
+    return <ShipmentTemplates onBack={() => setShowTemplates(false)} />;
+  }
   
   return (
     <div className="space-y-6">
@@ -117,6 +123,10 @@ const ShipmentTracking = () => {
           <Button variant="outline" className="flex items-center gap-1">
             <Filter className="h-4 w-4" />
             <span>Filter</span>
+          </Button>
+          <Button variant="outline" className="flex items-center gap-1" onClick={() => setShowTemplates(true)}>
+            <FileCode className="h-4 w-4" />
+            <span>Shipment Templates</span>
           </Button>
           <Button className="flex items-center gap-1">
             <Plus className="h-4 w-4" />
