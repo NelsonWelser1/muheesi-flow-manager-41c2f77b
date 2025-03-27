@@ -114,4 +114,64 @@ body.generating-pdf .editable-field {
   .page-break {
     page-break-before: always;
   }
+  
+  /* Hide UI elements when printing */
+  .print:hidden, 
+  button, 
+  .button,
+  .print-hidden {
+    display: none !important;
+  }
+  
+  /* Ensure content is visible */
+  .print-container * {
+    visibility: visible !important;
+  }
+  
+  /* Improve table rendering */
+  .print-container table {
+    page-break-inside: avoid;
+  }
+  
+  /* Ensure full width */
+  .print-container {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Remove unnecessary backgrounds and borders */
+  .print-container .bg-gray-50,
+  .print-container .bg-amber-50,
+  .print-container .bg-green-50,
+  .print-container .bg-purple-50 {
+    background-color: transparent !important;
+  }
+}
+
+/* PDF Export specific styles */
+body.generating-pdf {
+  background-color: white !important;
+}
+
+body.generating-pdf .print-container {
+  background-color: white !important;
+  margin: 0 !important;
+  padding: 20mm !important;
+  max-width: 210mm !important;
+  width: 210mm !important;
+  box-shadow: none !important;
+}
+
+body.generating-pdf .print-container table {
+  page-break-inside: avoid;
+  width: 100% !important;
+}
+
+/* Compliance document specific styles */
+.print-container h3.text-purple-800,
+.print-container h3.text-green-800,
+.print-container h3.text-amber-700 {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.75rem;
 }
