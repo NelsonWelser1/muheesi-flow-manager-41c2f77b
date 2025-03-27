@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -6,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { 
   Search, Plus, FileText, Download, Eye, Briefcase, 
-  Filter, Calendar, ArrowUpDown, FileTemplate
+  Filter, Calendar, ArrowUpDown, FileCode
 } from 'lucide-react';
 import ContractTemplates from './components/ContractTemplates';
 
@@ -97,7 +98,7 @@ const ContractManagement = () => {
             className="flex items-center gap-1"
             onClick={() => setShowTemplates(true)}
           >
-            <FileTemplate className="h-4 w-4" />
+            <FileCode className="h-4 w-4" />
             <span>Contract Templates</span>
           </Button>
           <Button className="flex items-center gap-1">
