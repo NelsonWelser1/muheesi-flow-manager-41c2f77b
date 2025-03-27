@@ -41,20 +41,20 @@ const GeneralProduceComplianceTemplate = ({ editMode = false, data = {}, onDataC
         <div>
           <img 
             src="/combined-logo.png" 
-            alt="KAJON Coffee Limited" 
+            alt="KAJON Limited" 
             className="h-16 w-auto mb-2"
           />
-          <h2 className="text-lg font-bold">KAJON Coffee Limited</h2>
+          <h2 className="text-lg font-bold">KAJON Limited</h2>
           <p className="text-sm text-gray-600">Kanoni, Kazo District, Uganda</p>
           <p className="text-sm text-gray-600">6th floor, Arie Towers, Mackinnon Road, Nakasero</p>
           <p className="text-sm text-gray-600">Kampala, Uganda, 256</p>
           <p className="text-sm text-gray-600">Tel: +256 776 670680 / +256 757 757517</p>
-          <p className="text-sm text-gray-600">Email: kajoncoffeelimited@gmail.com</p>
+          <p className="text-sm text-gray-600">Email: kajonlimited@gmail.com</p>
         </div>
         <div className="text-right">
-          <h1 className="text-2xl font-bold text-green-800">GENERAL PRODUCE PHYTOSANITARY CERTIFICATE</h1>
+          <h1 className="text-2xl font-bold text-green-800">AGRICULTURAL PRODUCE CERTIFICATE</h1>
           <p className="text-sm text-gray-600 mt-2">
-            Certificate #: <EditableField field="documentNumber" defaultValue="KCL-GPC-2024-001" />
+            Certificate #: <EditableField field="documentNumber" defaultValue="KL-GPC-2024-001" />
           </p>
           <p className="text-sm text-gray-600">
             Date Issued: <EditableField field="issueDate" defaultValue="2024-05-01" />
@@ -65,232 +65,221 @@ const GeneralProduceComplianceTemplate = ({ editMode = false, data = {}, onDataC
         </div>
       </div>
 
-      {/* Exporter & Importer */}
+      {/* Product Information */}
       <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-green-800">PARTIES</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="border-r pr-4">
-            <h4 className="font-semibold">EXPORTING ORGANIZATION:</h4>
-            <p className="text-sm">KAJON Coffee Limited</p>
-            <p className="text-sm">Kampala, Uganda</p>
-            <p className="text-sm">Registration #: UG2023786541</p>
-            <p className="text-sm">Export License: UG-EXP-23456</p>
-          </div>
-          <div>
-            <h4 className="font-semibold">IMPORTING ORGANIZATION:</h4>
-            <p className="text-sm">
-              <EditableField field="importerName" defaultValue="Global Agricultural Imports Inc." />
-            </p>
-            <p className="text-sm">
-              <EditableField field="importerAddress" defaultValue="123 Trade Avenue, New York, NY 10001, USA" />
-            </p>
-            <p className="text-sm">
-              Registration #: <EditableField field="importerRegistration" defaultValue="US-IMP-789012" />
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Product Details */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-green-800">PRODUCT DETAILS</h3>
+        <h3 className="text-lg font-bold mb-2 text-green-800">PRODUCT INFORMATION</h3>
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-green-50">
-              <th className="border border-gray-300 p-2 text-left">Commodity</th>
-              <th className="border border-gray-300 p-2 text-left">Variety/Type</th>
-              <th className="border border-gray-300 p-2 text-left">Quantity (MT)</th>
-              <th className="border border-gray-300 p-2 text-left">Origin Region</th>
+              <th className="border border-gray-300 p-2 text-left">Type</th>
+              <th className="border border-gray-300 p-2 text-left">Variety</th>
+              <th className="border border-gray-300 p-2 text-left">Origin</th>
               <th className="border border-gray-300 p-2 text-left">Harvest Period</th>
+              <th className="border border-gray-300 p-2 text-left">Processing Method</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td className="border border-gray-300 p-2">
-                <EditableField field="commodity1" defaultValue="Sesame Seeds" />
+                <EditableField field="produceType" defaultValue="Maize" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="variety1" defaultValue="Hulled White" />
+                <EditableField field="produceVariety" defaultValue="Longe 5" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="quantity1" defaultValue="25" />
+                <EditableField field="produceOrigin" defaultValue="Kazo, Uganda" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="origin1" defaultValue="Northern Uganda" />
+                <EditableField field="harvestPeriod" defaultValue="March-May 2024" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="harvest1" defaultValue="Jan-Mar 2024" />
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="commodity2" defaultValue="Soybeans" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="variety2" defaultValue="Non-GMO" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="quantity2" defaultValue="35" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="origin2" defaultValue="Eastern Uganda" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="harvest2" defaultValue="Feb-Apr 2024" />
+                <EditableField field="processingMethod" defaultValue="Sun-dried" />
               </td>
             </tr>
             <tr>
               <td className="border border-gray-300 p-2">
-                <EditableField field="commodity3" defaultValue="Maize" />
+                <EditableField field="produceType2" defaultValue="Beans" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="variety3" defaultValue="White Maize" />
+                <EditableField field="produceVariety2" defaultValue="K132" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="quantity3" defaultValue="50" />
+                <EditableField field="produceOrigin2" defaultValue="Kanoni, Uganda" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="origin3" defaultValue="Central Uganda" />
+                <EditableField field="harvestPeriod2" defaultValue="Feb-Apr 2024" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="harvest3" defaultValue="Mar-May 2024" />
+                <EditableField field="processingMethod2" defaultValue="Threshed" />
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      {/* Shipment & Transport */}
+      {/* Shipment Details */}
       <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-green-800">SHIPMENT & TRANSPORT DETAILS</h3>
+        <h3 className="text-lg font-bold mb-2 text-green-800">SHIPMENT DETAILS</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="font-semibold">Shipment Reference:</p>
-            <p className="text-sm"><EditableField field="shipmentRef" defaultValue="SHP-2024-001" /></p>
+            <p className="font-semibold">Total Quantity:</p>
+            <p className="text-sm"><EditableField field="totalQuantity" defaultValue="40,000 kg" /></p>
             
-            <p className="font-semibold mt-2">Means of Transport:</p>
-            <p className="text-sm"><EditableField field="transportMeans" defaultValue="Sea Freight" /></p>
+            <p className="font-semibold mt-2">Shipment Reference:</p>
+            <p className="text-sm"><EditableField field="shipmentRef" defaultValue="SHP-2024-002" /></p>
             
-            <p className="font-semibold mt-2">Container Numbers:</p>
-            <p className="text-sm"><EditableField field="containerNumbers" defaultValue="MSCU1234567, MSCU7654321" /></p>
+            <p className="font-semibold mt-2">Container Number:</p>
+            <p className="text-sm"><EditableField field="containerNumber" defaultValue="MSCU7654321" /></p>
           </div>
           <div>
             <p className="font-semibold">Port of Loading:</p>
             <p className="text-sm"><EditableField field="loadingPort" defaultValue="Mombasa, Kenya" /></p>
             
             <p className="font-semibold mt-2">Final Destination:</p>
-            <p className="text-sm"><EditableField field="destination" defaultValue="Port of New York, USA" /></p>
+            <p className="text-sm"><EditableField field="destination" defaultValue="Rotterdam, Netherlands" /></p>
             
-            <p className="font-semibold mt-2">Expected Arrival:</p>
-            <p className="text-sm"><EditableField field="expectedArrival" defaultValue="2024-06-15" /></p>
+            <p className="font-semibold mt-2">Vessel/Flight:</p>
+            <p className="text-sm"><EditableField field="transportVessel" defaultValue="MSC Isabella" /></p>
           </div>
         </div>
       </div>
 
-      {/* Treatment & Processing */}
+      {/* Quality Parameters */}
       <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-green-800">TREATMENT & PROCESSING</h3>
+        <h3 className="text-lg font-bold mb-2 text-green-800">QUALITY PARAMETERS</h3>
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="border rounded p-3 bg-gray-50">
+            <p className="font-semibold">Maize:</p>
+            <div className={editMode ? "space-y-2" : ""}>
+              <EditableField 
+                field="maizeParams" 
+                defaultValue="Moisture content: 12.5%
+Foreign matter: <1%
+Broken kernels: <2%
+Insect damage: None
+Aflatoxin: <5ppb
+Color: Yellow" 
+                isMultiline={true}
+              />
+            </div>
+          </div>
+          <div className="border rounded p-3 bg-gray-50">
+            <p className="font-semibold">Beans:</p>
+            <div className={editMode ? "space-y-2" : ""}>
+              <EditableField 
+                field="beanParams" 
+                defaultValue="Moisture content: 11.8%
+Foreign matter: <0.5%
+Broken seeds: <1%
+Insect damage: None
+Size: Medium-Large
+Color: Red mottled" 
+                isMultiline={true}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Export Compliance */}
+      <div className="mb-6">
+        <h3 className="text-lg font-bold mb-2 text-green-800">EXPORT COMPLIANCE</h3>
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-green-50">
-              <th className="border border-gray-300 p-2 text-left">Treatment Type</th>
-              <th className="border border-gray-300 p-2 text-left">Chemical/Method</th>
-              <th className="border border-gray-300 p-2 text-left">Concentration</th>
-              <th className="border border-gray-300 p-2 text-left">Date of Treatment</th>
-              <th className="border border-gray-300 p-2 text-left">Duration</th>
+              <th className="border border-gray-300 p-2 text-left">Document Type</th>
+              <th className="border border-gray-300 p-2 text-left">Reference Number</th>
+              <th className="border border-gray-300 p-2 text-left">Issuing Authority</th>
+              <th className="border border-gray-300 p-2 text-left">Date Issued</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td className="border border-gray-300 p-2">
-                <EditableField field="treatmentType1" defaultValue="Fumigation" />
+                <EditableField field="docType1" defaultValue="Phytosanitary Certificate" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="chemical1" defaultValue="Phosphine" />
+                <EditableField field="docRef1" defaultValue="UG-PHY-24-0456" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="concentration1" defaultValue="2g/m³" />
+                <EditableField field="docAuth1" defaultValue="Ministry of Agriculture" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="treatmentDate1" defaultValue="2024-04-20" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="duration1" defaultValue="72 hours" />
+                <EditableField field="docDate1" defaultValue="2024-04-28" />
               </td>
             </tr>
             <tr>
               <td className="border border-gray-300 p-2">
-                <EditableField field="treatmentType2" defaultValue="Heat Treatment" />
+                <EditableField field="docType2" defaultValue="Certificate of Origin" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="chemical2" defaultValue="Dry Heat" />
+                <EditableField field="docRef2" defaultValue="UG-CO-24-5672" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="concentration2" defaultValue="60°C" />
+                <EditableField field="docAuth2" defaultValue="Uganda Export Promotion Board" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="treatmentDate2" defaultValue="2024-04-22" />
+                <EditableField field="docDate2" defaultValue="2024-04-29" />
+              </td>
+            </tr>
+            <tr>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="docType3" defaultValue="Quality Certificate" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="duration2" defaultValue="30 minutes" />
+                <EditableField field="docRef3" defaultValue="UG-QC-24-7891" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="docAuth3" defaultValue="Uganda National Bureau of Standards" />
+              </td>
+              <td className="border border-gray-300 p-2">
+                <EditableField field="docDate3" defaultValue="2024-04-30" />
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      {/* Inspection & Testing */}
+      {/* Certification & Traceability */}
       <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-green-800">INSPECTION & TESTING</h3>
+        <h3 className="text-lg font-bold mb-2 text-green-800">CERTIFICATION & TRACEABILITY</h3>
         <div className="border rounded p-3 bg-gray-50">
-          <p className="font-semibold">Inspection Details:</p>
-          <p className="text-sm">
-            <EditableField 
-              field="inspectionDetails" 
-              defaultValue="The consignment has been inspected according to appropriate procedures and is considered to be free from quarantine pests, and practically free from other injurious pests, and is considered to conform with the current phytosanitary requirements of the importing country." 
-              isMultiline={true}
-            />
-          </p>
-          
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="font-semibold">Laboratory Tests Conducted:</p>
+              <p className="font-semibold">Certification Standards:</p>
               <ul className="text-sm list-disc pl-4">
-                <li><EditableField field="test1" defaultValue="Moisture Content Analysis" /></li>
-                <li><EditableField field="test2" defaultValue="Foreign Matter Assessment" /></li>
-                <li><EditableField field="test3" defaultValue="Microbiological Testing" /></li>
-                <li><EditableField field="test4" defaultValue="Pesticide Residue Analysis" /></li>
+                <li><EditableField field="cert1" defaultValue="Global G.A.P" /></li>
+                <li><EditableField field="cert2" defaultValue="ISO 22000" /></li>
+                <li><EditableField field="cert3" defaultValue="Organic EU" /></li>
               </ul>
             </div>
             <div>
-              <p className="font-semibold">Test Results:</p>
+              <p className="font-semibold">Traceability Information:</p>
               <ul className="text-sm list-disc pl-4">
-                <li>Moisture: <EditableField field="moisture" defaultValue="Within acceptable limits (8-12%)" /></li>
-                <li>Foreign Matter: <EditableField field="foreignMatter" defaultValue="Less than 1%" /></li>
-                <li>Microbiological Status: <EditableField field="microbiological" defaultValue="Compliant with EU standards" /></li>
-                <li>Pesticide Residues: <EditableField field="pesticide" defaultValue="Below MRL (Maximum Residue Levels)" /></li>
+                <li>Farm Group ID: <EditableField field="farmGroupId" defaultValue="KZF-2024-15" /></li>
+                <li>Processing Station: <EditableField field="processingStation" defaultValue="Kazo Central Processing Facility" /></li>
+                <li>Lot Number: <EditableField field="lotNumber" defaultValue="KZL-GEN-24-0045" /></li>
               </ul>
             </div>
           </div>
+          <p className="text-sm mt-4">
+            <EditableField 
+              field="traceabilityInfo" 
+              defaultValue="Full traceability from farm to export is maintained in accordance with certification requirements. Digital tracking system implemented with QR code verification available for buyers." 
+              isMultiline={true}
+            />
+          </p>
         </div>
       </div>
-
-      {/* Additional Declarations */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-green-800">ADDITIONAL DECLARATIONS</h3>
+      
+      {/* Declaration */}
+      <div className="mb-8">
+        <h3 className="text-lg font-bold mb-2 text-green-800">DECLARATION</h3>
         <div className="border rounded p-3 bg-gray-50">
           <p className="text-sm">
             <EditableField 
-              field="additionalDeclarations" 
-              defaultValue="This is to certify that the plants, plant products or other regulated articles described herein have been inspected and/or tested according to appropriate official procedures and are considered to be free from the quarantine pests specified by the importing country and to conform with the current phytosanitary requirements of the importing country, including those for regulated non-quarantine pests.
-
-The products are free from:
-1. Live insects, mites, and other pests
-2. Soil and plant debris
-3. Signs of disease or infection
-4. Genetically modified organisms (GMO)
-
-All products are sourced from areas free from specific quarantine pests of concern to the United States including Trogoderma granarium (Khapra Beetle)." 
+              field="declaration" 
+              defaultValue="We hereby certify that the agricultural produce described above is of Uganda origin, produced during the stated harvest period, and processed according to international standards. The produce meets all quality parameters required for export and complies with the phytosanitary regulations of both Uganda and the destination country." 
               isMultiline={true}
             />
           </p>
@@ -300,16 +289,14 @@ All products are sourced from areas free from specific quarantine pests of conce
       {/* Authorized Signatures */}
       <div className="grid grid-cols-2 gap-12 mt-12">
         <div>
-          <p className="font-semibold border-b border-gray-400 pb-8 mb-2">CERTIFYING OFFICER</p>
-          <p className="text-sm">Name: <EditableField field="certOfficerName" defaultValue="Dr. James Okello" /></p>
-          <p className="text-sm mt-2">Position: <EditableField field="certOfficerPosition" defaultValue="Senior Plant Health Inspector" /></p>
+          <p className="font-semibold border-b border-gray-400 pb-8 mb-2">QUALITY CONTROL MANAGER</p>
+          <p className="text-sm">Name: <EditableField field="qcManagerName" defaultValue="John Mukiibi" /></p>
           <p className="text-sm mt-2">Date: ________________________________</p>
           <p className="text-sm mt-2">Signature: ___________________________</p>
         </div>
         <div>
-          <p className="font-semibold border-b border-gray-400 pb-8 mb-2">AUTHORIZED REPRESENTATIVE</p>
-          <p className="text-sm">Name: <EditableField field="authRepName" defaultValue="John Mulumba" /></p>
-          <p className="text-sm mt-2">Position: <EditableField field="authRepPosition" defaultValue="Export Compliance Manager" /></p>
+          <p className="font-semibold border-b border-gray-400 pb-8 mb-2">EXPORT DIRECTOR</p>
+          <p className="text-sm">Name: <EditableField field="exportDirName" defaultValue="Sarah Namulondo" /></p>
           <p className="text-sm mt-2">Date: ________________________________</p>
           <p className="text-sm mt-2">Signature: ___________________________</p>
         </div>
@@ -318,28 +305,22 @@ All products are sourced from areas free from specific quarantine pests of conce
       {/* Official Stamps */}
       <div className="mt-12 grid grid-cols-3 gap-6 text-center">
         <div>
-          <p className="text-sm text-gray-500">[Ministry of Agriculture Stamp]</p>
+          <p className="text-sm text-gray-500">[UNBS Stamp]</p>
         </div>
         <div>
           <p className="text-sm text-gray-500">[Company Seal]</p>
         </div>
         <div>
-          <p className="text-sm text-gray-500">[Plant Protection Authority]</p>
+          <p className="text-sm text-gray-500">[Chamber of Commerce]</p>
         </div>
       </div>
 
-      {/* QR Code and Notes */}
-      <div className="mt-8 flex items-center justify-between">
-        <div className="text-xs text-gray-600 max-w-md">
-          <p>This certificate is electronically verifiable and is valid without signature and stamp when presented with the corresponding QR code verification.</p>
-          <p className="mt-1">Certificate issued in accordance with International Plant Protection Convention (IPPC) guidelines.</p>
-        </div>
-        <div className="text-center">
-          <p className="text-xs text-gray-500 mb-1">Scan to verify</p>
-          <div className="inline-block p-4 bg-gray-100 rounded-md">
-            <div className="w-24 h-24 bg-gray-300 flex items-center justify-center">
-              <span className="text-gray-600 text-xs">QR Code</span>
-            </div>
+      {/* QR Code */}
+      <div className="mt-8 text-center">
+        <p className="text-xs text-gray-500 mb-1">Scan to verify certificate authenticity</p>
+        <div className="inline-block p-4 bg-gray-100 rounded-md">
+          <div className="w-24 h-24 bg-gray-300 flex items-center justify-center">
+            <span className="text-gray-600 text-xs">QR Code</span>
           </div>
         </div>
       </div>
