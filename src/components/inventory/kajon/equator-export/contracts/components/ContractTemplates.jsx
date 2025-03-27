@@ -1,16 +1,17 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Printer, Eye, Edit, Save, RotateCcw } from 'lucide-react';
-import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 import CoffeeContractTemplate from './templates/CoffeeContractTemplate';
 import GeneralProduceTemplate from './templates/GeneralProduceTemplate';
 import FreshProduceTemplate from './templates/FreshProduceTemplate';
+import { exportContractToPDF } from '../utils/contractPdfExport';
 import '../styles/PrintStyles.css';
 
 const ContractTemplates = ({ onBack }) => {
+  const { toast } = useToast();
   const [activeTemplate, setActiveTemplate] = useState(null);
   const [selectedTab, setSelectedTab] = useState("coffee");
   const [editMode, setEditMode] = useState(false);
@@ -19,6 +20,7 @@ const ContractTemplates = ({ onBack }) => {
     general: null,
     fresh: null
   });
+  const templateRef = useRef(null);
 
   // When printing, add a class to the body element to apply print-specific styles
   useEffect(() => {
@@ -76,11 +78,48 @@ const ContractTemplates = ({ onBack }) => {
     window.print();
   };
 
-  const handleDownloadPDF = () => {
-    // This would be implemented with a PDF library like jsPDF
-    console.log("Download PDF functionality would be implemented here");
-    // Placeholder for actual PDF generation
-    alert("PDF download feature will be implemented with backend integration");
+  const handleDownloadPDF = async () => {
+    if (!templateRef.current) {
+      toast({
+        title: "Error",
+        description: "Cannot find template content to export",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Disable edit mode for PDF generation
+    const wasInEditMode = editMode;
+    if (wasInEditMode) {
+      setEditMode(false);
+    }
+
+    // Small delay to ensure edit mode is fully disabled
+    setTimeout(async () => {
+      try {
+        const templateType = activeTemplate || "contract";
+        const filename = `${templateType}_contract_${new Date().toISOString().split('T')[0]}`;
+        
+        await exportContractToPDF(templateRef.current, filename, toast);
+        
+        // Restore edit mode if it was active
+        if (wasInEditMode) {
+          setEditMode(true);
+        }
+      } catch (error) {
+        console.error("PDF generation error:", error);
+        toast({
+          title: "Error",
+          description: `Failed to generate PDF: ${error.message}`,
+          variant: "destructive"
+        });
+        
+        // Restore edit mode if it was active
+        if (wasInEditMode) {
+          setEditMode(true);
+        }
+      }
+    }, 100);
   };
 
   const toggleEditMode = () => {
@@ -197,7 +236,7 @@ const ContractTemplates = ({ onBack }) => {
       </div>
 
       {activeTemplate ? (
-        <div className="print-container">
+        <div className="print-container" ref={templateRef}>
           {renderTemplate()}
           
           <div className="mt-6 flex justify-center print:hidden">

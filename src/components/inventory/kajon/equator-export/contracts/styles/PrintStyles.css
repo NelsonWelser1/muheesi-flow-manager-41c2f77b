@@ -16,6 +16,18 @@
   }
 }
 
+/* Styles for PDF generation */
+body.generating-pdf .print:hidden {
+  display: none !important;
+}
+
+body.generating-pdf .print-container {
+  width: 100%;
+  background-color: white;
+  padding: 0;
+  margin: 0;
+}
+
 /* New styles for editable fields */
 .editable-field {
   transition: all 0.2s ease;

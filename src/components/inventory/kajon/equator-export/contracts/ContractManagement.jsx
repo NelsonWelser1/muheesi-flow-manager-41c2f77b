@@ -5,11 +5,16 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 import { 
   Search, Plus, FileText, Download, Eye, Briefcase, 
   Filter, Calendar, ArrowUpDown, FileCode
 } from 'lucide-react';
 import ContractTemplates from './components/ContractTemplates';
+import { exportContractToPDF } from './utils/contractPdfExport';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import { format } from 'date-fns';
 
 const contractStatusColors = {
   active: "bg-green-100 text-green-800",
@@ -20,6 +25,7 @@ const contractStatusColors = {
 };
 
 const ContractManagement = () => {
+  const { toast } = useToast();
   const [showTemplates, setShowTemplates] = useState(false);
 
   // Sample contracts data
@@ -81,6 +87,144 @@ const ContractManagement = () => {
     },
   ];
 
+  const handleContractDownload = (contract) => {
+    // Create new PDF document
+    const doc = new jsPDF();
+    
+    // Add company header
+    doc.setFontSize(18);
+    doc.setTextColor(0, 51, 102);
+    doc.text('KAJON Coffee Limited', 15, 20);
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Kanoni, Kazo District, Uganda', 15, 28);
+    
+    // Add contract title
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`CONTRACT: ${contract.id}`, 105, 20, { align: 'center' });
+    
+    // Add contract details
+    doc.setFontSize(12);
+    doc.setTextColor(60, 60, 60);
+    
+    doc.text(`Client: ${contract.client}`, 15, 45);
+    doc.text(`Country: ${contract.country}`, 15, 53);
+    doc.text(`Date: ${contract.date}`, 15, 61);
+    doc.text(`Value: ${contract.value}`, 15, 69);
+    doc.text(`Status: ${contract.status.charAt(0).toUpperCase() + contract.status.slice(1)}`, 15, 77);
+    doc.text(`Coffee Type: ${contract.coffeeType}`, 15, 85);
+    doc.text(`Quantity: ${contract.quantity}`, 15, 93);
+    
+    // Add contract terms
+    doc.text('CONTRACT TERMS', 15, 110);
+    doc.line(15, 112, 195, 112);
+    
+    // Sample terms
+    const terms = [
+      `This Export Contract is entered between KAJON Coffee Limited ("Seller") and ${contract.client} ("Buyer") on ${contract.date}.`,
+      `The Seller agrees to sell and the Buyer agrees to purchase ${contract.quantity} of ${contract.coffeeType} coffee beans at the agreed price of ${contract.value}.`,
+      'Payment terms: 30% advance payment upon contract signing, 70% upon shipping.',
+      'Delivery terms: FOB Mombasa',
+      'Quality specifications as per attached appendix.',
+      'This contract is governed by the laws of Uganda.'
+    ];
+    
+    let yPos = 120;
+    terms.forEach(term => {
+      const splitText = doc.splitTextToSize(term, 170);
+      doc.text(splitText, 15, yPos);
+      yPos += 10 * (splitText.length);
+    });
+    
+    // Add signature blocks
+    yPos += 20;
+    doc.text('For Seller:', 15, yPos);
+    doc.text('For Buyer:', 110, yPos);
+    
+    doc.line(15, yPos + 20, 90, yPos + 20);
+    doc.line(110, yPos + 20, 185, yPos + 20);
+    
+    doc.text('Authorized Signature', 15, yPos + 25);
+    doc.text('Authorized Signature', 110, yPos + 25);
+    
+    // Add date and page number in footer
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    const today = format(new Date(), 'yyyy-MM-dd');
+    doc.text(`Generated: ${today}`, 15, 280);
+    doc.text('Page 1 of 1', 170, 280);
+    
+    // Save the PDF
+    doc.save(`${contract.id}_${contract.client.replace(/\s+/g, '_')}.pdf`);
+    
+    toast({
+      title: "Success",
+      description: `Contract ${contract.id} downloaded successfully`,
+    });
+  };
+
+  const handleExportAllContracts = () => {
+    // Create new PDF document
+    const doc = new jsPDF();
+    
+    // Add company header
+    doc.setFontSize(18);
+    doc.setTextColor(0, 51, 102);
+    doc.text('KAJON Coffee Limited', 15, 20);
+    
+    // Add report title
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Active Export Contracts', 105, 35, { align: 'center' });
+    
+    // Add date
+    doc.setFontSize(11);
+    doc.setTextColor(100, 100, 100);
+    const today = format(new Date(), 'yyyy-MM-dd');
+    doc.text(`Generated: ${today}`, 15, 45);
+    
+    // Convert contracts to table data
+    const tableColumn = ["Contract ID", "Client", "Country", "Coffee Type", "Date", "Value", "Status"];
+    const tableRows = contracts.map(contract => [
+      contract.id,
+      contract.client,
+      contract.country,
+      contract.coffeeType,
+      contract.date,
+      contract.value,
+      contract.status.charAt(0).toUpperCase() + contract.status.slice(1)
+    ]);
+    
+    // Add contracts table
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 50,
+      theme: 'grid',
+      styles: { 
+        fontSize: 10,
+        cellPadding: 5
+      },
+      headStyles: { 
+        fillColor: [0, 51, 102],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold' 
+      },
+      alternateRowStyles: {
+        fillColor: [240, 245, 255]
+      }
+    });
+    
+    // Save the PDF
+    doc.save(`KAJON_Coffee_Contracts_${today}.pdf`);
+    
+    toast({
+      title: "Success",
+      description: "All contracts exported successfully",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -119,9 +263,20 @@ const ContractManagement = () => {
                   <Briefcase className="h-5 w-5 text-blue-600" />
                   <span>Export Contracts</span>
                 </CardTitle>
-                <div className="flex items-center relative w-64">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                  <Input placeholder="Search contracts..." className="pl-8" />
+                <div className="flex items-center gap-2">
+                  <div className="relative w-64">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input placeholder="Search contracts..." className="pl-8" />
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center gap-1"
+                    onClick={handleExportAllContracts}
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Export All</span>
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -159,13 +314,18 @@ const ContractManagement = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" title="View Contract">
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              title="Download Contract"
+                              onClick={() => handleContractDownload(contract)}
+                            >
                               <Download className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" title="Edit Contract">
                               <FileText className="h-4 w-4" />
                             </Button>
                           </div>
