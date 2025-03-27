@@ -1,0 +1,66 @@
+
+@media print {
+  body {
+    background: white;
+    font-size: 12pt;
+    color: black;
+  }
+  
+  .print-container {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+  
+  .print-container table {
+    page-break-inside: avoid;
+  }
+  
+  .print-hidden {
+    display: none !important;
+  }
+  
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+  
+  /* Hide elements not needed in print version */
+  button, 
+  .print:hidden,
+  nav,
+  footer {
+    display: none !important;
+  }
+  
+  /* Ensure proper page breaks */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+  
+  img, table, figure {
+    page-break-inside: avoid;
+  }
+  
+  /* Break to a new page before these elements */
+  h1, h2, h3, section {
+    page-break-before: auto;
+  }
+  
+  /* Prevent breaking inside these elements */
+  p, li, blockquote, dl {
+    page-break-inside: avoid;
+  }
+  
+  /* Ensure proper URLs and cross-references in print */
+  a:after {
+    content: " (" attr(href) ")";
+    font-size: 90%;
+  }
+  
+  a[href^="#"]:after,
+  a[href^="javascript:"]:after {
+    content: "";
+  }
+}
