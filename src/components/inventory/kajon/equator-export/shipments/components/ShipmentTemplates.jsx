@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +23,8 @@ const ShipmentTemplates = ({ onBack }) => {
   const [savedTemplates, setSavedTemplates] = useState([]);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [templateTitle, setTemplateTitle] = useState('');
+  const [currentTemplate, setCurrentTemplate] = useState(null);
+  const [templateSaved, setTemplateSaved] = useState(false);
   const templateRef = useRef(null);
 
   // When printing, add a class to the body element to apply print-specific styles
@@ -81,6 +82,8 @@ const ShipmentTemplates = ({ onBack }) => {
 
   const handleViewTemplate = (templateType) => {
     setActiveTemplate(templateType);
+    setTemplateSaved(false); // Reset saved state when viewing a new template
+    setCurrentTemplate(null); // Reset current template
   };
 
   const handlePrint = () => {
@@ -137,6 +140,10 @@ const ShipmentTemplates = ({ onBack }) => {
 
   const toggleEditMode = () => {
     setEditMode(prev => !prev);
+    // Reset saved state when entering edit mode
+    if (!editMode) {
+      setTemplateSaved(false);
+    }
   };
 
   const handleDataChange = (field, value) => {
@@ -161,6 +168,7 @@ const ShipmentTemplates = ({ onBack }) => {
     }));
     
     // This will trigger the useEffect to reload default data
+    setTemplateSaved(false);
   };
 
   const handleSaveTemplate = () => {
@@ -183,15 +191,13 @@ const ShipmentTemplates = ({ onBack }) => {
     
     setSavedTemplates(prev => [...prev, newTemplate]);
     setSaveModalOpen(false);
-    setTemplateTitle('');
+    setTemplateSaved(true);
+    setCurrentTemplate(newTemplate);
     
     toast({
       title: "Success",
       description: "Template saved successfully"
     });
-    
-    // Return to template selection
-    setActiveTemplate(null);
   };
 
   // Render the selected template with proper data
@@ -272,6 +278,14 @@ const ShipmentTemplates = ({ onBack }) => {
                     <span>Reset</span>
                   </Button>
                   <Button 
+                    variant="outline" 
+                    onClick={() => setSaveModalOpen(true)}
+                    className="flex items-center gap-1"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>Save As</span>
+                  </Button>
+                  <Button 
                     onClick={toggleEditMode}
                     className="flex items-center gap-1"
                     variant="default"
@@ -282,37 +296,42 @@ const ShipmentTemplates = ({ onBack }) => {
                 </>
               ) : (
                 <>
-                  <Button 
-                    variant="outline" 
-                    onClick={toggleEditMode}
-                    className="flex items-center gap-1"
-                  >
-                    <Edit className="h-4 w-4" />
-                    <span>Edit Template</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setSaveModalOpen(true)}
-                    className="flex items-center gap-1"
-                  >
-                    <Save className="h-4 w-4" />
-                    <span>Save As</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handlePrint}
-                    className="flex items-center gap-1"
-                  >
-                    <Printer className="h-4 w-4" />
-                    <span>Print</span>
-                  </Button>
-                  <Button 
-                    onClick={handleDownloadPDF}
-                    className="flex items-center gap-1"
-                  >
-                    <Download className="h-4 w-4" />
-                    <span>Download PDF</span>
-                  </Button>
+                  {!templateSaved ? (
+                    <Button 
+                      variant="outline" 
+                      onClick={toggleEditMode}
+                      className="flex items-center gap-1"
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span>Edit Template</span>
+                    </Button>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        onClick={toggleEditMode}
+                        className="flex items-center gap-1"
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span>Edit Template</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={handlePrint}
+                        className="flex items-center gap-1"
+                      >
+                        <Printer className="h-4 w-4" />
+                        <span>Print</span>
+                      </Button>
+                      <Button 
+                        onClick={handleDownloadPDF}
+                        className="flex items-center gap-1"
+                      >
+                        <Download className="h-4 w-4" />
+                        <span>Download PDF</span>
+                      </Button>
+                    </>
+                  )}
                 </>
               )}
             </>
@@ -493,7 +512,6 @@ const ShipmentTemplates = ({ onBack }) => {
         </Tabs>
       )}
       
-      {/* Saved Templates Section */}
       {savedTemplates.length > 0 && !activeTemplate && (
         <Card className="mt-6">
           <CardHeader>
@@ -521,6 +539,8 @@ const ShipmentTemplates = ({ onBack }) => {
                             ...prev,
                             [template.type]: template.data
                           }));
+                          setTemplateSaved(true);
+                          setCurrentTemplate(template);
                         }}
                       >
                         <Eye className="h-3 w-3" />
