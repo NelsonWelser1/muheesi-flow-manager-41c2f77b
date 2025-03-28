@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import CertificateTemplateForm from './CertificateTemplateForm';
+import CertificateTemplateForm from './CertificateTemplateForm.jsx';
 import { useToast } from "@/components/ui/use-toast";
 
 const QualityCertification = () => {
