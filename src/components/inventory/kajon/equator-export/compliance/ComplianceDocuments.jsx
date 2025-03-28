@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +9,7 @@ import jsPDF from "jspdf";
 import CoffeeComplianceTemplate from "./templates/CoffeeComplianceTemplate";
 import GeneralProduceComplianceTemplate from "./templates/GeneralProduceComplianceTemplate";
 import FreshProduceComplianceTemplate from "./templates/FreshProduceComplianceTemplate";
-import "../../contracts/styles/PrintStyles.css";
+import "../../../contracts/styles/PrintStyles.css";
 
 const documents = [
   {
@@ -93,7 +92,6 @@ const ComplianceDocuments = ({ onBack }) => {
       return;
     }
 
-    // Here you would typically save to a database
     toast({
       title: "Document Saved",
       description: `'${documentTitle}' has been saved successfully.`,
@@ -104,7 +102,6 @@ const ComplianceDocuments = ({ onBack }) => {
   };
 
   const handleReset = () => {
-    // This would reset form values to defaults
     toast({
       title: "Document Reset",
       description: "All changes have been discarded.",
@@ -116,7 +113,6 @@ const ComplianceDocuments = ({ onBack }) => {
     if (!element) return;
 
     try {
-      // Add printable class to properly style for PDF
       document.body.classList.add('generating-pdf');
       
       const canvas = await html2canvas(element, {
@@ -132,7 +128,7 @@ const ComplianceDocuments = ({ onBack }) => {
         format: 'a4',
       });
       
-      const imgWidth = 210; // A4 width in mm
+      const imgWidth = 210;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
@@ -163,9 +159,8 @@ const ComplianceDocuments = ({ onBack }) => {
       isEditing,
       documentData: {
         title: documentTitle || selectedDocument.name,
-        // Additional data would go here
       },
-      setDocumentData: () => {}, // This would update form values in a real implementation
+      setDocumentData: () => {},
     };
 
     if (selectedDocument.type === 'coffee') {
@@ -179,7 +174,6 @@ const ComplianceDocuments = ({ onBack }) => {
     return <div>Template not found</div>;
   };
 
-  // Filter documents by active tab
   const filteredDocuments = documents.filter(doc => doc.type === activeTab);
 
   return (
