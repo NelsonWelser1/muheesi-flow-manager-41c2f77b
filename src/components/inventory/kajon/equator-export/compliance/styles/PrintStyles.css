@@ -1,0 +1,89 @@
+
+/* Print styles for compliance documents */
+@media print {
+  body {
+    background-color: white;
+    font-size: 12pt;
+    color: black;
+  }
+  
+  .print-container {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: white;
+  }
+  
+  .print:hidden {
+    display: none !important;
+  }
+  
+  .print-container * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  /* Hide elements that shouldn't appear in print */
+  button, 
+  .print:hidden, 
+  nav, 
+  .sidebar, 
+  .search-controls, 
+  .dialog-overlay,
+  .tabs-list,
+  .action-buttons {
+    display: none !important;
+  }
+  
+  /* Make sure text is black for printing */
+  p, h1, h2, h3, h4, h5, h6, span, div, td, th {
+    color: black !important;
+  }
+  
+  /* Ensure tables print properly */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  /* Make sure images/logos print properly */
+  img {
+    max-width: 100% !important;
+  }
+  
+  /* Ensure page breaks don't happen in the middle of important sections */
+  h1, h2, h3, table, img {
+    page-break-inside: avoid;
+  }
+  
+  /* Add page footer with page numbers */
+  @page {
+    margin: 20mm;
+    size: A4;
+    
+    @bottom-center {
+      content: "Page " counter(page) " of " counter(pages);
+    }
+  }
+}
+
+/* Special class for PDF generation - hide elements */
+body.generating-pdf .print\:hidden,
+body.generating-pdf button,
+body.generating-pdf nav {
+  display: none !important;
+}
+
+/* Ensure template displays correctly while editing */
+.print-container {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}

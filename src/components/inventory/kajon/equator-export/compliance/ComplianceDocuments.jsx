@@ -14,8 +14,83 @@ import { useToast } from "@/components/ui/use-toast";
 import CoffeeComplianceTemplate from './templates/CoffeeComplianceTemplate';
 import GeneralProduceComplianceTemplate from './templates/GeneralProduceComplianceTemplate';
 import FreshProduceComplianceTemplate from './templates/FreshProduceComplianceTemplate';
-import { exportContractToPDF } from '../../contracts/utils/contractPdfExport';
-import '../../contracts/styles/PrintStyles.css';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+
+const exportToPDF = async (templateRef, filename, toast) => {
+  try {
+    if (!templateRef) {
+      throw new Error('Template element not found');
+    }
+
+    const loadingToastId = toast({
+      title: "Processing",
+      description: "Generating PDF...",
+      duration: 10000,
+    });
+    
+    document.body.classList.add('generating-pdf');
+    
+    const canvas = await html2canvas(templateRef, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      windowWidth: templateRef.scrollWidth,
+      windowHeight: templateRef.scrollHeight,
+      onclone: (doc) => {
+        const element = doc.body.querySelector('.print-container');
+        if (element) {
+          element.style.padding = '0';
+          element.style.margin = '0 auto';
+          element.style.border = 'none';
+          element.style.boxShadow = 'none';
+        }
+      }
+    });
+    
+    document.body.classList.remove('generating-pdf');
+    
+    const imgWidth = 210;
+    const pageHeight = 297;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+    
+    pdf.save(`${filename}.pdf`);
+    
+    if (loadingToastId) {
+      toast.dismiss(loadingToastId);
+    }
+    
+    toast({
+      title: "Success",
+      description: "PDF exported successfully",
+      duration: 3000,
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error exporting to PDF:', error);
+    toast({
+      title: "Error",
+      description: `Failed to export PDF: ${error.message}`,
+      variant: "destructive",
+      duration: 5000,
+    });
+    return false;
+  }
+};
 
 const documents = [
   {
@@ -231,7 +306,6 @@ const ComplianceDocuments = () => {
         buyer: 'Client Company Name',
         buyerAddress: 'Client Address, Country',
         shipmentRef: 'SHP-2024-001',
-        // Add more default fields based on template type
       };
       
       setEditableData(prev => ({
@@ -275,7 +349,7 @@ const ComplianceDocuments = () => {
           `${templateTitle.replace(/\s+/g, '_')}` : 
           `${templateType}_document_${new Date().toISOString().split('T')[0]}`;
         
-        await exportContractToPDF(templateRef.current, filename, toast);
+        await exportToPDF(templateRef.current, filename, toast);
         
         if (wasInEditMode) {
           setEditMode(true);

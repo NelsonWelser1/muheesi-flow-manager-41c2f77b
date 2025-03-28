@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import ComplianceDocumentManager from './ComplianceDocumentManager';
+import ComplianceDocuments from './ComplianceDocuments';
 
 const ComplianceButton = () => {
   const [showDialog, setShowDialog] = useState(false);
@@ -25,7 +25,7 @@ const ComplianceButton = () => {
         className="max-w-5xl w-full"
       >
         <DialogContent className="max-w-5xl w-full p-0 max-h-[90vh] overflow-auto">
-          <ComplianceDocumentManager />
+          <ComplianceDocuments />
         </DialogContent>
       </Dialog>
     </>
