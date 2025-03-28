@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,7 +33,6 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
     fetchStaffData 
   } = useStaffData(farmId);
   
-  // New staff form state
   const [newStaff, setNewStaff] = useState({
     firstName: '',
     lastName: '',
@@ -49,14 +47,12 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
     avatar: ''
   });
 
-  // For editing an existing staff member
   const [editingStaff, setEditingStaff] = useState(null);
   
   useEffect(() => {
     fetchStaffData();
   }, [farmId]);
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (editingStaff) {
@@ -66,7 +62,6 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
     }
   };
 
-  // Handle select changes
   const handleSelectChange = (name, value) => {
     if (editingStaff) {
       setEditingStaff(prev => ({ ...prev, [name]: value }));
@@ -75,19 +70,16 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
     }
   };
 
-  // Start editing a staff member
   const handleEditStaff = (staff) => {
     setEditingStaff(staff);
     setActiveTab('edit');
   };
 
-  // Cancel editing
   const handleCancelEdit = () => {
     setEditingStaff(null);
     setActiveTab('directory');
   };
 
-  // Handle staff deletion
   const handleDeleteStaff = async (id) => {
     if (window.confirm('Are you sure you want to delete this staff member?')) {
       try {
@@ -99,7 +91,6 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
     }
   };
 
-  // Handle form submission for new staff
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -118,7 +109,6 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
         farm_id: farmId
       });
       
-      // Reset form
       setNewStaff({
         firstName: '',
         lastName: '',
@@ -133,7 +123,6 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
         avatar: ''
       });
       
-      // Refresh data and switch to directory tab
       fetchStaffData();
       setActiveTab('directory');
     } catch (error) {
@@ -141,7 +130,6 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
     }
   };
 
-  // Handle form submission for editing staff
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     
@@ -157,10 +145,8 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
     try {
       await updateStaffMember(editingStaff.id, editingStaff);
       
-      // Reset editing state
       setEditingStaff(null);
       
-      // Refresh data and switch to directory tab
       fetchStaffData();
       setActiveTab('directory');
     } catch (error) {
@@ -183,7 +169,6 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
     });
   };
 
-  // Filter staff data based on search query and role filter
   const filteredStaff = staffData.filter(staff => {
     const fullName = `${staff.firstName} ${staff.lastName}`.toLowerCase();
     const matchesSearch = fullName.includes(searchQuery.toLowerCase()) || 
@@ -195,12 +180,10 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
     return matchesSearch && matchesRole;
   });
 
-  // Function to get initials for avatar fallback
   const getInitials = (firstName, lastName) => {
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
   };
 
-  // Role display mapping
   const roleDisplayMap = {
     'farm_manager': 'Farm Manager',
     'farm_worker': 'Farm Worker',
