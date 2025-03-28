@@ -1,7 +1,12 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -10,143 +15,260 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { 
+  Search, 
+  RefreshCw, 
+  FileDown, 
+  Printer, 
+  Plus, 
+  Filter, 
+  Cow,
+  Droplet,
+  DollarSign,
+  Download,
+  Pencil,
+  Trash2,
+  BookOpen
+} from "lucide-react";
+import { format } from 'date-fns';
+import { useToast } from "@/components/ui/use-toast";
+import { KyalimaPDFExport } from "./kyalima/utils/KyalimaPDFExport";
+import CattleManagement from "./kyalima/CattleManagement";
+import MilkProduction from "./kyalima/MilkProduction";
+import CattleFattening from "./kyalima/CattleFattening";
+import LoanManager from "./kyalima/LoanManager";
 
 const KyalimaFarmersLimited = () => {
-  const loanMetrics = {
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("overview");
+  
+  // Basic metrics for the overview dashboard
+  const companyMetrics = {
+    totalCattle: 135,
+    milkProduction: "480 liters/day",
+    activeFattening: 42,
     totalLoans: "UGX 150,000,000",
-    activeLoans: "UGX 120,000,000",
-    duePayments: "UGX 15,000,000",
-    businessReturns: "UGX 45,000,000",
-    loanProgress: 35
+    revenue: "UGX 28,500,000",
+    expenses: "UGX 14,200,000"
+  };
+  
+  // Function to handle export of all data
+  const handleExportAll = () => {
+    KyalimaPDFExport.exportDashboard('kyalima-dashboard');
+    toast({
+      title: "Export Started",
+      description: "Preparing your Kyalima Farmers Limited dashboard export...",
+    });
   };
 
-  const loans = [
-    {
-      id: "L001",
-      institution: "Microfinance Support Center",
-      startDate: "2024-01-15",
-      dueDate: "2025-01-15",
-      amount: "UGX 100,000,000",
-      remaining: "UGX 65,000,000",
-      nextPayment: "2024-04-15",
-      status: "Active"
-    }
-  ];
-
+  // Function to handle print of current view
+  const handlePrint = () => {
+    KyalimaPDFExport.printContent('kyalima-content');
+    toast({
+      title: "Print Prepared",
+      description: "Sending Kyalima dashboard to printer...",
+    });
+  };
+  
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Kyalima Farmers Limited</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <div>
+            <CardTitle className="text-2xl font-bold">Kyalima Farmers Limited</CardTitle>
+            <CardDescription>Manage cattle, milk production, fattening program, and loans</CardDescription>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1"
+              onClick={handlePrint}
+            >
+              <Printer className="h-4 w-4" />
+              <span className="hidden sm:inline">Print</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1"
+              onClick={handleExportAll}
+            >
+              <FileDown className="h-4 w-4" />
+              <span className="hidden sm:inline">Export</span>
+            </Button>
+          </div>
         </CardHeader>
+
         <CardContent>
-          <Tabs defaultValue="kyalima" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="kyalima">Kyalima Operations</TabsTrigger>
-              <TabsTrigger value="loan-manager">Loan Manager</TabsTrigger>
+          <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
+                <span>Overview</span>
+              </TabsTrigger>
+              <TabsTrigger value="cattle" className="flex items-center gap-2">
+                <Cow className="h-4 w-4" />
+                <span>Cattle Management</span>
+              </TabsTrigger>
+              <TabsTrigger value="milk" className="flex items-center gap-2">
+                <Droplet className="h-4 w-4" />
+                <span>Milk Production</span>
+              </TabsTrigger>
+              <TabsTrigger value="fattening" className="flex items-center gap-2">
+                <Cow className="h-4 w-4" />
+                <span>Cattle Fattening</span>
+              </TabsTrigger>
+              <TabsTrigger value="loans" className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                <span>Loan Manager</span>
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="kyalima">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold mb-2">Grain Stock</h3>
-                <ul>
-                  <li className="mb-1">Maize: 20,000 MT</li>
-                  <li className="mb-1">Hulled white sesame: 2,000 MT</li>
-                  <li className="mb-1">Soybean: 50,000 MT</li>
-                  <li className="mb-1">Cocoa: 500 MT</li>
-                </ul>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="loan-manager">
-              <div className="space-y-6">
-                {/* Metrics Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div id="kyalima-content">
+              {/* Overview Dashboard */}
+              <TabsContent value="overview" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-2xl font-bold">{loanMetrics.totalLoans}</div>
-                      <p className="text-sm text-muted-foreground">Total Loans</p>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">Total Cattle</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{companyMetrics.totalCattle}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Across all categories</p>
+                      <div className="flex items-center mt-2">
+                        <Cow className="h-4 w-4 text-primary mr-1" />
+                        <div className="text-xs text-muted-foreground">Last updated: {format(new Date(), 'MMM dd, yyyy')}</div>
+                      </div>
                     </CardContent>
                   </Card>
+                  
                   <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-2xl font-bold">{loanMetrics.activeLoans}</div>
-                      <p className="text-sm text-muted-foreground">Active Loans</p>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">Daily Milk Production</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{companyMetrics.milkProduction}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Average from 24 mother cows</p>
+                      <div className="flex items-center mt-2">
+                        <Droplet className="h-4 w-4 text-blue-500 mr-1" />
+                        <div className="text-xs text-muted-foreground">2 milking sessions daily</div>
+                      </div>
                     </CardContent>
                   </Card>
+                  
                   <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-2xl font-bold">{loanMetrics.duePayments}</div>
-                      <p className="text-sm text-muted-foreground">Due Payments</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="text-2xl font-bold">{loanMetrics.businessReturns}</div>
-                      <p className="text-sm text-muted-foreground">Business Returns</p>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">Cattle in Fattening Program</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{companyMetrics.activeFattening}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Bulls and steers in program</p>
+                      <div className="flex items-center mt-2">
+                        <div className="w-full bg-secondary h-2 rounded-full">
+                          <div className="bg-primary h-2 rounded-full w-3/4"></div>
+                        </div>
+                        <span className="text-xs ml-2">75% to target</span>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
 
-                {/* Loan Progress */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Loan Repayment Progress</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Progress value={loanMetrics.loanProgress} className="h-2" />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {loanMetrics.loanProgress}% of total loans repaid
-                    </p>
-                  </CardContent>
-                </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Financial Overview</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <dl className="grid grid-cols-2 gap-4">
+                        <div>
+                          <dt className="text-sm font-medium text-muted-foreground">Revenue (Monthly)</dt>
+                          <dd className="text-lg font-semibold">{companyMetrics.revenue}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-medium text-muted-foreground">Expenses (Monthly)</dt>
+                          <dd className="text-lg font-semibold">{companyMetrics.expenses}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-medium text-muted-foreground">Total Loans</dt>
+                          <dd className="text-lg font-semibold">{companyMetrics.totalLoans}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-medium text-muted-foreground">Loan Repayment</dt>
+                          <dd className="flex items-center">
+                            <div className="w-full mr-2">
+                              <Progress value={35} className="h-2" />
+                            </div>
+                            <span className="text-xs">35%</span>
+                          </dd>
+                        </div>
+                      </dl>
+                    </CardContent>
+                  </Card>
 
-                {/* Loans Table */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Active Loans</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Loan ID</TableHead>
-                          <TableHead>Institution</TableHead>
-                          <TableHead>Start Date</TableHead>
-                          <TableHead>Due Date</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Remaining</TableHead>
-                          <TableHead>Next Payment</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {loans.map((loan) => (
-                          <TableRow key={loan.id}>
-                            <TableCell>{loan.id}</TableCell>
-                            <TableCell>{loan.institution}</TableCell>
-                            <TableCell>{loan.startDate}</TableCell>
-                            <TableCell>{loan.dueDate}</TableCell>
-                            <TableCell>{loan.amount}</TableCell>
-                            <TableCell>{loan.remaining}</TableCell>
-                            <TableCell>{loan.nextPayment}</TableCell>
-                            <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                loan.status === 'Active' ? 'bg-green-100 text-green-800' : 
-                                loan.status === 'Overdue' ? 'bg-red-100 text-red-800' : 
-                                'bg-gray-100 text-gray-800'
-                              }`}>
-                                {loan.status}
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Stock Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="text-sm font-semibold mb-2">Cattle Stock</h3>
+                          <ul className="grid grid-cols-2 gap-2">
+                            <li className="flex justify-between items-center text-sm">
+                              <span>Mother Cows:</span> <span className="font-medium">24</span>
+                            </li>
+                            <li className="flex justify-between items-center text-sm">
+                              <span>Heifers:</span> <span className="font-medium">36</span>
+                            </li>
+                            <li className="flex justify-between items-center text-sm">
+                              <span>Bulls:</span> <span className="font-medium">15</span>
+                            </li>
+                            <li className="flex justify-between items-center text-sm">
+                              <span>Female Calves:</span> <span className="font-medium">32</span>
+                            </li>
+                            <li className="flex justify-between items-center text-sm">
+                              <span>Male Calves:</span> <span className="font-medium">28</span>
+                            </li>
+                          </ul>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-semibold mb-2">Grain Stock</h3>
+                          <ul className="space-y-1">
+                            <li className="flex justify-between items-center text-sm">
+                              <span>Maize:</span> <span className="font-medium">20,000 MT</span>
+                            </li>
+                            <li className="flex justify-between items-center text-sm">
+                              <span>Soybean:</span> <span className="font-medium">50,000 MT</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Cattle Management Tab */}
+              <TabsContent value="cattle">
+                <CattleManagement />
+              </TabsContent>
+
+              {/* Milk Production Tab */}
+              <TabsContent value="milk">
+                <MilkProduction />
+              </TabsContent>
+
+              {/* Cattle Fattening Tab */}
+              <TabsContent value="fattening">
+                <CattleFattening />
+              </TabsContent>
+
+              {/* Loan Manager Tab */}
+              <TabsContent value="loans">
+                <LoanManager />
+              </TabsContent>
+            </div>
           </Tabs>
         </CardContent>
       </Card>
