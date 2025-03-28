@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import jsPDF from "jspdf";
 import CoffeeComplianceTemplate from "./templates/CoffeeComplianceTemplate";
 import GeneralProduceComplianceTemplate from "./templates/GeneralProduceComplianceTemplate";
 import FreshProduceComplianceTemplate from "./templates/FreshProduceComplianceTemplate";
-import "../../../contracts/styles/PrintStyles.css";
+import "../compliance/styles/PrintStyles.css";
 
 const documents = [
   {

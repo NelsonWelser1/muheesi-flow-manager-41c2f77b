@@ -1,0 +1,206 @@
+
+/* Print styles */
+@media print {
+  body.printing * {
+    visibility: visible !important;
+  }
+  body.printing .print:hidden {
+    display: none !important;
+  }
+  body.printing .print-container {
+    visibility: visible !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  body.printing .edit-mode-indicator {
+    display: none !important;
+  }
+  body.printing .editable-field {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+}
+
+/* Styles for PDF generation */
+body.generating-pdf .print:hidden {
+  display: none !important;
+}
+
+body.generating-pdf .print-container {
+  width: 100%;
+  background-color: white;
+  padding: 0;
+  margin: 0;
+}
+
+body.generating-pdf .edit-mode-indicator {
+  display: none !important;
+}
+
+body.generating-pdf .editable-field {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Editable fields styles */
+.editable-field {
+  transition: all 0.2s ease;
+  border-radius: 3px;
+}
+
+.editable-field:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.editable-field:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+
+.edit-mode-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(59, 130, 246, 0.9);
+  color: white;
+  text-align: center;
+  padding: 4px;
+  font-size: 12px;
+  z-index: 1000;
+}
+
+/* Table styles for templates */
+.print-container table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.print-container th,
+.print-container td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.print-container th {
+  font-weight: bold;
+  background-color: #f8fafc;
+}
+
+/* Print layout optimization */
+@page {
+  size: A4;
+  margin: 0.5cm;
+}
+
+@media print {
+  html, body {
+    width: 210mm;
+    height: 297mm;
+  }
+  
+  .print-container {
+    padding: 10mm;
+  }
+  
+  .page-break {
+    page-break-before: always;
+  }
+  
+  /* Hide non-essential UI when printing */
+  .print:hidden,
+  button,
+  .print-hidden,
+  nav,
+  .tabs,
+  input[type="button"],
+  .actions-container {
+    display: none !important;
+  }
+  
+  /* Ensure white background for printed documents */
+  body, .print-container {
+    background-color: white !important;
+  }
+  
+  /* Remove borders that shouldn't appear in print */
+  .print-container .card,
+  .print-container .border {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Format headers for printing */
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+  }
+  
+  /* Format tables for printing */
+  table {
+    page-break-inside: auto;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  
+  /* Certificate specific styling */
+  .print-container {
+    font-size: 12pt;
+    line-height: 1.3;
+  }
+  
+  /* Optimize images for printing */
+  img {
+    max-width: 100% !important;
+  }
+}
+
+/* PDF export optimization */
+body.generating-pdf {
+  background-color: white !important;
+}
+
+body.generating-pdf .print-container {
+  padding: 20mm;
+  margin: 0 auto;
+  max-width: 210mm;
+  background-color: white;
+}
+
+body.generating-pdf button,
+body.generating-pdf .tabs,
+body.generating-pdf .print-hidden {
+  display: none !important;
+}
+
+/* Certificate template styling */
+.certificate-header {
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+.certificate-footer {
+  border-top: 1px solid #e2e8f0;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.certificate-signature {
+  border-top: 1px solid #000;
+  margin-top: 2rem;
+  padding-top: 0.5rem;
+}
