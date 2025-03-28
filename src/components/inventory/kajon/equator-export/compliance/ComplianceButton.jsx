@@ -22,6 +22,7 @@ const ComplianceButton = () => {
       <Dialog 
         open={showDialog} 
         onOpenChange={setShowDialog}
+        className="max-w-5xl w-full"
       >
         <DialogContent className="max-w-5xl w-full p-0 max-h-[90vh] overflow-auto">
           <ComplianceDocumentManager />
