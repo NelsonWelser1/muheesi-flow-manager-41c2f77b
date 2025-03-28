@@ -22,7 +22,7 @@ const ComplianceButton = () => {
         <span>Compliance Documents</span>
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen} size="full">
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[90vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Compliance Document Management</DialogTitle>

@@ -15,6 +15,7 @@ import ContractManagement from './contracts/ContractManagement';
 import ShipmentTracking from './shipments/ShipmentTracking';
 import GlobalMarketInsights from './market/GlobalMarketInsights';
 import ComplianceDocuments from './compliance/ComplianceDocuments';
+import ComplianceButton from './compliance/ComplianceButton';
 import QualityCertification from './quality/QualityCertification';
 import FinanceManagement from './finance/FinanceManagement';
 import SalesMarketing from './sales/SalesMarketing';
@@ -32,6 +33,12 @@ const EquatorExportManagement = () => {
   
   return (
     <div className="space-y-6">
+      {/* Header with compliance button */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Equator Coffee Export</h2>
+        <ComplianceButton />
+      </div>
+      
       {/* Export Quick Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-blue-50">

@@ -1,297 +1,223 @@
 
 import React from 'react';
-import { format } from 'date-fns';
-import { Check, Award, Sprout, CalendarRange, Package, FileText, Clipboard, Globe, ShieldCheck } from 'lucide-react';
 
-const GeneralProduceComplianceTemplate = ({ data = {}, editMode = false, onDataChange }) => {
-  const handleChange = (field, value) => {
-    if (editMode && onDataChange) {
-      onDataChange(field, value);
-    }
+const GeneralProduceComplianceTemplate = ({ isEditing, documentData }) => {
+  // Sample data to display in the template
+  const companyInfo = {
+    name: "KAJON Coffee Limited",
+    address: "123 Coffee Way, Kampala, Uganda",
+    phone: "+256 782 123456",
+    email: "info@kajoncoffee.com",
+    website: "www.kajoncoffee.com"
   };
-  
-  const renderEditableField = (fieldName, value, placeholder, type = "text") => {
-    return editMode ? (
-      <input
-        type={type}
-        className="editable-field w-full p-1 border-b border-dashed"
-        value={value || ""}
-        onChange={(e) => handleChange(fieldName, e.target.value)}
-        placeholder={placeholder}
-      />
-    ) : (
-      <div className="py-1">{value || placeholder}</div>
-    );
+
+  const sampleShipmentData = {
+    documentNumber: "INV-2024-0432",
+    contractReference: "CTR-2024-0128",
+    buyer: "Global Foods Imports Ltd.",
+    buyerAddress: "14 Market Street, Rotterdam, Netherlands",
+    shipmentDate: "15-Apr-2024",
+    portOfLoading: "Mombasa, Kenya",
+    portOfDischarge: "Rotterdam, Netherlands",
+    incoterm: "FOB Mombasa",
+    paymentTerms: "Letter of Credit at 60 days"
   };
-  
-  const renderEditableSelect = (fieldName, value, options, placeholder) => {
-    return editMode ? (
-      <select
-        className="editable-field w-full p-1 border-b border-dashed"
-        value={value || ""}
-        onChange={(e) => handleChange(fieldName, e.target.value)}
-      >
-        <option value="">{placeholder}</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-    ) : (
-      <div className="py-1">{value || placeholder}</div>
-    );
-  };
-  
-  // Default data
-  const currentDate = format(new Date(), 'yyyy-MM-dd');
-  const expiryDate = format(new Date(new Date().setFullYear(new Date().getFullYear() + 1)), 'yyyy-MM-dd');
-  
-  // Template data with defaults
-  const {
-    documentNumber = `GEN-CERT-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-    issueDate = currentDate,
-    expiryDate: expiry = expiryDate,
-    produceType = "",
-    produceVariety = "",
-    originCountry = "Uganda",
-    growingRegion = "",
-    harvestSeason = "",
-    certificationStandards = "",
-    batchNumber = `BATCH-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-    exportDestination = "",
-    exporterName = "KAJON Limited",
-    exporterAddress = "Plot 123, Kampala Industrial Area, Uganda",
-    packagingType = "",
-    quantity = "",
-    authorizedBy = "",
-    notes = "",
-  } = data;
+
+  const sampleItems = [
+    { description: "Robusta Coffee Beans AA", quantity: "180", unit: "60kg bags", unitPrice: "4.20", amount: "45,360.00" },
+    { description: "Arabica Coffee Beans SB", quantity: "120", unit: "60kg bags", unitPrice: "5.65", amount: "40,680.00" }
+  ];
 
   return (
-    <div className="bg-white p-6 max-w-4xl mx-auto">
-      {/* Edit mode indicator */}
-      {editMode && (
-        <div className="edit-mode-indicator">
-          EDIT MODE - Fields with dashed borders can be edited
+    <div className="general-produce-document">
+      {/* Header with logo and document title */}
+      <div className="flex justify-between items-center mb-6 pb-4 border-b">
+        <div className="flex items-center">
+          {/* You can add a company logo here */}
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">
+            LOGO
+          </div>
+          <div className="ml-4">
+            <h1 className="text-2xl font-bold text-green-800">
+              {isEditing ? (
+                <input 
+                  type="text" 
+                  className="editable-field border px-2 py-1 w-full" 
+                  defaultValue={documentData.title || "Commercial Invoice"}
+                />
+              ) : (
+                documentData.title || "Commercial Invoice"
+              )}
+            </h1>
+            <p className="text-sm text-gray-600">{companyInfo.name}</p>
+          </div>
         </div>
-      )}
-      
-      {/* Header with logo and title */}
-      <div className="flex justify-between items-center mb-6 border-b pb-4">
-        <div className="flex items-center gap-3">
-          <img 
-            src="/combined-logo.png" 
-            alt="KAJON Limited" 
-            className="h-16 w-auto" 
+        <div className="text-right text-sm">
+          <p><strong>Invoice No:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleShipmentData.documentNumber} /> : sampleShipmentData.documentNumber}</p>
+          <p><strong>Date:</strong> {isEditing ? <input type="date" className="editable-field border px-2 py-1" defaultValue="2024-04-01" /> : "01-Apr-2024"}</p>
+          <p><strong>Contract Ref:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleShipmentData.contractReference} /> : sampleShipmentData.contractReference}</p>
+        </div>
+      </div>
+
+      {/* Company and Buyer Information */}
+      <div className="grid grid-cols-2 gap-8 mb-6">
+        <div>
+          <h2 className="text-lg font-semibold mb-2 text-green-700">Exporter</h2>
+          <p><strong>Company:</strong> {companyInfo.name}</p>
+          <p><strong>Address:</strong> {companyInfo.address}</p>
+          <p><strong>Phone:</strong> {companyInfo.phone}</p>
+          <p><strong>Email:</strong> {companyInfo.email}</p>
+          <p><strong>Tax ID:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="TAX-12345-UG" /> : "TAX-12345-UG"}</p>
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold mb-2 text-green-700">Buyer</h2>
+          <p><strong>Company:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1 w-full" defaultValue={sampleShipmentData.buyer} /> : sampleShipmentData.buyer}</p>
+          <p><strong>Address:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1 w-full" defaultValue={sampleShipmentData.buyerAddress} /> : sampleShipmentData.buyerAddress}</p>
+          <p><strong>Contact:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="+31 10 123 4567" /> : "+31 10 123 4567"}</p>
+          <p><strong>Email:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="orders@globalfoods.nl" /> : "orders@globalfoods.nl"}</p>
+          <p><strong>Tax ID:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="NL002123456B01" /> : "NL002123456B01"}</p>
+        </div>
+      </div>
+
+      {/* Shipment Information */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2 text-green-700">Shipment Details</h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p><strong>Shipment Date:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleShipmentData.shipmentDate} /> : sampleShipmentData.shipmentDate}</p>
+            <p><strong>Port of Loading:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleShipmentData.portOfLoading} /> : sampleShipmentData.portOfLoading}</p>
+            <p><strong>Port of Discharge:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleShipmentData.portOfDischarge} /> : sampleShipmentData.portOfDischarge}</p>
+          </div>
+          <div>
+            <p><strong>Incoterm:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleShipmentData.incoterm} /> : sampleShipmentData.incoterm}</p>
+            <p><strong>Payment Terms:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleShipmentData.paymentTerms} /> : sampleShipmentData.paymentTerms}</p>
+            <p><strong>Currency:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="USD" /> : "USD"}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Shipment Items */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2 text-green-700">Invoice Items</h2>
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-green-50">
+              <th className="border p-2 text-left">Description</th>
+              <th className="border p-2 text-left">Quantity</th>
+              <th className="border p-2 text-left">Unit</th>
+              <th className="border p-2 text-right">Unit Price (USD)</th>
+              <th className="border p-2 text-right">Amount (USD)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sampleItems.map((item, index) => (
+              <tr key={index}>
+                <td className="border p-2">
+                  {isEditing ? <input type="text" className="editable-field border px-2 py-1 w-full" defaultValue={item.description} /> : item.description}
+                </td>
+                <td className="border p-2">
+                  {isEditing ? <input type="text" className="editable-field border px-2 py-1 w-full" defaultValue={item.quantity} /> : item.quantity}
+                </td>
+                <td className="border p-2">
+                  {isEditing ? <input type="text" className="editable-field border px-2 py-1 w-full" defaultValue={item.unit} /> : item.unit}
+                </td>
+                <td className="border p-2 text-right">
+                  {isEditing ? <input type="text" className="editable-field border px-2 py-1 w-full text-right" defaultValue={item.unitPrice} /> : item.unitPrice}
+                </td>
+                <td className="border p-2 text-right">
+                  {isEditing ? <input type="text" className="editable-field border px-2 py-1 w-full text-right" defaultValue={item.amount} /> : item.amount}
+                </td>
+              </tr>
+            ))}
+            {isEditing && (
+              <tr>
+                <td className="border p-2">
+                  <input type="text" className="editable-field border px-2 py-1 w-full" placeholder="Add item description..." />
+                </td>
+                <td className="border p-2">
+                  <input type="text" className="editable-field border px-2 py-1 w-full" placeholder="Quantity" />
+                </td>
+                <td className="border p-2">
+                  <input type="text" className="editable-field border px-2 py-1 w-full" placeholder="Unit" />
+                </td>
+                <td className="border p-2">
+                  <input type="text" className="editable-field border px-2 py-1 w-full text-right" placeholder="0.00" />
+                </td>
+                <td className="border p-2">
+                  <input type="text" className="editable-field border px-2 py-1 w-full text-right" placeholder="0.00" />
+                </td>
+              </tr>
+            )}
+          </tbody>
+          <tfoot>
+            <tr className="bg-green-50">
+              <td colSpan="3" className="border p-2 text-right"><strong>Total:</strong></td>
+              <td colSpan="2" className="border p-2 text-right">
+                {isEditing ? <input type="text" className="editable-field border px-2 py-1 w-full text-right" defaultValue="86,040.00" /> : "USD 86,040.00"}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {/* Bank Information */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2 text-green-700">Banking Details</h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p><strong>Bank Name:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="Uganda International Bank" /> : "Uganda International Bank"}</p>
+            <p><strong>Account Name:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="KAJON Coffee Limited" /> : "KAJON Coffee Limited"}</p>
+            <p><strong>Account No:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="01234567890" /> : "01234567890"}</p>
+          </div>
+          <div>
+            <p><strong>SWIFT/BIC:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="UGINTBKXXX" /> : "UGINTBKXXX"}</p>
+            <p><strong>IBAN:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="UG12 UGIB 1234 5678 9012 34" /> : "UG12 UGIB 1234 5678 9012 34"}</p>
+            <p><strong>Bank Address:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="25 Finance Blvd, Kampala, Uganda" /> : "25 Finance Blvd, Kampala, Uganda"}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Declaration */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2 text-green-700">Declaration</h2>
+        {isEditing ? (
+          <textarea
+            className="editable-field border px-2 py-1 w-full h-20"
+            defaultValue="We hereby certify that this invoice shows the actual price of the goods described, that no other invoice has been or will be issued, and that all particulars are true and correct."
           />
-          <div>
-            <h1 className="text-2xl font-bold text-green-800">AGRICULTURAL PRODUCE CERTIFICATE</h1>
-            <p className="text-gray-600">Export Quality & Standards Compliance</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="font-semibold flex items-center gap-1">
-            <FileText size={16} />
-            Document #: {renderEditableField("documentNumber", documentNumber, "Auto-generated")}
-          </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Issue Date:</span> {renderEditableField("issueDate", issueDate, "Select date", "date")}
-          </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Expiry Date:</span> {renderEditableField("expiryDate", expiry, "Select date", "date")}
-          </p>
-        </div>
+        ) : (
+          <p>We hereby certify that this invoice shows the actual price of the goods described, that no other invoice has been or will be issued, and that all particulars are true and correct.</p>
+        )}
       </div>
-      
-      {/* Produce Details Section */}
+
+      {/* Signature */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-green-50 p-2 border-l-4 border-green-500 mb-3 flex items-center">
-          <Sprout size={18} className="mr-2" /> Produce Details
-        </h2>
+        <h2 className="text-lg font-semibold mb-2 text-green-700">Authorized Signatory</h2>
+        <div className="h-16 mb-2 border-b border-black"></div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-gray-600 font-medium">Produce Type:</p>
-            {renderEditableSelect("produceType", produceType, [
-              "Grains",
-              "Pulses",
-              "Oilseeds",
-              "Cotton",
-              "Cocoa",
-              "Vanilla",
-              "Tea",
-              "Spices",
-              "Other"
-            ], "Select produce type")}
+            <p><strong>Name:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="Sarah Kimani" /> : "Sarah Kimani"}</p>
+            <p><strong>Position:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="Export Manager" /> : "Export Manager"}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-600 font-medium">Variety/Grade:</p>
-            {renderEditableField("produceVariety", produceVariety, "Enter variety or grade")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Country of Origin:</p>
-            {renderEditableField("originCountry", originCountry, "Enter origin country")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Growing Region:</p>
-            {renderEditableField("growingRegion", growingRegion, "Enter growing region")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Harvest Season:</p>
-            {renderEditableField("harvestSeason", harvestSeason, "Enter harvest season/period")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Batch Number:</p>
-            {renderEditableField("batchNumber", batchNumber, "Enter batch number")}
+            <p><strong>Date:</strong> {isEditing ? <input type="date" className="editable-field border px-2 py-1" defaultValue="2024-04-01" /> : "01-Apr-2024"}</p>
+            <p><strong>Place:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="Kampala, Uganda" /> : "Kampala, Uganda"}</p>
           </div>
         </div>
       </div>
-      
-      {/* Export & Packaging Details */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-green-50 p-2 border-l-4 border-green-500 mb-3 flex items-center">
-          <Globe size={18} className="mr-2" /> Export & Packaging Details
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Export Destination:</p>
-            {renderEditableField("exportDestination", exportDestination, "Enter destination country")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Packaging Type:</p>
-            {renderEditableSelect("packagingType", packagingType, [
-              "Jute Bags",
-              "Poly Bags",
-              "Sisal Bags",
-              "Bulk Containers",
-              "Cardboard Boxes",
-              "GrainPro Bags",
-              "Vacuum Sealed",
-              "Other"
-            ], "Select packaging type")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Quantity:</p>
-            {renderEditableField("quantity", quantity, "Enter quantity and unit")}
-          </div>
+
+      {/* Stamp/Seal */}
+      <div className="text-right mb-4">
+        <div className="inline-block border-2 border-green-700 rounded-full p-6 mb-2">
+          <p className="font-bold text-green-700">COMPANY SEAL</p>
         </div>
       </div>
-      
-      {/* Certification Standards */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-green-50 p-2 border-l-4 border-green-500 mb-3 flex items-center">
-          <ShieldCheck size={18} className="mr-2" /> Certification & Compliance
-        </h2>
-        <div>
-          <p className="text-sm text-gray-600 font-medium mb-2">Standards & Compliance:</p>
-          {renderEditableSelect("certificationStandards", certificationStandards, [
-            "Organic - USDA",
-            "Organic - EU",
-            "Global G.A.P.",
-            "Fair Trade",
-            "Rainforest Alliance",
-            "BRC",
-            "ISO 22000",
-            "HACCP Compliant",
-            "Multiple Standards"
-          ], "Select applicable standards")}
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 border border-gray-400 flex items-center justify-center">
-              {(produceType && produceVariety) ? <Check size={12} className="text-green-600" /> : null}
-            </div>
-            <span className="text-sm">Quality Standards</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 border border-gray-400 flex items-center justify-center">
-              {(batchNumber && originCountry) ? <Check size={12} className="text-green-600" /> : null}
-            </div>
-            <span className="text-sm">Traceability Requirements</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 border border-gray-400 flex items-center justify-center">
-              {(certificationStandards) ? <Check size={12} className="text-green-600" /> : null}
-            </div>
-            <span className="text-sm">Certification Verified</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 border border-gray-400 flex items-center justify-center">
-              {(exportDestination && packagingType) ? <Check size={12} className="text-green-600" /> : null}
-            </div>
-            <span className="text-sm">Export Requirements</span>
-          </div>
-        </div>
-      </div>
-      
-      {/* Exporter Information */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-green-50 p-2 border-l-4 border-green-500 mb-3 flex items-center">
-          <Package size={18} className="mr-2" /> Exporter Information
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Exporter Name:</p>
-            {renderEditableField("exporterName", exporterName, "Enter exporter name")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Exporter Address:</p>
-            {renderEditableField("exporterAddress", exporterAddress, "Enter exporter address")}
-          </div>
-        </div>
-      </div>
-      
-      {/* Additional Notes */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-green-50 p-2 border-l-4 border-green-500 mb-3 flex items-center">
-          <Clipboard size={18} className="mr-2" /> Additional Information
-        </h2>
-        <div>
-          <p className="text-sm text-gray-600 font-medium">Notes:</p>
-          {editMode ? (
-            <textarea
-              className="editable-field w-full p-1 border border-dashed"
-              value={notes || ""}
-              onChange={(e) => handleChange("notes", e.target.value)}
-              placeholder="Enter any additional notes or comments"
-              rows={3}
-            />
-          ) : (
-            <div className="py-1">{notes || "No additional notes."}</div>
-          )}
-        </div>
-      </div>
-      
-      {/* Signatures Section */}
-      <div className="mt-8 border-t pt-4">
-        <div className="grid grid-cols-2 gap-8">
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Authorized by:</p>
-            {renderEditableField("authorizedBy", authorizedBy, "Enter name of authorized person")}
-            <div className="mt-8 border-t border-gray-400 pt-1">
-              <p className="text-sm text-gray-600">Authorized Signature</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="mb-4">
-              <img 
-                src="/combined-logo.png" 
-                alt="Company Seal" 
-                className="h-16 w-auto inline-block opacity-30" 
-              />
-            </div>
-            <div className="mt-8 border-t border-gray-400 pt-1">
-              <p className="text-sm text-gray-600">Official Stamp</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
+
       {/* Footer */}
-      <div className="mt-8 pt-4 border-t text-center text-sm text-gray-500">
-        <p>This certificate is valid only when signed by an authorized representative of KAJON Limited.</p>
-        <p>Document generated on {format(new Date(), 'MMMM dd, yyyy')} | Valid until {format(new Date(expiry || expiryDate), 'MMMM dd, yyyy')}</p>
+      <div className="text-center text-sm text-gray-500 mt-8 pt-4 border-t">
+        <p>This document is electronically generated and valid without signature.</p>
+        <p>{companyInfo.name} | {companyInfo.address} | {companyInfo.phone}</p>
+        <p>Document ID: {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="INV-2024-0432-AUTH" /> : "INV-2024-0432-AUTH"}</p>
       </div>
     </div>
   );

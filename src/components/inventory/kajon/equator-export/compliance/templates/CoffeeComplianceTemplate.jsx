@@ -1,284 +1,215 @@
 
 import React from 'react';
-import { format } from 'date-fns';
-import { Check, Award, Coffee, CalendarRange, Package, FileText, Clipboard } from 'lucide-react';
 
-const CoffeeComplianceTemplate = ({ data = {}, editMode = false, onDataChange }) => {
-  const handleChange = (field, value) => {
-    if (editMode && onDataChange) {
-      onDataChange(field, value);
-    }
+const CoffeeComplianceTemplate = ({ isEditing, documentData }) => {
+  // Sample data to display in the template
+  const companyInfo = {
+    name: "KAJON Coffee Limited",
+    address: "123 Coffee Way, Kampala, Uganda",
+    phone: "+256 782 123456",
+    email: "info@kajoncoffee.com",
+    website: "www.kajoncoffee.com"
   };
-  
-  const renderEditableField = (fieldName, value, placeholder, type = "text") => {
-    return editMode ? (
-      <input
-        type={type}
-        className="editable-field w-full p-1 border-b border-dashed"
-        value={value || ""}
-        onChange={(e) => handleChange(fieldName, e.target.value)}
-        placeholder={placeholder}
-      />
-    ) : (
-      <div className="py-1">{value || placeholder}</div>
-    );
+
+  const sampleCoffeeData = {
+    batchNumber: "BATCH-2024-0568",
+    variety: "Arabica - Bourbon",
+    grade: "AA",
+    origin: "Mount Elgon, Uganda",
+    harvestDate: "March 2024",
+    processingMethod: "Fully Washed",
+    flavorProfile: "Bright acidity with notes of citrus, caramel, and blackberry",
+    certifications: ["Organic", "Rainforest Alliance", "Fair Trade"],
+    screenSize: "16+",
+    moisture: "10.5%",
+    density: "0.68 g/ml"
   };
-  
-  const renderEditableSelect = (fieldName, value, options, placeholder) => {
-    return editMode ? (
-      <select
-        className="editable-field w-full p-1 border-b border-dashed"
-        value={value || ""}
-        onChange={(e) => handleChange(fieldName, e.target.value)}
-      >
-        <option value="">{placeholder}</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-    ) : (
-      <div className="py-1">{value || placeholder}</div>
-    );
-  };
-  
-  // Default data
-  const currentDate = format(new Date(), 'yyyy-MM-dd');
-  const expiryDate = format(new Date(new Date().setFullYear(new Date().getFullYear() + 1)), 'yyyy-MM-dd');
-  
-  // Template data with defaults
-  const {
-    documentNumber = `COF-CERT-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-    issueDate = currentDate,
-    expiryDate: expiry = expiryDate,
-    coffeeType = "",
-    originCountry = "Uganda",
-    processingMethod = "",
-    grade = "",
-    certificationStandards = "",
-    batchNumber = `BATCH-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-    exportDestination = "",
-    exporterName = "KAJON Coffee Limited",
-    exporterAddress = "Plot 123, Kampala Industrial Area, Uganda",
-    authorizedBy = "",
-    notes = "",
-  } = data;
 
   return (
-    <div className="bg-white p-6 max-w-4xl mx-auto">
-      {/* Edit mode indicator */}
-      {editMode && (
-        <div className="edit-mode-indicator">
-          EDIT MODE - Fields with dashed borders can be edited
+    <div className="coffee-certificate">
+      {/* Header with logo and certificate title */}
+      <div className="flex justify-between items-center mb-6 pb-4 border-b">
+        <div className="flex items-center">
+          {/* You can add a company logo here */}
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+            LOGO
+          </div>
+          <div className="ml-4">
+            <h1 className="text-2xl font-bold text-blue-800">
+              {isEditing ? (
+                <input 
+                  type="text" 
+                  className="editable-field border px-2 py-1 w-full" 
+                  defaultValue={documentData.title || "Coffee Certificate of Origin"}
+                />
+              ) : (
+                documentData.title || "Coffee Certificate of Origin"
+              )}
+            </h1>
+            <p className="text-sm text-gray-600">{companyInfo.name}</p>
+          </div>
         </div>
-      )}
-      
-      {/* Header with logo and title */}
-      <div className="flex justify-between items-center mb-6 border-b pb-4">
-        <div className="flex items-center gap-3">
-          <img 
-            src="/combined-logo.png" 
-            alt="KAJON Coffee" 
-            className="h-16 w-auto" 
+        <div className="text-right text-sm">
+          <p><strong>Certificate No:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="COO-2024-0123" /> : "COO-2024-0123"}</p>
+          <p><strong>Issue Date:</strong> {isEditing ? <input type="date" className="editable-field border px-2 py-1" defaultValue="2024-03-26" /> : "26-Mar-2024"}</p>
+          <p><strong>Valid Until:</strong> {isEditing ? <input type="date" className="editable-field border px-2 py-1" defaultValue="2025-03-26" /> : "26-Mar-2025"}</p>
+        </div>
+      </div>
+
+      {/* Company Information */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2 text-blue-700">Company Information</h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p><strong>Company:</strong> {companyInfo.name}</p>
+            <p><strong>Address:</strong> {companyInfo.address}</p>
+            <p><strong>Contact:</strong> {companyInfo.phone}</p>
+          </div>
+          <div>
+            <p><strong>Email:</strong> {companyInfo.email}</p>
+            <p><strong>Website:</strong> {companyInfo.website}</p>
+            <p><strong>Tax ID:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="TAX-12345-UG" /> : "TAX-12345-UG"}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Coffee Details */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2 text-blue-700">Product Details</h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p><strong>Product:</strong> {isEditing ? (
+              <select className="editable-field border px-2 py-1">
+                <option>Coffee Beans</option>
+                <option>Green Coffee</option>
+                <option>Roasted Coffee</option>
+              </select>
+            ) : "Coffee Beans"}</p>
+            <p><strong>Variety:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleCoffeeData.variety} /> : sampleCoffeeData.variety}</p>
+            <p><strong>Grade:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleCoffeeData.grade} /> : sampleCoffeeData.grade}</p>
+            <p><strong>Origin:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleCoffeeData.origin} /> : sampleCoffeeData.origin}</p>
+            <p><strong>Harvest Date:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleCoffeeData.harvestDate} /> : sampleCoffeeData.harvestDate}</p>
+          </div>
+          <div>
+            <p><strong>Batch Number:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleCoffeeData.batchNumber} /> : sampleCoffeeData.batchNumber}</p>
+            <p><strong>Processing:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleCoffeeData.processingMethod} /> : sampleCoffeeData.processingMethod}</p>
+            <p><strong>Screen Size:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleCoffeeData.screenSize} /> : sampleCoffeeData.screenSize}</p>
+            <p><strong>Moisture:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleCoffeeData.moisture} /> : sampleCoffeeData.moisture}</p>
+            <p><strong>Density:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue={sampleCoffeeData.density} /> : sampleCoffeeData.density}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Certifications */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2 text-blue-700">Certifications</h2>
+        {isEditing ? (
+          <div className="flex flex-wrap gap-2">
+            {["Organic", "Rainforest Alliance", "Fair Trade", "UTZ", "4C", "Direct Trade"].map(cert => (
+              <label key={cert} className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  defaultChecked={sampleCoffeeData.certifications.includes(cert)} 
+                  className="rounded border-gray-300"
+                />
+                <span>{cert}</span>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <ul className="list-disc pl-5">
+            {sampleCoffeeData.certifications.map(cert => (
+              <li key={cert}>{cert}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Flavor Profile */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2 text-blue-700">Flavor Profile</h2>
+        {isEditing ? (
+          <textarea
+            className="editable-field border px-2 py-1 w-full h-20"
+            defaultValue={sampleCoffeeData.flavorProfile}
           />
-          <div>
-            <h1 className="text-2xl font-bold text-blue-800">CERTIFICATE OF COMPLIANCE</h1>
-            <p className="text-gray-600">Coffee Export Quality & Standards</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="font-semibold flex items-center gap-1">
-            <FileText size={16} />
-            Document #: {renderEditableField("documentNumber", documentNumber, "Auto-generated")}
-          </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Issue Date:</span> {renderEditableField("issueDate", issueDate, "Select date", "date")}
-          </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Expiry Date:</span> {renderEditableField("expiryDate", expiry, "Select date", "date")}
-          </p>
-        </div>
+        ) : (
+          <p>{sampleCoffeeData.flavorProfile}</p>
+        )}
       </div>
-      
-      {/* Coffee Details Section */}
+
+      {/* Shipment Information */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-blue-50 p-2 border-l-4 border-blue-500 mb-3 flex items-center">
-          <Coffee size={18} className="mr-2" /> Coffee Details
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Coffee Type:</p>
-            {renderEditableSelect("coffeeType", coffeeType, [
-              "Arabica - Typica",
-              "Arabica - Bourbon",
-              "Arabica - Geisha",
-              "Arabica - SL28",
-              "Robusta - Fine",
-              "Robusta - Premium",
-              "Robusta - Standard",
-              "Robusta - Ungraded"
-            ], "Select coffee type")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Country of Origin:</p>
-            {renderEditableField("originCountry", originCountry, "Enter origin country")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Processing Method:</p>
-            {renderEditableSelect("processingMethod", processingMethod, [
-              "Washed", 
-              "Natural", 
-              "Honey", 
-              "Pulped Natural", 
-              "Wet Hulled", 
-              "Other"
-            ], "Select processing method")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Grade:</p>
-            {renderEditableSelect("grade", grade, [
-              "AA", 
-              "A", 
-              "B", 
-              "C", 
-              "PB", 
-              "E", 
-              "F", 
-              "AB", 
-              "1", 
-              "2", 
-              "3", 
-              "Standard", 
-              "Premium"
-            ], "Select grade")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Batch Number:</p>
-            {renderEditableField("batchNumber", batchNumber, "Enter batch number")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Export Destination:</p>
-            {renderEditableField("exportDestination", exportDestination, "Enter destination country")}
-          </div>
-        </div>
+        <h2 className="text-lg font-semibold mb-2 text-blue-700">Shipment Information</h2>
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-blue-50">
+              <th className="border p-2 text-left">Description</th>
+              <th className="border p-2 text-left">Quantity</th>
+              <th className="border p-2 text-left">Net Weight</th>
+              <th className="border p-2 text-left">Packaging</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="border p-2">
+                {isEditing ? <input type="text" className="editable-field border px-2 py-1 w-full" defaultValue="Green Coffee Beans" /> : "Green Coffee Beans"}
+              </td>
+              <td className="border p-2">
+                {isEditing ? <input type="text" className="editable-field border px-2 py-1 w-full" defaultValue="320 Bags" /> : "320 Bags"}
+              </td>
+              <td className="border p-2">
+                {isEditing ? <input type="text" className="editable-field border px-2 py-1 w-full" defaultValue="19,200 kg" /> : "19,200 kg"}
+              </td>
+              <td className="border p-2">
+                {isEditing ? <input type="text" className="editable-field border px-2 py-1 w-full" defaultValue="60kg GrainPro Bags" /> : "60kg GrainPro Bags"}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      
-      {/* Certification Standards */}
+
+      {/* Declaration */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-blue-50 p-2 border-l-4 border-blue-500 mb-3 flex items-center">
-          <Award size={18} className="mr-2" /> Certification Standards
-        </h2>
+        <h2 className="text-lg font-semibold mb-2 text-blue-700">Declaration</h2>
+        {isEditing ? (
+          <textarea
+            className="editable-field border px-2 py-1 w-full h-20"
+            defaultValue="We hereby certify that the coffee described above is of Uganda origin, produced and processed under our supervision according to international standards and complies with all export requirements of the Republic of Uganda."
+          />
+        ) : (
+          <p>We hereby certify that the coffee described above is of Uganda origin, produced and processed under our supervision according to international standards and complies with all export requirements of the Republic of Uganda.</p>
+        )}
+      </div>
+
+      {/* Signatures */}
+      <div className="grid grid-cols-2 gap-8 mb-6">
         <div>
-          <p className="text-sm text-gray-600 font-medium mb-2">Standards & Compliance:</p>
-          {renderEditableSelect("certificationStandards", certificationStandards, [
-            "Organic - USDA",
-            "Organic - EU",
-            "Rainforest Alliance",
-            "Fair Trade",
-            "UTZ Certified",
-            "4C",
-            "Bird Friendly",
-            "C.A.F.E. Practices",
-            "Multiple Standards"
-          ], "Select applicable standards")}
+          <h2 className="text-lg font-semibold mb-2 text-blue-700">Authorized Signatory</h2>
+          <div className="h-16 mb-2 border-b border-black"></div>
+          <p><strong>Name:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="Sarah Kimani" /> : "Sarah Kimani"}</p>
+          <p><strong>Position:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="Export Manager" /> : "Export Manager"}</p>
         </div>
-        
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 border border-gray-400 flex items-center justify-center">
-              {(coffeeType && processingMethod && grade) ? <Check size={12} className="text-green-600" /> : null}
-            </div>
-            <span className="text-sm">Quality Standards</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 border border-gray-400 flex items-center justify-center">
-              {(batchNumber) ? <Check size={12} className="text-green-600" /> : null}
-            </div>
-            <span className="text-sm">Traceability Requirements</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 border border-gray-400 flex items-center justify-center">
-              {(certificationStandards) ? <Check size={12} className="text-green-600" /> : null}
-            </div>
-            <span className="text-sm">Certification Verified</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 border border-gray-400 flex items-center justify-center">
-              {(exportDestination) ? <Check size={12} className="text-green-600" /> : null}
-            </div>
-            <span className="text-sm">Export Requirements</span>
-          </div>
-        </div>
-      </div>
-      
-      {/* Exporter Information */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-blue-50 p-2 border-l-4 border-blue-500 mb-3 flex items-center">
-          <Package size={18} className="mr-2" /> Exporter Information
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Exporter Name:</p>
-            {renderEditableField("exporterName", exporterName, "Enter exporter name")}
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Exporter Address:</p>
-            {renderEditableField("exporterAddress", exporterAddress, "Enter exporter address")}
-          </div>
-        </div>
-      </div>
-      
-      {/* Additional Notes */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-blue-50 p-2 border-l-4 border-blue-500 mb-3 flex items-center">
-          <Clipboard size={18} className="mr-2" /> Additional Information
-        </h2>
         <div>
-          <p className="text-sm text-gray-600 font-medium">Notes:</p>
-          {editMode ? (
-            <textarea
-              className="editable-field w-full p-1 border border-dashed"
-              value={notes || ""}
-              onChange={(e) => handleChange("notes", e.target.value)}
-              placeholder="Enter any additional notes or comments"
-              rows={3}
-            />
-          ) : (
-            <div className="py-1">{notes || "No additional notes."}</div>
-          )}
+          <h2 className="text-lg font-semibold mb-2 text-blue-700">Quality Control</h2>
+          <div className="h-16 mb-2 border-b border-black"></div>
+          <p><strong>Name:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="Robert Mukasa" /> : "Robert Mukasa"}</p>
+          <p><strong>Position:</strong> {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="Quality Assurance Manager" /> : "Quality Assurance Manager"}</p>
         </div>
       </div>
-      
-      {/* Signatures Section */}
-      <div className="mt-8 border-t pt-4">
-        <div className="grid grid-cols-2 gap-8">
-          <div>
-            <p className="text-sm text-gray-600 font-medium">Authorized by:</p>
-            {renderEditableField("authorizedBy", authorizedBy, "Enter name of authorized person")}
-            <div className="mt-8 border-t border-gray-400 pt-1">
-              <p className="text-sm text-gray-600">Authorized Signature</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="mb-4">
-              <img 
-                src="/combined-logo.png" 
-                alt="Company Seal" 
-                className="h-16 w-auto inline-block opacity-30" 
-              />
-            </div>
-            <div className="mt-8 border-t border-gray-400 pt-1">
-              <p className="text-sm text-gray-600">Official Stamp</p>
-            </div>
-          </div>
+
+      {/* Official Seal */}
+      <div className="text-center mb-4">
+        <div className="inline-block border-2 border-blue-700 rounded-full p-6 mb-2">
+          <p className="font-bold text-blue-700">OFFICIAL SEAL</p>
         </div>
       </div>
-      
+
       {/* Footer */}
-      <div className="mt-8 pt-4 border-t text-center text-sm text-gray-500">
-        <p>This certificate is valid only when signed by an authorized representative of KAJON Coffee Limited.</p>
-        <p>Document generated on {format(new Date(), 'MMMM dd, yyyy')} | Valid until {format(new Date(expiry || expiryDate), 'MMMM dd, yyyy')}</p>
+      <div className="text-center text-sm text-gray-500 mt-8 pt-4 border-t">
+        <p>This certificate is electronically generated and valid without signature.</p>
+        <p>Verify authenticity at {companyInfo.website}/verify</p>
+        <p>Certificate ID: {isEditing ? <input type="text" className="editable-field border px-2 py-1" defaultValue="COO-2024-0123-VERIFY" /> : "COO-2024-0123-VERIFY"}</p>
       </div>
     </div>
   );
