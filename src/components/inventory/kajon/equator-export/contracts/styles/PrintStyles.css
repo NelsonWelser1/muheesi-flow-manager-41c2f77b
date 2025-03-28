@@ -114,4 +114,93 @@ body.generating-pdf .editable-field {
   .page-break {
     page-break-before: always;
   }
+  
+  /* Hide non-essential UI elements when printing */
+  .print:hidden,
+  button,
+  .print-hidden,
+  nav,
+  .tabs,
+  input[type="button"],
+  .actions-container {
+    display: none !important;
+  }
+  
+  /* Ensure white background for printed documents */
+  body, .print-container {
+    background-color: white !important;
+  }
+  
+  /* Remove borders that shouldn't appear in print */
+  .print-container .card,
+  .print-container .border {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Format headers for printing */
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+  }
+  
+  /* Format tables for printing */
+  table {
+    page-break-inside: auto;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  
+  /* Certificate specific styling */
+  .print-container {
+    font-size: 12pt;
+    line-height: 1.3;
+  }
+  
+  /* Optimize images for printing */
+  img {
+    max-width: 100% !important;
+  }
+}
+
+/* Optimize for PDF export */
+body.generating-pdf {
+  background-color: white !important;
+}
+
+body.generating-pdf .print-container {
+  padding: 20mm;
+  margin: 0 auto;
+  max-width: 210mm;
+  background-color: white;
+}
+
+body.generating-pdf button,
+body.generating-pdf .tabs,
+body.generating-pdf .print-hidden {
+  display: none !important;
+}
+
+/* Certificate template specific styling */
+.certificate-header {
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+.certificate-footer {
+  border-top: 1px solid #e2e8f0;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.certificate-signature {
+  border-top: 1px solid #000;
+  margin-top: 2rem;
+  padding-top: 0.5rem;
 }
