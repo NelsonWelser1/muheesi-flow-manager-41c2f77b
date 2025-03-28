@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { RefreshCw, Download, Leaf, FileText, BarChart2, PlusCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useSilageData } from '../../../hooks/useSilageData';
+import { useSilageData } from "@/hooks/useSilageData";
 import { format } from 'date-fns';
 
 const SilageManager = ({ farmId, isDataEntry = false }) => {

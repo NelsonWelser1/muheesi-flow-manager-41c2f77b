@@ -2,12 +2,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useSilageData = (farmId) => {
   const [silageData, setSilageData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const fetchSilageData = async () => {
     setIsLoading(true);
@@ -75,9 +77,25 @@ export const useSilageData = (farmId) => {
 
       if (error) throw error;
 
+      // Invalidate Kyalima's cache to ensure it sees the new data
+      if (farmId === 'bukomero') {
+        queryClient.invalidateQueries('silage-kyalima');
+      }
+      
+      toast({
+        title: "Silage Record Added",
+        description: "New silage record has been successfully added.",
+        variant: "success"
+      });
+
       return data;
     } catch (err) {
       console.error('Error adding silage record:', err);
+      toast({
+        title: "Error Adding Record",
+        description: err.message,
+        variant: "destructive"
+      });
       throw err;
     }
   };
@@ -106,9 +124,58 @@ export const useSilageData = (farmId) => {
 
       if (error) throw error;
 
+      // Invalidate Kyalima's cache to ensure it sees the updated data
+      if (farmId === 'bukomero') {
+        queryClient.invalidateQueries('silage-kyalima');
+      }
+      
+      toast({
+        title: "Silage Record Updated",
+        description: "The silage record has been successfully updated.",
+        variant: "success"
+      });
+
       return data;
     } catch (err) {
       console.error('Error updating silage record:', err);
+      toast({
+        title: "Error Updating Record",
+        description: err.message,
+        variant: "destructive"
+      });
+      throw err;
+    }
+  };
+
+  const deleteSilageRecord = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('silage_inventory')
+        .delete()
+        .eq('id', id)
+        .eq('farm_id', farmId);
+
+      if (error) throw error;
+      
+      // Invalidate Kyalima's cache to ensure it sees the deletion
+      if (farmId === 'bukomero') {
+        queryClient.invalidateQueries('silage-kyalima');
+      }
+      
+      toast({
+        title: "Silage Record Deleted",
+        description: "The silage record has been successfully removed.",
+        variant: "success"
+      });
+      
+      return true;
+    } catch (err) {
+      console.error('Error deleting silage record:', err);
+      toast({
+        title: "Error Deleting Record",
+        description: err.message,
+        variant: "destructive"
+      });
       throw err;
     }
   };
@@ -117,6 +184,23 @@ export const useSilageData = (farmId) => {
     if (farmId) {
       fetchSilageData();
     }
+    
+    // Set up real-time subscription for silage data changes
+    const subscription = supabase
+      .channel('silage-changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'silage_inventory',
+        filter: `farm_id=eq.${farmId}`
+      }, () => {
+        fetchSilageData();
+      })
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, [farmId]);
 
   return {
@@ -125,6 +209,7 @@ export const useSilageData = (farmId) => {
     error,
     fetchSilageData,
     addSilageRecord,
-    updateSilageRecord
+    updateSilageRecord,
+    deleteSilageRecord
   };
 };

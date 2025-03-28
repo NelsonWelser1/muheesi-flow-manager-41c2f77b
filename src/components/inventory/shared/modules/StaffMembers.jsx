@@ -4,21 +4,35 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, Users, RefreshCw, Download, UserCheck, BarChart2, MessageSquare, Calendar } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  RefreshCw, Download, User, Users, FileText, 
+  BarChart2, PlusCircle, Search, Filter, Mail, Phone, 
+  Calendar, DollarSign, MapPin, Clipboard, Trash2, Pencil 
+} from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useStaffData } from '../../../hooks/useStaffData';
+import { useStaffData } from '@/hooks/useStaffData';
 import { format } from 'date-fns';
 
 const StaffMembers = ({ farmId, isDataEntry = false }) => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('staff-list');
-  const { staffData, isLoading, error, addStaffMember, updateStaffMember, fetchStaffData } = useStaffData(farmId);
+  const [activeTab, setActiveTab] = useState('directory');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterRole, setFilterRole] = useState('all');
+  const { 
+    staffData, 
+    isLoading, 
+    error, 
+    addStaffMember, 
+    updateStaffMember,
+    deleteStaffMember,
+    fetchStaffData 
+  } = useStaffData(farmId);
   
   // New staff form state
   const [newStaff, setNewStaff] = useState({
@@ -27,13 +41,17 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
     role: 'farm_worker',
     contactNumber: '',
     email: '',
-    startDate: '',
+    startDate: format(new Date(), 'yyyy-MM-dd'),
     salary: '',
     status: 'active',
     address: '',
-    notes: ''
+    notes: '',
+    avatar: ''
   });
 
+  // For editing an existing staff member
+  const [editingStaff, setEditingStaff] = useState(null);
+  
   useEffect(() => {
     fetchStaffData();
   }, [farmId]);
@@ -41,19 +59,51 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewStaff(prev => ({ ...prev, [name]: value }));
+    if (editingStaff) {
+      setEditingStaff(prev => ({ ...prev, [name]: value }));
+    } else {
+      setNewStaff(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   // Handle select changes
   const handleSelectChange = (name, value) => {
-    setNewStaff(prev => ({ ...prev, [name]: value }));
+    if (editingStaff) {
+      setEditingStaff(prev => ({ ...prev, [name]: value }));
+    } else {
+      setNewStaff(prev => ({ ...prev, [name]: value }));
+    }
   };
 
-  // Handle form submission
+  // Start editing a staff member
+  const handleEditStaff = (staff) => {
+    setEditingStaff(staff);
+    setActiveTab('edit');
+  };
+
+  // Cancel editing
+  const handleCancelEdit = () => {
+    setEditingStaff(null);
+    setActiveTab('directory');
+  };
+
+  // Handle staff deletion
+  const handleDeleteStaff = async (id) => {
+    if (window.confirm('Are you sure you want to delete this staff member?')) {
+      try {
+        await deleteStaffMember(id);
+        fetchStaffData();
+      } catch (error) {
+        console.error('Error deleting staff:', error);
+      }
+    }
+  };
+
+  // Handle form submission for new staff
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!newStaff.firstName || !newStaff.lastName || !newStaff.role || !newStaff.contactNumber) {
+    if (!newStaff.firstName || !newStaff.lastName || !newStaff.contactNumber) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -65,14 +115,7 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
     try {
       await addStaffMember({
         ...newStaff,
-        farm_id: farmId,
-        salary: parseFloat(newStaff.salary) || 0,
-        created_at: new Date().toISOString()
-      });
-      
-      toast({
-        title: "Success",
-        description: "Staff member added successfully.",
+        farm_id: farmId
       });
       
       // Reset form
@@ -82,24 +125,46 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
         role: 'farm_worker',
         contactNumber: '',
         email: '',
-        startDate: '',
+        startDate: format(new Date(), 'yyyy-MM-dd'),
         salary: '',
         status: 'active',
         address: '',
-        notes: ''
+        notes: '',
+        avatar: ''
       });
       
-      // Refresh data
+      // Refresh data and switch to directory tab
       fetchStaffData();
-      
-      // Switch to staff list tab
-      setActiveTab('staff-list');
+      setActiveTab('directory');
     } catch (error) {
+      console.error('Error adding staff:', error);
+    }
+  };
+
+  // Handle form submission for editing staff
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!editingStaff.firstName || !editingStaff.lastName || !editingStaff.contactNumber) {
       toast({
-        title: "Error",
-        description: "Failed to add staff member: " + error.message,
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
         variant: "destructive"
       });
+      return;
+    }
+
+    try {
+      await updateStaffMember(editingStaff.id, editingStaff);
+      
+      // Reset editing state
+      setEditingStaff(null);
+      
+      // Refresh data and switch to directory tab
+      fetchStaffData();
+      setActiveTab('directory');
+    } catch (error) {
+      console.error('Error updating staff:', error);
     }
   };
 
@@ -118,25 +183,32 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
     });
   };
 
-  // Get role label for display
-  const getRoleLabel = (role) => {
-    const roles = {
-      'farm_manager': 'Farm Manager',
-      'herd_manager': 'Herd Manager',
-      'veterinarian': 'Veterinarian',
-      'milk_technician': 'Milk Technician',
-      'farm_worker': 'Farm Worker',
-      'tractor_operator': 'Tractor Operator',
-      'security': 'Security',
-      'admin': 'Admin',
-      'other': 'Other'
-    };
-    return roles[role] || role;
+  // Filter staff data based on search query and role filter
+  const filteredStaff = staffData.filter(staff => {
+    const fullName = `${staff.firstName} ${staff.lastName}`.toLowerCase();
+    const matchesSearch = fullName.includes(searchQuery.toLowerCase()) || 
+                          staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          staff.contactNumber.includes(searchQuery);
+    
+    const matchesRole = filterRole === 'all' || staff.role === filterRole;
+    
+    return matchesSearch && matchesRole;
+  });
+
+  // Function to get initials for avatar fallback
+  const getInitials = (firstName, lastName) => {
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
   };
 
-  // Count staff by role
-  const countByRole = (role) => {
-    return staffData.filter(staff => staff.role === role).length;
+  // Role display mapping
+  const roleDisplayMap = {
+    'farm_manager': 'Farm Manager',
+    'farm_worker': 'Farm Worker',
+    'milking_staff': 'Milking Staff',
+    'livestock_handler': 'Livestock Handler',
+    'vet_technician': 'Veterinary Technician',
+    'supervisor': 'Supervisor',
+    'admin': 'Administrator'
   };
 
   return (
@@ -157,24 +229,57 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="staff-list" className="flex items-center gap-2">
+          <TabsTrigger value="directory" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Staff List
+            Staff Directory
           </TabsTrigger>
-          <TabsTrigger value="add-staff" className="flex items-center gap-2" disabled={!isDataEntry}>
-            <UserPlus className="h-4 w-4" />
+          <TabsTrigger value="add" className="flex items-center gap-2" disabled={!isDataEntry}>
+            <PlusCircle className="h-4 w-4" />
             Add Staff
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <BarChart2 className="h-4 w-4" />
             Analytics
           </TabsTrigger>
+          {editingStaff && (
+            <TabsTrigger value="edit" className="flex items-center gap-2">
+              <Pencil className="h-4 w-4" />
+              Edit Staff
+            </TabsTrigger>
+          )}
         </TabsList>
 
-        <TabsContent value="staff-list">
+        <TabsContent value="directory">
           <Card>
-            <CardHeader>
-              <CardTitle>Staff Members</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle>Staff Directory</CardTitle>
+              <div className="flex space-x-2">
+                <div className="relative">
+                  <Search className="h-4 w-4 absolute left-2.5 top-2.5 text-gray-500" />
+                  <Input
+                    placeholder="Search staff..."
+                    className="pl-8 w-[200px]"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Select value={filterRole} onValueChange={(value) => setFilterRole(value)}>
+                  <SelectTrigger className="w-[160px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <span>{filterRole === 'all' ? 'All Roles' : roleDisplayMap[filterRole]}</span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem value="farm_manager">Farm Manager</SelectItem>
+                    <SelectItem value="farm_worker">Farm Worker</SelectItem>
+                    <SelectItem value="milking_staff">Milking Staff</SelectItem>
+                    <SelectItem value="livestock_handler">Livestock Handler</SelectItem>
+                    <SelectItem value="vet_technician">Veterinary Technician</SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
+                    <SelectItem value="admin">Administrator</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -190,47 +295,70 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
+                        <TableHead>Staff</TableHead>
                         <TableHead>Role</TableHead>
-                        <TableHead className="hidden md:table-cell">Contact</TableHead>
-                        <TableHead className="hidden lg:table-cell">Start Date</TableHead>
-                        <TableHead className="text-right">Status</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Start Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        {isDataEntry && <TableHead className="text-right">Actions</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {staffData.length === 0 ? (
+                      {filteredStaff.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-4">
+                          <TableCell colSpan={isDataEntry ? 6 : 5} className="text-center py-4">
                             No staff members found.
                           </TableCell>
                         </TableRow>
                       ) : (
-                        staffData.map((staff) => (
+                        filteredStaff.map((staff) => (
                           <TableRow key={staff.id}>
                             <TableCell className="flex items-center gap-3">
-                              <Avatar>
+                              <Avatar className="h-8 w-8 border border-gray-200">
                                 <AvatarImage src={staff.avatar} alt={`${staff.firstName} ${staff.lastName}`} />
-                                <AvatarFallback>
-                                  {staff.firstName?.charAt(0) || ''}{staff.lastName?.charAt(0) || ''}
+                                <AvatarFallback className="bg-primary text-primary-foreground">
+                                  {getInitials(staff.firstName, staff.lastName)}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <div className="font-medium">{staff.firstName} {staff.lastName}</div>
-                                <div className="text-xs text-muted-foreground hidden md:block lg:hidden">
-                                  {staff.contactNumber}
-                                </div>
+                                <div className="text-xs text-muted-foreground">{staff.email}</div>
                               </div>
                             </TableCell>
-                            <TableCell>{getRoleLabel(staff.role)}</TableCell>
-                            <TableCell className="hidden md:table-cell">{staff.contactNumber}</TableCell>
-                            <TableCell className="hidden lg:table-cell">
+                            <TableCell>
+                              {roleDisplayMap[staff.role] || staff.role}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <Phone className="h-3 w-3 text-muted-foreground" />
+                                <span>{staff.contactNumber}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
                               {staff.startDate ? format(new Date(staff.startDate), 'PP') : 'N/A'}
                             </TableCell>
-                            <TableCell className="text-right">
-                              <Badge variant={staff.status === 'active' ? 'default' : 'secondary'}>
-                                {staff.status?.charAt(0).toUpperCase() + staff.status?.slice(1)}
+                            <TableCell>
+                              <Badge variant={
+                                staff.status === 'active' ? 'default' :
+                                staff.status === 'on_leave' ? 'secondary' :
+                                'outline'
+                              }>
+                                {staff.status === 'active' ? 'Active' : 
+                                 staff.status === 'on_leave' ? 'On Leave' : 
+                                 staff.status === 'terminated' ? 'Terminated' : 
+                                 staff.status}
                               </Badge>
                             </TableCell>
+                            {isDataEntry && (
+                              <TableCell className="text-right">
+                                <Button variant="ghost" size="icon" onClick={() => handleEditStaff(staff)}>
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleDeleteStaff(staff.id)}>
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </TableCell>
+                            )}
                           </TableRow>
                         ))
                       )}
@@ -242,7 +370,7 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="add-staff">
+        <TabsContent value="add">
           <Card>
             <CardHeader>
               <CardTitle>Add New Staff Member</CardTitle>
@@ -251,7 +379,7 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name *</Label>
+                    <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
                     <Input
                       id="firstName"
                       name="firstName"
@@ -263,7 +391,7 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Label htmlFor="lastName">Last Name <span className="text-red-500">*</span></Label>
                     <Input
                       id="lastName"
                       name="lastName"
@@ -275,48 +403,28 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="role">Role *</Label>
+                    <Label htmlFor="role">Role</Label>
                     <Select
                       value={newStaff.role}
                       onValueChange={(value) => handleSelectChange('role', value)}
-                      required
                     >
                       <SelectTrigger id="role">
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="farm_manager">Farm Manager</SelectItem>
-                        <SelectItem value="herd_manager">Herd Manager</SelectItem>
-                        <SelectItem value="veterinarian">Veterinarian</SelectItem>
-                        <SelectItem value="milk_technician">Milk Technician</SelectItem>
                         <SelectItem value="farm_worker">Farm Worker</SelectItem>
-                        <SelectItem value="tractor_operator">Tractor Operator</SelectItem>
-                        <SelectItem value="security">Security</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="milking_staff">Milking Staff</SelectItem>
+                        <SelectItem value="livestock_handler">Livestock Handler</SelectItem>
+                        <SelectItem value="vet_technician">Veterinary Technician</SelectItem>
+                        <SelectItem value="supervisor">Supervisor</SelectItem>
+                        <SelectItem value="admin">Administrator</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select
-                      value={newStaff.status}
-                      onValueChange={(value) => handleSelectChange('status', value)}
-                    >
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="on_leave">On Leave</SelectItem>
-                        <SelectItem value="terminated">Terminated</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="contactNumber">Contact Number *</Label>
+                    <Label htmlFor="contactNumber">Contact Number <span className="text-red-500">*</span></Label>
                     <Input
                       id="contactNumber"
                       name="contactNumber"
@@ -351,7 +459,7 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="salary">Monthly Salary (UGX)</Label>
+                    <Label htmlFor="salary">Salary (UGX)</Label>
                     <Input
                       id="salary"
                       name="salary"
@@ -360,6 +468,23 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                       onChange={handleInputChange}
                       placeholder="Enter salary amount"
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select
+                      value={newStaff.status}
+                      onValueChange={(value) => handleSelectChange('status', value)}
+                    >
+                      <SelectTrigger id="status">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="on_leave">On Leave</SelectItem>
+                        <SelectItem value="terminated">Terminated</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
@@ -386,8 +511,8 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                   </div>
                 </div>
 
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700">
+                <div className="flex justify-end mt-6">
+                  <Button type="submit" disabled={isLoading} className="bg-green-600 hover:bg-green-700">
                     {isLoading ? (
                       <>
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -403,6 +528,169 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="edit">
+          {editingStaff && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Edit Staff Member</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdateSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        value={editingStaff.firstName}
+                        onChange={handleInputChange}
+                        placeholder="Enter first name"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name <span className="text-red-500">*</span></Label>
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        value={editingStaff.lastName}
+                        onChange={handleInputChange}
+                        placeholder="Enter last name"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Role</Label>
+                      <Select
+                        value={editingStaff.role}
+                        onValueChange={(value) => handleSelectChange('role', value)}
+                      >
+                        <SelectTrigger id="role">
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="farm_manager">Farm Manager</SelectItem>
+                          <SelectItem value="farm_worker">Farm Worker</SelectItem>
+                          <SelectItem value="milking_staff">Milking Staff</SelectItem>
+                          <SelectItem value="livestock_handler">Livestock Handler</SelectItem>
+                          <SelectItem value="vet_technician">Veterinary Technician</SelectItem>
+                          <SelectItem value="supervisor">Supervisor</SelectItem>
+                          <SelectItem value="admin">Administrator</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="contactNumber">Contact Number <span className="text-red-500">*</span></Label>
+                      <Input
+                        id="contactNumber"
+                        name="contactNumber"
+                        value={editingStaff.contactNumber}
+                        onChange={handleInputChange}
+                        placeholder="Enter contact number"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={editingStaff.email}
+                        onChange={handleInputChange}
+                        placeholder="Enter email address"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="startDate">Start Date</Label>
+                      <Input
+                        id="startDate"
+                        name="startDate"
+                        type="date"
+                        value={editingStaff.startDate}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="salary">Salary (UGX)</Label>
+                      <Input
+                        id="salary"
+                        name="salary"
+                        type="number"
+                        value={editingStaff.salary}
+                        onChange={handleInputChange}
+                        placeholder="Enter salary amount"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="status">Status</Label>
+                      <Select
+                        value={editingStaff.status}
+                        onValueChange={(value) => handleSelectChange('status', value)}
+                      >
+                        <SelectTrigger id="status">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="on_leave">On Leave</SelectItem>
+                          <SelectItem value="terminated">Terminated</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="address">Address</Label>
+                      <Input
+                        id="address"
+                        name="address"
+                        value={editingStaff.address}
+                        onChange={handleInputChange}
+                        placeholder="Enter address"
+                      />
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="notes">Notes</Label>
+                      <Textarea
+                        id="notes"
+                        name="notes"
+                        value={editingStaff.notes}
+                        onChange={handleInputChange}
+                        placeholder="Enter any additional notes"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 mt-6">
+                    <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700">
+                      {isLoading ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        'Update Staff Member'
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
         <TabsContent value="analytics">
           <Card>
             <CardHeader>
@@ -416,32 +704,25 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <span>Farm Managers:</span>
-                        <span className="font-medium">{countByRole('farm_manager')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Herd Managers:</span>
-                        <span className="font-medium">{countByRole('herd_manager')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Veterinarians:</span>
-                        <span className="font-medium">{countByRole('veterinarian')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Milk Technicians:</span>
-                        <span className="font-medium">{countByRole('milk_technician')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Farm Workers:</span>
-                        <span className="font-medium">{countByRole('farm_worker')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Other Staff:</span>
-                        <span className="font-medium">
-                          {countByRole('other') + countByRole('tractor_operator') + countByRole('security') + countByRole('admin')}
-                        </span>
-                      </div>
+                      {['farm_manager', 'farm_worker', 'milking_staff', 'livestock_handler', 'vet_technician', 'supervisor', 'admin'].map(role => {
+                        const count = staffData.filter(s => s.role === role).length;
+                        const percentage = staffData.length > 0 ? Math.round((count / staffData.length) * 100) : 0;
+                        
+                        return (
+                          <div key={role}>
+                            <div className="flex justify-between mb-1">
+                              <span>{roleDisplayMap[role]}</span>
+                              <span className="font-medium">{count}</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                              <div 
+                                className="bg-primary h-2.5 rounded-full" 
+                                style={{ width: `${percentage}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
@@ -452,32 +733,78 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span>Total Staff:</span>
-                          <span className="font-medium">{staffData.length}</span>
+                      {['active', 'on_leave', 'terminated'].map(status => {
+                        const count = staffData.filter(s => s.status === status).length;
+                        const percentage = staffData.length > 0 ? Math.round((count / staffData.length) * 100) : 0;
+                        
+                        return (
+                          <div key={status}>
+                            <div className="flex justify-between mb-1">
+                              <span>{status === 'active' ? 'Active' : status === 'on_leave' ? 'On Leave' : 'Terminated'}</span>
+                              <span className="font-medium">{count}</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                              <div 
+                                className={`h-2.5 rounded-full ${
+                                  status === 'active' ? 'bg-green-600' : 
+                                  status === 'on_leave' ? 'bg-yellow-500' : 
+                                  'bg-red-500'
+                                }`}
+                                style={{ width: `${percentage}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="md:col-span-2">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Staffing Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <Users className="h-6 w-6 mx-auto text-blue-500 mb-2" />
+                        <div className="text-2xl font-bold">{staffData.length}</div>
+                        <div className="text-sm text-gray-500">Total Staff</div>
+                      </div>
+                      
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <Calendar className="h-6 w-6 mx-auto text-green-500 mb-2" />
+                        <div className="text-2xl font-bold">
+                          {staffData.filter(s => {
+                            if (!s.startDate) return false;
+                            const startDate = new Date(s.startDate);
+                            const sixMonthsAgo = new Date();
+                            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+                            return startDate >= sixMonthsAgo;
+                          }).length}
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: '100%' }}></div>
+                        <div className="text-sm text-gray-500">New (< 6 months)</div>
+                      </div>
+                      
+                      <div className="text-center p-4 bg-purple-50 rounded-lg">
+                        <DollarSign className="h-6 w-6 mx-auto text-purple-500 mb-2" />
+                        <div className="text-2xl font-bold">
+                          {new Intl.NumberFormat('en-US', {
+                            style: 'decimal',
+                            maximumFractionDigits: 0
+                          }).format(
+                            staffData.reduce((sum, staff) => sum + (parseInt(staff.salary) || 0), 0)
+                          )}
                         </div>
+                        <div className="text-sm text-gray-500">Monthly Payroll (UGX)</div>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Active:</span>
-                        <span className="font-medium">
-                          {staffData.filter(staff => staff.status === 'active').length}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>On Leave:</span>
-                        <span className="font-medium">
-                          {staffData.filter(staff => staff.status === 'on_leave').length}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Terminated:</span>
-                        <span className="font-medium">
-                          {staffData.filter(staff => staff.status === 'terminated').length}
-                        </span>
+                      
+                      <div className="text-center p-4 bg-orange-50 rounded-lg">
+                        <User className="h-6 w-6 mx-auto text-orange-500 mb-2" />
+                        <div className="text-2xl font-bold">
+                          {staffData.filter(s => s.role === 'farm_manager').length}
+                        </div>
+                        <div className="text-sm text-gray-500">Managers</div>
                       </div>
                     </div>
                   </CardContent>
