@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -13,16 +12,16 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table";
-import { 
-  Search, 
-  RefreshCw, 
-  FileDown, 
-  Printer, 
-  Plus, 
-  Filter, 
-  Cow,
+import {
+  Search,
+  RefreshCw,
+  FileDown,
+  Printer,
+  Plus,
+  Filter,
+  Beef,
   Droplet,
   DollarSign,
   Download,
@@ -30,7 +29,7 @@ import {
   Trash2,
   BookOpen
 } from "lucide-react";
-import { format } from 'date-fns';
+import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { KyalimaPDFExport } from "./kyalima/utils/KyalimaPDFExport";
 import CattleManagement from "./kyalima/CattleManagement";
@@ -42,7 +41,6 @@ const KyalimaFarmersLimited = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   
-  // Basic metrics for the overview dashboard
   const companyMetrics = {
     totalCattle: 135,
     milkProduction: "480 liters/day",
@@ -52,7 +50,6 @@ const KyalimaFarmersLimited = () => {
     expenses: "UGX 14,200,000"
   };
   
-  // Function to handle export of all data
   const handleExportAll = () => {
     KyalimaPDFExport.exportDashboard('kyalima-dashboard');
     toast({
@@ -61,7 +58,6 @@ const KyalimaFarmersLimited = () => {
     });
   };
 
-  // Function to handle print of current view
   const handlePrint = () => {
     KyalimaPDFExport.printContent('kyalima-content');
     toast({
@@ -108,7 +104,7 @@ const KyalimaFarmersLimited = () => {
                 <span>Overview</span>
               </TabsTrigger>
               <TabsTrigger value="cattle" className="flex items-center gap-2">
-                <Cow className="h-4 w-4" />
+                <Beef className="h-4 w-4" />
                 <span>Cattle Management</span>
               </TabsTrigger>
               <TabsTrigger value="milk" className="flex items-center gap-2">
@@ -116,7 +112,7 @@ const KyalimaFarmersLimited = () => {
                 <span>Milk Production</span>
               </TabsTrigger>
               <TabsTrigger value="fattening" className="flex items-center gap-2">
-                <Cow className="h-4 w-4" />
+                <Beef className="h-4 w-4" />
                 <span>Cattle Fattening</span>
               </TabsTrigger>
               <TabsTrigger value="loans" className="flex items-center gap-2">
@@ -126,7 +122,6 @@ const KyalimaFarmersLimited = () => {
             </TabsList>
 
             <div id="kyalima-content">
-              {/* Overview Dashboard */}
               <TabsContent value="overview" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Card>
@@ -137,8 +132,10 @@ const KyalimaFarmersLimited = () => {
                       <div className="text-2xl font-bold">{companyMetrics.totalCattle}</div>
                       <p className="text-xs text-muted-foreground mt-1">Across all categories</p>
                       <div className="flex items-center mt-2">
-                        <Cow className="h-4 w-4 text-primary mr-1" />
-                        <div className="text-xs text-muted-foreground">Last updated: {format(new Date(), 'MMM dd, yyyy')}</div>
+                        <Beef className="h-4 w-4 text-primary mr-1" />
+                        <div className="text-xs text-muted-foreground">
+                          Last updated: {format(new Date(), "MMM dd, yyyy")}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -249,22 +246,18 @@ const KyalimaFarmersLimited = () => {
                 </div>
               </TabsContent>
 
-              {/* Cattle Management Tab */}
               <TabsContent value="cattle">
                 <CattleManagement />
               </TabsContent>
 
-              {/* Milk Production Tab */}
               <TabsContent value="milk">
                 <MilkProduction />
               </TabsContent>
 
-              {/* Cattle Fattening Tab */}
               <TabsContent value="fattening">
                 <CattleFattening />
               </TabsContent>
 
-              {/* Loan Manager Tab */}
               <TabsContent value="loans">
                 <LoanManager />
               </TabsContent>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,7 @@ import {
   Filter, 
   Pencil,
   Trash2,
-  Cow,
+  Beef,
   Printer
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -40,7 +39,6 @@ const CattleManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   
-  // Fetch cattle data function would be implemented here in a real app
   const refreshData = () => {
     toast({
       title: "Data Refreshed",
@@ -48,7 +46,6 @@ const CattleManagement = () => {
     });
   };
   
-  // Handle export to PDF
   const handleExportPDF = () => {
     KyalimaPDFExport.exportTableToPDF('cattle-table', 'Kyalima_Cattle_Data');
     toast({
@@ -57,7 +54,6 @@ const CattleManagement = () => {
     });
   };
   
-  // Handle print
   const handlePrint = () => {
     KyalimaPDFExport.printTable('cattle-table');
     toast({
@@ -66,7 +62,6 @@ const CattleManagement = () => {
     });
   };
   
-  // Sample cattle data for demo
   const sampleCattleData = [
     { id: 'KYL-C001', name: 'Bella', type: 'Dam/Mother', age: '4 years', breed: 'Fresian', status: 'Healthy', lactating: 'Yes', lastCheckup: '2023-12-15' },
     { id: 'KYL-C015', name: 'Zara', type: 'Heifer', age: '1.5 years', breed: 'Jersey Cross', status: 'Healthy', lactating: 'No', lastCheckup: '2023-12-10' },

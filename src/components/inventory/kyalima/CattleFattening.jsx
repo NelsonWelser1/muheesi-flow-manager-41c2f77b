@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -27,457 +26,235 @@ import {
   FileDown, 
   Plus, 
   Filter, 
-  Cow,
+  Beef,
   ArrowUpRight,
   Printer,
-  Pencil,
-  Trash2
+  Calendar,
+  Scale,
+  BarChart2,
+  Trash2,
+  Pencil
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { KyalimaPDFExport } from "./utils/KyalimaPDFExport";
 
 const CattleFattening = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-
-  // Sample data for cattle fattening program
-  const fatteningData = [
-    { 
-      id: 'CF-001', 
-      cattleId: 'KYL-C032', 
-      cattleName: 'Brutus', 
-      startDate: '2023-10-15',
-      initialWeight: 380, 
-      currentWeight: 468, 
-      targetWeight: 550,
-      dailyGain: 1.8,
-      feedType: 'High Energy Mix',
-      status: 'active',
-      estimatedCompletion: '2024-02-15',
-      supervisor: 'James Okello'
-    },
-    { 
-      id: 'CF-002', 
-      cattleId: 'KYL-C045', 
-      cattleName: 'Zeus', 
-      startDate: '2023-10-15',
-      initialWeight: 350, 
-      currentWeight: 462, 
-      targetWeight: 520,
-      dailyGain: 2.2,
-      feedType: 'High Protein Mix',
-      status: 'active',
-      estimatedCompletion: '2024-01-30',
-      supervisor: 'James Okello'
-    },
-    { 
-      id: 'CF-003', 
-      cattleId: 'KYL-C048', 
-      cattleName: 'Thor', 
-      startDate: '2023-11-01',
-      initialWeight: 410, 
-      currentWeight: 468, 
-      targetWeight: 560,
-      dailyGain: 1.6,
-      feedType: 'Standard Mix',
-      status: 'active',
-      estimatedCompletion: '2024-03-10',
-      supervisor: 'Sarah Nambi'
-    },
-    { 
-      id: 'CF-004', 
-      cattleId: 'KYL-C029', 
-      cattleName: 'Hercules', 
-      startDate: '2023-09-20',
-      initialWeight: 395, 
-      currentWeight: 490, 
-      targetWeight: 540,
-      dailyGain: 1.5,
-      feedType: 'High Energy Mix',
-      status: 'active',
-      estimatedCompletion: '2024-02-05',
-      supervisor: 'Sarah Nambi'
-    },
-    { 
-      id: 'CF-005', 
-      cattleId: 'KYL-C038', 
-      cattleName: 'Apollo', 
-      startDate: '2023-08-15',
-      initialWeight: 375, 
-      currentWeight: 535, 
-      targetWeight: 530,
-      dailyGain: 1.9,
-      feedType: 'High Protein Mix',
-      status: 'completed',
-      estimatedCompletion: '2023-12-15',
-      supervisor: 'James Okello'
-    }
+  const [filterCategory, setFilterCategory] = useState('all');
+  
+  // Sample data for cattle in fattening program
+  const fatteningCattleData = [
+    { id: 'FP-001', tagNumber: 'KYL-C037', name: 'Bull 37', entryDate: '2023-10-15', entryWeight: '320 kg', currentWeight: '387 kg', targetWeight: '450 kg', estimatedCompletion: '2024-04-15', status: 'on-track', dailyGain: '0.7 kg', feedType: 'High Energy', notes: 'Performing well' },
+    { id: 'FP-002', tagNumber: 'KYL-C043', name: 'Bull 43', entryDate: '2023-10-20', entryWeight: '305 kg', currentWeight: '362 kg', targetWeight: '430 kg', estimatedCompletion: '2024-04-20', status: 'on-track', dailyGain: '0.65 kg', feedType: 'High Energy', notes: 'Slight limp in left hind leg - monitor' },
+    { id: 'FP-003', tagNumber: 'KYL-C052', name: 'Bull 52', entryDate: '2023-11-05', entryWeight: '330 kg', currentWeight: '378 kg', targetWeight: '460 kg', estimatedCompletion: '2024-05-05', status: 'behind', dailyGain: '0.5 kg', feedType: 'Standard', notes: 'Not gaining as expected' },
+    { id: 'FP-004', tagNumber: 'KYL-C061', name: 'Bull 61', entryDate: '2023-11-15', entryWeight: '345 kg', currentWeight: '410 kg', targetWeight: '470 kg', estimatedCompletion: '2024-04-15', status: 'ahead', dailyGain: '0.85 kg', feedType: 'High Energy + Supplement', notes: 'Excellent performer' },
+    { id: 'FP-005', tagNumber: 'KYL-C078', name: 'Bull 78', entryDate: '2023-12-01', entryWeight: '315 kg', currentWeight: '352 kg', targetWeight: '440 kg', estimatedCompletion: '2024-05-30', status: 'on-track', dailyGain: '0.6 kg', feedType: 'Standard', notes: 'Average performance' },
+    { id: 'FP-006', tagNumber: 'KYL-C085', name: 'Bull 85', entryDate: '2023-12-10', entryWeight: '325 kg', currentWeight: '345 kg', targetWeight: '450 kg', estimatedCompletion: '2024-06-10', status: 'behind', dailyGain: '0.4 kg', feedType: 'Standard + Supplement', notes: 'Consider switching feed strategy' },
   ];
-
-  // Filter data based on search term and status filter
-  const filteredData = fatteningData.filter(cattle => {
+  
+  // Filter cattle based on search term and category filter
+  const filteredCattle = fatteningCattleData.filter(cattle => {
     const matchesSearch = 
       cattle.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      cattle.cattleId.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      cattle.cattleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cattle.supervisor.toLowerCase().includes(searchTerm.toLowerCase());
+      cattle.tagNumber.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      cattle.name.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = filterStatus === 'all' || cattle.status === filterStatus;
+    const matchesCategory = filterCategory === 'all' || cattle.status === filterCategory;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesCategory;
   });
-
-  // Calculate weight progress percentage
-  const calculateProgress = (current, initial, target) => {
-    if (target <= initial) return 100;
-    const progress = ((current - initial) / (target - initial)) * 100;
-    return Math.min(Math.max(progress, 0), 100);
-  };
-
-  // Handle refresh button click
-  const handleRefresh = () => {
-    toast({
-      title: "Data Refreshed",
-      description: "Cattle fattening data has been refreshed.",
-    });
-  };
-
-  // Handle export to PDF
-  const handleExportPDF = () => {
-    KyalimaPDFExport.exportTableToPDF('fattening-table', 'Kyalima_Cattle_Fattening_Data');
-    toast({
-      title: "Export Complete",
-      description: "Your cattle fattening data has been exported to PDF.",
-    });
-  };
   
-  // Handle print
-  const handlePrint = () => {
-    KyalimaPDFExport.printTable('fattening-table');
-    toast({
-      title: "Print Prepared",
-      description: "Sending cattle fattening data to printer...",
-    });
-  };
-
-  // Get status badge based on cattle status
+  // Handle status badge display
   const getStatusBadge = (status) => {
     switch(status) {
-      case 'active':
-        return <Badge className="bg-green-100 text-green-800">Active</Badge>;
-      case 'completed':
-        return <Badge className="bg-blue-100 text-blue-800">Completed</Badge>;
-      case 'sold':
-        return <Badge className="bg-purple-100 text-purple-800">Sold</Badge>;
+      case 'on-track':
+        return <Badge className="bg-green-100 text-green-800">On Track</Badge>;
+      case 'behind':
+        return <Badge className="bg-red-100 text-red-800">Behind</Badge>;
+      case 'ahead':
+        return <Badge className="bg-blue-100 text-blue-800">Ahead</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
     }
   };
-
+  
+  // Calculate weight gain percentage
+  const calculateGainPercentage = (current, entry) => {
+    const currentWeight = parseInt(current.replace(' kg', ''));
+    const entryWeight = parseInt(entry.replace(' kg', ''));
+    return ((currentWeight - entryWeight) / entryWeight * 100).toFixed(1);
+  };
+  
+  // Calculate progress to target weight
+  const calculateProgress = (current, target) => {
+    const currentWeight = parseInt(current.replace(' kg', ''));
+    const targetWeight = parseInt(target.replace(' kg', ''));
+    return (currentWeight / targetWeight * 100).toFixed(0);
+  };
+  
   return (
     <div className="space-y-4">
-      {/* Metrics summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Fattening</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{fatteningData.filter(c => c.status === 'active').length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Cattle being fattened</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Daily Gain</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {(fatteningData.filter(c => c.status === 'active').reduce((sum, c) => sum + c.dailyGain, 0) / 
-               fatteningData.filter(c => c.status === 'active').length).toFixed(1)} kg/day
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Current average</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Weight Gained</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {fatteningData.reduce((sum, c) => sum + (c.currentWeight - c.initialWeight), 0)} kg
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Across all cattle</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Completed Programs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{fatteningData.filter(c => c.status === 'completed').length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Year to date</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search and filters */}
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="flex flex-1 items-center space-x-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by ID, cattle, or supervisor..."
+              placeholder="Search by ID, tag number or name..."
               className="pl-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[140px]">
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="sold">Sold</SelectItem>
+              <SelectItem value="on-track">On Track</SelectItem>
+              <SelectItem value="behind">Behind</SelectItem>
+              <SelectItem value="ahead">Ahead</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" onClick={handleRefresh}>
+          <Button variant="outline" size="icon" onClick={() => toast({
+            title: "Data Refreshed",
+            description: "Fattening program data has been refreshed."
+          })}>
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
         <div className="flex items-center space-x-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                <span>Add Cattle</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>Add Cattle to Fattening Program</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cattleId">Cattle ID</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select cattle" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="kyl-c050">KYL-C050 (Atlas)</SelectItem>
-                        <SelectItem value="kyl-c051">KYL-C051 (Titan)</SelectItem>
-                        <SelectItem value="kyl-c052">KYL-C052 (Hector)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="startDate">Start Date</Label>
-                    <Input id="startDate" type="date" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="initialWeight">Initial Weight (kg)</Label>
-                    <Input id="initialWeight" type="number" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="targetWeight">Target Weight (kg)</Label>
-                    <Input id="targetWeight" type="number" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="estimatedDailyGain">Est. Daily Gain (kg)</Label>
-                    <Input id="estimatedDailyGain" type="number" step="0.1" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="feedType">Feed Type</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select feed mix" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="high-energy">High Energy Mix</SelectItem>
-                        <SelectItem value="high-protein">High Protein Mix</SelectItem>
-                        <SelectItem value="standard">Standard Mix</SelectItem>
-                        <SelectItem value="custom">Custom Mix</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="supervisor">Supervisor</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select supervisor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="james">James Okello</SelectItem>
-                        <SelectItem value="sarah">Sarah Nambi</SelectItem>
-                        <SelectItem value="david">David Mugisha</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes (Optional)</Label>
-                  <Input id="notes" />
-                </div>
-                <div className="flex justify-end space-x-2 pt-2">
-                  <Button variant="outline">Cancel</Button>
-                  <Button type="submit">Save</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-          <Button variant="outline" size="icon" onClick={handlePrint}>
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            <span>Add Cattle</span>
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => toast({
+            title: "Print Prepared",
+            description: "Sending fattening program data to printer..."
+          })}>
             <Printer className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" onClick={handleExportPDF}>
+          <Button variant="outline" size="icon" onClick={() => toast({
+            title: "Export Complete",
+            description: "Your fattening program data has been exported."
+          })}>
             <FileDown className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Data table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table id="fattening-table">
-              <TableHeader>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Active in Program</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{fatteningCattleData.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Current participants</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Average Daily Gain</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0.62 kg</div>
+            <div className="flex items-center mt-1">
+              <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
+              <p className="text-xs text-green-500">+0.05 kg from last month</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Average Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">68%</div>
+            <p className="text-xs text-muted-foreground mt-1">To target weights</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Feed Consumption</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">1,250 kg</div>
+            <p className="text-xs text-muted-foreground mt-1">Weekly average</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="border rounded-md">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID & Tag</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Entry Date</TableHead>
+                <TableHead>Entry Weight</TableHead>
+                <TableHead>Current Weight</TableHead>
+                <TableHead>Target Weight</TableHead>
+                <TableHead>Progress</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Daily Gain</TableHead>
+                <TableHead>Est. Completion</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredCattle.length === 0 ? (
                 <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Cattle</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>Initial Weight</TableHead>
-                  <TableHead>Current Weight</TableHead>
-                  <TableHead>Target</TableHead>
-                  <TableHead>Progress</TableHead>
-                  <TableHead>Daily Gain</TableHead>
-                  <TableHead>Feed Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableCell colSpan={11} className="text-center py-10">No cattle found in fattening program.</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={11} className="text-center py-10">
-                      No cattle fattening records found. Add your first record.
+              ) : (
+                filteredCattle.map((cattle) => (
+                  <TableRow key={cattle.id}>
+                    <TableCell>
+                      <div className="font-medium">{cattle.id}</div>
+                      <div className="text-xs text-muted-foreground">{cattle.tagNumber}</div>
+                    </TableCell>
+                    <TableCell>{cattle.name}</TableCell>
+                    <TableCell>{cattle.entryDate}</TableCell>
+                    <TableCell>{cattle.entryWeight}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span>{cattle.currentWeight}</span>
+                        <span className="text-xs text-green-600">+{calculateGainPercentage(cattle.currentWeight, cattle.entryWeight)}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{cattle.targetWeight}</TableCell>
+                    <TableCell className="w-[140px]">
+                      <div className="flex items-center gap-2">
+                        <div className="w-full bg-slate-100 h-2 rounded-full">
+                          <div 
+                            className="bg-primary h-2 rounded-full" 
+                            style={{ width: `${calculateProgress(cattle.currentWeight, cattle.targetWeight)}%` }} 
+                          />
+                        </div>
+                        <span className="text-xs">{calculateProgress(cattle.currentWeight, cattle.targetWeight)}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(cattle.status)}</TableCell>
+                    <TableCell>{cattle.dailyGain}</TableCell>
+                    <TableCell>{cattle.estimatedCompletion}</TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  filteredData.map((cattle) => (
-                    <TableRow key={cattle.id}>
-                      <TableCell className="font-medium">{cattle.id}</TableCell>
-                      <TableCell>
-                        {cattle.cattleId} 
-                        <div className="text-xs text-muted-foreground">{cattle.cattleName}</div>
-                      </TableCell>
-                      <TableCell>{cattle.startDate}</TableCell>
-                      <TableCell>{cattle.initialWeight} kg</TableCell>
-                      <TableCell>{cattle.currentWeight} kg</TableCell>
-                      <TableCell>{cattle.targetWeight} kg</TableCell>
-                      <TableCell className="max-w-[160px]">
-                        <div className="flex items-center gap-2">
-                          <div className="w-full bg-slate-100 h-2 rounded-full">
-                            <div 
-                              className="bg-primary h-2 rounded-full" 
-                              style={{ width: `${calculateProgress(cattle.currentWeight, cattle.initialWeight, cattle.targetWeight)}%` }} 
-                            />
-                          </div>
-                          <span className="text-xs">
-                            {calculateProgress(cattle.currentWeight, cattle.initialWeight, cattle.targetWeight).toFixed()}%
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{cattle.dailyGain} kg/day</TableCell>
-                      <TableCell>{cattle.feedType}</TableCell>
-                      <TableCell>{getStatusBadge(cattle.status)}</TableCell>
-                      <TableCell className="text-right space-x-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Weight tracking section */}
-      <div className="mt-8">
-        <h3 className="text-lg font-medium mb-4">Expected Completion Schedule</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Upcoming Completions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {fatteningData
-                  .filter(c => c.status === 'active')
-                  .sort((a, b) => new Date(a.estimatedCompletion) - new Date(b.estimatedCompletion))
-                  .slice(0, 3)
-                  .map((cattle, idx) => (
-                    <div key={idx} className="flex items-center justify-between border-b pb-2 last:border-0">
-                      <div>
-                        <p className="font-medium">{cattle.cattleName} ({cattle.cattleId})</p>
-                        <p className="text-sm text-muted-foreground">
-                          {calculateProgress(cattle.currentWeight, cattle.initialWeight, cattle.targetWeight).toFixed()}% complete
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{cattle.estimatedCompletion}</p>
-                        <p className="text-sm text-muted-foreground">Est. Completion</p>
-                      </div>
-                    </div>
-                  ))
-                }
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Feed Consumption</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">High Energy Mix</p>
-                    <p className="text-2xl font-bold">580 kg</p>
-                    <p className="text-xs text-muted-foreground">Weekly consumption</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">High Protein Mix</p>
-                    <p className="text-2xl font-bold">420 kg</p>
-                    <p className="text-xs text-muted-foreground">Weekly consumption</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Standard Mix</p>
-                    <p className="text-2xl font-bold">250 kg</p>
-                    <p className="text-xs text-muted-foreground">Weekly consumption</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>
