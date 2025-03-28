@@ -5,70 +5,217 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Calendar as CalendarIcon,
-  Coffee,
-  Wheat,
-  Apple
-} from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileDown, X, Save, Calendar, Coffee, Wheat, Apple } from "lucide-react";
+import { format } from "date-fns";
+import { useToast } from "@/components/ui/use-toast";
 
 const CertificateTemplateForm = ({ templateType, onCancel, onSave }) => {
-  // Template type will be 'coffee', 'general', or 'fresh'
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
-    issuer: '',
+    issuer: 'KAJON Coffee Limited',
+    issuanceDate: format(new Date(), 'yyyy-MM-dd'),
+    expiryDate: format(new Date(new Date().setFullYear(new Date().getFullYear() + 1)), 'yyyy-MM-dd'),
     recipient: '',
-    issueDate: new Date(),
-    expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
-    description: '',
-    // Coffee-specific fields
-    coffeeType: templateType === 'coffee' ? 'arabica' : '',
-    cuppingScore: templateType === 'coffee' ? '85' : '',
-    processingMethod: templateType === 'coffee' ? 'washed' : '',
-    // General produce fields
-    produceType: templateType === 'general' ? 'grains' : '',
-    gradeClassification: templateType === 'general' ? 'grade-1' : '',
-    moistureContent: templateType === 'general' ? '12.5' : '',
-    // Fresh produce fields
-    freshProduceType: templateType === 'fresh' ? 'fruits' : '',
-    shelfLife: templateType === 'fresh' ? '7' : '',
-    storageConditions: templateType === 'fresh' ? 'refrigerated' : '',
+    recipientAddress: '',
+    certificateNumber: `CRT-${Math.floor(10000 + Math.random() * 90000)}`,
+    inspectionDate: format(new Date(), 'yyyy-MM-dd'),
+    notes: '',
+    status: 'active'
   });
 
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Handle select changes
+  const handleSelectChange = (name, value) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!formData.name || !formData.recipient) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     onSave(formData);
   };
-
-  const getTemplateTitle = () => {
-    switch(templateType) {
+  
+  // Render title and icon based on template type
+  const getTemplateDetails = () => {
+    switch (templateType) {
       case 'coffee':
-        return 'Coffee Bean Certificate';
+        return {
+          title: 'Coffee Bean Certificate',
+          icon: <Coffee className="h-5 w-5 mr-2 text-amber-600" />
+        };
       case 'general':
-        return 'General Produce Certificate';
+        return {
+          title: 'General Produce Certificate',
+          icon: <Wheat className="h-5 w-5 mr-2 text-amber-600" />
+        };
       case 'fresh':
-        return 'Fresh Produce Certificate';
+        return {
+          title: 'Fresh Produce Certificate',
+          icon: <Apple className="h-5 w-5 mr-2 text-green-600" />
+        };
       default:
-        return 'Certificate';
+        return {
+          title: 'Quality Certificate',
+          icon: null
+        };
     }
   };
 
-  const getTemplateIcon = () => {
-    switch(templateType) {
+  const templateDetails = getTemplateDetails();
+
+  // Custom fields for different certificate types
+  const renderCustomFields = () => {
+    switch (templateType) {
       case 'coffee':
-        return <Coffee className="h-5 w-5 text-amber-600" />;
+        return (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="coffeeGrade">Coffee Grade</Label>
+              <Select
+                value={formData.coffeeGrade || 'specialty'}
+                onValueChange={(value) => handleSelectChange('coffeeGrade', value)}
+              >
+                <SelectTrigger id="coffeeGrade">
+                  <SelectValue placeholder="Select grade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="specialty">Specialty</SelectItem>
+                  <SelectItem value="premium">Premium</SelectItem>
+                  <SelectItem value="commercial">Commercial</SelectItem>
+                  <SelectItem value="standard">Standard</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cuppingScore">Cupping Score</Label>
+              <Input
+                id="cuppingScore"
+                name="cuppingScore"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={formData.cuppingScore || ''}
+                onChange={handleInputChange}
+                placeholder="Enter cupping score"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="variety">Coffee Variety</Label>
+              <Input
+                id="variety"
+                name="variety"
+                value={formData.variety || ''}
+                onChange={handleInputChange}
+                placeholder="Enter coffee variety"
+              />
+            </div>
+          </>
+        );
       case 'general':
-        return <Wheat className="h-5 w-5 text-amber-600" />;
+        return (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="produceType">Produce Type</Label>
+              <Input
+                id="produceType"
+                name="produceType"
+                value={formData.produceType || ''}
+                onChange={handleInputChange}
+                placeholder="Enter produce type"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="origin">Place of Origin</Label>
+              <Input
+                id="origin"
+                name="origin"
+                value={formData.origin || ''}
+                onChange={handleInputChange}
+                placeholder="Enter place of origin"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="purityLevel">Purity Level (%)</Label>
+              <Input
+                id="purityLevel"
+                name="purityLevel"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={formData.purityLevel || ''}
+                onChange={handleInputChange}
+                placeholder="Enter purity level"
+              />
+            </div>
+          </>
+        );
       case 'fresh':
-        return <Apple className="h-5 w-5 text-green-600" />;
+        return (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="harvestDate">Harvest Date</Label>
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 text-gray-500 absolute ml-3" />
+                <Input
+                  id="harvestDate"
+                  name="harvestDate"
+                  type="date"
+                  value={formData.harvestDate || ''}
+                  onChange={handleInputChange}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="freshnessPeriod">Freshness Period (days)</Label>
+              <Input
+                id="freshnessPeriod"
+                name="freshnessPeriod"
+                type="number"
+                min="1"
+                value={formData.freshnessPeriod || ''}
+                onChange={handleInputChange}
+                placeholder="Enter freshness period"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="storageConditions">Storage Conditions</Label>
+              <Select
+                value={formData.storageConditions || 'ambient'}
+                onValueChange={(value) => handleSelectChange('storageConditions', value)}
+              >
+                <SelectTrigger id="storageConditions">
+                  <SelectValue placeholder="Select storage conditions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="refrigerated">Refrigerated</SelectItem>
+                  <SelectItem value="frozen">Frozen</SelectItem>
+                  <SelectItem value="ambient">Ambient</SelectItem>
+                  <SelectItem value="controlled">Controlled Atmosphere</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        );
       default:
         return null;
     }
@@ -76,281 +223,129 @@ const CertificateTemplateForm = ({ templateType, onCancel, onSave }) => {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center gap-2">
-        {getTemplateIcon()}
-        <CardTitle>{getTemplateTitle()}</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center">
+          {templateDetails.icon}
+          {templateDetails.title}
+        </CardTitle>
+        <Button variant="ghost" size="sm" onClick={onCancel}>
+          <X className="h-4 w-4" />
+        </Button>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Common Fields */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Certificate Name*</Label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Certificate Name *</Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Enter certificate name"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="certificateNumber">Certificate Number</Label>
+              <Input
+                id="certificateNumber"
+                name="certificateNumber"
+                value={formData.certificateNumber}
+                onChange={handleInputChange}
+                placeholder="Enter certificate number"
+                readOnly
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="issuer">Issuer</Label>
+              <Input
+                id="issuer"
+                name="issuer"
+                value={formData.issuer}
+                onChange={handleInputChange}
+                placeholder="Enter issuer name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="recipient">Recipient *</Label>
+              <Input
+                id="recipient"
+                name="recipient"
+                value={formData.recipient}
+                onChange={handleInputChange}
+                placeholder="Enter recipient name"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="issuanceDate">Issuance Date</Label>
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 text-gray-500 absolute ml-3" />
                 <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                  placeholder="Enter certificate name"
-                  required
+                  id="issuanceDate"
+                  name="issuanceDate"
+                  type="date"
+                  value={formData.issuanceDate}
+                  onChange={handleInputChange}
+                  className="pl-10"
                 />
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="issuer">Issuing Authority*</Label>
+            <div className="space-y-2">
+              <Label htmlFor="expiryDate">Expiry Date</Label>
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 text-gray-500 absolute ml-3" />
                 <Input
-                  id="issuer"
-                  value={formData.issuer}
-                  onChange={(e) => handleChange('issuer', e.target.value)}
-                  placeholder="Enter issuing authority"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="recipient">Recipient*</Label>
-                <Input
-                  id="recipient"
-                  value={formData.recipient}
-                  onChange={(e) => handleChange('recipient', e.target.value)}
-                  placeholder="Enter recipient"
-                  required
+                  id="expiryDate"
+                  name="expiryDate"
+                  type="date"
+                  value={formData.expiryDate}
+                  onChange={handleInputChange}
+                  className="pl-10"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Issue Date*</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.issueDate ? format(formData.issueDate, "PPP") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.issueDate}
-                      onSelect={(date) => date && handleChange('issueDate', date)}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-2">
-                <Label>Expiry Date*</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.expiryDate ? format(formData.expiryDate, "PPP") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={formData.expiryDate}
-                      onSelect={(date) => date && handleChange('expiryDate', date)}
-                      disabled={(date) => date < new Date()}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+            {/* Custom fields based on template type */}
+            {renderCustomFields()}
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="recipientAddress">Recipient Address</Label>
+              <Textarea
+                id="recipientAddress"
+                name="recipientAddress"
+                value={formData.recipientAddress}
+                onChange={handleInputChange}
+                placeholder="Enter recipient address"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+                placeholder="Enter additional notes"
+                rows={3}
+              />
             </div>
           </div>
 
-          {/* Template-specific Fields */}
-          {templateType === 'coffee' && (
-            <div className="space-y-4 border-t pt-4">
-              <h3 className="font-medium text-lg">Coffee Quality Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="coffeeType">Coffee Type</Label>
-                  <Select 
-                    value={formData.coffeeType} 
-                    onValueChange={(value) => handleChange('coffeeType', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select coffee type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="arabica">Arabica</SelectItem>
-                      <SelectItem value="robusta">Robusta</SelectItem>
-                      <SelectItem value="liberica">Liberica</SelectItem>
-                      <SelectItem value="blend">Blend</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cuppingScore">Cupping Score</Label>
-                  <div className="flex items-center">
-                    <Input
-                      id="cuppingScore"
-                      value={formData.cuppingScore}
-                      onChange={(e) => handleChange('cuppingScore', e.target.value)}
-                      placeholder="0-100"
-                      type="number"
-                      min="0"
-                      max="100"
-                      className="flex-1"
-                    />
-                    <span className="ml-2">/100</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="processingMethod">Processing Method</Label>
-                  <Select 
-                    value={formData.processingMethod} 
-                    onValueChange={(value) => handleChange('processingMethod', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="washed">Washed</SelectItem>
-                      <SelectItem value="natural">Natural/Dry</SelectItem>
-                      <SelectItem value="honey">Honey/Pulped Natural</SelectItem>
-                      <SelectItem value="wet-hulled">Wet-Hulled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {templateType === 'general' && (
-            <div className="space-y-4 border-t pt-4">
-              <h3 className="font-medium text-lg">General Produce Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="produceType">Produce Type</Label>
-                  <Select 
-                    value={formData.produceType} 
-                    onValueChange={(value) => handleChange('produceType', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select produce type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="grains">Grains</SelectItem>
-                      <SelectItem value="seeds">Seeds</SelectItem>
-                      <SelectItem value="pulses">Pulses</SelectItem>
-                      <SelectItem value="nuts">Nuts</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gradeClassification">Grade Classification</Label>
-                  <Select 
-                    value={formData.gradeClassification} 
-                    onValueChange={(value) => handleChange('gradeClassification', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select grade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="grade-1">Grade 1 (Premium)</SelectItem>
-                      <SelectItem value="grade-2">Grade 2 (Standard)</SelectItem>
-                      <SelectItem value="grade-3">Grade 3 (Commercial)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="moistureContent">Moisture Content (%)</Label>
-                  <div className="flex items-center">
-                    <Input
-                      id="moistureContent"
-                      value={formData.moistureContent}
-                      onChange={(e) => handleChange('moistureContent', e.target.value)}
-                      placeholder="Enter percentage"
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      className="flex-1"
-                    />
-                    <span className="ml-2">%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {templateType === 'fresh' && (
-            <div className="space-y-4 border-t pt-4">
-              <h3 className="font-medium text-lg">Fresh Produce Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="freshProduceType">Fresh Produce Type</Label>
-                  <Select 
-                    value={formData.freshProduceType} 
-                    onValueChange={(value) => handleChange('freshProduceType', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select produce type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fruits">Fruits</SelectItem>
-                      <SelectItem value="vegetables">Vegetables</SelectItem>
-                      <SelectItem value="herbs">Herbs</SelectItem>
-                      <SelectItem value="flowers">Flowers</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="shelfLife">Shelf Life (days)</Label>
-                  <Input
-                    id="shelfLife"
-                    value={formData.shelfLife}
-                    onChange={(e) => handleChange('shelfLife', e.target.value)}
-                    placeholder="Enter days"
-                    type="number"
-                    min="1"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="storageConditions">Storage Conditions</Label>
-                  <Select 
-                    value={formData.storageConditions} 
-                    onValueChange={(value) => handleChange('storageConditions', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select conditions" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="room-temperature">Room Temperature</SelectItem>
-                      <SelectItem value="refrigerated">Refrigerated</SelectItem>
-                      <SelectItem value="frozen">Frozen</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Additional Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleChange('description', e.target.value)}
-              placeholder="Enter additional details about the certificate"
-              rows={4}
-            />
-          </div>
-
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="bg-green-600 hover:bg-green-700">
+              <Save className="h-4 w-4 mr-2" />
               Save Certificate
             </Button>
           </div>

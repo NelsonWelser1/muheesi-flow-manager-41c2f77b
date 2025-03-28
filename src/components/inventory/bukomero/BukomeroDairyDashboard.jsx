@@ -36,7 +36,7 @@ import MilkProduction from './modules/MilkProduction';
 import CattleFattening from './modules/CattleFattening';
 import SilageManager from '../shared/modules/SilageManager';
 import StaffMembers from '../shared/modules/StaffMembers';
-import { useBukomeroDairyData } from '../../hooks/useBukomeroDairyData';
+import { useBukomeroDairyData } from '../../../hooks/useBukomeroDairyData';
 
 const BukomeroDairyDashboard = () => {
   const { toast } = useToast();
