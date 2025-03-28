@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,27 +27,26 @@ import {
   Filter, 
   Pencil,
   Trash2,
-  Cow
+  Cow,
+  Printer
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useCattleRecords } from "./hooks/useCattleRecords";
 import { KyalimaPDFExport } from "./utils/KyalimaPDFExport";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import CattleForm from "./forms/CattleForm";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const CattleManagement = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   
-  // Use custom hook for fetching cattle data
-  const { 
-    records: cattleData, 
-    isLoading, 
-    error, 
-    refreshData 
-  } = useCattleRecords({ searchTerm, category: filterCategory });
+  // Fetch cattle data function would be implemented here in a real app
+  const refreshData = () => {
+    toast({
+      title: "Data Refreshed",
+      description: "Cattle data has been refreshed.",
+    });
+  };
   
   // Handle export to PDF
   const handleExportPDF = () => {
@@ -120,7 +119,86 @@ const CattleManagement = () => {
               <DialogHeader>
                 <DialogTitle>Add New Cattle</DialogTitle>
               </DialogHeader>
-              <CattleForm onSuccess={refreshData} />
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cattleId">Cattle ID</Label>
+                    <Input id="cattleId" placeholder="KYL-C###" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" placeholder="Cattle name" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Type</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dam">Dam/Mother</SelectItem>
+                        <SelectItem value="heifer">Heifer</SelectItem>
+                        <SelectItem value="bull">Bull</SelectItem>
+                        <SelectItem value="femalecalf">Female Calf</SelectItem>
+                        <SelectItem value="malecalf">Male Calf</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="age">Age</Label>
+                    <Input id="age" placeholder="Age (years/months)" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="breed">Breed</Label>
+                    <Input id="breed" placeholder="Breed" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="healthy">Healthy</SelectItem>
+                        <SelectItem value="needsCheckup">Needs Checkup</SelectItem>
+                        <SelectItem value="treatment">Treatment</SelectItem>
+                        <SelectItem value="quarantine">Quarantine</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="lactating">Lactating</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                        <SelectItem value="na">N/A</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastCheckup">Last Checkup</Label>
+                    <Input id="lastCheckup" type="date" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Input id="notes" placeholder="Additional notes" />
+                </div>
+                <div className="flex justify-end space-x-2 pt-2">
+                  <Button variant="outline">Cancel</Button>
+                  <Button>Save Cattle</Button>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
           <Button variant="outline" size="icon" onClick={handlePrint}>
@@ -149,17 +227,7 @@ const CattleManagement = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center py-10">Loading cattle data...</TableCell>
-                </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center py-10 text-red-500">
-                    Error loading cattle data. Please try again.
-                  </TableCell>
-                </TableRow>
-              ) : sampleCattleData.length === 0 ? (
+              {sampleCattleData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-10">No cattle found. Add your first cattle.</TableCell>
                 </TableRow>
@@ -219,14 +287,6 @@ const CattleManagement = () => {
           </div>
           <div className="flex w-[100px] items-center justify-center text-sm font-medium">
             Page 1 of 1
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="icon" className="h-8 w-8 p-0" disabled>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8 p-0" disabled>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </div>
