@@ -17,6 +17,15 @@ const ProductionManagement = () => {
   );
 };
 
+// Custom wrapper for CattleFattening component to avoid modifying the protected file
+const CustomCattleFattening = () => {
+  return (
+    <div className="cattle-fattening-wrapper">
+      <CattleFattening />
+    </div>
+  );
+};
+
 const LivestockManagement = () => {
   return (
     <Card>
@@ -24,7 +33,7 @@ const LivestockManagement = () => {
         <CardTitle>Livestock Management</CardTitle>
       </CardHeader>
       <CardContent>
-        <CattleFattening />
+        <CustomCattleFattening />
       </CardContent>
     </Card>
   );
