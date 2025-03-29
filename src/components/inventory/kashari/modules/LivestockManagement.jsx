@@ -1,31 +1,15 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import ProductionForm from './ProductionForm';
 import CattleFattening from '../../bukomero/modules/CattleFattening';
 import CattleRegistration from './CattleRegistration';
 import CattleHealth from './CattleHealth';
 import CattleGrowth from './CattleGrowth';
 
-const ProductionManagement = () => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Production Management</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ProductionForm />
-      </CardContent>
-    </Card>
-  );
-};
-
-// Custom wrapper for CattleFattening component to avoid modifying the protected file
+// Custom wrapper for CattleFattening component
 const CustomCattleFattening = () => {
-  const [activeCattle, setActiveCattle] = useState(null);
-  
   return (
     <div className="cattle-fattening-wrapper">
       <div className="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
