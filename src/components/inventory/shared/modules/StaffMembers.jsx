@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -766,7 +767,7 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                             return startDate >= sixMonthsAgo;
                           }).length}
                         </div>
-                        <div className="text-sm text-gray-500">New (< 6 months)</div>
+                        <div className="text-sm text-gray-500">New ({`<`} 6 months)</div>
                       </div>
                       
                       <div className="text-center p-4 bg-purple-50 rounded-lg">
