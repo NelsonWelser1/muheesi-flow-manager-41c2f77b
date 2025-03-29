@@ -111,7 +111,7 @@ const BukomeroDairyDashboard = () => {
 
             <div id="bukomero-content" className="bg-white rounded-lg shadow-sm">
               <TabsContent value="overview" className="space-y-6 focus:outline-none">
-                <div className="bg-green-50 p-4 rounded-lg border border-green-100 text-green-800 flex items-center gap-2 mb-4">
+                <div className="bg-green-50 p-4 rounded-lg border border-green-100 text-green-800 flex items-center gap-2 mb-4 px-[25px] py-[15px] mx-0 my-[65px]">
                   <AlertTriangle className="h-5 w-5 text-amber-500" />
                   <div>
                     <strong>Data Entry Terminal:</strong> All information entered here will be shared with Kyalima Farmers Limited Executive Management for strategic decision-making.
