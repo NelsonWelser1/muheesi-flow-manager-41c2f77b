@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import ProductionForm from './ProductionForm';
 import CattleFattening from '../../bukomero/modules/CattleFattening';
 import CattleRegistration from './CattleRegistration';
@@ -23,8 +24,22 @@ const ProductionManagement = () => {
 
 // Custom wrapper for CattleFattening component to avoid modifying the protected file
 const CustomCattleFattening = () => {
+  const [activeCattle, setActiveCattle] = useState(null);
+  
   return (
     <div className="cattle-fattening-wrapper">
+      <div className="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+        <h3 className="text-lg font-semibold text-amber-800 mb-2">Enhanced Fattening Program</h3>
+        <p className="text-amber-700 mb-2">
+          Track your cattle's growth progress, health records and fattening performance metrics.
+        </p>
+        <div className="flex flex-wrap gap-2 my-2">
+          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Weight Tracking</Badge>
+          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Feed Conversion</Badge>
+          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Performance Metrics</Badge>
+          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Health Monitoring</Badge>
+        </div>
+      </div>
       <CattleFattening />
     </div>
   );
