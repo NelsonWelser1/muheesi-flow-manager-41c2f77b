@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -196,15 +197,25 @@ const CattleManagement = ({ isDataEntry = false }) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Cattle Management</h2>
+        <h2 className="text-xl font-semibold text-green-800">Cattle Management</h2>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh} 
+            className="border-green-200 text-green-700 hover:bg-green-50"
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button variant="outline" size="sm" onClick={handleExport}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleExport}
+            className="border-green-200 text-green-700 hover:bg-green-50"
+          >
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -212,30 +223,40 @@ const CattleManagement = ({ isDataEntry = false }) => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-1 md:grid-cols-3 mb-4">
-          <TabsTrigger value="registry" className="flex items-center gap-2">
+        <TabsList className="grid grid-cols-1 md:grid-cols-3 mb-4 bg-green-50 p-1">
+          <TabsTrigger 
+            value="registry" 
+            className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-green-800"
+          >
             <Beef className="h-4 w-4" />
             Cattle Registry
           </TabsTrigger>
-          <TabsTrigger value="add" className="flex items-center gap-2" disabled={!isDataEntry}>
+          <TabsTrigger 
+            value="add" 
+            className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-green-800" 
+            disabled={!isDataEntry}
+          >
             <PlusCircle className="h-4 w-4" />
             Add Cattle
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
+          <TabsTrigger 
+            value="analytics" 
+            className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-green-800"
+          >
             <BarChart2 className="h-4 w-4" />
             Analytics
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="registry">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cattle Registry</CardTitle>
+          <Card className="border-green-100 shadow-sm">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-transparent border-b border-green-100">
+              <CardTitle className="text-lg text-green-800">Cattle Registry</CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
                 </div>
               ) : cattleData.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
@@ -245,7 +266,7 @@ const CattleManagement = ({ isDataEntry = false }) => {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="bg-green-50 text-green-800">
                         <TableHead>Tag/Name</TableHead>
                         <TableHead>Type</TableHead>
                         <TableHead>Breed</TableHead>
@@ -256,10 +277,10 @@ const CattleManagement = ({ isDataEntry = false }) => {
                     </TableHeader>
                     <TableBody>
                       {cattleData.map((cattle) => (
-                        <TableRow key={cattle.id}>
+                        <TableRow key={cattle.id} className="border-b border-green-50">
                           <TableCell>
                             <div className="font-medium">{cattle.tag_number}</div>
-                            <div className="text-sm text-muted-foreground">{cattle.name}</div>
+                            <div className="text-sm text-green-600">{cattle.name}</div>
                           </TableCell>
                           <TableCell>{getCattleTypeLabel(cattle.cattle_type)}</TableCell>
                           <TableCell>{getBreedLabel(cattle.breed)}</TableCell>
@@ -270,7 +291,8 @@ const CattleManagement = ({ isDataEntry = false }) => {
                             {cattle.weight ? `${cattle.weight} kg` : 'N/A'}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={cattle.status === 'active' ? 'default' : 'secondary'}>
+                            <Badge variant={cattle.status === 'active' ? 'default' : 'secondary'}
+                                  className={cattle.status === 'active' ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-800"}>
                               {cattle.status?.charAt(0).toUpperCase() + cattle.status?.slice(1)}
                             </Badge>
                           </TableCell>
@@ -285,43 +307,45 @@ const CattleManagement = ({ isDataEntry = false }) => {
         </TabsContent>
 
         <TabsContent value="add">
-          <Card>
-            <CardHeader>
-              <CardTitle>Add New Cattle</CardTitle>
+          <Card className="border-green-100 shadow-sm">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-transparent border-b border-green-100">
+              <CardTitle className="text-lg text-green-800">Add New Cattle</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="tagNumber">Tag Number *</Label>
+                    <Label htmlFor="tagNumber" className="text-green-700">Tag Number *</Label>
                     <Input
                       id="tagNumber"
                       name="tagNumber"
                       value={newCattle.tagNumber}
                       onChange={handleInputChange}
                       placeholder="Enter tag number"
+                      className="border-green-200 focus:border-green-300 focus:ring-green-200"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="name" className="text-green-700">Name</Label>
                     <Input
                       id="name"
                       name="name"
                       value={newCattle.name}
                       onChange={handleInputChange}
                       placeholder="Enter cattle name"
+                      className="border-green-200 focus:border-green-300 focus:ring-green-200"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="type">Type *</Label>
+                    <Label htmlFor="type" className="text-green-700">Type *</Label>
                     <Select
                       value={newCattle.type}
                       onValueChange={(value) => handleSelectChange('type', value)}
                     >
-                      <SelectTrigger id="type">
+                      <SelectTrigger id="type" className="border-green-200 focus:ring-green-200">
                         <SelectValue placeholder="Select cattle type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -335,12 +359,12 @@ const CattleManagement = ({ isDataEntry = false }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="breed">Breed</Label>
+                    <Label htmlFor="breed" className="text-green-700">Breed</Label>
                     <Select
                       value={newCattle.breed}
                       onValueChange={(value) => handleSelectChange('breed', value)}
                     >
-                      <SelectTrigger id="breed">
+                      <SelectTrigger id="breed" className="border-green-200 focus:ring-green-200">
                         <SelectValue placeholder="Select breed" />
                       </SelectTrigger>
                       <SelectContent>
@@ -355,18 +379,19 @@ const CattleManagement = ({ isDataEntry = false }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="dob">Date of Birth</Label>
+                    <Label htmlFor="dob" className="text-green-700">Date of Birth</Label>
                     <Input
                       id="dob"
                       name="dob"
                       type="date"
                       value={newCattle.dob}
                       onChange={handleInputChange}
+                      className="border-green-200 focus:border-green-300 focus:ring-green-200"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="weight">Weight (kg)</Label>
+                    <Label htmlFor="weight" className="text-green-700">Weight (kg)</Label>
                     <Input
                       id="weight"
                       name="weight"
@@ -374,16 +399,17 @@ const CattleManagement = ({ isDataEntry = false }) => {
                       value={newCattle.weight}
                       onChange={handleInputChange}
                       placeholder="Enter weight"
+                      className="border-green-200 focus:border-green-300 focus:ring-green-200"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="health">Health Status</Label>
+                    <Label htmlFor="health" className="text-green-700">Health Status</Label>
                     <Select
                       value={newCattle.health}
                       onValueChange={(value) => handleSelectChange('health', value)}
                     >
-                      <SelectTrigger id="health">
+                      <SelectTrigger id="health" className="border-green-200 focus:ring-green-200">
                         <SelectValue placeholder="Select health status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -397,12 +423,12 @@ const CattleManagement = ({ isDataEntry = false }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
+                    <Label htmlFor="status" className="text-green-700">Status</Label>
                     <Select
                       value={newCattle.status}
                       onValueChange={(value) => handleSelectChange('status', value)}
                     >
-                      <SelectTrigger id="status">
+                      <SelectTrigger id="status" className="border-green-200 focus:ring-green-200">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -415,7 +441,7 @@ const CattleManagement = ({ isDataEntry = false }) => {
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="notes">Notes</Label>
+                    <Label htmlFor="notes" className="text-green-700">Notes</Label>
                     <Textarea
                       id="notes"
                       name="notes"
@@ -423,12 +449,16 @@ const CattleManagement = ({ isDataEntry = false }) => {
                       onChange={handleInputChange}
                       placeholder="Enter any additional notes"
                       rows={3}
+                      className="border-green-200 focus:border-green-300 focus:ring-green-200"
                     />
                   </div>
                 </div>
 
                 <div className="flex justify-end">
-                  <Button type="submit" className="bg-green-600 hover:bg-green-700">
+                  <Button 
+                    type="submit" 
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
                     Add Cattle Record
                   </Button>
                 </div>
@@ -438,72 +468,72 @@ const CattleManagement = ({ isDataEntry = false }) => {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cattle Analytics</CardTitle>
+          <Card className="border-green-100 shadow-sm">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-transparent border-b border-green-100">
+              <CardTitle className="text-lg text-green-800">Cattle Analytics</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Cattle Composition</CardTitle>
+                <Card className="border-green-100 shadow-sm">
+                  <CardHeader className="pb-2 bg-green-50 border-b border-green-100">
+                    <CardTitle className="text-base text-green-800">Cattle Composition</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div className="flex justify-between">
-                        <span>Mother Cows:</span>
-                        <span className="font-medium">{cattleCounts.motherCows}</span>
+                        <span className="text-green-700">Mother Cows:</span>
+                        <span className="font-medium text-green-800">{cattleCounts.motherCows}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Heifers:</span>
-                        <span className="font-medium">{cattleCounts.heifers}</span>
+                        <span className="text-green-700">Heifers:</span>
+                        <span className="font-medium text-green-800">{cattleCounts.heifers}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Bulls:</span>
-                        <span className="font-medium">{cattleCounts.bulls}</span>
+                        <span className="text-green-700">Bulls:</span>
+                        <span className="font-medium text-green-800">{cattleCounts.bulls}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Male Calves:</span>
-                        <span className="font-medium">{cattleCounts.malecalves}</span>
+                        <span className="text-green-700">Male Calves:</span>
+                        <span className="font-medium text-green-800">{cattleCounts.malecalves}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Female Calves:</span>
-                        <span className="font-medium">{cattleCounts.femalecalves}</span>
+                        <span className="text-green-700">Female Calves:</span>
+                        <span className="font-medium text-green-800">{cattleCounts.femalecalves}</span>
                       </div>
-                      <div className="flex justify-between font-bold">
-                        <span>Total Head Count:</span>
-                        <span>{Object.values(cattleCounts).reduce((a, b) => a + b, 0)}</span>
+                      <div className="flex justify-between font-bold border-t border-green-100 pt-2">
+                        <span className="text-green-800">Total Head Count:</span>
+                        <span className="text-green-800">{Object.values(cattleCounts).reduce((a, b) => a + b, 0)}</span>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Herd Health</CardTitle>
+                <Card className="border-green-100 shadow-sm">
+                  <CardHeader className="pb-2 bg-green-50 border-b border-green-100">
+                    <CardTitle className="text-base text-green-800">Herd Health</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between mb-1">
-                          <span>Overall Herd Health:</span>
+                          <span className="text-green-700">Overall Herd Health:</span>
                           <span className="font-medium text-green-600">Good</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div className="w-full bg-green-100 rounded-full h-2.5">
                           <div className="bg-green-600 h-2.5 rounded-full" style={{ width: '80%' }}></div>
                         </div>
                       </div>
                       <div className="flex justify-between">
-                        <span>Vaccination Rate:</span>
-                        <span className="font-medium">95%</span>
+                        <span className="text-green-700">Vaccination Rate:</span>
+                        <span className="font-medium text-green-800">95%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Milk Producing Cows:</span>
-                        <span className="font-medium">{cattleCounts.motherCows}</span>
+                        <span className="text-green-700">Milk Producing Cows:</span>
+                        <span className="font-medium text-green-800">{cattleCounts.motherCows}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Breeding Potential:</span>
-                        <span className="font-medium">High</span>
+                        <span className="text-green-700">Breeding Potential:</span>
+                        <span className="font-medium text-green-800">High</span>
                       </div>
                     </div>
                   </CardContent>
