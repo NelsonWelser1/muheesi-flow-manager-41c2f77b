@@ -9,16 +9,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Droplet, RefreshCw, Download, BarChart2, PlusCircle, Calendar } from "lucide-react";
+import { Droplet, RefreshCw, Download, BarChart2, PlusCircle, Calendar, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 const MilkProduction = ({ isDataEntry = false }) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('records');
   const [milkData, setMilkData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [milkStats, setMilkStats] = useState({
     todayTotal: 0,
     weeklyAverage: 0,
@@ -35,6 +36,9 @@ const MilkProduction = ({ isDataEntry = false }) => {
     notes: ''
   });
 
+  // Form validation state
+  const [errors, setErrors] = useState({});
+
   // Fetch milk data
   const fetchMilkData = async () => {
     setIsLoading(true);
@@ -43,17 +47,19 @@ const MilkProduction = ({ isDataEntry = false }) => {
         .from('milk_production')
         .select('*')
         .eq('farm_id', 'bukomero')
-        .order('date', { ascending: false });
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      console.log('Fetched milk data:', data);
       setMilkData(data || []);
       
       // Calculate milk stats
       if (data && data.length > 0) {
         const today = format(new Date(), 'yyyy-MM-dd');
         const todayData = data.filter(record => record.date === today);
-        const todayTotal = todayData.reduce((sum, record) => sum + (record.volume || 0), 0);
+        const todayTotal = todayData.reduce((sum, record) => sum + (parseFloat(record.volume) || 0), 0);
         
         // Calculate weekly average (last 7 days)
         const sevenDaysAgo = new Date();
@@ -61,7 +67,7 @@ const MilkProduction = ({ isDataEntry = false }) => {
         const sevenDaysAgoStr = format(sevenDaysAgo, 'yyyy-MM-dd');
         
         const weekData = data.filter(record => record.date >= sevenDaysAgoStr);
-        const weeklyTotal = weekData.reduce((sum, record) => sum + (record.volume || 0), 0);
+        const weeklyTotal = weekData.reduce((sum, record) => sum + (parseFloat(record.volume) || 0), 0);
         const weeklyAverage = weekData.length > 0 ? weeklyTotal / 7 : 0;
         
         // Calculate monthly total
@@ -70,7 +76,7 @@ const MilkProduction = ({ isDataEntry = false }) => {
         const thirtyDaysAgoStr = format(thirtyDaysAgo, 'yyyy-MM-dd');
         
         const monthData = data.filter(record => record.date >= thirtyDaysAgoStr);
-        const monthlyTotal = monthData.reduce((sum, record) => sum + (record.volume || 0), 0);
+        const monthlyTotal = monthData.reduce((sum, record) => sum + (parseFloat(record.volume) || 0), 0);
         
         setMilkStats({
           todayTotal,
@@ -90,35 +96,117 @@ const MilkProduction = ({ isDataEntry = false }) => {
     }
   };
 
+  // Set up real-time subscription to milk_production table
   useEffect(() => {
     fetchMilkData();
+    
+    // Set up real-time subscription
+    const subscription = supabase
+      .channel('milk-production-changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'milk_production',
+        filter: 'farm_id=eq.bukomero'
+      }, (payload) => {
+        console.log('Change received!', payload);
+        fetchMilkData();
+      })
+      .subscribe();
+      
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, []);
+
+  // Validate the form
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!newRecord.date) {
+      newErrors.date = 'Date is required';
+    }
+    
+    if (!newRecord.volume) {
+      newErrors.volume = 'Volume is required';
+    } else if (parseFloat(newRecord.volume) <= 0) {
+      newErrors.volume = 'Volume must be greater than zero';
+    }
+    
+    if (!newRecord.milkingCows) {
+      newErrors.milkingCows = 'Number of milking cows is required';
+    } else if (parseInt(newRecord.milkingCows) <= 0) {
+      newErrors.milkingCows = 'Number of milking cows must be greater than zero';
+    }
+    
+    if (newRecord.fatContent && (parseFloat(newRecord.fatContent) <= 0 || parseFloat(newRecord.fatContent) > 100)) {
+      newErrors.fatContent = 'Fat content must be between 0 and 100%';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewRecord(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when user types
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
   };
 
   // Handle select changes
   const handleSelectChange = (name, value) => {
     setNewRecord(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when user selects
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!newRecord.date || !newRecord.volume || !newRecord.milkingCows) {
+    // Validate form
+    if (!validateForm()) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
+        title: "Validation Error",
+        description: "Please check the form for errors.",
         variant: "destructive"
       });
       return;
     }
 
+    setIsSubmitting(true);
+    
     try {
+      // Check for duplicate entry (same day and session)
+      const { data: existingData, error: checkError } = await supabase
+        .from('milk_production')
+        .select('id')
+        .eq('farm_id', 'bukomero')
+        .eq('date', newRecord.date)
+        .eq('session', newRecord.session);
+        
+      if (checkError) throw checkError;
+      
+      if (existingData && existingData.length > 0) {
+        toast({
+          title: "Duplicate Entry",
+          description: `A record for ${format(new Date(newRecord.date), 'PP')} ${newRecord.session} session already exists.`,
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Insert the new record
       const { data, error } = await supabase
         .from('milk_production')
         .insert([{
@@ -128,12 +216,13 @@ const MilkProduction = ({ isDataEntry = false }) => {
           milking_cows: parseInt(newRecord.milkingCows),
           fat_content: newRecord.fatContent ? parseFloat(newRecord.fatContent) : null,
           notes: newRecord.notes,
-          farm_id: 'bukomero',
-          created_at: new Date().toISOString()
+          farm_id: 'bukomero'
         }])
         .select();
 
       if (error) throw error;
+      
+      console.log('Milk record added:', data);
       
       toast({
         title: "Success",
@@ -150,9 +239,6 @@ const MilkProduction = ({ isDataEntry = false }) => {
         notes: ''
       });
       
-      // Refresh data
-      fetchMilkData();
-      
       // Switch to records tab
       setActiveTab('records');
     } catch (error) {
@@ -162,6 +248,8 @@ const MilkProduction = ({ isDataEntry = false }) => {
         description: "Failed to add milk record: " + error.message,
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -174,9 +262,37 @@ const MilkProduction = ({ isDataEntry = false }) => {
   };
 
   const handleExport = () => {
+    // Create CSV content
+    const headers = ["Date", "Session", "Volume (L)", "Milking Cows", "Fat %", "Notes"];
+    let csvContent = headers.join(",") + "\n";
+    
+    milkData.forEach(record => {
+      const formattedDate = record.date ? format(new Date(record.date), 'yyyy-MM-dd') : 'N/A';
+      const row = [
+        formattedDate,
+        record.session,
+        record.volume,
+        record.milking_cows,
+        record.fat_content || '',
+        record.notes ? `"${record.notes.replace(/"/g, '""')}"` : ''
+      ];
+      csvContent += row.join(",") + "\n";
+    });
+    
+    // Create and download the file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `milk-production-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
     toast({
-      title: "Export Started",
-      description: "Preparing milk production data export..."
+      title: "Export Complete",
+      description: "Milk production data has been exported to CSV."
     });
   };
 
@@ -198,7 +314,7 @@ const MilkProduction = ({ isDataEntry = false }) => {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button variant="outline" size="sm" onClick={handleExport}>
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={milkData.length === 0}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -295,10 +411,13 @@ const MilkProduction = ({ isDataEntry = false }) => {
                         type="date"
                         value={newRecord.date}
                         onChange={handleInputChange}
-                        className="pl-10"
+                        className={`pl-10 ${errors.date ? 'border-red-500' : ''}`}
                         required
                       />
                     </div>
+                    {errors.date && (
+                      <p className="text-red-500 text-xs mt-1">{errors.date}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -307,7 +426,7 @@ const MilkProduction = ({ isDataEntry = false }) => {
                       value={newRecord.session}
                       onValueChange={(value) => handleSelectChange('session', value)}
                     >
-                      <SelectTrigger id="session">
+                      <SelectTrigger id="session" className={errors.session ? 'border-red-500' : ''}>
                         <SelectValue placeholder="Select session" />
                       </SelectTrigger>
                       <SelectContent>
@@ -316,6 +435,9 @@ const MilkProduction = ({ isDataEntry = false }) => {
                         <SelectItem value="evening">Evening</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.session && (
+                      <p className="text-red-500 text-xs mt-1">{errors.session}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -328,8 +450,12 @@ const MilkProduction = ({ isDataEntry = false }) => {
                       value={newRecord.volume}
                       onChange={handleInputChange}
                       placeholder="Enter milk volume"
+                      className={errors.volume ? 'border-red-500' : ''}
                       required
                     />
+                    {errors.volume && (
+                      <p className="text-red-500 text-xs mt-1">{errors.volume}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -341,8 +467,12 @@ const MilkProduction = ({ isDataEntry = false }) => {
                       value={newRecord.milkingCows}
                       onChange={handleInputChange}
                       placeholder="Enter count"
+                      className={errors.milkingCows ? 'border-red-500' : ''}
                       required
                     />
+                    {errors.milkingCows && (
+                      <p className="text-red-500 text-xs mt-1">{errors.milkingCows}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -355,7 +485,11 @@ const MilkProduction = ({ isDataEntry = false }) => {
                       value={newRecord.fatContent}
                       onChange={handleInputChange}
                       placeholder="Enter fat percentage"
+                      className={errors.fatContent ? 'border-red-500' : ''}
                     />
+                    {errors.fatContent && (
+                      <p className="text-red-500 text-xs mt-1">{errors.fatContent}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
@@ -372,8 +506,19 @@ const MilkProduction = ({ isDataEntry = false }) => {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                    Add Milk Record
+                  <Button 
+                    type="submit" 
+                    className="bg-green-600 hover:bg-green-700"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Add Milk Record"
+                    )}
                   </Button>
                 </div>
               </form>
@@ -393,7 +538,7 @@ const MilkProduction = ({ isDataEntry = false }) => {
                     <CardTitle className="text-base">Today's Production</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-blue-600">{milkStats.todayTotal.toFixed(1)} L</div>
+                    <div className="text-3xl font-bold text-green-600">{milkStats.todayTotal.toFixed(1)} L</div>
                     <p className="text-sm text-muted-foreground mt-1">
                       {format(new Date(), 'PP')}
                     </p>
@@ -417,7 +562,7 @@ const MilkProduction = ({ isDataEntry = false }) => {
                     <CardTitle className="text-base">Monthly Total</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-purple-600">{milkStats.monthlyTotal.toFixed(1)} L</div>
+                    <div className="text-3xl font-bold text-green-600">{milkStats.monthlyTotal.toFixed(1)} L</div>
                     <p className="text-sm text-muted-foreground mt-1">
                       Last 30 days
                     </p>
@@ -434,29 +579,39 @@ const MilkProduction = ({ isDataEntry = false }) => {
                         <div className="flex justify-between mb-1">
                           <span>Average Production per Cow:</span>
                           <span className="font-medium">
-                            {(milkStats.weeklyAverage / Math.max(1, milkData[0]?.milking_cows || 0)).toFixed(1)} L/day
+                            {(milkData.length > 0 && milkData[0]?.milking_cows > 0) ? 
+                              (milkStats.weeklyAverage / Math.max(1, parseInt(milkData[0]?.milking_cows || 0))).toFixed(1) : 
+                              "0.0"} L/day
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: '75%' }}></div>
+                          <div className="bg-green-600 h-2.5 rounded-full" style={{ width: '75%' }}></div>
                         </div>
                       </div>
                       <div>
                         <div className="flex justify-between mb-1">
                           <span>Morning vs Evening Production:</span>
-                          <span className="font-medium">55% vs 45%</span>
+                          <span className="font-medium">
+                            {calculateSessionPercentages()}
+                          </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-amber-500 h-2.5 rounded-full" style={{ width: '55%' }}></div>
+                          <div className="bg-amber-500 h-2.5 rounded-full" style={{ 
+                            width: calculateMorningPercentage() + '%' 
+                          }}></div>
                         </div>
                       </div>
                       <div>
                         <div className="flex justify-between mb-1">
                           <span>Fat Content Trend:</span>
-                          <span className="font-medium text-green-600">Good</span>
+                          <span className="font-medium text-green-600">
+                            {calculateFatContentStatus()}
+                          </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-green-600 h-2.5 rounded-full" style={{ width: '85%' }}></div>
+                          <div className="bg-green-600 h-2.5 rounded-full" style={{ 
+                            width: calculateFatContentPercentage() + '%' 
+                          }}></div>
                         </div>
                       </div>
                     </div>
@@ -469,6 +624,74 @@ const MilkProduction = ({ isDataEntry = false }) => {
       </Tabs>
     </div>
   );
+  
+  // Helper function to calculate session percentages
+  function calculateSessionPercentages() {
+    if (milkData.length === 0) return "N/A";
+    
+    const morningRecords = milkData.filter(record => record.session === 'morning');
+    const eveningRecords = milkData.filter(record => record.session === 'evening');
+    
+    const morningTotal = morningRecords.reduce((sum, record) => sum + parseFloat(record.volume || 0), 0);
+    const eveningTotal = eveningRecords.reduce((sum, record) => sum + parseFloat(record.volume || 0), 0);
+    
+    const total = morningTotal + eveningTotal;
+    
+    if (total === 0) return "N/A";
+    
+    const morningPercent = Math.round((morningTotal / total) * 100);
+    const eveningPercent = 100 - morningPercent;
+    
+    return `${morningPercent}% vs ${eveningPercent}%`;
+  }
+  
+  function calculateMorningPercentage() {
+    if (milkData.length === 0) return 50;
+    
+    const morningRecords = milkData.filter(record => record.session === 'morning');
+    const eveningRecords = milkData.filter(record => record.session === 'evening');
+    
+    const morningTotal = morningRecords.reduce((sum, record) => sum + parseFloat(record.volume || 0), 0);
+    const eveningTotal = eveningRecords.reduce((sum, record) => sum + parseFloat(record.volume || 0), 0);
+    
+    const total = morningTotal + eveningTotal;
+    
+    if (total === 0) return 50;
+    
+    return Math.round((morningTotal / total) * 100);
+  }
+  
+  function calculateFatContentStatus() {
+    if (milkData.length === 0) return "N/A";
+    
+    const recordsWithFatContent = milkData.filter(record => record.fat_content);
+    
+    if (recordsWithFatContent.length === 0) return "No Data";
+    
+    const avgFatContent = recordsWithFatContent.reduce((sum, record) => sum + parseFloat(record.fat_content || 0), 0) / 
+      recordsWithFatContent.length;
+    
+    if (avgFatContent >= 3.8) return "Excellent";
+    if (avgFatContent >= 3.5) return "Good";
+    if (avgFatContent >= 3.2) return "Average";
+    return "Below Average";
+  }
+  
+  function calculateFatContentPercentage() {
+    if (milkData.length === 0) return 0;
+    
+    const recordsWithFatContent = milkData.filter(record => record.fat_content);
+    
+    if (recordsWithFatContent.length === 0) return 0;
+    
+    const avgFatContent = recordsWithFatContent.reduce((sum, record) => sum + parseFloat(record.fat_content || 0), 0) / 
+      recordsWithFatContent.length;
+    
+    // Scale the percentage from 0 to 100 based on fat content between 2.5% and 4.5%
+    const scaledPercentage = Math.min(100, Math.max(0, ((avgFatContent - 2.5) / 2) * 100));
+    
+    return Math.round(scaledPercentage);
+  }
 };
 
 export default MilkProduction;
