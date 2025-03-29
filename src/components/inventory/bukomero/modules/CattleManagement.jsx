@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Download, Beef, BarChart2, PlusCircle } from "lucide-react";
+import { RefreshCw, Download, Beef, BarChart2, PlusCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
 import { format } from 'date-fns';
@@ -38,6 +38,10 @@ const CattleManagement = ({ isDataEntry = false }) => {
     notes: '',
     status: 'active'
   });
+  
+  // Form validation state
+  const [validationErrors, setValidationErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchCattleData = async () => {
     setIsLoading(true);
@@ -50,6 +54,7 @@ const CattleManagement = ({ isDataEntry = false }) => {
 
       if (error) throw error;
 
+      console.log('Fetched cattle data:', data);
       setCattleData(data || []);
       
       const counts = {
@@ -71,6 +76,12 @@ const CattleManagement = ({ isDataEntry = false }) => {
       });
       
       setCattleCounts(counts);
+      
+      toast({
+        title: "Data Loaded Successfully",
+        description: `${data.length} cattle records loaded.`,
+        variant: "default"
+      });
     } catch (err) {
       console.error('Error fetching cattle data:', err);
       toast({
@@ -85,54 +96,133 @@ const CattleManagement = ({ isDataEntry = false }) => {
 
   useEffect(() => {
     fetchCattleData();
+    
+    // Set up a realtime subscription to cattle_inventory table
+    const cattleSubscription = supabase
+      .channel('cattle_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'cattle_inventory', filter: 'farm_id=eq.bukomero' }, 
+        (payload) => {
+          console.log('Realtime update received:', payload);
+          fetchCattleData();
+      })
+      .subscribe();
+      
+    // Cleanup subscription on component unmount
+    return () => {
+      supabase.removeChannel(cattleSubscription);
+    };
   }, []);
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!newCattle.tagNumber || newCattle.tagNumber.trim() === '') {
+      errors.tagNumber = 'Tag number is required';
+    }
+    
+    if (!newCattle.type) {
+      errors.type = 'Cattle type is required';
+    }
+    
+    if (newCattle.weight && isNaN(Number(newCattle.weight))) {
+      errors.weight = 'Weight must be a valid number';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewCattle(prev => ({ ...prev, [name]: value }));
+    
+    // Clear validation error for this field when user types
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
   };
 
   const handleSelectChange = (name, value) => {
     setNewCattle(prev => ({ ...prev, [name]: value }));
+    
+    // Clear validation error for this field when user selects
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!newCattle.tagNumber || !newCattle.type) {
+    if (!validateForm()) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
+        title: "Validation Error",
+        description: "Please correct the errors in the form.",
         variant: "destructive"
       });
       return;
     }
 
+    setIsSubmitting(true);
+    
     try {
+      // Prepare data for Supabase
+      const cattleRecord = {
+        tag_number: newCattle.tagNumber.trim(),
+        name: newCattle.name.trim() || null,
+        cattle_type: newCattle.type,
+        breed: newCattle.breed,
+        date_of_birth: newCattle.dob || null,
+        weight: newCattle.weight ? parseFloat(newCattle.weight) : null,
+        health_status: newCattle.health,
+        notes: newCattle.notes.trim() || null,
+        status: newCattle.status,
+        farm_id: 'bukomero'
+      };
+      
+      console.log('Submitting cattle record:', cattleRecord);
+      
+      // Check for duplicate tag number
+      const { data: existingCattle, error: checkError } = await supabase
+        .from('cattle_inventory')
+        .select('id')
+        .eq('tag_number', cattleRecord.tag_number)
+        .eq('farm_id', 'bukomero');
+        
+      if (checkError) throw checkError;
+      
+      if (existingCattle && existingCattle.length > 0) {
+        toast({
+          title: "Duplicate Tag Number",
+          description: "A cattle with this tag number already exists.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Insert the new record
       const { data, error } = await supabase
         .from('cattle_inventory')
-        .insert([{
-          tag_number: newCattle.tagNumber,
-          name: newCattle.name,
-          cattle_type: newCattle.type,
-          breed: newCattle.breed,
-          date_of_birth: newCattle.dob,
-          weight: newCattle.weight ? parseFloat(newCattle.weight) : null,
-          health_status: newCattle.health,
-          notes: newCattle.notes,
-          status: newCattle.status,
-          farm_id: 'bukomero',
-          created_at: new Date().toISOString()
-        }])
+        .insert([cattleRecord])
         .select();
 
       if (error) throw error;
+      
+      console.log('Cattle record added successfully:', data);
       
       toast({
         title: "Success",
         description: "Cattle record added successfully.",
       });
       
+      // Reset form after successful submission
       setNewCattle({
         tagNumber: '',
         name: '',
@@ -145,8 +235,7 @@ const CattleManagement = ({ isDataEntry = false }) => {
         status: 'active'
       });
       
-      fetchCattleData();
-      
+      // Switch to registry tab to see the new record
       setActiveTab('registry');
     } catch (error) {
       console.error('Error adding cattle record:', error);
@@ -155,15 +244,13 @@ const CattleManagement = ({ isDataEntry = false }) => {
         description: "Failed to add cattle record: " + error.message,
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleRefresh = () => {
     fetchCattleData();
-    toast({
-      title: "Data Refreshed",
-      description: "Cattle data has been updated."
-    });
   };
 
   const handleExport = () => {
@@ -171,6 +258,47 @@ const CattleManagement = ({ isDataEntry = false }) => {
       title: "Export Started",
       description: "Preparing cattle data export..."
     });
+    
+    try {
+      // Create CSV content
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Tag Number,Name,Type,Breed,Date of Birth,Weight,Health Status,Status\n";
+      
+      cattleData.forEach(cattle => {
+        const row = [
+          cattle.tag_number,
+          cattle.name || "",
+          getCattleTypeLabel(cattle.cattle_type),
+          getBreedLabel(cattle.breed),
+          cattle.date_of_birth || "",
+          cattle.weight ? `${cattle.weight} kg` : "",
+          cattle.health_status,
+          cattle.status
+        ].join(",");
+        csvContent += row + "\n";
+      });
+      
+      // Create download link and trigger download
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `bukomero_cattle_inventory_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Export Complete",
+        description: "Cattle data has been exported successfully.",
+      });
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export cattle data: " + error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const getCattleTypeLabel = (type) => {
@@ -285,7 +413,7 @@ const CattleManagement = ({ isDataEntry = false }) => {
                           <TableCell>{getCattleTypeLabel(cattle.cattle_type)}</TableCell>
                           <TableCell>{getBreedLabel(cattle.breed)}</TableCell>
                           <TableCell className="hidden md:table-cell">
-                            {cattle.date_of_birth ? format(new Date(cattle.date_of_birth), 'PP') : 'N/A'}
+                            {cattle.date_of_birth ? format(new Date(cattle.date_of_birth), 'PPP') : 'N/A'}
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
                             {cattle.weight ? `${cattle.weight} kg` : 'N/A'}
@@ -312,7 +440,7 @@ const CattleManagement = ({ isDataEntry = false }) => {
               <CardTitle className="text-lg text-green-800">Add New Cattle</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4 pt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="tagNumber" className="text-green-700">Tag Number *</Label>
@@ -322,9 +450,17 @@ const CattleManagement = ({ isDataEntry = false }) => {
                       value={newCattle.tagNumber}
                       onChange={handleInputChange}
                       placeholder="Enter tag number"
-                      className="border-green-200 focus:border-green-300 focus:ring-green-200"
+                      className={`border-green-200 focus:border-green-300 focus:ring-green-200 ${
+                        validationErrors.tagNumber ? 'border-red-500' : ''
+                      }`}
                       required
                     />
+                    {validationErrors.tagNumber && (
+                      <p className="text-red-500 text-xs flex items-center mt-1">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        {validationErrors.tagNumber}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -345,7 +481,9 @@ const CattleManagement = ({ isDataEntry = false }) => {
                       value={newCattle.type}
                       onValueChange={(value) => handleSelectChange('type', value)}
                     >
-                      <SelectTrigger id="type" className="border-green-200 focus:ring-green-200">
+                      <SelectTrigger id="type" className={`border-green-200 focus:ring-green-200 ${
+                        validationErrors.type ? 'border-red-500' : ''
+                      }`}>
                         <SelectValue placeholder="Select cattle type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -356,6 +494,12 @@ const CattleManagement = ({ isDataEntry = false }) => {
                         <SelectItem value="female_calf">Female Calf</SelectItem>
                       </SelectContent>
                     </Select>
+                    {validationErrors.type && (
+                      <p className="text-red-500 text-xs flex items-center mt-1">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        {validationErrors.type}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -396,11 +540,20 @@ const CattleManagement = ({ isDataEntry = false }) => {
                       id="weight"
                       name="weight"
                       type="number"
+                      step="0.1"
                       value={newCattle.weight}
                       onChange={handleInputChange}
                       placeholder="Enter weight"
-                      className="border-green-200 focus:border-green-300 focus:ring-green-200"
+                      className={`border-green-200 focus:border-green-300 focus:ring-green-200 ${
+                        validationErrors.weight ? 'border-red-500' : ''
+                      }`}
                     />
+                    {validationErrors.weight && (
+                      <p className="text-red-500 text-xs flex items-center mt-1">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        {validationErrors.weight}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -454,12 +607,20 @@ const CattleManagement = ({ isDataEntry = false }) => {
                   </div>
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-2">
                   <Button 
                     type="submit" 
+                    disabled={isSubmitting}
                     className="bg-green-600 hover:bg-green-700 text-white"
                   >
-                    Add Cattle Record
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin mr-2 h-4 w-4 border-b-2 border-white rounded-full"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      'Add Cattle Record'
+                    )}
                   </Button>
                 </div>
               </form>
