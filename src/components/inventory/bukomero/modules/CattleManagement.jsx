@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Cow, RefreshCw, Download, BarChart2, FileDown } from "lucide-react";
+import { RefreshCw, Download, Beef, BarChart2, PlusCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
 import { format } from 'date-fns';
@@ -27,7 +26,6 @@ const CattleManagement = ({ isDataEntry = false }) => {
     femalecalves: 0
   });
   
-  // New cattle form state
   const [newCattle, setNewCattle] = useState({
     tagNumber: '',
     name: '',
@@ -40,7 +38,6 @@ const CattleManagement = ({ isDataEntry = false }) => {
     status: 'active'
   });
 
-  // Fetch cattle data
   const fetchCattleData = async () => {
     setIsLoading(true);
     try {
@@ -54,7 +51,6 @@ const CattleManagement = ({ isDataEntry = false }) => {
 
       setCattleData(data || []);
       
-      // Calculate counts
       const counts = {
         motherCows: 0,
         heifers: 0,
@@ -90,18 +86,15 @@ const CattleManagement = ({ isDataEntry = false }) => {
     fetchCattleData();
   }, []);
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewCattle(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle select changes
   const handleSelectChange = (name, value) => {
     setNewCattle(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -139,7 +132,6 @@ const CattleManagement = ({ isDataEntry = false }) => {
         description: "Cattle record added successfully.",
       });
       
-      // Reset form
       setNewCattle({
         tagNumber: '',
         name: '',
@@ -152,10 +144,8 @@ const CattleManagement = ({ isDataEntry = false }) => {
         status: 'active'
       });
       
-      // Refresh data
       fetchCattleData();
       
-      // Switch to registry tab
       setActiveTab('registry');
     } catch (error) {
       console.error('Error adding cattle record:', error);
@@ -224,7 +214,7 @@ const CattleManagement = ({ isDataEntry = false }) => {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-1 md:grid-cols-3 mb-4">
           <TabsTrigger value="registry" className="flex items-center gap-2">
-            <Cow className="h-4 w-4" />
+            <Beef className="h-4 w-4" />
             Cattle Registry
           </TabsTrigger>
           <TabsTrigger value="add" className="flex items-center gap-2" disabled={!isDataEntry}>
