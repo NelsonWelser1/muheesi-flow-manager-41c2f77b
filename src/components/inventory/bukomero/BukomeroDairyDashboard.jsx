@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -6,32 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import {
-  Search,
-  RefreshCw,
-  FileDown,
-  Printer,
-  Plus,
-  ArrowLeft,
-  Beef,
-  Droplet,
-  DollarSign,
-  Tractor,
-  Users,
-  BookOpen,
-  BarChart3,
-  Calendar,
-  AlertTriangle,
-  ClipboardCheck
-} from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Search, RefreshCw, FileDown, Printer, Plus, ArrowLeft, Beef, Droplet, DollarSign, Tractor, Users, BookOpen, BarChart3, Calendar, AlertTriangle, ClipboardCheck } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
@@ -41,29 +16,31 @@ import CattleFattening from './modules/CattleFattening';
 import SilageManager from '../shared/modules/SilageManager';
 import StaffMembers from '../shared/modules/StaffMembers';
 import { useBukomeroDairyData } from '@/hooks/useBukomeroDairyData';
-
 const BukomeroDairyDashboard = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const { farmMetrics, isLoading, error, refreshMetrics } = useBukomeroDairyData();
-  
+  const {
+    farmMetrics,
+    isLoading,
+    error,
+    refreshMetrics
+  } = useBukomeroDairyData();
   const handleExportAll = () => {
     toast({
       title: "Export Started",
-      description: "Preparing your Bukomero Dairy Farm dashboard export...",
+      description: "Preparing your Bukomero Dairy Farm dashboard export..."
     });
   };
-
   const handlePrint = () => {
     toast({
       title: "Print Prepared",
-      description: "Sending Bukomero Dairy dashboard to printer...",
+      description: "Sending Bukomero Dairy dashboard to printer..."
     });
   };
-  
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6 px-[210px]">
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={() => navigate('/manage-inventory')} className="flex items-center space-x-2">
           <ArrowLeft className="h-4 w-4" />
@@ -88,30 +65,15 @@ const BukomeroDairyDashboard = () => {
             <CardDescription className="text-green-700">Data Entry Terminal - Managed by Kyalima Farmers Limited</CardDescription>
           </div>
           <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1 border-green-200 text-green-700 hover:bg-green-50"
-              onClick={() => refreshMetrics()}
-            >
+            <Button variant="outline" size="sm" className="h-8 gap-1 border-green-200 text-green-700 hover:bg-green-50" onClick={() => refreshMetrics()}>
               <RefreshCw className="h-4 w-4" />
               <span className="hidden sm:inline">Refresh</span>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1 border-green-200 text-green-700 hover:bg-green-50"
-              onClick={handlePrint}
-            >
+            <Button variant="outline" size="sm" className="h-8 gap-1 border-green-200 text-green-700 hover:bg-green-50" onClick={handlePrint}>
               <Printer className="h-4 w-4" />
               <span className="hidden sm:inline">Print</span>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1 border-green-200 text-green-700 hover:bg-green-50"
-              onClick={handleExportAll}
-            >
+            <Button variant="outline" size="sm" className="h-8 gap-1 border-green-200 text-green-700 hover:bg-green-50" onClick={handleExportAll}>
               <FileDown className="h-4 w-4" />
               <span className="hidden sm:inline">Export</span>
             </Button>
@@ -381,8 +343,6 @@ const BukomeroDairyDashboard = () => {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default BukomeroDairyDashboard;
