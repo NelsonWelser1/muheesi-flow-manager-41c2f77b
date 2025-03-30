@@ -3,17 +3,16 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import CattleFattening from '../../bukomero/modules/CattleFattening';
 import CattleRegistration from './CattleRegistration';
 import CattleHealth from './CattleHealth';
 import CattleGrowth from './CattleGrowth';
 import CattleList from './CattleList';
+import KyalimaCattleFattening from './KyalimaCattleFattening';
 
-// Add a modal state for displaying the add new cattle form
 const LivestockManagement = () => {
   const [activeTab, setActiveTab] = useState('cattle');
 
-  // Custom wrapper for CattleFattening component
+  // Custom wrapper for KyalimaCattleFattening component
   const CustomCattleFattening = () => {
     return (
       <div className="cattle-fattening-wrapper">
@@ -29,7 +28,7 @@ const LivestockManagement = () => {
             <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Health Monitoring</Badge>
           </div>
         </div>
-        <CattleFattening />
+        <KyalimaCattleFattening />
       </div>
     );
   };

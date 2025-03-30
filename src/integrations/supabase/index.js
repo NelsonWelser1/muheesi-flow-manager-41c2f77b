@@ -62,6 +62,16 @@ import { useAssociationForm } from '@/hooks/useAssociationForm';
 import { useCertifications } from './hooks/associations/useCertifications';
 import { useAssociationTrainings } from './hooks/associations/useAssociationTrainings';
 
+// Import Kyalima cattle fattening hooks
+import {
+    useFetchCattleFattening,
+    useFetchCattleFatteningById,
+    useAddCattleFattening,
+    useUpdateCattleFattening,
+    useDeleteCattleFattening,
+    useCattleFatteningAnalytics
+} from './hooks/useKyalimaCattleFattening';
+
 // Export everything individually
 export {
     supabase,
@@ -117,4 +127,11 @@ export {
     useAssociationMembers,
     useCertifications,
     useAssociationTrainings,
+    // Kyalima Cattle Fattening
+    useFetchCattleFattening,
+    useFetchCattleFatteningById,
+    useAddCattleFattening,
+    useUpdateCattleFattening,
+    useDeleteCattleFattening,
+    useCattleFatteningAnalytics
 };

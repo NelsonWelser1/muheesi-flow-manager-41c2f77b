@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS cattle_fattening (
   feeding_regime TEXT NOT NULL DEFAULT 'standard' CHECK (feeding_regime IN ('standard', 'intensive', 'premium', 'specialized')),
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'sold', 'deceased', 'transferred')),
   notes TEXT,
-  farm_id TEXT NOT NULL,
+  farm_id TEXT NOT NULL DEFAULT 'kyalima',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
