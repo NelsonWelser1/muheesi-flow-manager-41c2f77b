@@ -99,15 +99,17 @@ const CattleHealth = () => {
               <div className="space-y-2">
                 <Label>Cattle ID/Tag Number</Label>
                 <Select
-                  value={selectedCattle?.tag_number}
+                  value={selectedCattle?.tag_number || ""}
                   onValueChange={(value) => setSelectedCattle({ id: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select cattle" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Cattle list will be populated here */}
+                    {/* Make sure each SelectItem has a non-empty value */}
                     <SelectItem value="TAG001">TAG001</SelectItem>
+                    <SelectItem value="TAG002">TAG002</SelectItem>
+                    <SelectItem value="TAG003">TAG003</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
