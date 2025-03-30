@@ -7,6 +7,7 @@ import CattleFattening from '../../bukomero/modules/CattleFattening';
 import CattleRegistration from './CattleRegistration';
 import CattleHealth from './CattleHealth';
 import CattleGrowth from './CattleGrowth';
+import CattleList from './CattleList';
 
 // Custom wrapper for CattleFattening component
 const CustomCattleFattening = () => {
@@ -36,13 +37,17 @@ const LivestockManagement = () => {
         <CardTitle>Livestock Management</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="registration" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-4">
+        <Tabs defaultValue="cattle" className="w-full">
+          <TabsList className="grid grid-cols-5 mb-4">
+            <TabsTrigger value="cattle">Cattle List</TabsTrigger>
             <TabsTrigger value="registration">Registration</TabsTrigger>
             <TabsTrigger value="health">Health Records</TabsTrigger>
             <TabsTrigger value="growth">Growth Tracking</TabsTrigger>
             <TabsTrigger value="fattening">Fattening Programs</TabsTrigger>
           </TabsList>
+          <TabsContent value="cattle">
+            <CattleList />
+          </TabsContent>
           <TabsContent value="registration">
             <CattleRegistration />
           </TabsContent>
