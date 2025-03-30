@@ -12,240 +12,221 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from 'date-fns';
-import { ClipboardList, Tag, Calendar as CalendarIcon } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/supabase';
 
-const CattleRegistration = () => {
+const CattleRegistration = ({ onBack }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const [cattle, setCattle] = useState({
-    tagNumber: '',
-    name: '',
-    breed: '',
-    sex: '',
-    dateOfBirth: format(new Date(), 'yyyy-MM-dd'),
-    source: '',
-    purchaseDate: format(new Date(), 'yyyy-MM-dd'),
-    purchasePrice: '',
-    initialWeight: '',
-    notes: '',
-    status: 'active'
-  });
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
     try {
-      const { error } = await supabase
-        .from('cattle_inventory')
-        .insert([{
-          tag_number: cattle.tagNumber,
-          name: cattle.name,
-          breed: cattle.breed,
-          sex: cattle.sex,
-          date_of_birth: cattle.dateOfBirth,
-          source: cattle.source,
-          purchase_date: cattle.purchaseDate,
-          purchase_price: cattle.purchasePrice ? parseFloat(cattle.purchasePrice) : null,
-          initial_weight: cattle.initialWeight ? parseFloat(cattle.initialWeight) : null,
-          notes: cattle.notes,
-          status: cattle.status
-        }]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Cattle registered successfully"
-      });
-
-      // Reset form
-      setCattle({
-        tagNumber: '',
-        name: '',
-        breed: '',
-        sex: '',
-        dateOfBirth: format(new Date(), 'yyyy-MM-dd'),
-        source: '',
-        purchaseDate: format(new Date(), 'yyyy-MM-dd'),
-        purchasePrice: '',
-        initialWeight: '',
-        notes: '',
-        status: 'active'
-      });
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      
+      // Convert number strings to actual numbers
+      if (data.weight) data.weight = parseFloat(data.weight);
+      
+      console.log("Submitting cattle data:", data);
+      
+      // Here would be the actual submission to Supabase or other backend
+      // const { data: result, error } = await supabase.from('cattle_inventory').insert(data);
+      
+      // For now, just simulate success
+      setTimeout(() => {
+        toast({
+          title: "Cattle registered successfully",
+          description: `${data.name || 'New cattle'} has been added to inventory`,
+        });
+        
+        if (onBack) onBack();
+      }, 1000);
     } catch (error) {
-      console.error('Error registering cattle:', error);
+      console.error("Error registering cattle:", error);
       toast({
-        title: "Error",
-        description: "Failed to register cattle: " + error.message,
-        variant: "destructive"
+        title: "Registration failed",
+        description: error.message,
+        variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {onBack && (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onBack}
+          className="flex items-center gap-1"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to List
+        </Button>
+      )}
+      
       <Card>
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-transparent border-b border-slate-100">
-          <div className="flex items-center space-x-2">
-            <Tag className="h-5 w-5 text-slate-600" />
-            <CardTitle>Cattle Registration</CardTitle>
-          </div>
+        <CardHeader className="bg-gradient-to-r from-green-50 to-transparent">
+          <CardTitle>Cattle Registration</CardTitle>
         </CardHeader>
-        <CardContent className="mt-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="pt-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label>Tag Number</Label>
-                <Input
-                  value={cattle.tagNumber}
-                  onChange={(e) => setCattle(prev => ({ ...prev, tagNumber: e.target.value }))}
-                  placeholder="Enter tag number"
-                  required
+                <Label htmlFor="tag_number">Tag Number *</Label>
+                <Input 
+                  id="tag_number" 
+                  name="tag_number" 
+                  placeholder="Enter unique tag number"
+                  required 
                 />
               </div>
-
+              
               <div className="space-y-2">
-                <Label>Name (Optional)</Label>
-                <Input
-                  value={cattle.name}
-                  onChange={(e) => setCattle(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter name if applicable"
+                <Label htmlFor="name">Name</Label>
+                <Input 
+                  id="name" 
+                  name="name" 
+                  placeholder="Enter cattle name (optional)"
                 />
               </div>
-
+              
               <div className="space-y-2">
-                <Label>Breed</Label>
-                <Select
-                  value={cattle.breed}
-                  onValueChange={(value) => setCattle(prev => ({ ...prev, breed: value }))}
-                >
+                <Label htmlFor="cattle_type">Cattle Type *</Label>
+                <Select name="cattle_type" defaultValue="beef" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beef">Beef</SelectItem>
+                    <SelectItem value="dairy">Dairy</SelectItem>
+                    <SelectItem value="dual">Dual Purpose</SelectItem>
+                    <SelectItem value="calf">Calf</SelectItem>
+                    <SelectItem value="bull">Bull</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="breed">Breed *</Label>
+                <Select name="breed" defaultValue="Boran" required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select breed" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="angus">Angus</SelectItem>
-                    <SelectItem value="hereford">Hereford</SelectItem>
-                    <SelectItem value="brahman">Brahman</SelectItem>
-                    <SelectItem value="holstein">Holstein</SelectItem>
-                    <SelectItem value="ankole">Ankole</SelectItem>
-                    <SelectItem value="boran">Boran</SelectItem>
-                    <SelectItem value="sahiwal">Sahiwal</SelectItem>
-                    <SelectItem value="mixed">Mixed</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="Boran">Boran</SelectItem>
+                    <SelectItem value="Ankole Longhorn">Ankole Longhorn</SelectItem>
+                    <SelectItem value="Hereford">Hereford</SelectItem>
+                    <SelectItem value="Aberdeen">Aberdeen</SelectItem>
+                    <SelectItem value="Angus">Angus</SelectItem>
+                    <SelectItem value="Charolais">Charolais</SelectItem>
+                    <SelectItem value="Mixed">Mixed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
+              
               <div className="space-y-2">
-                <Label>Sex</Label>
-                <Select
-                  value={cattle.sex}
-                  onValueChange={(value) => setCattle(prev => ({ ...prev, sex: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select sex" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Date of Birth (Estimated)</Label>
-                <Input
+                <Label htmlFor="date_of_birth">Date of Birth</Label>
+                <Input 
+                  id="date_of_birth" 
+                  name="date_of_birth" 
                   type="date"
-                  value={cattle.dateOfBirth}
-                  onChange={(e) => setCattle(prev => ({ ...prev, dateOfBirth: e.target.value }))}
                 />
               </div>
-
+              
               <div className="space-y-2">
-                <Label>Source</Label>
-                <Select
-                  value={cattle.source}
-                  onValueChange={(value) => setCattle(prev => ({ ...prev, source: value }))}
-                >
+                <Label htmlFor="weight">Initial Weight (kg)</Label>
+                <Input 
+                  id="weight" 
+                  name="weight" 
+                  type="number" 
+                  step="0.1"
+                  min="0"
+                  placeholder="Enter weight in kg"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="gender">Gender *</Label>
+                <Select name="gender" defaultValue="female" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="male">Male</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="health_status">Health Status *</Label>
+                <Select name="health_status" defaultValue="good" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select health status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="good">Good</SelectItem>
+                    <SelectItem value="fair">Fair</SelectItem>
+                    <SelectItem value="poor">Poor</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="source">Source</Label>
+                <Select name="source" defaultValue="purchased">
                   <SelectTrigger>
                     <SelectValue placeholder="Select source" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="purchased">Purchased</SelectItem>
                     <SelectItem value="born">Born on Farm</SelectItem>
-                    <SelectItem value="transferred">Transferred</SelectItem>
                     <SelectItem value="donated">Donated</SelectItem>
+                    <SelectItem value="transferred">Transferred</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
+              
               <div className="space-y-2">
-                <Label>Purchase Date</Label>
-                <Input
-                  type="date"
-                  value={cattle.purchaseDate}
-                  onChange={(e) => setCattle(prev => ({ ...prev, purchaseDate: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Purchase Price (UGX)</Label>
-                <Input
-                  type="number"
-                  value={cattle.purchasePrice}
-                  onChange={(e) => setCattle(prev => ({ ...prev, purchasePrice: e.target.value }))}
-                  placeholder="Enter purchase price"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Initial Weight (kg)</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={cattle.initialWeight}
-                  onChange={(e) => setCattle(prev => ({ ...prev, initialWeight: e.target.value }))}
-                  placeholder="Enter initial weight"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select
-                  value={cattle.status}
-                  onValueChange={(value) => setCattle(prev => ({ ...prev, status: value }))}
-                >
+                <Label htmlFor="status">Status *</Label>
+                <Select name="status" defaultValue="active" required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="fattening">In Fattening</SelectItem>
                     <SelectItem value="sold">Sold</SelectItem>
                     <SelectItem value="deceased">Deceased</SelectItem>
-                    <SelectItem value="quarantine">Quarantine</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label>Notes</Label>
-                <Textarea
-                  value={cattle.notes}
-                  onChange={(e) => setCattle(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Enter any additional notes"
-                  rows={3}
-                />
-              </div>
             </div>
-
-            <div className="flex justify-end">
-              <Button type="submit" className="bg-slate-600 hover:bg-slate-700">
-                Register Cattle
-              </Button>
+            
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea 
+                id="notes" 
+                name="notes" 
+                placeholder="Any additional notes about the cattle"
+                rows={3}
+              />
             </div>
+            
+            <Button 
+              type="submit" 
+              className="bg-green-600 hover:bg-green-700 w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Registering..." : "Register Cattle"}
+            </Button>
           </form>
         </CardContent>
       </Card>

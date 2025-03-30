@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -9,35 +9,38 @@ import CattleHealth from './CattleHealth';
 import CattleGrowth from './CattleGrowth';
 import CattleList from './CattleList';
 
-// Custom wrapper for CattleFattening component
-const CustomCattleFattening = () => {
-  return (
-    <div className="cattle-fattening-wrapper">
-      <div className="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-        <h3 className="text-lg font-semibold text-amber-800 mb-2">Enhanced Fattening Program</h3>
-        <p className="text-amber-700 mb-2">
-          Track your cattle's growth progress, health records and fattening performance metrics.
-        </p>
-        <div className="flex flex-wrap gap-2 my-2">
-          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Weight Tracking</Badge>
-          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Feed Conversion</Badge>
-          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Performance Metrics</Badge>
-          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Health Monitoring</Badge>
-        </div>
-      </div>
-      <CattleFattening />
-    </div>
-  );
-};
-
+// Add a modal state for displaying the add new cattle form
 const LivestockManagement = () => {
+  const [activeTab, setActiveTab] = useState('cattle');
+
+  // Custom wrapper for CattleFattening component
+  const CustomCattleFattening = () => {
+    return (
+      <div className="cattle-fattening-wrapper">
+        <div className="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+          <h3 className="text-lg font-semibold text-amber-800 mb-2">Enhanced Fattening Program</h3>
+          <p className="text-amber-700 mb-2">
+            Track your cattle's growth progress, health records and fattening performance metrics.
+          </p>
+          <div className="flex flex-wrap gap-2 my-2">
+            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Weight Tracking</Badge>
+            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Feed Conversion</Badge>
+            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Performance Metrics</Badge>
+            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Health Monitoring</Badge>
+          </div>
+        </div>
+        <CattleFattening />
+      </div>
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Livestock Management</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="cattle" className="w-full">
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-5 mb-4">
             <TabsTrigger value="cattle">Cattle List</TabsTrigger>
             <TabsTrigger value="registration">Registration</TabsTrigger>

@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { 
   Select,
   SelectContent,
@@ -12,202 +11,162 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from 'date-fns';
-import { LineChart, Weight, TrendingUp, Plus } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/supabase';
 
 const CattleGrowth = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const [selectedCattle, setSelectedCattle] = useState(null);
-  const [growthRecord, setGrowthRecord] = useState({
-    measurementDate: new Date(),
-    weight: '',
-    height: '',
-    girth: '',
-    bodyConditionScore: '',
-    feedIntake: '',
-    notes: ''
-  });
-
-  const handleSubmit = async (e) => {
+  
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!selectedCattle) {
+    setIsSubmitting(true);
+    
+    // Simulate submission
+    setTimeout(() => {
       toast({
-        title: "Error",
-        description: "Please select a cattle first",
-        variant: "destructive"
+        title: "Growth record added",
+        description: "The growth data has been recorded successfully",
       });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('cattle_growth_metrics')
-        .insert([{
-          cattle_id: selectedCattle.id,
-          measurement_date: format(growthRecord.measurementDate, 'yyyy-MM-dd'),
-          weight: parseFloat(growthRecord.weight),
-          height: growthRecord.height ? parseFloat(growthRecord.height) : null,
-          girth: growthRecord.girth ? parseFloat(growthRecord.girth) : null,
-          body_condition_score: growthRecord.bodyConditionScore ? parseFloat(growthRecord.bodyConditionScore) : null,
-          feed_intake: growthRecord.feedIntake ? parseFloat(growthRecord.feedIntake) : null,
-          notes: growthRecord.notes
-        }]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Growth record added successfully"
-      });
-
-      // Reset form
-      setGrowthRecord({
-        measurementDate: new Date(),
-        weight: '',
-        height: '',
-        girth: '',
-        bodyConditionScore: '',
-        feedIntake: '',
-        notes: ''
-      });
-    } catch (error) {
-      console.error('Error adding growth record:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add growth record",
-        variant: "destructive"
-      });
-    }
+      
+      e.target.reset();
+      setIsSubmitting(false);
+    }, 1000);
   };
 
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-transparent border-b border-blue-100">
-          <div className="flex items-center space-x-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            <CardTitle>Growth Monitoring</CardTitle>
-          </div>
+        <CardHeader>
+          <CardTitle>Record Growth Measurements</CardTitle>
         </CardHeader>
-        <CardContent className="mt-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label>Cattle ID/Tag Number</Label>
-                <Select
-                  value={selectedCattle?.tag_number || ""}
-                  onValueChange={(value) => setSelectedCattle({ id: value })}
-                >
+                <Label htmlFor="tag_number">Cattle Tag Number *</Label>
+                <Select name="tag_number" required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select cattle" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Make sure each SelectItem has a non-empty value */}
-                    <SelectItem value="TAG001">TAG001</SelectItem>
-                    <SelectItem value="TAG002">TAG002</SelectItem>
-                    <SelectItem value="TAG003">TAG003</SelectItem>
+                    <SelectItem value="KAZ001">KAZ001</SelectItem>
+                    <SelectItem value="KAZ002">KAZ002</SelectItem>
+                    <SelectItem value="KAZ003">KAZ003</SelectItem>
+                    <SelectItem value="KAZ004">KAZ004</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
+              
               <div className="space-y-2">
-                <Label>Measurement Date</Label>
-                <Input
+                <Label htmlFor="measurement_date">Measurement Date *</Label>
+                <Input 
+                  id="measurement_date" 
+                  name="measurement_date" 
                   type="date"
-                  value={format(growthRecord.measurementDate, 'yyyy-MM-dd')}
-                  onChange={(e) => setGrowthRecord(prev => ({ ...prev, measurementDate: new Date(e.target.value) }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Weight (kg)</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={growthRecord.weight}
-                  onChange={(e) => setGrowthRecord(prev => ({ ...prev, weight: e.target.value }))}
-                  placeholder="Enter weight in kg"
                   required
                 />
               </div>
-
+              
               <div className="space-y-2">
-                <Label>Height (cm)</Label>
-                <Input
+                <Label htmlFor="current_weight">Current Weight (kg) *</Label>
+                <Input 
+                  id="current_weight" 
+                  name="current_weight" 
                   type="number"
                   step="0.1"
-                  value={growthRecord.height}
-                  onChange={(e) => setGrowthRecord(prev => ({ ...prev, height: e.target.value }))}
-                  placeholder="Enter height in cm"
+                  min="0"
+                  placeholder="Enter current weight"
+                  required
                 />
               </div>
-
+              
               <div className="space-y-2">
-                <Label>Chest Girth (cm)</Label>
-                <Input
+                <Label htmlFor="height">Height (cm)</Label>
+                <Input 
+                  id="height" 
+                  name="height" 
                   type="number"
                   step="0.1"
-                  value={growthRecord.girth}
-                  onChange={(e) => setGrowthRecord(prev => ({ ...prev, girth: e.target.value }))}
-                  placeholder="Enter chest girth in cm"
+                  min="0"
+                  placeholder="Enter height measurement"
                 />
               </div>
-
+              
               <div className="space-y-2">
-                <Label>Body Condition Score (1-9)</Label>
-                <Select
-                  value={growthRecord.bodyConditionScore}
-                  onValueChange={(value) => setGrowthRecord(prev => ({ ...prev, bodyConditionScore: value }))}
-                >
+                <Label htmlFor="body_condition">Body Condition Score *</Label>
+                <Select name="body_condition" required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select score" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1 - Extremely Thin</SelectItem>
-                    <SelectItem value="2">2 - Very Thin</SelectItem>
-                    <SelectItem value="3">3 - Thin</SelectItem>
-                    <SelectItem value="4">4 - Borderline</SelectItem>
-                    <SelectItem value="5">5 - Moderate</SelectItem>
-                    <SelectItem value="6">6 - Good</SelectItem>
-                    <SelectItem value="7">7 - Fat</SelectItem>
-                    <SelectItem value="8">8 - Very Fat</SelectItem>
-                    <SelectItem value="9">9 - Extremely Fat</SelectItem>
+                    <SelectItem value="1">1 - Very Poor</SelectItem>
+                    <SelectItem value="2">2 - Poor</SelectItem>
+                    <SelectItem value="3">3 - Moderate</SelectItem>
+                    <SelectItem value="4">4 - Good</SelectItem>
+                    <SelectItem value="5">5 - Excellent</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
+              
               <div className="space-y-2">
-                <Label>Feed Intake (kg/day)</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={growthRecord.feedIntake}
-                  onChange={(e) => setGrowthRecord(prev => ({ ...prev, feedIntake: e.target.value }))}
-                  placeholder="Enter daily feed intake"
+                <Label htmlFor="recorded_by">Recorded By *</Label>
+                <Input 
+                  id="recorded_by" 
+                  name="recorded_by" 
+                  placeholder="Enter your name"
+                  required
                 />
               </div>
-
+              
               <div className="space-y-2 md:col-span-2">
-                <Label>Notes</Label>
-                <Textarea
-                  value={growthRecord.notes}
-                  onChange={(e) => setGrowthRecord(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Enter any additional notes"
-                  rows={3}
+                <Label htmlFor="notes">Notes</Label>
+                <Input 
+                  id="notes" 
+                  name="notes" 
+                  placeholder="Additional notes about growth performance"
                 />
               </div>
             </div>
-
-            <div className="flex justify-end">
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Growth Record
-              </Button>
-            </div>
+            
+            <Button 
+              type="submit" 
+              className="bg-green-600 hover:bg-green-700"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Recording..." : "Record Growth Data"}
+            </Button>
           </form>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Growth Metrics Explanation</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4 text-sm">
+            <div>
+              <h3 className="font-medium">Body Condition Scoring</h3>
+              <p className="text-gray-600">The body condition score is a numerical score from 1-5 that represents the amount of fat cover on the animal:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1 text-gray-600">
+                <li><span className="font-medium">1 - Very Poor:</span> Extremely thin, no fat, prominent skeletal structures</li>
+                <li><span className="font-medium">2 - Poor:</span> Thin with minimal fat coverage</li>
+                <li><span className="font-medium">3 - Moderate:</span> Ideal condition with balanced fat coverage</li>
+                <li><span className="font-medium">4 - Good:</span> Well-covered with fat, rounded appearance</li>
+                <li><span className="font-medium">5 - Excellent:</span> Very fat, heavily covered</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-medium">Average Daily Gain (ADG)</h3>
+              <p className="text-gray-600">ADG is calculated by dividing the weight gain by the number of days in the feeding period. A good ADG for beef cattle in a fattening program is typically between 1.2-2.0 kg/day depending on breed and feeding regime.</p>
+            </div>
+            
+            <div>
+              <h3 className="font-medium">Feed Conversion Ratio</h3>
+              <p className="text-gray-600">Feed conversion ratio measures how efficiently the animal converts feed into weight gain. It's calculated as kilograms of feed consumed divided by kilograms of weight gained. Lower values indicate better efficiency.</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

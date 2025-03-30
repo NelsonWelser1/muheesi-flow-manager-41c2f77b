@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/supabase';
 import CattleProfile from './CattleProfile';
+import CattleRegistration from './CattleRegistration';
 
 const CattleList = () => {
   const [cattle, setCattle] = useState([]);
@@ -35,6 +35,7 @@ const CattleList = () => {
   const [sortField, setSortField] = useState('tag_number');
   const [sortDirection, setSortDirection] = useState('asc');
   const [selectedCattleId, setSelectedCattleId] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
 
   // Fetch cattle data
@@ -183,6 +184,11 @@ const CattleList = () => {
     }
   };
 
+  // Handle add new cattle
+  const handleAddNew = () => {
+    setShowAddForm(true);
+  };
+
   // Initial data fetch
   useEffect(() => {
     fetchCattle();
@@ -191,6 +197,11 @@ const CattleList = () => {
   // If viewing a specific cattle profile
   if (selectedCattleId) {
     return <CattleProfile cattleId={selectedCattleId} onBack={() => setSelectedCattleId(null)} />;
+  }
+  
+  // If showing the add form
+  if (showAddForm) {
+    return <CattleRegistration onBack={() => setShowAddForm(false)} />;
   }
 
   return (
@@ -224,6 +235,7 @@ const CattleList = () => {
               <Button 
                 className="bg-green-600 hover:bg-green-700"
                 size="sm"
+                onClick={handleAddNew}
               >
                 <Plus className="h-4 w-4 mr-1" />
                 <span>Add New Cattle</span>
@@ -288,7 +300,7 @@ const CattleList = () => {
               <Tag className="h-12 w-12 mx-auto text-gray-400 mb-2" />
               <h3 className="text-lg font-medium text-gray-700 mb-2">No cattle found</h3>
               <p className="text-gray-500 mb-4">Try adjusting your search or filters</p>
-              <Button className="bg-green-600 hover:bg-green-700">
+              <Button className="bg-green-600 hover:bg-green-700" onClick={handleAddNew}>
                 <Plus className="h-4 w-4 mr-1" />
                 Add New Cattle
               </Button>
