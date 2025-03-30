@@ -103,7 +103,7 @@ const BukomeroDairyDashboard = () => {
                 <Tractor className="h-4 w-4" />
                 <span>Silage & Feed</span>
               </TabsTrigger>
-              <TabsTrigger value="staff" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-green-800 md:col-start-1 md:col-span-1">
+              <TabsTrigger value="staff" className="flex items-center gap-2 data-[state=active]:text-green-800 md:col-start-1 md:col-span-1 bg-green-50">
                 <Users className="h-4 w-4" />
                 <span>Staff Members</span>
               </TabsTrigger>
