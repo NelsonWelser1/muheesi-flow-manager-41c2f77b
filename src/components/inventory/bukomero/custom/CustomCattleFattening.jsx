@@ -1,14 +1,21 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Beef, Activity, Plus, FileBarChart, ListFilter, Calendar } from 'lucide-react';
+import { Beef, Search, RefreshCw, FileDown, Plus, TrendingUp, Clipboard, BarChart4 } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { useToast } from "@/components/ui/use-toast";
 import { useCattleFattening } from '@/hooks/useCattleFattening';
+import AddCattleForm from './AddCattleForm';
 
 const CustomCattleFattening = ({ isDataEntry = false }) => {
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [searchQuery, setSearchQuery] = useState('');
   const {
     fatteningData,
     isLoading,
@@ -16,323 +23,411 @@ const CustomCattleFattening = ({ isDataEntry = false }) => {
     refreshData,
     exportToCSV
   } = useCattleFattening('bukomero');
-  
-  const [activeTab, setActiveTab] = useState('overview');
-  const [displayCount, setDisplayCount] = useState(10);
-  
-  useEffect(() => {
-    // Refresh data when component mounts
+
+  // Filter data based on search query
+  const filteredData = searchQuery
+    ? fatteningData.filter(item => 
+        item.tag_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())))
+    : fatteningData;
+
+  // Get status badge variant
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Active</Badge>;
+      case 'sold':
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Sold</Badge>;
+      case 'slaughtered':
+        return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200">Slaughtered</Badge>;
+      case 'transferred':
+        return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">Transferred</Badge>;
+      case 'deceased':
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">Deceased</Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">{status}</Badge>;
+    }
+  };
+
+  // Format feeding regime for display
+  const formatFeedingRegime = (regime) => {
+    if (!regime) return 'N/A';
+    return regime
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const handleRefresh = () => {
     refreshData();
-  }, []);
+    toast({
+      title: "Data Refreshed",
+      description: "Cattle fattening data updated"
+    });
+  };
+
+  const handleExport = () => {
+    exportToCSV();
+  };
+
+  const handleFormSuccess = () => {
+    refreshData();
+    setActiveTab('list');
+  };
+
+  // Format date with validation
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      return format(parseISO(dateString), 'MMM d, yyyy');
+    } catch (error) {
+      console.error("Invalid date format:", dateString);
+      return 'Invalid date';
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-green-800">Cattle Fattening Program</h2>
-        <div className="flex space-x-2">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          <Beef className="h-5 w-5 text-green-700" />
+          <h2 className="text-xl font-semibold text-green-800">Cattle Fattening Program</h2>
+        </div>
+        <div className="flex gap-2">
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex items-center gap-2 border-green-200 text-green-700"
-            onClick={exportToCSV}
+            onClick={handleRefresh} 
+            className="border-green-200 text-green-700 hover:bg-green-50"
           >
-            <FileBarChart className="h-4 w-4" />
-            <span>Export Data</span>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleExport}
+            className="border-green-200 text-green-700 hover:bg-green-50"
+          >
+            <FileDown className="h-4 w-4 mr-2" />
+            Export
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-green-50 p-1">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:text-green-800">
+          <TabsTrigger 
+            value="overview" 
+            className="data-[state=active]:bg-white data-[state=active]:text-green-800"
+          >
+            <Clipboard className="h-4 w-4 mr-2" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="cattle-list" className="data-[state=active]:bg-white data-[state=active]:text-green-800">
+          <TabsTrigger 
+            value="list" 
+            className="data-[state=active]:bg-white data-[state=active]:text-green-800"
+          >
+            <Beef className="h-4 w-4 mr-2" />
             Cattle List
           </TabsTrigger>
-          <TabsTrigger value="add-cattle" className="data-[state=active]:bg-white data-[state=active]:text-green-800">
-            Add to Program
+          <TabsTrigger 
+            value="add" 
+            className="data-[state=active]:bg-white data-[state=active]:text-green-800"
+            disabled={!isDataEntry}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Cattle
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="data-[state=active]:bg-white data-[state=active]:text-green-800">
+          <TabsTrigger 
+            value="analytics" 
+            className="data-[state=active]:bg-white data-[state=active]:text-green-800"
+          >
+            <BarChart4 className="h-4 w-4 mr-2" />
             Analytics
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-amber-100 shadow-sm overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-amber-50 to-transparent pb-2">
-                <CardTitle className="text-base font-medium text-amber-800 flex items-center gap-2">
-                  <Beef className="h-5 w-5 text-amber-600" />
-                  Active Fattening
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-amber-800">{analytics.totalActive || 0}</div>
-                <p className="text-sm text-amber-600">Cattle in fattening program</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-green-100 shadow-sm overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-green-50 to-transparent pb-2">
-                <CardTitle className="text-base font-medium text-green-800 flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-green-600" />
-                  Average Daily Gain
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-green-800">
-                  {analytics.averageDailyGain ? analytics.averageDailyGain.toFixed(2) : "0.00"} kg
-                </div>
-                <p className="text-sm text-green-600">Per day across all cattle</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-blue-100 shadow-sm overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-transparent pb-2">
-                <CardTitle className="text-base font-medium text-blue-800 flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                  Average Days in Program
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-blue-800">
-                  {Math.round(analytics.averageDaysInProgram) || 0}
-                </div>
-                <p className="text-sm text-blue-600">Days per active animal</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg text-green-800">Recent Cattle in Program</CardTitle>
+        {/* Overview Tab */}
+        <TabsContent value="overview">
+          <Card className="border-green-100 shadow-sm">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-transparent border-b border-green-100">
+              <CardTitle className="text-lg text-green-800">Fattening Program Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tag #</TableHead>
-                    <TableHead>Breed</TableHead>
-                    <TableHead>Entry Weight</TableHead>
-                    <TableHead>Current Weight</TableHead>
-                    <TableHead>Daily Gain</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-4">Loading...</TableCell>
-                    </TableRow>
-                  ) : fatteningData.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-4">No cattle in fattening program yet</TableCell>
-                    </TableRow>
-                  ) : (
-                    fatteningData.slice(0, 5).map((cattle) => (
-                      <TableRow key={cattle.id}>
-                        <TableCell className="font-medium">{cattle.tag_number}</TableCell>
-                        <TableCell>{cattle.breed}</TableCell>
-                        <TableCell>{cattle.entry_weight} kg</TableCell>
-                        <TableCell>{cattle.current_weight} kg</TableCell>
-                        <TableCell>
-                          {cattle.daily_gain ? (
-                            <span className={cattle.daily_gain > 0.8 ? "text-green-600" : "text-amber-600"}>
-                              {cattle.daily_gain.toFixed(2)} kg/day
-                            </span>
-                          ) : "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            className={
-                              cattle.status === 'active' ? "bg-green-100 text-green-800" : 
-                              cattle.status === 'sold' ? "bg-blue-100 text-blue-800" :
-                              "bg-amber-100 text-amber-800"
-                            }
-                          >
-                            {cattle.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-              
-              {fatteningData.length > 5 && (
-                <div className="mt-4 text-center">
-                  <Button 
-                    variant="link"
-                    onClick={() => setActiveTab('cattle-list')}
-                  >
-                    View All Cattle
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="border-amber-100 shadow-sm">
+                  <CardHeader className="pb-2 bg-amber-50 border-b border-amber-100">
+                    <CardTitle className="text-base text-amber-800">Active Cattle</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-amber-800">{analytics.totalActive}</div>
+                    <p className="text-sm text-amber-700 mt-1">In fattening program</p>
+                  </CardContent>
+                </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg text-green-800">Breed Performance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {analytics.weightGainByBreed && analytics.weightGainByBreed.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Breed</TableHead>
-                        <TableHead>Count</TableHead>
-                        <TableHead>Average Weight Gain</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {analytics.weightGainByBreed.map((breed, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{breed.breed}</TableCell>
-                          <TableCell>{breed.count}</TableCell>
-                          <TableCell>
-                            <span className={breed.averageGain > 40 ? "text-green-600" : "text-amber-600"}>
-                              {breed.averageGain.toFixed(2)} kg
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                <Card className="border-green-100 shadow-sm">
+                  <CardHeader className="pb-2 bg-green-50 border-b border-green-100">
+                    <CardTitle className="text-base text-green-800">Average Daily Gain</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-green-800">
+                      {analytics.averageDailyGain.toFixed(2)} <span className="text-base">kg/day</span>
+                    </div>
+                    <p className="text-sm text-green-700 mt-1">Growth performance</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-blue-100 shadow-sm">
+                  <CardHeader className="pb-2 bg-blue-50 border-b border-blue-100">
+                    <CardTitle className="text-base text-blue-800">Average Days in Program</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="text-3xl font-bold text-blue-800">
+                      {Math.round(analytics.averageDaysInProgram)} <span className="text-base">days</span>
+                    </div>
+                    <p className="text-sm text-blue-700 mt-1">Time to target weight</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="mt-8">
+                <h3 className="font-medium text-green-800 mb-4 flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2 text-green-700" />
+                  Recent Performance
+                </h3>
+                
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
+                  </div>
                 ) : (
-                  <p className="text-center py-4">No breed performance data available</p>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-green-50">
+                          <TableHead>Tag/Name</TableHead>
+                          <TableHead>Breed</TableHead>
+                          <TableHead>Daily Gain</TableHead>
+                          <TableHead>Days in Program</TableHead>
+                          <TableHead>Progress</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {fatteningData
+                          .filter(cattle => cattle.status === 'active')
+                          .slice(0, 5)
+                          .map((cattle) => {
+                            // Calculate days in program
+                            const entryDate = cattle.entry_date ? new Date(cattle.entry_date) : new Date();
+                            const today = new Date();
+                            const daysInProgram = Math.round((today - entryDate) / (1000 * 60 * 60 * 24));
+                            
+                            // Calculate progress toward target
+                            const startWeight = cattle.entry_weight || 0;
+                            const currentWeight = cattle.current_weight || 0;
+                            const targetWeight = cattle.target_weight || 0;
+                            const totalGain = targetWeight - startWeight;
+                            const achievedGain = currentWeight - startWeight;
+                            const progressPercent = totalGain > 0 
+                              ? Math.min(100, Math.round((achievedGain / totalGain) * 100))
+                              : 0;
+
+                            return (
+                              <TableRow key={cattle.id}>
+                                <TableCell>
+                                  <div className="font-medium">{cattle.tag_number}</div>
+                                  <div className="text-sm text-gray-500">{cattle.name}</div>
+                                </TableCell>
+                                <TableCell>{cattle.breed}</TableCell>
+                                <TableCell>
+                                  <span className="font-medium text-green-700">
+                                    {cattle.daily_gain ? `${cattle.daily_gain.toFixed(2)} kg/day` : 'N/A'}
+                                  </span>
+                                </TableCell>
+                                <TableCell>{daysInProgram} days</TableCell>
+                                <TableCell>
+                                  <div className="flex items-center">
+                                    <div className="w-full bg-gray-200 rounded-full h-2 mr-2">
+                                      <div 
+                                        className="bg-green-500 h-2 rounded-full" 
+                                        style={{ width: `${progressPercent}%` }}
+                                      />
+                                    </div>
+                                    <span className="text-xs">{progressPercent}%</span>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                      </TableBody>
+                    </Table>
+                    {fatteningData.filter(cattle => cattle.status === 'active').length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        No active cattle in the fattening program.
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="cattle-list" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg text-green-800">All Cattle in Fattening Program</CardTitle>
-              <Button 
-                onClick={() => setActiveTab('add-cattle')}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Add Cattle</span>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm" className="h-8 gap-1">
-                      <ListFilter className="h-4 w-4" />
-                      <span>Filter</span>
-                    </Button>
-                    <select 
-                      className="px-2 py-1 border rounded"
-                      value={displayCount}
-                      onChange={(e) => setDisplayCount(Number(e.target.value))}
-                    >
-                      <option value={10}>10 per page</option>
-                      <option value={20}>20 per page</option>
-                      <option value={50}>50 per page</option>
-                      <option value={100}>100 per page</option>
-                    </select>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={refreshData}>Refresh</Button>
+        {/* Cattle List Tab */}
+        <TabsContent value="list">
+          <Card className="border-green-100 shadow-sm">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-transparent border-b border-green-100">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <CardTitle className="text-lg text-green-800">Fattening Cattle List</CardTitle>
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by tag or name"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 border-green-200"
+                  />
                 </div>
-
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Tag #</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Breed</TableHead>
-                      <TableHead>Entry Date</TableHead>
-                      <TableHead>Entry Weight</TableHead>
-                      <TableHead>Current Weight</TableHead>
-                      <TableHead>Target</TableHead>
-                      <TableHead>Daily Gain</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={10} className="text-center py-4">Loading...</TableCell>
-                      </TableRow>
-                    ) : fatteningData.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={10} className="text-center py-4">No cattle in fattening program</TableCell>
-                      </TableRow>
-                    ) : (
-                      fatteningData.slice(0, displayCount).map((cattle) => (
-                        <TableRow key={cattle.id}>
-                          <TableCell className="font-medium">{cattle.tag_number}</TableCell>
-                          <TableCell>{cattle.name || "—"}</TableCell>
-                          <TableCell>{cattle.breed}</TableCell>
-                          <TableCell>{new Date(cattle.entry_date).toLocaleDateString()}</TableCell>
-                          <TableCell>{cattle.entry_weight} kg</TableCell>
-                          <TableCell>{cattle.current_weight} kg</TableCell>
-                          <TableCell>{cattle.target_weight} kg</TableCell>
-                          <TableCell>
-                            {cattle.daily_gain ? (
-                              <span className={cattle.daily_gain > 0.8 ? "text-green-600" : "text-amber-600"}>
-                                {cattle.daily_gain.toFixed(2)} kg/day
-                              </span>
-                            ) : "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            <Badge 
-                              className={
-                                cattle.status === 'active' ? "bg-green-100 text-green-800" : 
-                                cattle.status === 'sold' ? "bg-blue-100 text-blue-800" :
-                                "bg-amber-100 text-amber-800"
-                              }
-                            >
-                              {cattle.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => console.log("View details for:", cattle.id)}
-                            >
-                              View
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="add-cattle" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg text-green-800">Add Cattle to Fattening Program</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-center py-4">Add cattle form would be implemented here</p>
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-green-50">
+                        <TableHead>Tag/Name</TableHead>
+                        <TableHead>Breed</TableHead>
+                        <TableHead>Entry Date</TableHead>
+                        <TableHead>Weight Progress</TableHead>
+                        <TableHead>Feeding</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredData.map((cattle) => (
+                        <TableRow key={cattle.id}>
+                          <TableCell>
+                            <div className="font-medium">{cattle.tag_number}</div>
+                            <div className="text-sm text-gray-500">{cattle.name}</div>
+                          </TableCell>
+                          <TableCell>{cattle.breed}</TableCell>
+                          <TableCell>{formatDate(cattle.entry_date)}</TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="text-sm">
+                                {cattle.entry_weight} kg → {cattle.current_weight} kg
+                              </div>
+                              <div className="text-xs text-green-700">Target: {cattle.target_weight} kg</div>
+                              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                <div 
+                                  className="bg-green-500 h-1.5 rounded-full" 
+                                  style={{ 
+                                    width: `${Math.min(100, Math.round(((cattle.current_weight - cattle.entry_weight) / 
+                                      (cattle.target_weight - cattle.entry_weight)) * 100))}%` 
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{formatFeedingRegime(cattle.feeding_regime)}</TableCell>
+                          <TableCell>{getStatusBadge(cattle.status)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  
+                  {filteredData.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      {searchQuery ? 'No cattle matching your search.' : 'No cattle in the fattening program.'}
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4">
-          <Card>
-            <CardHeader>
+        {/* Add Cattle Tab */}
+        <TabsContent value="add">
+          <AddCattleForm onSuccess={handleFormSuccess} />
+        </TabsContent>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics">
+          <Card className="border-green-100 shadow-sm">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-transparent border-b border-green-100">
               <CardTitle className="text-lg text-green-800">Fattening Program Analytics</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-center py-4">Analytics dashboard would be implemented here</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="border-green-100 shadow-sm">
+                  <CardHeader className="pb-2 bg-green-50 border-b border-green-100">
+                    <CardTitle className="text-base text-green-800">Breed Distribution</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {analytics.breedDistribution.length > 0 ? (
+                      <div className="space-y-4 pt-2">
+                        {analytics.breedDistribution.map(item => (
+                          <div key={item.breed}>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-sm font-medium capitalize">{item.breed}</span>
+                              <span className="text-sm">{item.count} cattle ({item.percentage.toFixed(1)}%)</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`bg-green-500 h-2 rounded-full`}
+                                style={{ width: `${item.percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        No breed distribution data available.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="border-green-100 shadow-sm">
+                  <CardHeader className="pb-2 bg-green-50 border-b border-green-100">
+                    <CardTitle className="text-base text-green-800">Weight Gain by Breed</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {analytics.weightGainByBreed.length > 0 ? (
+                      <div className="space-y-4 pt-2">
+                        {analytics.weightGainByBreed.map(item => (
+                          <div key={item.breed}>
+                            <div className="flex justify-between mb-1">
+                              <span className="text-sm font-medium capitalize">{item.breed}</span>
+                              <span className="text-sm">{item.averageGain.toFixed(2)} kg</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-blue-500 h-2 rounded-full"
+                                style={{ width: `${Math.min(100, (item.averageGain / 200) * 100)}%` }}
+                              />
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">Based on {item.count} cattle</div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        No weight gain data available.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
