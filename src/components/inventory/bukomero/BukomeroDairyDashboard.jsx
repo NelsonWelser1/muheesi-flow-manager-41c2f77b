@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -86,30 +87,30 @@ const BukomeroDairyDashboard = () => {
 
         <CardContent className="pt-6">
           <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid grid-cols-3 md:grid-cols-5 gap-1 bg-green-50 p-1">
-              <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-green-800">
-                <BookOpen className="h-4 w-4" />
+            <TabsList className="grid grid-cols-6 gap-1 bg-green-50 p-1">
+              <TabsTrigger value="overview" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:text-green-800 text-xs">
+                <BookOpen className="h-3 w-3" />
                 <span>Overview</span>
               </TabsTrigger>
-              <TabsTrigger value="cattle" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-green-800">
-                <Beef className="h-4 w-4" />
-                <span>Cattle Management</span>
+              <TabsTrigger value="cattle" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:text-green-800 text-xs">
+                <Beef className="h-3 w-3" />
+                <span>Cattle</span>
               </TabsTrigger>
-              <TabsTrigger value="milk" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-green-800">
-                <Droplet className="h-4 w-4" />
-                <span>Milk Production</span>
+              <TabsTrigger value="milk" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:text-green-800 text-xs">
+                <Droplet className="h-3 w-3" />
+                <span>Milk</span>
               </TabsTrigger>
-              <TabsTrigger value="fattening" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-green-800">
-                <Beef className="h-4 w-4" />
-                <span>Cattle Fattening</span>
+              <TabsTrigger value="fattening" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:text-green-800 text-xs">
+                <Beef className="h-3 w-3" />
+                <span>Fattening</span>
               </TabsTrigger>
-              <TabsTrigger value="silage" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-green-800">
-                <Tractor className="h-4 w-4" />
-                <span>Silage & Feed</span>
+              <TabsTrigger value="silage" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:text-green-800 text-xs">
+                <Tractor className="h-3 w-3" />
+                <span>Silage</span>
               </TabsTrigger>
-              <TabsTrigger value="staff" className="flex items-center gap-2 data-[state=active]:text-green-800 md:col-start-1 md:col-span-1 bg-green-50">
-                <Users className="h-4 w-4" />
-                <span>Staff Members</span>
+              <TabsTrigger value="staff" className="flex items-center gap-1 data-[state=active]:bg-white data-[state=active]:text-green-800 text-xs">
+                <Users className="h-3 w-3" />
+                <span>Staff</span>
               </TabsTrigger>
             </TabsList>
 
