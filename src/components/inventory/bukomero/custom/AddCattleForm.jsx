@@ -13,11 +13,11 @@ import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCattleFattening } from '@/hooks/useCattleFattening';
+import { useBukomeroFattening } from '@/hooks/useBukomeroFattening';
 
 const AddCattleForm = ({ onSuccess }) => {
   const { toast } = useToast();
-  const { addFatteningProgram } = useCattleFattening();
+  const { addFatteningProgram } = useBukomeroFattening();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Define form validation schema
@@ -46,7 +46,7 @@ const AddCattleForm = ({ onSuccess }) => {
     defaultValues: {
       tag_number: "",
       name: "",
-      breed: "friesian",
+      breed: "ankole",
       date_of_birth: "",
       entry_date: format(new Date(), 'yyyy-MM-dd'),
       entry_weight: "",
@@ -69,6 +69,7 @@ const AddCattleForm = ({ onSuccess }) => {
         farm_id: "bukomero"
       };
       
+      console.log("Submitting cattle data:", cattleData);
       const result = await addFatteningProgram(cattleData);
       
       if (result) {
@@ -78,7 +79,18 @@ const AddCattleForm = ({ onSuccess }) => {
         });
         
         // Reset form
-        form.reset();
+        form.reset({
+          tag_number: "",
+          name: "",
+          breed: "ankole",
+          date_of_birth: "",
+          entry_date: format(new Date(), 'yyyy-MM-dd'),
+          entry_weight: "",
+          current_weight: "",
+          target_weight: "",
+          feeding_regime: "intensive",
+          notes: ""
+        });
         
         // Trigger any parent component callback if provided
         if (typeof onSuccess === 'function') {
@@ -89,7 +101,7 @@ const AddCattleForm = ({ onSuccess }) => {
       console.error("Error adding cattle:", error);
       toast({
         title: "Error",
-        description: "Failed to add cattle to fattening program",
+        description: "Failed to add cattle to fattening program: " + (error.message || "Unknown error"),
         variant: "destructive"
       });
     } finally {
@@ -164,11 +176,14 @@ const AddCattleForm = ({ onSuccess }) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="ankole">Ankole Longhorn</SelectItem>
+                        <SelectItem value="boran">Boran</SelectItem>
                         <SelectItem value="friesian">Friesian</SelectItem>
                         <SelectItem value="jersey">Jersey</SelectItem>
-                        <SelectItem value="guernsey">Guernsey</SelectItem>
-                        <SelectItem value="holstein">Holstein</SelectItem>
-                        <SelectItem value="ankole">Ankole</SelectItem>
+                        <SelectItem value="hereford">Hereford</SelectItem>
+                        <SelectItem value="aberdeen">Aberdeen</SelectItem>
+                        <SelectItem value="angus">Angus</SelectItem>
+                        <SelectItem value="charolais">Charolais</SelectItem>
                         <SelectItem value="mixed">Mixed</SelectItem>
                       </SelectContent>
                     </Select>
@@ -321,6 +336,9 @@ const AddCattleForm = ({ onSuccess }) => {
                         <SelectItem value="semi_intensive">Semi-Intensive (Mixed)</SelectItem>
                         <SelectItem value="pasture_based">Pasture-Based</SelectItem>
                         <SelectItem value="silage_based">Silage-Based</SelectItem>
+                        <SelectItem value="standard">Standard</SelectItem>
+                        <SelectItem value="premium">Premium</SelectItem>
+                        <SelectItem value="specialized">Specialized</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription className="text-xs">
