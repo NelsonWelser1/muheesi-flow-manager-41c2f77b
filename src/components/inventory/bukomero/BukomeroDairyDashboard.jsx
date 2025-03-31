@@ -12,10 +12,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
 import CattleManagement from './modules/CattleManagement';
 import MilkProduction from './modules/MilkProduction';
-import CattleFattening from './modules/CattleFattening';
+import CustomCattleFattening from './custom/CustomCattleFattening';
 import SilageManager from '../shared/modules/SilageManager';
 import StaffMembers from '../shared/modules/StaffMembers';
 import { useBukomeroDairyData } from '@/hooks/useBukomeroDairyData';
+
 const BukomeroDairyDashboard = () => {
   const {
     toast
@@ -28,18 +29,21 @@ const BukomeroDairyDashboard = () => {
     error,
     refreshMetrics
   } = useBukomeroDairyData();
+
   const handleExportAll = () => {
     toast({
       title: "Export Started",
       description: "Preparing your Bukomero Dairy Farm dashboard export..."
     });
   };
+
   const handlePrint = () => {
     toast({
       title: "Print Prepared",
       description: "Sending Bukomero Dairy dashboard to printer..."
     });
   };
+
   return <div className="space-y-6 px-[210px]">
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={() => navigate('/manage-inventory')} className="flex items-center space-x-2">
@@ -329,7 +333,7 @@ const BukomeroDairyDashboard = () => {
               </TabsContent>
 
               <TabsContent value="fattening">
-                <CattleFattening isDataEntry={true} />
+                <CustomCattleFattening isDataEntry={true} />
               </TabsContent>
 
               <TabsContent value="silage">
@@ -345,4 +349,5 @@ const BukomeroDairyDashboard = () => {
       </Card>
     </div>;
 };
+
 export default BukomeroDairyDashboard;
