@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS cattle_fattening (
   cattle_type TEXT NOT NULL, -- Added field for cattle type (Bull, Cow, etc.)
   date_of_birth DATE,
   entry_date DATE NOT NULL,
-  entry_weight NUMERIC NOT NULL,
-  current_weight NUMERIC NOT NULL,
+  entry_weight NUMERIC NOT NULL, -- Removed CHECK constraint
+  current_weight NUMERIC NOT NULL, -- Removed CHECK constraint
   target_weight NUMERIC NOT NULL CHECK (target_weight > 0),
   daily_gain NUMERIC,
   expected_completion_date DATE,
