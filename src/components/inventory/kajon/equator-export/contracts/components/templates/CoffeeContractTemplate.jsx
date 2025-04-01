@@ -117,9 +117,9 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
       <div className="flex justify-between items-start mb-8 border-b pb-6">
         <div>
           <img 
-            src="/combined-logo.png" 
+            src="/lovable-uploads/493ba471-e6fd-4a79-862b-f5d2c974d0d9.png" 
             alt="KAJON Coffee Limited" 
-            className="h-16 w-auto mb-2"
+            className="h-24 w-auto mb-2"
           />
           <h2 className="text-lg font-bold">KAJON Coffee Limited</h2>
           <p className="text-sm text-gray-600">Kanoni, Kazo District, Uganda</p>
@@ -371,6 +371,16 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
             </p>
           </div>
         </div>
+        
+        {/* Adding EditableField for Shipping Terms */}
+        <div className="mt-4">
+          <p className="font-semibold">Additional Shipping Terms:</p>
+          <EditableField 
+            field="additionalShippingTerms" 
+            defaultValue="Seller is responsible for arranging transportation to the port. Export documentation to be provided by seller. Cost of shipping insurance to be borne by buyer as per Incoterms."
+            isMultiline={true}
+          />
+        </div>
       </div>
 
       {/* Continue with other sections (Payment Terms, Certificates & Required Documents, etc.) */}
@@ -395,23 +405,41 @@ All banking charges outside Uganda to be borne by the Buyer"
       <div className="grid grid-cols-2 gap-12 mt-12">
         <div>
           <p className="font-semibold border-b border-gray-400 pb-8 mb-2">For and on behalf of SELLER</p>
-          <p className="text-sm">Name: ________________________________</p>
-          <p className="text-sm mt-2">Title: ________________________________</p>
-          <p className="text-sm mt-2">Date: ________________________________</p>
-          <p className="text-sm mt-2">Signature: ___________________________</p>
+          <p className="text-sm">
+            Name: <EditableField field="sellerName" defaultValue="________________________________" />
+          </p>
+          <p className="text-sm mt-2">
+            Title: <EditableField field="sellerTitle" defaultValue="________________________________" />
+          </p>
+          <p className="text-sm mt-2">
+            Date: <EditableField field="sellerDate" defaultValue="________________________________" />
+          </p>
+          <p className="text-sm mt-2">
+            Signature: <EditableField field="sellerSignature" defaultValue="___________________________" />
+          </p>
         </div>
         <div>
           <p className="font-semibold border-b border-gray-400 pb-8 mb-2">For and on behalf of BUYER</p>
-          <p className="text-sm">Name: ________________________________</p>
-          <p className="text-sm mt-2">Title: ________________________________</p>
-          <p className="text-sm mt-2">Date: ________________________________</p>
-          <p className="text-sm mt-2">Signature: ___________________________</p>
+          <p className="text-sm">
+            Name: <EditableField field="buyerSignatureName" defaultValue="________________________________" />
+          </p>
+          <p className="text-sm mt-2">
+            Title: <EditableField field="buyerSignatureTitle" defaultValue="________________________________" />
+          </p>
+          <p className="text-sm mt-2">
+            Date: <EditableField field="buyerSignatureDate" defaultValue="________________________________" />
+          </p>
+          <p className="text-sm mt-2">
+            Signature: <EditableField field="buyerSignature" defaultValue="___________________________" />
+          </p>
         </div>
       </div>
 
       {/* Company Seal/Stamp Area */}
       <div className="mt-12 text-center">
-        <p className="text-sm text-gray-500">[Company Seal/Stamp]</p>
+        <p className="text-sm text-gray-500">
+          <EditableField field="companyStamp" defaultValue="[Company Seal/Stamp]" />
+        </p>
       </div>
     </div>
   );
