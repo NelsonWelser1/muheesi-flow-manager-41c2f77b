@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +26,7 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
   const { 
     staffData, 
     isLoading, 
+    isSubmitting,
     error, 
     addStaffMember, 
     updateStaffMember,
@@ -49,67 +49,91 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
   });
 
   const [editingStaff, setEditingStaff] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
   
-  useEffect(() => {
-    fetchStaffData();
-  }, [farmId]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (editingStaff) {
       setEditingStaff(prev => ({ ...prev, [name]: value }));
+      if (formErrors[name]) {
+        setFormErrors(prev => ({ ...prev, [name]: null }));
+      }
     } else {
       setNewStaff(prev => ({ ...prev, [name]: value }));
+      if (formErrors[name]) {
+        setFormErrors(prev => ({ ...prev, [name]: null }));
+      }
     }
   };
 
   const handleSelectChange = (name, value) => {
     if (editingStaff) {
       setEditingStaff(prev => ({ ...prev, [name]: value }));
+      if (formErrors[name]) {
+        setFormErrors(prev => ({ ...prev, [name]: null }));
+      }
     } else {
       setNewStaff(prev => ({ ...prev, [name]: value }));
+      if (formErrors[name]) {
+        setFormErrors(prev => ({ ...prev, [name]: null }));
+      }
     }
+  };
+
+  const validateForm = (staff) => {
+    const errors = {};
+    if (!staff.firstName) errors.firstName = "First name is required";
+    if (!staff.lastName) errors.lastName = "Last name is required";
+    if (!staff.contactNumber) errors.contactNumber = "Contact number is required";
+    
+    if (staff.email && !/^\S+@\S+\.\S+$/.test(staff.email)) {
+      errors.email = "Invalid email format";
+    }
+    
+    if (staff.salary && isNaN(parseFloat(staff.salary))) {
+      errors.salary = "Salary must be a valid number";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleEditStaff = (staff) => {
     setEditingStaff(staff);
     setActiveTab('edit');
+    setFormErrors({});
   };
 
   const handleCancelEdit = () => {
     setEditingStaff(null);
     setActiveTab('directory');
+    setFormErrors({});
   };
 
   const handleDeleteStaff = async (id) => {
     if (window.confirm('Are you sure you want to delete this staff member?')) {
-      try {
-        await deleteStaffMember(id);
-        fetchStaffData();
-      } catch (error) {
-        console.error('Error deleting staff:', error);
-      }
+      await deleteStaffMember(id);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!newStaff.firstName || !newStaff.lastName || !newStaff.contactNumber) {
+    if (!validateForm(newStaff)) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
+        title: "Validation Error",
+        description: "Please correct the errors in the form",
         variant: "destructive"
       });
       return;
     }
 
-    try {
-      await addStaffMember({
-        ...newStaff,
-        farm_id: farmId
-      });
-      
+    const result = await addStaffMember({
+      ...newStaff,
+      farm_id: farmId
+    });
+    
+    if (result) {
       setNewStaff({
         firstName: '',
         lastName: '',
@@ -124,34 +148,29 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
         avatar: ''
       });
       
-      fetchStaffData();
       setActiveTab('directory');
-    } catch (error) {
-      console.error('Error adding staff:', error);
+      setFormErrors({});
     }
   };
 
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     
-    if (!editingStaff.firstName || !editingStaff.lastName || !editingStaff.contactNumber) {
+    if (!validateForm(editingStaff)) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
+        title: "Validation Error",
+        description: "Please correct the errors in the form",
         variant: "destructive"
       });
       return;
     }
 
-    try {
-      await updateStaffMember(editingStaff.id, editingStaff);
-      
+    const result = await updateStaffMember(editingStaff.id, editingStaff);
+    
+    if (result) {
       setEditingStaff(null);
-      
-      fetchStaffData();
       setActiveTab('directory');
-    } catch (error) {
-      console.error('Error updating staff:', error);
+      setFormErrors({});
     }
   };
 
@@ -164,16 +183,57 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
   };
 
   const handleExport = () => {
-    toast({
-      title: "Export Started",
-      description: "Preparing staff data export..."
-    });
+    try {
+      const headers = ['First Name', 'Last Name', 'Role', 'Contact Number', 'Email', 'Start Date', 'Salary', 'Status', 'Address', 'Notes'];
+      const csvRows = [headers];
+      
+      staffData.forEach(staff => {
+        const row = [
+          staff.firstName,
+          staff.lastName,
+          staff.role,
+          staff.contactNumber,
+          staff.email || '',
+          staff.startDate || '',
+          staff.salary || '',
+          staff.status,
+          staff.address || '',
+          staff.notes || ''
+        ];
+        csvRows.push(row);
+      });
+      
+      const csvContent = csvRows.map(row => row.map(cell => 
+        typeof cell === 'string' ? `"${cell.replace(/"/g, '""')}"` : cell
+      ).join(',')).join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `staff-members-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Export Successful",
+        description: "Staff data has been exported to CSV"
+      });
+    } catch (err) {
+      console.error('Error exporting staff data:', err);
+      toast({
+        title: "Export Failed",
+        description: err.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const filteredStaff = staffData.filter(staff => {
     const fullName = `${staff.firstName} ${staff.lastName}`.toLowerCase();
     const matchesSearch = fullName.includes(searchQuery.toLowerCase()) || 
-                          staff.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (staff.email && staff.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
                           staff.contactNumber.includes(searchQuery);
     
     const matchesRole = filterRole === 'all' || staff.role === filterRole;
@@ -272,7 +332,7 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                 </div>
               ) : error ? (
                 <div className="text-center py-8 text-red-500">
-                  Error loading staff data: {error.message}
+                  Error loading staff data: {error}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -370,8 +430,10 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                       value={newStaff.firstName}
                       onChange={handleInputChange}
                       placeholder="Enter first name"
+                      className={formErrors.firstName ? "border-red-500" : ""}
                       required
                     />
+                    {formErrors.firstName && <p className="text-xs text-red-500">{formErrors.firstName}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -382,8 +444,10 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                       value={newStaff.lastName}
                       onChange={handleInputChange}
                       placeholder="Enter last name"
+                      className={formErrors.lastName ? "border-red-500" : ""}
                       required
                     />
+                    {formErrors.lastName && <p className="text-xs text-red-500">{formErrors.lastName}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -415,8 +479,10 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                       value={newStaff.contactNumber}
                       onChange={handleInputChange}
                       placeholder="Enter contact number"
+                      className={formErrors.contactNumber ? "border-red-500" : ""}
                       required
                     />
+                    {formErrors.contactNumber && <p className="text-xs text-red-500">{formErrors.contactNumber}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -428,7 +494,9 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                       value={newStaff.email}
                       onChange={handleInputChange}
                       placeholder="Enter email address"
+                      className={formErrors.email ? "border-red-500" : ""}
                     />
+                    {formErrors.email && <p className="text-xs text-red-500">{formErrors.email}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -451,7 +519,9 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                       value={newStaff.salary}
                       onChange={handleInputChange}
                       placeholder="Enter salary amount"
+                      className={formErrors.salary ? "border-red-500" : ""}
                     />
+                    {formErrors.salary && <p className="text-xs text-red-500">{formErrors.salary}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -496,8 +566,8 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                 </div>
 
                 <div className="flex justify-end mt-6">
-                  <Button type="submit" disabled={isLoading} className="bg-green-600 hover:bg-green-700">
-                    {isLoading ? (
+                  <Button type="submit" disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
+                    {isSubmitting ? (
                       <>
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                         Saving...
@@ -529,8 +599,10 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                         value={editingStaff.firstName}
                         onChange={handleInputChange}
                         placeholder="Enter first name"
+                        className={formErrors.firstName ? "border-red-500" : ""}
                         required
                       />
+                      {formErrors.firstName && <p className="text-xs text-red-500">{formErrors.firstName}</p>}
                     </div>
 
                     <div className="space-y-2">
@@ -541,8 +613,10 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                         value={editingStaff.lastName}
                         onChange={handleInputChange}
                         placeholder="Enter last name"
+                        className={formErrors.lastName ? "border-red-500" : ""}
                         required
                       />
+                      {formErrors.lastName && <p className="text-xs text-red-500">{formErrors.lastName}</p>}
                     </div>
 
                     <div className="space-y-2">
@@ -574,8 +648,10 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                         value={editingStaff.contactNumber}
                         onChange={handleInputChange}
                         placeholder="Enter contact number"
+                        className={formErrors.contactNumber ? "border-red-500" : ""}
                         required
                       />
+                      {formErrors.contactNumber && <p className="text-xs text-red-500">{formErrors.contactNumber}</p>}
                     </div>
 
                     <div className="space-y-2">
@@ -587,7 +663,9 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                         value={editingStaff.email}
                         onChange={handleInputChange}
                         placeholder="Enter email address"
+                        className={formErrors.email ? "border-red-500" : ""}
                       />
+                      {formErrors.email && <p className="text-xs text-red-500">{formErrors.email}</p>}
                     </div>
 
                     <div className="space-y-2">
@@ -610,7 +688,9 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                         value={editingStaff.salary}
                         onChange={handleInputChange}
                         placeholder="Enter salary amount"
+                        className={formErrors.salary ? "border-red-500" : ""}
                       />
+                      {formErrors.salary && <p className="text-xs text-red-500">{formErrors.salary}</p>}
                     </div>
 
                     <div className="space-y-2">
@@ -658,8 +738,8 @@ const StaffMembers = ({ farmId, isDataEntry = false }) => {
                     <Button type="button" variant="outline" onClick={handleCancelEdit}>
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700">
-                      {isLoading ? (
+                    <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
+                      {isSubmitting ? (
                         <>
                           <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                           Updating...
