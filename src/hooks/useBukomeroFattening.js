@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from "@/components/ui/use-toast";
 import { format, addDays, differenceInDays } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useBukomeroFattening = () => {
   const [fatteningData, setFatteningData] = useState([]);
@@ -138,11 +138,11 @@ export const useBukomeroFattening = () => {
     });
   };
 
-  // Add new fattening program
+  // Add new fattening program - supports both single and batch entries
   const addFatteningProgram = async (programData) => {
     setIsSubmitting(true);
     try {
-      console.log('Adding new cattle to fattening program:', programData);
+      console.log('Adding cattle to fattening program:', programData);
       
       // Validation checks
       if (!programData.tag_number) {
@@ -161,72 +161,183 @@ export const useBukomeroFattening = () => {
         throw new Error("Valid target weight is required");
       }
       
-      // Check if tag_number already exists
-      const { data: existingTag, error: tagError } = await supabase
-        .from('cattle_fattening')
-        .select('id')
-        .eq('tag_number', programData.tag_number)
-        .eq('farm_id', farmId)
-        .eq('status', 'active')
-        .single();
-
-      if (tagError && tagError.code !== 'PGRST116') {
-        console.error('Error checking for duplicate tag:', tagError);
-        throw new Error("Error checking for duplicate tag");
+      if (!programData.cattle_type) {
+        throw new Error("Cattle type is required");
       }
-
-      if (existingTag) {
-        toast({
-          title: "Duplicate Tag",
-          description: "This tag number already exists in the fattening program",
-          variant: "destructive"
-        });
-        setIsSubmitting(false);
-        return false;
-      }
-
-      // Calculate daily gain
-      const entryDate = new Date(programData.entry_date);
-      const today = new Date();
-      const daysDiff = differenceInDays(today, entryDate);
       
-      let dailyGain = null;
-      if (daysDiff > 0) {
-        dailyGain = (Number(programData.current_weight) - Number(programData.entry_weight)) / daysDiff;
-      }
+      // Handle batch entries if batch_count is provided
+      if (programData.batch_count && programData.batch_count > 1) {
+        const batchId = uuidv4(); // Generate a unique batch ID
+        const batchEntries = [];
         
-      // Calculate expected completion date based on current gain rate
-      let expectedCompletionDate = null;
-      if (dailyGain && dailyGain > 0) {
-        const remainingGain = Number(programData.target_weight) - Number(programData.current_weight);
-        const daysToTarget = Math.ceil(remainingGain / dailyGain);
-        expectedCompletionDate = format(addDays(today, daysToTarget), 'yyyy-MM-dd');
+        // Generate batch entries
+        for (let i = 1; i <= programData.batch_count; i++) {
+          // Check if tag_number already exists for the first entry
+          if (i === 1) {
+            const { data: existingTag, error: tagError } = await supabase
+              .from('cattle_fattening')
+              .select('id')
+              .eq('tag_number', programData.tag_number)
+              .eq('farm_id', farmId)
+              .eq('status', 'active')
+              .single();
+
+            if (tagError && tagError.code !== 'PGRST116') {
+              console.error('Error checking for duplicate tag:', tagError);
+              throw new Error("Error checking for duplicate tag");
+            }
+
+            if (existingTag) {
+              toast({
+                title: "Duplicate Tag",
+                description: "The first tag number in batch already exists",
+                variant: "destructive"
+              });
+              setIsSubmitting(false);
+              return false;
+            }
+          }
+          
+          // Calculate tag number for each batch entry
+          let batchTagNumber = programData.tag_number;
+          if (i > 1) {
+            // For entries after the first one, append "-X" or increment the number
+            if (batchTagNumber.includes('-')) {
+              const parts = batchTagNumber.split('-');
+              const baseTag = parts.slice(0, -1).join('-');
+              const num = parseInt(parts[parts.length - 1]);
+              if (!isNaN(num)) {
+                batchTagNumber = `${baseTag}-${num + i - 1}`;
+              } else {
+                batchTagNumber = `${batchTagNumber}-${i}`;
+              }
+            } else {
+              batchTagNumber = `${batchTagNumber}-${i}`;
+            }
+          }
+          
+          // Calculate daily gain
+          const entryDate = new Date(programData.entry_date);
+          const today = new Date();
+          const daysDiff = differenceInDays(today, entryDate);
+          
+          let dailyGain = null;
+          if (daysDiff > 0) {
+            dailyGain = (Number(programData.current_weight) - Number(programData.entry_weight)) / daysDiff;
+          }
+            
+          // Calculate expected completion date based on current gain rate
+          let expectedCompletionDate = null;
+          if (dailyGain && dailyGain > 0) {
+            const remainingGain = Number(programData.target_weight) - Number(programData.current_weight);
+            const daysToTarget = Math.ceil(remainingGain / dailyGain);
+            expectedCompletionDate = format(addDays(today, daysToTarget), 'yyyy-MM-dd');
+          }
+          
+          // Create the cattle entry
+          const entryData = {
+            ...programData,
+            tag_number: batchTagNumber,
+            name: programData.name ? `${programData.name}${i > 1 ? `-${i}` : ''}` : '',
+            farm_id: farmId,
+            daily_gain: dailyGain,
+            expected_completion_date: expectedCompletionDate,
+            batch_id: batchId,
+            status: 'active'
+          };
+          
+          delete entryData.batch_count; // Remove the batch count field
+          batchEntries.push(entryData);
+        }
+        
+        // Insert all batch entries
+        const { data, error } = await supabase
+          .from('cattle_fattening')
+          .insert(batchEntries)
+          .select();
+
+        if (error) {
+          console.error('Error adding batch cattle to fattening program:', error);
+          throw error;
+        }
+        
+        console.log(`Successfully added ${batchEntries.length} cattle in batch to fattening program:`, data);
+        
+        toast({
+          title: "Success",
+          description: `${batchEntries.length} cattle added to fattening program successfully`,
+        });
+        
+      } else {
+        // Single entry - check if tag_number already exists
+        const { data: existingTag, error: tagError } = await supabase
+          .from('cattle_fattening')
+          .select('id')
+          .eq('tag_number', programData.tag_number)
+          .eq('farm_id', farmId)
+          .eq('status', 'active')
+          .single();
+
+        if (tagError && tagError.code !== 'PGRST116') {
+          console.error('Error checking for duplicate tag:', tagError);
+          throw new Error("Error checking for duplicate tag");
+        }
+
+        if (existingTag) {
+          toast({
+            title: "Duplicate Tag",
+            description: "This tag number already exists in the fattening program",
+            variant: "destructive"
+          });
+          setIsSubmitting(false);
+          return false;
+        }
+
+        // Calculate daily gain
+        const entryDate = new Date(programData.entry_date);
+        const today = new Date();
+        const daysDiff = differenceInDays(today, entryDate);
+        
+        let dailyGain = null;
+        if (daysDiff > 0) {
+          dailyGain = (Number(programData.current_weight) - Number(programData.entry_weight)) / daysDiff;
+        }
+          
+        // Calculate expected completion date based on current gain rate
+        let expectedCompletionDate = null;
+        if (dailyGain && dailyGain > 0) {
+          const remainingGain = Number(programData.target_weight) - Number(programData.current_weight);
+          const daysToTarget = Math.ceil(remainingGain / dailyGain);
+          expectedCompletionDate = format(addDays(today, daysToTarget), 'yyyy-MM-dd');
+        }
+
+        const newProgram = {
+          ...programData,
+          farm_id: farmId,
+          daily_gain: dailyGain,
+          expected_completion_date: expectedCompletionDate,
+          status: 'active'
+        };
+        
+        delete newProgram.batch_count; // Remove the batch count field if exists
+
+        const { data, error } = await supabase
+          .from('cattle_fattening')
+          .insert([newProgram])
+          .select();
+
+        if (error) {
+          console.error('Error adding cattle to fattening program:', error);
+          throw error;
+        }
+        
+        console.log('Successfully added cattle to fattening program:', data);
+        
+        toast({
+          title: "Success",
+          description: "Cattle added to fattening program successfully",
+        });
       }
-
-      const newProgram = {
-        ...programData,
-        farm_id: farmId,
-        daily_gain: dailyGain,
-        expected_completion_date: expectedCompletionDate,
-        status: 'active'
-      };
-
-      const { data, error } = await supabase
-        .from('cattle_fattening')
-        .insert([newProgram])
-        .select();
-
-      if (error) {
-        console.error('Error adding cattle to fattening program:', error);
-        throw error;
-      }
-      
-      console.log('Successfully added cattle to fattening program:', data);
-      
-      toast({
-        title: "Success",
-        description: "Cattle added to fattening program successfully",
-      });
       
       await fetchFatteningData();
       return true;

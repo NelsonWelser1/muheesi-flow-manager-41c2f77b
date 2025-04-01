@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
-import { AlertCircle, CalendarIcon, Beef, Scale } from "lucide-react";
+import { AlertCircle, CalendarIcon, Beef, Scale, Users } from "lucide-react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -19,12 +19,14 @@ const AddCattleForm = ({ onSuccess }) => {
   const { toast } = useToast();
   const { addFatteningProgram } = useBukomeroFattening();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [batchMode, setBatchMode] = useState(false);
 
   // Define form validation schema
   const formSchema = z.object({
     tag_number: z.string().min(1, "Tag number is required"),
     name: z.string().optional(),
     breed: z.string({ required_error: "Please select a breed" }),
+    cattle_type: z.string({ required_error: "Please select a cattle type" }),
     date_of_birth: z.string().optional(),
     entry_date: z.string({ required_error: "Entry date is required" }),
     entry_weight: z.coerce
@@ -37,6 +39,10 @@ const AddCattleForm = ({ onSuccess }) => {
       .number({ required_error: "Target weight is required" })
       .positive("Target weight must be greater than 0"),
     feeding_regime: z.string({ required_error: "Please select a feeding regime" }),
+    batch_count: z.coerce
+      .number()
+      .min(1, "Batch count must be at least 1")
+      .optional(),
     notes: z.string().optional()
   });
 
@@ -47,12 +53,14 @@ const AddCattleForm = ({ onSuccess }) => {
       tag_number: "",
       name: "",
       breed: "ankole",
+      cattle_type: "steer",
       date_of_birth: "",
       entry_date: format(new Date(), 'yyyy-MM-dd'),
       entry_weight: "",
       current_weight: "",
       target_weight: "",
       feeding_regime: "intensive",
+      batch_count: 1,
       notes: ""
     }
   });
@@ -75,7 +83,9 @@ const AddCattleForm = ({ onSuccess }) => {
       if (result) {
         toast({
           title: "Success",
-          description: "Cattle added to fattening program successfully",
+          description: batchMode ? 
+            `${values.batch_count} cattle added to fattening program successfully` :
+            "Cattle added to fattening program successfully",
         });
         
         // Reset form
@@ -83,12 +93,14 @@ const AddCattleForm = ({ onSuccess }) => {
           tag_number: "",
           name: "",
           breed: "ankole",
+          cattle_type: "steer",
           date_of_birth: "",
           entry_date: format(new Date(), 'yyyy-MM-dd'),
           entry_weight: "",
           current_weight: "",
           target_weight: "",
           feeding_regime: "intensive",
+          batch_count: 1,
           notes: ""
         });
         
@@ -112,10 +124,22 @@ const AddCattleForm = ({ onSuccess }) => {
   return (
     <Card className="border-green-100 shadow-sm">
       <CardHeader className="bg-gradient-to-r from-green-50 to-transparent border-b border-green-100">
-        <CardTitle className="text-lg text-green-800 flex items-center gap-2">
-          <Beef className="h-5 w-5 text-green-700" />
-          Add Cattle to Fattening Program
-        </CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg text-green-800 flex items-center gap-2">
+            <Beef className="h-5 w-5 text-green-700" />
+            Add Cattle to Fattening Program
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="batch-mode" className="text-sm text-green-700">Batch Entry</Label>
+            <input 
+              id="batch-mode" 
+              type="checkbox" 
+              checked={batchMode} 
+              onChange={() => setBatchMode(!batchMode)}
+              className="rounded border-green-300 text-green-600 focus:ring-green-500"
+            />
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="pt-5">
         <Form {...form}>
@@ -135,6 +159,9 @@ const AddCattleForm = ({ onSuccess }) => {
                         {...field} 
                       />
                     </FormControl>
+                    <FormDescription className="text-xs">
+                      {batchMode && "For batch entries, sequential numbers will be added to this base tag"}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -154,6 +181,39 @@ const AddCattleForm = ({ onSuccess }) => {
                         {...field} 
                       />
                     </FormControl>
+                    <FormDescription className="text-xs">
+                      {batchMode && "For batch entries, sequential numbers will be added to this base name"}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Cattle Type - NEW FIELD */}
+              <FormField
+                control={form.control}
+                name="cattle_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-green-700">Cattle Type *</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="border-green-200 focus:ring-green-200">
+                          <SelectValue placeholder="Select cattle type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="bull">Bull (Breeder)</SelectItem>
+                        <SelectItem value="cow">Cow (Mother)</SelectItem>
+                        <SelectItem value="heifer_calf">Heifer-Calf</SelectItem>
+                        <SelectItem value="bull_calf">Bull-Calf</SelectItem>
+                        <SelectItem value="heifer">Heifer</SelectItem>
+                        <SelectItem value="steer">Steer (Castrated Male)</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -346,6 +406,36 @@ const AddCattleForm = ({ onSuccess }) => {
                   </FormItem>
                 )}
               />
+
+              {/* Batch Count - NEW FIELD - Only show when batch mode is enabled */}
+              {batchMode && (
+                <FormField
+                  control={form.control}
+                  name="batch_count"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-green-700">Number of Cattle in Batch *</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            type="number"
+                            min="1"
+                            step="1"
+                            placeholder="Enter number of cattle" 
+                            className="border-green-200 focus:border-green-300 focus:ring-green-200"
+                            {...field} 
+                          />
+                          <Users className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
+                        </div>
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        Sequential tag numbers will be generated for each animal in the batch
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             {/* Notes */}
@@ -376,10 +466,10 @@ const AddCattleForm = ({ onSuccess }) => {
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin mr-2 h-4 w-4 border-b-2 border-white rounded-full"></div>
-                    Adding...
+                    {batchMode ? 'Adding Batch...' : 'Adding...'}
                   </>
                 ) : (
-                  'Add to Fattening Program'
+                  batchMode ? 'Add Batch to Fattening Program' : 'Add to Fattening Program'
                 )}
               </Button>
             </div>
@@ -395,6 +485,7 @@ const AddCattleForm = ({ onSuccess }) => {
                 <li>Daily weight gain is automatically calculated based on entry date and weights</li>
                 <li>Expected completion date will be estimated based on growth rate</li>
                 <li>Regular weight updates are essential for accurate projections</li>
+                {batchMode && <li>Batch entries will receive sequential tag numbers based on the provided tag number</li>}
               </ul>
             </div>
           </div>
