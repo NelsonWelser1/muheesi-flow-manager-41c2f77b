@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,22 +13,26 @@ import { RefreshCw, Download, Leaf, FileText, BarChart2, PlusCircle, Trash2, Pen
 import { useToast } from "@/components/ui/use-toast";
 import { useSilageInventory } from "@/hooks/useSilageInventory";
 import { format, parseISO } from 'date-fns';
-
-const SilageManager = ({ farmId, isDataEntry = true }) => {
-  const { toast } = useToast();
+const SilageManager = ({
+  farmId,
+  isDataEntry = true
+}) => {
+  const {
+    toast
+  } = useToast();
   const [activeTab, setActiveTab] = useState('inventory');
-  const { 
-    silageData, 
-    isLoading, 
-    isSubmitting, 
-    error, 
-    addSilageRecord, 
-    updateSilageRecord, 
-    deleteSilageRecord, 
-    refreshData, 
-    exportToCSV 
+  const {
+    silageData,
+    isLoading,
+    isSubmitting,
+    error,
+    addSilageRecord,
+    updateSilageRecord,
+    deleteSilageRecord,
+    refreshData,
+    exportToCSV
   } = useSilageInventory(farmId);
-  
+
   // New silage form state
   const [newSilage, setNewSilage] = useState({
     type: 'maize',
@@ -52,23 +55,38 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
   const [formErrors, setFormErrors] = useState({});
 
   // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewSilage(prev => ({ ...prev, [name]: value }));
-    
+  const handleInputChange = e => {
+    const {
+      name,
+      value
+    } = e.target;
+    setNewSilage(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
     // Clear error for this field when user makes changes
     if (formErrors[name]) {
-      setFormErrors(prev => ({ ...prev, [name]: null }));
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: null
+      }));
     }
   };
 
   // Handle select changes
   const handleSelectChange = (name, value) => {
-    setNewSilage(prev => ({ ...prev, [name]: value }));
-    
+    setNewSilage(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
     // Clear error for this field when user makes changes
     if (formErrors[name]) {
-      setFormErrors(prev => ({ ...prev, [name]: null }));
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: null
+      }));
     }
   };
 
@@ -76,11 +94,16 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
   const handleIngredientChange = (ingredient, checked) => {
     setNewSilage(prev => {
       const currentIngredients = prev.ingredients || [];
-      
       if (checked) {
-        return { ...prev, ingredients: [...currentIngredients, ingredient] };
+        return {
+          ...prev,
+          ingredients: [...currentIngredients, ingredient]
+        };
       } else {
-        return { ...prev, ingredients: currentIngredients.filter(item => item !== ingredient) };
+        return {
+          ...prev,
+          ingredients: currentIngredients.filter(item => item !== ingredient)
+        };
       }
     });
   };
@@ -88,32 +111,28 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
   // Validate form
   const validateForm = () => {
     const errors = {};
-    
     if (!newSilage.type) errors.type = "Type is required";
     if (!newSilage.amount || newSilage.amount <= 0) errors.amount = "Valid amount is required";
     if (!newSilage.unit) errors.unit = "Unit is required";
     if (!newSilage.productionDate) errors.productionDate = "Production date is required";
     if (!newSilage.quality) errors.quality = "Quality rating is required";
-    
+
     // Check if expiry date is after production date if provided
-    if (newSilage.expiryDate && newSilage.productionDate && 
-        new Date(newSilage.expiryDate) <= new Date(newSilage.productionDate)) {
+    if (newSilage.expiryDate && newSilage.productionDate && new Date(newSilage.expiryDate) <= new Date(newSilage.productionDate)) {
       errors.expiryDate = "Expiry date must be after production date";
     }
-    
+
     // Validate expenses if provided
     if (newSilage.expensesIncurred && isNaN(parseFloat(newSilage.expensesIncurred))) {
       errors.expensesIncurred = "Expenses must be a valid number";
     }
-    
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    
     if (!validateForm()) {
       toast({
         title: "Validation Error",
@@ -122,9 +141,7 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
       });
       return;
     }
-
     const success = await addSilageRecord(newSilage);
-    
     if (success) {
       // Reset form
       setNewSilage({
@@ -140,12 +157,11 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
         expensesIncurred: '',
         personInCharge: ''
       });
-      
+
       // Switch to inventory tab to see the new entry
       setActiveTab('inventory');
     }
   };
-
   const handleRefresh = () => {
     refreshData();
     toast({
@@ -153,16 +169,13 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
       description: "Silage data has been updated"
     });
   };
-
   const handleExport = () => {
     exportToCSV();
   };
 
   // Calculate total silage by type
-  const calculateTotalByType = (type) => {
-    return silageData
-      .filter(item => item.type === type)
-      .reduce((sum, item) => sum + Number(item.amount), 0);
+  const calculateTotalByType = type => {
+    return silageData.filter(item => item.type === type).reduce((sum, item) => sum + Number(item.amount), 0);
   };
 
   // Calculate total available silage
@@ -171,7 +184,7 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
   };
 
   // Format date for display
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     if (!dateString) return 'N/A';
     try {
       return format(parseISO(dateString), 'PP');
@@ -181,13 +194,11 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
   };
 
   // Format ingredients for display
-  const formatIngredients = (ingredients) => {
+  const formatIngredients = ingredients => {
     if (!ingredients || ingredients.length === 0) return 'None';
     return ingredients.join(', ');
   };
-
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Silage Management</h2>
         <div className="flex gap-2">
@@ -224,16 +235,11 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
               <CardTitle>Silage Inventory</CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <div className="flex justify-center py-8">
+              {isLoading ? <div className="flex justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                </div>
-              ) : error ? (
-                <div className="text-center py-8 text-red-500">
+                </div> : error ? <div className="text-center py-8 text-red-500">
                   Error loading silage data: {error}
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
+                </div> : <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -249,15 +255,11 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {silageData.length === 0 ? (
-                        <TableRow>
+                      {silageData.length === 0 ? <TableRow>
                           <TableCell colSpan={9} className="text-center py-4">
                             No silage records found.
                           </TableCell>
-                        </TableRow>
-                      ) : (
-                        silageData.map((silage) => (
-                          <TableRow key={silage.id}>
+                        </TableRow> : silageData.map(silage => <TableRow key={silage.id}>
                             <TableCell className="flex items-center gap-2">
                               <Leaf className="h-4 w-4 text-green-500" />
                               {silage.type.charAt(0).toUpperCase() + silage.type.slice(1)}
@@ -273,12 +275,7 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                             </TableCell>
                             <TableCell>{silage.storage_location || 'N/A'}</TableCell>
                             <TableCell>
-                              <Badge variant={
-                                silage.quality === 'excellent' ? 'default' :
-                                silage.quality === 'good' ? 'outline' :
-                                silage.quality === 'poor' ? 'destructive' :
-                                'secondary'
-                              }>
+                              <Badge variant={silage.quality === 'excellent' ? 'default' : silage.quality === 'good' ? 'outline' : silage.quality === 'poor' ? 'destructive' : 'secondary'}>
                                 {silage.quality.charAt(0).toUpperCase() + silage.quality.slice(1)}
                               </Badge>
                             </TableCell>
@@ -286,35 +283,24 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                             <TableCell>{silage.person_in_charge || 'N/A'}</TableCell>
                             <TableCell>
                               <div className="flex space-x-2">
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  onClick={() => {
-                                    // Handle edit functionality
-                                    toast({
-                                      title: "Edit Feature",
-                                      description: "Edit functionality will be implemented in a future update"
-                                    });
-                                  }}
-                                >
+                                <Button variant="ghost" size="icon" onClick={() => {
+                          // Handle edit functionality
+                          toast({
+                            title: "Edit Feature",
+                            description: "Edit functionality will be implemented in a future update"
+                          });
+                        }}>
                                   <Pencil className="h-4 w-4" />
                                 </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  onClick={() => deleteSilageRecord(silage.id)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                <Button variant="ghost" size="icon" onClick={() => deleteSilageRecord(silage.id)}>
+                                  
                                 </Button>
                               </div>
                             </TableCell>
-                          </TableRow>
-                        ))
-                      )}
+                          </TableRow>)}
                     </TableBody>
                   </Table>
-                </div>
-              )}
+                </div>}
             </CardContent>
           </Card>
         </TabsContent>
@@ -329,11 +315,7 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="type">Silage Type *</Label>
-                    <Select
-                      value={newSilage.type}
-                      onValueChange={(value) => handleSelectChange('type', value)}
-                      required
-                    >
+                    <Select value={newSilage.type} onValueChange={value => handleSelectChange('type', value)} required>
                       <SelectTrigger id="type" className={formErrors.type ? "border-red-500" : ""}>
                         <SelectValue placeholder="Select silage type" />
                       </SelectTrigger>
@@ -350,26 +332,12 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="amount">Amount *</Label>
-                      <Input
-                        id="amount"
-                        name="amount"
-                        type="number"
-                        step="0.01"
-                        value={newSilage.amount}
-                        onChange={handleInputChange}
-                        placeholder="Enter amount"
-                        required
-                        className={formErrors.amount ? "border-red-500" : ""}
-                      />
+                      <Input id="amount" name="amount" type="number" step="0.01" value={newSilage.amount} onChange={handleInputChange} placeholder="Enter amount" required className={formErrors.amount ? "border-red-500" : ""} />
                       {formErrors.amount && <p className="text-xs text-red-500">{formErrors.amount}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="unit">Unit *</Label>
-                      <Select
-                        value={newSilage.unit}
-                        onValueChange={(value) => handleSelectChange('unit', value)}
-                        required
-                      >
+                      <Select value={newSilage.unit} onValueChange={value => handleSelectChange('unit', value)} required>
                         <SelectTrigger id="unit" className={formErrors.unit ? "border-red-500" : ""}>
                           <SelectValue placeholder="Select unit" />
                         </SelectTrigger>
@@ -385,49 +353,24 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
 
                   <div className="space-y-2">
                     <Label htmlFor="productionDate">Production Date *</Label>
-                    <Input
-                      id="productionDate"
-                      name="productionDate"
-                      type="date"
-                      value={newSilage.productionDate}
-                      onChange={handleInputChange}
-                      required
-                      className={formErrors.productionDate ? "border-red-500" : ""}
-                    />
+                    <Input id="productionDate" name="productionDate" type="date" value={newSilage.productionDate} onChange={handleInputChange} required className={formErrors.productionDate ? "border-red-500" : ""} />
                     {formErrors.productionDate && <p className="text-xs text-red-500">{formErrors.productionDate}</p>}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="expiryDate">Expiry Date</Label>
-                    <Input
-                      id="expiryDate"
-                      name="expiryDate"
-                      type="date"
-                      value={newSilage.expiryDate}
-                      onChange={handleInputChange}
-                      className={formErrors.expiryDate ? "border-red-500" : ""}
-                    />
+                    <Input id="expiryDate" name="expiryDate" type="date" value={newSilage.expiryDate} onChange={handleInputChange} className={formErrors.expiryDate ? "border-red-500" : ""} />
                     {formErrors.expiryDate && <p className="text-xs text-red-500">{formErrors.expiryDate}</p>}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="storageLocation">Storage Location</Label>
-                    <Input
-                      id="storageLocation"
-                      name="storageLocation"
-                      value={newSilage.storageLocation}
-                      onChange={handleInputChange}
-                      placeholder="Enter storage location"
-                    />
+                    <Input id="storageLocation" name="storageLocation" value={newSilage.storageLocation} onChange={handleInputChange} placeholder="Enter storage location" />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="quality">Quality *</Label>
-                    <Select
-                      value={newSilage.quality}
-                      onValueChange={(value) => handleSelectChange('quality', value)}
-                      required
-                    >
+                    <Select value={newSilage.quality} onValueChange={value => handleSelectChange('quality', value)} required>
                       <SelectTrigger id="quality" className={formErrors.quality ? "border-red-500" : ""}>
                         <SelectValue placeholder="Select quality" />
                       </SelectTrigger>
@@ -444,21 +387,12 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                   <div className="space-y-2">
                     <Label>Ingredients</Label>
                     <div className="grid grid-cols-2 gap-2 border rounded-md p-3">
-                      {ingredientOptions.map((ingredient) => (
-                        <div key={ingredient} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`ingredient-${ingredient}`}
-                            checked={newSilage.ingredients?.includes(ingredient)}
-                            onCheckedChange={(checked) => handleIngredientChange(ingredient, checked)}
-                          />
-                          <label 
-                            htmlFor={`ingredient-${ingredient}`}
-                            className="text-sm cursor-pointer capitalize"
-                          >
+                      {ingredientOptions.map(ingredient => <div key={ingredient} className="flex items-center space-x-2">
+                          <Checkbox id={`ingredient-${ingredient}`} checked={newSilage.ingredients?.includes(ingredient)} onCheckedChange={checked => handleIngredientChange(ingredient, checked)} />
+                          <label htmlFor={`ingredient-${ingredient}`} className="text-sm cursor-pointer capitalize">
                             {ingredient}
                           </label>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
                   </div>
                   
@@ -466,16 +400,7 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                     <Label htmlFor="expensesIncurred">Expenses Incurred</Label>
                     <div className="relative">
                       <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                      <Input
-                        id="expensesIncurred"
-                        name="expensesIncurred"
-                        type="number"
-                        step="0.01"
-                        value={newSilage.expensesIncurred}
-                        onChange={handleInputChange}
-                        placeholder="Enter expenses"
-                        className={`pl-8 ${formErrors.expensesIncurred ? "border-red-500" : ""}`}
-                      />
+                      <Input id="expensesIncurred" name="expensesIncurred" type="number" step="0.01" value={newSilage.expensesIncurred} onChange={handleInputChange} placeholder="Enter expenses" className={`pl-8 ${formErrors.expensesIncurred ? "border-red-500" : ""}`} />
                     </div>
                     {formErrors.expensesIncurred && <p className="text-xs text-red-500">{formErrors.expensesIncurred}</p>}
                   </div>
@@ -484,40 +409,22 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                     <Label htmlFor="personInCharge">Person in Charge</Label>
                     <div className="relative">
                       <User className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                      <Input
-                        id="personInCharge"
-                        name="personInCharge"
-                        value={newSilage.personInCharge}
-                        onChange={handleInputChange}
-                        placeholder="Enter responsible person"
-                        className="pl-8"
-                      />
+                      <Input id="personInCharge" name="personInCharge" value={newSilage.personInCharge} onChange={handleInputChange} placeholder="Enter responsible person" className="pl-8" />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    name="notes"
-                    value={newSilage.notes}
-                    onChange={handleInputChange}
-                    placeholder="Enter any additional notes"
-                    rows={3}
-                  />
+                  <Textarea id="notes" name="notes" value={newSilage.notes} onChange={handleInputChange} placeholder="Enter any additional notes" rows={3} />
                 </div>
 
                 <div className="flex justify-end">
                   <Button type="submit" disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
-                    {isSubmitting ? (
-                      <>
+                    {isSubmitting ? <>
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                         Saving...
-                      </>
-                    ) : (
-                      'Add Silage Record'
-                    )}
+                      </> : 'Add Silage Record'}
                   </Button>
                 </div>
               </form>
@@ -572,10 +479,9 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div 
-                            className="bg-green-600 h-2.5 rounded-full" 
-                            style={{ width: `${Math.min(calculateTotalAvailable() / 2, 100)}%` }}
-                          ></div>
+                          <div className="bg-green-600 h-2.5 rounded-full" style={{
+                          width: `${Math.min(calculateTotalAvailable() / 2, 100)}%`
+                        }}></div>
                         </div>
                       </div>
                       <div className="flex justify-between">
@@ -590,14 +496,8 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                       </div>
                       <div className="flex justify-between">
                         <span>Feed Efficiency:</span>
-                        <span className={`font-medium ${
-                          calculateTotalAvailable() > 50 ? "text-green-600" : 
-                          calculateTotalAvailable() > 20 ? "text-amber-600" : 
-                          "text-red-600"
-                        }`}>
-                          {calculateTotalAvailable() > 50 ? "Good" : 
-                           calculateTotalAvailable() > 20 ? "Average" : 
-                           "Low"}
+                        <span className={`font-medium ${calculateTotalAvailable() > 50 ? "text-green-600" : calculateTotalAvailable() > 20 ? "text-amber-600" : "text-red-600"}`}>
+                          {calculateTotalAvailable() > 50 ? "Good" : calculateTotalAvailable() > 20 ? "Average" : "Low"}
                         </span>
                       </div>
                     </div>
@@ -608,8 +508,6 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
-
 export default SilageManager;
