@@ -1,5 +1,5 @@
 
--- First create the table if it doesn't exist
+-- Create the silage_inventory table if it doesn't exist
 CREATE TABLE IF NOT EXISTS silage_inventory (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type TEXT NOT NULL CHECK (type IN ('maize', 'grass', 'alfalfa', 'mixed')),
@@ -18,66 +18,69 @@ CREATE TABLE IF NOT EXISTS silage_inventory (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create indexes for better query performance (only if they don't exist)
+-- Create index for farm_id if it doesn't exist
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_silage_inventory_farm_id') THEN
-        CREATE INDEX idx_silage_inventory_farm_id ON silage_inventory(farm_id);
-    END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_silage_inventory_farm_id') THEN
+    CREATE INDEX idx_silage_inventory_farm_id ON silage_inventory(farm_id);
+  END IF;
 END $$;
 
+-- Create index for type if it doesn't exist
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_silage_inventory_type') THEN
-        CREATE INDEX idx_silage_inventory_type ON silage_inventory(type);
-    END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_silage_inventory_type') THEN
+    CREATE INDEX idx_silage_inventory_type ON silage_inventory(type);
+  END IF;
 END $$;
 
+-- Create index for storage_location if it doesn't exist
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_silage_inventory_storage_location') THEN
-        CREATE INDEX idx_silage_inventory_storage_location ON silage_inventory(storage_location);
-    END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_silage_inventory_storage_location') THEN
+    CREATE INDEX idx_silage_inventory_storage_location ON silage_inventory(storage_location);
+  END IF;
 END $$;
 
+-- Create index for expiry_date if it doesn't exist
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_silage_inventory_expiry_date') THEN
-        CREATE INDEX idx_silage_inventory_expiry_date ON silage_inventory(expiry_date);
-    END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_silage_inventory_expiry_date') THEN
+    CREATE INDEX idx_silage_inventory_expiry_date ON silage_inventory(expiry_date);
+  END IF;
 END $$;
 
--- Create trigger for updated_at functionality (only if it doesn't exist)
+-- Create the updated_at trigger function and trigger if they don't exist
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_silage_inventory_updated_at') THEN
-        CREATE OR REPLACE FUNCTION update_silage_inventory_updated_at()
-        RETURNS TRIGGER AS $$
-        BEGIN
-          NEW.updated_at = NOW();
-          RETURN NEW;
-        END;
-        $$ LANGUAGE plpgsql;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_silage_inventory_updated_at') THEN
+    CREATE OR REPLACE FUNCTION update_silage_inventory_updated_at()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      NEW.updated_at = NOW();
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
 
-        CREATE TRIGGER update_silage_inventory_updated_at
-        BEFORE UPDATE ON silage_inventory
-        FOR EACH ROW
-        EXECUTE FUNCTION update_silage_inventory_updated_at();
-    END IF;
+    CREATE TRIGGER update_silage_inventory_updated_at
+    BEFORE UPDATE ON silage_inventory
+    FOR EACH ROW
+    EXECUTE FUNCTION update_silage_inventory_updated_at();
+  END IF;
 END $$;
 
--- Enable Row Level Security but allow public access for now
+-- Enable Row Level Security
 ALTER TABLE silage_inventory ENABLE ROW LEVEL SECURITY;
 
--- Create policy (only if it doesn't exist)
+-- Create policy if it doesn't exist
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'silage_inventory' AND policyname = 'Allow full access to everyone') THEN
-        CREATE POLICY "Allow full access to everyone" 
-        ON silage_inventory
-        FOR ALL 
-        TO public
-        USING (true)
-        WITH CHECK (true);
-    END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'silage_inventory' AND policyname = 'Allow full access to everyone') THEN
+    CREATE POLICY "Allow full access to everyone" 
+    ON silage_inventory
+    FOR ALL 
+    TO public
+    USING (true)
+    WITH CHECK (true);
+  END IF;
 END $$;
