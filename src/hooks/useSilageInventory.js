@@ -74,6 +74,9 @@ export const useSilageInventory = (farmId) => {
         storage_location: silageData.storageLocation || null,
         quality: silageData.quality,
         notes: silageData.notes || null,
+        ingredients: silageData.ingredients || null,
+        expenses_incurred: silageData.expensesIncurred ? parseFloat(silageData.expensesIncurred) : null,
+        person_in_charge: silageData.personInCharge || null,
         farm_id: farmId
       };
 
@@ -125,6 +128,9 @@ export const useSilageInventory = (farmId) => {
         storage_location: updatedData.storageLocation || null,
         quality: updatedData.quality,
         notes: updatedData.notes || null,
+        ingredients: updatedData.ingredients || null,
+        expenses_incurred: updatedData.expensesIncurred ? parseFloat(updatedData.expensesIncurred) : null,
+        person_in_charge: updatedData.personInCharge || null,
         updated_at: new Date().toISOString()
       };
 
@@ -211,7 +217,8 @@ export const useSilageInventory = (farmId) => {
       // Format data for CSV
       const headers = [
         'Type', 'Amount', 'Unit', 'Production Date', 'Expiry Date', 
-        'Storage Location', 'Quality', 'Notes', 'Created At'
+        'Storage Location', 'Quality', 'Ingredients', 'Expenses Incurred',
+        'Person in Charge', 'Notes', 'Created At'
       ];
       
       const csvRows = [
@@ -227,6 +234,9 @@ export const useSilageInventory = (farmId) => {
           item.expiry_date || '',
           `"${item.storage_location || ''}"`,
           item.quality,
+          `"${item.ingredients ? item.ingredients.join(', ') : ''}"`,
+          item.expenses_incurred || '',
+          `"${item.person_in_charge || ''}"`,
           `"${item.notes?.replace(/"/g, '""') || ''}"`,
           format(parseISO(item.created_at), 'yyyy-MM-dd')
         ];

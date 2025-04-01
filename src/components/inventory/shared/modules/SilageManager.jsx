@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Download, Leaf, FileText, BarChart2, PlusCircle, Trash2, Pencil } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RefreshCw, Download, Leaf, FileText, BarChart2, PlusCircle, Trash2, Pencil, DollarSign, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useSilageInventory } from "@/hooks/useSilageInventory";
 import { format, parseISO } from 'date-fns';
@@ -38,8 +39,14 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
     expiryDate: '',
     storageLocation: '',
     quality: 'good',
-    notes: ''
+    notes: '',
+    ingredients: [],
+    expensesIncurred: '',
+    personInCharge: ''
   });
+
+  // Ingredients options
+  const ingredientOptions = ['molasses', 'urea', 'salt', 'formic acid'];
 
   // Form validation state
   const [formErrors, setFormErrors] = useState({});
@@ -65,6 +72,19 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
     }
   };
 
+  // Handle ingredient checkbox changes
+  const handleIngredientChange = (ingredient, checked) => {
+    setNewSilage(prev => {
+      const currentIngredients = prev.ingredients || [];
+      
+      if (checked) {
+        return { ...prev, ingredients: [...currentIngredients, ingredient] };
+      } else {
+        return { ...prev, ingredients: currentIngredients.filter(item => item !== ingredient) };
+      }
+    });
+  };
+
   // Validate form
   const validateForm = () => {
     const errors = {};
@@ -79,6 +99,11 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
     if (newSilage.expiryDate && newSilage.productionDate && 
         new Date(newSilage.expiryDate) <= new Date(newSilage.productionDate)) {
       errors.expiryDate = "Expiry date must be after production date";
+    }
+    
+    // Validate expenses if provided
+    if (newSilage.expensesIncurred && isNaN(parseFloat(newSilage.expensesIncurred))) {
+      errors.expensesIncurred = "Expenses must be a valid number";
     }
     
     setFormErrors(errors);
@@ -110,7 +135,10 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
         expiryDate: '',
         storageLocation: '',
         quality: 'good',
-        notes: ''
+        notes: '',
+        ingredients: [],
+        expensesIncurred: '',
+        personInCharge: ''
       });
       
       // Switch to inventory tab to see the new entry
@@ -150,6 +178,12 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
     } catch (e) {
       return 'Invalid date';
     }
+  };
+
+  // Format ingredients for display
+  const formatIngredients = (ingredients) => {
+    if (!ingredients || ingredients.length === 0) return 'None';
+    return ingredients.join(', ');
   };
 
   return (
@@ -209,13 +243,15 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                         <TableHead>Expiry Date</TableHead>
                         <TableHead>Location</TableHead>
                         <TableHead>Quality</TableHead>
+                        <TableHead>Ingredients</TableHead>
+                        <TableHead>Person in Charge</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {silageData.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-4">
+                          <TableCell colSpan={9} className="text-center py-4">
                             No silage records found.
                           </TableCell>
                         </TableRow>
@@ -246,6 +282,8 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                                 {silage.quality.charAt(0).toUpperCase() + silage.quality.slice(1)}
                               </Badge>
                             </TableCell>
+                            <TableCell>{formatIngredients(silage.ingredients)}</TableCell>
+                            <TableCell>{silage.person_in_charge || 'N/A'}</TableCell>
                             <TableCell>
                               <div className="flex space-x-2">
                                 <Button 
@@ -401,6 +439,60 @@ const SilageManager = ({ farmId, isDataEntry = true }) => {
                       </SelectContent>
                     </Select>
                     {formErrors.quality && <p className="text-xs text-red-500">{formErrors.quality}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Ingredients</Label>
+                    <div className="grid grid-cols-2 gap-2 border rounded-md p-3">
+                      {ingredientOptions.map((ingredient) => (
+                        <div key={ingredient} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`ingredient-${ingredient}`}
+                            checked={newSilage.ingredients?.includes(ingredient)}
+                            onCheckedChange={(checked) => handleIngredientChange(ingredient, checked)}
+                          />
+                          <label 
+                            htmlFor={`ingredient-${ingredient}`}
+                            className="text-sm cursor-pointer capitalize"
+                          >
+                            {ingredient}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="expensesIncurred">Expenses Incurred</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                      <Input
+                        id="expensesIncurred"
+                        name="expensesIncurred"
+                        type="number"
+                        step="0.01"
+                        value={newSilage.expensesIncurred}
+                        onChange={handleInputChange}
+                        placeholder="Enter expenses"
+                        className={`pl-8 ${formErrors.expensesIncurred ? "border-red-500" : ""}`}
+                      />
+                    </div>
+                    {formErrors.expensesIncurred && <p className="text-xs text-red-500">{formErrors.expensesIncurred}</p>}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="personInCharge">Person in Charge</Label>
+                    <div className="relative">
+                      <User className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                      <Input
+                        id="personInCharge"
+                        name="personInCharge"
+                        value={newSilage.personInCharge}
+                        onChange={handleInputChange}
+                        placeholder="Enter responsible person"
+                        className="pl-8"
+                      />
+                    </div>
                   </div>
                 </div>
 

@@ -20,6 +20,9 @@ CREATE TABLE silage_inventory (
   storage_location TEXT,
   quality TEXT NOT NULL CHECK (quality IN ('excellent', 'good', 'average', 'poor')),
   notes TEXT,
+  ingredients TEXT[] CHECK (ingredients <@ ARRAY['molasses', 'urea', 'salt', 'formic acid']),
+  expenses_incurred NUMERIC,
+  person_in_charge TEXT,
   farm_id TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
