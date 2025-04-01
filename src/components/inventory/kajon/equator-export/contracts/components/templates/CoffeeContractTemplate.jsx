@@ -1,9 +1,53 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, Trash } from "lucide-react";
 
 const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = () => {} }) => {
+  // Initial product data
+  const initialProducts = [
+    {
+      id: 'product1',
+      description: 'Arabica Coffee Beans',
+      origin: 'Kazo, Uganda',
+      quantity: '18,000',
+      grade: 'Screen 18, AA',
+      price: 'USD 5.86',
+      total: 'USD 105,480.00',
+      specs: 'Moisture content: 10-12%\nDefect count: Max 5 per 300g\nCup score: 84+ points\nProcessing: Fully washed\nFlavor profile: Citrus, floral, medium body'
+    },
+    {
+      id: 'product2',
+      description: 'Robusta Coffee Beans',
+      origin: 'Kanoni, Uganda',
+      quantity: '7,000',
+      grade: 'Screen 15',
+      price: 'USD 4.63',
+      total: 'USD 32,410.00',
+      specs: 'Moisture content: 11-13%\nDefect count: Max 15 per 300g\nCup score: 80+ points\nProcessing: Natural\nFlavor profile: Chocolate, nutty, full body'
+    }
+  ];
+
+  // State to track products
+  const [products, setProducts] = useState(
+    data.products || initialProducts
+  );
+
+  // Update parent data when products change
+  useEffect(() => {
+    if (editMode) {
+      onDataChange('products', products);
+    }
+  }, [products, editMode, onDataChange]);
+
+  // Calculate total contract value
+  const totalContractValue = products.reduce((sum, product) => {
+    const totalValue = product.total.replace(/[^\d.]/g, '');
+    return sum + (parseFloat(totalValue) || 0);
+  }, 0);
+
   // Helper function to render editable or display content
   const EditableField = ({ field, defaultValue, isMultiline = false }) => {
     const value = data[field] || defaultValue;
@@ -32,6 +76,39 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
     ) : (
       <span>{value}</span>
     );
+  };
+
+  // Update a product field
+  const handleProductChange = (index, field, value) => {
+    const updatedProducts = [...products];
+    updatedProducts[index] = {
+      ...updatedProducts[index],
+      [field]: value
+    };
+    setProducts(updatedProducts);
+  };
+
+  // Add a new product
+  const addProduct = () => {
+    const newProduct = {
+      id: `product${products.length + 1}`,
+      description: 'New Coffee Product',
+      origin: 'Uganda',
+      quantity: '0',
+      grade: 'Select Grade',
+      price: 'USD 0.00',
+      total: 'USD 0.00',
+      specs: 'Moisture content: \nDefect count: \nCup score: \nProcessing: \nFlavor profile: '
+    };
+    setProducts([...products, newProduct]);
+  };
+
+  // Remove a product
+  const removeProduct = (index) => {
+    if (products.length <= 1) return; // Keep at least one product
+    const updatedProducts = [...products];
+    updatedProducts.splice(index, 1);
+    setProducts(updatedProducts);
   };
 
   return (
@@ -89,7 +166,19 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
 
       {/* Product Details */}
       <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-800">PRODUCT DETAILS</h3>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-lg font-bold text-blue-800">PRODUCT DETAILS</h3>
+          {editMode && (
+            <Button 
+              type="button" 
+              onClick={addProduct} 
+              size="sm" 
+              className="flex items-center gap-1"
+            >
+              <Plus className="h-4 w-4" /> Add Product
+            </Button>
+          )}
+        </div>
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-blue-50">
@@ -99,56 +188,110 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
               <th className="border border-gray-300 p-2 text-left">Grade</th>
               <th className="border border-gray-300 p-2 text-left">Price per Kg</th>
               <th className="border border-gray-300 p-2 text-left">Total Value</th>
+              {editMode && <th className="border border-gray-300 p-2 text-left">Actions</th>}
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="product1Description" defaultValue="Arabica Coffee Beans" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="product1Origin" defaultValue="Kazo, Uganda" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="product1Quantity" defaultValue="18,000" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="product1Grade" defaultValue="Screen 18, AA" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="product1Price" defaultValue="USD 5.86" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="product1Total" defaultValue="USD 105,480.00" />
-              </td>
-            </tr>
-            <tr>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="product2Description" defaultValue="Robusta Coffee Beans" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="product2Origin" defaultValue="Kanoni, Uganda" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="product2Quantity" defaultValue="7,000" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="product2Grade" defaultValue="Screen 15" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="product2Price" defaultValue="USD 4.63" />
-              </td>
-              <td className="border border-gray-300 p-2">
-                <EditableField field="product2Total" defaultValue="USD 32,410.00" />
-              </td>
-            </tr>
+            {products.map((product, index) => (
+              <tr key={product.id}>
+                <td className="border border-gray-300 p-2">
+                  {editMode ? (
+                    <Input 
+                      value={product.description} 
+                      onChange={(e) => handleProductChange(index, 'description', e.target.value)} 
+                      className="w-full border border-blue-300 p-1"
+                    />
+                  ) : (
+                    product.description
+                  )}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {editMode ? (
+                    <Input 
+                      value={product.origin} 
+                      onChange={(e) => handleProductChange(index, 'origin', e.target.value)} 
+                      className="w-full border border-blue-300 p-1"
+                    />
+                  ) : (
+                    product.origin
+                  )}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {editMode ? (
+                    <Input 
+                      value={product.quantity} 
+                      onChange={(e) => handleProductChange(index, 'quantity', e.target.value)} 
+                      className="w-full border border-blue-300 p-1"
+                    />
+                  ) : (
+                    product.quantity
+                  )}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {editMode ? (
+                    <Input 
+                      value={product.grade} 
+                      onChange={(e) => handleProductChange(index, 'grade', e.target.value)} 
+                      className="w-full border border-blue-300 p-1"
+                    />
+                  ) : (
+                    product.grade
+                  )}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {editMode ? (
+                    <Input 
+                      value={product.price} 
+                      onChange={(e) => handleProductChange(index, 'price', e.target.value)} 
+                      className="w-full border border-blue-300 p-1"
+                    />
+                  ) : (
+                    product.price
+                  )}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {editMode ? (
+                    <Input 
+                      value={product.total} 
+                      onChange={(e) => handleProductChange(index, 'total', e.target.value)} 
+                      className="w-full border border-blue-300 p-1"
+                    />
+                  ) : (
+                    product.total
+                  )}
+                </td>
+                {editMode && (
+                  <td className="border border-gray-300 p-2">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => removeProduct(index)}
+                      disabled={products.length <= 1}
+                      className="text-red-500 hover:text-red-700 flex items-center"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </td>
+                )}
+              </tr>
+            ))}
           </tbody>
           <tfoot>
             <tr className="bg-blue-50">
-              <td colSpan="5" className="border border-gray-300 p-2 font-bold text-right">Total Contract Value:</td>
+              <td colSpan={editMode ? "6" : "5"} className="border border-gray-300 p-2 font-bold text-right">Total Contract Value:</td>
               <td className="border border-gray-300 p-2 font-bold">
-                <EditableField field="totalValue" defaultValue="USD 137,890.00" />
+                {editMode ? (
+                  <Input 
+                    value={data.totalValue || `USD ${totalContractValue.toLocaleString()}`} 
+                    onChange={(e) => onDataChange('totalValue', e.target.value)} 
+                    className="border border-blue-300 p-1"
+                  />
+                ) : (
+                  data.totalValue || `USD ${totalContractValue.toLocaleString()}`
+                )}
               </td>
+              {editMode && <td></td>}
             </tr>
           </tfoot>
         </table>
@@ -157,35 +300,30 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
       {/* Quality Specifications */}
       <div className="mb-6">
         <h3 className="text-lg font-bold mb-2 text-blue-800">QUALITY SPECIFICATIONS</h3>
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="border rounded p-3 bg-gray-50">
-            <p className="font-semibold">Arabica (Screen 18, AA):</p>
-            <div className={editMode ? "space-y-2" : ""}>
-              <EditableField 
-                field="arabicaSpecs" 
-                defaultValue="Moisture content: 10-12%
-Defect count: Max 5 per 300g
-Cup score: 84+ points
-Processing: Fully washed
-Flavor profile: Citrus, floral, medium body" 
-                isMultiline={true}
-              />
+        <div className="grid grid-cols-1 gap-4 mb-4">
+          {products.map((product, index) => (
+            <div key={`spec-${product.id}`} className="border rounded p-3 bg-gray-50">
+              <div className="flex justify-between">
+                <p className="font-semibold">{product.description} ({product.grade}):</p>
+                {editMode && (
+                  <div className="text-xs text-gray-500">
+                    Linked to product #{index + 1}
+                  </div>
+                )}
+              </div>
+              <div className={editMode ? "space-y-2" : ""}>
+                {editMode ? (
+                  <Textarea
+                    value={product.specs}
+                    onChange={(e) => handleProductChange(index, 'specs', e.target.value)}
+                    className="w-full min-h-[80px] border border-blue-300 p-2 mt-2"
+                  />
+                ) : (
+                  <p className="text-sm whitespace-pre-line">{product.specs}</p>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="border rounded p-3 bg-gray-50">
-            <p className="font-semibold">Robusta (Screen 15):</p>
-            <div className={editMode ? "space-y-2" : ""}>
-              <EditableField 
-                field="robustaSpecs" 
-                defaultValue="Moisture content: 11-13%
-Defect count: Max 15 per 300g
-Cup score: 80+ points
-Processing: Natural
-Flavor profile: Chocolate, nutty, full body" 
-                isMultiline={true}
-              />
-            </div>
-          </div>
+          ))}
         </div>
         <p className="text-sm">
           <EditableField 
