@@ -189,7 +189,7 @@ const AddCattleForm = ({ onSuccess }) => {
                 )}
               />
 
-              {/* Cattle Type - NEW FIELD */}
+              {/* Cattle Type */}
               <FormField
                 control={form.control}
                 name="cattle_type"
@@ -372,7 +372,7 @@ const AddCattleForm = ({ onSuccess }) => {
                 )}
               />
 
-              {/* Feeding Regime */}
+              {/* Feeding Regime - Updated to match database constraint */}
               <FormField
                 control={form.control}
                 name="feeding_regime"
@@ -407,7 +407,7 @@ const AddCattleForm = ({ onSuccess }) => {
                 )}
               />
 
-              {/* Batch Count - NEW FIELD - Only show when batch mode is enabled */}
+              {/* Batch Count - Only show when batch mode is enabled */}
               {batchMode && (
                 <FormField
                   control={form.control}

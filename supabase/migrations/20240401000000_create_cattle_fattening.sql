@@ -33,15 +33,17 @@ CREATE TABLE cattle_fattening (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Add feeding regime constraint
+-- Add feeding regime constraint that matches the form values
 ALTER TABLE cattle_fattening ADD CONSTRAINT cattle_fattening_feeding_regime_check 
-CHECK (feeding_regime IN ('standard', 'intensive', 'premium', 'specialized', 'pasture-silage based'));
+CHECK (feeding_regime IN ('standard', 'intensive', 'semi_intensive', 'pasture_based', 
+                         'silage_based', 'pasture_silage', 'premium', 'specialized', 'pasture-silage based'));
 
 -- Create indexes for better query performance
 CREATE INDEX idx_cattle_fattening_farm_id ON cattle_fattening(farm_id);
 CREATE INDEX idx_cattle_fattening_status ON cattle_fattening(status);
 CREATE INDEX idx_cattle_fattening_tag_number ON cattle_fattening(tag_number);
 CREATE INDEX idx_cattle_fattening_batch_id ON cattle_fattening(batch_id);
+CREATE INDEX idx_cattle_fattening_breed ON cattle_fattening(breed);
 
 -- Create trigger for updated_at functionality
 CREATE FUNCTION update_cattle_fattening_updated_at()
