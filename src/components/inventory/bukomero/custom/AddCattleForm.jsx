@@ -29,13 +29,13 @@ const AddCattleForm = ({ onSuccess }) => {
     entry_date: z.string({ required_error: "Entry date is required" }),
     entry_weight: z.coerce
       .number({ required_error: "Entry weight is required" })
-      .min(50, "Entry weight must be at least 50kg"),
+      .positive("Entry weight must be greater than 0"),
     current_weight: z.coerce
       .number({ required_error: "Current weight is required" })
-      .min(50, "Current weight must be at least 50kg"),
+      .positive("Current weight must be greater than 0"),
     target_weight: z.coerce
       .number({ required_error: "Target weight is required" })
-      .min(100, "Target weight must be at least 100kg"),
+      .positive("Target weight must be greater than 0"),
     feeding_regime: z.string({ required_error: "Please select a feeding regime" }),
     notes: z.string().optional()
   });
@@ -249,7 +249,6 @@ const AddCattleForm = ({ onSuccess }) => {
                         <Input 
                           type="number"
                           step="0.1"
-                          min="50"
                           placeholder="Enter weight in kg" 
                           className="border-green-200 focus:border-green-300 focus:ring-green-200"
                           {...field} 
@@ -274,7 +273,6 @@ const AddCattleForm = ({ onSuccess }) => {
                         <Input 
                           type="number"
                           step="0.1"
-                          min="50"
                           placeholder="Enter weight in kg" 
                           className="border-green-200 focus:border-green-300 focus:ring-green-200"
                           {...field} 
@@ -302,7 +300,6 @@ const AddCattleForm = ({ onSuccess }) => {
                         <Input 
                           type="number"
                           step="0.1"
-                          min="100"
                           placeholder="Enter target weight in kg" 
                           className="border-green-200 focus:border-green-300 focus:ring-green-200"
                           {...field} 
@@ -336,6 +333,7 @@ const AddCattleForm = ({ onSuccess }) => {
                         <SelectItem value="semi_intensive">Semi-Intensive (Mixed)</SelectItem>
                         <SelectItem value="pasture_based">Pasture-Based</SelectItem>
                         <SelectItem value="silage_based">Silage-Based</SelectItem>
+                        <SelectItem value="pasture_silage">Pasture-Silage Based</SelectItem>
                         <SelectItem value="standard">Standard</SelectItem>
                         <SelectItem value="premium">Premium</SelectItem>
                         <SelectItem value="specialized">Specialized</SelectItem>
