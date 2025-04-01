@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -383,7 +382,7 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
         </div>
       </div>
 
-      {/* Continue with other sections (Payment Terms, Certificates & Required Documents, etc.) */}
+      {/* Continue with other sections */}
       <div className="mb-6">
         <h3 className="text-lg font-bold mb-2 text-blue-800">PAYMENT TERMS</h3>
         <div className="border rounded p-3 bg-gray-50">

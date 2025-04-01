@@ -262,6 +262,15 @@ Aflatoxin: max 10 ppb"
             </p>
           </div>
         </div>
+        
+        <div className="mt-4">
+          <p className="font-semibold">Additional Shipping Terms:</p>
+          <EditableField 
+            field="additionalShippingTerms" 
+            defaultValue="Seller is responsible for arranging transportation to the port. Export documentation to be provided by seller. Cost of shipping insurance to be borne by buyer as per Incoterms."
+            isMultiline={true}
+          />
+        </div>
       </div>
 
       {/* Payment Terms */}

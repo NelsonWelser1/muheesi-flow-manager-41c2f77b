@@ -116,6 +116,16 @@ const CoffeeShipmentTemplate = ({ editMode = false, data = {}, onDataChange = ()
             </p>
           </div>
         </div>
+        
+        {/* Adding EditableField for Additional Shipping Details */}
+        <div className="mt-4">
+          <p className="font-semibold">Shipping Instructions:</p>
+          <EditableField 
+            field="shippingInstructions" 
+            defaultValue="Maintain proper ventilation throughout transit. Handle with care. Notify of any route changes or delays immediately."
+            isMultiline={true}
+          />
+        </div>
       </div>
 
       {/* Buyer Information */}

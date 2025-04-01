@@ -303,6 +303,15 @@ Packaging: 2kg plastic clamshells
             </p>
           </div>
         </div>
+        
+        <div className="mt-4">
+          <p className="font-semibold">Additional Shipping & Logistics Terms:</p>
+          <EditableField 
+            field="additionalShippingTerms" 
+            defaultValue="Seller arranges air freight booking and customs clearance at origin. Buyer responsible for import clearance at destination. Temperature-controlled handling required throughout transport chain. Tracking information to be provided to buyer upon departure."
+            isMultiline={true}
+          />
+        </div>
       </div>
 
       {/* Just adding a few more editable sections */}

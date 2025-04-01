@@ -116,6 +116,16 @@ const GeneralProduceShipmentTemplate = ({ editMode = false, data = {}, onDataCha
             </p>
           </div>
         </div>
+        
+        {/* Adding EditableField for Additional Shipping Details */}
+        <div className="mt-4">
+          <p className="font-semibold">Shipping Instructions:</p>
+          <EditableField 
+            field="shippingInstructions" 
+            defaultValue="Ensure proper temperature control. Notify of any routing or schedule changes. Provide daily location updates during transit."
+            isMultiline={true}
+          />
+        </div>
       </div>
 
       {/* Buyer Information */}
