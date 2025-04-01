@@ -24,15 +24,24 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_silage_inventory_farm_id') THEN
         CREATE INDEX idx_silage_inventory_farm_id ON silage_inventory(farm_id);
     END IF;
-    
+END $$;
+
+DO $$
+BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_silage_inventory_type') THEN
         CREATE INDEX idx_silage_inventory_type ON silage_inventory(type);
     END IF;
-    
+END $$;
+
+DO $$
+BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_silage_inventory_storage_location') THEN
         CREATE INDEX idx_silage_inventory_storage_location ON silage_inventory(storage_location);
     END IF;
-    
+END $$;
+
+DO $$
+BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_silage_inventory_expiry_date') THEN
         CREATE INDEX idx_silage_inventory_expiry_date ON silage_inventory(expiry_date);
     END IF;
@@ -72,4 +81,3 @@ BEGIN
         WITH CHECK (true);
     END IF;
 END $$;
-
