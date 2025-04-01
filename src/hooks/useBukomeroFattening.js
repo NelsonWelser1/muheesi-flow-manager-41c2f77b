@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from "@/components/ui/use-toast";
@@ -26,7 +27,7 @@ export const useBukomeroFattening = () => {
       const { data, error } = await supabase
         .from('cattle_fattening')
         .select('*')
-        .eq('farm_id', farmId)
+        .eq('farm_id', 'bukomero')
         .order('entry_date', { ascending: false });
 
       if (error) {
@@ -164,8 +165,18 @@ export const useBukomeroFattening = () => {
       if (!programData.cattle_type) {
         throw new Error("Cattle type is required");
       }
+
+      // Ensure feeding_regime is one of the allowed values to prevent constraint violation
+      const validFeedingRegimes = [
+        'standard', 'intensive', 'semi_intensive', 'pasture_based', 
+        'silage_based', 'pasture_silage', 'premium', 'specialized'
+      ];
       
-      // Handle batch entries if batch_count is provided
+      if (!validFeedingRegimes.includes(programData.feeding_regime)) {
+        programData.feeding_regime = 'standard'; // Default to standard if invalid
+      }
+      
+      // Handle batch entries if batch_count is provided and greater than 1
       if (programData.batch_count && programData.batch_count > 1) {
         const batchId = uuidv4(); // Generate a unique batch ID
         const batchEntries = [];
@@ -178,7 +189,7 @@ export const useBukomeroFattening = () => {
               .from('cattle_fattening')
               .select('id')
               .eq('tag_number', programData.tag_number)
-              .eq('farm_id', farmId)
+              .eq('farm_id', 'bukomero')
               .eq('status', 'active')
               .single();
 
@@ -239,7 +250,7 @@ export const useBukomeroFattening = () => {
             ...programData,
             tag_number: batchTagNumber,
             name: programData.name ? `${programData.name}${i > 1 ? `-${i}` : ''}` : '',
-            farm_id: farmId,
+            farm_id: 'bukomero',
             daily_gain: dailyGain,
             expected_completion_date: expectedCompletionDate,
             batch_id: batchId,
@@ -274,7 +285,7 @@ export const useBukomeroFattening = () => {
           .from('cattle_fattening')
           .select('id')
           .eq('tag_number', programData.tag_number)
-          .eq('farm_id', farmId)
+          .eq('farm_id', 'bukomero')
           .eq('status', 'active')
           .single();
 
@@ -313,7 +324,7 @@ export const useBukomeroFattening = () => {
 
         const newProgram = {
           ...programData,
-          farm_id: farmId,
+          farm_id: 'bukomero',
           daily_gain: dailyGain,
           expected_completion_date: expectedCompletionDate,
           status: 'active'
@@ -576,7 +587,7 @@ export const useBukomeroFattening = () => {
         event: '*', 
         schema: 'public', 
         table: 'cattle_fattening',
-        filter: `farm_id=eq.${farmId}`
+        filter: `farm_id=eq.bukomero`
       }, (payload) => {
         console.log('Real-time update received:', payload);
         fetchFatteningData();

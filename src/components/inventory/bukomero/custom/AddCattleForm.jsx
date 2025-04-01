@@ -59,7 +59,7 @@ const AddCattleForm = ({ onSuccess }) => {
       entry_weight: "",
       current_weight: "",
       target_weight: "",
-      feeding_regime: "intensive",
+      feeding_regime: "standard",
       batch_count: 1,
       notes: ""
     }
@@ -99,7 +99,7 @@ const AddCattleForm = ({ onSuccess }) => {
           entry_weight: "",
           current_weight: "",
           target_weight: "",
-          feeding_regime: "intensive",
+          feeding_regime: "standard",
           batch_count: 1,
           notes: ""
         });
@@ -389,12 +389,12 @@ const AddCattleForm = ({ onSuccess }) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="standard">Standard</SelectItem>
                         <SelectItem value="intensive">Intensive (High-grain)</SelectItem>
                         <SelectItem value="semi_intensive">Semi-Intensive (Mixed)</SelectItem>
                         <SelectItem value="pasture_based">Pasture-Based</SelectItem>
                         <SelectItem value="silage_based">Silage-Based</SelectItem>
                         <SelectItem value="pasture_silage">Pasture-Silage Based</SelectItem>
-                        <SelectItem value="standard">Standard</SelectItem>
                         <SelectItem value="premium">Premium</SelectItem>
                         <SelectItem value="specialized">Specialized</SelectItem>
                       </SelectContent>
