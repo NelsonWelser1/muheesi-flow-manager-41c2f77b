@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -6,17 +7,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const OrderInformation = () => {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold bg-[#fff3e0] px-4 py-2">ORDER INFORMATION</h2>
+      <Input 
+        className="text-xl font-bold bg-[#fff3e0] px-4 py-2"
+        defaultValue="ORDER INFORMATION" 
+      />
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>PRODUCT NAME</TableHead>
-            <TableHead>ITEM #</TableHead>
-            <TableHead>PRICE</TableHead>
-            <TableHead>QTY</TableHead>
-            <TableHead>SIZE</TableHead>
-            <TableHead>GRADE</TableHead>
-            <TableHead>TOTAL</TableHead>
+            <TableHead>
+              <Input className="font-bold" defaultValue="PRODUCT NAME" />
+            </TableHead>
+            <TableHead>
+              <Input className="font-bold" defaultValue="ITEM #" />
+            </TableHead>
+            <TableHead>
+              <Input className="font-bold" defaultValue="PRICE" />
+            </TableHead>
+            <TableHead>
+              <Input className="font-bold" defaultValue="QTY" />
+            </TableHead>
+            <TableHead>
+              <Input className="font-bold" defaultValue="SIZE" />
+            </TableHead>
+            <TableHead>
+              <Input className="font-bold" defaultValue="GRADE" />
+            </TableHead>
+            <TableHead>
+              <Input className="font-bold" defaultValue="TOTAL" />
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
