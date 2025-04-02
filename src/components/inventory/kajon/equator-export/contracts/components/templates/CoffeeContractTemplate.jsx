@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -298,7 +299,9 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
 
       {/* Quality Specifications */}
       <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-800">QUALITY SPECIFICATIONS</h3>
+        <h3 className="text-lg font-bold mb-2 text-blue-800">
+          <EditableField field="qualitySpecificationsTitle" defaultValue="QUALITY SPECIFICATIONS" />
+        </h3>
         <div className="grid grid-cols-1 gap-4 mb-4">
           {products.map((product, index) => (
             <div key={`spec-${product.id}`} className="border rounded p-3 bg-gray-50">
@@ -335,36 +338,50 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
 
       {/* Shipping Terms */}
       <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-800">SHIPPING TERMS</h3>
+        <h3 className="text-lg font-bold mb-2 text-blue-800">
+          <EditableField field="shippingTermsTitle" defaultValue="SHIPPING TERMS" />
+        </h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="font-semibold">Incoterm:</p>
+            <p className="font-semibold">
+              <EditableField field="incotermLabel" defaultValue="Incoterm:" />
+            </p>
             <p className="text-sm">
               <EditableField field="incoterm" defaultValue="FOB Mombasa" />
             </p>
             
-            <p className="font-semibold mt-2">Packaging:</p>
+            <p className="font-semibold mt-2">
+              <EditableField field="packagingLabel" defaultValue="Packaging:" />
+            </p>
             <p className="text-sm">
               <EditableField field="packaging" defaultValue="60kg jute bags with GrainPro liners" />
             </p>
             
-            <p className="font-semibold mt-2">Loading Port:</p>
+            <p className="font-semibold mt-2">
+              <EditableField field="loadingPortLabel" defaultValue="Loading Port:" />
+            </p>
             <p className="text-sm">
               <EditableField field="loadingPort" defaultValue="Mombasa, Kenya" />
             </p>
           </div>
           <div>
-            <p className="font-semibold">Destination:</p>
+            <p className="font-semibold">
+              <EditableField field="destinationLabel" defaultValue="Destination:" />
+            </p>
             <p className="text-sm">
               <EditableField field="destination" defaultValue="Hamburg, Germany" />
             </p>
             
-            <p className="font-semibold mt-2">Latest Shipment Date:</p>
+            <p className="font-semibold mt-2">
+              <EditableField field="shipmentDateLabel" defaultValue="Latest Shipment Date:" />
+            </p>
             <p className="text-sm">
               <EditableField field="shipmentDate" defaultValue="October 15, 2024" />
             </p>
             
-            <p className="font-semibold mt-2">Delivery Timeline:</p>
+            <p className="font-semibold mt-2">
+              <EditableField field="deliveryTimelineLabel" defaultValue="Delivery Timeline:" />
+            </p>
             <p className="text-sm">
               <EditableField field="deliveryTimeline" defaultValue="30-45 days from loading" />
             </p>
@@ -373,7 +390,9 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
         
         {/* Adding EditableField for Shipping Terms */}
         <div className="mt-4">
-          <p className="font-semibold">Additional Shipping Terms:</p>
+          <p className="font-semibold">
+            <EditableField field="additionalShippingTermsLabel" defaultValue="Additional Shipping Terms:" />
+          </p>
           <EditableField 
             field="additionalShippingTerms" 
             defaultValue="Seller is responsible for arranging transportation to the port. Export documentation to be provided by seller. Cost of shipping insurance to be borne by buyer as per Incoterms."
@@ -382,9 +401,11 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
         </div>
       </div>
 
-      {/* Continue with other sections */}
+      {/* Payment Terms */}
       <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-800">PAYMENT TERMS</h3>
+        <h3 className="text-lg font-bold mb-2 text-blue-800">
+          <EditableField field="paymentTermsTitle" defaultValue="PAYMENT TERMS" />
+        </h3>
         <div className="border rounded p-3 bg-gray-50">
           <div className={editMode ? "space-y-2" : ""}>
             <EditableField 
@@ -403,33 +424,37 @@ All banking charges outside Uganda to be borne by the Buyer"
       {/* Signature Block */}
       <div className="grid grid-cols-2 gap-12 mt-12">
         <div>
-          <p className="font-semibold border-b border-gray-400 pb-8 mb-2">For and on behalf of SELLER</p>
+          <p className="font-semibold border-b border-gray-400 pb-8 mb-2">
+            <EditableField field="forSellerLabel" defaultValue="For and on behalf of SELLER" />
+          </p>
           <p className="text-sm">
-            Name: <EditableField field="sellerName" defaultValue="________________________________" />
+            <EditableField field="sellerNameLabel" defaultValue="Name:" /> <EditableField field="sellerName" defaultValue="________________________________" />
           </p>
           <p className="text-sm mt-2">
-            Title: <EditableField field="sellerTitle" defaultValue="________________________________" />
+            <EditableField field="sellerTitleLabel" defaultValue="Title:" /> <EditableField field="sellerTitle" defaultValue="________________________________" />
           </p>
           <p className="text-sm mt-2">
-            Date: <EditableField field="sellerDate" defaultValue="________________________________" />
+            <EditableField field="sellerDateLabel" defaultValue="Date:" /> <EditableField field="sellerDate" defaultValue="________________________________" />
           </p>
           <p className="text-sm mt-2">
-            Signature: <EditableField field="sellerSignature" defaultValue="___________________________" />
+            <EditableField field="sellerSignatureLabel" defaultValue="Signature:" /> <EditableField field="sellerSignature" defaultValue="___________________________" />
           </p>
         </div>
         <div>
-          <p className="font-semibold border-b border-gray-400 pb-8 mb-2">For and on behalf of BUYER</p>
+          <p className="font-semibold border-b border-gray-400 pb-8 mb-2">
+            <EditableField field="forBuyerLabel" defaultValue="For and on behalf of BUYER" />
+          </p>
           <p className="text-sm">
-            Name: <EditableField field="buyerSignatureName" defaultValue="________________________________" />
+            <EditableField field="buyerSignatureNameLabel" defaultValue="Name:" /> <EditableField field="buyerSignatureName" defaultValue="________________________________" />
           </p>
           <p className="text-sm mt-2">
-            Title: <EditableField field="buyerSignatureTitle" defaultValue="________________________________" />
+            <EditableField field="buyerSignatureTitleLabel" defaultValue="Title:" /> <EditableField field="buyerSignatureTitle" defaultValue="________________________________" />
           </p>
           <p className="text-sm mt-2">
-            Date: <EditableField field="buyerSignatureDate" defaultValue="________________________________" />
+            <EditableField field="buyerSignatureDateLabel" defaultValue="Date:" /> <EditableField field="buyerSignatureDate" defaultValue="________________________________" />
           </p>
           <p className="text-sm mt-2">
-            Signature: <EditableField field="buyerSignature" defaultValue="___________________________" />
+            <EditableField field="buyerSignatureLabel" defaultValue="Signature:" /> <EditableField field="buyerSignature" defaultValue="___________________________" />
           </p>
         </div>
       </div>
