@@ -362,13 +362,6 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
             </div>
           ))}
         </div>
-        <p className="text-sm">
-          <EditableField 
-            field="qualityVerification" 
-            defaultValue="Quality to be verified by SGS or equivalent third-party inspector at loading. Buyer has the right to reject shipment if quality parameters are not met." 
-            isMultiline={true}
-          />
-        </p>
       </div>
 
       {/* Shipping Terms */}
