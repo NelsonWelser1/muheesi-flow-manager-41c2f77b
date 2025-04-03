@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -285,63 +284,102 @@ Aflatoxin: max 10 ppb"
         <h3 className="text-lg font-bold mb-2 text-green-800">
           <EditableField field="shippingTermsTitle" defaultValue="SHIPPING TERMS" />
         </h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="font-semibold">
-              <EditableField field="incotermLabel" defaultValue="Incoterm:" />
-            </p>
-            <p className="text-sm">
-              <EditableField field="incoterm" defaultValue="CIF Rotterdam" />
-            </p>
+        {editMode ? (
+          <div className="space-y-4 border border-green-200 p-4 rounded-md bg-green-50">
+            <p className="text-sm text-green-600 italic">Edit Shipping Terms Structure:</p>
             
-            <p className="font-semibold mt-2">
-              <EditableField field="packagingLabel" defaultValue="Packaging:" />
-            </p>
-            <p className="text-sm">
-              <EditableField field="packaging" defaultValue="25kg/50kg polypropylene bags in container" />
-            </p>
+            {/* Editable grid structure */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Left column labels and values */}
+              {[1, 2, 3].map((index) => (
+                <div key={`left-${index}`} className="space-y-1">
+                  <Input 
+                    className="font-semibold border border-green-300"
+                    value={data[`shippingLeftLabel${index}`] || 
+                          (index === 1 ? "Incoterm:" : 
+                           index === 2 ? "Packaging:" : "Loading Port:")}
+                    onChange={(e) => onDataChange(`shippingLeftLabel${index}`, e.target.value)}
+                  />
+                  <Input
+                    className="border border-green-300"
+                    value={data[`shippingLeftValue${index}`] || 
+                          (index === 1 ? "CIF Rotterdam" : 
+                           index === 2 ? "25kg/50kg polypropylene bags in container" : "Mombasa, Kenya")}
+                    onChange={(e) => onDataChange(`shippingLeftValue${index}`, e.target.value)}
+                  />
+                </div>
+              ))}
+              
+              {/* Right column labels and values */}
+              {[1, 2, 3].map((index) => (
+                <div key={`right-${index}`} className="space-y-1">
+                  <Input 
+                    className="font-semibold border border-green-300"
+                    value={data[`shippingRightLabel${index}`] || 
+                          (index === 1 ? "Destination:" : 
+                           index === 2 ? "Latest Shipment Date:" : "Delivery Timeline:")}
+                    onChange={(e) => onDataChange(`shippingRightLabel${index}`, e.target.value)}
+                  />
+                  <Input
+                    className="border border-green-300"
+                    value={data[`shippingRightValue${index}`] || 
+                          (index === 1 ? "Rotterdam, Netherlands" : 
+                           index === 2 ? "November 30, 2024" : "35-50 days from loading")}
+                    onChange={(e) => onDataChange(`shippingRightValue${index}`, e.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
             
-            <p className="font-semibold mt-2">
-              <EditableField field="loadingPortLabel" defaultValue="Loading Port:" />
-            </p>
-            <p className="text-sm">
-              <EditableField field="loadingPort" defaultValue="Mombasa, Kenya" />
-            </p>
+            {/* Bottom section */}
+            <div className="mt-4">
+              <Input 
+                className="font-semibold border border-green-300 mb-1"
+                value={data.additionalShippingTermsLabel || "Additional Shipping Terms:"}
+                onChange={(e) => onDataChange('additionalShippingTermsLabel', e.target.value)}
+              />
+              <Textarea 
+                className="border border-green-300"
+                value={data.additionalShippingTerms || "Seller is responsible for arranging transportation to the port. Export documentation to be provided by seller. Cost of shipping insurance to be borne by buyer as per Incoterms."}
+                onChange={(e) => onDataChange('additionalShippingTerms', e.target.value)}
+              />
+            </div>
           </div>
-          <div>
-            <p className="font-semibold">
-              <EditableField field="destinationLabel" defaultValue="Destination:" />
-            </p>
-            <p className="text-sm">
-              <EditableField field="destination" defaultValue="Rotterdam, Netherlands" />
-            </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                {[1, 2, 3].map((index) => (
+                  <div key={`left-display-${index}`} className="mb-2">
+                    <p className="font-semibold">{data[`shippingLeftLabel${index}`] || 
+                      (index === 1 ? "Incoterm:" : 
+                       index === 2 ? "Packaging:" : "Loading Port:")}</p>
+                    <p className="text-sm">{data[`shippingLeftValue${index}`] || 
+                      (index === 1 ? "CIF Rotterdam" : 
+                       index === 2 ? "25kg/50kg polypropylene bags in container" : "Mombasa, Kenya")}</p>
+                  </div>
+                ))}
+              </div>
+              <div>
+                {[1, 2, 3].map((index) => (
+                  <div key={`right-display-${index}`} className="mb-2">
+                    <p className="font-semibold">{data[`shippingRightLabel${index}`] || 
+                      (index === 1 ? "Destination:" : 
+                       index === 2 ? "Latest Shipment Date:" : "Delivery Timeline:")}</p>
+                    <p className="text-sm">{data[`shippingRightValue${index}`] || 
+                      (index === 1 ? "Rotterdam, Netherlands" : 
+                       index === 2 ? "November 30, 2024" : "35-50 days from loading")}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
             
-            <p className="font-semibold mt-2">
-              <EditableField field="shipmentDateLabel" defaultValue="Latest Shipment Date:" />
-            </p>
-            <p className="text-sm">
-              <EditableField field="shipmentDate" defaultValue="November 30, 2024" />
-            </p>
-            
-            <p className="font-semibold mt-2">
-              <EditableField field="deliveryTimelineLabel" defaultValue="Delivery Timeline:" />
-            </p>
-            <p className="text-sm">
-              <EditableField field="deliveryTimeline" defaultValue="35-50 days from loading" />
-            </p>
-          </div>
-        </div>
-        
-        <div className="mt-4">
-          <p className="font-semibold">
-            <EditableField field="additionalShippingTermsLabel" defaultValue="Additional Shipping Terms:" />
-          </p>
-          <EditableField 
-            field="additionalShippingTerms" 
-            defaultValue="Seller is responsible for arranging transportation to the port. Export documentation to be provided by seller. Cost of shipping insurance to be borne by buyer as per Incoterms."
-            isMultiline={true}
-          />
-        </div>
+            <div className="mt-4">
+              <p className="font-semibold">{data.additionalShippingTermsLabel || "Additional Shipping Terms:"}</p>
+              <p className="text-sm whitespace-pre-line">{data.additionalShippingTerms || "Seller is responsible for arranging transportation to the port. Export documentation to be provided by seller. Cost of shipping insurance to be borne by buyer as per Incoterms."}</p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Payment Terms */}

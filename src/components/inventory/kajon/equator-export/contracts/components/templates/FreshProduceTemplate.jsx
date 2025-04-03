@@ -266,52 +266,107 @@ Packaging: 2kg plastic clamshells
         </div>
       </div>
 
-      {/* Shipping & Logistics */}
+      {/* Shipping & Logistics - Making everything editable */}
       <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-amber-700">SHIPPING & LOGISTICS</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="font-semibold">Shipping Method:</p>
-            <p className="text-sm">
-              <EditableField field="shippingMethod" defaultValue="Air Freight" />
-            </p>
+        <h3 className="text-lg font-bold mb-2 text-amber-700">
+          <EditableField field="shippingTermsTitle" defaultValue="SHIPPING & LOGISTICS" />
+        </h3>
+        {editMode ? (
+          <div className="space-y-4 border border-amber-200 p-4 rounded-md bg-amber-50">
+            <p className="text-sm text-amber-600 italic">Edit Shipping & Logistics Structure:</p>
             
-            <p className="font-semibold mt-2">Departure Airport:</p>
-            <p className="text-sm">
-              <EditableField field="departureAirport" defaultValue="Entebbe International Airport, Uganda" />
-            </p>
+            {/* Editable grid structure */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Left column labels and values */}
+              {[1, 2, 3].map((index) => (
+                <div key={`left-${index}`} className="space-y-1">
+                  <Input 
+                    className="font-semibold border border-amber-300"
+                    value={data[`shippingLeftLabel${index}`] || 
+                          (index === 1 ? "Shipping Method:" : 
+                           index === 2 ? "Departure Airport:" : "Transit Time:")}
+                    onChange={(e) => onDataChange(`shippingLeftLabel${index}`, e.target.value)}
+                  />
+                  <Input
+                    className="border border-amber-300"
+                    value={data[`shippingLeftValue${index}`] || 
+                          (index === 1 ? "Air Freight" : 
+                           index === 2 ? "Entebbe International Airport, Uganda" : "24-48 hours from departure")}
+                    onChange={(e) => onDataChange(`shippingLeftValue${index}`, e.target.value)}
+                  />
+                </div>
+              ))}
+              
+              {/* Right column labels and values */}
+              {[1, 2, 3].map((index) => (
+                <div key={`right-${index}`} className="space-y-1">
+                  <Input 
+                    className="font-semibold border border-amber-300"
+                    value={data[`shippingRightLabel${index}`] || 
+                          (index === 1 ? "Incoterm:" : 
+                           index === 2 ? "Shipment Schedule:" : "First Shipment Date:")}
+                    onChange={(e) => onDataChange(`shippingRightLabel${index}`, e.target.value)}
+                  />
+                  <Input
+                    className="border border-amber-300"
+                    value={data[`shippingRightValue${index}`] || 
+                          (index === 1 ? "CIP London Heathrow" : 
+                           index === 2 ? "Every Tuesday and Friday" : "August 15, 2024")}
+                    onChange={(e) => onDataChange(`shippingRightValue${index}`, e.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
             
-            <p className="font-semibold mt-2">Transit Time:</p>
-            <p className="text-sm">
-              <EditableField field="transitTime" defaultValue="24-48 hours from departure" />
-            </p>
+            {/* Bottom section */}
+            <div className="mt-4">
+              <Input 
+                className="font-semibold border border-amber-300 mb-1"
+                value={data.additionalShippingTermsLabel || "Additional Shipping & Logistics Terms:"}
+                onChange={(e) => onDataChange('additionalShippingTermsLabel', e.target.value)}
+              />
+              <Textarea 
+                className="border border-amber-300"
+                value={data.additionalShippingTerms || "Seller arranges air freight booking and customs clearance at origin. Buyer responsible for import clearance at destination. Temperature-controlled handling required throughout transport chain. Tracking information to be provided to buyer upon departure."}
+                onChange={(e) => onDataChange('additionalShippingTerms', e.target.value)}
+              />
+            </div>
           </div>
-          <div>
-            <p className="font-semibold">Incoterm:</p>
-            <p className="text-sm">
-              <EditableField field="incoterm" defaultValue="CIP London Heathrow" />
-            </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                {[1, 2, 3].map((index) => (
+                  <div key={`left-display-${index}`} className="mb-2">
+                    <p className="font-semibold">{data[`shippingLeftLabel${index}`] || 
+                      (index === 1 ? "Shipping Method:" : 
+                       index === 2 ? "Departure Airport:" : "Transit Time:")}</p>
+                    <p className="text-sm">{data[`shippingLeftValue${index}`] || 
+                      (index === 1 ? "Air Freight" : 
+                       index === 2 ? "Entebbe International Airport, Uganda" : "24-48 hours from departure")}</p>
+                  </div>
+                ))}
+              </div>
+              <div>
+                {[1, 2, 3].map((index) => (
+                  <div key={`right-display-${index}`} className="mb-2">
+                    <p className="font-semibold">{data[`shippingRightLabel${index}`] || 
+                      (index === 1 ? "Incoterm:" : 
+                       index === 2 ? "Shipment Schedule:" : "First Shipment Date:")}</p>
+                    <p className="text-sm">{data[`shippingRightValue${index}`] || 
+                      (index === 1 ? "CIP London Heathrow" : 
+                       index === 2 ? "Every Tuesday and Friday" : "August 15, 2024")}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
             
-            <p className="font-semibold mt-2">Shipment Schedule:</p>
-            <p className="text-sm">
-              <EditableField field="shipmentSchedule" defaultValue="Every Tuesday and Friday" />
-            </p>
-            
-            <p className="font-semibold mt-2">First Shipment Date:</p>
-            <p className="text-sm">
-              <EditableField field="firstShipmentDate" defaultValue="August 15, 2024" />
-            </p>
-          </div>
-        </div>
-        
-        <div className="mt-4">
-          <p className="font-semibold">Additional Shipping & Logistics Terms:</p>
-          <EditableField 
-            field="additionalShippingTerms" 
-            defaultValue="Seller arranges air freight booking and customs clearance at origin. Buyer responsible for import clearance at destination. Temperature-controlled handling required throughout transport chain. Tracking information to be provided to buyer upon departure."
-            isMultiline={true}
-          />
-        </div>
+            <div className="mt-4">
+              <p className="font-semibold">{data.additionalShippingTermsLabel || "Additional Shipping & Logistics Terms:"}</p>
+              <p className="text-sm whitespace-pre-line">{data.additionalShippingTerms || "Seller arranges air freight booking and customs clearance at origin. Buyer responsible for import clearance at destination. Temperature-controlled handling required throughout transport chain. Tracking information to be provided to buyer upon departure."}</p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Just adding a few more editable sections */}
