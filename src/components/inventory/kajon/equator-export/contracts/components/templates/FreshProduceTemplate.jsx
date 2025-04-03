@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, Trash } from "lucide-react";
 
 const FreshProduceTemplate = ({ editMode = false, data = {}, onDataChange = () => {} }) => {
   // Helper function to render editable or display content
@@ -31,6 +33,42 @@ const FreshProduceTemplate = ({ editMode = false, data = {}, onDataChange = () =
     ) : (
       <span>{value}</span>
     );
+  };
+
+  // New state for payment terms structure
+  const [paymentTermsItems, setPaymentTermsItems] = useState(
+    data.paymentTermsItems || [
+      { id: 1, text: "First shipment: 100% payment upon receipt and inspection at destination" },
+      { id: 2, text: "Subsequent shipments: 50% advance payment, 50% within 7 days of receipt" },
+      { id: 3, text: "Payment by telegraphic transfer to seller's designated account" },
+      { id: 4, text: "All bank charges outside Uganda to be borne by the buyer" },
+      { id: 5, text: "Late payment subject to 1.5% interest per month on outstanding amount" }
+    ]
+  );
+
+  // Update parent data when payment terms items change
+  useEffect(() => {
+    if (editMode) {
+      onDataChange('paymentTermsItems', paymentTermsItems);
+    }
+  }, [paymentTermsItems, editMode, onDataChange]);
+
+  // Add a new payment term item
+  const addPaymentTermItem = () => {
+    const newId = paymentTermsItems.length > 0 ? Math.max(...paymentTermsItems.map(item => item.id)) + 1 : 1;
+    setPaymentTermsItems([...paymentTermsItems, { id: newId, text: "New payment term" }]);
+  };
+
+  // Update a payment term item
+  const updatePaymentTermItem = (id, newText) => {
+    setPaymentTermsItems(prevItems => 
+      prevItems.map(item => item.id === id ? { ...item, text: newText } : item)
+    );
+  };
+
+  // Remove a payment term item
+  const removePaymentTermItem = (id) => {
+    setPaymentTermsItems(prevItems => prevItems.filter(item => item.id !== id));
   };
 
   return (
@@ -284,7 +322,9 @@ Packaging: 2kg plastic clamshells
                     className="font-semibold border border-amber-300"
                     value={data[`shippingLeftLabel${index}`] || 
                           (index === 1 ? "Shipping Method:" : 
-                           index === 2 ? "Departure Airport:" : "Transit Time:")}
+                           index === 2 ? "Departure Airport:" : "Transit Time:") || 
+                          (index === 1 ? "Air Freight" : 
+                           index === 2 ? "Entebbe International Airport, Uganda" : "24-48 hours from departure")}
                     onChange={(e) => onDataChange(`shippingLeftLabel${index}`, e.target.value)}
                   />
                   <Input
@@ -304,7 +344,9 @@ Packaging: 2kg plastic clamshells
                     className="font-semibold border border-amber-300"
                     value={data[`shippingRightLabel${index}`] || 
                           (index === 1 ? "Incoterm:" : 
-                           index === 2 ? "Shipment Schedule:" : "First Shipment Date:")}
+                           index === 2 ? "Shipment Schedule:" : "First Shipment Date:") || 
+                          (index === 1 ? "CIP London Heathrow" : 
+                           index === 2 ? "Every Tuesday and Friday" : "August 15, 2024")}
                     onChange={(e) => onDataChange(`shippingRightLabel${index}`, e.target.value)}
                   />
                   <Input
@@ -369,21 +411,46 @@ Packaging: 2kg plastic clamshells
         )}
       </div>
 
-      {/* Just adding a few more editable sections */}
+      {/* Payment Terms */}
       <div className="mb-6">
         <h3 className="text-lg font-bold mb-2 text-amber-700">PAYMENT TERMS</h3>
         <div className="border rounded p-3 bg-gray-50">
-          <div className={editMode ? "space-y-2" : ""}>
-            <EditableField 
-              field="paymentTerms" 
-              defaultValue="First shipment: 100% payment upon receipt and inspection at destination
-Subsequent shipments: 50% advance payment, 50% within 7 days of receipt
-Payment by telegraphic transfer to seller's designated account
-All bank charges outside Uganda to be borne by the buyer
-Late payment subject to 1.5% interest per month on outstanding amount" 
-              isMultiline={true}
-            />
-          </div>
+          {editMode ? (
+            <div className="space-y-4">
+              {paymentTermsItems.map((item) => (
+                <div key={item.id} className="flex items-start gap-2">
+                  <Textarea
+                    value={item.text}
+                    onChange={(e) => updatePaymentTermItem(item.id, e.target.value)}
+                    className="flex-grow border border-amber-300 min-h-[60px]"
+                  />
+                  <Button 
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removePaymentTermItem(item.id)}
+                    className="text-red-500 hover:text-red-700 mt-1"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button 
+                type="button" 
+                onClick={addPaymentTermItem} 
+                size="sm" 
+                className="flex items-center gap-1 mt-2"
+              >
+                <Plus className="h-4 w-4" /> Add Payment Term
+              </Button>
+            </div>
+          ) : (
+            <ul className="list-disc pl-5 space-y-1">
+              {paymentTermsItems.map((item) => (
+                <li key={item.id} className="text-sm">{item.text}</li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 

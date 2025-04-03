@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, Trash } from "lucide-react";
 
 const GeneralProduceTemplate = ({ editMode = false, data = {}, onDataChange = () => {} }) => {
   // Helper function to render editable or display content
@@ -31,6 +33,43 @@ const GeneralProduceTemplate = ({ editMode = false, data = {}, onDataChange = ()
     ) : (
       <span>{value}</span>
     );
+  };
+
+  // New state for payment terms structure
+  const [paymentTermsItems, setPaymentTermsItems] = useState(
+    data.paymentTermsItems || [
+      { id: 1, text: "20% advance payment upon contract signing" },
+      { id: 2, text: "80% balance against presentation of shipping documents" },
+      { id: 3, text: "Payment by irrevocable Letter of Credit at sight" },
+      { id: 4, text: "L/C to be issued by buyer's bank within 14 days of contract signing" },
+      { id: 5, text: "L/C to be confirmed by Stanbic Bank, Kampala" },
+      { id: 6, text: "All banking charges outside Uganda to be borne by the Buyer" }
+    ]
+  );
+
+  // Update parent data when payment terms items change
+  useEffect(() => {
+    if (editMode) {
+      onDataChange('paymentTermsItems', paymentTermsItems);
+    }
+  }, [paymentTermsItems, editMode, onDataChange]);
+
+  // Add a new payment term item
+  const addPaymentTermItem = () => {
+    const newId = paymentTermsItems.length > 0 ? Math.max(...paymentTermsItems.map(item => item.id)) + 1 : 1;
+    setPaymentTermsItems([...paymentTermsItems, { id: newId, text: "New payment term" }]);
+  };
+
+  // Update a payment term item
+  const updatePaymentTermItem = (id, newText) => {
+    setPaymentTermsItems(prevItems => 
+      prevItems.map(item => item.id === id ? { ...item, text: newText } : item)
+    );
+  };
+
+  // Remove a payment term item
+  const removePaymentTermItem = (id) => {
+    setPaymentTermsItems(prevItems => prevItems.filter(item => item.id !== id));
   };
 
   return (
@@ -388,18 +427,42 @@ Aflatoxin: max 10 ppb"
           <EditableField field="paymentTermsTitle" defaultValue="PAYMENT TERMS" />
         </h3>
         <div className="border rounded p-3 bg-gray-50">
-          <div className={editMode ? "space-y-2" : ""}>
-            <EditableField 
-              field="paymentTerms" 
-              defaultValue="20% advance payment upon contract signing
-80% balance against presentation of shipping documents
-Payment by irrevocable Letter of Credit at sight
-L/C to be issued by buyer's bank within 14 days of contract signing
-L/C to be confirmed by Stanbic Bank, Kampala
-All banking charges outside Uganda to be borne by the Buyer" 
-              isMultiline={true}
-            />
-          </div>
+          {editMode ? (
+            <div className="space-y-4">
+              {paymentTermsItems.map((item) => (
+                <div key={item.id} className="flex items-start gap-2">
+                  <Textarea
+                    value={item.text}
+                    onChange={(e) => updatePaymentTermItem(item.id, e.target.value)}
+                    className="flex-grow border border-green-300 min-h-[60px]"
+                  />
+                  <Button 
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removePaymentTermItem(item.id)}
+                    className="text-red-500 hover:text-red-700 mt-1"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button 
+                type="button" 
+                onClick={addPaymentTermItem} 
+                size="sm" 
+                className="flex items-center gap-1 mt-2"
+              >
+                <Plus className="h-4 w-4" /> Add Payment Term
+              </Button>
+            </div>
+          ) : (
+            <ul className="list-disc pl-5 space-y-1">
+              {paymentTermsItems.map((item) => (
+                <li key={item.id} className="text-sm">{item.text}</li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
