@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,8 +49,10 @@ const ContractTemplates = ({ onBack }) => {
   // Load default template data when a template is first viewed
   useEffect(() => {
     if (activeTemplate && !editableData[activeTemplate]) {
+      // Get current date in YYYY-MM-DD format for default
+      const currentDate = new Date().toISOString().split('T')[0];
+      
       // Initialize with default template data structure
-      // This would normally be loaded from the actual template
       const defaultData = {
         buyerName: '[Buyer Company Name]',
         buyerAddress: '[Buyer Address]',
@@ -57,7 +60,7 @@ const ContractTemplates = ({ onBack }) => {
         contractNumber: activeTemplate === 'coffee' ? 'KCL-2024-[XXXX]' : 
                         activeTemplate === 'general' ? 'KCL-GP-2024-[XXXX]' : 
                         'KCL-FP-2024-[XXXX]',
-        currentDate: '[Current Date]',
+        currentDate: currentDate,
         // Add more fields as needed for each template
       };
       

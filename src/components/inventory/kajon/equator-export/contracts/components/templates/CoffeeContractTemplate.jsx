@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -215,10 +214,29 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
         <div className="text-right">
           <h1 className="text-2xl font-bold text-blue-800">COFFEE EXPORT CONTRACT</h1>
           <p className="text-sm text-gray-600 mt-2">
-            Contract #: <EditableField field="contractNumber" defaultValue="KCL-2024-[XXXX]" />
+            Contract #: {editMode ? (
+              <Input 
+                value={data.contractNumber || "KCL-2024-[XXXX]"}
+                onChange={(e) => onDataChange('contractNumber', e.target.value)}
+                className="border border-blue-300 p-1 mt-1 w-full"
+                placeholder="Enter contract number"
+              />
+            ) : (
+              <span>{data.contractNumber || "KCL-2024-[XXXX]"}</span>
+            )}
           </p>
           <p className="text-sm text-gray-600">
-            Date: <EditableField field="currentDate" defaultValue="[Current Date]" />
+            Date: {editMode ? (
+              <Input 
+                value={data.currentDate || "[Current Date]"}
+                onChange={(e) => onDataChange('currentDate', e.target.value)}
+                className="border border-blue-300 p-1 mt-1 w-full" 
+                placeholder="Enter date"
+                type="text"
+              />
+            ) : (
+              <span>{data.currentDate || "[Current Date]"}</span>
+            )}
           </p>
         </div>
       </div>
