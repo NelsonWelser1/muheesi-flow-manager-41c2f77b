@@ -327,7 +327,7 @@ const GeneralProduceTemplate = ({ editMode = false, data = {}, onDataChange = ()
                     <Input 
                       value={product.totalValue || ''} 
                       readOnly
-                      className="w-full border border-green-300 p-1 bg-gray-50"
+                      className="w-full border border-green-300 p-1 bg-gray-100 cursor-not-allowed"
                     />
                   ) : (
                     product.totalValue || ''
@@ -361,7 +361,7 @@ const GeneralProduceTemplate = ({ editMode = false, data = {}, onDataChange = ()
                         .toFixed(2)}`
                     } 
                     readOnly
-                    className="border border-green-300 p-1 bg-gray-50"
+                    className="border border-green-300 p-1 bg-gray-100 cursor-not-allowed"
                   />
                 ) : (
                   `USD ${products

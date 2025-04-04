@@ -267,7 +267,15 @@ const FreshProduceTemplate = ({ editMode = false, data = {}, onDataChange = () =
                 <EditableField field="product1Price" defaultValue="USD 1.15" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="product1Total" defaultValue="USD 9,200.00" />
+                {editMode ? (
+                  <Input 
+                    value={data.product1Total || "USD 9,200.00"} 
+                    readOnly
+                    className="w-full border border-amber-300 p-1 bg-gray-100 cursor-not-allowed"
+                  />
+                ) : (
+                  <span>{data.product1Total || "USD 9,200.00"}</span>
+                )}
               </td>
             </tr>
             <tr>
@@ -287,7 +295,15 @@ const FreshProduceTemplate = ({ editMode = false, data = {}, onDataChange = () =
                 <EditableField field="product2Price" defaultValue="USD 2.40" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="product2Total" defaultValue="USD 8,400.00" />
+                {editMode ? (
+                  <Input 
+                    value={data.product2Total || "USD 8,400.00"} 
+                    readOnly
+                    className="w-full border border-amber-300 p-1 bg-gray-100 cursor-not-allowed"
+                  />
+                ) : (
+                  <span>{data.product2Total || "USD 8,400.00"}</span>
+                )}
               </td>
             </tr>
             <tr>
@@ -307,7 +323,15 @@ const FreshProduceTemplate = ({ editMode = false, data = {}, onDataChange = () =
                 <EditableField field="product3Price" defaultValue="USD 2.80" />
               </td>
               <td className="border border-gray-300 p-2">
-                <EditableField field="product3Total" defaultValue="USD 14,000.00" />
+                {editMode ? (
+                  <Input 
+                    value={data.product3Total || "USD 14,000.00"} 
+                    readOnly
+                    className="w-full border border-amber-300 p-1 bg-gray-100 cursor-not-allowed"
+                  />
+                ) : (
+                  <span>{data.product3Total || "USD 14,000.00"}</span>
+                )}
               </td>
             </tr>
           </tbody>
@@ -315,7 +339,15 @@ const FreshProduceTemplate = ({ editMode = false, data = {}, onDataChange = () =
             <tr className="bg-amber-50">
               <td colSpan="5" className="border border-gray-300 p-2 font-bold text-right">Total Contract Value:</td>
               <td className="border border-gray-300 p-2 font-bold">
-                <EditableField field="totalValue" defaultValue="USD 31,600.00" />
+                {editMode ? (
+                  <Input 
+                    value={data.totalValue || "USD 31,600.00"} 
+                    readOnly
+                    className="w-full border border-amber-300 p-1 bg-gray-100 cursor-not-allowed"
+                  />
+                ) : (
+                  <span>{data.totalValue || "USD 31,600.00"}</span>
+                )}
               </td>
             </tr>
           </tfoot>

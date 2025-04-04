@@ -415,9 +415,8 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
                   {editMode ? (
                     <Input 
                       value={product.total} 
-                      onChange={(e) => handleProductChange(index, 'total', e.target.value)} 
-                      className="w-full border border-blue-300 p-1"
                       readOnly
+                      className="w-full border border-blue-300 p-1 bg-gray-100 cursor-not-allowed"
                     />
                   ) : (
                     product.total
@@ -447,8 +446,8 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
                 {editMode ? (
                   <Input 
                     value={data.totalValue || `USD ${totalContractValue.toLocaleString()}`} 
-                    onChange={(e) => onDataChange('totalValue', e.target.value)} 
-                    className="border border-blue-300 p-1"
+                    readOnly
+                    className="border border-blue-300 p-1 bg-gray-100 cursor-not-allowed"
                   />
                 ) : (
                   data.totalValue || `USD ${totalContractValue.toLocaleString()}`
