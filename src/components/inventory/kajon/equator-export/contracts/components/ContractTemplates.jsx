@@ -11,6 +11,7 @@ import FreshProduceTemplate from './templates/FreshProduceTemplate';
 import { exportContractToPDF } from '../utils/contractPdfExport';
 import '../styles/PrintStyles.css';
 import { useCoffeeExportContract } from '@/integrations/supabase/hooks/contracts/useCoffeeExportContract';
+import { useSpecialtyCoffeeContract } from '@/integrations/supabase/hooks/contracts/useSpecialtyCoffeeContract';
 
 const ContractTemplates = ({ onBack }) => {
   const { toast } = useToast();
@@ -22,25 +23,33 @@ const ContractTemplates = ({ onBack }) => {
   const [editableData, setEditableData] = useState({
     coffee: null,
     general: null,
-    fresh: null
+    fresh: null,
+    specialty: null
   });
+  const [activeContractType, setActiveContractType] = useState(null);
   const templateRef = useRef(null);
 
-  // Load the Supabase hook for coffee export contracts
   const {
     contracts: coffeeContracts,
     loading: coffeeContractsLoading,
     error: coffeeContractsError,
     saveContract: saveCoffeeContract,
     fetchContracts: fetchCoffeeContracts,
-    isSubmitting
+    isSubmitting: isSubmittingCoffeeContract
   } = useCoffeeExportContract();
 
-  // When printing, add a class to the body element to apply print-specific styles
+  const {
+    contracts: specialtyContracts,
+    loading: specialtyContractsLoading,
+    error: specialtyContractsError,
+    saveContract: saveSpecialtyContract,
+    fetchContracts: fetchSpecialtyContracts,
+    isSubmitting: isSubmittingSpecialtyContract
+  } = useSpecialtyCoffeeContract();
+
   useEffect(() => {
     const beforePrint = () => {
       document.body.classList.add('printing');
-      // Temporarily disable edit mode during printing
       if (editMode) {
         setEditMode(false);
       }
@@ -59,10 +68,11 @@ const ContractTemplates = ({ onBack }) => {
     };
   }, [editMode]);
 
-  // Load saved contracts from Supabase when component mounts
   useEffect(() => {
+    const formattedContracts = [];
+    
     if (coffeeContracts.length > 0) {
-      const formattedContracts = coffeeContracts.map(contract => ({
+      const formatted = coffeeContracts.map(contract => ({
         id: contract.id,
         type: 'coffee',
         title: `Coffee Contract - ${contract.contract_number || 'Untitled'} (${new Date(contract.created_at).toLocaleDateString()})`,
@@ -81,35 +91,66 @@ const ContractTemplates = ({ onBack }) => {
           },
           products: Array.isArray(contract.products) ? contract.products : [],
           paymentTermsItems: Array.isArray(contract.payment_terms_items) ? contract.payment_terms_items : [],
-          // Add other fields as needed
+          total_contract_value: parseFloat(contract.total_contract_value || 0)
         },
         dateCreated: contract.created_at
       }));
       
-      setSavedTemplates(prevTemplates => {
-        // Filter out coffee templates and add the new ones
-        const nonCoffeeTemplates = prevTemplates.filter(template => template.type !== 'coffee');
-        return [...nonCoffeeTemplates, ...formattedContracts];
-      });
+      formattedContracts.push(...formatted);
     }
-  }, [coffeeContracts]);
+    
+    if (specialtyContracts.length > 0) {
+      const formatted = specialtyContracts.map(contract => ({
+        id: contract.id,
+        type: 'specialty',
+        title: `Specialty Coffee Contract - ${contract.contract_number || 'Untitled'} (${new Date(contract.created_at).toLocaleDateString()})`,
+        data: {
+          contractNumber: contract.contract_number,
+          currentDate: contract.contract_date,
+          sellerDetails: {
+            name: contract.seller_name,
+            address: contract.seller_address,
+            registration: contract.seller_registration
+          },
+          buyerDetails: {
+            name: contract.buyer_name,
+            address: contract.buyer_address,
+            registration: contract.buyer_registration
+          },
+          coffeeOrigin: contract.coffee_origin,
+          coffeeVariety: contract.coffee_variety,
+          coffeeProcess: contract.coffee_process,
+          coffeeGrade: contract.coffee_grade,
+          coffeeCertification: contract.coffee_certification,
+          cuppingScore: contract.cupping_score,
+          products: Array.isArray(contract.products) ? contract.products : [],
+          paymentTermsItems: Array.isArray(contract.payment_terms_items) ? contract.payment_terms_items : [],
+          total_contract_value: parseFloat(contract.total_contract_value || 0)
+        },
+        dateCreated: contract.created_at
+      }));
+      
+      formattedContracts.push(...formatted);
+    }
+    
+    formattedContracts.sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
+    
+    setSavedTemplates(formattedContracts);
+  }, [coffeeContracts, specialtyContracts]);
 
-  // Load default template data when a template is first viewed
   useEffect(() => {
     if (activeTemplate && !editableData[activeTemplate]) {
-      // Get current date in YYYY-MM-DD format for default
       const currentDate = new Date().toISOString().split('T')[0];
       
-      // Initialize with default template data structure
       const defaultData = {
         buyerName: '[Buyer Company Name]',
         buyerAddress: '[Buyer Address]',
         buyerRegistration: '[Buyer Registration #]',
         contractNumber: activeTemplate === 'coffee' ? 'KCL-2024-[XXXX]' : 
+                        activeTemplate === 'specialty' ? 'KCL-SC-2024-[XXXX]' :
                         activeTemplate === 'general' ? 'KCL-GP-2024-[XXXX]' : 
                         'KCL-FP-2024-[XXXX]',
         currentDate: currentDate,
-        // Add more fields as needed for each template
       };
       
       setEditableData(prev => ({
@@ -119,13 +160,13 @@ const ContractTemplates = ({ onBack }) => {
     }
   }, [activeTemplate, editableData]);
 
-  const handleViewTemplate = (templateType) => {
+  const handleViewTemplate = (templateType, contractType = null) => {
     setActiveTemplate(templateType);
-    setTemplateSaved(false); // Reset saved state when viewing a new template
+    setActiveContractType(contractType);
+    setTemplateSaved(false);
   };
 
   const handlePrint = () => {
-    // Temporarily disable edit mode for printing
     setEditMode(false);
     window.print();
   };
@@ -136,13 +177,11 @@ const ContractTemplates = ({ onBack }) => {
       return;
     }
 
-    // Disable edit mode for PDF generation
     const wasInEditMode = editMode;
     if (wasInEditMode) {
       setEditMode(false);
     }
 
-    // Small delay to ensure edit mode is fully disabled
     setTimeout(async () => {
       try {
         const templateType = activeTemplate || "contract";
@@ -150,7 +189,6 @@ const ContractTemplates = ({ onBack }) => {
         
         await exportContractToPDF(templateRef.current, filename, toast);
         
-        // Restore edit mode if it was active
         if (wasInEditMode) {
           setEditMode(true);
         }
@@ -158,7 +196,6 @@ const ContractTemplates = ({ onBack }) => {
         console.error("PDF generation error:", error);
         showErrorToast(toast, `Failed to generate PDF: ${error.message}`);
         
-        // Restore edit mode if it was active
         if (wasInEditMode) {
           setEditMode(true);
         }
@@ -173,40 +210,54 @@ const ContractTemplates = ({ onBack }) => {
   const handleSaveContract = async () => {
     if (!activeTemplate) return;
     
-    // If submission is already in progress, don't allow another save
+    const isSubmitting = 
+      (activeTemplate === 'coffee' && isSubmittingCoffeeContract) ||
+      (activeTemplate === 'specialty' && isSubmittingSpecialtyContract);
+    
     if (isSubmitting) {
       showErrorToast(toast, "A save operation is already in progress, please wait");
       return;
     }
     
-    // Show loading toast
-    const loadingToastId = showLoadingToast(toast, "Saving contract...");
+    const loadingToastId = showLoadingToast(toast, `Saving ${activeTemplate} contract...`);
     
     try {
       if (activeTemplate === 'coffee') {
-        // Save coffee contract to Supabase
-        const contractData = prepareContractDataForSaving();
+        const contractData = prepareContractDataForSaving('coffee');
         const { success, data, error } = await saveCoffeeContract(contractData);
         
         if (success) {
-          // Update saved state
           setTemplateSaved(true);
-          // Exit edit mode
           setEditMode(false);
-          
-          // Dismiss loading toast and show success toast
           dismissToast(loadingToastId);
           showSuccessToast(toast, "Coffee export contract saved successfully");
-          
-          // Return to templates screen
           setActiveTemplate(null);
         } else {
-          // Dismiss loading toast and show error toast
+          dismissToast(loadingToastId);
+          showErrorToast(toast, `Failed to save contract: ${error?.message || 'Unknown error'}`);
+        }
+      } else if (activeTemplate === 'specialty') {
+        const contractData = prepareContractDataForSaving('specialty');
+        const { success, data, error, clientReferenceId } = await saveSpecialtyContract(contractData);
+        
+        if (success) {
+          setTemplateSaved(true);
+          setEditMode(false);
+          setEditableData(prev => ({
+            ...prev,
+            [activeTemplate]: {
+              ...prev[activeTemplate],
+              clientReferenceId
+            }
+          }));
+          dismissToast(loadingToastId);
+          showSuccessToast(toast, "Specialty coffee contract saved successfully");
+          setActiveTemplate(null);
+        } else {
           dismissToast(loadingToastId);
           showErrorToast(toast, `Failed to save contract: ${error?.message || 'Unknown error'}`);
         }
       } else {
-        // Handle non-coffee templates (local storage for now)
         const savedTemplate = {
           id: Date.now().toString(),
           type: activeTemplate,
@@ -215,16 +266,9 @@ const ContractTemplates = ({ onBack }) => {
           dateCreated: new Date().toISOString()
         };
         
-        // Add to saved templates
         setSavedTemplates(prev => [...prev, savedTemplate]);
-        
-        // Update saved state
         setTemplateSaved(true);
-        
-        // Exit edit mode
         setEditMode(false);
-        
-        // Dismiss loading toast and show success toast
         dismissToast(loadingToastId);
         showSuccessToast(toast, "Contract saved successfully");
       }
@@ -235,14 +279,12 @@ const ContractTemplates = ({ onBack }) => {
     }
   };
 
-  // Prepare contract data for saving to Supabase
-  const prepareContractDataForSaving = () => {
-    if (activeTemplate === 'coffee') {
+  const prepareContractDataForSaving = (templateType) => {
+    if (templateType === 'coffee') {
       const data = editableData.coffee || {};
       const sellerDetails = data.sellerDetails || {};
       const buyerDetails = data.buyerDetails || {};
       
-      // Ensure products have valid structure
       const products = Array.isArray(data.products) ? data.products.map(product => ({
         description: product.description || '',
         quantity: parseFloat(product.quantity) || 0,
@@ -262,8 +304,63 @@ const ContractTemplates = ({ onBack }) => {
         buyer_registration: buyerDetails.registration || "[Buyer Registration #]",
         products: products,
         payment_terms_items: Array.isArray(data.paymentTermsItems) ? data.paymentTermsItems : [],
-        // ... Include other fields from the template
         total_contract_value: parseFloat(data.totalContractValue || 0)
+      };
+    } else if (templateType === 'specialty') {
+      const data = editableData.specialty || {};
+      const sellerDetails = data.sellerDetails || {};
+      const buyerDetails = data.buyerDetails || {};
+      
+      const products = Array.isArray(data.products) ? data.products.map(product => ({
+        id: product.id || `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        description: product.description || '',
+        quantity: parseFloat(product.quantity) || 0,
+        pricePerKg: parseFloat(product.pricePerKg) || 0,
+        totalValue: parseFloat(product.totalValue) || 
+          (parseFloat(product.quantity || 0) * parseFloat(product.pricePerKg || 0)).toFixed(2)
+      })) : [];
+      
+      const paymentTerms = Array.isArray(data.paymentTermsItems) ? data.paymentTermsItems.map(item => {
+        return {
+          id: item.id || `term-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          description: item.description || item.text || ''
+        };
+      }) : [];
+      
+      return {
+        contract_number: data.contractNumber || "KCL-SC-2024-" + new Date().getTime().toString().slice(-4),
+        contract_date: data.currentDate || new Date().toISOString().split('T')[0],
+        seller_name: sellerDetails.name || "KAJON Coffee Limited",
+        seller_address: sellerDetails.address || "Kampala, Uganda",
+        seller_registration: sellerDetails.registration || "Registration #: UG2023786541",
+        buyer_name: buyerDetails.name || "[Buyer Company Name]",
+        buyer_address: buyerDetails.address || "[Buyer Address]",
+        buyer_registration: buyerDetails.registration || "[Buyer Registration #]",
+        coffee_origin: data.coffeeOrigin || '',
+        coffee_variety: data.coffeeVariety || '',
+        coffee_process: data.coffeeProcess || '',
+        coffee_grade: data.coffeeGrade || '',
+        coffee_certification: data.coffeeCertification || '',
+        cupping_score: data.cuppingScore ? parseFloat(data.cuppingScore) : null,
+        products: products,
+        payment_terms_items: paymentTerms,
+        client_reference_id: data.clientReferenceId,
+        shipping_left_label1: data.shipping_left_label1 || 'Incoterm:',
+        shipping_left_value1: data.shipping_left_value1 || 'FOB Mombasa',
+        shipping_left_label2: data.shipping_left_label2 || 'Packaging:',
+        shipping_left_value2: data.shipping_left_value2 || '60kg jute bags with GrainPro liners',
+        shipping_left_label3: data.shipping_left_label3 || 'Loading Port:',
+        shipping_left_value3: data.shipping_left_value3 || 'Mombasa, Kenya',
+        shipping_right_label1: data.shipping_right_label1 || 'Destination:',
+        shipping_right_value1: data.shipping_right_value1 || 'Hamburg, Germany',
+        shipping_right_label2: data.shipping_right_label2 || 'Latest Shipment Date:',
+        shipping_right_value2: data.shipping_right_value2 || 'October 15, 2024',
+        shipping_right_label3: data.shipping_right_label3 || 'Delivery Timeline:',
+        shipping_right_value3: data.shipping_right_value3 || '30-45 days from loading',
+        additional_shipping_terms_label: data.additional_shipping_terms_label || 'Additional Shipping Terms:',
+        additional_shipping_terms: data.additional_shipping_terms || '',
+        total_contract_value: parseFloat(data.totalContractValue || 0),
+        currency: data.currency || 'USD'
       };
     }
     return null;
@@ -284,54 +381,67 @@ const ContractTemplates = ({ onBack }) => {
   const resetTemplate = () => {
     if (!activeTemplate) return;
     
-    // Reset the active template to initial state
     setEditableData(prev => ({
       ...prev,
       [activeTemplate]: null
     }));
-    
-    // This will trigger the useEffect to reload default data
   };
 
-  // Handle save for the Coffee template
   const handleCoffeeSave = (contractData) => {
-    // If submission is already in progress, don't allow another save
-    if (isSubmitting) {
+    if (isSubmittingCoffeeContract) {
       showErrorToast(toast, "A save operation is already in progress, please wait");
       return;
     }
     
-    // Show loading toast
     const loadingToastId = showLoadingToast(toast, "Saving coffee export contract...");
     
-    // Prepare the contract data for saving
     saveCoffeeContract(contractData)
       .then(({ success, data, error }) => {
-        // Dismiss loading toast
         dismissToast(loadingToastId);
         
         if (success) {
           showSuccessToast(toast, "Coffee export contract saved successfully");
-          // Return to templates view
           setActiveTemplate(null);
         } else {
           showErrorToast(toast, `Failed to save contract: ${error?.message || 'Unknown error'}`);
         }
       })
       .catch((error) => {
-        // Dismiss loading toast
-        dismissToast(loadingToastId);
-        
         console.error("Error saving contract:", error);
+        dismissToast(loadingToastId);
         showErrorToast(toast, `An unexpected error occurred: ${error.message}`);
       });
   };
 
-  // Render the selected template with proper data
+  const handleSpecialtyCoffeeSave = (contractData) => {
+    if (isSubmittingSpecialtyContract) {
+      showErrorToast(toast, "A save operation is already in progress, please wait");
+      return;
+    }
+    
+    const loadingToastId = showLoadingToast(toast, "Saving specialty coffee contract...");
+    
+    saveSpecialtyContract(contractData)
+      .then(({ success, data, error }) => {
+        dismissToast(loadingToastId);
+        
+        if (success) {
+          showSuccessToast(toast, "Specialty coffee contract saved successfully");
+          setActiveTemplate(null);
+        } else {
+          showErrorToast(toast, `Failed to save contract: ${error?.message || 'Unknown error'}`);
+        }
+      })
+      .catch((error) => {
+        console.error("Error saving contract:", error);
+        dismissToast(loadingToastId);
+        showErrorToast(toast, `An unexpected error occurred: ${error.message}`);
+      });
+  };
+
   const renderTemplate = () => {
     if (!activeTemplate) return null;
     
-    // Pass the editable data to the template components
     const templateProps = {
       editMode,
       data: editableData[activeTemplate] || {},
@@ -341,6 +451,8 @@ const ContractTemplates = ({ onBack }) => {
     switch(activeTemplate) {
       case "coffee":
         return <CoffeeContractTemplate {...templateProps} onSave={handleCoffeeSave} />;
+      case "specialty":
+        return <CoffeeContractTemplate {...templateProps} onSave={handleSpecialtyCoffeeSave} isSpecialty={true} />;
       case "general":
         return <GeneralProduceTemplate {...templateProps} />;
       case "fresh":
@@ -430,7 +542,7 @@ const ContractTemplates = ({ onBack }) => {
         <>
           <Tabs defaultValue="coffee" value={selectedTab} onValueChange={setSelectedTab} className="print:hidden">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="coffee">Coffee Beans</TabsTrigger>
+              <TabsTrigger value="coffee">Coffee Contracts</TabsTrigger>
               <TabsTrigger value="general">General Produce</TabsTrigger>
               <TabsTrigger value="fresh">Fresh Produce</TabsTrigger>
             </TabsList>
@@ -453,7 +565,7 @@ const ContractTemplates = ({ onBack }) => {
                         <Button 
                           variant="outline" 
                           className="flex items-center gap-1"
-                          onClick={() => handleViewTemplate("coffee")}
+                          onClick={() => handleViewTemplate("coffee", "standard")}
                         >
                           <Eye className="h-4 w-4" />
                           <span>View Template</span>
@@ -474,7 +586,7 @@ const ContractTemplates = ({ onBack }) => {
                         <Button 
                           variant="outline" 
                           className="flex items-center gap-1"
-                          onClick={() => handleViewTemplate("coffee")}
+                          onClick={() => handleViewTemplate("specialty", "specialty")}
                         >
                           <Eye className="h-4 w-4" />
                           <span>View Template</span>
@@ -589,19 +701,7 @@ const ContractTemplates = ({ onBack }) => {
             </TabsContent>
           </Tabs>
           
-          {/* Saved Contracts Section */}
-          {coffeeContractsLoading ? (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Saved Contracts</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-center p-6">
-                  <p>Loading saved contracts...</p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : savedTemplates.length > 0 ? (
+          {savedTemplates.length > 0 && (
             <Card className="mt-6">
               <CardHeader>
                 <CardTitle>Saved Contracts</CardTitle>
@@ -624,6 +724,7 @@ const ContractTemplates = ({ onBack }) => {
                             className="flex items-center gap-1"
                             onClick={() => {
                               setActiveTemplate(template.type);
+                              setActiveContractType(template.type);
                               setEditableData(prev => ({
                                 ...prev,
                                 [template.type]: template.data
@@ -638,20 +739,6 @@ const ContractTemplates = ({ onBack }) => {
                       </CardContent>
                     </Card>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Saved Contracts</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center justify-center p-6 text-center">
-                  <p className="text-gray-500 mb-4">No saved contracts found.</p>
-                  <p className="text-sm text-gray-400">
-                    Create a contract by clicking "View Template" on any of the contract templates above.
-                  </p>
                 </div>
               </CardContent>
             </Card>

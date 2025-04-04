@@ -1,795 +1,686 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Plus, Trash } from "lucide-react";
-import ProductTable from '../../../../quotations/form-sections/ProductTable';
+import { PlusCircle, MinusCircle, Trash } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
-const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = () => {}, onSave = () => {} }) => {
-  // Initialize state for seller details
-  const [sellerDetails, setSellerDetails] = useState(
-    data.sellerDetails || {
-      name: "KAJON Coffee Limited",
-      address: "Kampala, Uganda",
-      registration: "Registration #: UG2023786541"
-    }
-  );
-
-  // Initialize state for buyer details
-  const [buyerDetails, setBuyerDetails] = useState(
-    data.buyerDetails || {
-      name: "[Buyer Company Name]",
-      address: "[Buyer Address]",
-      registration: "[Buyer Registration #]"
-    }
-  );
-
-  // Initialize state for products
-  const [products, setProducts] = useState(
-    data.products || []
-  );
+const CoffeeContractTemplate = ({ 
+  editMode = false, 
+  data = {}, 
+  onDataChange = () => {}, 
+  onSave = null,
+  isSpecialty = false
+}) => {
+  // Local state for editable fields
+  const [sellerDetails, setSellerDetails] = useState({
+    name: data.sellerDetails?.name || 'KAJON Coffee Limited',
+    address: data.sellerDetails?.address || 'Kampala, Uganda',
+    registration: data.sellerDetails?.registration || 'Registration #: UG2023786541'
+  });
   
-  // Initialize state for payment terms
+  const [buyerDetails, setBuyerDetails] = useState({
+    name: data.buyerDetails?.name || '',
+    address: data.buyerDetails?.address || '',
+    registration: data.buyerDetails?.registration || ''
+  });
+  
+  const [contractNumber, setContractNumber] = useState(data.contractNumber || (isSpecialty ? 'KCL-SC-2024-' : 'KCL-2024-') + new Date().getTime().toString().slice(-4));
+  const [currentDate, setCurrentDate] = useState(data.currentDate || new Date().toISOString().split('T')[0]);
+  
+  // Products state - ensure it's an array
+  const [products, setProducts] = useState(Array.isArray(data.products) ? data.products : [
+    { id: `product-${uuidv4()}`, description: '', quantity: '', pricePerKg: '', totalValue: 0 }
+  ]);
+  
+  // Specialty coffee fields
+  const [coffeeOrigin, setCoffeeOrigin] = useState(data.coffeeOrigin || '');
+  const [coffeeVariety, setCoffeeVariety] = useState(data.coffeeVariety || '');
+  const [coffeeProcess, setCoffeeProcess] = useState(data.coffeeProcess || '');
+  const [coffeeGrade, setCoffeeGrade] = useState(data.coffeeGrade || '');
+  const [coffeeCertification, setCoffeeCertification] = useState(data.coffeeCertification || '');
+  const [cuppingScore, setCuppingScore] = useState(data.cuppingScore || '');
+  
+  // Payment terms state - ensure it's an array and add unique IDs
   const [paymentTermsItems, setPaymentTermsItems] = useState(
-    data.paymentTermsItems || []
+    Array.isArray(data.paymentTermsItems) ? 
+      data.paymentTermsItems.map(item => ({
+        id: item.id || `term-${uuidv4()}`,
+        description: item.description || item.text || ''
+      })) : 
+      [
+        { id: `term-${uuidv4()}`, description: '30% of the contract value paid upon signing this agreement.' },
+        { id: `term-${uuidv4()}`, description: '70% of the contract value paid upon presentation of shipping documents.' }
+      ]
   );
   
-  // Initialize contract number and date
-  const [contractNumber, setContractNumber] = useState(
-    data.contractNumber || "KCL-2024-"
-  );
-  
-  const [currentDate, setCurrentDate] = useState(
-    data.currentDate || new Date().toISOString().split('T')[0]
-  );
-  
-  // Get the current date in YYYY-MM-DD format for the contract date field
-  useEffect(() => {
-    if (!data.currentDate) {
-      const today = new Date().toISOString().split('T')[0];
-      setCurrentDate(today);
-      // Update parent data
-      onDataChange('currentDate', today);
+  // Calculate contract total value
+  const totalContractValue = products.reduce((sum, product) => {
+    if (product.quantity && product.pricePerKg) {
+      const totalValue = parseFloat(product.quantity) * parseFloat(product.pricePerKg) * 1000; // convert tons to kg
+      return sum + totalValue;
     }
-  }, [data.currentDate, onDataChange]);
+    return sum;
+  }, 0);
   
-  // Update parent data when seller details change
+  // Shipping and other details
+  const [additionalShippingTerms, setAdditionalShippingTerms] = useState(data.additionalShippingTerms || '');
+  
+  // Sync changes back to parent component
   useEffect(() => {
+    if (!onDataChange) return;
+    
     onDataChange('sellerDetails', sellerDetails);
-  }, [sellerDetails, onDataChange]);
-
-  // Update parent data when buyer details change
-  useEffect(() => {
     onDataChange('buyerDetails', buyerDetails);
-  }, [buyerDetails, onDataChange]);
-
-  // Update parent data when products change
-  useEffect(() => {
-    onDataChange('products', products);
-    
-    // Calculate and update total contract value
-    const totalValue = products.reduce((sum, product) => {
-      const quantity = parseFloat(product.quantity) || 0;
-      const price = parseFloat(product.pricePerKg) || 0;
-      return sum + (quantity * price);
-    }, 0);
-    
-    onDataChange('totalContractValue', totalValue.toFixed(2));
-  }, [products, onDataChange]);
-
-  // Update parent data when payment terms change
-  useEffect(() => {
-    onDataChange('paymentTermsItems', paymentTermsItems);
-  }, [paymentTermsItems, onDataChange]);
-  
-  // Update parent data when contract number changes
-  useEffect(() => {
     onDataChange('contractNumber', contractNumber);
-  }, [contractNumber, onDataChange]);
-  
-  // Update parent data when current date changes
-  useEffect(() => {
     onDataChange('currentDate', currentDate);
-  }, [currentDate, onDataChange]);
-
-  // Helper function to update seller details
-  const handleSellerChange = (field, value) => {
-    setSellerDetails(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Helper function to update buyer details
-  const handleBuyerChange = (field, value) => {
-    setBuyerDetails(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Helper function to handle product change
-  const handleProductChange = (index, event) => {
+    onDataChange('products', products);
+    onDataChange('paymentTermsItems', paymentTermsItems);
+    onDataChange('totalContractValue', totalContractValue);
+    onDataChange('additionalShippingTerms', additionalShippingTerms);
+    
+    // Specialty coffee fields
+    if (isSpecialty) {
+      onDataChange('coffeeOrigin', coffeeOrigin);
+      onDataChange('coffeeVariety', coffeeVariety);
+      onDataChange('coffeeProcess', coffeeProcess);
+      onDataChange('coffeeGrade', coffeeGrade);
+      onDataChange('coffeeCertification', coffeeCertification);
+      onDataChange('cuppingScore', cuppingScore);
+    }
+  }, [
+    sellerDetails, 
+    buyerDetails, 
+    contractNumber, 
+    currentDate, 
+    products, 
+    paymentTermsItems, 
+    totalContractValue, 
+    additionalShippingTerms,
+    // Specialty coffee fields
+    coffeeOrigin,
+    coffeeVariety,
+    coffeeProcess,
+    coffeeGrade,
+    coffeeCertification,
+    cuppingScore
+  ]);
+  
+  // Handle changes to products
+  const handleProductChange = (index, field, value) => {
     const updatedProducts = [...products];
-    const { name, value } = event.target;
-    
-    // If this is a new product being added
-    if (name === 'new') {
-      updatedProducts.push(value);
-      setProducts(updatedProducts);
-      return;
-    }
-    
-    // Otherwise update an existing product
-    if (!updatedProducts[index]) {
-      updatedProducts[index] = {};
-    }
-    
     updatedProducts[index] = {
       ...updatedProducts[index],
-      [name]: value
+      [field]: value
     };
     
-    // Auto-calculate total value when quantity or price changes
-    if (name === 'quantity' || name === 'pricePerKg') {
-      const product = updatedProducts[index];
+    // Auto-calculate totalValue when quantity or pricePerKg changes
+    if (field === 'quantity' || field === 'pricePerKg') {
+      const quantity = field === 'quantity' ? parseFloat(value) || 0 : parseFloat(updatedProducts[index].quantity) || 0;
+      const pricePerKg = field === 'pricePerKg' ? parseFloat(value) || 0 : parseFloat(updatedProducts[index].pricePerKg) || 0;
       
-      // Extract numeric values from the fields
-      const quantity = parseFloat(product.quantity || 0);
-      const price = parseFloat(product.pricePerKg || 0);
-      
-      // Calculate total if both quantity and price are valid numbers
-      if (!isNaN(quantity) && !isNaN(price)) {
-        updatedProducts[index].totalValue = (quantity * price).toFixed(2);
-      }
+      // Calculate total value (tons converted to kg: 1 ton = 1000 kg)
+      const totalValue = quantity * pricePerKg * 1000;
+      updatedProducts[index].totalValue = totalValue;
     }
     
     setProducts(updatedProducts);
   };
   
-  // Add a new payment term
-  const addPaymentTerm = () => {
-    setPaymentTermsItems([...paymentTermsItems, { description: '' }]);
-  };
-  
-  // Remove a payment term
-  const removePaymentTerm = (index) => {
-    const updatedTerms = [...paymentTermsItems];
-    updatedTerms.splice(index, 1);
-    setPaymentTermsItems(updatedTerms);
-  };
-  
-  // Update a payment term
-  const handlePaymentTermChange = (index, value) => {
-    const updatedTerms = [...paymentTermsItems];
-    updatedTerms[index] = { description: value };
-    setPaymentTermsItems(updatedTerms);
-  };
-  
-  // Add a new product
+  // Add new product
   const addProduct = () => {
-    setProducts([...products, { 
-      id: `product-${Date.now()}`,
-      description: '',
-      quantity: '',
-      pricePerKg: '',
-      totalValue: ''
-    }]);
+    setProducts([
+      ...products,
+      { id: `product-${uuidv4()}`, description: '', quantity: '', pricePerKg: '', totalValue: 0 }
+    ]);
   };
   
-  // Remove a product
+  // Remove product
   const removeProduct = (index) => {
-    const updatedProducts = [...products];
-    updatedProducts.splice(index, 1);
-    setProducts(updatedProducts);
+    if (products.length > 1) {
+      setProducts(products.filter((_, i) => i !== index));
+    }
   };
   
-  // Functions to handle payment term items that were missing
+  // Handle changes to payment terms
   const addPaymentTermItem = () => {
-    const newItem = { id: `term-${Date.now()}`, text: '' };
-    setPaymentTermsItems([...paymentTermsItems, newItem]);
+    setPaymentTermsItems([
+      ...paymentTermsItems,
+      { id: `term-${uuidv4()}`, description: '' }
+    ]);
   };
   
-  const removePaymentTermItem = (itemId) => {
-    setPaymentTermsItems(paymentTermsItems.filter(item => item.id !== itemId));
+  const removePaymentTermItem = (index) => {
+    if (paymentTermsItems.length > 1) {
+      setPaymentTermsItems(paymentTermsItems.filter((_, i) => i !== index));
+    }
   };
   
-  const updatePaymentTermItem = (itemId, text) => {
-    setPaymentTermsItems(paymentTermsItems.map(item => 
-      item.id === itemId ? { ...item, text } : item
-    ));
-  };
-  
-  // Prepare contract data for saving
-  const prepareContractData = () => {
-    // Make sure totalValue is calculated for each product
-    const updatedProducts = products.map(product => {
-      // Make sure each product has an id
-      const productWithId = { 
-        ...product,
-        id: product.id || `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      };
-      
-      // If totalValue is not calculated yet, do it now
-      if (!productWithId.totalValue) {
-        const quantity = parseFloat(productWithId.quantity || 0);
-        const price = parseFloat(productWithId.pricePerKg || 0);
-        return {
-          ...productWithId,
-          totalValue: (quantity * price).toFixed(2)
-        };
-      }
-      return productWithId;
-    });
-    
-    // Calculate the total contract value
-    const totalContractValue = updatedProducts.reduce((sum, product) => {
-      return sum + parseFloat(product.totalValue || 0);
-    }, 0);
-    
-    // Format payment terms items to match database schema
-    const formattedPaymentTermsItems = paymentTermsItems.map(item => {
-      // If the item already has the right structure, use it
-      if (item.description) return item;
-      
-      // Otherwise convert from {id, text} to {description}
-      return { 
-        description: item.text || '',
-        id: item.id || `term-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      };
-    });
-    
-    return {
-      contract_number: contractNumber || `KCL-2024-${Date.now().toString().slice(-4)}`,
-      contract_date: currentDate || new Date().toISOString().split('T')[0],
-      seller_name: sellerDetails.name || "KAJON Coffee Limited",
-      seller_address: sellerDetails.address || "Kampala, Uganda",
-      seller_registration: sellerDetails.registration || "Registration #: UG2023786541",
-      buyer_name: buyerDetails.name || "[Buyer Company Name]",
-      buyer_address: buyerDetails.address || "[Buyer Address]",
-      buyer_registration: buyerDetails.registration || "[Buyer Registration #]",
-      products: updatedProducts,
-      payment_terms_items: formattedPaymentTermsItems,
-      total_contract_value: totalContractValue.toFixed(2),
-      // Add shipping terms and other fields
-      shipping_left_label1: data.shippingLeftLabel1 || "Incoterm:",
-      shipping_left_value1: data.shippingLeftValue1 || "FOB Mombasa",
-      shipping_left_label2: data.shippingLeftLabel2 || "Packaging:",
-      shipping_left_value2: data.shippingLeftValue2 || "60kg jute bags with GrainPro liners",
-      shipping_left_label3: data.shippingLeftLabel3 || "Loading Port:",
-      shipping_left_value3: data.shippingLeftValue3 || "Mombasa, Kenya",
-      shipping_right_label1: data.shippingRightLabel1 || "Destination:",
-      shipping_right_value1: data.shippingRightValue1 || "Hamburg, Germany",
-      shipping_right_label2: data.shippingRightLabel2 || "Latest Shipment Date:",
-      shipping_right_value2: data.shippingRightValue2 || "October 15, 2024",
-      shipping_right_label3: data.shippingRightLabel3 || "Delivery Timeline:",
-      shipping_right_value3: data.shippingRightValue3 || "30-45 days from loading",
-      additional_shipping_terms_label: data.additionalShippingTermsLabel || "Additional Shipping Terms:",
-      additional_shipping_terms: data.additionalShippingTerms || "",
-      for_seller_label: data.forSellerLabel || "For and on behalf of SELLER",
-      seller_name_label: data.sellerNameLabel || "Name:",
-      seller_name_value: data.sellerName || "",
-      seller_title_label: data.sellerTitleLabel || "Title:",
-      seller_title_value: data.sellerTitle || "",
-      seller_date_label: data.sellerDateLabel || "Date:",
-      seller_date_value: data.sellerDate || "",
-      seller_signature_label: data.sellerSignatureLabel || "Signature:",
-      seller_signature_value: data.sellerSignature || "",
-      for_buyer_label: data.forBuyerLabel || "For and on behalf of BUYER",
-      buyer_signature_name_label: data.buyerSignatureNameLabel || "Name:",
-      buyer_signature_name_value: data.buyerSignatureName || "",
-      buyer_signature_title_label: data.buyerSignatureTitleLabel || "Title:",
-      buyer_signature_title_value: data.buyerSignatureTitle || "",
-      buyer_signature_date_label: data.buyerSignatureDateLabel || "Date:",
-      buyer_signature_date_value: data.buyerSignatureDate || "",
-      buyer_signature_label: data.buyerSignatureLabel || "Signature:",
-      buyer_signature_value: data.buyerSignature || "",
-      company_stamp: data.companyStamp || "[Company Seal/Stamp]"
+  const updatePaymentTermItem = (index, description) => {
+    const updatedTerms = [...paymentTermsItems];
+    updatedTerms[index] = {
+      ...updatedTerms[index],
+      description
     };
+    setPaymentTermsItems(updatedTerms);
   };
   
-  // Handle save button click
-  const handleSave = () => {
-    const contractData = prepareContractData();
+  // Handle form submission
+  const handleSaveContract = () => {
+    if (!onSave) return;
+    
+    // Create data object for submission to the backend
+    let contractData = {
+      contract_number: contractNumber,
+      contract_date: currentDate,
+      seller_name: sellerDetails.name,
+      seller_address: sellerDetails.address,
+      seller_registration: sellerDetails.registration,
+      buyer_name: buyerDetails.name,
+      buyer_address: buyerDetails.address,
+      buyer_registration: buyerDetails.registration,
+      products: products,
+      payment_terms_items: paymentTermsItems,
+      total_contract_value: totalContractValue,
+      additional_shipping_terms: additionalShippingTerms,
+    };
+    
+    // Add specialty coffee data if relevant
+    if (isSpecialty) {
+      contractData = {
+        ...contractData,
+        coffee_origin: coffeeOrigin,
+        coffee_variety: coffeeVariety,
+        coffee_process: coffeeProcess,
+        coffee_grade: coffeeGrade,
+        coffee_certification: coffeeCertification,
+        cupping_score: cuppingScore ? parseFloat(cuppingScore) : null
+      };
+    }
+    
+    // Call the save function
     onSave(contractData);
   };
-
-  // Helper function to render editable or display content
-  const EditableField = ({ field, defaultValue, isMultiline = false }) => {
-    const value = data[field] || defaultValue;
-    
-    if (editMode) {
-      if (isMultiline) {
-        return (
-          <Textarea
-            value={value}
-            onChange={(e) => onDataChange(field, e.target.value)}
-            className="w-full min-h-[80px] border border-blue-300 p-2"
-          />
-        );
-      }
-      return (
-        <Input
-          value={value}
-          onChange={(e) => onDataChange(field, e.target.value)}
-          className="border border-blue-300 p-1"
-        />
-      );
-    }
-    
-    return isMultiline ? (
-      <p className="text-sm">{value}</p>
-    ) : (
-      <span>{value}</span>
-    );
+  
+  // Format as a currency value
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(value);
   };
-
-  // Render Product Details section
-  const renderProductDetails = () => {
-    return (
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-700">PRODUCT DETAILS</h3>
-        {editMode && (
-          <Button
-            type="button"
-            onClick={addProduct}
-            size="sm"
-            className="mb-2 flex items-center gap-1"
-          >
-            <Plus className="h-4 w-4" /> Add Product
-          </Button>
-        )}
-        
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-blue-50">
-              <th className="border border-gray-300 p-2 text-left">Description</th>
-              <th className="border border-gray-300 p-2 text-left">Quantity (Kg)</th>
-              <th className="border border-gray-300 p-2 text-left">Price per Kg</th>
-              <th className="border border-gray-300 p-2 text-left">Total Value</th>
-              {editMode && <th className="border border-gray-300 p-2 text-left">Actions</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product, index) => (
-              <tr key={product.id || index}>
-                <td className="border border-gray-300 p-2">
-                  {editMode ? (
-                    <Input 
-                      name="description"
-                      value={product.description || ''} 
-                      onChange={(e) => handleProductChange(index, e)} 
-                      className="w-full border border-blue-300 p-1"
-                    />
-                  ) : (
-                    product.description || ''
-                  )}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {editMode ? (
-                    <Input 
-                      type="number"
-                      name="quantity"
-                      value={product.quantity || ''} 
-                      onChange={(e) => handleProductChange(index, e)} 
-                      className="w-full border border-blue-300 p-1"
-                    />
-                  ) : (
-                    product.quantity || ''
-                  )}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {editMode ? (
-                    <Input 
-                      type="number"
-                      name="pricePerKg"
-                      value={product.pricePerKg || ''} 
-                      onChange={(e) => handleProductChange(index, e)} 
-                      className="w-full border border-blue-300 p-1"
-                    />
-                  ) : (
-                    product.pricePerKg || ''
-                  )}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {editMode ? (
-                    <Input 
-                      name="totalValue"
-                      value={product.totalValue || ''} 
-                      readOnly
-                      className="w-full border border-blue-300 p-1 bg-gray-100 cursor-not-allowed"
-                    />
-                  ) : (
-                    product.totalValue || ''
-                  )}
-                </td>
-                {editMode && (
-                  <td className="border border-gray-300 p-2">
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => removeProduct(index)}
-                      className="text-red-500 hover:text-red-700 flex items-center"
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="bg-blue-50">
-              <td colSpan={editMode ? "3" : "3"} className="border border-gray-300 p-2 font-bold text-right">Total Contract Value:</td>
-              <td className="border border-gray-300 p-2 font-bold">
-                {`USD ${products
-                  .reduce((sum, product) => sum + (parseFloat(product.totalValue || 0) || 0), 0)
-                  .toFixed(2)}`}
-              </td>
-              {editMode && <td></td>}
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    );
-  };
-
+  
   return (
-    <div className="max-w-4xl mx-auto bg-white p-8 border border-gray-200 shadow-sm print:shadow-none print:border-none">
-      {/* Company Header */}
-      <div className="flex justify-between items-start mb-8 border-b pb-6">
+    <div className="flex flex-col space-y-8 max-w-4xl mx-auto bg-white p-8 shadow-sm contract-template">
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-bold mb-1">{isSpecialty ? 'SPECIALTY COFFEE EXPORT CONTRACT' : 'COFFEE EXPORT CONTRACT'}</h1>
+        <p className="text-sm text-gray-500 print:hidden">
+          {editMode ? 'Editing Mode - Make changes to fields below' : 'View Mode - Read only'}
+        </p>
+      </div>
+      
+      {/* Contract Details Header */}
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <img 
-            src="/lovable-uploads/493ba471-e6fd-4a79-862b-f5d2c974d0d9.png" 
-            alt="KAJON Coffee Limited" 
-            className="h-24 w-auto mb-2"
-          />
-          <h2 className="text-lg font-bold">KAJON Coffee Limited</h2>
-          <p className="text-sm text-gray-600">Kanoni, Kazo District, Uganda</p>
-          <p className="text-sm text-gray-600">6th floor, Arie Towers, Mackinnon Road, Nakasero</p>
-          <p className="text-sm text-gray-600">Kampala, Uganda, 256</p>
-          <p className="text-sm text-gray-600">Tel: +256 776 670680 / +256 757 757517</p>
-          <p className="text-sm text-gray-600">Email: kajoncoffeelimited@gmail.com</p>
-        </div>
-        <div className="text-right">
-          <h1 className="text-2xl font-bold text-blue-800">COFFEE EXPORT CONTRACT</h1>
-          <p className="text-sm text-gray-600 mt-2">
-            Contract #: {editMode ? (
-              <Input 
-                value={data.contractNumber || "KCL-2024-[XXXX]"}
-                onChange={(e) => onDataChange('contractNumber', e.target.value)}
-                className="border border-blue-300 p-1 mt-1 w-full"
-                placeholder="Enter contract number"
-              />
-            ) : (
-              <span>{data.contractNumber || "KCL-2024-[XXXX]"}</span>
-            )}
-          </p>
-          <p className="text-sm text-gray-600">
-            Date: {editMode ? (
-              <Input 
-                value={data.currentDate || ""}
-                onChange={(e) => onDataChange('currentDate', e.target.value)}
-                className="border border-blue-300 p-1 mt-1 w-full" 
-                placeholder="YYYY-MM-DD"
-                type="date"
-              />
-            ) : (
-              <span>{data.currentDate || "[Current Date]"}</span>
-            )}
-          </p>
-        </div>
-      </div>
-
-      {/* Parties - Enhanced with editable fields */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-800">PARTIES</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="border-r pr-4">
-            <h4 className="font-semibold">SELLER:</h4>
-            {editMode ? (
-              <div className="space-y-2 mt-1">
-                <Input 
-                  value={sellerDetails.name}
-                  onChange={(e) => handleSellerChange('name', e.target.value)}
-                  placeholder="Company Name"
-                  className="w-full border border-blue-300 p-1"
-                />
-                <Input 
-                  value={sellerDetails.address}
-                  onChange={(e) => handleSellerChange('address', e.target.value)}
-                  placeholder="Address"
-                  className="w-full border border-blue-300 p-1"
-                />
-                <Input 
-                  value={sellerDetails.registration}
-                  onChange={(e) => handleSellerChange('registration', e.target.value)}
-                  placeholder="Registration Number"
-                  className="w-full border border-blue-300 p-1"
-                />
-              </div>
-            ) : (
-              <>
-                <p className="text-sm">{sellerDetails.name}</p>
-                <p className="text-sm">{sellerDetails.address}</p>
-                <p className="text-sm">{sellerDetails.registration}</p>
-              </>
-            )}
-          </div>
-          <div>
-            <h4 className="font-semibold">BUYER:</h4>
-            {editMode ? (
-              <div className="space-y-2 mt-1">
-                <Input 
-                  value={buyerDetails.name}
-                  onChange={(e) => handleBuyerChange('name', e.target.value)}
-                  placeholder="Company Name"
-                  className="w-full border border-blue-300 p-1"
-                />
-                <Input 
-                  value={buyerDetails.address}
-                  onChange={(e) => handleBuyerChange('address', e.target.value)}
-                  placeholder="Address"
-                  className="w-full border border-blue-300 p-1"
-                />
-                <Input 
-                  value={buyerDetails.registration}
-                  onChange={(e) => handleBuyerChange('registration', e.target.value)}
-                  placeholder="Registration Number"
-                  className="w-full border border-blue-300 p-1"
-                />
-              </div>
-            ) : (
-              <>
-                <p className="text-sm">{buyerDetails.name}</p>
-                <p className="text-sm">{buyerDetails.address}</p>
-                <p className="text-sm">{buyerDetails.registration}</p>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Product Details */}
-      {renderProductDetails()}
-
-      {/* Quality Specifications */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-800">
-          <EditableField field="qualitySpecificationsTitle" defaultValue="QUALITY SPECIFICATIONS" />
-        </h3>
-        <div className="grid grid-cols-1 gap-4 mb-4">
-          {products.map((product, index) => (
-            <div key={`spec-${product.id}`} className="border rounded p-3 bg-gray-50">
-              <div className="flex justify-between">
-                <p className="font-semibold">{product.description} ({product.grade}):</p>
-                {editMode && (
-                  <div className="text-xs text-gray-500">
-                    Linked to product #{index + 1}
-                  </div>
-                )}
-              </div>
-              <div className={editMode ? "space-y-2" : ""}>
-                {editMode ? (
-                  <Textarea
-                    value={product.specs}
-                    onChange={(e) => handleProductChange(index, 'specs', e.target.value)}
-                    className="w-full min-h-[80px] border border-blue-300 p-2 mt-2"
-                  />
-                ) : (
-                  <p className="text-sm whitespace-pre-line">{product.specs}</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Shipping Terms */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-800">
-          <EditableField field="shippingTermsTitle" defaultValue="SHIPPING TERMS" />
-        </h3>
-        {editMode ? (
-          <div className="space-y-4 border border-blue-200 p-4 rounded-md bg-blue-50">
-            <p className="text-sm text-blue-600 italic">Edit Shipping Terms Structure:</p>
-            
-            <div className="grid grid-cols-2 gap-4">
-              {[1, 2, 3].map((index) => (
-                <div key={`left-${index}`} className="space-y-1">
-                  <Input 
-                    className="font-semibold border border-blue-300"
-                    value={data[`shippingLeftLabel${index}`] || 
-                          (index === 1 ? "Incoterm:" : 
-                           index === 2 ? "Packaging:" : "Loading Port:")}
-                    onChange={(e) => onDataChange(`shippingLeftLabel${index}`, e.target.value)}
-                  />
-                  <Input
-                    className="border border-blue-300"
-                    value={data[`shippingLeftValue${index}`] || 
-                          (index === 1 ? "FOB Mombasa" : 
-                           index === 2 ? "60kg jute bags with GrainPro liners" : "Mombasa, Kenya")}
-                    onChange={(e) => onDataChange(`shippingLeftValue${index}`, e.target.value)}
-                  />
-                </div>
-              ))}
-              
-              {[1, 2, 3].map((index) => (
-                <div key={`right-${index}`} className="space-y-1">
-                  <Input 
-                    className="font-semibold border border-blue-300"
-                    value={data[`shippingRightLabel${index}`] || 
-                          (index === 1 ? "Destination:" : 
-                           index === 2 ? "Latest Shipment Date:" : "Delivery Timeline:")}
-                    onChange={(e) => onDataChange(`shippingRightLabel${index}`, e.target.value)}
-                  />
-                  <Input
-                    className="border border-blue-300"
-                    value={data[`shippingRightValue${index}`] || 
-                          (index === 1 ? "Hamburg, Germany" : 
-                           index === 2 ? "October 15, 2024" : "30-45 days from loading")}
-                    onChange={(e) => onDataChange(`shippingRightValue${index}`, e.target.value)}
-                  />
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-4">
-              <Input 
-                className="font-semibold border border-blue-300 mb-1"
-                value={data.additionalShippingTermsLabel || "Additional Shipping Terms:"}
-                onChange={(e) => onDataChange('additionalShippingTermsLabel', e.target.value)}
-              />
-              <Textarea 
-                className="border border-blue-300"
-                value={data.additionalShippingTerms || "Seller is responsible for arranging transportation to the port. Export documentation to be provided by seller. Cost of shipping insurance to be borne by buyer as per Incoterms."}
-                onChange={(e) => onDataChange('additionalShippingTerms', e.target.value)}
-              />
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                {[1, 2, 3].map((index) => (
-                  <div key={`left-display-${index}`} className="mb-2">
-                    <p className="font-semibold">{data[`shippingLeftLabel${index}`] || 
-                      (index === 1 ? "Incoterm:" : 
-                       index === 2 ? "Packaging:" : "Loading Port:")}</p>
-                    <p className="text-sm">{data[`shippingLeftValue${index}`] || 
-                      (index === 1 ? "FOB Mombasa" : 
-                       index === 2 ? "60kg jute bags with GrainPro liners" : "Mombasa, Kenya")}</p>
-                  </div>
-                ))}
-              </div>
-              <div>
-                {[1, 2, 3].map((index) => (
-                  <div key={`right-display-${index}`} className="mb-2">
-                    <p className="font-semibold">{data[`shippingRightLabel${index}`] || 
-                      (index === 1 ? "Destination:" : 
-                       index === 2 ? "Latest Shipment Date:" : "Delivery Timeline:")}</p>
-                    <p className="text-sm">{data[`shippingRightValue${index}`] || 
-                      (index === 1 ? "Hamburg, Germany" : 
-                       index === 2 ? "October 15, 2024" : "30-45 days from loading")}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="mt-4">
-              <p className="font-semibold">{data.additionalShippingTermsLabel || "Additional Shipping Terms:"}</p>
-              <p className="text-sm whitespace-pre-line">{data.additionalShippingTerms || "Seller is responsible for arranging transportation to the port. Export documentation to be provided by seller. Cost of shipping insurance to be borne by buyer as per Incoterms."}</p>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Payment Terms */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-800">
-          <EditableField field="paymentTermsTitle" defaultValue="PAYMENT TERMS" />
-        </h3>
-        <div className="border rounded p-3 bg-gray-50">
+          <p className="font-semibold mb-2">Contract Number:</p>
           {editMode ? (
-            <div className="space-y-4">
-              {paymentTermsItems.map((item) => (
-                <div key={item.id || `item-${Math.random()}`} className="flex items-start gap-2">
-                  <Textarea
-                    value={item.text || item.description || ''}
-                    onChange={(e) => item.id ? 
-                      updatePaymentTermItem(item.id, e.target.value) : 
-                      handlePaymentTermChange(paymentTermsItems.indexOf(item), e.target.value)
-                    }
-                    className="flex-grow border border-blue-300 min-h-[60px]"
-                  />
-                  <Button 
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => item.id ? 
-                      removePaymentTermItem(item.id) : 
-                      removePaymentTerm(paymentTermsItems.indexOf(item))
-                    }
-                    className="text-red-500 hover:text-red-700 mt-1"
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button 
-                type="button" 
-                onClick={addPaymentTermItem} 
-                size="sm" 
-                className="flex items-center gap-1 mt-2"
-              >
-                <Plus className="h-4 w-4" /> Add Payment Term
-              </Button>
-            </div>
+            <Input 
+              value={contractNumber}
+              onChange={(e) => setContractNumber(e.target.value)}
+              className="border border-gray-300 px-2 py-1"
+            />
           ) : (
-            <ul className="list-disc pl-5 space-y-1">
-              {paymentTermsItems.map((item) => (
-                <li key={item.id || `item-${Math.random()}`} className="text-sm">
-                  {item.text || item.description || ''}
-                </li>
-              ))}
-            </ul>
+            <p>{contractNumber}</p>
+          )}
+        </div>
+        <div>
+          <p className="font-semibold mb-2">Date:</p>
+          {editMode ? (
+            <Input 
+              type="date"
+              value={currentDate}
+              onChange={(e) => setCurrentDate(e.target.value)}
+              className="border border-gray-300 px-2 py-1"
+            />
+          ) : (
+            <p>{new Date(currentDate).toLocaleDateString()}</p>
           )}
         </div>
       </div>
-
-      {/* Signature Block */}
-      <div className="grid grid-cols-2 gap-12 mt-12">
-        <div>
-          <p className="font-semibold border-b border-gray-400 pb-8 mb-2">
-            <EditableField field="forSellerLabel" defaultValue="For and on behalf of SELLER" />
-          </p>
-          <p className="text-sm">
-            <EditableField field="sellerNameLabel" defaultValue="Name:" /> <EditableField field="sellerName" defaultValue="________________________________" />
-          </p>
-          <p className="text-sm mt-2">
-            <EditableField field="sellerTitleLabel" defaultValue="Title:" /> <EditableField field="sellerTitle" defaultValue="________________________________" />
-          </p>
-          <p className="text-sm mt-2">
-            <EditableField field="sellerDateLabel" defaultValue="Date:" /> <EditableField field="sellerDate" defaultValue="________________________________" />
-          </p>
-          <p className="text-sm mt-2">
-            <EditableField field="sellerSignatureLabel" defaultValue="Signature:" /> <EditableField field="sellerSignature" defaultValue="___________________________" />
-          </p>
+      
+      {/* Seller and Buyer Information */}
+      <div className="grid grid-cols-2 gap-8">
+        {/* Seller Information */}
+        <div className="border p-4">
+          <h2 className="font-bold mb-2 text-lg">SELLER:</h2>
+          <div className="space-y-2">
+            <div>
+              <p className="text-sm mb-1">Company Name:</p>
+              {editMode ? (
+                <Input 
+                  value={sellerDetails.name}
+                  onChange={(e) => setSellerDetails({...sellerDetails, name: e.target.value})}
+                  className="border border-gray-300 px-2 py-1"
+                />
+              ) : (
+                <p className="font-semibold">{sellerDetails.name}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm mb-1">Address:</p>
+              {editMode ? (
+                <Input 
+                  value={sellerDetails.address}
+                  onChange={(e) => setSellerDetails({...sellerDetails, address: e.target.value})}
+                  className="border border-gray-300 px-2 py-1"
+                />
+              ) : (
+                <p>{sellerDetails.address}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm mb-1">Registration:</p>
+              {editMode ? (
+                <Input 
+                  value={sellerDetails.registration}
+                  onChange={(e) => setSellerDetails({...sellerDetails, registration: e.target.value})}
+                  className="border border-gray-300 px-2 py-1"
+                />
+              ) : (
+                <p>{sellerDetails.registration}</p>
+              )}
+            </div>
+          </div>
         </div>
-        <div>
-          <p className="font-semibold border-b border-gray-400 pb-8 mb-2">
-            <EditableField field="forBuyerLabel" defaultValue="For and on behalf of BUYER" />
-          </p>
-          <p className="text-sm">
-            <EditableField field="buyerSignatureNameLabel" defaultValue="Name:" /> <EditableField field="buyerSignatureName" defaultValue="________________________________" />
-          </p>
-          <p className="text-sm mt-2">
-            <EditableField field="buyerSignatureTitleLabel" defaultValue="Title:" /> <EditableField field="buyerSignatureTitle" defaultValue="________________________________" />
-          </p>
-          <p className="text-sm mt-2">
-            <EditableField field="buyerSignatureDateLabel" defaultValue="Date:" /> <EditableField field="buyerSignatureDate" defaultValue="________________________________" />
-          </p>
-          <p className="text-sm mt-2">
-            <EditableField field="buyerSignatureLabel" defaultValue="Signature:" /> <EditableField field="buyerSignature" defaultValue="___________________________" />
-          </p>
+        
+        {/* Buyer Information */}
+        <div className="border p-4">
+          <h2 className="font-bold mb-2 text-lg">BUYER:</h2>
+          <div className="space-y-2">
+            <div>
+              <p className="text-sm mb-1">Company Name:</p>
+              {editMode ? (
+                <Input 
+                  value={buyerDetails.name}
+                  onChange={(e) => setBuyerDetails({...buyerDetails, name: e.target.value})}
+                  className="border border-gray-300 px-2 py-1"
+                  placeholder="Enter buyer company name"
+                />
+              ) : (
+                <p className="font-semibold">{buyerDetails.name || '[Buyer Company Name]'}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm mb-1">Address:</p>
+              {editMode ? (
+                <Input 
+                  value={buyerDetails.address}
+                  onChange={(e) => setBuyerDetails({...buyerDetails, address: e.target.value})}
+                  className="border border-gray-300 px-2 py-1"
+                  placeholder="Enter buyer address"
+                />
+              ) : (
+                <p>{buyerDetails.address || '[Buyer Address]'}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm mb-1">Registration:</p>
+              {editMode ? (
+                <Input 
+                  value={buyerDetails.registration}
+                  onChange={(e) => setBuyerDetails({...buyerDetails, registration: e.target.value})}
+                  className="border border-gray-300 px-2 py-1"
+                  placeholder="Enter buyer registration number"
+                />
+              ) : (
+                <p>{buyerDetails.registration || '[Buyer Registration #]'}</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Company Seal/Stamp Area */}
-      <div className="mt-12 text-center">
-        <p className="text-sm text-gray-500">
-          <EditableField field="companyStamp" defaultValue="[Company Seal/Stamp]" />
-        </p>
+      
+      {/* Specialty Coffee Details - Only show if this is a specialty contract */}
+      {isSpecialty && (
+        <div className="border p-4">
+          <h2 className="font-bold mb-4 text-lg">SPECIALTY COFFEE DETAILS:</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm mb-1">Origin:</p>
+              {editMode ? (
+                <Input 
+                  value={coffeeOrigin}
+                  onChange={(e) => setCoffeeOrigin(e.target.value)}
+                  className="border border-gray-300 px-2 py-1"
+                  placeholder="e.g., Mount Elgon, Uganda"
+                />
+              ) : (
+                <p>{coffeeOrigin || 'Not specified'}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm mb-1">Variety:</p>
+              {editMode ? (
+                <Input 
+                  value={coffeeVariety}
+                  onChange={(e) => setCoffeeVariety(e.target.value)}
+                  className="border border-gray-300 px-2 py-1"
+                  placeholder="e.g., SL28, Bourbon"
+                />
+              ) : (
+                <p>{coffeeVariety || 'Not specified'}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm mb-1">Processing Method:</p>
+              {editMode ? (
+                <Input 
+                  value={coffeeProcess}
+                  onChange={(e) => setCoffeeProcess(e.target.value)}
+                  className="border border-gray-300 px-2 py-1"
+                  placeholder="e.g., Washed, Natural, Honey"
+                />
+              ) : (
+                <p>{coffeeProcess || 'Not specified'}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm mb-1">Grade:</p>
+              {editMode ? (
+                <Input 
+                  value={coffeeGrade}
+                  onChange={(e) => setCoffeeGrade(e.target.value)}
+                  className="border border-gray-300 px-2 py-1"
+                  placeholder="e.g., AA, AB"
+                />
+              ) : (
+                <p>{coffeeGrade || 'Not specified'}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm mb-1">Certification:</p>
+              {editMode ? (
+                <Input 
+                  value={coffeeCertification}
+                  onChange={(e) => setCoffeeCertification(e.target.value)}
+                  className="border border-gray-300 px-2 py-1"
+                  placeholder="e.g., Organic, Fair Trade, Rainforest Alliance"
+                />
+              ) : (
+                <p>{coffeeCertification || 'Not specified'}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm mb-1">Cupping Score:</p>
+              {editMode ? (
+                <Input 
+                  type="number"
+                  value={cuppingScore}
+                  onChange={(e) => setCuppingScore(e.target.value)}
+                  className="border border-gray-300 px-2 py-1"
+                  placeholder="e.g., 85.5"
+                  step="0.25"
+                  min="0"
+                  max="100"
+                />
+              ) : (
+                <p>{cuppingScore || 'Not specified'}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Product Details */}
+      <div>
+        <h2 className="font-bold mb-4 text-lg">PRODUCT DETAILS:</h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-full border">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border p-2 text-left">Description</th>
+                <th className="border p-2 text-right">Quantity (Tons)</th>
+                <th className="border p-2 text-right">Price per Kg (USD)</th>
+                <th className="border p-2 text-right">Total Value (USD)</th>
+                {editMode && <th className="border p-2 w-10"></th>}
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product, index) => (
+                <tr key={product.id || index} className="border-b">
+                  <td className="border p-2">
+                    {editMode ? (
+                      <Input 
+                        value={product.description}
+                        onChange={(e) => handleProductChange(index, 'description', e.target.value)}
+                        className="border border-gray-300 px-2 py-1 w-full"
+                        placeholder="e.g., Bugisu AA Arabica Coffee"
+                      />
+                    ) : (
+                      <p>{product.description || '-'}</p>
+                    )}
+                  </td>
+                  <td className="border p-2 text-right">
+                    {editMode ? (
+                      <Input 
+                        type="number" 
+                        value={product.quantity}
+                        onChange={(e) => handleProductChange(index, 'quantity', e.target.value)}
+                        className="border border-gray-300 px-2 py-1 w-full text-right"
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0"
+                      />
+                    ) : (
+                      <p>{parseFloat(product.quantity).toFixed(2) || '0.00'}</p>
+                    )}
+                  </td>
+                  <td className="border p-2 text-right">
+                    {editMode ? (
+                      <Input 
+                        type="number" 
+                        value={product.pricePerKg}
+                        onChange={(e) => handleProductChange(index, 'pricePerKg', e.target.value)}
+                        className="border border-gray-300 px-2 py-1 w-full text-right"
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0"
+                      />
+                    ) : (
+                      <p>{parseFloat(product.pricePerKg).toFixed(2) || '0.00'}</p>
+                    )}
+                  </td>
+                  <td className="border p-2 text-right">
+                    {formatCurrency(product.totalValue)}
+                  </td>
+                  {editMode && (
+                    <td className="border p-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => removeProduct(index)}
+                        disabled={products.length <= 1}
+                        className="p-1 h-8 w-8"
+                      >
+                        <Trash className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+              
+              {/* Total Row */}
+              <tr className="font-bold bg-gray-50">
+                <td className="border p-2 text-right" colSpan={2}>
+                  TOTAL CONTRACT VALUE:
+                </td>
+                <td className="border p-2 text-right">
+                  {/* Placeholder for alignment */}
+                </td>
+                <td className="border p-2 text-right">
+                  {formatCurrency(totalContractValue)}
+                </td>
+                {editMode && <td className="border p-2"></td>}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Add Product Button (only in edit mode) */}
+        {editMode && (
+          <div className="mt-2 flex justify-end">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={addProduct}
+              className="flex items-center"
+            >
+              <PlusCircle className="h-4 w-4 mr-1" />
+              Add Product
+            </Button>
+          </div>
+        )}
       </div>
-
-      {/* Save button - Shown only in edit mode */}
-      {editMode && typeof onSave === 'function' && (
-        <div className="mt-8 flex justify-center print:hidden">
+      
+      {/* Payment Terms */}
+      <div>
+        <h2 className="font-bold mb-4 text-lg">PAYMENT TERMS:</h2>
+        <div className="space-y-3">
+          {paymentTermsItems.map((item, index) => (
+            <div key={item.id || index} className="flex items-start">
+              <div className="mr-2 mt-1">
+                {`${index + 1}.`}
+              </div>
+              <div className="flex-grow">
+                {editMode ? (
+                  <Textarea 
+                    value={item.description || item.text || ''}
+                    onChange={(e) => updatePaymentTermItem(index, e.target.value)}
+                    className="border border-gray-300 px-2 py-1 w-full min-h-[60px]"
+                    placeholder="Enter payment term"
+                  />
+                ) : (
+                  <p>{item.description || item.text || '-'}</p>
+                )}
+              </div>
+              {editMode && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => removePaymentTermItem(index)}
+                  disabled={paymentTermsItems.length <= 1}
+                  className="ml-2 p-1 h-8 w-8 mt-1"
+                >
+                  <MinusCircle className="h-4 w-4 text-red-500" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        {/* Add Payment Term Button (only in edit mode) */}
+        {editMode && (
+          <div className="mt-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={addPaymentTermItem}
+              className="flex items-center"
+            >
+              <PlusCircle className="h-4 w-4 mr-1" />
+              Add Payment Term
+            </Button>
+          </div>
+        )}
+      </div>
+      
+      {/* Shipping Terms */}
+      <div>
+        <h2 className="font-bold mb-4 text-lg">SHIPPING AND DELIVERY:</h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <div>
+              <p className="font-medium">Incoterm:</p>
+              <p>FOB Mombasa</p>
+            </div>
+            <div>
+              <p className="font-medium">Packaging:</p>
+              <p>60kg jute bags with GrainPro liners</p>
+            </div>
+            <div>
+              <p className="font-medium">Loading Port:</p>
+              <p>Mombasa, Kenya</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <p className="font-medium">Destination:</p>
+              <p>Hamburg, Germany</p>
+            </div>
+            <div>
+              <p className="font-medium">Latest Shipment Date:</p>
+              <p>October 15, 2024</p>
+            </div>
+            <div>
+              <p className="font-medium">Delivery Timeline:</p>
+              <p>30-45 days from loading</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Additional Terms */}
+        <div className="mt-4">
+          <p className="font-medium mb-2">Additional Shipping Terms:</p>
+          {editMode ? (
+            <Textarea 
+              value={additionalShippingTerms}
+              onChange={(e) => setAdditionalShippingTerms(e.target.value)}
+              className="border border-gray-300 px-2 py-1 w-full min-h-[80px]"
+              placeholder="Enter any additional shipping terms or special conditions"
+            />
+          ) : (
+            <p className="border p-2 min-h-[40px]">{additionalShippingTerms || 'None specified'}</p>
+          )}
+        </div>
+      </div>
+      
+      {/* Signatures */}
+      <div className="grid grid-cols-2 gap-8 mt-8">
+        <div className="border-t pt-4">
+          <p className="font-bold mb-4">For and on behalf of SELLER:</p>
+          <div className="space-y-2">
+            <p>Name: _______________________</p>
+            <p>Title: _______________________</p>
+            <p>Date: _______________________</p>
+            <p>Signature: __________________</p>
+          </div>
+        </div>
+        <div className="border-t pt-4">
+          <p className="font-bold mb-4">For and on behalf of BUYER:</p>
+          <div className="space-y-2">
+            <p>Name: _______________________</p>
+            <p>Title: _______________________</p>
+            <p>Date: _______________________</p>
+            <p>Signature: __________________</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Company Seal/Stamp */}
+      <div className="text-center mt-6 border-t pt-4">
+        <p>&#91;Company Seal/Stamp&#93;</p>
+      </div>
+      
+      {/* Save Button (only shown in editing mode and when onSave is provided) */}
+      {editMode && onSave && (
+        <div className="print:hidden mt-8 flex justify-center">
           <Button 
-            onClick={handleSave}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={handleSaveContract}
+            className="px-8 py-2"
           >
             Save Contract
           </Button>
