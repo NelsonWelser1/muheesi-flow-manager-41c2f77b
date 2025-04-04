@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash } from "lucide-react";
 
 const FreshProduceTemplate = ({ editMode = false, data = {}, onDataChange = () => {} }) => {
+  // State for seller details
+  const [sellerDetails, setSellerDetails] = useState(
+    data.sellerDetails || {
+      name: "KAJON Coffee Limited",
+      address: "Kampala, Uganda",
+      registration: "Registration #: UG2023786541"
+    }
+  );
+
+  // State for buyer details
+  const [buyerDetails, setBuyerDetails] = useState(
+    data.buyerDetails || {
+      name: "[Buyer Company Name]",
+      address: "[Buyer Address]",
+      registration: "Registration #: [Buyer Registration #]"
+    }
+  );
+
   // Helper function to render editable or display content
   const EditableField = ({ field, defaultValue, isMultiline = false }) => {
     const value = data[field] || defaultValue;
@@ -34,6 +53,36 @@ const FreshProduceTemplate = ({ editMode = false, data = {}, onDataChange = () =
       <span>{value}</span>
     );
   };
+
+  // Helper function to update seller details
+  const handleSellerChange = (field, value) => {
+    setSellerDetails(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Helper function to update buyer details
+  const handleBuyerChange = (field, value) => {
+    setBuyerDetails(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Update parent data when seller details change
+  useEffect(() => {
+    if (editMode) {
+      onDataChange('sellerDetails', sellerDetails);
+    }
+  }, [sellerDetails, editMode, onDataChange]);
+
+  // Update parent data when buyer details change
+  useEffect(() => {
+    if (editMode) {
+      onDataChange('buyerDetails', buyerDetails);
+    }
+  }, [buyerDetails, editMode, onDataChange]);
 
   // New state for payment terms structure
   const [paymentTermsItems, setPaymentTermsItems] = useState(
@@ -99,27 +148,71 @@ const FreshProduceTemplate = ({ editMode = false, data = {}, onDataChange = () =
         </div>
       </div>
 
-      {/* Parties */}
+      {/* Parties - Enhanced with editable fields */}
       <div className="mb-6">
         <h3 className="text-lg font-bold mb-2 text-amber-700">PARTIES</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="border-r pr-4">
             <h4 className="font-semibold">SELLER:</h4>
-            <p className="text-sm">KAJON Coffee Limited</p>
-            <p className="text-sm">Kampala, Uganda</p>
-            <p className="text-sm">Registration #: UG2023786541</p>
+            {editMode ? (
+              <div className="space-y-2 mt-1">
+                <Input 
+                  value={sellerDetails.name}
+                  onChange={(e) => handleSellerChange('name', e.target.value)}
+                  placeholder="Company Name"
+                  className="w-full border border-amber-300 p-1"
+                />
+                <Input 
+                  value={sellerDetails.address}
+                  onChange={(e) => handleSellerChange('address', e.target.value)}
+                  placeholder="Address"
+                  className="w-full border border-amber-300 p-1"
+                />
+                <Input 
+                  value={sellerDetails.registration}
+                  onChange={(e) => handleSellerChange('registration', e.target.value)}
+                  placeholder="Registration Number"
+                  className="w-full border border-amber-300 p-1"
+                />
+              </div>
+            ) : (
+              <>
+                <p className="text-sm">{sellerDetails.name}</p>
+                <p className="text-sm">{sellerDetails.address}</p>
+                <p className="text-sm">{sellerDetails.registration}</p>
+              </>
+            )}
           </div>
           <div>
             <h4 className="font-semibold">BUYER:</h4>
-            <p className="text-sm">
-              <EditableField field="buyerName" defaultValue="[Buyer Company Name]" />
-            </p>
-            <p className="text-sm">
-              <EditableField field="buyerAddress" defaultValue="[Buyer Address]" />
-            </p>
-            <p className="text-sm">
-              Registration #: <EditableField field="buyerRegistration" defaultValue="[Buyer Registration #]" />
-            </p>
+            {editMode ? (
+              <div className="space-y-2 mt-1">
+                <Input 
+                  value={buyerDetails.name}
+                  onChange={(e) => handleBuyerChange('name', e.target.value)}
+                  placeholder="Company Name"
+                  className="w-full border border-amber-300 p-1"
+                />
+                <Input 
+                  value={buyerDetails.address}
+                  onChange={(e) => handleBuyerChange('address', e.target.value)}
+                  placeholder="Address"
+                  className="w-full border border-amber-300 p-1"
+                />
+                <Input 
+                  value={buyerDetails.registration}
+                  onChange={(e) => handleBuyerChange('registration', e.target.value)}
+                  placeholder="Registration Number"
+                  className="w-full border border-amber-300 p-1"
+                />
+              </div>
+            ) : (
+              <>
+                <p className="text-sm">{buyerDetails.name}</p>
+                <p className="text-sm">{buyerDetails.address}</p>
+                <p className="text-sm">{buyerDetails.registration}</p>
+              </>
+            )}
           </div>
         </div>
       </div>
