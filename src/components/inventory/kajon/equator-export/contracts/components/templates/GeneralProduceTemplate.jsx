@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -24,6 +23,11 @@ const GeneralProduceTemplate = ({ editMode = false, data = {}, onDataChange = ()
     }
   );
 
+  // State for products
+  const [products, setProducts] = useState(
+    data.products || []
+  );
+  
   // Update parent data when seller details change
   useEffect(() => {
     if (editMode) {
@@ -37,6 +41,13 @@ const GeneralProduceTemplate = ({ editMode = false, data = {}, onDataChange = ()
       onDataChange('buyerDetails', buyerDetails);
     }
   }, [buyerDetails, editMode, onDataChange]);
+
+  // Update parent data when products change
+  useEffect(() => {
+    if (editMode) {
+      onDataChange('products', products);
+    }
+  }, [products, editMode, onDataChange]);
 
   // Helper function to render editable or display content
   const EditableField = ({ field, defaultValue, isMultiline = false }) => {
@@ -82,6 +93,55 @@ const GeneralProduceTemplate = ({ editMode = false, data = {}, onDataChange = ()
       ...prev,
       [field]: value
     }));
+  };
+
+  // Helper function to handle product change
+  const handleProductChange = (index, field, value) => {
+    const updatedProducts = [...products];
+    
+    if (!updatedProducts[index]) {
+      updatedProducts[index] = {};
+    }
+    
+    updatedProducts[index] = {
+      ...updatedProducts[index],
+      [field]: value
+    };
+    
+    // Auto-calculate total value when quantity or price changes
+    if (field === 'quantity' || field === 'pricePerKg') {
+      const product = updatedProducts[index];
+      
+      // Extract numeric values from the fields
+      const quantity = parseFloat(product.quantity || 0);
+      const price = parseFloat(product.pricePerKg || 0);
+      
+      // Calculate total if both quantity and price are valid numbers
+      if (!isNaN(quantity) && !isNaN(price)) {
+        const total = quantity * price;
+        updatedProducts[index].totalValue = total.toFixed(2);
+      }
+    }
+    
+    setProducts(updatedProducts);
+  };
+  
+  // Add a new product
+  const addProduct = () => {
+    setProducts([...products, { 
+      id: `product-${Date.now()}`,
+      description: '',
+      quantity: '',
+      pricePerKg: '',
+      totalValue: ''
+    }]);
+  };
+  
+  // Remove a product
+  const removeProduct = (index) => {
+    const updatedProducts = [...products];
+    updatedProducts.splice(index, 1);
+    setProducts(updatedProducts);
   };
 
   return (
@@ -200,10 +260,119 @@ const GeneralProduceTemplate = ({ editMode = false, data = {}, onDataChange = ()
         </div>
       </div>
 
-      {/* Placeholder for the rest of the template content */}
+      {/* Product Details Section */}
       <div className="mb-6">
         <h3 className="text-lg font-bold mb-2 text-green-700">PRODUCT DETAILS</h3>
-        <p>This is a placeholder for the General Produce contract template content.</p>
+        {editMode && (
+          <Button
+            type="button"
+            onClick={addProduct}
+            size="sm"
+            className="mb-2 flex items-center gap-1"
+          >
+            <Plus className="h-4 w-4" /> Add Product
+          </Button>
+        )}
+        
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-green-50">
+              <th className="border border-gray-300 p-2 text-left">Description</th>
+              <th className="border border-gray-300 p-2 text-left">Quantity (Kg)</th>
+              <th className="border border-gray-300 p-2 text-left">Price per Kg</th>
+              <th className="border border-gray-300 p-2 text-left">Total Value</th>
+              {editMode && <th className="border border-gray-300 p-2 text-left">Actions</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {products.map((product, index) => (
+              <tr key={product.id || index}>
+                <td className="border border-gray-300 p-2">
+                  {editMode ? (
+                    <Input 
+                      value={product.description || ''} 
+                      onChange={(e) => handleProductChange(index, 'description', e.target.value)} 
+                      className="w-full border border-green-300 p-1"
+                    />
+                  ) : (
+                    product.description || ''
+                  )}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {editMode ? (
+                    <Input 
+                      type="number"
+                      value={product.quantity || ''} 
+                      onChange={(e) => handleProductChange(index, 'quantity', e.target.value)} 
+                      className="w-full border border-green-300 p-1"
+                    />
+                  ) : (
+                    product.quantity || ''
+                  )}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {editMode ? (
+                    <Input 
+                      type="number"
+                      value={product.pricePerKg || ''} 
+                      onChange={(e) => handleProductChange(index, 'pricePerKg', e.target.value)} 
+                      className="w-full border border-green-300 p-1"
+                    />
+                  ) : (
+                    product.pricePerKg || ''
+                  )}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  {editMode ? (
+                    <Input 
+                      value={product.totalValue || ''} 
+                      readOnly
+                      className="w-full border border-green-300 p-1 bg-gray-50"
+                    />
+                  ) : (
+                    product.totalValue || ''
+                  )}
+                </td>
+                {editMode && (
+                  <td className="border border-gray-300 p-2">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => removeProduct(index)}
+                      className="text-red-500 hover:text-red-700 flex items-center"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="bg-green-50">
+              <td colSpan={editMode ? "3" : "3"} className="border border-gray-300 p-2 font-bold text-right">Total Contract Value:</td>
+              <td className="border border-gray-300 p-2 font-bold">
+                {editMode ? (
+                  <Input 
+                    value={
+                      `USD ${products
+                        .reduce((sum, product) => sum + (parseFloat(product.totalValue || 0) || 0), 0)
+                        .toFixed(2)}`
+                    } 
+                    readOnly
+                    className="border border-green-300 p-1 bg-gray-50"
+                  />
+                ) : (
+                  `USD ${products
+                    .reduce((sum, product) => sum + (parseFloat(product.totalValue || 0) || 0), 0)
+                    .toFixed(2)}`
+                )}
+              </td>
+              {editMode && <td></td>}
+            </tr>
+          </tfoot>
+        </table>
       </div>
 
       {/* Signature Block */}

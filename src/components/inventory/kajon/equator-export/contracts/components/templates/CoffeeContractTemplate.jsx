@@ -150,6 +150,22 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
       ...updatedProducts[index],
       [field]: value
     };
+    
+    if (field === 'quantity' || field === 'price') {
+      const product = updatedProducts[index];
+      
+      const quantityStr = field === 'quantity' ? value : product.quantity || '';
+      const priceStr = field === 'price' ? value : product.price || '';
+      
+      const quantity = parseFloat(quantityStr.toString().replace(/[^\d.]/g, '')) || 0;
+      const price = parseFloat(priceStr.toString().replace(/[^\d.]/g, '')) || 0;
+      
+      const total = quantity * price;
+      const formattedTotal = `USD ${total.toFixed(2)}`;
+      
+      updatedProducts[index].total = formattedTotal;
+    }
+    
     setProducts(updatedProducts);
   };
 
@@ -170,7 +186,7 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
 
   // Remove a product
   const removeProduct = (index) => {
-    if (products.length <= 1) return; // Keep at least one product
+    if (products.length <= 1) return;
     const updatedProducts = [...products];
     updatedProducts.splice(index, 1);
     setProducts(updatedProducts);
@@ -401,6 +417,7 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
                       value={product.total} 
                       onChange={(e) => handleProductChange(index, 'total', e.target.value)} 
                       className="w-full border border-blue-300 p-1"
+                      readOnly
                     />
                   ) : (
                     product.total
