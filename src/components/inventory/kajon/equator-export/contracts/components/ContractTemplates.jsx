@@ -16,6 +16,8 @@ const ContractTemplates = ({ onBack }) => {
   const [activeTemplate, setActiveTemplate] = useState(null);
   const [selectedTab, setSelectedTab] = useState("coffee");
   const [editMode, setEditMode] = useState(false);
+  const [templateSaved, setTemplateSaved] = useState(false);
+  const [savedTemplates, setSavedTemplates] = useState([]);
   const [editableData, setEditableData] = useState({
     coffee: null,
     general: null,
@@ -73,6 +75,7 @@ const ContractTemplates = ({ onBack }) => {
 
   const handleViewTemplate = (templateType) => {
     setActiveTemplate(templateType);
+    setTemplateSaved(false); // Reset saved state when viewing a new template
   };
 
   const handlePrint = () => {
@@ -127,6 +130,34 @@ const ContractTemplates = ({ onBack }) => {
 
   const toggleEditMode = () => {
     setEditMode(prev => !prev);
+  };
+
+  const handleSaveContract = () => {
+    if (!activeTemplate) return;
+    
+    // Create a saved template entry
+    const savedTemplate = {
+      id: Date.now().toString(),
+      type: activeTemplate,
+      title: `${activeTemplate.charAt(0).toUpperCase() + activeTemplate.slice(1)} Contract - ${new Date().toLocaleDateString()}`,
+      data: editableData[activeTemplate],
+      dateCreated: new Date().toISOString()
+    };
+    
+    // Add to saved templates
+    setSavedTemplates(prev => [...prev, savedTemplate]);
+    
+    // Update saved state
+    setTemplateSaved(true);
+    
+    // Exit edit mode
+    setEditMode(false);
+    
+    // Show success toast
+    toast({
+      title: "Contract saved successfully",
+      description: "You can now print or download this contract as PDF",
+    });
   };
 
   const handleDataChange = (field, value) => {
@@ -198,12 +229,12 @@ const ContractTemplates = ({ onBack }) => {
                     <span>Reset</span>
                   </Button>
                   <Button 
-                    onClick={toggleEditMode}
+                    onClick={handleSaveContract}
                     className="flex items-center gap-1"
                     variant="default"
                   >
                     <Save className="h-4 w-4" />
-                    <span>Done Editing</span>
+                    <span>Save Contract</span>
                   </Button>
                 </>
               ) : (
@@ -216,21 +247,25 @@ const ContractTemplates = ({ onBack }) => {
                     <Edit className="h-4 w-4" />
                     <span>Edit Template</span>
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handlePrint}
-                    className="flex items-center gap-1"
-                  >
-                    <Printer className="h-4 w-4" />
-                    <span>Print</span>
-                  </Button>
-                  <Button 
-                    onClick={handleDownloadPDF}
-                    className="flex items-center gap-1"
-                  >
-                    <Download className="h-4 w-4" />
-                    <span>Download PDF</span>
-                  </Button>
+                  {templateSaved && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        onClick={handlePrint}
+                        className="flex items-center gap-1"
+                      >
+                        <Printer className="h-4 w-4" />
+                        <span>Print</span>
+                      </Button>
+                      <Button 
+                        onClick={handleDownloadPDF}
+                        className="flex items-center gap-1"
+                      >
+                        <Download className="h-4 w-4" />
+                        <span>Download PDF</span>
+                      </Button>
+                    </>
+                  )}
                 </>
               )}
             </>
@@ -249,166 +284,211 @@ const ContractTemplates = ({ onBack }) => {
           </div>
         </div>
       ) : (
-        <Tabs defaultValue="coffee" value={selectedTab} onValueChange={setSelectedTab} className="print:hidden">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="coffee">Coffee Beans</TabsTrigger>
-            <TabsTrigger value="general">General Produce</TabsTrigger>
-            <TabsTrigger value="fresh">Fresh Produce</TabsTrigger>
-          </TabsList>
+        <>
+          <Tabs defaultValue="coffee" value={selectedTab} onValueChange={setSelectedTab} className="print:hidden">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="coffee">Coffee Beans</TabsTrigger>
+              <TabsTrigger value="general">General Produce</TabsTrigger>
+              <TabsTrigger value="fresh">Fresh Produce</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="coffee" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Coffee Export Contract Templates</CardTitle>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-6">
+                  <Card className="border border-blue-200 hover:shadow-md transition-all">
+                    <CardHeader className="bg-blue-50 pb-2">
+                      <CardTitle className="text-lg">Standard Coffee Export Contract</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-gray-600 mb-4">
+                        Standard template for coffee bean export agreements with full clauses for quality, delivery, and payment terms.
+                      </p>
+                      <div className="flex justify-end">
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-1"
+                          onClick={() => handleViewTemplate("coffee")}
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span>View Template</span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border border-blue-200 hover:shadow-md transition-all">
+                    <CardHeader className="bg-blue-50 pb-2">
+                      <CardTitle className="text-lg">Specialty Coffee Contract</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-gray-600 mb-4">
+                        Contract template for specialty grade coffees, including detailed cupping scores, origin specifications, and premium payment terms.
+                      </p>
+                      <div className="flex justify-end">
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-1"
+                          onClick={() => handleViewTemplate("coffee")}
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span>View Template</span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="general" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>General Produce Export Contract Templates</CardTitle>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-6">
+                  <Card className="border border-green-200 hover:shadow-md transition-all">
+                    <CardHeader className="bg-green-50 pb-2">
+                      <CardTitle className="text-lg">Standard Agricultural Export Contract</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-gray-600 mb-4">
+                        General purpose template for agricultural exports with customizable clauses for various commodities.
+                      </p>
+                      <div className="flex justify-end">
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-1"
+                          onClick={() => handleViewTemplate("general")}
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span>View Template</span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border border-green-200 hover:shadow-md transition-all">
+                    <CardHeader className="bg-green-50 pb-2">
+                      <CardTitle className="text-lg">Bulk Commodity Contract</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-gray-600 mb-4">
+                        Contract template for bulk agricultural commodities with volume-based pricing and delivery schedules.
+                      </p>
+                      <div className="flex justify-end">
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-1"
+                          onClick={() => handleViewTemplate("general")}
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span>View Template</span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="fresh" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Fresh Produce Export Contract Templates</CardTitle>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-6">
+                  <Card className="border border-amber-200 hover:shadow-md transition-all">
+                    <CardHeader className="bg-amber-50 pb-2">
+                      <CardTitle className="text-lg">Perishable Goods Export Contract</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-gray-600 mb-4">
+                        Specialized contract for perishable agricultural products with cold chain and shelf-life requirements.
+                      </p>
+                      <div className="flex justify-end">
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-1"
+                          onClick={() => handleViewTemplate("fresh")}
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span>View Template</span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border border-amber-200 hover:shadow-md transition-all">
+                    <CardHeader className="bg-amber-50 pb-2">
+                      <CardTitle className="text-lg">Fresh Fruits & Vegetables Contract</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-gray-600 mb-4">
+                        Contract template for fresh fruits and vegetables with quality standards, packaging requirements, and rapid delivery terms.
+                      </p>
+                      <div className="flex justify-end">
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-1"
+                          onClick={() => handleViewTemplate("fresh")}
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span>View Template</span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
           
-          <TabsContent value="coffee" className="mt-6">
-            <Card>
+          {/* Saved Contracts Section */}
+          {savedTemplates.length > 0 && (
+            <Card className="mt-6">
               <CardHeader>
-                <CardTitle>Coffee Export Contract Templates</CardTitle>
+                <CardTitle>Saved Contracts</CardTitle>
               </CardHeader>
-              <CardContent className="grid md:grid-cols-2 gap-6">
-                <Card className="border border-blue-200 hover:shadow-md transition-all">
-                  <CardHeader className="bg-blue-50 pb-2">
-                    <CardTitle className="text-lg">Standard Coffee Export Contract</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <p className="text-sm text-gray-600 mb-4">
-                      Standard template for coffee bean export agreements with full clauses for quality, delivery, and payment terms.
-                    </p>
-                    <div className="flex justify-end">
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center gap-1"
-                        onClick={() => handleViewTemplate("coffee")}
-                      >
-                        <Eye className="h-4 w-4" />
-                        <span>View Template</span>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="border border-blue-200 hover:shadow-md transition-all">
-                  <CardHeader className="bg-blue-50 pb-2">
-                    <CardTitle className="text-lg">Specialty Coffee Contract</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <p className="text-sm text-gray-600 mb-4">
-                      Contract template for specialty grade coffees, including detailed cupping scores, origin specifications, and premium payment terms.
-                    </p>
-                    <div className="flex justify-end">
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center gap-1"
-                        onClick={() => handleViewTemplate("coffee")}
-                      >
-                        <Eye className="h-4 w-4" />
-                        <span>View Template</span>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+              <CardContent>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {savedTemplates.map(template => (
+                    <Card key={template.id} className="border hover:shadow-md transition-all">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base">{template.title}</CardTitle>
+                        <p className="text-xs text-gray-500">
+                          {new Date(template.dateCreated).toLocaleDateString()}
+                        </p>
+                      </CardHeader>
+                      <CardContent className="pt-2">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="flex items-center gap-1"
+                            onClick={() => {
+                              setActiveTemplate(template.type);
+                              setEditableData(prev => ({
+                                ...prev,
+                                [template.type]: template.data
+                              }));
+                              setTemplateSaved(true);
+                            }}
+                          >
+                            <Eye className="h-3 w-3" />
+                            <span>View</span>
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          <TabsContent value="general" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>General Produce Export Contract Templates</CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-2 gap-6">
-                <Card className="border border-green-200 hover:shadow-md transition-all">
-                  <CardHeader className="bg-green-50 pb-2">
-                    <CardTitle className="text-lg">Standard Agricultural Export Contract</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <p className="text-sm text-gray-600 mb-4">
-                      General purpose template for agricultural exports with customizable clauses for various commodities.
-                    </p>
-                    <div className="flex justify-end">
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center gap-1"
-                        onClick={() => handleViewTemplate("general")}
-                      >
-                        <Eye className="h-4 w-4" />
-                        <span>View Template</span>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="border border-green-200 hover:shadow-md transition-all">
-                  <CardHeader className="bg-green-50 pb-2">
-                    <CardTitle className="text-lg">Bulk Commodity Contract</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <p className="text-sm text-gray-600 mb-4">
-                      Contract template for bulk agricultural commodities with volume-based pricing and delivery schedules.
-                    </p>
-                    <div className="flex justify-end">
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center gap-1"
-                        onClick={() => handleViewTemplate("general")}
-                      >
-                        <Eye className="h-4 w-4" />
-                        <span>View Template</span>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="fresh" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Fresh Produce Export Contract Templates</CardTitle>
-              </CardHeader>
-              <CardContent className="grid md:grid-cols-2 gap-6">
-                <Card className="border border-amber-200 hover:shadow-md transition-all">
-                  <CardHeader className="bg-amber-50 pb-2">
-                    <CardTitle className="text-lg">Perishable Goods Export Contract</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <p className="text-sm text-gray-600 mb-4">
-                      Specialized contract for perishable agricultural products with cold chain and shelf-life requirements.
-                    </p>
-                    <div className="flex justify-end">
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center gap-1"
-                        onClick={() => handleViewTemplate("fresh")}
-                      >
-                        <Eye className="h-4 w-4" />
-                        <span>View Template</span>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="border border-amber-200 hover:shadow-md transition-all">
-                  <CardHeader className="bg-amber-50 pb-2">
-                    <CardTitle className="text-lg">Fresh Fruits & Vegetables Contract</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <p className="text-sm text-gray-600 mb-4">
-                      Contract template for fresh fruits and vegetables with quality standards, packaging requirements, and rapid delivery terms.
-                    </p>
-                    <div className="flex justify-end">
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center gap-1"
-                        onClick={() => handleViewTemplate("fresh")}
-                      >
-                        <Eye className="h-4 w-4" />
-                        <span>View Template</span>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          )}
+        </>
       )}
     </div>
   );

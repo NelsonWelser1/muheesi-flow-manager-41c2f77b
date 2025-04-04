@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -117,11 +118,11 @@ const GeneralProduceTemplate = ({ editMode = false, data = {}, onDataChange = ()
           <p className="text-sm text-gray-600">
             Date: {editMode ? (
               <Input 
-                value={data.currentDate || "[Current Date]"}
+                value={data.currentDate || ""}
                 onChange={(e) => onDataChange('currentDate', e.target.value)}
                 className="border border-green-300 p-1 mt-1 w-full" 
-                placeholder="Enter date"
-                type="text"
+                placeholder="YYYY-MM-DD"
+                type="date"
               />
             ) : (
               <span>{data.currentDate || "[Current Date]"}</span>
