@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import UpdateStock from '../components/inventory/UpdateStock';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Home, LogOut, Clock } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+
 const companies = [{
   name: "Grand Berna Dairies",
   description: "Raw Milk, Processed Milk, Cheese, Yogurt, Packed Meat of Beef, Pork, and Goat. Factories in Kyiboga and Mbarara with various outlets.",
@@ -37,13 +37,6 @@ const companies = [{
     livestockSales: "UGX 67,900,000",
     expenses: "UGX 2,000,000"
   }
-}, {
-  name: "Equator Coffee Export",
-  description: "Global export management system for coffee trading, contracts, shipments, market analysis, and international compliance.",
-  component: "equator-export",
-  manager: "Sarah Kimani",
-  contact: "+256 780 123456",
-  location: "Kampala"
 }];
 
 const ManageInventory = () => {
@@ -60,7 +53,6 @@ const ManageInventory = () => {
     } else if (company.component === 'bukomero-dairy') {
       navigate('/manage-inventory/bukomero-dairy');
     } else if (company.component === 'equator-export') {
-      // Navigate directly to KAJON with Equator Export Management pre-selected
       navigate('/manage-inventory/kajon-coffee', { state: { selectedInterface: 'equator' } });
     } else {
       setSelectedCompany(company);
