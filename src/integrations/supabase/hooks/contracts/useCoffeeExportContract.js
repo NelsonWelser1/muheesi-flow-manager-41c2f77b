@@ -120,6 +120,28 @@ export const useCoffeeExportContract = () => {
       // Generate a client reference ID to prevent duplicates
       const clientReferenceId = uuidv4();
       
+      // Ensure products are properly formatted for DB storage
+      const formattedProducts = Array.isArray(contractData.products) 
+        ? contractData.products.map(product => ({
+            description: product.description || '',
+            quantity: parseFloat(product.quantity) || 0,
+            pricePerKg: parseFloat(product.pricePerKg) || 0,
+            totalValue: parseFloat(product.totalValue) || 
+              (parseFloat(product.quantity || 0) * parseFloat(product.pricePerKg || 0))
+          }))
+        : [];
+      
+      // Ensure payment terms are properly formatted
+      const formattedPaymentTerms = Array.isArray(contractData.payment_terms_items)
+        ? contractData.payment_terms_items.map(item => {
+            // Handle both formats: {description} and {id, text}
+            return {
+              description: item.description || item.text || '',
+              id: item.id || `term-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            };
+          })
+        : [];
+      
       // Prepare the data for insertion
       const contractToInsert = {
         contract_number: contractData.contract_number,
@@ -130,12 +152,8 @@ export const useCoffeeExportContract = () => {
         buyer_name: contractData.buyer_name,
         buyer_address: contractData.buyer_address || '',
         buyer_registration: contractData.buyer_registration || '',
-        products: Array.isArray(contractData.products) 
-          ? contractData.products 
-          : [],
-        payment_terms_items: Array.isArray(contractData.payment_terms_items) 
-          ? contractData.payment_terms_items 
-          : [],
+        products: formattedProducts,
+        payment_terms_items: formattedPaymentTerms,
         shipping_left_label1: contractData.shipping_left_label1 || 'Incoterm:',
         shipping_left_value1: contractData.shipping_left_value1 || 'FOB Mombasa',
         shipping_left_label2: contractData.shipping_left_label2 || 'Packaging:',

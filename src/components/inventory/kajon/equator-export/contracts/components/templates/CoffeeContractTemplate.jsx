@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -206,16 +205,22 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
   const prepareContractData = () => {
     // Make sure totalValue is calculated for each product
     const updatedProducts = products.map(product => {
+      // Make sure each product has an id
+      const productWithId = { 
+        ...product,
+        id: product.id || `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      };
+      
       // If totalValue is not calculated yet, do it now
-      if (!product.totalValue) {
-        const quantity = parseFloat(product.quantity || 0);
-        const price = parseFloat(product.pricePerKg || 0);
+      if (!productWithId.totalValue) {
+        const quantity = parseFloat(productWithId.quantity || 0);
+        const price = parseFloat(productWithId.pricePerKg || 0);
         return {
-          ...product,
+          ...productWithId,
           totalValue: (quantity * price).toFixed(2)
         };
       }
-      return product;
+      return productWithId;
     });
     
     // Calculate the total contract value
@@ -223,18 +228,64 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
       return sum + parseFloat(product.totalValue || 0);
     }, 0);
     
+    // Format payment terms items to match database schema
+    const formattedPaymentTermsItems = paymentTermsItems.map(item => {
+      // If the item already has the right structure, use it
+      if (item.description) return item;
+      
+      // Otherwise convert from {id, text} to {description}
+      return { 
+        description: item.text || '',
+        id: item.id || `term-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      };
+    });
+    
     return {
-      contract_number: contractNumber,
-      contract_date: currentDate,
-      seller_name: sellerDetails.name,
-      seller_address: sellerDetails.address,
-      seller_registration: sellerDetails.registration,
-      buyer_name: buyerDetails.name,
-      buyer_address: buyerDetails.address,
-      buyer_registration: buyerDetails.registration,
+      contract_number: contractNumber || `KCL-2024-${Date.now().toString().slice(-4)}`,
+      contract_date: currentDate || new Date().toISOString().split('T')[0],
+      seller_name: sellerDetails.name || "KAJON Coffee Limited",
+      seller_address: sellerDetails.address || "Kampala, Uganda",
+      seller_registration: sellerDetails.registration || "Registration #: UG2023786541",
+      buyer_name: buyerDetails.name || "[Buyer Company Name]",
+      buyer_address: buyerDetails.address || "[Buyer Address]",
+      buyer_registration: buyerDetails.registration || "[Buyer Registration #]",
       products: updatedProducts,
-      payment_terms_items: paymentTermsItems,
-      total_contract_value: totalContractValue.toFixed(2)
+      payment_terms_items: formattedPaymentTermsItems,
+      total_contract_value: totalContractValue.toFixed(2),
+      // Add shipping terms and other fields
+      shipping_left_label1: data.shippingLeftLabel1 || "Incoterm:",
+      shipping_left_value1: data.shippingLeftValue1 || "FOB Mombasa",
+      shipping_left_label2: data.shippingLeftLabel2 || "Packaging:",
+      shipping_left_value2: data.shippingLeftValue2 || "60kg jute bags with GrainPro liners",
+      shipping_left_label3: data.shippingLeftLabel3 || "Loading Port:",
+      shipping_left_value3: data.shippingLeftValue3 || "Mombasa, Kenya",
+      shipping_right_label1: data.shippingRightLabel1 || "Destination:",
+      shipping_right_value1: data.shippingRightValue1 || "Hamburg, Germany",
+      shipping_right_label2: data.shippingRightLabel2 || "Latest Shipment Date:",
+      shipping_right_value2: data.shippingRightValue2 || "October 15, 2024",
+      shipping_right_label3: data.shippingRightLabel3 || "Delivery Timeline:",
+      shipping_right_value3: data.shippingRightValue3 || "30-45 days from loading",
+      additional_shipping_terms_label: data.additionalShippingTermsLabel || "Additional Shipping Terms:",
+      additional_shipping_terms: data.additionalShippingTerms || "",
+      for_seller_label: data.forSellerLabel || "For and on behalf of SELLER",
+      seller_name_label: data.sellerNameLabel || "Name:",
+      seller_name_value: data.sellerName || "",
+      seller_title_label: data.sellerTitleLabel || "Title:",
+      seller_title_value: data.sellerTitle || "",
+      seller_date_label: data.sellerDateLabel || "Date:",
+      seller_date_value: data.sellerDate || "",
+      seller_signature_label: data.sellerSignatureLabel || "Signature:",
+      seller_signature_value: data.sellerSignature || "",
+      for_buyer_label: data.forBuyerLabel || "For and on behalf of BUYER",
+      buyer_signature_name_label: data.buyerSignatureNameLabel || "Name:",
+      buyer_signature_name_value: data.buyerSignatureName || "",
+      buyer_signature_title_label: data.buyerSignatureTitleLabel || "Title:",
+      buyer_signature_title_value: data.buyerSignatureTitle || "",
+      buyer_signature_date_label: data.buyerSignatureDateLabel || "Date:",
+      buyer_signature_date_value: data.buyerSignatureDate || "",
+      buyer_signature_label: data.buyerSignatureLabel || "Signature:",
+      buyer_signature_value: data.buyerSignature || "",
+      company_stamp: data.companyStamp || "[Company Seal/Stamp]"
     };
   };
   
@@ -644,17 +695,23 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
           {editMode ? (
             <div className="space-y-4">
               {paymentTermsItems.map((item) => (
-                <div key={item.id} className="flex items-start gap-2">
+                <div key={item.id || `item-${Math.random()}`} className="flex items-start gap-2">
                   <Textarea
-                    value={item.text}
-                    onChange={(e) => updatePaymentTermItem(item.id, e.target.value)}
+                    value={item.text || item.description || ''}
+                    onChange={(e) => item.id ? 
+                      updatePaymentTermItem(item.id, e.target.value) : 
+                      handlePaymentTermChange(paymentTermsItems.indexOf(item), e.target.value)
+                    }
                     className="flex-grow border border-blue-300 min-h-[60px]"
                   />
                   <Button 
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => removePaymentTermItem(item.id)}
+                    onClick={() => item.id ? 
+                      removePaymentTermItem(item.id) : 
+                      removePaymentTerm(paymentTermsItems.indexOf(item))
+                    }
                     className="text-red-500 hover:text-red-700 mt-1"
                   >
                     <Trash className="h-4 w-4" />
@@ -673,7 +730,9 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
           ) : (
             <ul className="list-disc pl-5 space-y-1">
               {paymentTermsItems.map((item) => (
-                <li key={item.id} className="text-sm">{item.text}</li>
+                <li key={item.id || `item-${Math.random()}`} className="text-sm">
+                  {item.text || item.description || ''}
+                </li>
               ))}
             </ul>
           )}
