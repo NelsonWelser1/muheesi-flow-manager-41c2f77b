@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../supabase';
 import { useToast } from "@/components/ui/use-toast";
 import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Custom hook for managing coffee export contracts
@@ -11,6 +12,7 @@ export const useCoffeeExportContract = () => {
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   // Fetch all coffee export contracts
@@ -34,7 +36,26 @@ export const useCoffeeExportContract = () => {
       }
       
       console.log(`Fetched ${data?.length || 0} coffee export contracts successfully`);
-      setContracts(data || []);
+      
+      // Parse JSON fields for each contract
+      const parsedContracts = (data || []).map(contract => {
+        try {
+          return {
+            ...contract,
+            products: typeof contract.products === 'string' 
+              ? JSON.parse(contract.products) 
+              : contract.products,
+            payment_terms_items: typeof contract.payment_terms_items === 'string'
+              ? JSON.parse(contract.payment_terms_items)
+              : contract.payment_terms_items
+          };
+        } catch (e) {
+          console.warn('Error parsing JSON fields for contract:', e);
+          return contract;
+        }
+      });
+      
+      setContracts(parsedContracts);
       
     } catch (err) {
       console.error('Unexpected error fetching coffee export contracts:', err);
@@ -47,7 +68,14 @@ export const useCoffeeExportContract = () => {
 
   // Save a coffee export contract
   const saveContract = async (contractData) => {
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      console.log('Submission already in progress, ignoring duplicate request');
+      return { success: false, error: 'Submission already in progress' };
+    }
+    
     try {
+      setIsSubmitting(true);
       setLoading(true);
       setError(null);
       
@@ -89,6 +117,9 @@ export const useCoffeeExportContract = () => {
       
       console.log('Saving coffee export contract to Supabase:', contractData);
       
+      // Generate a client reference ID to prevent duplicates
+      const clientReferenceId = uuidv4();
+      
       // Prepare the data for insertion
       const contractToInsert = {
         contract_number: contractData.contract_number,
@@ -99,8 +130,12 @@ export const useCoffeeExportContract = () => {
         buyer_name: contractData.buyer_name,
         buyer_address: contractData.buyer_address || '',
         buyer_registration: contractData.buyer_registration || '',
-        products: JSON.stringify(contractData.products || []),
-        payment_terms_items: JSON.stringify(contractData.payment_terms_items || []),
+        products: Array.isArray(contractData.products) 
+          ? contractData.products 
+          : [],
+        payment_terms_items: Array.isArray(contractData.payment_terms_items) 
+          ? contractData.payment_terms_items 
+          : [],
         shipping_left_label1: contractData.shipping_left_label1 || 'Incoterm:',
         shipping_left_value1: contractData.shipping_left_value1 || 'FOB Mombasa',
         shipping_left_label2: contractData.shipping_left_label2 || 'Packaging:',
@@ -134,7 +169,8 @@ export const useCoffeeExportContract = () => {
         buyer_signature_label: contractData.buyer_signature_label || 'Signature:',
         buyer_signature_value: contractData.buyer_signature_value || '',
         company_stamp: contractData.company_stamp || '[Company Seal/Stamp]',
-        total_contract_value: parseFloat(contractData.total_contract_value || 0)
+        total_contract_value: parseFloat(contractData.total_contract_value || 0),
+        client_reference_id: clientReferenceId
       };
       
       const { data, error } = await supabase
@@ -152,7 +188,25 @@ export const useCoffeeExportContract = () => {
       console.log('Coffee export contract saved successfully:', data);
       
       // Update the local state with the new contract
-      setContracts(prevContracts => [data[0], ...prevContracts]);
+      if (data && data.length > 0) {
+        // Parse JSON fields if they're stored as strings
+        try {
+          const parsedData = {
+            ...data[0],
+            products: typeof data[0].products === 'string' 
+              ? JSON.parse(data[0].products) 
+              : data[0].products,
+            payment_terms_items: typeof data[0].payment_terms_items === 'string'
+              ? JSON.parse(data[0].payment_terms_items)
+              : data[0].payment_terms_items
+          };
+          
+          setContracts(prevContracts => [parsedData, ...prevContracts]);
+        } catch (e) {
+          console.warn('Error parsing JSON in saved contract:', e);
+          setContracts(prevContracts => [data[0], ...prevContracts]);
+        }
+      }
       
       showSuccessToast(toast, 'Contract saved successfully');
       return { success: true, data: data[0] };
@@ -164,6 +218,7 @@ export const useCoffeeExportContract = () => {
       return { success: false, error: err };
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -193,8 +248,13 @@ export const useCoffeeExportContract = () => {
       // Parse JSON fields
       if (data) {
         try {
-          data.products = JSON.parse(data.products);
-          data.payment_terms_items = JSON.parse(data.payment_terms_items);
+          data.products = typeof data.products === 'string' 
+            ? JSON.parse(data.products) 
+            : data.products;
+          
+          data.payment_terms_items = typeof data.payment_terms_items === 'string'
+            ? JSON.parse(data.payment_terms_items)
+            : data.payment_terms_items;
         } catch (e) {
           console.warn('Error parsing JSON fields:', e);
         }
@@ -221,6 +281,7 @@ export const useCoffeeExportContract = () => {
     contracts,
     loading,
     error,
+    isSubmitting,
     saveContract,
     fetchContracts,
     getContractById
