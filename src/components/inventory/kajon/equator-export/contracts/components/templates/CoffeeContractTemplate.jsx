@@ -213,9 +213,16 @@ const CoffeeContractTemplate = ({
   };
   
   return (
-    <div className="flex flex-col space-y-8 max-w-4xl mx-auto bg-white p-8 shadow-sm contract-template">
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold mb-1">{isSpecialty ? 'SPECIALTY COFFEE EXPORT CONTRACT' : 'COFFEE EXPORT CONTRACT'}</h1>
+    <div className="flex flex-col space-y-8 max-w-4xl mx-auto bg-white p-8 shadow-sm contract-template border border-gray-200 print:border-0 print:shadow-none">
+      {/* Logo and Title Header */}
+      <div className="text-center mb-6 flex flex-col items-center">
+        <img 
+          src="/combined-logo.png" 
+          alt="KAJON Coffee Limited" 
+          className="h-24 mb-4 object-contain"
+        />
+        <div className="w-full border-b border-gray-300 my-2"></div>
+        <h1 className="text-2xl font-bold my-4 text-blue-800">{isSpecialty ? 'SPECIALTY COFFEE EXPORT CONTRACT' : 'COFFEE EXPORT CONTRACT'}</h1>
         <p className="text-sm text-gray-500 print:hidden">
           {editMode ? 'Editing Mode - Make changes to fields below' : 'View Mode - Read only'}
         </p>
@@ -253,8 +260,8 @@ const CoffeeContractTemplate = ({
       {/* Seller and Buyer Information */}
       <div className="grid grid-cols-2 gap-8">
         {/* Seller Information */}
-        <div className="border p-4">
-          <h2 className="font-bold mb-2 text-lg">SELLER:</h2>
+        <div className="border p-4 bg-blue-50">
+          <h2 className="font-bold mb-2 text-lg text-blue-800">SELLER:</h2>
           <div className="space-y-2">
             <div>
               <p className="text-sm mb-1">Company Name:</p>
@@ -296,8 +303,8 @@ const CoffeeContractTemplate = ({
         </div>
         
         {/* Buyer Information */}
-        <div className="border p-4">
-          <h2 className="font-bold mb-2 text-lg">BUYER:</h2>
+        <div className="border p-4 bg-blue-50">
+          <h2 className="font-bold mb-2 text-lg text-blue-800">BUYER:</h2>
           <div className="space-y-2">
             <div>
               <p className="text-sm mb-1">Company Name:</p>
@@ -344,8 +351,8 @@ const CoffeeContractTemplate = ({
       
       {/* Specialty Coffee Details - Only show if this is a specialty contract */}
       {isSpecialty && (
-        <div className="border p-4">
-          <h2 className="font-bold mb-4 text-lg">SPECIALTY COFFEE DETAILS:</h2>
+        <div className="border p-4 bg-amber-50">
+          <h2 className="font-bold mb-4 text-lg text-amber-800">SPECIALTY COFFEE DETAILS:</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm mb-1">Origin:</p>
@@ -435,11 +442,11 @@ const CoffeeContractTemplate = ({
       
       {/* Product Details */}
       <div>
-        <h2 className="font-bold mb-4 text-lg">PRODUCT DETAILS:</h2>
+        <h2 className="font-bold mb-4 text-lg text-green-800">PRODUCT DETAILS:</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full border">
             <thead>
-              <tr className="bg-gray-100">
+              <tr className="bg-green-100">
                 <th className="border p-2 text-left">Description</th>
                 <th className="border p-2 text-right">Quantity (Tons)</th>
                 <th className="border p-2 text-right">Price per Kg (USD)</th>
@@ -512,7 +519,7 @@ const CoffeeContractTemplate = ({
               ))}
               
               {/* Total Row */}
-              <tr className="font-bold bg-gray-50">
+              <tr className="font-bold bg-green-50">
                 <td className="border p-2 text-right" colSpan={2}>
                   TOTAL CONTRACT VALUE:
                 </td>
@@ -547,8 +554,8 @@ const CoffeeContractTemplate = ({
       
       {/* Payment Terms */}
       <div>
-        <h2 className="font-bold mb-4 text-lg">PAYMENT TERMS:</h2>
-        <div className="space-y-3">
+        <h2 className="font-bold mb-4 text-lg text-purple-800">PAYMENT TERMS:</h2>
+        <div className="space-y-3 bg-purple-50 p-4 rounded-lg">
           {paymentTermsItems.map((item, index) => (
             <div key={item.id || index} className="flex items-start">
               <div className="mr-2 mt-1">
@@ -600,8 +607,8 @@ const CoffeeContractTemplate = ({
       
       {/* Shipping Terms */}
       <div>
-        <h2 className="font-bold mb-4 text-lg">SHIPPING AND DELIVERY:</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <h2 className="font-bold mb-4 text-lg text-blue-800">SHIPPING AND DELIVERY:</h2>
+        <div className="grid grid-cols-2 gap-4 bg-blue-50 p-4 rounded-lg">
           <div className="space-y-3">
             <div>
               <p className="font-medium">Incoterm:</p>
@@ -651,7 +658,7 @@ const CoffeeContractTemplate = ({
       {/* Signatures */}
       <div className="grid grid-cols-2 gap-8 mt-8">
         <div className="border-t pt-4">
-          <p className="font-bold mb-4">For and on behalf of SELLER:</p>
+          <p className="font-bold mb-4 text-blue-800">For and on behalf of SELLER:</p>
           <div className="space-y-2">
             <p>Name: _______________________</p>
             <p>Title: _______________________</p>
@@ -660,7 +667,7 @@ const CoffeeContractTemplate = ({
           </div>
         </div>
         <div className="border-t pt-4">
-          <p className="font-bold mb-4">For and on behalf of BUYER:</p>
+          <p className="font-bold mb-4 text-blue-800">For and on behalf of BUYER:</p>
           <div className="space-y-2">
             <p>Name: _______________________</p>
             <p>Title: _______________________</p>
@@ -680,7 +687,7 @@ const CoffeeContractTemplate = ({
         <div className="print:hidden mt-8 flex justify-center">
           <Button 
             onClick={handleSaveContract}
-            className="px-8 py-2"
+            className="px-8 py-2 bg-blue-600 hover:bg-blue-700"
           >
             Save Contract
           </Button>
@@ -691,3 +698,4 @@ const CoffeeContractTemplate = ({
 };
 
 export default CoffeeContractTemplate;
+
