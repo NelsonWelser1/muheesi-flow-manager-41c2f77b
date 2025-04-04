@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash } from "lucide-react";
 
-const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = () => {} }) => {
+const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = () => {}, onSave = () => {} }) => {
   // Initial product data
   const initialProducts = [
     {
@@ -210,6 +210,62 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
     setPaymentTermsItems(prevItems => prevItems.filter(item => item.id !== id));
   };
 
+  // Handle Save Contract
+  const handleSaveContract = () => {
+    // Prepare data for saving to Supabase
+    const contractData = {
+      contract_number: data.contractNumber || "KCL-2024-" + new Date().getTime().toString().slice(-4),
+      contract_date: data.currentDate || new Date().toISOString().split('T')[0],
+      seller_name: sellerDetails.name,
+      seller_address: sellerDetails.address,
+      seller_registration: sellerDetails.registration,
+      buyer_name: buyerDetails.name,
+      buyer_address: buyerDetails.address,
+      buyer_registration: buyerDetails.registration,
+      products: products,
+      payment_terms_items: paymentTermsItems,
+      total_contract_value: totalContractValue,
+      // Add shipping terms fields
+      shipping_left_label1: data.shippingLeftLabel1,
+      shipping_left_value1: data.shippingLeftValue1,
+      shipping_left_label2: data.shippingLeftLabel2,
+      shipping_left_value2: data.shippingLeftValue2,
+      shipping_left_label3: data.shippingLeftLabel3,
+      shipping_left_value3: data.shippingLeftValue3,
+      shipping_right_label1: data.shippingRightLabel1,
+      shipping_right_value1: data.shippingRightValue1,
+      shipping_right_label2: data.shippingRightLabel2,
+      shipping_right_value2: data.shippingRightValue2,
+      shipping_right_label3: data.shippingRightLabel3,
+      shipping_right_value3: data.shippingRightValue3,
+      additional_shipping_terms_label: data.additionalShippingTermsLabel,
+      additional_shipping_terms: data.additionalShippingTerms,
+      // Signature fields
+      for_seller_label: data.forSellerLabel,
+      seller_name_label: data.sellerNameLabel,
+      seller_name_value: data.sellerName,
+      seller_title_label: data.sellerTitleLabel,
+      seller_title_value: data.sellerTitle,
+      seller_date_label: data.sellerDateLabel,
+      seller_date_value: data.sellerDate,
+      seller_signature_label: data.sellerSignatureLabel,
+      seller_signature_value: data.sellerSignature,
+      for_buyer_label: data.forBuyerLabel,
+      buyer_signature_name_label: data.buyerSignatureNameLabel,
+      buyer_signature_name_value: data.buyerSignatureName,
+      buyer_signature_title_label: data.buyerSignatureTitleLabel,
+      buyer_signature_title_value: data.buyerSignatureTitle,
+      buyer_signature_date_label: data.buyerSignatureDateLabel,
+      buyer_signature_date_value: data.buyerSignatureDate,
+      buyer_signature_label: data.buyerSignatureLabel,
+      buyer_signature_value: data.buyerSignature,
+      company_stamp: data.companyStamp
+    };
+    
+    // Call the onSave callback with the prepared data
+    onSave(contractData);
+  };
+
   return (
     <div className="max-w-4xl mx-auto bg-white p-8 border border-gray-200 shadow-sm print:shadow-none print:border-none">
       {/* Company Header */}
@@ -244,11 +300,11 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
           <p className="text-sm text-gray-600">
             Date: {editMode ? (
               <Input 
-                value={data.currentDate || "[Current Date]"}
+                value={data.currentDate || ""}
                 onChange={(e) => onDataChange('currentDate', e.target.value)}
                 className="border border-blue-300 p-1 mt-1 w-full" 
-                placeholder="Enter date"
-                type="text"
+                placeholder="YYYY-MM-DD"
+                type="date"
               />
             ) : (
               <span>{data.currentDate || "[Current Date]"}</span>
@@ -445,12 +501,12 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
               <td className="border border-gray-300 p-2 font-bold">
                 {editMode ? (
                   <Input 
-                    value={data.totalValue || `USD ${totalContractValue.toLocaleString()}`} 
+                    value={`USD ${totalContractValue.toFixed(2)}`} 
                     readOnly
                     className="border border-blue-300 p-1 bg-gray-100 cursor-not-allowed"
                   />
                 ) : (
-                  data.totalValue || `USD ${totalContractValue.toLocaleString()}`
+                  `USD ${totalContractValue.toFixed(2)}`
                 )}
               </td>
               {editMode && <td></td>}
@@ -679,6 +735,19 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
           <EditableField field="companyStamp" defaultValue="[Company Seal/Stamp]" />
         </p>
       </div>
+
+      {/* Save button - Shown only in edit mode */}
+      {editMode && (
+        <div className="mt-8 flex justify-center">
+          <Button 
+            type="button"
+            onClick={handleSaveContract}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-2"
+          >
+            Save Contract
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
