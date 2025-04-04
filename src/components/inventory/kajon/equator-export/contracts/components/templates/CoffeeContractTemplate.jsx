@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -183,6 +184,22 @@ const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = ()
     const updatedProducts = [...products];
     updatedProducts.splice(index, 1);
     setProducts(updatedProducts);
+  };
+  
+  // Functions to handle payment term items that were missing
+  const addPaymentTermItem = () => {
+    const newItem = { id: `term-${Date.now()}`, text: '' };
+    setPaymentTermsItems([...paymentTermsItems, newItem]);
+  };
+  
+  const removePaymentTermItem = (itemId) => {
+    setPaymentTermsItems(paymentTermsItems.filter(item => item.id !== itemId));
+  };
+  
+  const updatePaymentTermItem = (itemId, text) => {
+    setPaymentTermsItems(paymentTermsItems.map(item => 
+      item.id === itemId ? { ...item, text } : item
+    ));
   };
   
   // Prepare contract data for saving
