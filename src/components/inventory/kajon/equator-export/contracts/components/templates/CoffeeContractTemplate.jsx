@@ -1,755 +1,802 @@
-import React, { useState, useEffect } from 'react';
-import { Textarea } from "@/components/ui/textarea";
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Plus, Trash } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import { Save, Loader2 } from 'lucide-react';
+import { useCoffeeExportContract } from '@/integrations/supabase/hooks/contracts/useCoffeeExportContract';
+import { showSuccessToast, showErrorToast, showLoadingToast } from "@/components/ui/notifications";
+import { dismissToast } from "@/components/ui/notifications";
 
-const CoffeeContractTemplate = ({ editMode = false, data = {}, onDataChange = () => {}, onSave = () => {} }) => {
-  // Initial product data
-  const initialProducts = [
-    {
-      id: 'product1',
-      description: 'Arabica Coffee Beans',
-      origin: 'Kazo, Uganda',
-      quantity: '18,000',
-      grade: 'Screen 18, AA',
-      price: 'USD 5.86',
-      total: 'USD 105,480.00',
-      specs: 'Moisture content: 10-12%\nDefect count: Max 5 per 300g\nCup score: 84+ points\nProcessing: Fully washed\nFlavor profile: Citrus, floral, medium body'
-    },
-    {
-      id: 'product2',
-      description: 'Robusta Coffee Beans',
-      origin: 'Kanoni, Uganda',
-      quantity: '7,000',
-      grade: 'Screen 15',
-      price: 'USD 4.63',
-      total: 'USD 32,410.00',
-      specs: 'Moisture content: 11-13%\nDefect count: Max 15 per 300g\nCup score: 80+ points\nProcessing: Natural\nFlavor profile: Chocolate, nutty, full body'
-    }
-  ];
+const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => {
+  const [formData, setFormData] = useState({
+    contract_number: contractData.contract_number || '',
+    contract_date: contractData.contract_date || '',
+    seller_name: contractData.seller_name || '',
+    seller_address: contractData.seller_address || '',
+    seller_registration: contractData.seller_registration || '',
+    buyer_name: contractData.buyer_name || '',
+    buyer_address: contractData.buyer_address || '',
+    buyer_registration: contractData.buyer_registration || '',
+    products: contractData.products || [{ id: uuidv4(), description: '', quantity: '', unit_price: '', total_price: '' }],
+    payment_terms_items: contractData.payment_terms_items || [{ id: uuidv4(), description: '', due_date: '', amount: '' }],
+    shipping_left_label1: contractData.shipping_left_label1 || 'Incoterm:',
+    shipping_left_value1: contractData.shipping_left_value1 || 'FOB Mombasa',
+    shipping_left_label2: contractData.shipping_left_label2 || 'Packaging:',
+    shipping_left_value2: contractData.shipping_left_value2 || '60kg jute bags with GrainPro liners',
+    shipping_left_label3: contractData.shipping_left_label3 || 'Loading Port:',
+    shipping_left_value3: contractData.shipping_left_value3 || 'Mombasa, Kenya',
+    shipping_right_label1: contractData.shipping_right_label1 || 'Destination:',
+    shipping_right_value1: contractData.shipping_right_value1 || 'Hamburg, Germany',
+    shipping_right_label2: contractData.shipping_right_label2 || 'Latest Shipment Date:',
+    shipping_right_value2: contractData.shipping_right_value2 || 'October 15, 2024',
+    shipping_right_label3: contractData.shipping_right_label3 || 'Delivery Timeline:',
+    shipping_right_value3: contractData.shipping_right_value3 || '30-45 days from loading',
+    additional_shipping_terms_label: contractData.additional_shipping_terms_label || 'Additional Shipping Terms:',
+    additional_shipping_terms: contractData.additional_shipping_terms || '',
+    for_seller_label: contractData.for_seller_label || 'For and on behalf of SELLER',
+    seller_name_label: contractData.seller_name_label || 'Name:',
+    seller_name_value: contractData.seller_name_value || '',
+    seller_title_label: contractData.seller_title_label || 'Title:',
+    seller_title_value: contractData.seller_title_value || '',
+    seller_date_label: contractData.seller_date_label || 'Date:',
+    seller_date_value: contractData.seller_date_value || '',
+    seller_signature_label: contractData.seller_signature_label || 'Signature:',
+    seller_signature_value: contractData.seller_signature_value || '',
+    for_buyer_label: contractData.for_buyer_label || 'For and on behalf of BUYER',
+    buyer_signature_name_label: contractData.buyer_signature_name_label || 'Name:',
+    buyer_signature_name_value: contractData.buyer_signature_name_value || '',
+    buyer_signature_title_label: contractData.buyer_signature_title_label || 'Title:',
+    buyer_signature_title_value: contractData.buyer_signature_title_value || '',
+    buyer_signature_date_label: contractData.buyer_signature_date_label || 'Date:',
+    buyer_signature_date_value: contractData.buyer_signature_date_value || '',
+    buyer_signature_label: contractData.buyer_signature_label || 'Signature:',
+    buyer_signature_value: contractData.buyer_signature_value || '',
+    company_stamp: contractData.company_stamp || '[Company Seal/Stamp]',
+    total_contract_value: contractData.total_contract_value || '',
+  });
 
-  // State to track products
-  const [products, setProducts] = useState(
-    data.products || initialProducts
-  );
+  const [isSaving, setIsSaving] = useState(false);
+  const [contractDate, setContractDate] = useState(contractData.contract_date ? new Date(contractData.contract_date) : undefined);
+  const { toast } = useToast();
+  const { saveContract } = useCoffeeExportContract();
+  const productsSectionRef = useRef(null);
+  const paymentTermsRef = useRef(null);
 
-  // State for payment terms structure
-  const [paymentTermsItems, setPaymentTermsItems] = useState(
-    data.paymentTermsItems || [
-      { id: 1, text: "30% advance payment upon contract signing" },
-      { id: 2, text: "70% balance payment by irrevocable Letter of Credit at sight" },
-      { id: 3, text: "L/C to be issued by buyer's bank within 14 days of contract signing" },
-      { id: 4, text: "L/C to be confirmed by Standard Chartered Bank, Kampala" },
-      { id: 5, text: "All banking charges outside Uganda to be borne by the Buyer" }
-    ]
-  );
-
-  // State for seller details
-  const [sellerDetails, setSellerDetails] = useState(
-    data.sellerDetails || {
-      name: "KAJON Coffee Limited",
-      address: "Kampala, Uganda",
-      registration: "Registration #: UG2023786541"
-    }
-  );
-
-  // State for buyer details
-  const [buyerDetails, setBuyerDetails] = useState(
-    data.buyerDetails || {
-      name: "[Buyer Company Name]",
-      address: "[Buyer Address]",
-      registration: "Registration #: [Buyer Registration #]"
-    }
-  );
-
-  // Update parent data when products change
   useEffect(() => {
-    if (editMode) {
-      onDataChange('products', products);
+    if (contractData) {
+      setFormData({
+        contract_number: contractData.contract_number || '',
+        contract_date: contractData.contract_date || '',
+        seller_name: contractData.seller_name || '',
+        seller_address: contractData.seller_address || '',
+        seller_registration: contractData.seller_registration || '',
+        buyer_name: contractData.buyer_name || '',
+        buyer_address: contractData.buyer_address || '',
+        buyer_registration: contractData.buyer_registration || '',
+        products: contractData.products || [{ id: uuidv4(), description: '', quantity: '', unit_price: '', total_price: '' }],
+        payment_terms_items: contractData.payment_terms_items || [{ id: uuidv4(), description: '', due_date: '', amount: '' }],
+        shipping_left_label1: contractData.shipping_left_label1 || 'Incoterm:',
+        shipping_left_value1: contractData.shipping_left_value1 || 'FOB Mombasa',
+        shipping_left_label2: contractData.shipping_left_label2 || 'Packaging:',
+        shipping_left_value2: contractData.shipping_left_value2 || '60kg jute bags with GrainPro liners',
+        shipping_left_label3: contractData.shipping_left_label3 || 'Loading Port:',
+        shipping_left_value3: contractData.shipping_left_value3 || 'Mombasa, Kenya',
+        shipping_right_label1: contractData.shipping_right_label1 || 'Destination:',
+        shipping_right_value1: contractData.shipping_right_value1 || 'Hamburg, Germany',
+        shipping_right_label2: contractData.shipping_right_label2 || 'Latest Shipment Date:',
+        shipping_right_value2: contractData.shipping_right_value2 || 'October 15, 2024',
+        shipping_right_label3: contractData.shipping_right_label3 || 'Delivery Timeline:',
+        shipping_right_value3: contractData.shipping_right_value3 || '30-45 days from loading',
+        additional_shipping_terms_label: contractData.additional_shipping_terms_label || 'Additional Shipping Terms:',
+        additional_shipping_terms: contractData.additional_shipping_terms || '',
+        for_seller_label: contractData.for_seller_label || 'For and on behalf of SELLER',
+        seller_name_label: contractData.seller_name_label || 'Name:',
+        seller_name_value: contractData.seller_name_value || '',
+        seller_title_label: contractData.seller_title_label || 'Title:',
+        seller_title_value: contractData.seller_title_value || '',
+        seller_date_label: contractData.seller_date_label || 'Date:',
+        seller_date_value: contractData.seller_date_value || '',
+        seller_signature_label: contractData.seller_signature_label || 'Signature:',
+        seller_signature_value: contractData.seller_signature_value || '',
+        for_buyer_label: contractData.for_buyer_label || 'For and on behalf of BUYER',
+        buyer_signature_name_label: contractData.buyer_signature_name_label || 'Name:',
+        buyer_signature_name_value: contractData.buyer_signature_name_value || '',
+        buyer_signature_title_label: contractData.buyer_signature_title_label || 'Title:',
+        buyer_signature_title_value: contractData.buyer_signature_title_value || '',
+        buyer_signature_date_label: contractData.buyer_signature_date_label || 'Date:',
+        buyer_signature_date_value: contractData.buyer_signature_date_value || '',
+        buyer_signature_label: contractData.buyer_signature_label || 'Signature:',
+        buyer_signature_value: contractData.buyer_signature_value || '',
+        company_stamp: contractData.company_stamp || '[Company Seal/Stamp]',
+        total_contract_value: contractData.total_contract_value || '',
+      });
+      setContractDate(contractData.contract_date ? new Date(contractData.contract_date) : undefined);
     }
-  }, [products, editMode, onDataChange]);
+  }, [contractData]);
 
-  // Update parent data when payment terms items change
-  useEffect(() => {
-    if (editMode) {
-      onDataChange('paymentTermsItems', paymentTermsItems);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (onDataChange) {
+      onDataChange({ ...formData, [name]: value });
     }
-  }, [paymentTermsItems, editMode, onDataChange]);
+  };
 
-  // Update parent data when seller details change
-  useEffect(() => {
-    if (editMode) {
-      onDataChange('sellerDetails', sellerDetails);
+  const handleProductChange = useCallback((index, field, value) => {
+    const updatedProducts = [...formData.products];
+    updatedProducts[index][field] = value;
+    setFormData(prev => ({ ...prev, products: updatedProducts }));
+    if (onDataChange) {
+      onDataChange({ ...formData, products: updatedProducts });
     }
-  }, [sellerDetails, editMode, onDataChange]);
+  }, [formData, onDataChange]);
 
-  // Update parent data when buyer details change
-  useEffect(() => {
-    if (editMode) {
-      onDataChange('buyerDetails', buyerDetails);
+  const handleAddProduct = useCallback(() => {
+    const newProducts = [...formData.products, { id: uuidv4(), description: '', quantity: '', unit_price: '', total_price: '' }];
+    setFormData(prev => ({ ...prev, products: newProducts }));
+    if (onDataChange) {
+      onDataChange({ ...formData, products: newProducts });
     }
-  }, [buyerDetails, editMode, onDataChange]);
+    // Scroll to the products section
+    productsSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [formData, onDataChange]);
 
-  // Calculate total contract value
-  const totalContractValue = products.reduce((sum, product) => {
-    const totalValue = product.total.replace(/[^\d.]/g, '');
-    return sum + (parseFloat(totalValue) || 0);
-  }, 0);
+  const handleRemoveProduct = useCallback((id) => {
+    const updatedProducts = formData.products.filter(product => product.id !== id);
+    setFormData(prev => ({ ...prev, products: updatedProducts }));
+    if (onDataChange) {
+      onDataChange({ ...formData, products: updatedProducts });
+    }
+  }, [formData, onDataChange]);
 
-  // Helper function to render editable or display content
-  const EditableField = ({ field, defaultValue, isMultiline = false }) => {
-    const value = data[field] || defaultValue;
-    
-    if (editMode) {
-      if (isMultiline) {
-        return (
-          <Textarea
-            value={value}
-            onChange={(e) => onDataChange(field, e.target.value)}
-            className="w-full min-h-[80px] border border-blue-300 p-2"
-          />
-        );
+  const handlePaymentTermsChange = useCallback((index, field, value) => {
+    const updatedPaymentTerms = [...formData.payment_terms_items];
+    updatedPaymentTerms[index][field] = value;
+    setFormData(prev => ({ ...prev, payment_terms_items: updatedPaymentTerms }));
+    if (onDataChange) {
+      onDataChange({ ...formData, payment_terms_items: updatedPaymentTerms });
+    }
+  }, [formData, onDataChange]);
+
+  const handleAddPaymentTerm = useCallback(() => {
+    const newPaymentTerms = [...formData.payment_terms_items, { id: uuidv4(), description: '', due_date: '', amount: '' }];
+    setFormData(prev => ({ ...prev, payment_terms_items: newPaymentTerms }));
+    if (onDataChange) {
+      onDataChange({ ...formData, payment_terms_items: newPaymentTerms });
+    }
+    // Scroll to the payment terms section
+    paymentTermsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [formData, onDataChange]);
+
+  const handleRemovePaymentTerm = useCallback((id) => {
+    const updatedPaymentTerms = formData.payment_terms_items.filter(item => item.id !== id);
+    setFormData(prev => ({ ...prev, payment_terms_items: updatedPaymentTerms }));
+    if (onDataChange) {
+      onDataChange({ ...formData, payment_terms_items: updatedPaymentTerms });
+    }
+  }, [formData, onDataChange]);
+
+  const handleContractDateChange = (date) => {
+    setContractDate(date);
+    const formattedDate = date ? format(date, 'yyyy-MM-dd') : '';
+    setFormData(prev => ({ ...prev, contract_date: formattedDate }));
+    if (onDataChange) {
+      onDataChange({ ...formData, contract_date: formattedDate });
+    }
+  };
+
+  const handleSaveContract = async () => {
+    try {
+      console.log("Attempting to save contract with data:", formData);
+      setIsSaving(true);
+      
+      // Validate required fields
+      if (!formData.contract_number) {
+        showErrorToast(toast, "Contract number is required");
+        setIsSaving(false);
+        return;
       }
-      return (
-        <Input
-          value={value}
-          onChange={(e) => onDataChange(field, e.target.value)}
-          className="border border-blue-300 p-1"
-        />
-      );
+      
+      if (!formData.contract_date) {
+        showErrorToast(toast, "Contract date is required");
+        setIsSaving(false);
+        return;
+      }
+      
+      if (!formData.seller_name) {
+        showErrorToast(toast, "Seller name is required");
+        setIsSaving(false);
+        return;
+      }
+      
+      if (!formData.buyer_name) {
+        showErrorToast(toast, "Buyer name is required");
+        setIsSaving(false);
+        return;
+      }
+      
+      // Create a loading toast
+      const loadingToastId = showLoadingToast(toast, "Saving contract...");
+      
+      // Format products for database storage
+      const processedProducts = formData.products.map(product => {
+        // Ensure each product has a unique ID
+        if (!product.id) {
+          return { ...product, id: `product-${uuidv4()}` };
+        }
+        return product;
+      });
+      
+      // Prepare contract data for saving
+      const contractToSave = {
+        ...formData,
+        products: processedProducts,
+        submission_id: uuidv4() // Use submission_id instead of submitted_flag
+      };
+      
+      console.log("Saving contract with processed data:", contractToSave);
+      
+      // Save to Supabase using the useCoffeeExportContract hook
+      const { success, error, data } = await saveContract(contractToSave);
+      
+      // Dismiss the loading toast
+      dismissToast(loadingToastId);
+      
+      if (success) {
+        console.log("Contract saved successfully:", data);
+        showSuccessToast(toast, "Contract saved successfully");
+        
+        // Call the onSave callback if provided
+        if (onSave && typeof onSave === 'function') {
+          onSave(data);
+        }
+      } else {
+        console.error("Error saving contract:", error);
+        showErrorToast(toast, `Error saving contract: ${error.message || error}`);
+      }
+    } catch (err) {
+      console.error("Exception in handleSaveContract:", err);
+      showErrorToast(toast, `An unexpected error occurred: ${err.message}`);
+    } finally {
+      setIsSaving(false);
     }
-    
-    return isMultiline ? (
-      <p className="text-sm">{value}</p>
-    ) : (
-      <span>{value}</span>
-    );
-  };
-
-  // Helper function to update seller details
-  const handleSellerChange = (field, value) => {
-    setSellerDetails(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Helper function to update buyer details
-  const handleBuyerChange = (field, value) => {
-    setBuyerDetails(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Update a product field
-  const handleProductChange = (index, field, value) => {
-    const updatedProducts = [...products];
-    updatedProducts[index] = {
-      ...updatedProducts[index],
-      [field]: value
-    };
-    
-    if (field === 'quantity' || field === 'price') {
-      const product = updatedProducts[index];
-      
-      const quantityStr = field === 'quantity' ? value : product.quantity || '';
-      const priceStr = field === 'price' ? value : product.price || '';
-      
-      const quantity = parseFloat(quantityStr.toString().replace(/[^\d.]/g, '')) || 0;
-      const price = parseFloat(priceStr.toString().replace(/[^\d.]/g, '')) || 0;
-      
-      const total = quantity * price;
-      const formattedTotal = `USD ${total.toFixed(2)}`;
-      
-      updatedProducts[index].total = formattedTotal;
-    }
-    
-    setProducts(updatedProducts);
-  };
-
-  // Add a new product
-  const addProduct = () => {
-    const newProduct = {
-      id: `product${products.length + 1}`,
-      description: 'New Coffee Product',
-      origin: 'Uganda',
-      quantity: '0',
-      grade: 'Select Grade',
-      price: 'USD 0.00',
-      total: 'USD 0.00',
-      specs: 'Moisture content: \nDefect count: \nCup score: \nProcessing: \nFlavor profile: '
-    };
-    setProducts([...products, newProduct]);
-  };
-
-  // Remove a product
-  const removeProduct = (index) => {
-    if (products.length <= 1) return;
-    const updatedProducts = [...products];
-    updatedProducts.splice(index, 1);
-    setProducts(updatedProducts);
-  };
-
-  // Add a new payment term item
-  const addPaymentTermItem = () => {
-    const newId = paymentTermsItems.length > 0 ? Math.max(...paymentTermsItems.map(item => item.id)) + 1 : 1;
-    setPaymentTermsItems([...paymentTermsItems, { id: newId, text: "New payment term" }]);
-  };
-
-  // Update a payment term item
-  const updatePaymentTermItem = (id, newText) => {
-    setPaymentTermsItems(prevItems => 
-      prevItems.map(item => item.id === id ? { ...item, text: newText } : item)
-    );
-  };
-
-  // Remove a payment term item
-  const removePaymentTermItem = (id) => {
-    setPaymentTermsItems(prevItems => prevItems.filter(item => item.id !== id));
-  };
-
-  // Handle Save Contract
-  const handleSaveContract = () => {
-    // Prepare data for saving to Supabase
-    const contractData = {
-      contract_number: data.contractNumber || "KCL-2024-" + new Date().getTime().toString().slice(-4),
-      contract_date: data.currentDate || new Date().toISOString().split('T')[0],
-      seller_name: sellerDetails.name,
-      seller_address: sellerDetails.address,
-      seller_registration: sellerDetails.registration,
-      buyer_name: buyerDetails.name,
-      buyer_address: buyerDetails.address,
-      buyer_registration: buyerDetails.registration,
-      products: products,
-      payment_terms_items: paymentTermsItems,
-      total_contract_value: totalContractValue,
-      // Add shipping terms fields
-      shipping_left_label1: data.shippingLeftLabel1,
-      shipping_left_value1: data.shippingLeftValue1,
-      shipping_left_label2: data.shippingLeftLabel2,
-      shipping_left_value2: data.shippingLeftValue2,
-      shipping_left_label3: data.shippingLeftLabel3,
-      shipping_left_value3: data.shippingLeftValue3,
-      shipping_right_label1: data.shippingRightLabel1,
-      shipping_right_value1: data.shippingRightValue1,
-      shipping_right_label2: data.shippingRightLabel2,
-      shipping_right_value2: data.shippingRightValue2,
-      shipping_right_label3: data.shippingRightLabel3,
-      shipping_right_value3: data.shippingRightValue3,
-      additional_shipping_terms_label: data.additionalShippingTermsLabel,
-      additional_shipping_terms: data.additionalShippingTerms,
-      // Signature fields
-      for_seller_label: data.forSellerLabel,
-      seller_name_label: data.sellerNameLabel,
-      seller_name_value: data.sellerName,
-      seller_title_label: data.sellerTitleLabel,
-      seller_title_value: data.sellerTitle,
-      seller_date_label: data.sellerDateLabel,
-      seller_date_value: data.sellerDate,
-      seller_signature_label: data.sellerSignatureLabel,
-      seller_signature_value: data.sellerSignature,
-      for_buyer_label: data.forBuyerLabel,
-      buyer_signature_name_label: data.buyerSignatureNameLabel,
-      buyer_signature_name_value: data.buyerSignatureName,
-      buyer_signature_title_label: data.buyerSignatureTitleLabel,
-      buyer_signature_title_value: data.buyerSignatureTitle,
-      buyer_signature_date_label: data.buyerSignatureDateLabel,
-      buyer_signature_date_value: data.buyerSignatureDate,
-      buyer_signature_label: data.buyerSignatureLabel,
-      buyer_signature_value: data.buyerSignature,
-      company_stamp: data.companyStamp
-    };
-    
-    // Call the onSave callback with the prepared data
-    onSave(contractData);
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white p-8 border border-gray-200 shadow-sm print:shadow-none print:border-none">
-      {/* Company Header */}
-      <div className="flex justify-between items-start mb-8 border-b pb-6">
+    <div className="space-y-4">
+      {/* Contract Details */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <img 
-            src="/lovable-uploads/493ba471-e6fd-4a79-862b-f5d2c974d0d9.png" 
-            alt="KAJON Coffee Limited" 
-            className="h-24 w-auto mb-2"
+          <Label htmlFor="contract_number">Contract Number</Label>
+          <Input
+            type="text"
+            id="contract_number"
+            name="contract_number"
+            value={formData.contract_number}
+            onChange={handleInputChange}
           />
-          <h2 className="text-lg font-bold">KAJON Coffee Limited</h2>
-          <p className="text-sm text-gray-600">Kanoni, Kazo District, Uganda</p>
-          <p className="text-sm text-gray-600">6th floor, Arie Towers, Mackinnon Road, Nakasero</p>
-          <p className="text-sm text-gray-600">Kampala, Uganda, 256</p>
-          <p className="text-sm text-gray-600">Tel: +256 776 670680 / +256 757 757517</p>
-          <p className="text-sm text-gray-600">Email: kajoncoffeelimited@gmail.com</p>
         </div>
-        <div className="text-right">
-          <h1 className="text-2xl font-bold text-blue-800">COFFEE EXPORT CONTRACT</h1>
-          <p className="text-sm text-gray-600 mt-2">
-            Contract #: {editMode ? (
-              <Input 
-                value={data.contractNumber || "KCL-2024-[XXXX]"}
-                onChange={(e) => onDataChange('contractNumber', e.target.value)}
-                className="border border-blue-300 p-1 mt-1 w-full"
-                placeholder="Enter contract number"
+        <div>
+          <Label htmlFor="contract_date">Contract Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full pl-3 text-left font-normal",
+                  !contractDate && "text-muted-foreground"
+                )}
+              >
+                {contractDate ? (
+                  format(contractDate, "PPP")
+                ) : (
+                  <span>Pick a date</span>
+                )}
+                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={contractDate}
+                onSelect={handleContractDateChange}
+                initialFocus
               />
-            ) : (
-              <span>{data.contractNumber || "KCL-2024-[XXXX]"}</span>
-            )}
-          </p>
-          <p className="text-sm text-gray-600">
-            Date: {editMode ? (
-              <Input 
-                value={data.currentDate || ""}
-                onChange={(e) => onDataChange('currentDate', e.target.value)}
-                className="border border-blue-300 p-1 mt-1 w-full" 
-                placeholder="YYYY-MM-DD"
-                type="date"
-              />
-            ) : (
-              <span>{data.currentDate || "[Current Date]"}</span>
-            )}
-          </p>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
-      {/* Parties - Enhanced with editable fields */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-800">PARTIES</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="border-r pr-4">
-            <h4 className="font-semibold">SELLER:</h4>
-            {editMode ? (
-              <div className="space-y-2 mt-1">
-                <Input 
-                  value={sellerDetails.name}
-                  onChange={(e) => handleSellerChange('name', e.target.value)}
-                  placeholder="Company Name"
-                  className="w-full border border-blue-300 p-1"
-                />
-                <Input 
-                  value={sellerDetails.address}
-                  onChange={(e) => handleSellerChange('address', e.target.value)}
-                  placeholder="Address"
-                  className="w-full border border-blue-300 p-1"
-                />
-                <Input 
-                  value={sellerDetails.registration}
-                  onChange={(e) => handleSellerChange('registration', e.target.value)}
-                  placeholder="Registration Number"
-                  className="w-full border border-blue-300 p-1"
-                />
-              </div>
-            ) : (
-              <>
-                <p className="text-sm">{sellerDetails.name}</p>
-                <p className="text-sm">{sellerDetails.address}</p>
-                <p className="text-sm">{sellerDetails.registration}</p>
-              </>
-            )}
+      {/* Seller Details */}
+      <div className="border-t pt-4">
+        <h3 className="text-xl font-semibold mb-2">Seller Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="seller_name">Seller Name</Label>
+            <Input
+              type="text"
+              id="seller_name"
+              name="seller_name"
+              value={formData.seller_name}
+              onChange={handleInputChange}
+            />
           </div>
           <div>
-            <h4 className="font-semibold">BUYER:</h4>
-            {editMode ? (
-              <div className="space-y-2 mt-1">
-                <Input 
-                  value={buyerDetails.name}
-                  onChange={(e) => handleBuyerChange('name', e.target.value)}
-                  placeholder="Company Name"
-                  className="w-full border border-blue-300 p-1"
-                />
-                <Input 
-                  value={buyerDetails.address}
-                  onChange={(e) => handleBuyerChange('address', e.target.value)}
-                  placeholder="Address"
-                  className="w-full border border-blue-300 p-1"
-                />
-                <Input 
-                  value={buyerDetails.registration}
-                  onChange={(e) => handleBuyerChange('registration', e.target.value)}
-                  placeholder="Registration Number"
-                  className="w-full border border-blue-300 p-1"
-                />
-              </div>
-            ) : (
-              <>
-                <p className="text-sm">{buyerDetails.name}</p>
-                <p className="text-sm">{buyerDetails.address}</p>
-                <p className="text-sm">{buyerDetails.registration}</p>
-              </>
-            )}
+            <Label htmlFor="seller_address">Seller Address</Label>
+            <Input
+              type="text"
+              id="seller_address"
+              name="seller_address"
+              value={formData.seller_address}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="seller_registration">Seller Registration</Label>
+            <Input
+              type="text"
+              id="seller_registration"
+              name="seller_registration"
+              value={formData.seller_registration}
+              onChange={handleInputChange}
+            />
           </div>
         </div>
       </div>
 
-      {/* Product Details */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-lg font-bold text-blue-800">PRODUCT DETAILS</h3>
-          {editMode && (
-            <Button 
-              type="button" 
-              onClick={addProduct} 
-              size="sm" 
-              className="flex items-center gap-1"
-            >
-              <Plus className="h-4 w-4" /> Add Product
-            </Button>
-          )}
-        </div>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-blue-50">
-              <th className="border border-gray-300 p-2 text-left">Description</th>
-              <th className="border border-gray-300 p-2 text-left">Origin</th>
-              <th className="border border-gray-300 p-2 text-left">Quantity (Kg)</th>
-              <th className="border border-gray-300 p-2 text-left">Grade</th>
-              <th className="border border-gray-300 p-2 text-left">Price per Kg</th>
-              <th className="border border-gray-300 p-2 text-left">Total Value</th>
-              {editMode && <th className="border border-gray-300 p-2 text-left">Actions</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product, index) => (
-              <tr key={product.id}>
-                <td className="border border-gray-300 p-2">
-                  {editMode ? (
-                    <Input 
-                      value={product.description} 
-                      onChange={(e) => handleProductChange(index, 'description', e.target.value)} 
-                      className="w-full border border-blue-300 p-1"
-                    />
-                  ) : (
-                    product.description
-                  )}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {editMode ? (
-                    <Input 
-                      value={product.origin} 
-                      onChange={(e) => handleProductChange(index, 'origin', e.target.value)} 
-                      className="w-full border border-blue-300 p-1"
-                    />
-                  ) : (
-                    product.origin
-                  )}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {editMode ? (
-                    <Input 
-                      value={product.quantity} 
-                      onChange={(e) => handleProductChange(index, 'quantity', e.target.value)} 
-                      className="w-full border border-blue-300 p-1"
-                    />
-                  ) : (
-                    product.quantity
-                  )}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {editMode ? (
-                    <Input 
-                      value={product.grade} 
-                      onChange={(e) => handleProductChange(index, 'grade', e.target.value)} 
-                      className="w-full border border-blue-300 p-1"
-                    />
-                  ) : (
-                    product.grade
-                  )}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {editMode ? (
-                    <Input 
-                      value={product.price} 
-                      onChange={(e) => handleProductChange(index, 'price', e.target.value)} 
-                      className="w-full border border-blue-300 p-1"
-                    />
-                  ) : (
-                    product.price
-                  )}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {editMode ? (
-                    <Input 
-                      value={product.total} 
-                      readOnly
-                      className="w-full border border-blue-300 p-1 bg-gray-100 cursor-not-allowed"
-                    />
-                  ) : (
-                    product.total
-                  )}
-                </td>
-                {editMode && (
-                  <td className="border border-gray-300 p-2">
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => removeProduct(index)}
-                      disabled={products.length <= 1}
-                      className="text-red-500 hover:text-red-700 flex items-center"
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="bg-blue-50">
-              <td colSpan={editMode ? "6" : "5"} className="border border-gray-300 p-2 font-bold text-right">Total Contract Value:</td>
-              <td className="border border-gray-300 p-2 font-bold">
-                {editMode ? (
-                  <Input 
-                    value={`USD ${totalContractValue.toFixed(2)}`} 
-                    readOnly
-                    className="border border-blue-300 p-1 bg-gray-100 cursor-not-allowed"
-                  />
-                ) : (
-                  `USD ${totalContractValue.toFixed(2)}`
-                )}
-              </td>
-              {editMode && <td></td>}
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      {/* Quality Specifications */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-800">
-          <EditableField field="qualitySpecificationsTitle" defaultValue="QUALITY SPECIFICATIONS" />
-        </h3>
-        <div className="grid grid-cols-1 gap-4 mb-4">
-          {products.map((product, index) => (
-            <div key={`spec-${product.id}`} className="border rounded p-3 bg-gray-50">
-              <div className="flex justify-between">
-                <p className="font-semibold">{product.description} ({product.grade}):</p>
-                {editMode && (
-                  <div className="text-xs text-gray-500">
-                    Linked to product #{index + 1}
-                  </div>
-                )}
-              </div>
-              <div className={editMode ? "space-y-2" : ""}>
-                {editMode ? (
-                  <Textarea
-                    value={product.specs}
-                    onChange={(e) => handleProductChange(index, 'specs', e.target.value)}
-                    className="w-full min-h-[80px] border border-blue-300 p-2 mt-2"
-                  />
-                ) : (
-                  <p className="text-sm whitespace-pre-line">{product.specs}</p>
-                )}
-              </div>
-            </div>
-          ))}
+      {/* Buyer Details */}
+      <div className="border-t pt-4">
+        <h3 className="text-xl font-semibold mb-2">Buyer Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="buyer_name">Buyer Name</Label>
+            <Input
+              type="text"
+              id="buyer_name"
+              name="buyer_name"
+              value={formData.buyer_name}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="buyer_address">Buyer Address</Label>
+            <Input
+              type="text"
+              id="buyer_address"
+              name="buyer_address"
+              value={formData.buyer_address}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="buyer_registration">Buyer Registration</Label>
+            <Input
+              type="text"
+              id="buyer_registration"
+              name="buyer_registration"
+              value={formData.buyer_registration}
+              onChange={handleInputChange}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Shipping Terms */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-800">
-          <EditableField field="shippingTermsTitle" defaultValue="SHIPPING TERMS" />
-        </h3>
-        {editMode ? (
-          <div className="space-y-4 border border-blue-200 p-4 rounded-md bg-blue-50">
-            <p className="text-sm text-blue-600 italic">Edit Shipping Terms Structure:</p>
-            
-            <div className="grid grid-cols-2 gap-4">
-              {[1, 2, 3].map((index) => (
-                <div key={`left-${index}`} className="space-y-1">
-                  <Input 
-                    className="font-semibold border border-blue-300"
-                    value={data[`shippingLeftLabel${index}`] || 
-                          (index === 1 ? "Incoterm:" : 
-                           index === 2 ? "Packaging:" : "Loading Port:")}
-                    onChange={(e) => onDataChange(`shippingLeftLabel${index}`, e.target.value)}
-                  />
-                  <Input
-                    className="border border-blue-300"
-                    value={data[`shippingLeftValue${index}`] || 
-                          (index === 1 ? "FOB Mombasa" : 
-                           index === 2 ? "60kg jute bags with GrainPro liners" : "Mombasa, Kenya")}
-                    onChange={(e) => onDataChange(`shippingLeftValue${index}`, e.target.value)}
-                  />
-                </div>
-              ))}
-              
-              {[1, 2, 3].map((index) => (
-                <div key={`right-${index}`} className="space-y-1">
-                  <Input 
-                    className="font-semibold border border-blue-300"
-                    value={data[`shippingRightLabel${index}`] || 
-                          (index === 1 ? "Destination:" : 
-                           index === 2 ? "Latest Shipment Date:" : "Delivery Timeline:")}
-                    onChange={(e) => onDataChange(`shippingRightLabel${index}`, e.target.value)}
-                  />
-                  <Input
-                    className="border border-blue-300"
-                    value={data[`shippingRightValue${index}`] || 
-                          (index === 1 ? "Hamburg, Germany" : 
-                           index === 2 ? "October 15, 2024" : "30-45 days from loading")}
-                    onChange={(e) => onDataChange(`shippingRightValue${index}`, e.target.value)}
-                  />
-                </div>
-              ))}
+      {/* Products */}
+      <div className="border-t pt-4" ref={productsSectionRef}>
+        <h3 className="text-xl font-semibold mb-2">Products</h3>
+        {formData.products.map((product, index) => (
+          <div key={product.id} className="grid grid-cols-5 gap-4 mb-4">
+            <div>
+              <Label htmlFor={`description-${product.id}`}>Description</Label>
+              <Input
+                type="text"
+                id={`description-${product.id}`}
+                name={`description-${product.id}`}
+                value={product.description}
+                onChange={(e) => handleProductChange(index, 'description', e.target.value)}
+              />
             </div>
-            
-            <div className="mt-4">
-              <Input 
-                className="font-semibold border border-blue-300 mb-1"
-                value={data.additionalShippingTermsLabel || "Additional Shipping Terms:"}
-                onChange={(e) => onDataChange('additionalShippingTermsLabel', e.target.value)}
+            <div>
+              <Label htmlFor={`quantity-${product.id}`}>Quantity</Label>
+              <Input
+                type="number"
+                id={`quantity-${product.id}`}
+                name={`quantity-${product.id}`}
+                value={product.quantity}
+                onChange={(e) => handleProductChange(index, 'quantity', e.target.value)}
               />
-              <Textarea 
-                className="border border-blue-300"
-                value={data.additionalShippingTerms || "Seller is responsible for arranging transportation to the port. Export documentation to be provided by seller. Cost of shipping insurance to be borne by buyer as per Incoterms."}
-                onChange={(e) => onDataChange('additionalShippingTerms', e.target.value)}
+            </div>
+            <div>
+              <Label htmlFor={`unit_price-${product.id}`}>Unit Price</Label>
+              <Input
+                type="number"
+                id={`unit_price-${product.id}`}
+                name={`unit_price-${product.id}`}
+                value={product.unit_price}
+                onChange={(e) => handleProductChange(index, 'unit_price', e.target.value)}
               />
+            </div>
+            <div>
+              <Label htmlFor={`total_price-${product.id}`}>Total Price</Label>
+              <Input
+                type="number"
+                id={`total_price-${product.id}`}
+                name={`total_price-${product.id}`}
+                value={product.total_price}
+                onChange={(e) => handleProductChange(index, 'total_price', e.target.value)}
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
+                onClick={() => handleRemoveProduct(product.id)}
+              >
+                Remove
+              </button>
             </div>
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                {[1, 2, 3].map((index) => (
-                  <div key={`left-display-${index}`} className="mb-2">
-                    <p className="font-semibold">{data[`shippingLeftLabel${index}`] || 
-                      (index === 1 ? "Incoterm:" : 
-                       index === 2 ? "Packaging:" : "Loading Port:")}</p>
-                    <p className="text-sm">{data[`shippingLeftValue${index}`] || 
-                      (index === 1 ? "FOB Mombasa" : 
-                       index === 2 ? "60kg jute bags with GrainPro liners" : "Mombasa, Kenya")}</p>
-                  </div>
-                ))}
-              </div>
-              <div>
-                {[1, 2, 3].map((index) => (
-                  <div key={`right-display-${index}`} className="mb-2">
-                    <p className="font-semibold">{data[`shippingRightLabel${index}`] || 
-                      (index === 1 ? "Destination:" : 
-                       index === 2 ? "Latest Shipment Date:" : "Delivery Timeline:")}</p>
-                    <p className="text-sm">{data[`shippingRightValue${index}`] || 
-                      (index === 1 ? "Hamburg, Germany" : 
-                       index === 2 ? "October 15, 2024" : "30-45 days from loading")}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="mt-4">
-              <p className="font-semibold">{data.additionalShippingTermsLabel || "Additional Shipping Terms:"}</p>
-              <p className="text-sm whitespace-pre-line">{data.additionalShippingTerms || "Seller is responsible for arranging transportation to the port. Export documentation to be provided by seller. Cost of shipping insurance to be borne by buyer as per Incoterms."}</p>
-            </div>
-          </>
-        )}
+        ))}
+        <button
+          type="button"
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
+          onClick={handleAddProduct}
+        >
+          Add Product
+        </button>
       </div>
 
       {/* Payment Terms */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-2 text-blue-800">
-          <EditableField field="paymentTermsTitle" defaultValue="PAYMENT TERMS" />
-        </h3>
-        <div className="border rounded p-3 bg-gray-50">
-          {editMode ? (
-            <div className="space-y-4">
-              {paymentTermsItems.map((item) => (
-                <div key={item.id} className="flex items-start gap-2">
-                  <Textarea
-                    value={item.text}
-                    onChange={(e) => updatePaymentTermItem(item.id, e.target.value)}
-                    className="flex-grow border border-blue-300 min-h-[60px]"
-                  />
-                  <Button 
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removePaymentTermItem(item.id)}
-                    className="text-red-500 hover:text-red-700 mt-1"
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button 
-                type="button" 
-                onClick={addPaymentTermItem} 
-                size="sm" 
-                className="flex items-center gap-1 mt-2"
-              >
-                <Plus className="h-4 w-4" /> Add Payment Term
-              </Button>
+      <div className="border-t pt-4" ref={paymentTermsRef}>
+        <h3 className="text-xl font-semibold mb-2">Payment Terms</h3>
+        {formData.payment_terms_items.map((item, index) => (
+          <div key={item.id} className="grid grid-cols-4 gap-4 mb-4">
+            <div>
+              <Label htmlFor={`description-${item.id}`}>Description</Label>
+              <Input
+                type="text"
+                id={`description-${item.id}`}
+                name={`description-${item.id}`}
+                value={item.description}
+                onChange={(e) => handlePaymentTermsChange(index, 'description', e.target.value)}
+              />
             </div>
-          ) : (
-            <ul className="list-disc pl-5 space-y-1">
-              {paymentTermsItems.map((item) => (
-                <li key={item.id} className="text-sm">{item.text}</li>
-              ))}
-            </ul>
-          )}
-        </div>
+            <div>
+              <Label htmlFor={`due_date-${item.id}`}>Due Date</Label>
+              <Input
+                type="date"
+                id={`due_date-${item.id}`}
+                name={`due_date-${item.id}`}
+                value={item.due_date}
+                onChange={(e) => handlePaymentTermsChange(index, 'due_date', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor={`amount-${item.id}`}>Amount</Label>
+              <Input
+                type="number"
+                id={`amount-${item.id}`}
+                name={`amount-${item.id}`}
+                value={item.amount}
+                onChange={(e) => handlePaymentTermsChange(index, 'amount', e.target.value)}
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
+                onClick={() => handleRemovePaymentTerm(item.id)}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        ))}
+        <button
+          type="button"
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
+          onClick={handleAddPaymentTerm}
+        >
+          Add Payment Term
+        </button>
       </div>
 
-      {/* Signature Block */}
-      <div className="grid grid-cols-2 gap-12 mt-12">
+      {/* Shipping Terms */}
+      <div className="border-t pt-4">
+        <h3 className="text-xl font-semibold mb-2">Shipping Terms</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {/* Left Column */}
+          <div>
+            <div>
+              <Label htmlFor="shipping_left_label1">Left Label 1</Label>
+              <Input
+                type="text"
+                id="shipping_left_label1"
+                name="shipping_left_label1"
+                value={formData.shipping_left_label1}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="shipping_left_value1">Left Value 1</Label>
+              <Input
+                type="text"
+                id="shipping_left_value1"
+                name="shipping_left_value1"
+                value={formData.shipping_left_value1}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="shipping_left_label2">Left Label 2</Label>
+              <Input
+                type="text"
+                id="shipping_left_label2"
+                name="shipping_left_label2"
+                value={formData.shipping_left_label2}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="shipping_left_value2">Left Value 2</Label>
+              <Input
+                type="text"
+                id="shipping_left_value2"
+                name="shipping_left_value2"
+                value={formData.shipping_left_value2}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="shipping_left_label3">Left Label 3</Label>
+              <Input
+                type="text"
+                id="shipping_left_label3"
+                name="shipping_left_label3"
+                value={formData.shipping_left_label3}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="shipping_left_value3">Left Value 3</Label>
+              <Input
+                type="text"
+                id="shipping_left_value3"
+                name="shipping_left_value3"
+                value={formData.shipping_left_value3}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div>
+            <div>
+              <Label htmlFor="shipping_right_label1">Right Label 1</Label>
+              <Input
+                type="text"
+                id="shipping_right_label1"
+                name="shipping_right_label1"
+                value={formData.shipping_right_label1}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="shipping_right_value1">Right Value 1</Label>
+              <Input
+                type="text"
+                id="shipping_right_value1"
+                name="shipping_right_value1"
+                value={formData.shipping_right_value1}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="shipping_right_label2">Right Label 2</Label>
+              <Input
+                type="text"
+                id="shipping_right_label2"
+                name="shipping_right_label2"
+                value={formData.shipping_right_label2}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="shipping_right_value2">Right Value 2</Label>
+              <Input
+                type="text"
+                id="shipping_right_value2"
+                name="shipping_right_value2"
+                value={formData.shipping_right_value2}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="shipping_right_label3">Right Label 3</Label>
+              <Input
+                type="text"
+                id="shipping_right_label3"
+                name="shipping_right_label3"
+                value={formData.shipping_right_label3}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="shipping_right_value3">Right Value 3</Label>
+              <Input
+                type="text"
+                id="shipping_right_value3"
+                name="shipping_right_value3"
+                value={formData.shipping_right_value3}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Shipping Terms */}
+        <div className="mt-4">
+          <Label htmlFor="additional_shipping_terms_label">Additional Shipping Terms Label</Label>
+          <Input
+            type="text"
+            id="additional_shipping_terms_label"
+            name="additional_shipping_terms_label"
+            value={formData.additional_shipping_terms_label}
+            onChange={handleInputChange}
+          />
+        </div>
         <div>
-          <p className="font-semibold border-b border-gray-400 pb-8 mb-2">
-            <EditableField field="forSellerLabel" defaultValue="For and on behalf of SELLER" />
-          </p>
-          <p className="text-sm">
-            <EditableField field="sellerNameLabel" defaultValue="Name:" /> <EditableField field="sellerName" defaultValue="________________________________" />
-          </p>
-          <p className="text-sm mt-2">
-            <EditableField field="sellerTitleLabel" defaultValue="Title:" /> <EditableField field="sellerTitle" defaultValue="________________________________" />
-          </p>
-          <p className="text-sm mt-2">
-            <EditableField field="sellerDateLabel" defaultValue="Date:" /> <EditableField field="sellerDate" defaultValue="________________________________" />
-          </p>
-          <p className="text-sm mt-2">
-            <EditableField field="sellerSignatureLabel" defaultValue="Signature:" /> <EditableField field="sellerSignature" defaultValue="___________________________" />
-          </p>
-        </div>
-        <div>
-          <p className="font-semibold border-b border-gray-400 pb-8 mb-2">
-            <EditableField field="forBuyerLabel" defaultValue="For and on behalf of BUYER" />
-          </p>
-          <p className="text-sm">
-            <EditableField field="buyerSignatureNameLabel" defaultValue="Name:" /> <EditableField field="buyerSignatureName" defaultValue="________________________________" />
-          </p>
-          <p className="text-sm mt-2">
-            <EditableField field="buyerSignatureTitleLabel" defaultValue="Title:" /> <EditableField field="buyerSignatureTitle" defaultValue="________________________________" />
-          </p>
-          <p className="text-sm mt-2">
-            <EditableField field="buyerSignatureDateLabel" defaultValue="Date:" /> <EditableField field="buyerSignatureDate" defaultValue="________________________________" />
-          </p>
-          <p className="text-sm mt-2">
-            <EditableField field="buyerSignatureLabel" defaultValue="Signature:" /> <EditableField field="buyerSignature" defaultValue="___________________________" />
-          </p>
+          <Label htmlFor="additional_shipping_terms">Additional Shipping Terms</Label>
+          <Textarea
+            id="additional_shipping_terms"
+            name="additional_shipping_terms"
+            value={formData.additional_shipping_terms}
+            onChange={handleInputChange}
+          />
         </div>
       </div>
 
-      {/* Company Seal/Stamp Area */}
-      <div className="mt-12 text-center">
-        <p className="text-sm text-gray-500">
-          <EditableField field="companyStamp" defaultValue="[Company Seal/Stamp]" />
-        </p>
-      </div>
+      {/* Signature Fields */}
+      <div className="border-t pt-4">
+        <h3 className="text-xl font-semibold mb-2">Signature Fields</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {/* Seller Signature */}
+          <div>
+            <Label htmlFor="for_seller_label">For Seller Label</Label>
+            <Input
+              type="text"
+              id="for_seller_label"
+              name="for_seller_label"
+              value={formData.for_seller_label}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="seller_name_label">Seller Name Label</Label>
+            <Input
+              type="text"
+              id="seller_name_label"
+              name="seller_name_label"
+              value={formData.seller_name_label}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="seller_name_value">Seller Name Value</Label>
+            <Input
+              type="text"
+              id="seller_name_value"
+              name="seller_name_value"
+              value={formData.seller_name_value}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="seller_title_label">Seller Title Label</Label>
+            <Input
+              type="text"
+              id="seller_title_label"
+              name="seller_title_label"
+              value={formData.seller_title_label}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="seller_title_value">Seller Title Value</Label>
+            <Input
+              type="text"
+              id="seller_title_value"
+              name="seller_title_value"
+              value={formData.seller_title_value}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="seller_date_label">Seller Date Label</Label>
+            <Input
+              type="text"
+              id="seller_date_label"
+              name="seller_date_label"
+              value={formData.seller_date_label}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="seller_date_value">Seller Date Value</Label>
+            <Input
+              type="text"
+              id="seller_date_value"
+              name="seller_date_value"
+              value={formData.seller_date_value}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="seller_signature_label">Seller Signature Label</Label>
+            <Input
+              type="text"
+              id="seller_signature_label"
+              name="seller_signature_label"
+              value={formData.seller_signature_label}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="seller_signature_value">Seller Signature Value</Label>
+            <Input
+              type="text"
+              id="seller_signature_value"
+              name="seller_signature_value"
+              value={formData.seller_signature_value}
+              onChange={handleInputChange}
+            />
+          </div>
 
-      {/* Save button - Shown only in edit mode */}
-      {editMode && (
-        <div className="mt-8 flex justify-center">
-          <Button 
-            type="button"
-            onClick={handleSaveContract}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-2"
-          >
-            Save Contract
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default CoffeeContractTemplate;
+          {/* Buyer Signature */}
+          <div>
+            <Label htmlFor="for_buyer_label">For Buyer Label</Label>
+            <Input
+              type="text"
+              id="for_buyer_label"
+              name="for_buyer_label"
+              value={formData.for_buyer_label}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="buyer_signature_name_label">Buyer Name Label</Label>
+            <Input
+              type="text"
+              id="buyer_signature_name_label"
+              name="buyer_signature_name_label"
+              value={formData.buyer_signature_name_label}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="buyer_signature_name_value">Buyer Name Value</Label>
+            <Input
+              type="text"
+              id="buyer_signature_name_value"
+              name="buyer_signature_name_value"
+              value={formData.buyer_signature_name_value}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="buyer_signature_title_label">Buyer Title Label</Label>
+            <Input
+              type="text"
+              id="buyer_signature_title_label"
+              name="buyer_signature_title_label"
+              value={formData.buyer_signature_title_label}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="buyer_signature_title_value">Buyer Title Value</Label>
+            <Input
+              type="text"
+              id="buyer_signature_title_value"
+              name="buyer_signature_title_value"
+              value={formData.buyer_signature_title_value}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="buyer_signature_date_label">Buyer Date Label</Label>
+            <Input
+              type="text"
+              id="buyer_signature_date_label"
+              name="buyer_signature_date_label"
+              value={formData.buyer_signature_date_label}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="buyer_signature_date_value">Buyer Date Value</Label>
+            <Input
+              type="text"
+              id="buyer_signature_date_value"
+              name="buyer_signature_date_value"
+              value={formData.buyer_signature_date_value}
