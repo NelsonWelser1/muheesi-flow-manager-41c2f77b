@@ -191,7 +191,7 @@ export const useCoffeeExportContract = () => {
         buyer_signature_value: contractData.buyer_signature_value || '',
         company_stamp: contractData.company_stamp || '[Company Seal/Stamp]',
         total_contract_value: parseFloat(contractData.total_contract_value || 0),
-        submission_id: submissionId // Using submission_id instead of submitted_flag
+        submission_id: submissionId // Changed from submitted_flag to submission_id
       };
       
       const { data, error } = await supabase
