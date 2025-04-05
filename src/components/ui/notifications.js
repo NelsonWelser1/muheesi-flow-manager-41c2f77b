@@ -1,69 +1,54 @@
 
-import { toast as toastFn } from "sonner";
+import { toast as toastFunction } from "@/components/ui/use-toast";
 
+/**
+ * Show a success toast notification
+ * @param {Object} toast - The toast object from useToast hook
+ * @param {string} message - The message to display
+ */
 export const showSuccessToast = (toast, message) => {
-  if (toastFn) {
-    toastFn.success(message);
-  } else if (toast) {
-    toast({
-      title: "Success",
-      description: message,
-      variant: "default",
-    });
-  }
+  toast({
+    title: "Success",
+    description: message,
+    variant: "default"
+  });
 };
 
+/**
+ * Show an error toast notification
+ * @param {Object} toast - The toast object from useToast hook
+ * @param {string} message - The message to display
+ */
 export const showErrorToast = (toast, message) => {
-  if (toastFn) {
-    toastFn.error(message);
-  } else if (toast) {
-    toast({
-      title: "Error",
-      description: message,
-      variant: "destructive",
-    });
-  }
+  toast({
+    title: "Error",
+    description: message,
+    variant: "destructive"
+  });
 };
 
+/**
+ * Show an info toast notification
+ * @param {Object} toast - The toast object from useToast hook
+ * @param {string} message - The message to display
+ */
 export const showInfoToast = (toast, message) => {
-  if (toastFn) {
-    toastFn.info(message);
-  } else if (toast) {
-    toast({
-      title: "Information",
-      description: message,
-      variant: "default",
-    });
-  }
+  toast({
+    title: "Information",
+    description: message,
+    variant: "default"
+  });
 };
 
+/**
+ * Show a warning toast notification
+ * @param {Object} toast - The toast object from useToast hook
+ * @param {string} message - The message to display
+ */
 export const showWarningToast = (toast, message) => {
-  if (toastFn) {
-    toastFn.warning(message);
-  } else if (toast) {
-    toast({
-      title: "Warning",
-      description: message,
-      variant: "destructive",
-    });
-  }
-};
-
-export const showLoadingToast = (toast, message) => {
-  if (toastFn) {
-    return toastFn.loading(message);
-  } else if (toast) {
-    return toast({
-      title: "Loading",
-      description: message,
-      variant: "default",
-    });
-  }
-  return null;
-};
-
-export const dismissToast = (id) => {
-  if (toastFn && id) {
-    toastFn.dismiss(id);
-  }
+  toast({
+    title: "Warning",
+    description: message,
+    variant: "destructive"
+  });
 };

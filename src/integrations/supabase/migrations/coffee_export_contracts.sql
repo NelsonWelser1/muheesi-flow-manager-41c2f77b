@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS coffee_export_contracts (
   total_contract_value NUMERIC(15, 2),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  submission_id TEXT DEFAULT NULL  -- Changed from submitted_flag to submission_id for clarity
+  submission_id TEXT DEFAULT NULL  -- Using submission_id consistently
 );
 
 -- Create an index on contract_number for faster lookups

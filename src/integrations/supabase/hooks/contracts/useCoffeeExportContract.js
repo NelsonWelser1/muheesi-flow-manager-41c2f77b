@@ -191,7 +191,7 @@ export const useCoffeeExportContract = () => {
         buyer_signature_value: contractData.buyer_signature_value || '',
         company_stamp: contractData.company_stamp || '[Company Seal/Stamp]',
         total_contract_value: parseFloat(contractData.total_contract_value || 0),
-        submission_id: submissionId // This field was previously submitted_flag but now it's submission_id
+        submission_id: submissionId // Using submission_id consistently
       };
       
       const { data, error } = await supabase
