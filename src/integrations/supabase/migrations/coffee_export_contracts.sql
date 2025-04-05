@@ -54,17 +54,11 @@ CREATE TABLE IF NOT EXISTS coffee_export_contracts (
   -- Metadata
   total_contract_value NUMERIC(15, 2),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  -- Add this field to prevent duplicates 
-  client_reference_id TEXT
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create an index on contract_number for faster lookups
 CREATE INDEX IF NOT EXISTS coffee_export_contracts_contract_number_idx ON coffee_export_contracts(contract_number);
-
--- Create a unique index on client_reference_id to prevent duplicates
-CREATE UNIQUE INDEX IF NOT EXISTS coffee_export_contracts_client_reference_idx ON coffee_export_contracts(client_reference_id) 
-WHERE client_reference_id IS NOT NULL;
 
 -- Create trigger to automatically update the updated_at timestamp
 CREATE OR REPLACE FUNCTION update_modified_column()

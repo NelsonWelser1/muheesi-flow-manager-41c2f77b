@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,8 +33,7 @@ const ContractTemplates = ({ onBack }) => {
     loading: coffeeContractsLoading,
     error: coffeeContractsError,
     saveContract: saveCoffeeContract,
-    fetchContracts: fetchCoffeeContracts,
-    isSubmitting
+    fetchContracts: fetchCoffeeContracts
   } = useCoffeeExportContract();
 
   // When printing, add a class to the body element to apply print-specific styles
@@ -173,12 +173,6 @@ const ContractTemplates = ({ onBack }) => {
   const handleSaveContract = async () => {
     if (!activeTemplate) return;
     
-    // If submission is already in progress, don't allow another save
-    if (isSubmitting) {
-      showErrorToast(toast, "A save operation is already in progress, please wait");
-      return;
-    }
-    
     // Show loading toast
     const loadingToastId = showLoadingToast(toast, "Saving contract...");
     
@@ -242,15 +236,6 @@ const ContractTemplates = ({ onBack }) => {
       const sellerDetails = data.sellerDetails || {};
       const buyerDetails = data.buyerDetails || {};
       
-      // Ensure products have valid structure
-      const products = Array.isArray(data.products) ? data.products.map(product => ({
-        description: product.description || '',
-        quantity: parseFloat(product.quantity) || 0,
-        pricePerKg: parseFloat(product.pricePerKg) || 0,
-        totalValue: parseFloat(product.totalValue) || 
-          (parseFloat(product.quantity || 0) * parseFloat(product.pricePerKg || 0)).toFixed(2)
-      })) : [];
-      
       return {
         contract_number: data.contractNumber || "KCL-2024-" + new Date().getTime().toString().slice(-4),
         contract_date: data.currentDate || new Date().toISOString().split('T')[0],
@@ -260,8 +245,8 @@ const ContractTemplates = ({ onBack }) => {
         buyer_name: buyerDetails.name || "[Buyer Company Name]",
         buyer_address: buyerDetails.address || "[Buyer Address]",
         buyer_registration: buyerDetails.registration || "[Buyer Registration #]",
-        products: products,
-        payment_terms_items: Array.isArray(data.paymentTermsItems) ? data.paymentTermsItems : [],
+        products: data.products || [],
+        payment_terms_items: data.paymentTermsItems || [],
         // ... Include other fields from the template
         total_contract_value: parseFloat(data.totalContractValue || 0)
       };
@@ -295,21 +280,9 @@ const ContractTemplates = ({ onBack }) => {
 
   // Handle save for the Coffee template
   const handleCoffeeSave = (contractData) => {
-    // If submission is already in progress, don't allow another save
-    if (isSubmitting) {
-      showErrorToast(toast, "A save operation is already in progress, please wait");
-      return;
-    }
-    
-    // Show loading toast
-    const loadingToastId = showLoadingToast(toast, "Saving coffee export contract...");
-    
     // Prepare the contract data for saving
     saveCoffeeContract(contractData)
       .then(({ success, data, error }) => {
-        // Dismiss loading toast
-        dismissToast(loadingToastId);
-        
         if (success) {
           showSuccessToast(toast, "Coffee export contract saved successfully");
           // Return to templates view
@@ -319,9 +292,6 @@ const ContractTemplates = ({ onBack }) => {
         }
       })
       .catch((error) => {
-        // Dismiss loading toast
-        dismissToast(loadingToastId);
-        
         console.error("Error saving contract:", error);
         showErrorToast(toast, `An unexpected error occurred: ${error.message}`);
       });
