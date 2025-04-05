@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 import { SupabaseAuthProvider, useSupabaseAuth, SupabaseAuthUI } from './auth';
 
@@ -74,7 +73,6 @@ import {
 
 // Import contracts hooks
 import { useCoffeeExportContract } from './hooks/contracts/useCoffeeExportContract';
-import { useSpecialtyCoffeeContract } from './hooks/contracts/useSpecialtyCoffeeContract';
 
 // Export everything individually
 export {
@@ -139,6 +137,5 @@ export {
     useDeleteCattleFattening,
     useCattleFatteningAnalytics,
     // Contract hooks
-    useCoffeeExportContract,
-    useSpecialtyCoffeeContract
+    useCoffeeExportContract
 };
