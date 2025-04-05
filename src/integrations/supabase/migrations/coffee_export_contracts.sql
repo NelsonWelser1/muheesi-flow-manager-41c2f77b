@@ -70,6 +70,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop the existing trigger if it exists to prevent errors on re-runs
+DROP TRIGGER IF EXISTS update_coffee_export_contracts_modtime ON coffee_export_contracts;
+
+-- Create trigger to automatically update the updated_at timestamp
 CREATE TRIGGER update_coffee_export_contracts_modtime
 BEFORE UPDATE ON coffee_export_contracts
 FOR EACH ROW
