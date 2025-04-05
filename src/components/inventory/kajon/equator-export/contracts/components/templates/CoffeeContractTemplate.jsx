@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Input } from "@/components/ui/input";
@@ -12,8 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { Save, Loader2 } from 'lucide-react';
 import { useCoffeeExportContract } from '@/integrations/supabase/hooks/contracts/useCoffeeExportContract';
-import { showSuccessToast, showErrorToast, showLoadingToast } from "@/components/ui/notifications";
-import { dismissToast } from "@/components/ui/notifications";
+import { showSuccessToast, showErrorToast, showLoadingToast, dismissToast } from "@/components/ui/notifications";
 
 const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => {
   const [formData, setFormData] = useState({
@@ -288,10 +288,10 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
           <Label htmlFor="contract_date">Contract Date</Label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
+              <button
+                type="button"
                 className={cn(
-                  "w-full pl-3 text-left font-normal",
+                  "w-full flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
                   !contractDate && "text-muted-foreground"
                 )}
               >
@@ -301,7 +301,7 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
                   <span>Pick a date</span>
                 )}
                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-              </Button>
+              </button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
@@ -800,3 +800,78 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
               id="buyer_signature_date_value"
               name="buyer_signature_date_value"
               value={formData.buyer_signature_date_value}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="buyer_signature_label">Buyer Signature Label</Label>
+            <Input
+              type="text"
+              id="buyer_signature_label"
+              name="buyer_signature_label"
+              value={formData.buyer_signature_label}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="buyer_signature_value">Buyer Signature Value</Label>
+            <Input
+              type="text"
+              id="buyer_signature_value"
+              name="buyer_signature_value"
+              value={formData.buyer_signature_value}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+
+        {/* Company Stamp */}
+        <div className="mt-4">
+          <Label htmlFor="company_stamp">Company Stamp</Label>
+          <Input
+            type="text"
+            id="company_stamp"
+            name="company_stamp"
+            value={formData.company_stamp}
+            onChange={handleInputChange}
+          />
+        </div>
+      </div>
+
+      {/* Total Contract Value */}
+      <div className="border-t pt-4">
+        <h3 className="text-xl font-semibold mb-2">Total Contract Value</h3>
+        <div>
+          <Label htmlFor="total_contract_value">Total Contract Value (USD)</Label>
+          <Input
+            type="number"
+            id="total_contract_value"
+            name="total_contract_value"
+            value={formData.total_contract_value}
+            onChange={handleInputChange}
+          />
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <div className="mt-6 flex justify-end">
+        <button
+          type="button"
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-2"
+          onClick={handleSaveContract}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              <span>Save Contract</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default CoffeeContractTemplate;
