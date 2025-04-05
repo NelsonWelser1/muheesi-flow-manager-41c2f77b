@@ -145,7 +145,6 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
     if (onDataChange) {
       onDataChange({ ...formData, products: newProducts });
     }
-    // Scroll to the products section
     productsSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [formData, onDataChange]);
 
@@ -172,7 +171,6 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
     if (onDataChange) {
       onDataChange({ ...formData, payment_terms_items: newPaymentTerms });
     }
-    // Scroll to the payment terms section
     paymentTermsRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [formData, onDataChange]);
 
@@ -198,7 +196,6 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
       console.log("Attempting to save contract with data:", formData);
       setIsSaving(true);
       
-      // Validate required fields
       if (!formData.contract_number) {
         showErrorToast(toast, "Contract number is required");
         setIsSaving(false);
@@ -223,38 +220,31 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
         return;
       }
       
-      // Create a loading toast
       const loadingToastId = showLoadingToast(toast, "Saving contract...");
       
-      // Format products for database storage
       const processedProducts = formData.products.map(product => {
-        // Ensure each product has a unique ID
         if (!product.id) {
           return { ...product, id: `product-${uuidv4()}` };
         }
         return product;
       });
       
-      // Prepare contract data for saving
       const contractToSave = {
         ...formData,
         products: processedProducts,
-        submission_id: uuidv4() // Use submission_id instead of submitted_flag
+        submission_id: uuidv4()
       };
       
       console.log("Saving contract with processed data:", contractToSave);
       
-      // Save to Supabase using the useCoffeeExportContract hook
       const { success, error, data } = await saveContract(contractToSave);
       
-      // Dismiss the loading toast
       dismissToast(loadingToastId);
       
       if (success) {
         console.log("Contract saved successfully:", data);
         showSuccessToast(toast, "Contract saved successfully");
         
-        // Call the onSave callback if provided
         if (onSave && typeof onSave === 'function') {
           onSave(data);
         }
@@ -272,7 +262,6 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
 
   return (
     <div className="space-y-4">
-      {/* Contract Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="contract_number">Contract Number</Label>
@@ -315,7 +304,6 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
         </div>
       </div>
 
-      {/* Seller Details */}
       <div className="border-t pt-4">
         <h3 className="text-xl font-semibold mb-2">Seller Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -352,7 +340,6 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
         </div>
       </div>
 
-      {/* Buyer Details */}
       <div className="border-t pt-4">
         <h3 className="text-xl font-semibold mb-2">Buyer Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -389,7 +376,6 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
         </div>
       </div>
 
-      {/* Products */}
       <div className="border-t pt-4" ref={productsSectionRef}>
         <h3 className="text-xl font-semibold mb-2">Products</h3>
         {formData.products.map((product, index) => (
@@ -454,7 +440,6 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
         </button>
       </div>
 
-      {/* Payment Terms */}
       <div className="border-t pt-4" ref={paymentTermsRef}>
         <h3 className="text-xl font-semibold mb-2">Payment Terms</h3>
         {formData.payment_terms_items.map((item, index) => (
@@ -509,11 +494,9 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
         </button>
       </div>
 
-      {/* Shipping Terms */}
       <div className="border-t pt-4">
         <h3 className="text-xl font-semibold mb-2">Shipping Terms</h3>
         <div className="grid grid-cols-2 gap-4">
-          {/* Left Column */}
           <div>
             <div>
               <Label htmlFor="shipping_left_label1">Left Label 1</Label>
@@ -576,8 +559,6 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
               />
             </div>
           </div>
-
-          {/* Right Column */}
           <div>
             <div>
               <Label htmlFor="shipping_right_label1">Right Label 1</Label>
@@ -642,7 +623,6 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
           </div>
         </div>
 
-        {/* Additional Shipping Terms */}
         <div className="mt-4">
           <Label htmlFor="additional_shipping_terms_label">Additional Shipping Terms Label</Label>
           <Input
@@ -664,11 +644,9 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
         </div>
       </div>
 
-      {/* Signature Fields */}
       <div className="border-t pt-4">
         <h3 className="text-xl font-semibold mb-2">Signature Fields</h3>
         <div className="grid grid-cols-2 gap-4">
-          {/* Seller Signature */}
           <div>
             <Label htmlFor="for_seller_label">For Seller Label</Label>
             <Input
@@ -743,8 +721,6 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
               onChange={handleInputChange}
             />
           </div>
-
-          {/* Buyer Signature */}
           <div>
             <Label htmlFor="for_buyer_label">For Buyer Label</Label>
             <Input
@@ -800,3 +776,72 @@ const CoffeeContractTemplate = ({ contractData = {}, onDataChange, onSave }) => 
               id="buyer_signature_date_value"
               name="buyer_signature_date_value"
               value={formData.buyer_signature_date_value}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="buyer_signature_label">Buyer Signature Label</Label>
+            <Input
+              type="text"
+              id="buyer_signature_label"
+              name="buyer_signature_label"
+              value={formData.buyer_signature_label}
+              onChange={handleInputChange}
+            />
+            <Label htmlFor="buyer_signature_value">Buyer Signature Value</Label>
+            <Input
+              type="text"
+              id="buyer_signature_value"
+              name="buyer_signature_value"
+              value={formData.buyer_signature_value}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <Label htmlFor="company_stamp">Company Stamp</Label>
+          <Input
+            type="text"
+            id="company_stamp"
+            name="company_stamp"
+            value={formData.company_stamp}
+            onChange={handleInputChange}
+          />
+        </div>
+
+        <div className="mt-4">
+          <Label htmlFor="total_contract_value">Total Contract Value</Label>
+          <Input
+            type="number"
+            id="total_contract_value"
+            name="total_contract_value"
+            value={formData.total_contract_value}
+            onChange={handleInputChange}
+          />
+        </div>
+      </div>
+
+      <div className="border-t pt-4 mt-6 flex justify-end">
+        <button
+          type="button"
+          onClick={handleSaveContract}
+          disabled={isSaving}
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center gap-2"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              <span>Save Contract</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default CoffeeContractTemplate;
