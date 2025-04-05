@@ -2,7 +2,7 @@
 -- Create coffee_export_contracts table
 CREATE TABLE IF NOT EXISTS coffee_export_contracts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  contract_number TEXT NOT NULL,
+  contract_number TEXT NOT NULL UNIQUE,  -- Added UNIQUE constraint to prevent duplicates
   contract_date DATE NOT NULL,
   -- Seller details
   seller_name TEXT NOT NULL,
@@ -54,7 +54,8 @@ CREATE TABLE IF NOT EXISTS coffee_export_contracts (
   -- Metadata
   total_contract_value NUMERIC(15, 2),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  submitted_flag TEXT DEFAULT NULL  -- Added flag to prevent duplicate submissions
 );
 
 -- Create an index on contract_number for faster lookups
@@ -76,3 +77,4 @@ EXECUTE FUNCTION update_modified_column();
 
 -- Temporarily disable RLS (Row Level Security) for now since authentication is disabled
 ALTER TABLE coffee_export_contracts DISABLE ROW LEVEL SECURITY;
+
