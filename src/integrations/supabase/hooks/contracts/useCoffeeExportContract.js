@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../supabase';
 import { useToast } from "@/components/ui/use-toast";
@@ -190,7 +191,7 @@ export const useCoffeeExportContract = () => {
         buyer_signature_value: contractData.buyer_signature_value || '',
         company_stamp: contractData.company_stamp || '[Company Seal/Stamp]',
         total_contract_value: parseFloat(contractData.total_contract_value || 0),
-        submitted_flag: submissionId // Save a unique flag to track this specific submission
+        submission_id: submissionId // Changed from submitted_flag to submission_id
       };
       
       const { data, error } = await supabase
