@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Save, Loader2 } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { showSuccessToast, showErrorToast, showLoadingToast, dismissToast } from "@/components/ui/notifications";
-import { useCoffeeExportContract } from '@/integrations/supabase/hooks/contracts/useCoffeeExportContract';
+import { useCoffeeExportContract } from '@/integrations/supabase/hooks/useCoffeeExportContract';
 import { v4 as uuidv4 } from 'uuid';
 
 const SaveContractButton = ({ formData, onSuccess }) => {

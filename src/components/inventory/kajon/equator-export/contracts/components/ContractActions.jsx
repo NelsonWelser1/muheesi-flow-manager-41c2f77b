@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button"; 
+import { Button } from "@/components/ui/button";
 import { Printer, FileText, Send } from 'lucide-react';
 import SaveContractButton from './SaveContractButton';
 
