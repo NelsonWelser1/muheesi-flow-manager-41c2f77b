@@ -1,12 +1,6 @@
 
 import { toast as toastFn } from "sonner";
 
-/**
- * Show a success toast notification
- * @param {object} toast - Toast function from useToast hook
- * @param {string} message - Message to display
- * @returns {void}
- */
 export const showSuccessToast = (toast, message) => {
   if (toastFn) {
     toastFn.success(message);
@@ -19,12 +13,6 @@ export const showSuccessToast = (toast, message) => {
   }
 };
 
-/**
- * Show an error toast notification
- * @param {object} toast - Toast function from useToast hook
- * @param {string} message - Message to display
- * @returns {void}
- */
 export const showErrorToast = (toast, message) => {
   if (toastFn) {
     toastFn.error(message);
@@ -37,12 +25,6 @@ export const showErrorToast = (toast, message) => {
   }
 };
 
-/**
- * Show an info toast notification
- * @param {object} toast - Toast function from useToast hook
- * @param {string} message - Message to display
- * @returns {void}
- */
 export const showInfoToast = (toast, message) => {
   if (toastFn) {
     toastFn.info(message);
@@ -55,12 +37,6 @@ export const showInfoToast = (toast, message) => {
   }
 };
 
-/**
- * Show a warning toast notification
- * @param {object} toast - Toast function from useToast hook
- * @param {string} message - Message to display
- * @returns {void}
- */
 export const showWarningToast = (toast, message) => {
   if (toastFn) {
     toastFn.warning(message);
@@ -73,12 +49,6 @@ export const showWarningToast = (toast, message) => {
   }
 };
 
-/**
- * Show a loading toast notification
- * @param {object} toast - Toast function from useToast hook
- * @param {string} message - Message to display
- * @returns {string|null} - Toast ID for dismissing
- */
 export const showLoadingToast = (toast, message) => {
   if (toastFn) {
     return toastFn.loading(message);
@@ -92,49 +62,8 @@ export const showLoadingToast = (toast, message) => {
   return null;
 };
 
-/**
- * Dismiss a toast by ID
- * @param {string} id - Toast ID to dismiss
- * @returns {void}
- */
 export const dismissToast = (id) => {
   if (toastFn && id) {
     toastFn.dismiss(id);
-  }
-};
-
-/**
- * Show a contract saved toast notification
- * @param {object} toast - Toast function from useToast hook
- * @param {string} contractName - Name of the saved contract
- * @returns {void}
- */
-export const showContractSavedToast = (toast, contractName) => {
-  if (toastFn) {
-    toastFn.success(`Contract "${contractName}" saved successfully`);
-  } else if (toast) {
-    toast({
-      title: "Contract Saved",
-      description: `Contract "${contractName}" saved successfully`,
-      variant: "default",
-    });
-  }
-};
-
-/**
- * Show a contract export toast notification
- * @param {object} toast - Toast function from useToast hook
- * @param {string} format - Export format (PDF, etc.)
- * @returns {void}
- */
-export const showContractExportedToast = (toast, format) => {
-  if (toastFn) {
-    toastFn.success(`Contract exported as ${format.toUpperCase()} successfully`);
-  } else if (toast) {
-    toast({
-      title: "Contract Exported",
-      description: `Contract exported as ${format.toUpperCase()} successfully`,
-      variant: "default",
-    });
   }
 };

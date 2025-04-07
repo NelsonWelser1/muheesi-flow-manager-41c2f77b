@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +10,6 @@ import GeneralProduceTemplate from './templates/GeneralProduceTemplate';
 import FreshProduceTemplate from './templates/FreshProduceTemplate';
 import { exportContractToPDF } from '../utils/contractPdfExport';
 import '../styles/PrintStyles.css';
-import { useContractTemplates } from '@/integrations/supabase/hooks/useContractTemplates';
 
 const ContractTemplates = ({ onBack }) => {
   const { toast } = useToast();
@@ -24,12 +24,12 @@ const ContractTemplates = ({ onBack }) => {
     fresh: null
   });
   const templateRef = useRef(null);
-  
-  const { saveContract, fetchContracts, loading } = useContractTemplates();
 
+  // When printing, add a class to the body element to apply print-specific styles
   useEffect(() => {
     const beforePrint = () => {
       document.body.classList.add('printing');
+      // Temporarily disable edit mode during printing
       if (editMode) {
         setEditMode(false);
       }
@@ -48,44 +48,13 @@ const ContractTemplates = ({ onBack }) => {
     };
   }, [editMode]);
 
-  useEffect(() => {
-    const loadSavedTemplates = async () => {
-      const contracts = await fetchContracts();
-      if (contracts && contracts.length > 0) {
-        const transformedTemplates = contracts.map(contract => ({
-          id: contract.id,
-          type: contract.type,
-          title: contract.name,
-          data: {
-            buyerName: contract.buyer_name,
-            buyerAddress: contract.buyer_address,
-            buyerRegistration: contract.buyer_registration,
-            contractNumber: contract.contract_number,
-            currentDate: contract.contract_date,
-            productDetails: contract.product_details,
-            qualitySpecifications: contract.quality_specifications,
-            paymentTerms: contract.payment_terms,
-            deliveryTerms: contract.delivery_terms,
-            shippingTerms: contract.shipping_terms,
-            inspectionTerms: contract.inspection_terms,
-            additionalTerms: contract.additional_terms,
-            sellerSignature: contract.seller_signature,
-            buyerSignature: contract.buyer_signature,
-          },
-          dateCreated: contract.created_at
-        }));
-        
-        setSavedTemplates(transformedTemplates);
-      }
-    };
-    
-    loadSavedTemplates();
-  }, []);
-
+  // Load default template data when a template is first viewed
   useEffect(() => {
     if (activeTemplate && !editableData[activeTemplate]) {
+      // Get current date in YYYY-MM-DD format for default
       const currentDate = new Date().toISOString().split('T')[0];
       
+      // Initialize with default template data structure
       const defaultData = {
         buyerName: '[Buyer Company Name]',
         buyerAddress: '[Buyer Address]',
@@ -94,13 +63,7 @@ const ContractTemplates = ({ onBack }) => {
                         activeTemplate === 'general' ? 'KCL-GP-2024-[XXXX]' : 
                         'KCL-FP-2024-[XXXX]',
         currentDate: currentDate,
-        productDetails: [],
-        qualitySpecifications: [],
-        paymentTerms: 'Payment due within 30 days of delivery',
-        deliveryTerms: 'FOB Mombasa',
-        shippingTerms: 'CIF Destination Port',
-        inspectionTerms: 'Quality inspection at loading and unloading',
-        additionalTerms: 'As per agreed upon standards',
+        // Add more fields as needed for each template
       };
       
       setEditableData(prev => ({
@@ -112,10 +75,11 @@ const ContractTemplates = ({ onBack }) => {
 
   const handleViewTemplate = (templateType) => {
     setActiveTemplate(templateType);
-    setTemplateSaved(false);
+    setTemplateSaved(false); // Reset saved state when viewing a new template
   };
 
   const handlePrint = () => {
+    // Temporarily disable edit mode for printing
     setEditMode(false);
     window.print();
   };
@@ -130,11 +94,13 @@ const ContractTemplates = ({ onBack }) => {
       return;
     }
 
+    // Disable edit mode for PDF generation
     const wasInEditMode = editMode;
     if (wasInEditMode) {
       setEditMode(false);
     }
 
+    // Small delay to ensure edit mode is fully disabled
     setTimeout(async () => {
       try {
         const templateType = activeTemplate || "contract";
@@ -142,6 +108,7 @@ const ContractTemplates = ({ onBack }) => {
         
         await exportContractToPDF(templateRef.current, filename, toast);
         
+        // Restore edit mode if it was active
         if (wasInEditMode) {
           setEditMode(true);
         }
@@ -153,6 +120,7 @@ const ContractTemplates = ({ onBack }) => {
           variant: "destructive"
         });
         
+        // Restore edit mode if it was active
         if (wasInEditMode) {
           setEditMode(true);
         }
@@ -164,35 +132,32 @@ const ContractTemplates = ({ onBack }) => {
     setEditMode(prev => !prev);
   };
 
-  const handleSaveContract = async () => {
+  const handleSaveContract = () => {
     if (!activeTemplate) return;
     
-    try {
-      const savedContract = await saveContract(activeTemplate, editableData[activeTemplate]);
-      
-      if (savedContract) {
-        const newSavedTemplate = {
-          id: savedContract.id,
-          type: activeTemplate,
-          title: savedContract.name,
-          data: editableData[activeTemplate],
-          dateCreated: savedContract.created_at
-        };
-        
-        setSavedTemplates(prev => [newSavedTemplate, ...prev]);
-        
-        setTemplateSaved(true);
-        
-        setEditMode(false);
-      }
-    } catch (error) {
-      console.error("Error saving contract:", error);
-      toast({
-        title: "Error",
-        description: `Failed to save contract: ${error.message}`,
-        variant: "destructive"
-      });
-    }
+    // Create a saved template entry
+    const savedTemplate = {
+      id: Date.now().toString(),
+      type: activeTemplate,
+      title: `${activeTemplate.charAt(0).toUpperCase() + activeTemplate.slice(1)} Contract - ${new Date().toLocaleDateString()}`,
+      data: editableData[activeTemplate],
+      dateCreated: new Date().toISOString()
+    };
+    
+    // Add to saved templates
+    setSavedTemplates(prev => [...prev, savedTemplate]);
+    
+    // Update saved state
+    setTemplateSaved(true);
+    
+    // Exit edit mode
+    setEditMode(false);
+    
+    // Show success toast
+    toast({
+      title: "Contract saved successfully",
+      description: "You can now print or download this contract as PDF",
+    });
   };
 
   const handleDataChange = (field, value) => {
@@ -210,15 +175,20 @@ const ContractTemplates = ({ onBack }) => {
   const resetTemplate = () => {
     if (!activeTemplate) return;
     
+    // Reset the active template to initial state
     setEditableData(prev => ({
       ...prev,
       [activeTemplate]: null
     }));
+    
+    // This will trigger the useEffect to reload default data
   };
 
+  // Render the selected template with proper data
   const renderTemplate = () => {
     if (!activeTemplate) return null;
     
+    // Pass the editable data to the template components
     const templateProps = {
       editMode,
       data: editableData[activeTemplate] || {},
@@ -262,10 +232,9 @@ const ContractTemplates = ({ onBack }) => {
                     onClick={handleSaveContract}
                     className="flex items-center gap-1"
                     variant="default"
-                    disabled={loading}
                   >
                     <Save className="h-4 w-4" />
-                    <span>{loading ? 'Saving...' : 'Save Contract'}</span>
+                    <span>Save Contract</span>
                   </Button>
                 </>
               ) : (
@@ -477,6 +446,7 @@ const ContractTemplates = ({ onBack }) => {
             </TabsContent>
           </Tabs>
           
+          {/* Saved Contracts Section */}
           {savedTemplates.length > 0 && (
             <Card className="mt-6">
               <CardHeader>

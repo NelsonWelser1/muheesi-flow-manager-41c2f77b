@@ -36,9 +36,6 @@ import {
 
 import { useSalesOrders } from './hooks/useSalesOrders';
 
-// Import contract templates hook
-import { useContractTemplates } from './hooks/useContractTemplates';
-
 // Import individual sales hooks
 import { useFetchSalesOrders } from './hooks/sales/useFetchSalesOrders';
 import { useCreateSalesOrder } from './hooks/sales/useCreateSalesOrder';
@@ -81,8 +78,6 @@ export {
     SupabaseAuthProvider,
     useSupabaseAuth,
     SupabaseAuthUI,
-    // Contract Templates
-    useContractTemplates,
     // Grand Berna Dairies
     useGrandBernaDairy,
     useFactoryOperations,
