@@ -1,14 +1,13 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Printer, Eye, Edit, Save, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Printer, Eye, Edit, Save, RotateCcw } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import CoffeeContractTemplate from './templates/CoffeeContractTemplate';
 import GeneralProduceTemplate from './templates/GeneralProduceTemplate';
 import FreshProduceTemplate from './templates/FreshProduceTemplate';
-import { exportContractToPDF } from '../utils/contractPdfExport';
+import ContractExportButtons from './export-buttons/ContractExportButtons';
 import '../styles/PrintStyles.css';
 
 const ContractTemplates = ({ onBack }) => {
@@ -84,50 +83,6 @@ const ContractTemplates = ({ onBack }) => {
     window.print();
   };
 
-  const handleDownloadPDF = async () => {
-    if (!templateRef.current) {
-      toast({
-        title: "Error",
-        description: "Cannot find template content to export",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Disable edit mode for PDF generation
-    const wasInEditMode = editMode;
-    if (wasInEditMode) {
-      setEditMode(false);
-    }
-
-    // Small delay to ensure edit mode is fully disabled
-    setTimeout(async () => {
-      try {
-        const templateType = activeTemplate || "contract";
-        const filename = `${templateType}_contract_${new Date().toISOString().split('T')[0]}`;
-        
-        await exportContractToPDF(templateRef.current, filename, toast);
-        
-        // Restore edit mode if it was active
-        if (wasInEditMode) {
-          setEditMode(true);
-        }
-      } catch (error) {
-        console.error("PDF generation error:", error);
-        toast({
-          title: "Error",
-          description: `Failed to generate PDF: ${error.message}`,
-          variant: "destructive"
-        });
-        
-        // Restore edit mode if it was active
-        if (wasInEditMode) {
-          setEditMode(true);
-        }
-      }
-    }, 100);
-  };
-
   const toggleEditMode = () => {
     setEditMode(prev => !prev);
   };
@@ -135,19 +90,7 @@ const ContractTemplates = ({ onBack }) => {
   const handleSaveContract = () => {
     if (!activeTemplate) return;
     
-    // Create a saved template entry
-    const savedTemplate = {
-      id: Date.now().toString(),
-      type: activeTemplate,
-      title: `${activeTemplate.charAt(0).toUpperCase() + activeTemplate.slice(1)} Contract - ${new Date().toLocaleDateString()}`,
-      data: editableData[activeTemplate],
-      dateCreated: new Date().toISOString()
-    };
-    
-    // Add to saved templates
-    setSavedTemplates(prev => [...prev, savedTemplate]);
-    
-    // Update saved state
+    // Instead of saving to database, mark as saved so export buttons are enabled
     setTemplateSaved(true);
     
     // Exit edit mode
@@ -155,8 +98,8 @@ const ContractTemplates = ({ onBack }) => {
     
     // Show success toast
     toast({
-      title: "Contract saved successfully",
-      description: "You can now print or download this contract as PDF",
+      title: "Contract prepared successfully",
+      description: "You can now print or export this contract in various formats",
     });
   };
 
@@ -207,6 +150,27 @@ const ContractTemplates = ({ onBack }) => {
     }
   };
 
+  // Generate filename based on active template and contract number
+  const getExportFilename = () => {
+    if (!activeTemplate || !editableData[activeTemplate]) {
+      return `contract-${new Date().toISOString().split('T')[0]}`;
+    }
+    
+    const data = editableData[activeTemplate];
+    const contractNum = data.contractNumber?.replace(/[\[\]]/g, '') || '';
+    const buyerName = data.buyerName?.replace(/[\[\]]/g, '').trim() || '';
+    
+    if (contractNum && buyerName) {
+      return `${contractNum}-${buyerName.substring(0, 15).replace(/\s+/g, '-')}`;
+    } else if (contractNum) {
+      return contractNum;
+    } else if (buyerName) {
+      return `Contract-${buyerName.substring(0, 15).replace(/\s+/g, '-')}`;
+    } else {
+      return `${activeTemplate}-contract-${new Date().toISOString().split('T')[0]}`;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center print:hidden">
@@ -234,7 +198,7 @@ const ContractTemplates = ({ onBack }) => {
                     variant="default"
                   >
                     <Save className="h-4 w-4" />
-                    <span>Save Contract</span>
+                    <span>Prepare for Export</span>
                   </Button>
                 </>
               ) : (
@@ -257,13 +221,12 @@ const ContractTemplates = ({ onBack }) => {
                         <Printer className="h-4 w-4" />
                         <span>Print</span>
                       </Button>
-                      <Button 
-                        onClick={handleDownloadPDF}
-                        className="flex items-center gap-1"
-                      >
-                        <Download className="h-4 w-4" />
-                        <span>Download PDF</span>
-                      </Button>
+                      <ContractExportButtons 
+                        templateRef={templateRef}
+                        contractData={editableData[activeTemplate]}
+                        filename={getExportFilename()}
+                        showDropdown={true}
+                      />
                     </>
                   )}
                 </>
