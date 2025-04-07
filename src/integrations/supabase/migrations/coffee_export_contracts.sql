@@ -2,7 +2,7 @@
 -- Create coffee_export_contracts table
 CREATE TABLE IF NOT EXISTS coffee_export_contracts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  contract_number TEXT NOT NULL UNIQUE,  -- Added UNIQUE constraint to prevent duplicates
+  contract_number TEXT NOT NULL,
   contract_date DATE NOT NULL,
   -- Seller details
   seller_name TEXT NOT NULL,
@@ -54,8 +54,7 @@ CREATE TABLE IF NOT EXISTS coffee_export_contracts (
   -- Metadata
   total_contract_value NUMERIC(15, 2),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  submission_id TEXT DEFAULT NULL  -- Using submission_id consistently
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create an index on contract_number for faster lookups
@@ -70,10 +69,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Drop the existing trigger if it exists to prevent errors on re-runs
-DROP TRIGGER IF EXISTS update_coffee_export_contracts_modtime ON coffee_export_contracts;
-
--- Create trigger to automatically update the updated_at timestamp
 CREATE TRIGGER update_coffee_export_contracts_modtime
 BEFORE UPDATE ON coffee_export_contracts
 FOR EACH ROW

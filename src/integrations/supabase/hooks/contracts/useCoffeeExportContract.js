@@ -1,9 +1,8 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../supabase';
 import { useToast } from "@/components/ui/use-toast";
 import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Custom hook for managing coffee export contracts
@@ -13,9 +12,6 @@ export const useCoffeeExportContract = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { toast } = useToast();
-  
-  // Use a ref to track submission status and prevent duplicate submissions
-  const submissionStatusRef = useRef({});
 
   // Fetch all coffee export contracts
   const fetchContracts = async () => {
@@ -52,19 +48,6 @@ export const useCoffeeExportContract = () => {
   // Save a coffee export contract
   const saveContract = async (contractData) => {
     try {
-      // Generate a submission ID to track this specific save attempt
-      const submissionId = uuidv4();
-      
-      // Check if we're already processing this exact submission
-      if (submissionStatusRef.current[contractData.contract_number] === 'processing') {
-        console.log('Preventing duplicate submission, already processing this contract');
-        showErrorToast(toast, 'This contract is already being saved. Please wait.');
-        return { success: false, error: 'Duplicate submission' };
-      }
-      
-      // Mark this contract number as being processed
-      submissionStatusRef.current[contractData.contract_number] = 'processing';
-      
       setLoading(true);
       setError(null);
       
@@ -73,7 +56,6 @@ export const useCoffeeExportContract = () => {
         const error = 'Contract number is required';
         setError(error);
         showErrorToast(toast, error);
-        submissionStatusRef.current[contractData.contract_number] = null;
         return { success: false, error };
       }
 
@@ -81,7 +63,6 @@ export const useCoffeeExportContract = () => {
         const error = 'Contract date is required';
         setError(error);
         showErrorToast(toast, error);
-        submissionStatusRef.current[contractData.contract_number] = null;
         return { success: false, error };
       }
 
@@ -89,7 +70,6 @@ export const useCoffeeExportContract = () => {
         const error = 'Seller name is required';
         setError(error);
         showErrorToast(toast, error);
-        submissionStatusRef.current[contractData.contract_number] = null;
         return { success: false, error };
       }
 
@@ -97,53 +77,17 @@ export const useCoffeeExportContract = () => {
         const error = 'Buyer name is required';
         setError(error);
         showErrorToast(toast, error);
-        submissionStatusRef.current[contractData.contract_number] = null;
         return { success: false, error };
       }
 
-      // Validate products array and ensure it's properly formatted
       if (!contractData.products || !Array.isArray(contractData.products) || contractData.products.length === 0) {
         const error = 'At least one product is required';
         setError(error);
         showErrorToast(toast, error);
-        submissionStatusRef.current[contractData.contract_number] = null;
         return { success: false, error };
       }
-      
-      // Ensure each product has a unique ID
-      const processedProducts = contractData.products.map(product => {
-        // If the product already has an id, keep it, otherwise generate one
-        if (!product.id) {
-          return { ...product, id: `product-${uuidv4()}` };
-        }
-        return product;
-      });
       
       console.log('Saving coffee export contract to Supabase:', contractData);
-      
-      // Check if a contract with this number already exists
-      const { data: existingContract, error: existingError } = await supabase
-        .from('coffee_export_contracts')
-        .select('id')
-        .eq('contract_number', contractData.contract_number)
-        .single();
-        
-      if (existingError && existingError.code !== 'PGRST116') { // PGRST116 means no rows returned
-        console.error('Error checking for existing contract:', existingError);
-        setError(existingError.message);
-        showErrorToast(toast, `Error checking for existing contract: ${existingError.message}`);
-        submissionStatusRef.current[contractData.contract_number] = null;
-        return { success: false, error: existingError };
-      }
-      
-      if (existingContract) {
-        const error = `A contract with number ${contractData.contract_number} already exists`;
-        console.error(error);
-        setError(error);
-        showErrorToast(toast, error);
-        submissionStatusRef.current[contractData.contract_number] = null;
-        return { success: false, error };
-      }
       
       // Prepare the data for insertion
       const contractToInsert = {
@@ -155,7 +99,7 @@ export const useCoffeeExportContract = () => {
         buyer_name: contractData.buyer_name,
         buyer_address: contractData.buyer_address || '',
         buyer_registration: contractData.buyer_registration || '',
-        products: JSON.stringify(processedProducts || []),
+        products: JSON.stringify(contractData.products || []),
         payment_terms_items: JSON.stringify(contractData.payment_terms_items || []),
         shipping_left_label1: contractData.shipping_left_label1 || 'Incoterm:',
         shipping_left_value1: contractData.shipping_left_value1 || 'FOB Mombasa',
@@ -190,8 +134,7 @@ export const useCoffeeExportContract = () => {
         buyer_signature_label: contractData.buyer_signature_label || 'Signature:',
         buyer_signature_value: contractData.buyer_signature_value || '',
         company_stamp: contractData.company_stamp || '[Company Seal/Stamp]',
-        total_contract_value: parseFloat(contractData.total_contract_value || 0),
-        submission_id: submissionId // Using submission_id consistently
+        total_contract_value: parseFloat(contractData.total_contract_value || 0)
       };
       
       const { data, error } = await supabase
@@ -203,7 +146,6 @@ export const useCoffeeExportContract = () => {
         console.error('Error saving coffee export contract:', error);
         setError(error.message);
         showErrorToast(toast, `Error saving contract: ${error.message}`);
-        submissionStatusRef.current[contractData.contract_number] = null;
         return { success: false, error };
       }
       
@@ -212,9 +154,6 @@ export const useCoffeeExportContract = () => {
       // Update the local state with the new contract
       setContracts(prevContracts => [data[0], ...prevContracts]);
       
-      // Clear the processing flag
-      submissionStatusRef.current[contractData.contract_number] = 'completed';
-      
       showSuccessToast(toast, 'Contract saved successfully');
       return { success: true, data: data[0] };
       
@@ -222,12 +161,6 @@ export const useCoffeeExportContract = () => {
       console.error('Unexpected error saving coffee export contract:', err);
       setError(err.message);
       showErrorToast(toast, `Unexpected error: ${err.message}`);
-      
-      // Clear the processing flag in case of error
-      if (contractData && contractData.contract_number) {
-        submissionStatusRef.current[contractData.contract_number] = null;
-      }
-      
       return { success: false, error: err };
     } finally {
       setLoading(false);
@@ -260,30 +193,8 @@ export const useCoffeeExportContract = () => {
       // Parse JSON fields
       if (data) {
         try {
-          // Ensure products array is properly parsed
-          if (data.products) {
-            if (typeof data.products === 'string') {
-              data.products = JSON.parse(data.products);
-            }
-            // Ensure each product has an ID
-            data.products = data.products.map(product => {
-              if (!product.id) {
-                return { ...product, id: `product-${uuidv4()}` };
-              }
-              return product;
-            });
-          } else {
-            data.products = [];
-          }
-          
-          // Parse payment terms
-          if (data.payment_terms_items) {
-            if (typeof data.payment_terms_items === 'string') {
-              data.payment_terms_items = JSON.parse(data.payment_terms_items);
-            }
-          } else {
-            data.payment_terms_items = [];
-          }
+          data.products = JSON.parse(data.products);
+          data.payment_terms_items = JSON.parse(data.payment_terms_items);
         } catch (e) {
           console.warn('Error parsing JSON fields:', e);
         }

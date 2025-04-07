@@ -1,29 +1,18 @@
 
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from "@/components/ui/use-toast";
 
-/**
- * Shows a success toast notification
- * @param {Function} toastFn - The toast function from useToast hook
- * @param {string} message - The message to display
- * @returns {Object} - Toast return value
- */
-export const showSuccessToast = (toastFn, message) => {
-  return toastFn({
+export const showSuccessToast = (toast, message) => {
+  toast({
     title: "Success",
     description: message,
     variant: "default",
+    className: "bg-green-50 border-green-300 text-green-800",
     duration: 3000,
   });
 };
 
-/**
- * Shows an error toast notification
- * @param {Function} toastFn - The toast function from useToast hook
- * @param {string} message - The error message to display
- * @returns {Object} - Toast return value
- */
-export const showErrorToast = (toastFn, message) => {
-  return toastFn({
+export const showErrorToast = (toast, message) => {
+  toast({
     title: "Error",
     description: message,
     variant: "destructive",
@@ -31,55 +20,71 @@ export const showErrorToast = (toastFn, message) => {
   });
 };
 
-/**
- * Shows a loading toast notification
- * @param {Function} toastFn - The toast function from useToast hook
- * @param {string} message - The loading message to display
- * @returns {string} - Toast ID for dismissal
- */
-export const showLoadingToast = (toastFn, message) => {
-  return toastFn({
-    title: "Loading",
-    description: message,
-    duration: 100000, // Long duration as we'll dismiss it manually
-  });
-};
-
-/**
- * Dismisses a toast by ID
- * @param {string} toastId - ID of the toast to dismiss
- */
-export const dismissToast = (toastId) => {
-  if (toastId) {
-    toast.dismiss(toastId);
-  }
-};
-
-/**
- * Shows a warning toast notification
- * @param {Function} toastFn - The toast function from useToast hook
- * @param {string} message - The warning message to display
- * @returns {Object} - Toast return value
- */
-export const showWarningToast = (toastFn, message) => {
-  return toastFn({
+export const showWarningToast = (toast, message) => {
+  toast({
     title: "Warning",
     description: message,
-    variant: "warning",
+    variant: "default",
+    className: "bg-amber-50 border-amber-300 text-amber-800",
     duration: 4000,
   });
 };
 
-/**
- * Shows an info toast notification
- * @param {Function} toastFn - The toast function from useToast hook
- * @param {string} message - The info message to display
- * @returns {Object} - Toast return value
- */
-export const showInfoToast = (toastFn, message) => {
-  return toastFn({
+export const showInfoToast = (toast, message) => {
+  toast({
     title: "Information",
     description: message,
+    variant: "default",
+    className: "bg-blue-50 border-blue-300 text-blue-800",
+    duration: 3000,
+  });
+};
+
+export const showLoadingToast = (toast, message) => {
+  return toast({
+    title: "Loading",
+    description: message,
+    variant: "default",
+    className: "bg-gray-50 border-gray-300",
+    duration: Infinity, // Stays until manually dismissed
+  });
+};
+
+export const dismissToast = (toastId) => {
+  // The toast function returns an object with an id
+  // that can be used to dismiss it
+  if (toastId) {
+    return { id: toastId };
+  }
+};
+
+// New notification helpers for reports
+export const showReportSubmittedToast = (toast, reportTitle) => {
+  toast({
+    title: "Report Submitted",
+    description: `Your report "${reportTitle}" has been submitted successfully.`,
+    variant: "default",
+    className: "bg-green-50 border-green-300 text-green-800",
+    duration: 4000,
+  });
+};
+
+export const showReportSharedToast = (toast, recipients) => {
+  toast({
+    title: "Report Shared",
+    description: `Report has been shared with ${recipients} recipient(s).`,
+    variant: "default",
+    className: "bg-blue-50 border-blue-300 text-blue-800",
+    duration: 3000,
+  });
+};
+
+export const showReportExportedToast = (toast, format) => {
+  toast({
+    title: "Report Exported",
+    description: `Report has been exported as ${format.toUpperCase()}.`,
+    variant: "default",
+    className: "bg-blue-50 border-blue-300 text-blue-800",
     duration: 3000,
   });
 };
