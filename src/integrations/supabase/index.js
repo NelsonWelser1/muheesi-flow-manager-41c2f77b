@@ -72,6 +72,10 @@ import {
     useCattleFatteningAnalytics
 } from './hooks/useKyalimaCattleFattening';
 
+// Import KAJON export contract hooks
+import { useContractTemplates } from './hooks/useContractTemplates';
+import { runContractsMigrations } from '../components/inventory/kajon/equator-export/contracts/utils/runMigrations';
+
 // Export everything individually
 export {
     supabase,
@@ -133,5 +137,19 @@ export {
     useAddCattleFattening,
     useUpdateCattleFattening,
     useDeleteCattleFattening,
-    useCattleFatteningAnalytics
+    useCattleFatteningAnalytics,
+    // KAJON Export Contract hooks
+    useContractTemplates,
+    runContractsMigrations
 };
+
+// Initialize migrations when this file is imported
+// This ensures the database tables are created when the app starts
+(async () => {
+    try {
+        console.log('Initializing contract migrations...');
+        await runContractsMigrations();
+    } catch (error) {
+        console.error('Failed to initialize contract migrations:', error);
+    }
+})();
