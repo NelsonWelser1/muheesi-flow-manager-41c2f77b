@@ -1,134 +1,100 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { 
-  Download, 
-  FileText, 
-  FileImage, 
-  FileSpreadsheet
-} from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { 
-  exportContractToPDF, 
-  exportContractToJPG, 
-  exportContractToExcel 
-} from '../../utils/contractExportUtils';
+import { Download } from "lucide-react";
+import { exportContractToPDF, exportContractToJPG, exportContractToExcel } from '../../utils/contractExportUtils';
+import { useToast } from '@/components/ui/use-toast';
 
 const ContractExportButtons = ({ 
   templateRef, 
-  contractData,
-  filename = 'contract',
+  contractData, 
+  filename, 
   showDropdown = true,
   disabled = false
 }) => {
   const { toast } = useToast();
-  const [isExporting, setIsExporting] = useState(false);
   
-  const handleExport = async (format) => {
-    if (isExporting) return;
-    
-    setIsExporting(true);
-    try {
-      let success = false;
-      
-      switch (format) {
-        case 'pdf':
-          success = await exportContractToPDF(templateRef.current, filename, toast);
-          break;
-        case 'jpg':
-          success = await exportContractToJPG(templateRef.current, filename, toast);
-          break;
-        case 'excel':
-          success = await exportContractToExcel(templateRef.current, contractData, filename, toast);
-          break;
-        default:
-          throw new Error(`Unsupported export format: ${format}`);
-      }
-      
-      if (!success) {
-        throw new Error(`Failed to export ${format.toUpperCase()}`);
-      }
-    } catch (error) {
-      console.error(`Export error:`, error);
-      toast({
-        title: "Export failed",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setIsExporting(false);
-    }
+  const handleExportPDF = async () => {
+    await exportContractToPDF(templateRef.current, filename, toast);
   };
   
-  if (showDropdown) {
+  const handleExportJPG = async () => {
+    await exportContractToJPG(templateRef.current, filename, toast);
+  };
+  
+  const handleExportExcel = async () => {
+    await exportContractToExcel(templateRef.current, contractData, filename, toast);
+  };
+  
+  if (!showDropdown) {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="default" 
-            disabled={disabled || isExporting}
-            className="flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            {isExporting ? "Exporting..." : "Export Contract"}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => handleExport('pdf')}>
-            <FileText className="h-4 w-4 mr-2" />
-            Save as PDF
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleExport('excel')}>
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
-            Save as Excel
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleExport('jpg')}>
-            <FileImage className="h-4 w-4 mr-2" />
-            Save as Image
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex gap-2">
+        <Button 
+          variant="outline" 
+          onClick={handleExportPDF}
+          disabled={disabled}
+          className="flex items-center gap-1"
+        >
+          <Download className="h-4 w-4" />
+          PDF
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={handleExportJPG}
+          disabled={disabled}
+          className="flex items-center gap-1"
+        >
+          <Download className="h-4 w-4" />
+          JPG
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={handleExportExcel}
+          disabled={disabled}
+          className="flex items-center gap-1"
+        >
+          <Download className="h-4 w-4" />
+          Excel
+        </Button>
+      </div>
     );
   }
   
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => handleExport('pdf')}
-        disabled={disabled || isExporting}
+    <div className="relative group">
+      <Button 
+        variant="outline" 
         className="flex items-center gap-1"
+        disabled={disabled}
       >
-        <FileText className="h-4 w-4" />
-        PDF
+        <Download className="h-4 w-4" />
+        Export
       </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => handleExport('excel')}
-        disabled={disabled || isExporting}
-        className="flex items-center gap-1"
-      >
-        <FileSpreadsheet className="h-4 w-4" />
-        Excel
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => handleExport('jpg')}
-        disabled={disabled || isExporting}
-        className="flex items-center gap-1"
-      >
-        <FileImage className="h-4 w-4" />
-        JPG
-      </Button>
+      <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50 hidden group-hover:block">
+        <div className="py-1">
+          <button
+            onClick={handleExportPDF}
+            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            disabled={disabled}
+          >
+            Export as PDF
+          </button>
+          <button
+            onClick={handleExportJPG}
+            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            disabled={disabled}
+          >
+            Export as JPG
+          </button>
+          <button
+            onClick={handleExportExcel}
+            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            disabled={disabled}
+          >
+            Export as Excel
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

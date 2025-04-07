@@ -1,19 +1,20 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Trash2, Plus, Save, Calendar, FileText } from "lucide-react";
+import { Trash2, Plus, Save, Calendar, ArrowLeft, Download } from "lucide-react";
 import { format } from 'date-fns';
-import { useLocalPurchaseAgreements } from '@/integrations/supabase/hooks/useLocalPurchaseAgreements';
-import ContractExportButtons from '../export-buttons/ContractExportButtons';
+import { useLocalPurchaseAgreements } from '@/hooks/useLocalPurchaseAgreements';
+import { exportContractToPDF, exportContractToJPG, exportContractToExcel } from '../../utils/contractExportUtils';
 
-const LocalPurchaseAgreementForm = ({ onBack }) => {
+const LocalPurchaseAgreementForm = ({ onBack, existingAgreement = null }) => {
   const { toast } = useToast();
-  const { saveAgreement, loading, generateContractNumber } = useLocalPurchaseAgreements();
+  const { saveAgreement, updateAgreement, generateContractNumber, loading } = useLocalPurchaseAgreements();
   const contractRef = useRef(null);
+  const isEditMode = !!existingAgreement;
   
   const [formData, setFormData] = useState({
     contract_number: generateContractNumber(),
@@ -34,6 +35,16 @@ const LocalPurchaseAgreementForm = ({ onBack }) => {
     special_terms: '',
     notes: ''
   });
+
+  // Load existing agreement data if in edit mode
+  useEffect(() => {
+    if (existingAgreement) {
+      setFormData(prevData => ({
+        ...prevData,
+        ...existingAgreement
+      }));
+    }
+  }, [existingAgreement]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -66,7 +77,7 @@ const LocalPurchaseAgreementForm = ({ onBack }) => {
   const removeItem = (id) => {
     if (formData.items.length <= 1) {
       toast({
-        title: "Cannot Remove",
+        title: "Error",
         description: "At least one item is required",
         variant: "destructive",
       });
@@ -81,45 +92,127 @@ const LocalPurchaseAgreementForm = ({ onBack }) => {
 
   const calculateTotal = () => {
     return formData.items.reduce(
-      (total, item) => total + (parseFloat(item.quantity) * parseFloat(item.unit_price) || 0), 
+      (total, item) => total + (parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0)), 
       0
     );
   };
 
-  const handleSubmit = async () => {
-    // Validate required fields
+  const validateForm = () => {
+    // Required field validation
     if (!formData.supplier_name) {
       toast({
         title: "Missing Information",
         description: "Please provide supplier name",
         variant: "destructive",
       });
-      return;
+      return false;
     }
     
-    if (formData.items.some(item => !item.description || !item.quantity || !item.unit_price)) {
+    // Items validation
+    if (!formData.items || formData.items.length === 0) {
       toast({
         title: "Missing Information",
-        description: "Please complete all item details",
+        description: "Please add at least one item",
         variant: "destructive",
       });
-      return;
+      return false;
     }
     
-    // Save to database
-    const result = await saveAgreement(formData);
-    
-    if (result.success) {
-      // Reset form after successful save or keep fields for export
-      // You might want to redirect or just keep the form as is
+    // Validate each item
+    for (const item of formData.items) {
+      if (!item.description) {
+        toast({
+          title: "Missing Information",
+          description: "Please provide a description for all items",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      if (!item.quantity || item.quantity <= 0) {
+        toast({
+          title: "Invalid Information",
+          description: "Quantity must be greater than zero for all items",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      if (!item.unit_price || item.unit_price <= 0) {
+        toast({
+          title: "Invalid Information",
+          description: "Price must be greater than zero for all items",
+          variant: "destructive",
+        });
+        return false;
+      }
     }
+    
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+    
+    // Prepare data for submission
+    const submissionData = {
+      ...formData,
+      total_value: calculateTotal(),
+    };
+    
+    try {
+      let result;
+      
+      if (isEditMode) {
+        // Update existing agreement
+        result = await updateAgreement(existingAgreement.id, submissionData);
+      } else {
+        // Create new agreement
+        result = await saveAgreement(submissionData);
+      }
+      
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: isEditMode 
+            ? "Agreement updated successfully" 
+            : "Agreement saved successfully",
+        });
+        
+        // If we're in create mode, reset the form or redirect
+        if (!isEditMode) {
+          onBack(); // Navigate back to list view
+        }
+      }
+    } catch (error) {
+      console.error("Error saving agreement:", error);
+      toast({
+        title: "Error",
+        description: `Failed to save agreement: ${error.message || "Unknown error"}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Export functions
+  const handleExportPDF = async () => {
+    await exportContractToPDF(contractRef.current, `local-purchase-${formData.contract_number}`, toast);
+  };
+
+  const handleExportJPG = async () => {
+    await exportContractToJPG(contractRef.current, `local-purchase-${formData.contract_number}`, toast);
+  };
+
+  const handleExportExcel = async () => {
+    await exportContractToExcel(contractRef.current, formData, `local-purchase-${formData.contract_number}`, toast);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <Button variant="outline" onClick={onBack}>
-          Back to Contracts
+        <Button variant="outline" onClick={onBack} className="flex items-center gap-1">
+          <ArrowLeft className="h-4 w-4" />
+          Back to Agreements
         </Button>
         <div className="flex gap-2">
           <Button 
@@ -129,15 +222,38 @@ const LocalPurchaseAgreementForm = ({ onBack }) => {
             disabled={loading}
           >
             <Save className="h-4 w-4" />
-            {loading ? "Saving..." : "Save Agreement"}
+            {loading ? "Saving..." : isEditMode ? "Update Agreement" : "Save Agreement"}
           </Button>
-          <ContractExportButtons
-            templateRef={contractRef}
-            contractData={formData}
-            filename={`local-purchase-${formData.contract_number}`}
-            showDropdown={false}
-            disabled={loading}
-          />
+          
+          {/* Export Dropdown */}
+          <div className="relative group">
+            <Button variant="outline" className="flex items-center gap-1">
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+            <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50 hidden group-hover:block">
+              <div className="py-1">
+                <button
+                  onClick={handleExportPDF}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Export as PDF
+                </button>
+                <button
+                  onClick={handleExportJPG}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Export as JPG
+                </button>
+                <button
+                  onClick={handleExportExcel}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Export as Excel
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -229,14 +345,14 @@ const LocalPurchaseAgreementForm = ({ onBack }) => {
                   <tr key={item.id}>
                     <td className="px-4 py-2 border">
                       <Input
-                        value={item.description}
+                        value={item.description || ''}
                         onChange={(e) => handleItemChange(index, 'description', e.target.value)}
                         placeholder="Coffee beans, etc."
                       />
                     </td>
                     <td className="px-4 py-2 border">
                       <Input
-                        value={item.variety}
+                        value={item.variety || ''}
                         onChange={(e) => handleItemChange(index, 'variety', e.target.value)}
                         placeholder="Arabica, Robusta, etc."
                       />
@@ -245,13 +361,13 @@ const LocalPurchaseAgreementForm = ({ onBack }) => {
                       <Input
                         type="number"
                         min="0"
-                        value={item.quantity}
+                        value={item.quantity || 0}
                         onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
                       />
                     </td>
                     <td className="px-4 py-2 border">
                       <Select 
-                        value={item.unit} 
+                        value={item.unit || 'Kg'} 
                         onValueChange={(value) => handleItemChange(index, 'unit', value)}
                       >
                         <SelectTrigger className="w-full">
@@ -269,12 +385,12 @@ const LocalPurchaseAgreementForm = ({ onBack }) => {
                       <Input
                         type="number"
                         min="0"
-                        value={item.unit_price}
+                        value={item.unit_price || 0}
                         onChange={(e) => handleItemChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
                       />
                     </td>
                     <td className="px-4 py-2 border">
-                      {(item.quantity * item.unit_price).toFixed(2)}
+                      {((item.quantity || 0) * (item.unit_price || 0)).toFixed(2)}
                     </td>
                     <td className="px-4 py-2 border text-center">
                       <Button
@@ -317,7 +433,7 @@ const LocalPurchaseAgreementForm = ({ onBack }) => {
           <div>
             <h2 className="text-lg font-semibold mb-2 text-blue-700">PAYMENT TERMS</h2>
             <Textarea
-              value={formData.payment_terms}
+              value={formData.payment_terms || ''}
               onChange={(e) => handleInputChange('payment_terms', e.target.value)}
               rows={3}
             />
@@ -326,7 +442,7 @@ const LocalPurchaseAgreementForm = ({ onBack }) => {
           <div>
             <h2 className="text-lg font-semibold mb-2 text-blue-700">DELIVERY TERMS</h2>
             <Textarea
-              value={formData.delivery_terms}
+              value={formData.delivery_terms || ''}
               onChange={(e) => handleInputChange('delivery_terms', e.target.value)}
               rows={3}
             />
@@ -336,7 +452,7 @@ const LocalPurchaseAgreementForm = ({ onBack }) => {
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-2 text-blue-700">QUALITY REQUIREMENTS</h2>
           <Textarea
-            value={formData.quality_requirements}
+            value={formData.quality_requirements || ''}
             onChange={(e) => handleInputChange('quality_requirements', e.target.value)}
             rows={3}
           />
@@ -345,7 +461,7 @@ const LocalPurchaseAgreementForm = ({ onBack }) => {
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-2 text-blue-700">SPECIAL TERMS AND CONDITIONS</h2>
           <Textarea
-            value={formData.special_terms}
+            value={formData.special_terms || ''}
             onChange={(e) => handleInputChange('special_terms', e.target.value)}
             placeholder="Enter any special terms or conditions for this agreement"
             rows={3}
@@ -355,11 +471,29 @@ const LocalPurchaseAgreementForm = ({ onBack }) => {
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-2 text-blue-700">NOTES</h2>
           <Textarea
-            value={formData.notes}
+            value={formData.notes || ''}
             onChange={(e) => handleInputChange('notes', e.target.value)}
             placeholder="Enter any additional notes"
             rows={2}
           />
+        </div>
+        
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-600 mb-2">Contract Status</label>
+          <Select 
+            value={formData.contract_status || 'draft'} 
+            onValueChange={(value) => handleInputChange('contract_status', value)}
+          >
+            <SelectTrigger className="w-full max-w-xs">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 mb-6">
