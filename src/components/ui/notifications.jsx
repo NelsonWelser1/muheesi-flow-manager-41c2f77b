@@ -58,6 +58,28 @@ export const dismissToast = (toastId) => {
   }
 };
 
+// Contract specific toast notifications
+export const showContractSavedToast = (toast, buyerName) => {
+  showSuccessToast(
+    toast, 
+    `Contract for ${buyerName || 'client'} has been saved successfully.`
+  );
+};
+
+export const showContractExportedToast = (toast, format, buyerName) => {
+  showSuccessToast(
+    toast, 
+    `Contract for ${buyerName || 'client'} has been exported as ${format}.`
+  );
+};
+
+export const showContractErrorToast = (toast, errorType, message) => {
+  showErrorToast(
+    toast, 
+    `${errorType}: ${message}`
+  );
+};
+
 // New notification helpers for reports
 export const showReportSubmittedToast = (toast, reportTitle) => {
   toast({
