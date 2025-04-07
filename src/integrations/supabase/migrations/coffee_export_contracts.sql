@@ -89,7 +89,7 @@ CREATE INDEX IF NOT EXISTS coffee_export_contracts_contract_number_idx ON coffee
 -- Create an index on buyer_name for faster lookups
 CREATE INDEX IF NOT EXISTS coffee_export_contracts_buyer_name_idx ON coffee_export_contracts(buyer_name);
 
--- Create trigger to automatically update the updated_at timestamp
+-- Create the updated_at function if it doesn't exist
 CREATE OR REPLACE FUNCTION update_modified_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -98,6 +98,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop the trigger if it exists before creating it again
+DROP TRIGGER IF EXISTS update_coffee_export_contracts_modtime ON coffee_export_contracts;
+
+-- Create the trigger
 CREATE TRIGGER update_coffee_export_contracts_modtime
 BEFORE UPDATE ON coffee_export_contracts
 FOR EACH ROW
