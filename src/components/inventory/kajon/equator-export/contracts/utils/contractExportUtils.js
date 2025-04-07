@@ -1,320 +1,226 @@
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
-import * as XLSX from 'xlsx';
-import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
-import { format } from 'date-fns';
+
+// Import necessary libraries
+import { useToast } from "@/components/ui/use-toast";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
+import * as XLSX from "xlsx";
+import { format } from "date-fns";
+import { toPng } from "html-to-image";
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
 /**
- * Exports the contract template to PDF by capturing the HTML content
- * @param {HTMLElement} templateRef - Reference to the template DOM element
- * @param {string} filename - Name for the downloaded file
- * @param {Function} toast - Toast function for notifications
- * @returns {Promise<boolean>} - Success status of the export
+ * Export a contract to PDF
+ * @param {HTMLElement} element - The DOM element to convert to PDF
+ * @param {string} filename - The filename to save the PDF as
+ * @param {object} toast - The toast function from useToast hook
+ * @returns {Promise<void>}
  */
-export const exportContractToPDF = async (templateRef, filename, toast) => {
+export const exportContractToPDF = async (element, filename, toast) => {
+  if (!element) {
+    showErrorToast(toast, "Error", "Nothing to export");
+    return;
+  }
+
   try {
-    if (!templateRef) {
-      throw new Error('Template element not found');
-    }
-
     // Show loading toast
-    const loadingToast = showLoadingToast(toast, 'Generating PDF...');
-    
-    // Temporarily add a class to help with styling during capture
-    document.body.classList.add('generating-pdf');
-    
-    // Configure html2canvas with high quality settings
-    const canvas = await html2canvas(templateRef, {
-      scale: 2, // Higher scale for better quality
-      useCORS: true, // Enable CORS for images
-      logging: false,
-      backgroundColor: '#ffffff',
-      windowWidth: templateRef.scrollWidth,
-      windowHeight: templateRef.scrollHeight,
-      onclone: (doc) => {
-        // Apply print-specific styling to the cloned document
-        const element = doc.body.querySelector('.print-container');
-        if (element) {
-          element.style.padding = '0';
-          element.style.margin = '0 auto';
-          element.style.border = 'none';
-          element.style.boxShadow = 'none';
-        }
-      }
-    });
-    
-    // Remove the temporary class
-    document.body.classList.remove('generating-pdf');
-    
-    // Create PDF with appropriate dimensions
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 297; // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+    showSuccessToast(toast, "Processing", "Generating PDF...");
 
-    // Add additional pages if the content doesn't fit on one page
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    // Convert HTML to canvas
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff"
+    });
+
+    // Create PDF
+    const pdf = new jsPDF({
+      unit: "mm",
+      format: "a4",
+      orientation: "portrait"
+    });
+
+    // Calculate dimensions to fit content on the page
+    const imgData = canvas.toDataURL("image/png");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    
+    const ratio = canvasWidth / canvasHeight;
+    const imgWidth = pageWidth - 20; // Margins
+    const imgHeight = imgWidth / ratio;
+    
+    // Check if the height is greater than page height and handle multiple pages
+    if (imgHeight > pageHeight - 20) {
+      let position = 0;
+      let heightLeft = canvasHeight;
+      let pdfPageHeight = pageHeight - 20; // Margins
+      
+      while (heightLeft > 0) {
+        pdf.addPage();
+        
+        // Add image to page
+        pdf.addImage(
+          imgData,
+          "PNG",
+          10, // x position
+          10, // y position
+          imgWidth,
+          imgHeight,
+          "",
+          "FAST",
+          0,
+          position / canvasHeight * canvas.height // Crop position
+        );
+        
+        // Move position and reduce height left
+        heightLeft -= pdfPageHeight;
+        position += pdfPageHeight;
+      }
+    } else {
+      // Single page, add image centered
+      pdf.addImage(
+        imgData,
+        "PNG",
+        10, // x position
+        10, // y position
+        imgWidth,
+        imgHeight
+      );
     }
     
-    // Save the PDF
+    // Save PDF
     pdf.save(`${filename}.pdf`);
     
-    // Dismiss loading toast and show success
-    if (loadingToast) dismissToast(loadingToast);
-    showSuccessToast(toast, 'PDF exported successfully');
-    
-    return true;
+    // Show success toast
+    showSuccessToast(toast, "Success", "PDF exported successfully");
   } catch (error) {
-    console.error('Error exporting contract to PDF:', error);
-    showErrorToast(toast, `Failed to export PDF: ${error.message}`);
-    return false;
+    console.error("Error exporting PDF:", error);
+    showErrorToast(toast, "Error", "Failed to export PDF");
   }
 };
 
 /**
- * Exports the contract template to JPG by capturing the HTML content
- * @param {HTMLElement} templateRef - Reference to the template DOM element
- * @param {string} filename - Name for the downloaded file
- * @param {Function} toast - Toast function for notifications
- * @returns {Promise<boolean>} - Success status of the export
+ * Export a contract to JPG
+ * @param {HTMLElement} element - The DOM element to convert to JPG
+ * @param {string} filename - The filename to save the JPG as
+ * @param {object} toast - The toast function from useToast hook
+ * @returns {Promise<void>}
  */
-export const exportContractToJPG = async (templateRef, filename, toast) => {
-  try {
-    if (!templateRef) {
-      throw new Error('Template element not found');
-    }
+export const exportContractToJPG = async (element, filename, toast) => {
+  if (!element) {
+    showErrorToast(toast, "Error", "Nothing to export");
+    return;
+  }
 
+  try {
     // Show loading toast
-    const loadingToast = showLoadingToast(toast, 'Generating Image...');
-    
-    // Configure html2canvas with high quality settings
-    const canvas = await html2canvas(templateRef, {
-      scale: 3, // Higher scale for better quality
-      useCORS: true, // Enable CORS for images
-      logging: false,
-      backgroundColor: '#ffffff'
+    showSuccessToast(toast, "Processing", "Generating image...");
+
+    const dataUrl = await toPng(element, {
+      cacheBust: true,
+      quality: 0.95,
+      backgroundColor: "#ffffff",
+      pixelRatio: 2
     });
     
-    // Convert canvas to data URL
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-    
-    // Create a download link
-    const link = document.createElement('a');
-    link.href = dataUrl;
+    // Create a link element and trigger download
+    const link = document.createElement("a");
     link.download = `${filename}.jpg`;
-    document.body.appendChild(link);
+    link.href = dataUrl;
     link.click();
-    document.body.removeChild(link);
     
-    // Dismiss loading toast and show success
-    if (loadingToast) dismissToast(loadingToast);
-    showSuccessToast(toast, 'Image exported successfully');
-    
-    return true;
+    // Show success toast
+    showSuccessToast(toast, "Success", "Image exported successfully");
   } catch (error) {
-    console.error('Error exporting contract to JPG:', error);
-    showErrorToast(toast, `Failed to export JPG: ${error.message}`);
-    return false;
+    console.error("Error exporting image:", error);
+    showErrorToast(toast, "Error", "Failed to export image");
   }
 };
 
 /**
- * Exports the contract data to Excel
- * @param {HTMLElement} templateRef - Reference to the template DOM element (not used, kept for consistency)
- * @param {Object} contractData - The contract data object
- * @param {string} filename - Name for the downloaded file
- * @param {Function} toast - Toast function for notifications
- * @returns {Promise<boolean>} - Success status of the export
+ * Export a contract to Excel
+ * @param {HTMLElement} element - The DOM element to grab data from (not used directly)
+ * @param {object} data - The contract data object
+ * @param {string} filename - The filename to save the Excel as
+ * @param {object} toast - The toast function from useToast hook
+ * @returns {Promise<void>}
  */
-export const exportContractToExcel = async (templateRef, contractData, filename, toast) => {
+export const exportContractToExcel = async (element, data, filename, toast) => {
   try {
-    if (!contractData) {
-      throw new Error('Contract data not provided');
-    }
-
     // Show loading toast
-    const loadingToast = showLoadingToast(toast, 'Generating Excel file...');
-    
-    // Determine the type of contract based on the data structure
-    let worksheets = [];
-    
-    // Check if it's a local purchase agreement
-    if (contractData.items && Array.isArray(contractData.items)) {
-      // Local Purchase Agreement format
-      worksheets = [
-        {
-          name: 'Contract Details',
-          data: [
-            ['Contract Number', contractData.contract_number || ''],
-            ['Date', format(new Date(contractData.agreement_date || new Date()), 'yyyy-MM-dd')],
-            ['Status', contractData.contract_status || 'draft'],
-            ['Buyer', contractData.buyer_name || ''],
-            ['Buyer Address', contractData.buyer_address || ''],
-            ['Buyer Contact', contractData.buyer_contact || ''],
-            ['Supplier', contractData.supplier_name || ''],
-            ['Supplier Address', contractData.supplier_address || ''],
-            ['Supplier Contact', contractData.supplier_contact || ''],
-            ['Payment Terms', contractData.payment_terms || ''],
-            ['Delivery Terms', contractData.delivery_terms || ''],
-            ['Quality Requirements', contractData.quality_requirements || ''],
-            ['Special Terms', contractData.special_terms || ''],
-            ['Notes', contractData.notes || ''],
-            ['Total Value', parseFloat(contractData.total_value || '0').toFixed(2)]
-          ]
-        },
-        {
-          name: 'Items',
-          data: [
-            ['Description', 'Variety/Type', 'Quantity', 'Unit', 'Price per Unit', 'Total Value'],
-            ...contractData.items.map(item => [
-              item.description || '',
-              item.variety || '',
-              parseFloat(item.quantity || '0').toString(),
-              item.unit || 'Kg',
-              parseFloat(item.unit_price || '0').toFixed(2),
-              (parseFloat(item.quantity || '0') * parseFloat(item.unit_price || '0')).toFixed(2)
-            ])
-          ]
-        }
-      ];
-    } else if (contractData.product_details && Array.isArray(contractData.product_details)) {
-      // Export contract format (from coffee contract templates)
-      worksheets = [
-        {
-          name: 'Contract Details',
-          data: [
-            ['Contract Number', contractData.contract_number || ''],
-            ['Date', format(new Date(contractData.contract_date || new Date()), 'yyyy-MM-dd')],
-            ['Buyer', contractData.buyer_name || ''],
-            ['Buyer Address', contractData.buyer_address || ''],
-            ['Seller', contractData.seller_name || ''],
-            ['Seller Address', contractData.seller_address || ''],
-            ['Incoterm', contractData.incoterm || ''],
-            ['Loading Port', contractData.loading_port || ''],
-            ['Destination', contractData.destination || ''],
-            ['Latest Shipment', contractData.latest_shipment || ''],
-            ['Payment Terms', contractData.payment_terms || ''],
-            ['Additional Terms', contractData.additional_terms || '']
-          ]
-        },
-        {
-          name: 'Products',
-          data: [
-            ['Description', 'Origin', 'Quantity (Kg)', 'Grade', 'Price per Kg', 'Total Value'],
-            ...contractData.product_details.map(product => [
-              product.description || '',
-              product.origin || '',
-              parseFloat(product.quantity || '0').toString(),
-              product.grade || '',
-              parseFloat(product.price_per_kg || '0').toFixed(2),
-              parseFloat(product.total_value || '0').toFixed(2)
-            ])
-          ]
-        }
-      ];
-      
-      // Add quality specifications if available
-      if (contractData.quality_specs && Array.isArray(contractData.quality_specs)) {
-        worksheets.push({
-          name: 'Quality Specifications',
-          data: [
-            ['Type', 'Moisture', 'Defect Content', 'Cup Score', 'Processing', 'Flavor Profile'],
-            ...contractData.quality_specs.map(spec => [
-              spec.type || '',
-              spec.moisture || '',
-              spec.defect_content || '',
-              spec.cup_score || '',
-              spec.processing || '',
-              spec.flavor_profile || ''
-            ])
-          ]
-        });
-      }
-    } else {
-      // Generic fallback format
-      const data = [];
-      for (const [key, value] of Object.entries(contractData)) {
-        if (typeof value !== 'object') {
-          data.push([key, value]);
-        }
-      }
-      worksheets = [{ name: 'Contract', data }];
-    }
-    
+    showSuccessToast(toast, "Processing", "Generating Excel file...");
+
     // Create a new workbook
-    const workbook = XLSX.utils.book_new();
+    const wb = XLSX.utils.book_new();
     
-    // Add each worksheet to the workbook
-    worksheets.forEach(sheet => {
-      const worksheet = XLSX.utils.aoa_to_sheet(sheet.data);
-      XLSX.utils.book_append_sheet(workbook, worksheet, sheet.name);
-    });
+    // Format contract data for Excel
+    const mainInfo = [
+      ["LOCAL PURCHASE AGREEMENT"],
+      [`Contract #: ${data.contract_number}`],
+      [`Date: ${format(new Date(data.agreement_date), 'MMMM dd, yyyy')}`],
+      [""],
+      ["BUYER INFORMATION"],
+      [`Company: ${data.buyer_name}`],
+      [`Address: ${data.buyer_address || "N/A"}`],
+      [`Contact: ${data.buyer_contact || "N/A"}`],
+      [""],
+      ["SUPPLIER INFORMATION"],
+      [`Company/Farm/Producer: ${data.supplier_name}`],
+      [`Address: ${data.supplier_address || "N/A"}`],
+      [`Contact: ${data.supplier_contact || "N/A"}`],
+      [""],
+      ["CONTRACT TERMS"],
+      [`Payment Terms: ${data.payment_terms || "N/A"}`],
+      [`Delivery Terms: ${data.delivery_terms || "N/A"}`],
+      [`Quality Requirements: ${data.quality_requirements || "N/A"}`],
+      [`Special Terms: ${data.special_terms || "N/A"}`],
+      [`Notes: ${data.notes || "N/A"}`],
+      [`Status: ${data.contract_status || "draft"}`],
+    ];
     
-    // Generate Excel file and trigger download
-    XLSX.writeFile(workbook, `${filename}.xlsx`);
+    // Create main worksheet
+    const wsMain = XLSX.utils.aoa_to_sheet(mainInfo);
+    XLSX.utils.book_append_sheet(wb, wsMain, "Contract Info");
     
-    // Dismiss loading toast and show success
-    if (loadingToast) dismissToast(loadingToast);
-    showSuccessToast(toast, 'Excel file exported successfully');
+    // Create items worksheet if items exist
+    if (data.items && data.items.length > 0) {
+      const itemsHeader = [["Description", "Variety/Type", "Quantity", "Unit", "Price per Unit", "Total"]];
+      
+      const itemsData = data.items.map(item => [
+        item.description || "",
+        item.variety || "",
+        item.quantity || 0,
+        item.unit || "Kg",
+        item.unit_price || 0,
+        (item.quantity || 0) * (item.unit_price || 0)
+      ]);
+      
+      // Add total row
+      const totalValue = data.items.reduce(
+        (total, item) => total + ((item.quantity || 0) * (item.unit_price || 0)), 
+        0
+      );
+      
+      itemsData.push(["", "", "", "", "TOTAL", totalValue]);
+      
+      // Combine header and data
+      const itemsSheet = [...itemsHeader, ...itemsData];
+      
+      // Create items worksheet
+      const wsItems = XLSX.utils.aoa_to_sheet(itemsSheet);
+      XLSX.utils.book_append_sheet(wb, wsItems, "Items");
+    }
     
-    return true;
+    // Write workbook and trigger download
+    XLSX.writeFile(wb, `${filename}.xlsx`);
+    
+    // Show success toast
+    showSuccessToast(toast, "Success", "Excel file exported successfully");
   } catch (error) {
-    console.error('Error exporting contract to Excel:', error);
-    showErrorToast(toast, `Failed to export Excel: ${error.message}`);
-    return false;
-  }
-};
-
-// Helper function for a loading toast
-const showLoadingToast = (toast, message) => {
-  if (toast) {
-    return toast({
-      title: "Processing",
-      description: message,
-      duration: 10000, // 10s
-    });
-  }
-  return null;
-};
-
-// Helper function to dismiss a toast
-const dismissToast = (toastId) => {
-  if (toastId) {
-    return { id: toastId };
-  }
-};
-
-// Create default notification functions for internal use
-const defaultNotifications = {
-  showSuccessToast: (toast, message) => {
-    if (toast) {
-      toast({
-        title: "Success",
-        description: message,
-        duration: 3000,
-      });
-    } else {
-      console.log('Success:', message);
-    }
-  },
-  showErrorToast: (toast, message) => {
-    if (toast) {
-      toast({
-        title: "Error",
-        description: message,
-        variant: "destructive",
-        duration: 5000,
-      });
-    } else {
-      console.error('Error:', message);
-    }
+    console.error("Error exporting Excel:", error);
+    showErrorToast(toast, "Error", "Failed to export Excel file");
   }
 };
