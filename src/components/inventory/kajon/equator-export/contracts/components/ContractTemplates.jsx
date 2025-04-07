@@ -10,11 +10,9 @@ import GeneralProduceTemplate from './templates/GeneralProduceTemplate';
 import FreshProduceTemplate from './templates/FreshProduceTemplate';
 import { exportContractToPDF } from '../utils/contractPdfExport';
 import '../styles/PrintStyles.css';
-import { useContractTemplates } from '@/integrations/supabase/hooks/useContractTemplates';
 
 const ContractTemplates = ({ onBack }) => {
   const { toast } = useToast();
-  const { saveContract, fetchContracts, fetchContractById, isLoading } = useContractTemplates();
   const [activeTemplate, setActiveTemplate] = useState(null);
   const [selectedTab, setSelectedTab] = useState("coffee");
   const [editMode, setEditMode] = useState(false);
@@ -26,22 +24,6 @@ const ContractTemplates = ({ onBack }) => {
     fresh: null
   });
   const templateRef = useRef(null);
-
-  // Load saved contracts on component mount
-  useEffect(() => {
-    const loadSavedContracts = async () => {
-      const contracts = await fetchContracts();
-      setSavedTemplates(contracts.map(contract => ({
-        id: contract.id,
-        type: contract.contract_type,
-        title: contract.contract_name,
-        data: contract.contract_data,
-        dateCreated: contract.created_at
-      })));
-    };
-    
-    loadSavedContracts();
-  }, [fetchContracts]);
 
   // When printing, add a class to the body element to apply print-specific styles
   useEffect(() => {
@@ -150,44 +132,32 @@ const ContractTemplates = ({ onBack }) => {
     setEditMode(prev => !prev);
   };
 
-  const handleSaveContract = async () => {
+  const handleSaveContract = () => {
     if (!activeTemplate) return;
     
-    // Prepare contract data for saving
-    const contractData = {
+    // Create a saved template entry
+    const savedTemplate = {
+      id: Date.now().toString(),
       type: activeTemplate,
       title: `${activeTemplate.charAt(0).toUpperCase() + activeTemplate.slice(1)} Contract - ${new Date().toLocaleDateString()}`,
-      ...editableData[activeTemplate],
+      data: editableData[activeTemplate],
       dateCreated: new Date().toISOString()
     };
     
-    // Save contract to Supabase
-    const result = await saveContract(contractData);
+    // Add to saved templates
+    setSavedTemplates(prev => [...prev, savedTemplate]);
     
-    if (result.success) {
-      // Update saved templates list
-      const savedContract = {
-        id: result.id,
-        type: activeTemplate,
-        title: contractData.title,
-        data: editableData[activeTemplate],
-        dateCreated: new Date().toISOString()
-      };
-      
-      setSavedTemplates(prev => {
-        // Replace if exists, otherwise add
-        const exists = prev.some(t => t.id === result.id);
-        return exists 
-          ? prev.map(t => t.id === result.id ? savedContract : t)
-          : [...prev, savedContract];
-      });
-      
-      // Update saved state
-      setTemplateSaved(true);
-      
-      // Exit edit mode
-      setEditMode(false);
-    }
+    // Update saved state
+    setTemplateSaved(true);
+    
+    // Exit edit mode
+    setEditMode(false);
+    
+    // Show success toast
+    toast({
+      title: "Contract saved successfully",
+      description: "You can now print or download this contract as PDF",
+    });
   };
 
   const handleDataChange = (field, value) => {

@@ -1,3 +1,4 @@
+
 import { supabase } from './supabase';
 import { SupabaseAuthProvider, useSupabaseAuth, SupabaseAuthUI } from './auth';
 
@@ -71,10 +72,6 @@ import {
     useCattleFatteningAnalytics
 } from './hooks/useKyalimaCattleFattening';
 
-// Import KAJON export contract hooks
-import { useContractTemplates } from './hooks/useContractTemplates';
-import { runContractsMigrations } from './migrations/contract_migrations';
-
 // Export everything individually
 export {
     supabase,
@@ -136,19 +133,5 @@ export {
     useAddCattleFattening,
     useUpdateCattleFattening,
     useDeleteCattleFattening,
-    useCattleFatteningAnalytics,
-    // KAJON Export Contract hooks
-    useContractTemplates,
-    runContractsMigrations
+    useCattleFatteningAnalytics
 };
-
-// Initialize migrations when this file is imported
-// This ensures the database tables are created when the app starts
-(async () => {
-    try {
-        console.log('Initializing contract migrations...');
-        await runContractsMigrations();
-    } catch (error) {
-        console.error('Failed to initialize contract migrations:', error);
-    }
-})();
