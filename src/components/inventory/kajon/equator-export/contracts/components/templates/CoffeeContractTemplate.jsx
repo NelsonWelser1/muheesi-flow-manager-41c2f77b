@@ -81,6 +81,13 @@ const CoffeeContractTemplate = ({ editMode, data, onDataChange }) => {
       {/* Header and Logo */}
       <div className="flex justify-between items-start mb-6 pb-6 border-b">
         <div>
+          <div className="flex items-center mb-2">
+            <img 
+              src="/combined-logo.png" 
+              alt="KAJON Coffee Limited" 
+              className="h-16 w-auto mr-3"
+            />
+          </div>
           <h1 className="text-2xl font-bold text-blue-900">COFFEE EXPORT CONTRACT</h1>
           <p className="text-gray-600">KAJON Coffee Limited</p>
           <p className="text-gray-600">Kanoni, Kazo District, Uganda</p>
