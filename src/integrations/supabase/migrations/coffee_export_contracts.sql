@@ -4,61 +4,90 @@ CREATE TABLE IF NOT EXISTS coffee_export_contracts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   contract_number TEXT NOT NULL,
   contract_date DATE NOT NULL,
+  
   -- Seller details
   seller_name TEXT NOT NULL,
   seller_address TEXT,
   seller_registration TEXT,
+  seller_contact TEXT,
+  seller_email TEXT,
+  
   -- Buyer details
   buyer_name TEXT NOT NULL,
   buyer_address TEXT,
   buyer_registration TEXT,
+  buyer_contact TEXT,
+  buyer_email TEXT,
+  
   -- Products (stored as JSONB array)
   products JSONB NOT NULL,
+  
+  -- Quality specifications (stored as JSONB array)
+  quality_specifications JSONB NOT NULL,
+  
   -- Payment terms (stored as JSONB array)
   payment_terms_items JSONB NOT NULL,
-  -- Shipping terms
-  shipping_left_label1 TEXT,
-  shipping_left_value1 TEXT,
-  shipping_left_label2 TEXT,
-  shipping_left_value2 TEXT,
-  shipping_left_label3 TEXT,
-  shipping_left_value3 TEXT,
-  shipping_right_label1 TEXT,
-  shipping_right_value1 TEXT,
-  shipping_right_label2 TEXT,
-  shipping_right_value2 TEXT,
-  shipping_right_label3 TEXT,
-  shipping_right_value3 TEXT,
-  additional_shipping_terms_label TEXT,
+  
+  -- Shipping details
+  shipping_incoterm TEXT,
+  shipping_packaging TEXT,
+  shipping_loading_port TEXT,
+  shipping_destination TEXT,
+  shipping_latest_date TEXT,
+  shipping_timeline TEXT,
   additional_shipping_terms TEXT,
-  -- Signature fields
-  for_seller_label TEXT,
-  seller_name_label TEXT,
-  seller_name_value TEXT,
-  seller_title_label TEXT,
-  seller_title_value TEXT,
-  seller_date_label TEXT,
-  seller_date_value TEXT,
-  seller_signature_label TEXT,
+  
+  -- Certification details
+  certifications JSONB,
+  
+  -- Insurance and risk
+  insurance_requirements TEXT,
+  risk_transfer TEXT,
+  
+  -- Inspection
+  inspection_method TEXT,
+  inspection_location TEXT,
+  inspection_timeline TEXT,
+  
+  -- Quality claims
+  quality_claims_period TEXT,
+  quality_claims_process TEXT,
+  
+  -- Defaults and remedies
+  defaults_remedies TEXT,
+  
+  -- Force majeure
+  force_majeure TEXT,
+  
+  -- Governing law
+  governing_law TEXT,
+  dispute_resolution TEXT,
+  
+  -- Signatures and completion
+  seller_signature_name TEXT,
+  seller_signature_title TEXT,
+  seller_signature_date TEXT,
   seller_signature_value TEXT,
-  for_buyer_label TEXT,
-  buyer_signature_name_label TEXT,
-  buyer_signature_name_value TEXT,
-  buyer_signature_title_label TEXT,
-  buyer_signature_title_value TEXT,
-  buyer_signature_date_label TEXT,
-  buyer_signature_date_value TEXT,
-  buyer_signature_label TEXT,
+  
+  buyer_signature_name TEXT,
+  buyer_signature_title TEXT,
+  buyer_signature_date TEXT,
   buyer_signature_value TEXT,
+  
   company_stamp TEXT,
+  
   -- Metadata
   total_contract_value NUMERIC(15, 2),
+  contract_status TEXT DEFAULT 'draft',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create an index on contract_number for faster lookups
 CREATE INDEX IF NOT EXISTS coffee_export_contracts_contract_number_idx ON coffee_export_contracts(contract_number);
+
+-- Create an index on buyer_name for faster lookups
+CREATE INDEX IF NOT EXISTS coffee_export_contracts_buyer_name_idx ON coffee_export_contracts(buyer_name);
 
 -- Create trigger to automatically update the updated_at timestamp
 CREATE OR REPLACE FUNCTION update_modified_column()
