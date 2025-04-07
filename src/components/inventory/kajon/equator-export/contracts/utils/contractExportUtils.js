@@ -1,4 +1,3 @@
-
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import * as XLSX from 'xlsx';
@@ -293,7 +292,7 @@ const dismissToast = (toastId) => {
   }
 };
 
-// Attempt to create notification functions if not available
+// Create default notification functions for internal use
 const defaultNotifications = {
   showSuccessToast: (toast, message) => {
     if (toast) {
@@ -317,30 +316,5 @@ const defaultNotifications = {
     } else {
       console.error('Error:', message);
     }
-  }
-};
-
-// Export default notification functions
-export const showSuccessToast = (toast, message) => {
-  try {
-    if (typeof window.showSuccessToast === 'function') {
-      return window.showSuccessToast(toast, message);
-    } else {
-      return defaultNotifications.showSuccessToast(toast, message);
-    }
-  } catch (e) {
-    return defaultNotifications.showSuccessToast(toast, message);
-  }
-};
-
-export const showErrorToast = (toast, message) => {
-  try {
-    if (typeof window.showErrorToast === 'function') {
-      return window.showErrorToast(toast, message);
-    } else {
-      return defaultNotifications.showErrorToast(toast, message);
-    }
-  } catch (e) {
-    return defaultNotifications.showErrorToast(toast, message);
   }
 };
