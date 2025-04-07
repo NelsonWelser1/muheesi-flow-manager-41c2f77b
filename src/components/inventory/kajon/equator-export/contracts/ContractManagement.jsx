@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, Plus, FileText, Download, Eye, Briefcase, Filter, Calendar, ArrowUpDown, FileCode } from 'lucide-react';
+import { Search, Plus, FileText, Download, Eye, Briefcase, Filter, Calendar, ArrowUpDown, FileCode, Store } from 'lucide-react';
 import ContractTemplates from './components/ContractTemplates';
+import LocalPurchaseAgreementPanel from './components/local-purchase/LocalPurchaseAgreementPanel';
 import { exportContractToPDF } from './utils/contractPdfExport';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
+import { runLocalPurchaseAgreementMigration } from './utils/localPurchaseAgreementMigration';
+
 const contractStatusColors = {
   active: "bg-green-100 text-green-800",
   pending: "bg-amber-100 text-amber-800",
@@ -18,11 +22,23 @@ const contractStatusColors = {
   draft: "bg-gray-100 text-gray-800",
   negotiation: "bg-purple-100 text-purple-800"
 };
+
 const ContractManagement = () => {
-  const {
-    toast
-  } = useToast();
-  const [showTemplates, setShowTemplates] = useState(false);
+  const { toast } = useToast();
+  const [activeView, setActiveView] = useState('contracts'); // 'contracts', 'templates', 'local-purchase'
+  
+  // Initialize migrations when component mounts
+  useEffect(() => {
+    const initMigrations = async () => {
+      try {
+        await runLocalPurchaseAgreementMigration();
+      } catch (error) {
+        console.error('Failed to initialize local purchase agreement migrations:', error);
+      }
+    };
+    
+    initMigrations();
+  }, []);
 
   // Sample contracts data
   const contracts = [{
@@ -76,6 +92,7 @@ const ContractManagement = () => {
     coffeeType: 'Arabica',
     quantity: '10 tons'
   }];
+  
   const handleContractDownload = contract => {
     // Create new PDF document
     const doc = new jsPDF();
@@ -142,6 +159,7 @@ const ContractManagement = () => {
       description: `Contract ${contract.id} downloaded successfully`
     });
   };
+  
   const handleExportAllContracts = () => {
     // Create new PDF document
     const doc = new jsPDF();
@@ -195,6 +213,7 @@ const ContractManagement = () => {
       description: "All contracts exported successfully"
     });
   };
+  
   return <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div className="flex-1">
@@ -202,19 +221,39 @@ const ContractManagement = () => {
           <p className="text-gray-500 text-sm">Manage export contracts and agreements</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="flex items-center gap-1">
-            <Filter className="h-4 w-4" />
-            <span>Filter</span>
+          <Button 
+            variant={activeView === 'contracts' ? "default" : "outline"} 
+            className="flex items-center gap-1"
+            onClick={() => setActiveView('contracts')}
+          >
+            <Briefcase className="h-4 w-4" />
+            <span>Export Contracts</span>
           </Button>
-          <Button variant="outline" className="flex items-center gap-1" onClick={() => setShowTemplates(true)}>
+          <Button 
+            variant={activeView === 'local-purchase' ? "default" : "outline"} 
+            className="flex items-center gap-1"
+            onClick={() => setActiveView('local-purchase')}
+          >
+            <Store className="h-4 w-4" />
+            <span>Local Purchase</span>
+          </Button>
+          <Button 
+            variant={activeView === 'templates' ? "default" : "outline"} 
+            className="flex items-center gap-1"
+            onClick={() => setActiveView('templates')}
+          >
             <FileCode className="h-4 w-4" />
-            <span>Contract Templates</span>
+            <span>Templates</span>
           </Button>
-          
         </div>
       </div>
       
-      {showTemplates ? <ContractTemplates onBack={() => setShowTemplates(false)} /> : <>
+      {activeView === 'templates' ? (
+        <ContractTemplates onBack={() => setActiveView('contracts')} />
+      ) : activeView === 'local-purchase' ? (
+        <LocalPurchaseAgreementPanel onBack={() => setActiveView('contracts')} />
+      ) : (
+        <>
           <Card>
             <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
@@ -359,7 +398,9 @@ const ContractManagement = () => {
               </div>
             </CardContent>
           </Card>
-        </>}
+        </>
+      )}
     </div>;
 };
+
 export default ContractManagement;
