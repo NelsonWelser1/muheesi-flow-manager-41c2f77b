@@ -55,68 +55,40 @@ export const useCoffeeExportContract = () => {
   const saveContract = async (contractData) => {
     setIsLoading(true);
     try {
-      console.log('Saving contract data:', contractData);
-      
       // Calculate total contract value from products
-      const totalValue = calculateTotalContractValue(contractData.products || []);
+      const totalValue = calculateTotalContractValue(contractData.products);
       
       // Generate a contract number if not provided
       const contractNumber = contractData.contract_number || generateContractNumber();
-      
-      // Ensure all JSONB fields are properly formatted as arrays
-      const products = Array.isArray(contractData.products) ? contractData.products : [];
-      const quality_specifications = Array.isArray(contractData.quality_specifications) 
-        ? contractData.quality_specifications 
-        : [];
-      const payment_terms_items = Array.isArray(contractData.payment_terms_items) 
-        ? contractData.payment_terms_items 
-        : [];
       
       // Create the contract data object to save
       const dataToSave = {
         ...contractData,
         contract_number: contractNumber,
         total_contract_value: totalValue,
-        products: products,
-        quality_specifications: quality_specifications,
-        payment_terms_items: payment_terms_items,
+        // Ensure JSONB fields are properly formatted
+        products: Array.isArray(contractData.products) ? contractData.products : [],
+        quality_specifications: Array.isArray(contractData.quality_specifications) ? contractData.quality_specifications : [],
+        payment_terms_items: Array.isArray(contractData.payment_terms_items) ? contractData.payment_terms_items : [],
         certifications: contractData.certifications || null
       };
 
-      console.log('Prepared contract data for saving:', dataToSave);
-
       // Determine if this is an update or insert
-      let result;
-      if (contractData.id) {
-        console.log(`Updating existing contract with ID: ${contractData.id}`);
-        result = await supabase
-          .from('coffee_export_contracts')
-          .update(dataToSave)
-          .eq('id', contractData.id)
-          .select();
-      } else {
-        console.log('Creating new contract');
-        result = await supabase
-          .from('coffee_export_contracts')
-          .insert(dataToSave)
-          .select();
-      }
+      const { data, error } = contractData.id 
+        ? await supabase
+            .from('coffee_export_contracts')
+            .update(dataToSave)
+            .eq('id', contractData.id)
+            .select()
+        : await supabase
+            .from('coffee_export_contracts')
+            .insert(dataToSave)
+            .select();
 
-      const { data, error } = result;
+      if (error) throw error;
 
-      if (error) {
-        console.error('Supabase error when saving contract:', error);
-        throw error;
-      }
-
-      if (!data || data.length === 0) {
-        throw new Error('No data returned from Supabase after save operation');
-      }
-
-      console.log('Contract saved successfully:', data[0]);
-      
       // Show success notification
-      showContractSavedToast(toast, contractData.buyer_name || 'Client');
+      showContractSavedToast(toast, contractData.buyer_name);
       
       return data[0];
     } catch (error) {
