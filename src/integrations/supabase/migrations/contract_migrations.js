@@ -1,5 +1,5 @@
 
-import { runExportContractsMigration } from '@/integrations/supabase/migrations/export_contracts_migration';
+import { runExportContractsMigration } from './export_contracts_migration';
 
 /**
  * Function to run all migrations required for the contracts module

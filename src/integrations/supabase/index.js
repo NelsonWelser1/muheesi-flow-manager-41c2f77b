@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 import { SupabaseAuthProvider, useSupabaseAuth, SupabaseAuthUI } from './auth';
 
@@ -74,7 +73,7 @@ import {
 
 // Import KAJON export contract hooks
 import { useContractTemplates } from './hooks/useContractTemplates';
-import { runContractsMigrations } from '../components/inventory/kajon/equator-export/contracts/utils/runMigrations';
+import { runContractsMigrations } from './migrations/contract_migrations';
 
 // Export everything individually
 export {
