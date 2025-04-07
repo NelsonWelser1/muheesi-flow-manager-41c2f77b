@@ -67,25 +67,3 @@ export const dismissToast = (id) => {
     toastFn.dismiss(id);
   }
 };
-
-// Contract specific toast notifications
-export const showContractSavedToast = (toast, buyerName) => {
-  showSuccessToast(
-    toast, 
-    `Contract for ${buyerName || 'client'} has been saved successfully.`
-  );
-};
-
-export const showContractExportedToast = (toast, format, buyerName) => {
-  showSuccessToast(
-    toast, 
-    `Contract for ${buyerName || 'client'} has been exported as ${format}.`
-  );
-};
-
-export const showContractErrorToast = (toast, errorType, message) => {
-  showErrorToast(
-    toast, 
-    `${errorType}: ${message}`
-  );
-};

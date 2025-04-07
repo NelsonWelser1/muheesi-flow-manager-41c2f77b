@@ -72,12 +72,6 @@ import {
     useCattleFatteningAnalytics
 } from './hooks/useKyalimaCattleFattening';
 
-// Import contracts hooks
-import { useCoffeeExportContract } from './hooks/contracts/useCoffeeExportContract';
-
-// Import quotation hooks
-import { useQuotes } from './hooks/useQuotes';
-
 // Export everything individually
 export {
     supabase,
@@ -139,9 +133,5 @@ export {
     useAddCattleFattening,
     useUpdateCattleFattening,
     useDeleteCattleFattening,
-    useCattleFatteningAnalytics,
-    // Contract hooks
-    useCoffeeExportContract,
-    // Quotation hooks
-    useQuotes
+    useCattleFatteningAnalytics
 };
