@@ -21,7 +21,7 @@ import {
 import { Plus, Search, Eye, Pencil, Loader } from "lucide-react";
 import { format } from 'date-fns';
 import { useLocalPurchaseOrders } from '@/hooks/useLocalPurchaseOrders';
-import { runLocalPurchaseAgreementMigration } from '@/integrations/supabase/hooks/runMigration';
+import { initializeDatabase } from '@/integrations/supabase/hooks/runMigration';
 
 const LocalPurchaseOrderList = ({ 
   orders = [], 
@@ -38,7 +38,7 @@ const LocalPurchaseOrderList = ({
   const handleInitializeTable = async () => {
     setIsInitializing(true);
     try {
-      await runLocalPurchaseAgreementMigration();
+      await initializeDatabase();
       await fetchOrders();
     } catch (error) {
       console.error('Error initializing table:', error);
