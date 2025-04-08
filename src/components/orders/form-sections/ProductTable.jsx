@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -74,13 +75,14 @@ const ProductTable = ({ company, currency, products, onProductsChange }) => {
             <TableRow key={index}>
               <TableCell>
                 <Select 
-                  value={item.product} 
+                  value={item.product || "select-product"} 
                   onValueChange={(value) => updateProduct(index, 'product', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select Product" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="select-product">Choose a product</SelectItem>
                     {Object.keys(PRODUCT_PRICES[company] || {}).map(product => (
                       <SelectItem key={product} value={product}>
                         {product}
@@ -89,7 +91,7 @@ const ProductTable = ({ company, currency, products, onProductsChange }) => {
                   </SelectContent>
                 </Select>
               </TableCell>
-              <TableCell>{item.product}</TableCell>
+              <TableCell>{item.product || "-"}</TableCell>
               <TableCell>
                 <Input 
                   type="number"

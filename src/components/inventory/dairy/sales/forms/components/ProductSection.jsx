@@ -45,7 +45,7 @@ const ProductSection = ({
           </SelectTrigger>
           <SelectContent>
             {productTypes.map((type) => (
-              <SelectItem key={type} value={type}>
+              <SelectItem key={type} value={type || "default-type"}>
                 {type}
               </SelectItem>
             ))}

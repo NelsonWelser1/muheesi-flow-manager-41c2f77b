@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -63,7 +64,7 @@ const ProductTable = ({ products, handleProductChange }) => {
               <TableRow key={index}>
                 <TableCell>
                   <Select
-                    value={product.code || "select-product"}  // Provide default value
+                    value={product.code || "select-product"}  // Ensure default value is not empty
                     onValueChange={(value) => {
                       const selectedProduct = [...COFFEE_PRODUCTS.arabica, ...COFFEE_PRODUCTS.robusta]
                         .find(p => p.code === value);
