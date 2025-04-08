@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -12,6 +13,7 @@ import {
   FileCode
 } from 'lucide-react';
 import ShipmentTemplates from './components/ShipmentTemplates';
+import NewShipmentForm from './components/NewShipmentForm';
 
 // Sample shipment data
 const shipments = [
@@ -103,6 +105,7 @@ const statusLabels = {
 const ShipmentTracking = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showNewShipmentForm, setShowNewShipmentForm] = useState(false);
   
   const filteredShipments = filterStatus === 'all' 
     ? shipments 
@@ -110,6 +113,10 @@ const ShipmentTracking = () => {
   
   if (showTemplates) {
     return <ShipmentTemplates onBack={() => setShowTemplates(false)} />;
+  }
+
+  if (showNewShipmentForm) {
+    return <NewShipmentForm onCancel={() => setShowNewShipmentForm(false)} />;
   }
   
   return (
@@ -128,7 +135,7 @@ const ShipmentTracking = () => {
             <FileCode className="h-4 w-4" />
             <span>Shipment Templates</span>
           </Button>
-          <Button className="flex items-center gap-1">
+          <Button className="flex items-center gap-1" onClick={() => setShowNewShipmentForm(true)}>
             <Plus className="h-4 w-4" />
             <span>New Shipment</span>
           </Button>
