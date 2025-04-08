@@ -48,12 +48,10 @@ const ProductSection = ({
           </SelectTrigger>
           <SelectContent>
             {validProductTypes.length > 0 ? (
-              validProductTypes.map((type, index) => (
-                type && type.trim() !== '' ? (
-                  <SelectItem key={index} value={type}>
-                    {type}
-                  </SelectItem>
-                ) : null
+              validProductTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
               ))
             ) : (
               <SelectItem value="default-type">Default Type</SelectItem>

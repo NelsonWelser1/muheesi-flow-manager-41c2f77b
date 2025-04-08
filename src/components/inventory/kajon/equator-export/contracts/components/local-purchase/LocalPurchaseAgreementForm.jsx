@@ -5,14 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Trash2, Plus, Save, ArrowLeft, Download } from "lucide-react";
+import { Trash2, Plus, Save, Calendar, ArrowLeft, Download } from "lucide-react";
 import { format } from 'date-fns';
 import { useLocalPurchaseAgreements } from '@/hooks/useLocalPurchaseAgreements';
+import { exportContractToPDF, exportContractToJPG, exportContractToExcel } from '../../utils/contractExportUtils';
 
-const LocalPurchaseOrderForm = ({ onBack, existingOrder = null }) => {
+const LocalPurchaseAgreementForm = ({ onBack, existingAgreement = null }) => {
   const { toast } = useToast();
   const { saveAgreement, updateAgreement, generateContractNumber, loading } = useLocalPurchaseAgreements();
-  const isEditMode = !!existingOrder;
+  const contractRef = useRef(null);
+  const isEditMode = !!existingAgreement;
   
   const [formData, setFormData] = useState({
     contract_number: generateContractNumber(),
@@ -27,22 +29,22 @@ const LocalPurchaseOrderForm = ({ onBack, existingOrder = null }) => {
     delivery_terms: 'Delivery to buyer\'s warehouse',
     contract_status: 'draft',
     items: [
-      { id: 1, description: 'Green Coffee Beans', variety: 'Arabica', quantity: 1000, unit: 'Kg', unit_price: 2.5 }
+      { id: 1, description: '', variety: '', quantity: 0, unit: 'Kg', unit_price: 0 }
     ],
     quality_requirements: 'Standard coffee quality as per Uganda Coffee Development Authority guidelines',
     special_terms: '',
     notes: ''
   });
 
-  // Load existing order data if in edit mode
+  // Load existing agreement data if in edit mode
   useEffect(() => {
-    if (existingOrder) {
+    if (existingAgreement) {
       setFormData(prevData => ({
         ...prevData,
-        ...existingOrder
+        ...existingAgreement
       }));
     }
-  }, [existingOrder]);
+  }, [existingAgreement]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -62,12 +64,12 @@ const LocalPurchaseOrderForm = ({ onBack, existingOrder = null }) => {
   };
 
   const addNewItem = () => {
-    const newId = Math.max(0, ...formData.items.map(item => item.id || 0)) + 1;
+    const newId = Math.max(0, ...formData.items.map(item => item.id)) + 1;
     setFormData(prev => ({
       ...prev,
       items: [
         ...prev.items,
-        { id: newId, description: 'Coffee Beans', variety: 'Arabica', quantity: 0, unit: 'Kg', unit_price: 0 }
+        { id: newId, description: '', variety: '', quantity: 0, unit: 'Kg', unit_price: 0 }
       ]
     }));
   };
@@ -163,7 +165,7 @@ const LocalPurchaseOrderForm = ({ onBack, existingOrder = null }) => {
       
       if (isEditMode) {
         // Update existing agreement
-        result = await updateAgreement(existingOrder.id, submissionData);
+        result = await updateAgreement(existingAgreement.id, submissionData);
       } else {
         // Create new agreement
         result = await saveAgreement(submissionData);
@@ -173,23 +175,36 @@ const LocalPurchaseOrderForm = ({ onBack, existingOrder = null }) => {
         toast({
           title: "Success",
           description: isEditMode 
-            ? "Purchase Order updated successfully" 
-            : "Purchase Order created successfully",
+            ? "Agreement updated successfully" 
+            : "Agreement saved successfully",
         });
         
-        // If we're in create mode, redirect back to the list
+        // If we're in create mode, reset the form or redirect
         if (!isEditMode) {
-          onBack();
+          onBack(); // Navigate back to list view
         }
       }
     } catch (error) {
-      console.error("Error saving purchase order:", error);
+      console.error("Error saving agreement:", error);
       toast({
         title: "Error",
-        description: `Failed to save purchase order: ${error.message || "Unknown error"}`,
+        description: `Failed to save agreement: ${error.message || "Unknown error"}`,
         variant: "destructive",
       });
     }
+  };
+
+  // Export functions
+  const handleExportPDF = async () => {
+    await exportContractToPDF(contractRef.current, `local-purchase-${formData.contract_number}`, toast);
+  };
+
+  const handleExportJPG = async () => {
+    await exportContractToJPG(contractRef.current, `local-purchase-${formData.contract_number}`, toast);
+  };
+
+  const handleExportExcel = async () => {
+    await exportContractToExcel(contractRef.current, formData, `local-purchase-${formData.contract_number}`, toast);
   };
 
   return (
@@ -197,23 +212,55 @@ const LocalPurchaseOrderForm = ({ onBack, existingOrder = null }) => {
       <div className="flex justify-between items-center">
         <Button variant="outline" onClick={onBack} className="flex items-center gap-1">
           <ArrowLeft className="h-4 w-4" />
-          Back to Purchase Orders
+          Back to Agreements
         </Button>
-        <Button 
-          variant="default" 
-          className="flex items-center gap-1"
-          onClick={handleSubmit}
-          disabled={loading}
-        >
-          <Save className="h-4 w-4" />
-          {loading ? "Saving..." : isEditMode ? "Update Order" : "Create Order"}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="default" 
+            className="flex items-center gap-1"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            <Save className="h-4 w-4" />
+            {loading ? "Saving..." : isEditMode ? "Update Agreement" : "Save Agreement"}
+          </Button>
+          
+          {/* Export Dropdown */}
+          <div className="relative group">
+            <Button variant="outline" className="flex items-center gap-1">
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+            <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50 hidden group-hover:block">
+              <div className="py-1">
+                <button
+                  onClick={handleExportPDF}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Export as PDF
+                </button>
+                <button
+                  onClick={handleExportJPG}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Export as JPG
+                </button>
+                <button
+                  onClick={handleExportExcel}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Export as Excel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       
-      <div className="p-6 border rounded-md bg-white">
+      <div ref={contractRef} className="print-container p-6 border rounded-md bg-white">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-blue-800">LOCAL PURCHASE ORDER</h1>
-          <div className="text-gray-500">Order #: {formData.contract_number}</div>
+          <h1 className="text-2xl font-bold text-blue-800">LOCAL PURCHASE AGREEMENT</h1>
+          <div className="text-gray-500">Contract #: {formData.contract_number}</div>
           <div className="text-gray-500">Date: {format(new Date(formData.agreement_date), 'MMMM dd, yyyy')}</div>
         </div>
         
@@ -295,7 +342,7 @@ const LocalPurchaseOrderForm = ({ onBack, existingOrder = null }) => {
               </thead>
               <tbody>
                 {formData.items.map((item, index) => (
-                  <tr key={item.id || index}>
+                  <tr key={item.id}>
                     <td className="px-4 py-2 border">
                       <Input
                         value={item.description || ''}
@@ -338,7 +385,6 @@ const LocalPurchaseOrderForm = ({ onBack, existingOrder = null }) => {
                       <Input
                         type="number"
                         min="0"
-                        step="0.01"
                         value={item.unit_price || 0}
                         onChange={(e) => handleItemChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
                       />
@@ -413,6 +459,16 @@ const LocalPurchaseOrderForm = ({ onBack, existingOrder = null }) => {
         </div>
         
         <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-2 text-blue-700">SPECIAL TERMS AND CONDITIONS</h2>
+          <Textarea
+            value={formData.special_terms || ''}
+            onChange={(e) => handleInputChange('special_terms', e.target.value)}
+            placeholder="Enter any special terms or conditions for this agreement"
+            rows={3}
+          />
+        </div>
+        
+        <div className="mb-6">
           <h2 className="text-lg font-semibold mb-2 text-blue-700">NOTES</h2>
           <Textarea
             value={formData.notes || ''}
@@ -423,7 +479,7 @@ const LocalPurchaseOrderForm = ({ onBack, existingOrder = null }) => {
         </div>
         
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-600 mb-2">Status</label>
+          <label className="block text-sm font-medium text-gray-600 mb-2">Contract Status</label>
           <Select 
             value={formData.contract_status || 'draft'} 
             onValueChange={(value) => handleInputChange('contract_status', value)}
@@ -433,16 +489,29 @@ const LocalPurchaseOrderForm = ({ onBack, existingOrder = null }) => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 mb-6">
+          <div className="border-t pt-4">
+            <p className="font-semibold">For and on behalf of BUYER:</p>
+            <div className="mt-6 h-10 border-b border-dashed"></div>
+            <p className="text-sm text-gray-500">Authorized Signature, Date</p>
+          </div>
+          
+          <div className="border-t pt-4">
+            <p className="font-semibold">For and on behalf of SUPPLIER:</p>
+            <div className="mt-6 h-10 border-b border-dashed"></div>
+            <p className="text-sm text-gray-500">Authorized Signature, Date</p>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default LocalPurchaseOrderForm;
+export default LocalPurchaseAgreementForm;

@@ -73,6 +73,8 @@ import {
 } from './hooks/useKyalimaCattleFattening';
 
 // Import Local Purchase Agreement hooks
+import { useLocalPurchaseAgreements } from '@/hooks/useLocalPurchaseAgreements';
+import { useLocalPurchaseAgreementForm } from '@/hooks/useLocalPurchaseAgreementForm';
 import { runLocalPurchaseAgreementMigration } from './migrations/runLocalPurchaseAgreementMigration';
 
 // Export everything individually
@@ -138,5 +140,7 @@ export {
     useDeleteCattleFattening,
     useCattleFatteningAnalytics,
     // Local Purchase Agreement hooks
+    useLocalPurchaseAgreements,
+    useLocalPurchaseAgreementForm,
     runLocalPurchaseAgreementMigration
 };
