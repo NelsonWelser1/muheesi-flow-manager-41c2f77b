@@ -1,11 +1,32 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LocalPurchaseOrderList from './LocalPurchaseOrderList';
 import LocalPurchaseOrderForm from './LocalPurchaseOrderForm';
+import { useLocalPurchaseOrders } from '@/hooks/useLocalPurchaseOrders';
+import { useToast } from '@/components/ui/use-toast';
 
 const LocalPurchaseOrderManager = () => {
   const [activeView, setActiveView] = useState('list');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const { fetchOrders, loading } = useLocalPurchaseOrders();
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        await fetchOrders();
+      } catch (error) {
+        console.error("Error loading purchase orders:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load purchase orders. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    loadInitialData();
+  }, [fetchOrders, toast]);
   
   const handleNewOrder = () => {
     setSelectedOrder(null);

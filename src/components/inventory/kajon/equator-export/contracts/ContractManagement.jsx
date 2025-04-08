@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -8,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { Search, Plus, FileText, Download, Eye, Briefcase, Filter, Calendar, ArrowUpDown, FileCode, Store } from 'lucide-react';
 import ContractTemplates from './components/ContractTemplates';
+import LocalPurchaseOrderManager from './components/purchase-order/LocalPurchaseOrderManager';
 import LocalPurchaseAgreementPanel from './components/local-purchase/LocalPurchaseAgreementPanel';
-import { exportContractToPDF } from './utils/contractPdfExport';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
-import { runLocalPurchaseAgreementMigration } from './utils/localPurchaseAgreementMigration';
+import { runLocalPurchaseAgreementMigration } from '@/integrations/supabase/migrations/runLocalPurchaseAgreementMigration';
 
 const contractStatusColors = {
   active: "bg-green-100 text-green-800",
@@ -25,7 +24,7 @@ const contractStatusColors = {
 
 const ContractManagement = () => {
   const { toast } = useToast();
-  const [activeView, setActiveView] = useState('contracts'); // 'contracts', 'templates', 'local-purchase'
+  const [activeView, setActiveView] = useState('contracts'); // 'contracts', 'templates', 'local-purchase', 'purchase-orders'
   
   // Initialize migrations when component mounts
   useEffect(() => {
@@ -230,6 +229,14 @@ const ContractManagement = () => {
             <span>Export Contracts</span>
           </Button>
           <Button 
+            variant={activeView === 'purchase-orders' ? "default" : "outline"} 
+            className="flex items-center gap-1"
+            onClick={() => setActiveView('purchase-orders')}
+          >
+            <Store className="h-4 w-4" />
+            <span>Purchase Orders</span>
+          </Button>
+          <Button 
             variant={activeView === 'local-purchase' ? "default" : "outline"} 
             className="flex items-center gap-1"
             onClick={() => setActiveView('local-purchase')}
@@ -252,6 +259,8 @@ const ContractManagement = () => {
         <ContractTemplates onBack={() => setActiveView('contracts')} />
       ) : activeView === 'local-purchase' ? (
         <LocalPurchaseAgreementPanel onBack={() => setActiveView('contracts')} />
+      ) : activeView === 'purchase-orders' ? (
+        <LocalPurchaseOrderManager />
       ) : (
         <>
           <Card>
