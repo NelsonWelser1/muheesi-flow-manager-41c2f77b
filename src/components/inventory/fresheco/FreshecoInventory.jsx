@@ -62,7 +62,7 @@ const FreshecoInventory = () => {
                 <SelectValue placeholder="Select product" />
               </SelectTrigger>
               <SelectContent>
-                {products.map((product) => (
+                {products.filter(product => product && product.trim() !== '').map((product) => (
                   <SelectItem key={product} value={product}>{product}</SelectItem>
                 ))}
               </SelectContent>

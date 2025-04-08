@@ -44,17 +44,11 @@ const ProductSection = ({
             <SelectValue placeholder="Select product type" />
           </SelectTrigger>
           <SelectContent>
-            {productTypes.map((type) => {
-              // Skip empty strings or null/undefined values
-              if (!type || type.trim() === '') return null;
-              
-              return (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              );
-            })}
-            {/* Add a fallback if there are no valid types */}
+            {productTypes.filter(type => type && type.trim() !== '').map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
             {(!productTypes || productTypes.filter(type => type && type.trim() !== '').length === 0) && (
               <SelectItem value="default-type">Default Type</SelectItem>
             )}

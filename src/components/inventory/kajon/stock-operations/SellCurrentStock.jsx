@@ -134,10 +134,10 @@ const SellCurrentStock = ({ isKazo }) => {
           </SelectTrigger>
           <SelectContent>
             {isKazo 
-              ? STORE_LOCATIONS.kazo.map(location => (
+              ? STORE_LOCATIONS.kazo.filter(location => location && location.trim() !== '').map(location => (
                   <SelectItem key={location} value={location}>{location}</SelectItem>
                 ))
-              : STORE_LOCATIONS.regular.map(location => (
+              : STORE_LOCATIONS.regular.filter(location => location && location.trim() !== '').map(location => (
                   <SelectItem key={location} value={location}>{location}</SelectItem>
                 ))
             }

@@ -84,7 +84,7 @@ const StockUpdateForm = () => {
             <SelectValue placeholder="Select location" />
           </SelectTrigger>
           <SelectContent>
-            {WAREHOUSE_LOCATIONS.map(location => (
+            {WAREHOUSE_LOCATIONS.filter(location => location && location.trim() !== '').map(location => (
               <SelectItem key={location} value={location}>{location}</SelectItem>
             ))}
           </SelectContent>
@@ -140,9 +140,12 @@ const StockUpdateForm = () => {
               <SelectValue placeholder="Select grade" />
             </SelectTrigger>
             <SelectContent>
-              {selectedCoffeeType && COFFEE_GRADES[selectedCoffeeType].map((grade) => (
+              {selectedCoffeeType && COFFEE_GRADES[selectedCoffeeType].filter(grade => grade && grade.trim() !== '').map((grade) => (
                 <SelectItem key={grade} value={grade}>{grade}</SelectItem>
               ))}
+              {!selectedCoffeeType && (
+                <SelectItem value="no-grade-selected">Select Coffee Type First</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>

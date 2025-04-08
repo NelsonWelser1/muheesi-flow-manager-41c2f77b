@@ -22,7 +22,7 @@ const BatchSelector = ({
             <SelectItem value="loading">Loading...</SelectItem>
           ) : batchEntries.length > 0 ? (
             batchEntries.map((entry) => (
-              <SelectItem key={entry.id} value={entry.id}>
+              <SelectItem key={entry.id} value={entry.id || `entry-${entry.display_label}`}>
                 {entry.display_label}
               </SelectItem>
             ))

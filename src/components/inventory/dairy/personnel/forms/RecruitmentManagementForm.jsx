@@ -95,11 +95,14 @@ const RecruitmentManagementForm = () => {
                 <SelectValue placeholder="Select job position" />
               </SelectTrigger>
               <SelectContent>
-                {JOB_POSITIONS.map(position => (
+                {JOB_POSITIONS.filter(position => position && position.trim() !== '').map(position => (
                   <SelectItem key={position} value={position}>
                     {position}
                   </SelectItem>
                 ))}
+                {(!JOB_POSITIONS || JOB_POSITIONS.length === 0) && (
+                  <SelectItem value="default-position">Default Position</SelectItem>
+                )}
               </SelectContent>
             </Select>
             {errors.jobTitle && <p className="text-red-500 text-xs">{errors.jobTitle.message}</p>}
