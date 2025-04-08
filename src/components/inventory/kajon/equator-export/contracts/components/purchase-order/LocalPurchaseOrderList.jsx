@@ -21,7 +21,7 @@ import {
 import { Plus, Search, Eye, Pencil, Loader } from "lucide-react";
 import { format } from 'date-fns';
 import { useLocalPurchaseOrders } from '@/hooks/useLocalPurchaseOrders';
-import { runLocalPurchaseAgreementMigration } from '@/integrations/supabase/hooks/runMigration';
+import { runLocalPurchaseAgreementMigration } from '@/integrations/supabase/migrations/runLocalPurchaseAgreementMigration';
 
 const LocalPurchaseOrderList = ({ 
   orders = [], 
