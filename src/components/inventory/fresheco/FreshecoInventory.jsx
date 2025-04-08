@@ -48,6 +48,9 @@ const FreshecoInventory = () => {
     "Sugarcane", "Ginger", "Culnary Variety Mushrooms"
   ];
 
+  // Filter out any empty products
+  const validProducts = products.filter(product => product && product.trim() !== '');
+
   return (
     <Card>
       <CardHeader>
@@ -62,7 +65,7 @@ const FreshecoInventory = () => {
                 <SelectValue placeholder="Select product" />
               </SelectTrigger>
               <SelectContent>
-                {products.filter(product => product && product.trim() !== '').map((product) => (
+                {validProducts.map((product) => (
                   <SelectItem key={product} value={product}>{product}</SelectItem>
                 ))}
               </SelectContent>

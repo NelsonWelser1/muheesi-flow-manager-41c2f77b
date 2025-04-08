@@ -10,6 +10,11 @@ const BatchSelector = ({
   handleBatchSelect, 
   register 
 }) => {
+  // Filter out any entries with empty or undefined id/display_label
+  const validBatchEntries = batchEntries.filter(entry => 
+    entry && (entry.id || entry.display_label)
+  );
+  
   return (
     <div className="space-y-2">
       <Label>Product Batch ID</Label>
@@ -20,10 +25,13 @@ const BatchSelector = ({
         <SelectContent>
           {loading ? (
             <SelectItem value="loading">Loading...</SelectItem>
-          ) : batchEntries.length > 0 ? (
-            batchEntries.map((entry) => (
-              <SelectItem key={entry.id} value={entry.id || `entry-${entry.display_label}`}>
-                {entry.display_label}
+          ) : validBatchEntries.length > 0 ? (
+            validBatchEntries.map((entry) => (
+              <SelectItem 
+                key={entry.id || `entry-${entry.display_label}`} 
+                value={entry.id || `entry-${entry.display_label}`}
+              >
+                {entry.display_label || 'Unnamed batch'}
               </SelectItem>
             ))
           ) : (

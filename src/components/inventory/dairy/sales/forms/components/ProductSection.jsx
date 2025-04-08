@@ -12,6 +12,9 @@ const ProductSection = ({
   selectedProduct, 
   productTypes 
 }) => {
+  // Filter out any empty product types
+  const validProductTypes = productTypes.filter(type => type && type.trim() !== '');
+  
   return (
     <>
       <FormField
@@ -38,18 +41,19 @@ const ProductSection = ({
       >
         <Select 
           onValueChange={(value) => setValue("productType", value)}
-          disabled={!selectedProduct || productTypes.length === 0}
+          disabled={!selectedProduct || validProductTypes.length === 0}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select product type" />
           </SelectTrigger>
           <SelectContent>
-            {productTypes.filter(type => type && type.trim() !== '').map((type) => (
-              <SelectItem key={type} value={type}>
-                {type}
-              </SelectItem>
-            ))}
-            {(!productTypes || productTypes.filter(type => type && type.trim() !== '').length === 0) && (
+            {validProductTypes.length > 0 ? (
+              validProductTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))
+            ) : (
               <SelectItem value="default-type">Default Type</SelectItem>
             )}
           </SelectContent>
