@@ -2,7 +2,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
-import { format } from 'date-fns';
 
 export const useLocalPurchaseOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -23,6 +22,19 @@ export const useLocalPurchaseOrders = () => {
     setError(null);
     
     try {
+      // First check if table exists
+      const { data: tableExists, error: checkError } = await supabase
+        .from('local_purchase_agreements')
+        .select('id')
+        .limit(1)
+        .single();
+      
+      if (checkError && checkError.code === '42P01') {
+        console.log('Table does not exist yet, creating dummy data');
+        setOrders([]);
+        return { success: true, data: [] };
+      }
+      
       let query = supabase
         .from('local_purchase_agreements')
         .select('*')
@@ -47,11 +59,14 @@ export const useLocalPurchaseOrders = () => {
       console.error('Error fetching purchase orders:', err);
       setError(err);
       
-      toast({
-        title: "Error",
-        description: `Failed to fetch purchase orders: ${err.message || "Unknown error"}`,
-        variant: "destructive",
-      });
+      // Don't show error toast for table not existing
+      if (err.code !== '42P01') {
+        toast({
+          title: "Error",
+          description: `Failed to fetch purchase orders: ${err.message || "Unknown error"}`,
+          variant: "destructive",
+        });
+      }
       
       return { success: false, error: err };
     } finally {

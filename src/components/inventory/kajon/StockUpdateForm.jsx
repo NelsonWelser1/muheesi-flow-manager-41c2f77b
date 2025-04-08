@@ -75,6 +75,9 @@ const StockUpdateForm = () => {
     });
   };
 
+  // Filter out any empty locations
+  const filteredLocations = WAREHOUSE_LOCATIONS.filter(location => location && location.trim() !== '');
+
   if (!selectedLocation) {
     return (
       <div className="space-y-4">
@@ -84,7 +87,7 @@ const StockUpdateForm = () => {
             <SelectValue placeholder="Select location" />
           </SelectTrigger>
           <SelectContent>
-            {WAREHOUSE_LOCATIONS.filter(location => location && location.trim() !== '').map(location => (
+            {filteredLocations.map(location => (
               <SelectItem key={location} value={location}>{location}</SelectItem>
             ))}
           </SelectContent>
@@ -102,6 +105,11 @@ const StockUpdateForm = () => {
       />
     );
   }
+
+  // Filter coffee grades to remove any empty strings
+  const filteredCoffeeGrades = selectedCoffeeType ? 
+    COFFEE_GRADES[selectedCoffeeType].filter(grade => grade && grade.trim() !== '') : 
+    [];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -140,10 +148,11 @@ const StockUpdateForm = () => {
               <SelectValue placeholder="Select grade" />
             </SelectTrigger>
             <SelectContent>
-              {selectedCoffeeType && COFFEE_GRADES[selectedCoffeeType].filter(grade => grade && grade.trim() !== '').map((grade) => (
-                <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-              ))}
-              {!selectedCoffeeType && (
+              {filteredCoffeeGrades.length > 0 ? (
+                filteredCoffeeGrades.map((grade) => (
+                  <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                ))
+              ) : (
                 <SelectItem value="no-grade-selected">Select Coffee Type First</SelectItem>
               )}
             </SelectContent>

@@ -58,6 +58,14 @@ const ProductTable = ({ company, currency, products, onProductsChange }) => {
     return price * (quantity * 1000);
   };
 
+  // Get available products for the selected company
+  const getAvailableProducts = () => {
+    if (!company || !PRODUCT_PRICES[company]) return [];
+    return Object.keys(PRODUCT_PRICES[company]);
+  };
+
+  const availableProducts = getAvailableProducts();
+
   return (
     <>
       <Table>
@@ -83,11 +91,13 @@ const ProductTable = ({ company, currency, products, onProductsChange }) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="select-product">Choose a product</SelectItem>
-                    {company && PRODUCT_PRICES[company] ? Object.keys(PRODUCT_PRICES[company] || {}).map(product => (
-                      <SelectItem key={product} value={product}>
-                        {product}
-                      </SelectItem>
-                    )) : (
+                    {availableProducts.length > 0 ? (
+                      availableProducts.map(product => (
+                        <SelectItem key={product} value={product}>
+                          {product}
+                        </SelectItem>
+                      ))
+                    ) : (
                       <SelectItem value="no-products">No products available</SelectItem>
                     )}
                   </SelectContent>

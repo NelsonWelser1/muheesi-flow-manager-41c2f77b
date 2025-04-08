@@ -1,203 +1,155 @@
-
 import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { ArrowLeft, Plus, Trash, Save, Loader } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { useToast } from "@/components/ui/use-toast";
-import { Trash2, Plus, Save, ArrowLeft, Download } from "lucide-react";
-import { format } from 'date-fns';
 import { useLocalPurchaseOrders } from '@/hooks/useLocalPurchaseOrders';
 
-const LocalPurchaseOrderForm = ({ onBack, existingOrder = null, readonly = false }) => {
+const LocalPurchaseOrderForm = ({ onBack, existingOrder, readonly = false }) => {
   const { toast } = useToast();
-  const { saveOrder, updateOrder, generateOrderNumber, loading } = useLocalPurchaseOrders();
-  const isEditMode = !!existingOrder;
-  
-  const [formData, setFormData] = useState({
-    contract_number: generateOrderNumber(),
-    agreement_date: format(new Date(), 'yyyy-MM-dd'),
-    buyer_name: 'KAJON Coffee Limited',
-    buyer_address: 'Kanoni, Kazo District, Uganda',
-    buyer_contact: '+256 782 123456',
-    supplier_name: '',
-    supplier_address: '',
-    supplier_contact: '',
-    payment_terms: 'Payment due within 30 days of delivery',
-    delivery_terms: 'Delivery to buyer\'s warehouse',
-    contract_status: 'draft',
-    items: [
-      { id: 1, description: 'Green Coffee Beans', variety: 'Arabica', quantity: 1000, unit: 'Kg', unit_price: 2.5 }
-    ],
-    quality_requirements: 'Standard coffee quality as per Uganda Coffee Development Authority guidelines',
-    special_terms: '',
-    notes: ''
+  const { saveOrder, updateOrder, generateOrderNumber } = useLocalPurchaseOrders();
+  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState([]);
+
+  const { register, handleSubmit, setValue, reset, watch, formState: { errors } } = useForm({
+    defaultValues: {
+      contract_number: existingOrder?.contract_number || generateOrderNumber(),
+      agreement_date: existingOrder?.agreement_date || new Date().toISOString().split('T')[0],
+      buyer_name: existingOrder?.buyer_name || 'KAJON Coffee Limited',
+      buyer_address: existingOrder?.buyer_address || 'Kanoni, Kazo District, Uganda',
+      buyer_contact: existingOrder?.buyer_contact || '+256 776 670680',
+      supplier_name: existingOrder?.supplier_name || '',
+      supplier_address: existingOrder?.supplier_address || '',
+      supplier_contact: existingOrder?.supplier_contact || '',
+      payment_terms: existingOrder?.payment_terms || 'Net 30',
+      delivery_terms: existingOrder?.delivery_terms || '',
+      quality_requirements: existingOrder?.quality_requirements || '',
+      special_terms: existingOrder?.special_terms || '',
+      notes: existingOrder?.notes || '',
+      contract_status: existingOrder?.contract_status || 'draft'
+    }
   });
 
-  // Load existing order data if in edit mode
   useEffect(() => {
     if (existingOrder) {
-      // Make sure items array is properly formatted
-      let items = existingOrder.items;
-      if (!items || !Array.isArray(items) || items.length === 0) {
-        items = [{ id: 1, description: 'Green Coffee Beans', variety: 'Arabica', quantity: 1000, unit: 'Kg', unit_price: 2.5 }];
-      }
-      
-      setFormData(prevData => ({
-        ...prevData,
-        ...existingOrder,
-        items: items
-      }));
-    }
-  }, [existingOrder]);
-
-  const handleInputChange = (field, value) => {
-    if (readonly) return;
-    
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleItemChange = (index, field, value) => {
-    if (readonly) return;
-    
-    const updatedItems = [...formData.items];
-    updatedItems[index][field] = value;
-    
-    setFormData(prev => ({
-      ...prev,
-      items: updatedItems
-    }));
-  };
-
-  const addNewItem = () => {
-    if (readonly) return;
-    
-    const newId = Math.max(0, ...formData.items.map(item => item.id || 0)) + 1;
-    setFormData(prev => ({
-      ...prev,
-      items: [
-        ...prev.items,
-        { id: newId, description: 'Coffee Beans', variety: 'Arabica', quantity: 0, unit: 'Kg', unit_price: 0 }
-      ]
-    }));
-  };
-
-  const removeItem = (id) => {
-    if (readonly) return;
-    
-    if (formData.items.length <= 1) {
-      toast({
-        title: "Error",
-        description: "At least one item is required",
-        variant: "destructive",
+      // Reset form with existing order data
+      reset({
+        contract_number: existingOrder.contract_number,
+        agreement_date: existingOrder.agreement_date,
+        buyer_name: existingOrder.buyer_name,
+        buyer_address: existingOrder.buyer_address,
+        buyer_contact: existingOrder.buyer_contact,
+        supplier_name: existingOrder.supplier_name,
+        supplier_address: existingOrder.supplier_address,
+        supplier_contact: existingOrder.supplier_contact,
+        payment_terms: existingOrder.payment_terms,
+        delivery_terms: existingOrder.delivery_terms,
+        quality_requirements: existingOrder.quality_requirements,
+        special_terms: existingOrder.special_terms,
+        notes: existingOrder.notes,
+        contract_status: existingOrder.contract_status || 'draft'
       });
-      return;
+      
+      // Set items if any
+      if (existingOrder.items && Array.isArray(existingOrder.items)) {
+        setItems(existingOrder.items);
+      } else {
+        setItems([]);
+      }
+    } else {
+      // Default values for new purchase order
+      reset({
+        contract_number: generateOrderNumber(),
+        agreement_date: new Date().toISOString().split('T')[0],
+        buyer_name: 'KAJON Coffee Limited',
+        buyer_address: 'Kanoni, Kazo District, Uganda',
+        buyer_contact: '+256 776 670680',
+        supplier_name: '',
+        supplier_address: '',
+        supplier_contact: '',
+        payment_terms: 'Net 30',
+        delivery_terms: '',
+        quality_requirements: '',
+        special_terms: '',
+        notes: '',
+        contract_status: 'draft'
+      });
+      setItems([]);
+    }
+  }, [existingOrder, reset, generateOrderNumber]);
+
+  const addItem = () => {
+    setItems([...items, { 
+      description: '',
+      quantity: 0,
+      unit: 'kg',
+      unit_price: 0,
+      total: 0
+    }]);
+  };
+
+  const removeItem = (index) => {
+    const newItems = [...items];
+    newItems.splice(index, 1);
+    setItems(newItems);
+  };
+
+  const updateItem = (index, field, value) => {
+    const newItems = [...items];
+    const item = { ...newItems[index], [field]: value };
+    
+    // Update the total price
+    if (field === 'quantity' || field === 'unit_price') {
+      item.total = Number(item.quantity || 0) * Number(item.unit_price || 0);
     }
     
-    setFormData(prev => ({
-      ...prev,
-      items: prev.items.filter(item => item.id !== id)
-    }));
+    newItems[index] = item;
+    setItems(newItems);
   };
 
   const calculateTotal = () => {
-    if (!formData.items || !Array.isArray(formData.items)) {
-      return 0;
-    }
-    return formData.items.reduce(
-      (total, item) => total + (parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0)), 
-      0
-    );
+    return items.reduce((total, item) => total + (item.total || 0), 0);
   };
 
-  const validateForm = () => {
-    // Required field validation
-    if (!formData.supplier_name) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide supplier name",
-        variant: "destructive",
-      });
-      return false;
-    }
-    
-    // Items validation
-    if (!formData.items || formData.items.length === 0) {
-      toast({
-        title: "Missing Information",
-        description: "Please add at least one item",
-        variant: "destructive",
-      });
-      return false;
-    }
-    
-    // Validate each item
-    for (const item of formData.items) {
-      if (!item.description) {
-        toast({
-          title: "Missing Information",
-          description: "Please provide a description for all items",
-          variant: "destructive",
-        });
-        return false;
-      }
-      
-      if (!item.quantity || item.quantity <= 0) {
-        toast({
-          title: "Invalid Information",
-          description: "Quantity must be greater than zero for all items",
-          variant: "destructive",
-        });
-        return false;
-      }
-      
-      if (!item.unit_price || item.unit_price <= 0) {
-        toast({
-          title: "Invalid Information",
-          description: "Price must be greater than zero for all items",
-          variant: "destructive",
-        });
-        return false;
-      }
-    }
-    
-    return true;
-  };
-
-  const handleSubmit = async () => {
-    if (readonly) return;
-    if (!validateForm()) return;
-    
-    // Prepare data for submission
-    const submissionData = {
-      ...formData,
-      total_value: calculateTotal(),
-    };
-    
+  const onSubmit = async (data) => {
+    setLoading(true);
     try {
-      let result;
+      // Add items to the data
+      const orderData = {
+        ...data,
+        items: items,
+        total_value: calculateTotal()
+      };
       
-      if (isEditMode) {
-        // Update existing order
-        result = await updateOrder(existingOrder.id, submissionData);
+      // If this is an existing order, update it
+      if (existingOrder) {
+        const result = await updateOrder(existingOrder.id, orderData);
+        if (result.success) {
+          toast({
+            title: "Success",
+            description: `Purchase order "${data.contract_number}" updated successfully`,
+          });
+          onBack();
+        }
       } else {
-        // Create new order
-        result = await saveOrder(submissionData);
-      }
-      
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: isEditMode 
-            ? "Purchase Order updated successfully" 
-            : "Purchase Order created successfully",
-        });
-        
-        // If we're in create mode, redirect back to the list
-        if (!isEditMode) {
+        // Otherwise create a new order
+        const result = await saveOrder(orderData);
+        if (result.success) {
+          toast({
+            title: "Success",
+            description: `Purchase order "${data.contract_number}" created successfully`,
+          });
           onBack();
         }
       }
@@ -205,344 +157,351 @@ const LocalPurchaseOrderForm = ({ onBack, existingOrder = null, readonly = false
       console.error("Error saving purchase order:", error);
       toast({
         title: "Error",
-        description: `Failed to save purchase order: ${error.message || "Unknown error"}`,
+        description: "Failed to save purchase order. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <Button variant="outline" onClick={onBack} className="flex items-center gap-1">
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center">
+        <Button 
+          variant="ghost" 
+          className="mr-2" 
+          onClick={onBack}
+          disabled={loading}
+        >
           <ArrowLeft className="h-4 w-4" />
-          Back to Purchase Orders
         </Button>
-        {!readonly && (
-          <Button 
-            variant="default" 
-            className="flex items-center gap-1"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            <Save className="h-4 w-4" />
-            {loading ? "Saving..." : isEditMode ? "Update Order" : "Create Order"}
-          </Button>
-        )}
-      </div>
+        <CardTitle>
+          {readonly ? 'View Purchase Order' : existingOrder ? 'Edit Purchase Order' : 'New Purchase Order'}
+        </CardTitle>
+      </CardHeader>
       
-      <div className="p-6 border rounded-md bg-white">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-blue-800">LOCAL PURCHASE ORDER</h1>
-          <div className="text-gray-500">Order #: {formData.contract_number}</div>
-          <div className="text-gray-500">Date: {format(new Date(formData.agreement_date), 'MMMM dd, yyyy')}</div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <h2 className="text-lg font-semibold mb-2 text-blue-700">BUYER</h2>
-            <div className="space-y-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Company</label>
+      <CardContent>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Purchase Order Details</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="contract_number">Order Number</Label>
                 <Input 
-                  value={formData.buyer_name || ''}
-                  onChange={(e) => handleInputChange('buyer_name', e.target.value)}
-                  readOnly={readonly}
-                  className={readonly ? "bg-gray-50" : ""}
+                  id="contract_number" 
+                  {...register("contract_number", { required: "Order number is required" })}
+                  readOnly
+                  disabled={readonly}
+                />
+                {errors.contract_number && (
+                  <p className="text-sm text-red-500">{errors.contract_number.message}</p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="agreement_date">Date</Label>
+                <Input 
+                  id="agreement_date" 
+                  type="date" 
+                  {...register("agreement_date", { required: "Date is required" })}
+                  disabled={readonly}
+                />
+                {errors.agreement_date && (
+                  <p className="text-sm text-red-500">{errors.agreement_date.message}</p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="contract_status">Status</Label>
+                <Select 
+                  defaultValue={watch("contract_status")} 
+                  onValueChange={(value) => setValue("contract_status", value)}
+                  disabled={readonly}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input type="hidden" {...register("contract_status")} />
+              </div>
+            </div>
+            
+            <div className="md:border-l md:pl-4 space-y-4">
+              <h3 className="text-lg font-semibold">Buyer Details</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="buyer_name">Buyer Name</Label>
+                <Input 
+                  id="buyer_name" 
+                  {...register("buyer_name", { required: "Buyer name is required" })}
+                  disabled={readonly}
+                />
+                {errors.buyer_name && (
+                  <p className="text-sm text-red-500">{errors.buyer_name.message}</p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="buyer_address">Buyer Address</Label>
+                <Input 
+                  id="buyer_address" 
+                  {...register("buyer_address")}
+                  disabled={readonly}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Address</label>
+              
+              <div className="space-y-2">
+                <Label htmlFor="buyer_contact">Buyer Contact</Label>
                 <Input 
-                  value={formData.buyer_address || ''}
-                  onChange={(e) => handleInputChange('buyer_address', e.target.value)}
-                  readOnly={readonly}
-                  className={readonly ? "bg-gray-50" : ""}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Contact</label>
-                <Input 
-                  value={formData.buyer_contact || ''}
-                  onChange={(e) => handleInputChange('buyer_contact', e.target.value)}
-                  readOnly={readonly}
-                  className={readonly ? "bg-gray-50" : ""}
+                  id="buyer_contact" 
+                  {...register("buyer_contact")}
+                  disabled={readonly}
                 />
               </div>
             </div>
           </div>
           
-          <div>
-            <h2 className="text-lg font-semibold mb-2 text-blue-700">SUPPLIER</h2>
-            <div className="space-y-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-600">
-                  Company/Farm/Producer <span className="text-red-500">*</span>
-                </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Supplier Details</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="supplier_name">Supplier Name</Label>
                 <Input 
-                  value={formData.supplier_name || ''}
-                  onChange={(e) => handleInputChange('supplier_name', e.target.value)}
-                  placeholder="Enter supplier name"
-                  readOnly={readonly}
-                  className={readonly ? "bg-gray-50" : ""}
+                  id="supplier_name" 
+                  {...register("supplier_name", { required: "Supplier name is required" })}
+                  disabled={readonly}
+                />
+                {errors.supplier_name && (
+                  <p className="text-sm text-red-500">{errors.supplier_name.message}</p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="supplier_address">Supplier Address</Label>
+                <Input 
+                  id="supplier_address" 
+                  {...register("supplier_address")}
+                  disabled={readonly}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Address</label>
+              
+              <div className="space-y-2">
+                <Label htmlFor="supplier_contact">Supplier Contact</Label>
                 <Input 
-                  value={formData.supplier_address || ''}
-                  onChange={(e) => handleInputChange('supplier_address', e.target.value)}
-                  placeholder="Enter supplier address"
-                  readOnly={readonly}
-                  className={readonly ? "bg-gray-50" : ""}
+                  id="supplier_contact" 
+                  {...register("supplier_contact")}
+                  disabled={readonly}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600">Contact</label>
+            </div>
+            
+            <div className="md:border-l md:pl-4 space-y-4">
+              <h3 className="text-lg font-semibold">Terms & Conditions</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="payment_terms">Payment Terms</Label>
                 <Input 
-                  value={formData.supplier_contact || ''}
-                  onChange={(e) => handleInputChange('supplier_contact', e.target.value)}
-                  placeholder="Enter supplier contact"
-                  readOnly={readonly}
-                  className={readonly ? "bg-gray-50" : ""}
+                  id="payment_terms" 
+                  {...register("payment_terms")}
+                  disabled={readonly}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="delivery_terms">Delivery Terms</Label>
+                <Input 
+                  id="delivery_terms" 
+                  {...register("delivery_terms")}
+                  disabled={readonly}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="quality_requirements">Quality Requirements</Label>
+                <Input 
+                  id="quality_requirements" 
+                  {...register("quality_requirements")}
+                  disabled={readonly}
                 />
               </div>
             </div>
           </div>
-        </div>
-        
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2 text-blue-700">PRODUCTS</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-4 py-2 text-left border">Description <span className="text-red-500">*</span></th>
-                  <th className="px-4 py-2 text-left border">Variety/Type</th>
-                  <th className="px-4 py-2 text-left border">Quantity <span className="text-red-500">*</span></th>
-                  <th className="px-4 py-2 text-left border">Unit</th>
-                  <th className="px-4 py-2 text-left border">Price per Unit <span className="text-red-500">*</span></th>
-                  <th className="px-4 py-2 text-left border">Total</th>
-                  {!readonly && (
-                    <th className="px-4 py-2 text-center border">Actions</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {formData.items && formData.items.map((item, index) => (
-                  <tr key={item.id || index}>
-                    <td className="px-4 py-2 border">
-                      {readonly ? (
-                        <div>{item.description || 'N/A'}</div>
-                      ) : (
-                        <Input
-                          value={item.description || ''}
-                          onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                          placeholder="Coffee beans, etc."
-                          readOnly={readonly}
-                          className={readonly ? "bg-gray-50" : ""}
-                        />
-                      )}
-                    </td>
-                    <td className="px-4 py-2 border">
-                      {readonly ? (
-                        <div>{item.variety || 'N/A'}</div>
-                      ) : (
-                        <Input
-                          value={item.variety || ''}
-                          onChange={(e) => handleItemChange(index, 'variety', e.target.value)}
-                          placeholder="Arabica, Robusta, etc."
-                          readOnly={readonly}
-                          className={readonly ? "bg-gray-50" : ""}
-                        />
-                      )}
-                    </td>
-                    <td className="px-4 py-2 border">
-                      {readonly ? (
-                        <div>{item.quantity || '0'}</div>
-                      ) : (
-                        <Input
-                          type="number"
-                          min="0"
-                          value={item.quantity || 0}
-                          onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
-                          readOnly={readonly}
-                          className={readonly ? "bg-gray-50" : ""}
-                        />
-                      )}
-                    </td>
-                    <td className="px-4 py-2 border">
-                      {readonly ? (
-                        <div>{item.unit || 'Kg'}</div>
-                      ) : (
-                        <Select 
-                          value={item.unit || 'Kg'} 
-                          onValueChange={(value) => handleItemChange(index, 'unit', value)}
-                          disabled={readonly}
-                        >
-                          <SelectTrigger className={`w-full ${readonly ? "bg-gray-50" : ""}`}>
-                            <SelectValue placeholder="Unit" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Kg">Kg</SelectItem>
-                            <SelectItem value="Ton">Ton</SelectItem>
-                            <SelectItem value="Bag">Bag</SelectItem>
-                            <SelectItem value="Sack">Sack</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </td>
-                    <td className="px-4 py-2 border">
-                      {readonly ? (
-                        <div>{item.unit_price || '0'}</div>
-                      ) : (
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.unit_price || 0}
-                          onChange={(e) => handleItemChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                          readOnly={readonly}
-                          className={readonly ? "bg-gray-50" : ""}
-                        />
-                      )}
-                    </td>
-                    <td className="px-4 py-2 border">
-                      {((item.quantity || 0) * (item.unit_price || 0)).toFixed(2)}
-                    </td>
-                    {!readonly && (
-                      <td className="px-4 py-2 border text-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeItem(item.id)}
-                          title="Remove item"
-                          disabled={readonly}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </td>
-                    )}
+          
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Order Items</h3>
+              {!readonly && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={addItem}
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-2" /> Add Item
+                </Button>
+              )}
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2">Description</th>
+                    <th className="text-center p-2">Quantity</th>
+                    <th className="text-center p-2">Unit</th>
+                    <th className="text-center p-2">Unit Price</th>
+                    <th className="text-right p-2">Total</th>
+                    {!readonly && <th className="w-10"></th>}
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={readonly ? "5" : "5"} className="px-4 py-2 text-right font-bold">
-                    TOTAL:
-                  </td>
-                  <td className="px-4 py-2 border font-bold">
-                    {calculateTotal().toFixed(2)}
-                  </td>
-                  {!readonly && (
-                    <td className="px-4 py-2 border text-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={addNewItem}
-                        title="Add item"
-                        disabled={readonly}
-                      >
-                        <Plus className="h-4 w-4 text-green-500" />
-                      </Button>
-                    </td>
+                </thead>
+                <tbody>
+                  {items.length === 0 ? (
+                    <tr>
+                      <td colSpan={readonly ? 5 : 6} className="text-center py-4 text-gray-500">
+                        No items added to this purchase order
+                      </td>
+                    </tr>
+                  ) : (
+                    items.map((item, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="p-2">
+                          <Input 
+                            value={item.description || ''} 
+                            onChange={(e) => updateItem(index, 'description', e.target.value)}
+                            disabled={readonly}
+                            placeholder="Item description"
+                          />
+                        </td>
+                        <td className="p-2">
+                          <Input 
+                            type="number" 
+                            value={item.quantity || ''} 
+                            onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                            disabled={readonly}
+                            className="text-center"
+                            placeholder="0"
+                          />
+                        </td>
+                        <td className="p-2">
+                          <Select 
+                            value={item.unit || 'kg'} 
+                            onValueChange={(value) => updateItem(index, 'unit', value)}
+                            disabled={readonly}
+                          >
+                            <SelectTrigger className="text-center">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="kg">kg</SelectItem>
+                              <SelectItem value="ton">ton</SelectItem>
+                              <SelectItem value="bag">bag</SelectItem>
+                              <SelectItem value="unit">unit</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="p-2">
+                          <Input 
+                            type="number" 
+                            value={item.unit_price || ''} 
+                            onChange={(e) => updateItem(index, 'unit_price', e.target.value)}
+                            disabled={readonly}
+                            className="text-center"
+                            placeholder="0.00"
+                          />
+                        </td>
+                        <td className="p-2 text-right font-medium">
+                          {(item.total || 0).toLocaleString()}
+                        </td>
+                        {!readonly && (
+                          <td className="p-2">
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              onClick={() => removeItem(index)}
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        )}
+                      </tr>
+                    ))
                   )}
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <h2 className="text-lg font-semibold mb-2 text-blue-700">PAYMENT TERMS</h2>
-            {readonly ? (
-              <div className="border p-3 rounded bg-gray-50 min-h-[100px]">{formData.payment_terms || 'N/A'}</div>
-            ) : (
-              <Textarea
-                value={formData.payment_terms || ''}
-                onChange={(e) => handleInputChange('payment_terms', e.target.value)}
-                rows={3}
-                readOnly={readonly}
-                className={readonly ? "bg-gray-50" : ""}
-              />
-            )}
+                  <tr className="font-semibold">
+                    <td colSpan={readonly ? 4 : 5} className="text-right p-2">
+                      Total:
+                    </td>
+                    <td className="text-right p-2">{calculateTotal().toLocaleString()}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
           
-          <div>
-            <h2 className="text-lg font-semibold mb-2 text-blue-700">DELIVERY TERMS</h2>
-            {readonly ? (
-              <div className="border p-3 rounded bg-gray-50 min-h-[100px]">{formData.delivery_terms || 'N/A'}</div>
-            ) : (
-              <Textarea
-                value={formData.delivery_terms || ''}
-                onChange={(e) => handleInputChange('delivery_terms', e.target.value)}
-                rows={3}
-                readOnly={readonly}
-                className={readonly ? "bg-gray-50" : ""}
-              />
-            )}
-          </div>
-        </div>
-        
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2 text-blue-700">QUALITY REQUIREMENTS</h2>
-          {readonly ? (
-            <div className="border p-3 rounded bg-gray-50 min-h-[100px]">{formData.quality_requirements || 'N/A'}</div>
-          ) : (
-            <Textarea
-              value={formData.quality_requirements || ''}
-              onChange={(e) => handleInputChange('quality_requirements', e.target.value)}
-              rows={3}
-              readOnly={readonly}
-              className={readonly ? "bg-gray-50" : ""}
-            />
-          )}
-        </div>
-        
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2 text-blue-700">NOTES</h2>
-          {readonly ? (
-            <div className="border p-3 rounded bg-gray-50 min-h-[100px]">{formData.notes || 'N/A'}</div>
-          ) : (
-            <Textarea
-              value={formData.notes || ''}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="Enter any additional notes"
-              rows={2}
-              readOnly={readonly}
-              className={readonly ? "bg-gray-50" : ""}
-            />
-          )}
-        </div>
-        
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-600 mb-2">Status</label>
-          {readonly ? (
-            <div className="inline-block px-3 py-1 rounded-full text-sm font-medium capitalize bg-gray-100">
-              {formData.contract_status || 'draft'}
-            </div>
-          ) : (
-            <Select 
-              value={formData.contract_status || 'draft'} 
-              onValueChange={(value) => handleInputChange('contract_status', value)}
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea 
+              id="notes" 
+              {...register("notes")}
               disabled={readonly}
-            >
-              <SelectTrigger className={`w-full max-w-xs ${readonly ? "bg-gray-50" : ""}`}>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
+              rows={3}
+            />
+          </div>
+          
+          {!readonly && (
+            <div className="flex justify-end gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onBack}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Purchase Order
+                  </>
+                )}
+              </Button>
+            </div>
           )}
-        </div>
-      </div>
-    </div>
+        </form>
+      </CardContent>
+      
+      {readonly && (
+        <CardFooter className="flex justify-end">
+          <Button 
+            variant="outline" 
+            onClick={onBack}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to List
+          </Button>
+        </CardFooter>
+      )}
+    </Card>
   );
 };
 
