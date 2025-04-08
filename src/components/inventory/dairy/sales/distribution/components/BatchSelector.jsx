@@ -19,7 +19,7 @@ const BatchSelector = ({
         </SelectTrigger>
         <SelectContent>
           {loading ? (
-            <SelectItem value="loading" disabled>Loading...</SelectItem>
+            <SelectItem value="loading">Loading...</SelectItem>
           ) : batchEntries.length > 0 ? (
             batchEntries.map((entry) => (
               <SelectItem key={entry.id} value={entry.id}>
@@ -27,7 +27,7 @@ const BatchSelector = ({
               </SelectItem>
             ))
           ) : (
-            <SelectItem value="no-batches" disabled>No available batch entries found</SelectItem>
+            <SelectItem value="no-batches">No available batch entries found</SelectItem>
           )}
         </SelectContent>
       </Select>

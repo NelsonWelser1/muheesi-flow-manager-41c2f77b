@@ -83,11 +83,13 @@ const ProductTable = ({ company, currency, products, onProductsChange }) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="select-product">Choose a product</SelectItem>
-                    {Object.keys(PRODUCT_PRICES[company] || {}).map(product => (
+                    {company && PRODUCT_PRICES[company] ? Object.keys(PRODUCT_PRICES[company] || {}).map(product => (
                       <SelectItem key={product} value={product}>
                         {product}
                       </SelectItem>
-                    ))}
+                    )) : (
+                      <SelectItem value="no-products">No products available</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </TableCell>
