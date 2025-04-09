@@ -25,7 +25,7 @@ export const exportContractToPDF = async (element, filename, toast) => {
     // Show loading toast
     showSuccessToast(toast, "Processing", "Generating PDF...");
 
-    // Convert HTML to canvas
+    // Convert HTML to canvas with higher quality settings
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
@@ -33,57 +33,63 @@ export const exportContractToPDF = async (element, filename, toast) => {
       backgroundColor: "#ffffff"
     });
 
-    // Create PDF
+    // Create PDF with appropriate dimensions
     const pdf = new jsPDF({
       unit: "mm",
       format: "a4",
       orientation: "portrait"
     });
 
-    // Calculate dimensions to fit content on the page
-    const imgData = canvas.toDataURL("image/png");
+    // Calculate dimensions to fit content properly on the page
+    const imgData = canvas.toDataURL("image/jpeg", 1.0);
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-
+    
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
     
+    // Calculate ratio and dimensions
     const ratio = canvasWidth / canvasHeight;
     const imgWidth = pageWidth - 20; // Margins
     const imgHeight = imgWidth / ratio;
     
-    // Check if the height is greater than page height and handle multiple pages
+    // Fixed: Proper multi-page handling
     if (imgHeight > pageHeight - 20) {
-      let position = 0;
-      let heightLeft = canvasHeight;
-      let pdfPageHeight = pageHeight - 20; // Margins
-      
-      while (heightLeft > 0) {
-        pdf.addPage();
-        
-        // Add image to page
-        pdf.addImage(
-          imgData,
-          "PNG",
-          10, // x position
-          10, // y position
-          imgWidth,
-          imgHeight,
-          "",
-          "FAST",
-          0,
-          position / canvasHeight * canvas.height // Crop position
-        );
-        
-        // Move position and reduce height left
-        heightLeft -= pdfPageHeight;
-        position += pdfPageHeight;
-      }
-    } else {
-      // Single page, add image centered
+      // First page
       pdf.addImage(
         imgData,
-        "PNG",
+        "JPEG",
+        10, // x position
+        10, // y position
+        imgWidth,
+        imgHeight,
+        null,
+        'FAST'
+      );
+      
+      // Calculate number of pages needed
+      const totalPages = Math.ceil(imgHeight / (pageHeight - 20));
+      
+      // Add additional pages if needed
+      for (let i = 1; i < totalPages; i++) {
+        pdf.addPage();
+        // Position content to show the next portion on each page
+        pdf.addImage(
+          imgData,
+          "JPEG",
+          10, // x position
+          -(i * (pageHeight - 20)) + 10, // Offset y position for each page
+          imgWidth,
+          imgHeight,
+          null,
+          'FAST'
+        );
+      }
+    } else {
+      // Single page - add image centered
+      pdf.addImage(
+        imgData,
+        "JPEG",
         10, // x position
         10, // y position
         imgWidth,
@@ -119,12 +125,15 @@ export const exportContractToJPG = async (element, filename, toast) => {
     // Show loading toast
     showSuccessToast(toast, "Processing", "Generating image...");
 
-    const dataUrl = await toPng(element, {
-      cacheBust: true,
-      quality: 0.95,
-      backgroundColor: "#ffffff",
-      pixelRatio: 2
+    // Use html2canvas instead of toPng to avoid CORS issues
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff"
     });
+    
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
     
     // Create a link element and trigger download
     const link = document.createElement("a");
@@ -156,54 +165,66 @@ export const exportContractToExcel = async (element, data, filename, toast) => {
     // Create a new workbook
     const wb = XLSX.utils.book_new();
     
-    // Format contract data for Excel
+    // Improved formatting of contract data for Excel
     const mainInfo = [
       ["LOCAL PURCHASE AGREEMENT"],
-      [`Contract #: ${data.contract_number}`],
-      [`Date: ${format(new Date(data.agreement_date), 'MMMM dd, yyyy')}`],
+      [""],
+      ["CONTRACT INFORMATION"],
+      [`Contract Number: ${data.contract_number || 'N/A'}`],
+      [`Agreement Date: ${data.agreement_date ? format(new Date(data.agreement_date), 'MMMM dd, yyyy') : 'N/A'}`],
+      [`Status: ${data.contract_status ? data.contract_status.toUpperCase() : 'DRAFT'}`],
       [""],
       ["BUYER INFORMATION"],
-      [`Company: ${data.buyer_name}`],
-      [`Address: ${data.buyer_address || "N/A"}`],
-      [`Contact: ${data.buyer_contact || "N/A"}`],
+      [`Company: ${data.buyer_name || 'N/A'}`],
+      [`Address: ${data.buyer_address || 'N/A'}`],
+      [`Contact: ${data.buyer_contact || 'N/A'}`],
       [""],
       ["SUPPLIER INFORMATION"],
-      [`Company/Farm/Producer: ${data.supplier_name}`],
-      [`Address: ${data.supplier_address || "N/A"}`],
-      [`Contact: ${data.supplier_contact || "N/A"}`],
+      [`Company/Farm/Producer: ${data.supplier_name || 'N/A'}`],
+      [`Address: ${data.supplier_address || 'N/A'}`],
+      [`Contact: ${data.supplier_contact || 'N/A'}`],
       [""],
       ["CONTRACT TERMS"],
-      [`Payment Terms: ${data.payment_terms || "N/A"}`],
-      [`Delivery Terms: ${data.delivery_terms || "N/A"}`],
-      [`Quality Requirements: ${data.quality_requirements || "N/A"}`],
-      [`Special Terms: ${data.special_terms || "N/A"}`],
-      [`Notes: ${data.notes || "N/A"}`],
-      [`Status: ${data.contract_status || "draft"}`],
+      [`Payment Terms: ${data.payment_terms || 'N/A'}`],
+      [`Delivery Terms: ${data.delivery_terms || 'N/A'}`],
+      [`Quality Requirements: ${data.quality_requirements || 'N/A'}`],
+      [`Special Terms: ${data.special_terms || 'N/A'}`],
+      [`Notes: ${data.notes || 'N/A'}`],
     ];
     
-    // Create main worksheet
+    // Create formatted main worksheet
     const wsMain = XLSX.utils.aoa_to_sheet(mainInfo);
+    
+    // Apply some formatting to the main worksheet
+    // Set some column widths
+    const mainCols = [{ wch: 40 }]; // Width of first column
+    wsMain['!cols'] = mainCols;
+    
+    // Add main worksheet to workbook
     XLSX.utils.book_append_sheet(wb, wsMain, "Contract Info");
     
-    // Create items worksheet if items exist
+    // Create items worksheet if items exist with improved formatting
     if (data.items && data.items.length > 0) {
-      const itemsHeader = [["Description", "Variety/Type", "Quantity", "Unit", "Price per Unit", "Total"]];
+      // Create proper headers for the items sheet
+      const itemsHeader = [["Description", "Variety/Type", "Quantity", "Unit", "Price per Unit (USD)", "Total (USD)"]];
       
+      // Format items data properly
       const itemsData = data.items.map(item => [
-        item.description || "",
-        item.variety || "",
+        item.description || "N/A",
+        item.variety || "N/A",
         item.quantity || 0,
         item.unit || "Kg",
-        item.unit_price || 0,
-        (item.quantity || 0) * (item.unit_price || 0)
+        parseFloat(item.unit_price || 0).toFixed(2),
+        parseFloat((item.quantity || 0) * (item.unit_price || 0)).toFixed(2)
       ]);
       
-      // Add total row
+      // Calculate total value correctly
       const totalValue = data.items.reduce(
         (total, item) => total + ((item.quantity || 0) * (item.unit_price || 0)), 
         0
-      );
+      ).toFixed(2);
       
+      // Add total row with proper formatting
       itemsData.push(["", "", "", "", "TOTAL", totalValue]);
       
       // Combine header and data
@@ -211,8 +232,38 @@ export const exportContractToExcel = async (element, data, filename, toast) => {
       
       // Create items worksheet
       const wsItems = XLSX.utils.aoa_to_sheet(itemsSheet);
+      
+      // Set column widths for better readability
+      const itemsCols = [
+        { wch: 30 }, // Description
+        { wch: 20 }, // Variety
+        { wch: 10 }, // Quantity
+        { wch: 10 }, // Unit
+        { wch: 18 }, // Price per Unit
+        { wch: 15 }  // Total
+      ];
+      wsItems['!cols'] = itemsCols;
+      
       XLSX.utils.book_append_sheet(wb, wsItems, "Items");
     }
+    
+    // Add a signatures sheet
+    const signaturesData = [
+      ["SIGNATURES"],
+      [""],
+      ["For and on behalf of BUYER:"],
+      ["Name: ___________________________"],
+      ["Signature: ______________________"],
+      ["Date: ___________________________"],
+      [""],
+      ["For and on behalf of SUPPLIER:"],
+      ["Name: ___________________________"], 
+      ["Signature: ______________________"],
+      ["Date: ___________________________"]
+    ];
+    
+    const wsSignatures = XLSX.utils.aoa_to_sheet(signaturesData);
+    XLSX.utils.book_append_sheet(wb, wsSignatures, "Signatures");
     
     // Write workbook and trigger download
     XLSX.writeFile(wb, `${filename}.xlsx`);
@@ -224,3 +275,4 @@ export const exportContractToExcel = async (element, data, filename, toast) => {
     showErrorToast(toast, "Error", "Failed to export Excel file");
   }
 };
+
