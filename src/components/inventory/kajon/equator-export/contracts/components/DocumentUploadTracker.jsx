@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,7 +54,6 @@ const DocumentUploadTracker = () => {
     removeDocument
   } = useContractDocuments();
 
-  // Load documents when component mounts
   useEffect(() => {
     const fetchDocuments = async () => {
       await loadDocuments();
@@ -70,7 +68,6 @@ const DocumentUploadTracker = () => {
       if (file.type === 'application/pdf' || file.type === 'image/jpeg' || file.type === 'image/jpg') {
         setUploadedFile(file);
         
-        // Try to extract contract ID from filename (e.g., CNT-1001_Client_Name.pdf)
         const match = file.name.match(/^(CNT-\d+)/);
         if (match) {
           setContractId(match[0]);
@@ -108,11 +105,9 @@ const DocumentUploadTracker = () => {
       return;
     }
 
-    // Prepare keywords and signers as arrays
     const keywordsArray = keywords ? keywords.split(',').map(k => k.trim()) : [];
     const signersArray = signedBy ? signedBy.split(',').map(s => s.trim()) : [];
 
-    // Additional metadata
     const metadata = {
       client: client || null,
       notes: notes || null,
@@ -124,7 +119,6 @@ const DocumentUploadTracker = () => {
     
     if (result.success) {
       resetForm();
-      // Switch to "all" tab to show the uploaded document
       setActiveTab('all');
     }
   };
@@ -143,7 +137,6 @@ const DocumentUploadTracker = () => {
   };
 
   const handleViewDocument = (document) => {
-    // Open document URL in a new tab
     if (document.file_url) {
       window.open(document.file_url, '_blank');
     } else {
@@ -156,7 +149,6 @@ const DocumentUploadTracker = () => {
   };
 
   const handleDownloadDocument = (document) => {
-    // Trigger download of document
     if (document.file_url) {
       const link = document.createElement('a');
       link.href = document.file_url;
@@ -212,7 +204,6 @@ const DocumentUploadTracker = () => {
     }
   };
 
-  // Function to display documents in a consistent format
   const renderDocumentItem = (document) => (
     <div key={document.id} className="p-4 border rounded-md flex items-start gap-4">
       {renderDocumentIcon(document.file_type)}
@@ -296,7 +287,6 @@ const DocumentUploadTracker = () => {
     </div>
   );
 
-  // Refresh documents list
   const handleRefreshDocuments = async () => {
     await loadDocuments();
   };

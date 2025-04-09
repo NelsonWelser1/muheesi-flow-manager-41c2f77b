@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, Plus, FileText, Download, Eye, Briefcase, Filter, Calendar, ArrowUpDown, FileCode, Store } from 'lucide-react';
+import { Search, Plus, FileText, Download, Eye, Briefcase, Filter, Calendar, ArrowUpDown, FileCode, Store, Check, AlertCircle } from 'lucide-react';
 import ContractTemplates from './components/ContractTemplates';
 import LocalPurchaseAgreementPanel from './components/local-purchase/LocalPurchaseAgreementPanel';
 import { exportContractToPDF } from './utils/contractPdfExport';

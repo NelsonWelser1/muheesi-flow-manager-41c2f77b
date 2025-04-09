@@ -1,69 +1,57 @@
 
-import { toast as toastFn } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 
-export const showSuccessToast = (toast, message) => {
-  if (toastFn) {
-    toastFn.success(message);
-  } else if (toast) {
-    toast({
-      title: "Success",
-      description: message,
-      variant: "default",
-    });
-  }
+/**
+ * Show a success toast notification
+ * @param {Object} toastFn - Toast function from useToast hook
+ * @param {String} message - Message to display
+ */
+export const showSuccessToast = (toastFn, message) => {
+  toastFn({
+    title: "Success",
+    description: message,
+    variant: "default",
+  });
 };
 
-export const showErrorToast = (toast, message) => {
-  if (toastFn) {
-    toastFn.error(message);
-  } else if (toast) {
-    toast({
-      title: "Error",
-      description: message,
-      variant: "destructive",
-    });
-  }
+/**
+ * Show an error toast notification
+ * @param {Object} toastFn - Toast function from useToast hook
+ * @param {String} message - Message to display
+ */
+export const showErrorToast = (toastFn, message) => {
+  toastFn({
+    title: "Error",
+    description: message,
+    variant: "destructive",
+  });
 };
 
-export const showInfoToast = (toast, message) => {
-  if (toastFn) {
-    toastFn.info(message);
-  } else if (toast) {
-    toast({
-      title: "Information",
-      description: message,
-      variant: "default",
-    });
-  }
+/**
+ * Show a warning toast notification
+ * @param {Object} toastFn - Toast function from useToast hook
+ * @param {String} message - Message to display
+ */
+export const showWarningToast = (toastFn, message) => {
+  toastFn({
+    title: "Warning",
+    description: message,
+    variant: "default",
+    className: "bg-amber-50 border-amber-200 text-amber-800",
+  });
 };
 
-export const showWarningToast = (toast, message) => {
-  if (toastFn) {
-    toastFn.warning(message);
-  } else if (toast) {
-    toast({
-      title: "Warning",
-      description: message,
-      variant: "destructive",
-    });
-  }
+/**
+ * Show an info toast notification
+ * @param {Object} toastFn - Toast function from useToast hook
+ * @param {String} message - Message to display
+ */
+export const showInfoToast = (toastFn, message) => {
+  toastFn({
+    title: "Information",
+    description: message,
+    variant: "default",
+    className: "bg-blue-50 border-blue-200 text-blue-800",
+  });
 };
 
-export const showLoadingToast = (toast, message) => {
-  if (toastFn) {
-    return toastFn.loading(message);
-  } else if (toast) {
-    return toast({
-      title: "Loading",
-      description: message,
-      variant: "default",
-    });
-  }
-  return null;
-};
-
-export const dismissToast = (id) => {
-  if (toastFn && id) {
-    toastFn.dismiss(id);
-  }
-};

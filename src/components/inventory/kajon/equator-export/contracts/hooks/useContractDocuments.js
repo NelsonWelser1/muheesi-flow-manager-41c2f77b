@@ -212,8 +212,17 @@ export const useContractDocuments = () => {
 
   // Load documents on mount
   useEffect(() => {
-    loadDocuments();
-  }, [loadDocuments]);
+    const fetchDocuments = async () => {
+      try {
+        await loadDocuments();
+      } catch (error) {
+        console.error("Error connecting to Supabase:", error);
+        showErrorToast(toast, "Failed to connect to database. Please try again later.");
+      }
+    };
+    
+    fetchDocuments();
+  }, [loadDocuments, toast]);
 
   return {
     documents,
@@ -230,3 +239,4 @@ export const useContractDocuments = () => {
 };
 
 export default useContractDocuments;
+
