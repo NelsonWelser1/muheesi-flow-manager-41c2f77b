@@ -55,3 +55,31 @@ export const showInfoToast = (toastFn, message) => {
   });
 };
 
+/**
+ * Show a loading toast notification that stays until dismissed
+ * @param {Object} toastFn - Toast function from useToast hook
+ * @param {String} message - Message to display
+ * @returns {Object} - The toast object which can be used to dismiss
+ */
+export const showLoadingToast = (toastFn, message) => {
+  return toastFn({
+    title: "Loading",
+    description: message,
+    variant: "default",
+    className: "bg-gray-50 border-gray-200 text-gray-800",
+    duration: Infinity, // Stays until manually dismissed
+  });
+};
+
+/**
+ * Dismiss a toast notification
+ * @param {String} toastId - ID of the toast to dismiss
+ * @returns {Object} - Object containing the toast ID
+ */
+export const dismissToast = (toastId) => {
+  if (toastId) {
+    return { id: toastId };
+  }
+  return null;
+};
+
