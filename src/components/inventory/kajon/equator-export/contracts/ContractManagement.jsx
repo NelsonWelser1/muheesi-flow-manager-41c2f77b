@@ -12,7 +12,7 @@ import { exportContractToPDF } from './utils/contractPdfExport';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
-import { runLocalPurchaseAgreementMigration } from './utils/localPurchaseAgreementMigration';
+import { runLocalPurchaseAgreementMigration } from '@/integrations/supabase/migrations/runLocalPurchaseAgreementMigration';
 import DocumentUploadTracker from './components/DocumentUploadTracker';
 import { runContractDocumentsMigration } from '@/integrations/supabase/migrations/contractDocumentsMigration';
 import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';

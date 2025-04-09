@@ -82,4 +82,3 @@ export const dismissToast = (toastId) => {
   }
   return null;
 };
-

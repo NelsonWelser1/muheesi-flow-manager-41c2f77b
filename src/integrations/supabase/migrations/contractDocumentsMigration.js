@@ -83,4 +83,3 @@ export const runContractDocumentsMigration = async () => {
 };
 
 export default runContractDocumentsMigration;
-
