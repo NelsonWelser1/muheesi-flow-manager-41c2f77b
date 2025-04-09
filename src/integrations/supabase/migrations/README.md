@@ -24,7 +24,7 @@ This migration:
 
 ## Fields in the Table
 
-- `id`: Unique identifier for each document (UUID)
+- `id`: Unique identifier for each document (auto-incrementing)
 - `filename`: The original filename
 - `file_path`: Path in storage where the file is saved
 - `file_url`: Public URL to access the file

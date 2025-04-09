@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
-import { v4 as uuidv4 } from 'uuid';
 import { 
   showSuccessToast, 
   showErrorToast, 
@@ -118,11 +117,9 @@ const useContractDocuments = () => {
       setUploadProgress(70);
       
       // Create metadata record in the database
-      const documentId = uuidv4();
       const { data: documentRecord, error: recordError } = await supabase
         .from('contract_documents')
         .insert({
-          id: documentId,
           filename: file.name,
           file_path: filePath,
           contract_id: contractId,

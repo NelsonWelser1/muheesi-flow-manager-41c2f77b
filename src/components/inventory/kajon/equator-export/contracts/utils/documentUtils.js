@@ -1,7 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/supabase';
-import { format } from 'date-fns';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Uploads a document to Supabase storage and creates a record in the database
@@ -45,11 +43,9 @@ export const uploadContractDocument = async (file, contractId = null, metadata =
     const publicUrl = urlData?.publicUrl || '';
     
     // Create metadata record in the database
-    const documentId = uuidv4();
     const { data: documentRecord, error: recordError } = await supabase
       .from('contract_documents')
       .insert({
-        id: documentId,
         filename: file.name,
         file_path: filePath,
         contract_id: contractId,

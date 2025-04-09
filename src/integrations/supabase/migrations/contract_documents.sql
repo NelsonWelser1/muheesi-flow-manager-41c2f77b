@@ -7,7 +7,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create the contract_documents table
 CREATE TABLE IF NOT EXISTS contract_documents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   filename TEXT NOT NULL,
   file_path TEXT NOT NULL,
   file_url TEXT,
