@@ -1,232 +1,383 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { v4 as uuidv4 } from 'uuid';
 import { 
-  uploadContractDocument, 
-  getContractDocuments, 
-  searchContractDocuments,
-  updateDocumentMetadata,
-  deleteDocument
-} from '../utils/documentUtils';
-import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
+  showSuccessToast, 
+  showErrorToast, 
+  showWarningToast 
+} from '@/components/ui/notifications';
 
 /**
- * Custom hook for managing contract documents with Supabase integration
+ * Custom hook for managing contract documents
+ * @returns {Object} Document management functions and state
  */
-export const useContractDocuments = () => {
+const useContractDocuments = () => {
+  const { toast } = useToast();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const { toast } = useToast();
 
   /**
-   * Upload a document to Supabase
+   * Load documents from the database
+   */
+  const loadDocuments = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const { data, error } = await supabase
+        .from('contract_documents')
+        .select('*')
+        .order('upload_date', { ascending: false });
+      
+      if (error) {
+        console.error('Error retrieving documents:', error);
+        setError(error);
+        return [];
+      }
+      
+      setDocuments(data || []);
+      return data || [];
+    } catch (err) {
+      console.error('Error in loadDocuments:', err);
+      setError(err);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Upload a document to Supabase storage and create a database record
+   * @param {File} file - The file to upload
+   * @param {string} contractId - Associated contract ID (optional)
+   * @param {Object} metadata - Additional metadata for the document
+   * @returns {Promise<Object>} Upload result
    */
   const uploadDocument = useCallback(async (file, contractId = null, metadata = {}) => {
-    if (!file) {
-      showErrorToast(toast, "No file selected for upload");
-      return { success: false };
-    }
-
     try {
+      if (!file) {
+        const error = new Error('No file provided');
+        showErrorToast(toast, error.message);
+        return { success: false, error };
+      }
+      
       setLoading(true);
       setUploadProgress(0);
       
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 95) {
-            clearInterval(progressInterval);
-            return 95;
-          }
-          return prev + 5;
-        });
-      }, 100);
-
-      // Perform the upload to Supabase
-      const result = await uploadContractDocument(file, contractId, metadata);
+      // Check file type
+      if (!(file.type === 'application/pdf' || 
+            file.type === 'image/jpeg' || 
+            file.type === 'image/jpg')) {
+        const error = new Error('Invalid file type. Only PDF, JPEG, and JPG are supported.');
+        showErrorToast(toast, error.message);
+        return { success: false, error };
+      }
       
-      clearInterval(progressInterval);
+      // Update progress
+      setUploadProgress(10);
+      
+      // Generate a unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${contractId ? contractId + '_' : ''}${Date.now()}.${fileExt}`;
+      const filePath = `contract-documents/${fileName}`;
+      
+      // Update progress
+      setUploadProgress(20);
+      
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      // Update progress
+      setUploadProgress(50);
+        
+      if (error) {
+        console.error('Storage upload error:', error);
+        showErrorToast(toast, `Upload failed: ${error.message}`);
+        return { success: false, error };
+      }
+      
+      // Get public URL for the file
+      const { data: urlData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+        
+      const publicUrl = urlData?.publicUrl || '';
+      
+      // Update progress
+      setUploadProgress(70);
+      
+      // Create metadata record in the database
+      const documentId = uuidv4();
+      const { data: documentRecord, error: recordError } = await supabase
+        .from('contract_documents')
+        .insert({
+          id: documentId,
+          filename: file.name,
+          file_path: filePath,
+          contract_id: contractId,
+          file_type: file.type,
+          file_size: file.size,
+          file_url: publicUrl,
+          status: 'pending_verification',
+          upload_date: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          ...metadata
+        })
+        .select()
+        .single();
+        
+      // Update progress
+      setUploadProgress(90);
+      
+      if (recordError) {
+        console.error('Database record error:', recordError);
+        showErrorToast(toast, `Database error: ${recordError.message}`);
+        
+        // Try to delete the uploaded file to avoid orphaned files
+        try {
+          await supabase.storage.from('documents').remove([filePath]);
+        } catch (cleanupError) {
+          console.error('Failed to clean up orphaned file:', cleanupError);
+        }
+        
+        return { success: false, error: recordError };
+      }
+      
+      // Update progress
       setUploadProgress(100);
       
-      if (result.success) {
-        // Add the document to the list
-        setDocuments(prevDocs => [result.data, ...prevDocs]);
-        
-        showSuccessToast(toast, "Document uploaded successfully");
-      } else {
-        showErrorToast(toast, result.message || "Failed to upload document");
-      }
+      // Refresh document list
+      await loadDocuments();
       
-      return result;
-    } catch (error) {
-      console.error("Error uploading document:", error);
+      showSuccessToast(toast, 'Document uploaded successfully');
       
-      showErrorToast(toast, error.message || "An unexpected error occurred during upload");
-      
-      return { success: false, error };
+      return {
+        success: true,
+        data: documentRecord,
+        message: 'Document uploaded successfully'
+      };
+    } catch (err) {
+      console.error('Upload error:', err);
+      showErrorToast(toast, `Upload failed: ${err.message || 'Unknown error'}`);
+      return { success: false, error: err };
     } finally {
       setLoading(false);
-      setTimeout(() => setUploadProgress(0), 1000);
+      // Reset progress after a delay
+      setTimeout(() => setUploadProgress(0), 2000);
     }
-  }, [toast]);
+  }, [loadDocuments, toast]);
 
   /**
-   * Load documents from Supabase, with optional filtering
-   */
-  const loadDocuments = useCallback(async (filters = {}) => {
-    try {
-      setLoading(true);
-      
-      const result = await getContractDocuments(filters);
-      
-      if (result.success) {
-        setDocuments(result.data);
-      } else {
-        showErrorToast(toast, result.message || "Failed to load documents");
-      }
-      
-      return result;
-    } catch (error) {
-      console.error("Error loading documents:", error);
-      
-      showErrorToast(toast, error.message || "An unexpected error occurred while loading documents");
-      
-      return { success: false, error, data: [] };
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
-
-  /**
-   * Search for documents in Supabase
+   * Search for documents by query term
+   * @param {string} query - Search query
    */
   const searchDocuments = useCallback(async (query) => {
-    if (!query || query.trim() === '') {
-      setSearchResults([]);
-      return { success: false, message: "Search query is required", data: [] };
-    }
-    
     try {
-      setSearchLoading(true);
-      
-      const result = await searchContractDocuments(query);
-      
-      if (result.success) {
-        setSearchResults(result.data);
-      } else {
-        showErrorToast(toast, result.message || "Failed to search documents");
+      if (!query || query.trim() === '') {
+        showWarningToast(toast, 'Please enter a search term');
+        return;
       }
       
-      return result;
-    } catch (error) {
-      console.error("Error searching documents:", error);
+      setSearchLoading(true);
       
-      showErrorToast(toast, error.message || "An unexpected error occurred during search");
+      const searchTerm = query.trim();
       
-      return { success: false, error, data: [] };
+      // For Supabase, we use ILIKE for case-insensitive search
+      const { data, error } = await supabase
+        .from('contract_documents')
+        .select('*')
+        .or(`
+          filename.ilike.%${searchTerm}%,
+          contract_id.ilike.%${searchTerm}%,
+          client.ilike.%${searchTerm}%,
+          notes.ilike.%${searchTerm}%
+        `)
+        .order('upload_date', { ascending: false });
+      
+      if (error) {
+        console.error('Search error:', error);
+        showErrorToast(toast, `Search failed: ${error.message}`);
+        return;
+      }
+      
+      setSearchResults(data || []);
+      
+      if (data && data.length > 0) {
+        showSuccessToast(toast, `Found ${data.length} documents matching "${searchTerm}"`);
+      } else {
+        showWarningToast(toast, `No documents found matching "${searchTerm}"`);
+      }
+    } catch (err) {
+      console.error('Search error:', err);
+      showErrorToast(toast, `Search failed: ${err.message || 'Unknown error'}`);
     } finally {
       setSearchLoading(false);
     }
   }, [toast]);
 
   /**
-   * Update document metadata or status in Supabase
+   * Update document metadata
+   * @param {string} documentId - Document ID
+   * @param {Object} updates - Fields to update
    */
   const updateDocument = useCallback(async (documentId, updates) => {
     try {
-      setLoading(true);
-      
-      const result = await updateDocumentMetadata(documentId, updates);
-      
-      if (result.success) {
-        // Update the local document list
-        setDocuments(prevDocs => 
-          prevDocs.map(doc => 
-            doc.id === documentId ? { ...doc, ...updates } : doc
-          )
-        );
-        
-        // Also update search results if present
-        if (searchResults.length > 0) {
-          setSearchResults(prevResults => 
-            prevResults.map(doc => 
-              doc.id === documentId ? { ...doc, ...updates } : doc
-            )
-          );
-        }
-        
-        showSuccessToast(toast, "Document updated successfully");
-      } else {
-        showErrorToast(toast, result.message || "Failed to update document");
+      if (!documentId) {
+        showErrorToast(toast, 'Document ID is required for update');
+        return { success: false };
       }
       
-      return result;
-    } catch (error) {
-      console.error("Error updating document:", error);
+      setLoading(true);
       
-      showErrorToast(toast, error.message || "An unexpected error occurred during update");
+      // Don't allow updating certain fields
+      const safeUpdates = { ...updates };
+      delete safeUpdates.id;
+      delete safeUpdates.file_path;
+      delete safeUpdates.created_at;
       
-      return { success: false, error };
+      // Add updated_at timestamp
+      safeUpdates.updated_at = new Date().toISOString();
+      
+      const { data, error } = await supabase
+        .from('contract_documents')
+        .update(safeUpdates)
+        .eq('id', documentId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Update error:', error);
+        showErrorToast(toast, `Update failed: ${error.message}`);
+        return { success: false, error };
+      }
+      
+      // Update the documents list
+      setDocuments(docs => 
+        docs.map(doc => doc.id === documentId ? { ...doc, ...safeUpdates } : doc)
+      );
+      
+      // Also update search results if present
+      if (searchResults.length > 0) {
+        setSearchResults(results => 
+          results.map(doc => doc.id === documentId ? { ...doc, ...safeUpdates } : doc)
+        );
+      }
+      
+      showSuccessToast(toast, 'Document updated successfully');
+      
+      return {
+        success: true,
+        data,
+        message: 'Document updated successfully'
+      };
+    } catch (err) {
+      console.error('Update error:', err);
+      showErrorToast(toast, `Update failed: ${err.message || 'Unknown error'}`);
+      return { success: false, error: err };
     } finally {
       setLoading(false);
     }
-  }, [toast, searchResults]);
+  }, [searchResults, toast]);
 
   /**
-   * Delete a document from Supabase
+   * Remove a document
+   * @param {string} documentId - Document ID to delete
    */
   const removeDocument = useCallback(async (documentId) => {
     try {
-      setLoading(true);
-      
-      const result = await deleteDocument(documentId);
-      
-      if (result.success) {
-        // Remove from local state
-        setDocuments(prevDocs => prevDocs.filter(doc => doc.id !== documentId));
-        
-        // Also remove from search results if present
-        if (searchResults.length > 0) {
-          setSearchResults(prevResults => prevResults.filter(doc => doc.id !== documentId));
-        }
-        
-        showSuccessToast(toast, "Document deleted successfully");
-      } else {
-        showErrorToast(toast, result.message || "Failed to delete document");
+      if (!documentId) {
+        showErrorToast(toast, 'Document ID is required for deletion');
+        return { success: false };
       }
       
-      return result;
-    } catch (error) {
-      console.error("Error deleting document:", error);
+      setLoading(true);
       
-      showErrorToast(toast, error.message || "An unexpected error occurred while deleting");
+      // First get the document to know the file path
+      const { data: document, error: getError } = await supabase
+        .from('contract_documents')
+        .select('file_path')
+        .eq('id', documentId)
+        .single();
       
-      return { success: false, error };
+      if (getError) {
+        console.error('Error getting document for deletion:', getError);
+        showErrorToast(toast, `Deletion failed: ${getError.message}`);
+        return { success: false, error: getError };
+      }
+      
+      if (!document) {
+        showErrorToast(toast, 'Document not found');
+        return { success: false, error: new Error('Document not found') };
+      }
+      
+      // Delete from storage
+      if (document.file_path) {
+        const { error: storageError } = await supabase.storage
+          .from('documents')
+          .remove([document.file_path]);
+          
+        if (storageError) {
+          console.error('Warning: Could not delete file from storage', storageError);
+          showWarningToast(toast, 'Warning: File removed from database but could not be deleted from storage');
+          // Continue with database deletion even if storage deletion fails
+        }
+      }
+      
+      // Delete from database
+      const { error } = await supabase
+        .from('contract_documents')
+        .delete()
+        .eq('id', documentId);
+      
+      if (error) {
+        console.error('Database deletion error:', error);
+        showErrorToast(toast, `Deletion failed: ${error.message}`);
+        return { success: false, error };
+      }
+      
+      // Update the documents list
+      setDocuments(docs => docs.filter(doc => doc.id !== documentId));
+      
+      // Also update search results if present
+      if (searchResults.length > 0) {
+        setSearchResults(results => results.filter(doc => doc.id !== documentId));
+      }
+      
+      showSuccessToast(toast, 'Document deleted successfully');
+      
+      return {
+        success: true,
+        message: 'Document deleted successfully'
+      };
+    } catch (err) {
+      console.error('Deletion error:', err);
+      showErrorToast(toast, `Deletion failed: ${err.message || 'Unknown error'}`);
+      return { success: false, error: err };
     } finally {
       setLoading(false);
     }
-  }, [toast, searchResults]);
+  }, [searchResults, toast]);
 
   // Load documents on mount
   useEffect(() => {
-    const fetchDocuments = async () => {
-      try {
-        await loadDocuments();
-      } catch (error) {
-        console.error("Error connecting to Supabase:", error);
-        showErrorToast(toast, "Failed to connect to database. Please try again later.");
-      }
-    };
-    
-    fetchDocuments();
-  }, [loadDocuments, toast]);
+    loadDocuments();
+  }, [loadDocuments]);
 
   return {
     documents,
     loading,
+    error,
     uploadProgress,
     searchResults,
     searchLoading,
