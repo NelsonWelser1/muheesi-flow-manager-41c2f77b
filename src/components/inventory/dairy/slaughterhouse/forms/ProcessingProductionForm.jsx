@@ -132,6 +132,10 @@ const ProcessingProductionForm = ({ onBack }) => {
     }
   };
 
+  const filteredMeatQualityGrades = MEAT_QUALITY_GRADES.filter(grade => grade && grade.trim() !== '');
+  const filteredValueAddedProducts = VALUE_ADDED_PRODUCTS.filter(product => product && product.trim() !== '');
+  const filteredProcessingTechniques = PROCESSING_TECHNIQUES.filter(technique => technique && technique.trim() !== '');
+
   return (
     <div className="space-y-4">
       <Button variant="outline" onClick={onBack} className="mb-4">
@@ -208,7 +212,7 @@ const ProcessingProductionForm = ({ onBack }) => {
                         <SelectValue placeholder="Select quality grade" />
                       </SelectTrigger>
                       <SelectContent>
-                        {MEAT_QUALITY_GRADES.map(grade => (
+                        {filteredMeatQualityGrades.map(grade => (
                           <SelectItem key={grade} value={grade.toLowerCase()}>
                             {grade}
                           </SelectItem>
@@ -239,7 +243,7 @@ const ProcessingProductionForm = ({ onBack }) => {
                         <SelectValue placeholder="Select product type" />
                       </SelectTrigger>
                       <SelectContent>
-                        {VALUE_ADDED_PRODUCTS.map(type => (
+                        {filteredValueAddedProducts.map(type => (
                           <SelectItem key={type} value={type.toLowerCase()}>
                             {type}
                           </SelectItem>
@@ -255,7 +259,7 @@ const ProcessingProductionForm = ({ onBack }) => {
                         <SelectValue placeholder="Select technique" />
                       </SelectTrigger>
                       <SelectContent>
-                        {PROCESSING_TECHNIQUES.map(technique => (
+                        {filteredProcessingTechniques.map(technique => (
                           <SelectItem key={technique} value={technique.toLowerCase()}>
                             {technique}
                           </SelectItem>
@@ -322,7 +326,6 @@ const ProcessingProductionForm = ({ onBack }) => {
         </TabsContent>
       </Tabs>
 
-      {/* Records Display */}
       <Card>
         <CardHeader>
           <CardTitle>Processing Records</CardTitle>

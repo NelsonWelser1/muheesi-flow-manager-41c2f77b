@@ -25,7 +25,7 @@ const StoreSelector = ({ onLocationSelect }) => {
           <SelectValue placeholder="Select location" />
         </SelectTrigger>
         <SelectContent>
-          {STORE_LOCATIONS.map(location => (
+          {STORE_LOCATIONS.filter(location => location && location.trim() !== '').map(location => (
             <SelectItem key={location} value={location}>{location}</SelectItem>
           ))}
         </SelectContent>
