@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -14,6 +13,8 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { runLocalPurchaseAgreementMigration } from './utils/localPurchaseAgreementMigration';
+import DocumentUploadTracker from './components/DocumentUploadTracker';
+import { runContractDocumentsMigration } from '@/integrations/supabase/migrations/contractDocumentsMigration';
 
 const contractStatusColors = {
   active: "bg-green-100 text-green-800",
@@ -27,20 +28,19 @@ const ContractManagement = () => {
   const { toast } = useToast();
   const [activeView, setActiveView] = useState('contracts'); // 'contracts', 'templates', 'local-purchase'
   
-  // Initialize migrations when component mounts
   useEffect(() => {
     const initMigrations = async () => {
       try {
         await runLocalPurchaseAgreementMigration();
+        await runContractDocumentsMigration();
       } catch (error) {
-        console.error('Failed to initialize local purchase agreement migrations:', error);
+        console.error('Failed to initialize migrations:', error);
       }
     };
     
     initMigrations();
   }, []);
 
-  // Sample contracts data
   const contracts = [{
     id: 'CNT-1001',
     client: 'European Coffee Roasters GmbH',
@@ -94,10 +94,8 @@ const ContractManagement = () => {
   }];
   
   const handleContractDownload = contract => {
-    // Create new PDF document
     const doc = new jsPDF();
 
-    // Add company header
     doc.setFontSize(18);
     doc.setTextColor(0, 51, 102);
     doc.text('KAJON Coffee Limited', 15, 20);
@@ -105,14 +103,12 @@ const ContractManagement = () => {
     doc.setTextColor(100, 100, 100);
     doc.text('Kanoni, Kazo District, Uganda', 15, 28);
 
-    // Add contract title
     doc.setFontSize(16);
     doc.setTextColor(0, 0, 0);
     doc.text(`CONTRACT: ${contract.id}`, 105, 20, {
       align: 'center'
     });
 
-    // Add contract details
     doc.setFontSize(12);
     doc.setTextColor(60, 60, 60);
     doc.text(`Client: ${contract.client}`, 15, 45);
@@ -123,11 +119,9 @@ const ContractManagement = () => {
     doc.text(`Coffee Type: ${contract.coffeeType}`, 15, 85);
     doc.text(`Quantity: ${contract.quantity}`, 15, 93);
 
-    // Add contract terms
     doc.text('CONTRACT TERMS', 15, 110);
     doc.line(15, 112, 195, 112);
 
-    // Sample terms
     const terms = [`This Export Contract is entered between KAJON Coffee Limited ("Seller") and ${contract.client} ("Buyer") on ${contract.date}.`, `The Seller agrees to sell and the Buyer agrees to purchase ${contract.quantity} of ${contract.coffeeType} coffee beans at the agreed price of ${contract.value}.`, 'Payment terms: 30% advance payment upon contract signing, 70% upon shipping.', 'Delivery terms: FOB Mombasa', 'Quality specifications as per attached appendix.', 'This contract is governed by the laws of Uganda.'];
     let yPos = 120;
     terms.forEach(term => {
@@ -136,7 +130,6 @@ const ContractManagement = () => {
       yPos += 10 * splitText.length;
     });
 
-    // Add signature blocks
     yPos += 20;
     doc.text('For Seller:', 15, yPos);
     doc.text('For Buyer:', 110, yPos);
@@ -145,14 +138,12 @@ const ContractManagement = () => {
     doc.text('Authorized Signature', 15, yPos + 25);
     doc.text('Authorized Signature', 110, yPos + 25);
 
-    // Add date and page number in footer
     doc.setFontSize(10);
     doc.setTextColor(150, 150, 150);
     const today = format(new Date(), 'yyyy-MM-dd');
     doc.text(`Generated: ${today}`, 15, 280);
     doc.text('Page 1 of 1', 170, 280);
 
-    // Save the PDF
     doc.save(`${contract.id}_${contract.client.replace(/\s+/g, '_')}.pdf`);
     toast({
       title: "Success",
@@ -161,32 +152,26 @@ const ContractManagement = () => {
   };
   
   const handleExportAllContracts = () => {
-    // Create new PDF document
     const doc = new jsPDF();
 
-    // Add company header
     doc.setFontSize(18);
     doc.setTextColor(0, 51, 102);
     doc.text('KAJON Coffee Limited', 15, 20);
 
-    // Add report title
     doc.setFontSize(16);
     doc.setTextColor(0, 0, 0);
     doc.text('Active Export Contracts', 105, 35, {
       align: 'center'
     });
 
-    // Add date
     doc.setFontSize(11);
     doc.setTextColor(100, 100, 100);
     const today = format(new Date(), 'yyyy-MM-dd');
     doc.text(`Generated: ${today}`, 15, 45);
 
-    // Convert contracts to table data
     const tableColumn = ["Contract ID", "Client", "Country", "Coffee Type", "Date", "Value", "Status"];
     const tableRows = contracts.map(contract => [contract.id, contract.client, contract.country, contract.coffeeType, contract.date, contract.value, contract.status.charAt(0).toUpperCase() + contract.status.slice(1)]);
 
-    // Add contracts table
     doc.autoTable({
       head: [tableColumn],
       body: tableRows,
@@ -206,7 +191,6 @@ const ContractManagement = () => {
       }
     });
 
-    // Save the PDF
     doc.save(`KAJON_Coffee_Contracts_${today}.pdf`);
     toast({
       title: "Success",
@@ -324,7 +308,8 @@ const ContractManagement = () => {
             </CardContent>
           </Card>
           
-          {/* Contract Analytics */}
+          <DocumentUploadTracker />
+          
           <Card>
             <CardHeader className="pb-2">
               <CardTitle>Contract Analytics</CardTitle>
@@ -358,7 +343,6 @@ const ContractManagement = () => {
             </CardContent>
           </Card>
           
-          {/* Recent Contract Activities */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2">
