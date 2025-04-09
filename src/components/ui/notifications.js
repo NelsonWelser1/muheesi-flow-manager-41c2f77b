@@ -3,11 +3,11 @@ import { toast } from "@/components/ui/use-toast";
 
 /**
  * Show a success toast notification
- * @param {Object} toastFn - Toast function from useToast hook
- * @param {String} message - Message to display
+ * @param {Object} toastInstance - Toast instance from useToast hook
+ * @param {string} message - Message to display
  */
-export const showSuccessToast = (toastFn, message) => {
-  toastFn({
+export const showSuccessToast = (toastInstance, message) => {
+  toastInstance({
     title: "Success",
     description: message,
     variant: "default",
@@ -16,11 +16,11 @@ export const showSuccessToast = (toastFn, message) => {
 
 /**
  * Show an error toast notification
- * @param {Object} toastFn - Toast function from useToast hook
- * @param {String} message - Message to display
+ * @param {Object} toastInstance - Toast instance from useToast hook
+ * @param {string} message - Message to display
  */
-export const showErrorToast = (toastFn, message) => {
-  toastFn({
+export const showErrorToast = (toastInstance, message) => {
+  toastInstance({
     title: "Error",
     description: message,
     variant: "destructive",
@@ -29,56 +29,26 @@ export const showErrorToast = (toastFn, message) => {
 
 /**
  * Show a warning toast notification
- * @param {Object} toastFn - Toast function from useToast hook
- * @param {String} message - Message to display
+ * @param {Object} toastInstance - Toast instance from useToast hook
+ * @param {string} message - Message to display
  */
-export const showWarningToast = (toastFn, message) => {
-  toastFn({
+export const showWarningToast = (toastInstance, message) => {
+  toastInstance({
     title: "Warning",
     description: message,
-    variant: "default",
-    className: "bg-amber-50 border-amber-200 text-amber-800",
+    variant: "warning",
   });
 };
 
 /**
  * Show an info toast notification
- * @param {Object} toastFn - Toast function from useToast hook
- * @param {String} message - Message to display
+ * @param {Object} toastInstance - Toast instance from useToast hook
+ * @param {string} message - Message to display
  */
-export const showInfoToast = (toastFn, message) => {
-  toastFn({
+export const showInfoToast = (toastInstance, message) => {
+  toastInstance({
     title: "Information",
     description: message,
     variant: "default",
-    className: "bg-blue-50 border-blue-200 text-blue-800",
   });
-};
-
-/**
- * Show a loading toast notification that stays until dismissed
- * @param {Object} toastFn - Toast function from useToast hook
- * @param {String} message - Message to display
- * @returns {Object} - The toast object which can be used to dismiss
- */
-export const showLoadingToast = (toastFn, message) => {
-  return toastFn({
-    title: "Loading",
-    description: message,
-    variant: "default",
-    className: "bg-gray-50 border-gray-200 text-gray-800",
-    duration: Infinity, // Stays until manually dismissed
-  });
-};
-
-/**
- * Dismiss a toast notification
- * @param {String} toastId - ID of the toast to dismiss
- * @returns {Object} - Object containing the toast ID
- */
-export const dismissToast = (toastId) => {
-  if (toastId) {
-    return { id: toastId };
-  }
-  return null;
 };
