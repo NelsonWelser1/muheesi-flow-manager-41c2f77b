@@ -12,7 +12,8 @@ import {
   FileText, 
   Search, 
   Eye, 
-  Download, 
+  Download,
+  Trash2, 
   File, 
   FileImage, 
   Info, 
@@ -20,11 +21,14 @@ import {
   X,
   Check,
   Filter,
-  Calendar
+  Calendar,
+  RotateCcw,
+  Tag
 } from 'lucide-react';
 import { format } from 'date-fns';
 import useContractDocuments from '../hooks/useContractDocuments';
 import { formatFileSize, getFileIconName } from '../utils/documentUtils';
+import { showWarningToast } from '@/components/ui/notifications';
 
 const DocumentUploadTracker = () => {
   const { toast } = useToast();
@@ -33,6 +37,10 @@ const DocumentUploadTracker = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef(null);
   const [contractId, setContractId] = useState('');
+  const [client, setClient] = useState('');
+  const [notes, setNotes] = useState('');
+  const [keywords, setKeywords] = useState('');
+  const [signedBy, setSignedBy] = useState('');
   
   const {
     documents,
@@ -43,7 +51,8 @@ const DocumentUploadTracker = () => {
     uploadDocument,
     loadDocuments,
     searchDocuments,
-    updateDocument
+    updateDocument,
+    removeDocument
   } = useContractDocuments();
 
   // Load documents when component mounts
@@ -77,6 +86,18 @@ const DocumentUploadTracker = () => {
     }
   };
 
+  const resetForm = () => {
+    setUploadedFile(null);
+    setContractId('');
+    setClient('');
+    setNotes('');
+    setKeywords('');
+    setSignedBy('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleUpload = async () => {
     if (!uploadedFile) {
       toast({
@@ -87,14 +108,24 @@ const DocumentUploadTracker = () => {
       return;
     }
 
-    const result = await uploadDocument(uploadedFile, contractId || null);
+    // Prepare keywords and signers as arrays
+    const keywordsArray = keywords ? keywords.split(',').map(k => k.trim()) : [];
+    const signersArray = signedBy ? signedBy.split(',').map(s => s.trim()) : [];
+
+    // Additional metadata
+    const metadata = {
+      client: client || null,
+      notes: notes || null,
+      keywords: keywordsArray.length > 0 ? keywordsArray : null,
+      signed_by: signersArray.length > 0 ? signersArray : null
+    };
+
+    const result = await uploadDocument(uploadedFile, contractId || null, metadata);
     
     if (result.success) {
-      setUploadedFile(null);
-      setContractId('');
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      resetForm();
+      // Switch to "all" tab to show the uploaded document
+      setActiveTab('all');
     }
   };
 
@@ -140,6 +171,20 @@ const DocumentUploadTracker = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleDeleteDocument = async (document) => {
+    if (window.confirm(`Are you sure you want to delete "${document.filename}"?`)) {
+      await removeDocument(document.id);
+    }
+  };
+
+  const handleVerifyDocument = async (document) => {
+    await updateDocument(document.id, {
+      status: 'verified',
+      verified_by: 'System Admin',
+      verified_at: new Date().toISOString()
+    });
   };
 
   const renderDocumentIcon = (fileType) => {
@@ -229,9 +274,32 @@ const DocumentUploadTracker = () => {
         >
           <Download className="h-4 w-4" />
         </Button>
+        {document.status === 'pending_verification' && (
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => handleVerifyDocument(document)}
+            title="Verify Document"
+          >
+            <Check className="h-4 w-4 text-green-600" />
+          </Button>
+        )}
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => handleDeleteDocument(document)}
+          title="Delete Document"
+        >
+          <Trash2 className="h-4 w-4 text-red-500" />
+        </Button>
       </div>
     </div>
   );
+
+  // Refresh documents list
+  const handleRefreshDocuments = async () => {
+    await loadDocuments();
+  };
 
   return (
     <Card className="mt-6">
@@ -310,11 +378,7 @@ const DocumentUploadTracker = () => {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => {
-                            setUploadedFile(null);
-                            setContractId('');
-                            if (fileInputRef.current) fileInputRef.current.value = '';
-                          }}
+                          onClick={resetForm}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -335,7 +399,7 @@ const DocumentUploadTracker = () => {
                 
                 <div>
                   <div className="border rounded-md p-4">
-                    <h3 className="text-sm font-medium mb-2">Contract Details</h3>
+                    <h3 className="text-sm font-medium mb-3">Document Details</h3>
                     <div className="space-y-3">
                       <div>
                         <label className="text-xs text-gray-500 mb-1 block">Contract ID</label>
@@ -347,20 +411,61 @@ const DocumentUploadTracker = () => {
                         />
                       </div>
                       
-                      <div className="text-xs text-gray-500">
-                        <p className="mb-1">Tips:</p>
-                        <ul className="list-disc list-inside space-y-1">
-                          <li>Use file naming like: CNT-1001_ClientName.pdf</li>
-                          <li>Make sure all signatures are visible</li>
-                          <li>Include all contract pages</li>
-                        </ul>
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Client</label>
+                        <Input 
+                          value={client} 
+                          onChange={e => setClient(e.target.value)}
+                          placeholder="Client name"
+                          className="text-sm"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Signed By (comma-separated)</label>
+                        <Input 
+                          value={signedBy} 
+                          onChange={e => setSignedBy(e.target.value)}
+                          placeholder="John Doe, Jane Smith"
+                          className="text-sm"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Keywords (comma-separated)</label>
+                        <Input 
+                          value={keywords} 
+                          onChange={e => setKeywords(e.target.value)}
+                          placeholder="export, coffee, arabica"
+                          className="text-sm"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Notes</label>
+                        <Input 
+                          value={notes} 
+                          onChange={e => setNotes(e.target.value)}
+                          placeholder="Additional notes"
+                          className="text-sm"
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={resetForm}
+                  disabled={!uploadedFile && !contractId && !client && !notes && !keywords && !signedBy}
+                  className="flex items-center gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  <span>Clear Form</span>
+                </Button>
+                
                 <Button 
                   onClick={handleUpload} 
                   disabled={!uploadedFile || loading}
@@ -454,13 +559,30 @@ const DocumentUploadTracker = () => {
                 </div>
                 
                 <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center gap-1"
+                    onClick={handleRefreshDocuments}
+                    disabled={loading}
+                  >
+                    <RotateCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    <span>Refresh</span>
+                  </Button>
+                  
                   <Button variant="outline" size="sm" className="flex items-center gap-1">
                     <Filter className="h-4 w-4" />
                     <span>Filter</span>
                   </Button>
+                  
                   <Button variant="outline" size="sm" className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
                     <span>Date Range</span>
+                  </Button>
+                  
+                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Tag className="h-4 w-4" />
+                    <span>Categories</span>
                   </Button>
                 </div>
               </div>

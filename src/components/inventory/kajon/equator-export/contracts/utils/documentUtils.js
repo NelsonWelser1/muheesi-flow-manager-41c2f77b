@@ -4,12 +4,12 @@ import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Uploads a document to Supabase storage
+ * Uploads a document to Supabase storage and creates a record in the database
  * @param {File} file - The file to upload
  * @param {string} contractId - Associated contract ID (optional)
  * @returns {Promise<Object>} Upload result
  */
-export const uploadContractDocument = async (file, contractId = null) => {
+export const uploadContractDocument = async (file, contractId = null, metadata = {}) => {
   try {
     if (!file) {
       throw new Error('No file provided');
@@ -42,20 +42,24 @@ export const uploadContractDocument = async (file, contractId = null) => {
       .from('documents')
       .getPublicUrl(filePath);
       
+    const publicUrl = urlData?.publicUrl || '';
+    
     // Create metadata record in the database
+    const documentId = uuidv4();
     const { data: documentRecord, error: recordError } = await supabase
       .from('contract_documents')
       .insert({
-        id: uuidv4(),
+        id: documentId,
         filename: file.name,
         file_path: filePath,
         contract_id: contractId,
         file_type: file.type,
         file_size: file.size,
-        file_url: urlData?.publicUrl || '',
+        file_url: publicUrl,
         status: 'pending_verification',
         upload_date: new Date().toISOString(),
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        ...metadata
       })
       .select()
       .single();
@@ -78,7 +82,7 @@ export const uploadContractDocument = async (file, contractId = null) => {
 };
 
 /**
- * Retrieves a list of contract documents
+ * Retrieves a list of contract documents from the database
  * @param {Object} filters - Optional filtering parameters
  * @returns {Promise<Array>} List of documents
  */
@@ -100,8 +104,16 @@ export const getContractDocuments = async (filters = {}) => {
     
     if (filters.search) {
       query = query.or(
-        `filename.ilike.%${filters.search}%,contract_id.ilike.%${filters.search}%`
+        `filename.ilike.%${filters.search}%,contract_id.ilike.%${filters.search}%,client.ilike.%${filters.search}%`
       );
+    }
+    
+    if (filters.dateFrom) {
+      query = query.gte('upload_date', filters.dateFrom);
+    }
+    
+    if (filters.dateTo) {
+      query = query.lte('upload_date', filters.dateTo);
     }
     
     const { data, error } = await query;
@@ -135,16 +147,15 @@ export const searchContractDocuments = async (query) => {
       throw new Error('Search query is required');
     }
     
-    // In a real implementation, this would use full-text search capabilities
-    // For now, we'll just search basic metadata
+    // For Supabase, we use ILIKE for case-insensitive search
     const { data, error } = await supabase
       .from('contract_documents')
       .select('*')
       .or(`
         filename.ilike.%${query}%,
         contract_id.ilike.%${query}%,
-        notes.ilike.%${query}%,
-        keywords.cs.{"${query}"}
+        client.ilike.%${query}%,
+        notes.ilike.%${query}%
       `)
       .order('upload_date', { ascending: false });
     
@@ -207,6 +218,61 @@ export const updateDocumentMetadata = async (documentId, updates) => {
       success: false,
       error,
       message: error.message || 'Failed to update document'
+    };
+  }
+};
+
+/**
+ * Delete a document from storage and database
+ * @param {string} documentId - Document ID to delete
+ * @returns {Promise<Object>} Result of deletion
+ */
+export const deleteDocument = async (documentId) => {
+  try {
+    if (!documentId) {
+      throw new Error('Document ID is required');
+    }
+    
+    // First get the document to know the file path
+    const { data: document, error: getError } = await supabase
+      .from('contract_documents')
+      .select('file_path')
+      .eq('id', documentId)
+      .single();
+    
+    if (getError) throw getError;
+    if (!document) throw new Error('Document not found');
+    
+    // Delete from storage
+    if (document.file_path) {
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .remove([document.file_path]);
+        
+      if (storageError) {
+        console.error('Warning: Could not delete file from storage', storageError);
+        // Continue with database deletion even if storage deletion fails
+      }
+    }
+    
+    // Delete from database
+    const { error } = await supabase
+      .from('contract_documents')
+      .delete()
+      .eq('id', documentId);
+    
+    if (error) throw error;
+    
+    return {
+      success: true,
+      message: 'Document deleted successfully'
+    };
+  } catch (error) {
+    console.error('Error deleting document:', error);
+    return {
+      success: false,
+      error,
+      message: error.message || 'Failed to delete document'
     };
   }
 };

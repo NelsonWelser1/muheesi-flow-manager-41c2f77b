@@ -1,15 +1,17 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { 
   uploadContractDocument, 
   getContractDocuments, 
   searchContractDocuments,
-  updateDocumentMetadata
+  updateDocumentMetadata,
+  deleteDocument
 } from '../utils/documentUtils';
+import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
 
 /**
- * Custom hook for managing contract documents
+ * Custom hook for managing contract documents with Supabase integration
  */
 export const useContractDocuments = () => {
   const [documents, setDocuments] = useState([]);
@@ -20,15 +22,11 @@ export const useContractDocuments = () => {
   const { toast } = useToast();
 
   /**
-   * Upload a document
+   * Upload a document to Supabase
    */
   const uploadDocument = useCallback(async (file, contractId = null, metadata = {}) => {
     if (!file) {
-      toast({
-        title: "Error",
-        description: "No file selected for upload",
-        variant: "destructive"
-      });
+      showErrorToast(toast, "No file selected for upload");
       return { success: false };
     }
 
@@ -47,8 +45,8 @@ export const useContractDocuments = () => {
         });
       }, 100);
 
-      // Perform the upload
-      const result = await uploadContractDocument(file, contractId);
+      // Perform the upload to Supabase
+      const result = await uploadContractDocument(file, contractId, metadata);
       
       clearInterval(progressInterval);
       setUploadProgress(100);
@@ -57,27 +55,16 @@ export const useContractDocuments = () => {
         // Add the document to the list
         setDocuments(prevDocs => [result.data, ...prevDocs]);
         
-        toast({
-          title: "Success",
-          description: "Document uploaded successfully"
-        });
+        showSuccessToast(toast, "Document uploaded successfully");
       } else {
-        toast({
-          title: "Upload Failed",
-          description: result.message || "Failed to upload document",
-          variant: "destructive"
-        });
+        showErrorToast(toast, result.message || "Failed to upload document");
       }
       
       return result;
     } catch (error) {
       console.error("Error uploading document:", error);
       
-      toast({
-        title: "Upload Error",
-        description: error.message || "An unexpected error occurred during upload",
-        variant: "destructive"
-      });
+      showErrorToast(toast, error.message || "An unexpected error occurred during upload");
       
       return { success: false, error };
     } finally {
@@ -87,7 +74,7 @@ export const useContractDocuments = () => {
   }, [toast]);
 
   /**
-   * Load documents, with optional filtering
+   * Load documents from Supabase, with optional filtering
    */
   const loadDocuments = useCallback(async (filters = {}) => {
     try {
@@ -98,22 +85,14 @@ export const useContractDocuments = () => {
       if (result.success) {
         setDocuments(result.data);
       } else {
-        toast({
-          title: "Error",
-          description: result.message || "Failed to load documents",
-          variant: "destructive"
-        });
+        showErrorToast(toast, result.message || "Failed to load documents");
       }
       
       return result;
     } catch (error) {
       console.error("Error loading documents:", error);
       
-      toast({
-        title: "Error",
-        description: error.message || "An unexpected error occurred while loading documents",
-        variant: "destructive"
-      });
+      showErrorToast(toast, error.message || "An unexpected error occurred while loading documents");
       
       return { success: false, error, data: [] };
     } finally {
@@ -122,7 +101,7 @@ export const useContractDocuments = () => {
   }, [toast]);
 
   /**
-   * Search for documents
+   * Search for documents in Supabase
    */
   const searchDocuments = useCallback(async (query) => {
     if (!query || query.trim() === '') {
@@ -138,22 +117,14 @@ export const useContractDocuments = () => {
       if (result.success) {
         setSearchResults(result.data);
       } else {
-        toast({
-          title: "Search Error",
-          description: result.message || "Failed to search documents",
-          variant: "destructive"
-        });
+        showErrorToast(toast, result.message || "Failed to search documents");
       }
       
       return result;
     } catch (error) {
       console.error("Error searching documents:", error);
       
-      toast({
-        title: "Search Error",
-        description: error.message || "An unexpected error occurred during search",
-        variant: "destructive"
-      });
+      showErrorToast(toast, error.message || "An unexpected error occurred during search");
       
       return { success: false, error, data: [] };
     } finally {
@@ -162,7 +133,7 @@ export const useContractDocuments = () => {
   }, [toast]);
 
   /**
-   * Update document metadata or status
+   * Update document metadata or status in Supabase
    */
   const updateDocument = useCallback(async (documentId, updates) => {
     try {
@@ -187,33 +158,62 @@ export const useContractDocuments = () => {
           );
         }
         
-        toast({
-          title: "Success",
-          description: "Document updated successfully"
-        });
+        showSuccessToast(toast, "Document updated successfully");
       } else {
-        toast({
-          title: "Update Failed",
-          description: result.message || "Failed to update document",
-          variant: "destructive"
-        });
+        showErrorToast(toast, result.message || "Failed to update document");
       }
       
       return result;
     } catch (error) {
       console.error("Error updating document:", error);
       
-      toast({
-        title: "Update Error",
-        description: error.message || "An unexpected error occurred during update",
-        variant: "destructive"
-      });
+      showErrorToast(toast, error.message || "An unexpected error occurred during update");
       
       return { success: false, error };
     } finally {
       setLoading(false);
     }
   }, [toast, searchResults]);
+
+  /**
+   * Delete a document from Supabase
+   */
+  const removeDocument = useCallback(async (documentId) => {
+    try {
+      setLoading(true);
+      
+      const result = await deleteDocument(documentId);
+      
+      if (result.success) {
+        // Remove from local state
+        setDocuments(prevDocs => prevDocs.filter(doc => doc.id !== documentId));
+        
+        // Also remove from search results if present
+        if (searchResults.length > 0) {
+          setSearchResults(prevResults => prevResults.filter(doc => doc.id !== documentId));
+        }
+        
+        showSuccessToast(toast, "Document deleted successfully");
+      } else {
+        showErrorToast(toast, result.message || "Failed to delete document");
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      
+      showErrorToast(toast, error.message || "An unexpected error occurred while deleting");
+      
+      return { success: false, error };
+    } finally {
+      setLoading(false);
+    }
+  }, [toast, searchResults]);
+
+  // Load documents on mount
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
 
   return {
     documents,
@@ -224,7 +224,8 @@ export const useContractDocuments = () => {
     uploadDocument,
     loadDocuments,
     searchDocuments,
-    updateDocument
+    updateDocument,
+    removeDocument
   };
 };
 

@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { runLocalPurchaseAgreementMigration } from './utils/localPurchaseAgreementMigration';
 import DocumentUploadTracker from './components/DocumentUploadTracker';
 import { runContractDocumentsMigration } from '@/integrations/supabase/migrations/contractDocumentsMigration';
+import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
 
 const contractStatusColors = {
   active: "bg-green-100 text-green-800",
@@ -27,19 +28,39 @@ const contractStatusColors = {
 const ContractManagement = () => {
   const { toast } = useToast();
   const [activeView, setActiveView] = useState('contracts'); // 'contracts', 'templates', 'local-purchase'
+  const [migrationStatus, setMigrationStatus] = useState({ running: false, success: null, message: '' });
   
   useEffect(() => {
     const initMigrations = async () => {
       try {
-        await runLocalPurchaseAgreementMigration();
+        setMigrationStatus({ running: true, success: null, message: 'Running database migrations...' });
+        
+        // Run migrations
         await runContractDocumentsMigration();
+        
+        // Local purchase agreements migration (if needed)
+        try {
+          await runLocalPurchaseAgreementMigration();
+        } catch (localPurchaseError) {
+          console.error('Non-critical error with local purchase migration:', localPurchaseError);
+          // Continue anyway since this is a separate feature
+        }
+        
+        setMigrationStatus({ running: false, success: true, message: 'Database migrations completed successfully' });
+        showSuccessToast(toast, 'Database migrations completed successfully');
       } catch (error) {
         console.error('Failed to initialize migrations:', error);
+        setMigrationStatus({ 
+          running: false, 
+          success: false, 
+          message: `Migration error: ${error.message || 'Unknown error'}` 
+        });
+        showErrorToast(toast, `Migration error: ${error.message || 'Unknown error'}`);
       }
     };
     
     initMigrations();
-  }, []);
+  }, [toast]);
 
   const contracts = [{
     id: 'CNT-1001',
@@ -231,6 +252,26 @@ const ContractManagement = () => {
           </Button>
         </div>
       </div>
+      
+      {migrationStatus.message && (
+        <div className={`p-3 rounded-md ${
+          migrationStatus.running ? 'bg-blue-50 text-blue-800' : 
+          migrationStatus.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+        }`}>
+          <div className="flex items-center gap-2">
+            {migrationStatus.running ? (
+              <div className="animate-spin">
+                <ArrowUpDown className="h-4 w-4" />
+              </div>
+            ) : migrationStatus.success ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
+            <span>{migrationStatus.message}</span>
+          </div>
+        </div>
+      )}
       
       {activeView === 'templates' ? (
         <ContractTemplates onBack={() => setActiveView('contracts')} />
