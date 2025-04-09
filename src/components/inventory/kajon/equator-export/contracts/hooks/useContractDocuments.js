@@ -29,6 +29,8 @@ const useContractDocuments = () => {
       setLoading(true);
       setError(null);
       
+      console.log('Loading contract documents from Supabase...');
+      
       const { data, error } = await supabase
         .from('contract_documents')
         .select('*')
@@ -37,19 +39,22 @@ const useContractDocuments = () => {
       if (error) {
         console.error('Error retrieving documents:', error);
         setError(error);
+        showErrorToast(toast, `Error loading documents: ${error.message}`);
         return [];
       }
       
+      console.log(`Loaded ${data?.length || 0} contract documents`);
       setDocuments(data || []);
       return data || [];
     } catch (err) {
       console.error('Error in loadDocuments:', err);
       setError(err);
+      showErrorToast(toast, `Error loading documents: ${err.message}`);
       return [];
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   /**
    * Upload a document to Supabase storage and create a database record
@@ -89,6 +94,8 @@ const useContractDocuments = () => {
       // Update progress
       setUploadProgress(20);
       
+      console.log('Uploading file to Supabase storage:', filePath);
+      
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from('documents')
@@ -106,6 +113,8 @@ const useContractDocuments = () => {
         return { success: false, error };
       }
       
+      console.log('File uploaded successfully, generating public URL');
+      
       // Get public URL for the file
       const { data: urlData } = supabase.storage
         .from('documents')
@@ -115,6 +124,8 @@ const useContractDocuments = () => {
       
       // Update progress
       setUploadProgress(70);
+      
+      console.log('Creating database record for document');
       
       // Create metadata record in the database
       const { data: documentRecord, error: recordError } = await supabase
@@ -144,6 +155,7 @@ const useContractDocuments = () => {
         // Try to delete the uploaded file to avoid orphaned files
         try {
           await supabase.storage.from('documents').remove([filePath]);
+          console.log('Cleaned up orphaned file after database error');
         } catch (cleanupError) {
           console.error('Failed to clean up orphaned file:', cleanupError);
         }
@@ -153,6 +165,8 @@ const useContractDocuments = () => {
       
       // Update progress
       setUploadProgress(100);
+      
+      console.log('Document record created successfully:', documentRecord);
       
       // Refresh document list
       await loadDocuments();
@@ -189,6 +203,7 @@ const useContractDocuments = () => {
       setSearchLoading(true);
       
       const searchTerm = query.trim();
+      console.log('Searching documents with term:', searchTerm);
       
       // For Supabase, we use ILIKE for case-insensitive search
       const { data, error } = await supabase
@@ -208,6 +223,7 @@ const useContractDocuments = () => {
         return;
       }
       
+      console.log(`Search returned ${data?.length || 0} results`);
       setSearchResults(data || []);
       
       if (data && data.length > 0) {
@@ -246,6 +262,8 @@ const useContractDocuments = () => {
       // Add updated_at timestamp
       safeUpdates.updated_at = new Date().toISOString();
       
+      console.log('Updating document:', documentId, safeUpdates);
+      
       const { data, error } = await supabase
         .from('contract_documents')
         .update(safeUpdates)
@@ -258,6 +276,8 @@ const useContractDocuments = () => {
         showErrorToast(toast, `Update failed: ${error.message}`);
         return { success: false, error };
       }
+      
+      console.log('Document updated successfully:', data);
       
       // Update the documents list
       setDocuments(docs => 
@@ -300,6 +320,8 @@ const useContractDocuments = () => {
       
       setLoading(true);
       
+      console.log('Deleting document:', documentId);
+      
       // First get the document to know the file path
       const { data: document, error: getError } = await supabase
         .from('contract_documents')
@@ -320,6 +342,8 @@ const useContractDocuments = () => {
       
       // Delete from storage
       if (document.file_path) {
+        console.log('Removing file from storage:', document.file_path);
+        
         const { error: storageError } = await supabase.storage
           .from('documents')
           .remove([document.file_path]);
@@ -332,6 +356,7 @@ const useContractDocuments = () => {
       }
       
       // Delete from database
+      console.log('Removing document record from database');
       const { error } = await supabase
         .from('contract_documents')
         .delete()
@@ -342,6 +367,8 @@ const useContractDocuments = () => {
         showErrorToast(toast, `Deletion failed: ${error.message}`);
         return { success: false, error };
       }
+      
+      console.log('Document deleted successfully');
       
       // Update the documents list
       setDocuments(docs => docs.filter(doc => doc.id !== documentId));

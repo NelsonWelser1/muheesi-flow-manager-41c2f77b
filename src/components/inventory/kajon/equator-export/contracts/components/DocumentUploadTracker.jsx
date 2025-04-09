@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ import {
 import { format } from 'date-fns';
 import useContractDocuments from '../hooks/useContractDocuments';
 import { formatFileSize, getFileIconName } from '../utils/documentUtils';
-import { showWarningToast } from '@/components/ui/notifications';
+import { showWarningToast, showSuccessToast, showErrorToast } from '@/components/ui/notifications';
 
 const DocumentUploadTracker = () => {
   const { toast } = useToast();
@@ -55,11 +56,8 @@ const DocumentUploadTracker = () => {
   } = useContractDocuments();
 
   useEffect(() => {
-    const fetchDocuments = async () => {
-      await loadDocuments();
-    };
-    
-    fetchDocuments();
+    // Load documents when component mounts
+    loadDocuments();
   }, [loadDocuments]);
 
   const handleFileSelect = (e) => {
@@ -68,16 +66,13 @@ const DocumentUploadTracker = () => {
       if (file.type === 'application/pdf' || file.type === 'image/jpeg' || file.type === 'image/jpg') {
         setUploadedFile(file);
         
+        // Try to extract contract ID from filename if it follows the pattern
         const match = file.name.match(/^(CNT-\d+)/);
         if (match) {
           setContractId(match[0]);
         }
       } else {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload a PDF, JPEG, or JPG file.",
-          variant: "destructive"
-        });
+        showErrorToast(toast, "Please upload a PDF, JPEG, or JPG file.");
         setUploadedFile(null);
       }
     }
@@ -97,11 +92,7 @@ const DocumentUploadTracker = () => {
 
   const handleUpload = async () => {
     if (!uploadedFile) {
-      toast({
-        title: "No file selected",
-        description: "Please select a file to upload.",
-        variant: "destructive"
-      });
+      showErrorToast(toast, "Please select a file to upload.");
       return;
     }
 
@@ -117,19 +108,16 @@ const DocumentUploadTracker = () => {
 
     const result = await uploadDocument(uploadedFile, contractId || null, metadata);
     
-    if (result.success) {
+    if (result && result.success) {
       resetForm();
       setActiveTab('all');
+      showSuccessToast(toast, "Document uploaded successfully");
     }
   };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      toast({
-        title: "Empty search",
-        description: "Please enter a search term.",
-        variant: "destructive"
-      });
+      showWarningToast(toast, "Please enter a search term.");
       return;
     }
     
@@ -140,11 +128,7 @@ const DocumentUploadTracker = () => {
     if (document.file_url) {
       window.open(document.file_url, '_blank');
     } else {
-      toast({
-        title: "Document unavailable",
-        description: "The document URL is not available.",
-        variant: "destructive"
-      });
+      showErrorToast(toast, "The document URL is not available.");
     }
   };
 
@@ -157,11 +141,7 @@ const DocumentUploadTracker = () => {
       link.click();
       document.body.removeChild(link);
     } else {
-      toast({
-        title: "Download failed",
-        description: "The document URL is not available for download.",
-        variant: "destructive"
-      });
+      showErrorToast(toast, "The document URL is not available for download.");
     }
   };
 

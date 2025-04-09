@@ -2,8 +2,8 @@
 import { supabase } from '../supabase';
 
 /**
- * Creates the necessary tables for contract documents
- * This function attempts to check if the table exists first
+ * Creates the necessary storage bucket for contract documents
+ * This function assumes the SQL migration has already been run to create the table
  */
 export const runContractDocumentsMigration = async () => {
   try {
@@ -31,6 +31,8 @@ export const runContractDocumentsMigration = async () => {
             allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/jpg']
           });
           console.log('Created documents storage bucket');
+        } else {
+          console.log('Documents storage bucket already exists');
         }
       } catch (storageError) {
         console.error('Error checking or creating storage bucket:', storageError);
@@ -40,7 +42,6 @@ export const runContractDocumentsMigration = async () => {
       
     } catch (checkError) {
       // If we get an error, the table might not exist
-      // But we can't reliably create it from JavaScript so we'll show instructions
       console.log('The contract_documents table needs to be created manually.');
       console.log('Please run the SQL in src/integrations/supabase/migrations/contract_documents.sql');
       

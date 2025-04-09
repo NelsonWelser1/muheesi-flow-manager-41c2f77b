@@ -36,7 +36,11 @@ const ContractManagement = () => {
         setMigrationStatus({ running: true, success: null, message: 'Running database migrations...' });
         
         // Run migrations
-        await runContractDocumentsMigration();
+        const docMigrationResult = await runContractDocumentsMigration();
+        
+        if (!docMigrationResult.success) {
+          console.warn('Contract documents migration notice:', docMigrationResult.error?.message);
+        }
         
         // Local purchase agreements migration (if needed)
         try {
