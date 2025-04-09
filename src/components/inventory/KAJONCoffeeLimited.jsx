@@ -89,7 +89,7 @@ const KAJONCoffeeLimited = () => {
               </Button>
             </div>
             
-            {/* Equator Coffee Export Management System - New Tile */}
+            {/* KAJON Equata Coffee Management System - New Tile */}
             <div className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl h-[250px]">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-800/90 to-blue-950/95 opacity-90 transition-opacity group-hover:opacity-100"></div>
               <div className="absolute inset-0 bg-[url('/combined-logo.png')] bg-center bg-no-repeat bg-contain opacity-10"></div>
@@ -101,7 +101,7 @@ const KAJONCoffeeLimited = () => {
                 <div className="rounded-full bg-blue-700/50 p-4 mb-2 backdrop-blur-sm transition-all duration-300 group-hover:bg-blue-600/70">
                   <Ship className="h-12 w-12" />
                 </div>
-                <span className="text-2xl font-bold tracking-wide">Equator Coffee Export</span>
+                <span className="text-2xl font-bold tracking-wide">KAJON Equata Coffee</span>
                 <p className="text-sm font-light max-w-[80%] text-center text-blue-100 opacity-90">
                   Global Export Management System
                 </p>
@@ -189,7 +189,7 @@ const KAJONCoffeeLimited = () => {
                     'KAJON Coffee Factory Management' 
                 : selectedInterface === 'kazo' ? 
                   'Kazo Coffee Development Project' 
-                : 'Equator Coffee Export Management System'}
+                : 'KAJON Equata Coffee Management System'}
             </h2>
             <Button variant="ghost" onClick={handleBack} className="p-2">
               <ArrowLeft className="h-5 w-5" />

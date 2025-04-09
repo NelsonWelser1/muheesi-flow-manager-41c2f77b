@@ -35,7 +35,7 @@ const EquatorExportManagement = () => {
     <div className="space-y-6">
       {/* Header with compliance button */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Equator Coffee Export</h2>
+        <h2 className="text-2xl font-bold">KAJON Equata Coffee</h2>
         <ComplianceButton />
       </div>
       
