@@ -7,6 +7,10 @@ import {
   showErrorToast, 
   showWarningToast 
 } from '@/components/ui/notifications';
+import { 
+  validateDocumentFile, 
+  ensureDocumentsBucketExists 
+} from '../utils/documentUtils';
 
 /**
  * Custom hook for managing contract documents
@@ -74,45 +78,77 @@ const useContractDocuments = () => {
       setLoading(true);
       setUploadProgress(0);
       
-      // Check file type
-      if (!(file.type === 'application/pdf' || 
-            file.type === 'image/jpeg' || 
-            file.type === 'image/jpg')) {
-        const error = new Error('Invalid file type. Only PDF, JPEG, and JPG are supported.');
-        showErrorToast(toast, error.message);
-        return { success: false, error };
+      // Validate file
+      if (!validateDocumentFile(file, toast, showErrorToast)) {
+        return { success: false, error: new Error('File validation failed') };
       }
       
       // Update progress
       setUploadProgress(10);
+      
+      // Ensure documents bucket exists
+      const bucketExists = await ensureDocumentsBucketExists(supabase, toast, showErrorToast);
+      if (!bucketExists) {
+        return { success: false, error: new Error('Storage bucket not available') };
+      }
+      
+      // Update progress
+      setUploadProgress(20);
       
       // Generate a unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `${contractId ? contractId + '_' : ''}${Date.now()}.${fileExt}`;
       const filePath = `contract-documents/${fileName}`;
       
-      // Update progress
-      setUploadProgress(20);
-      
       console.log('Uploading file to Supabase storage:', filePath);
       
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      // Upload to Supabase Storage with exponential backoff retry
+      let uploadAttempt = 0;
+      let uploadSuccess = false;
+      let uploadData = null;
+      let uploadError = null;
+      
+      while (uploadAttempt < 3 && !uploadSuccess) {
+        try {
+          uploadAttempt++;
+          
+          const { data, error } = await supabase.storage
+            .from('documents')
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+            
+          if (error) {
+            console.error(`Upload attempt ${uploadAttempt} failed:`, error);
+            uploadError = error;
+            // Wait before retrying
+            if (uploadAttempt < 3) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * uploadAttempt));
+            }
+          } else {
+            uploadSuccess = true;
+            uploadData = data;
+          }
+        } catch (err) {
+          console.error(`Upload attempt ${uploadAttempt} exception:`, err);
+          uploadError = err;
+          if (uploadAttempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * uploadAttempt));
+          }
+        }
+      }
+      
+      // Check final upload result
+      if (!uploadSuccess) {
+        console.error('All upload attempts failed:', uploadError);
+        showErrorToast(toast, `Upload failed after multiple attempts: ${uploadError.message}`);
+        return { success: false, error: uploadError };
+      }
       
       // Update progress
       setUploadProgress(50);
         
-      if (error) {
-        console.error('Storage upload error:', error);
-        showErrorToast(toast, `Upload failed: ${error.message}`);
-        return { success: false, error };
-      }
-      
       console.log('File uploaded successfully, generating public URL');
       
       // Get public URL for the file
@@ -396,7 +432,17 @@ const useContractDocuments = () => {
   // Load documents on mount
   useEffect(() => {
     loadDocuments();
-  }, [loadDocuments]);
+    
+    // Also check if the documents bucket exists on mount
+    ensureDocumentsBucketExists(supabase, toast, showErrorToast)
+      .then(exists => {
+        if (exists) {
+          console.log('Documents bucket is ready for uploads');
+        } else {
+          console.error('Failed to initialize documents bucket');
+        }
+      });
+  }, [loadDocuments, toast]);
 
   return {
     documents,

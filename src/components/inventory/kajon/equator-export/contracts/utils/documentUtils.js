@@ -34,6 +34,11 @@ export const getFileIconName = (fileType) => {
  * @returns {boolean} - Whether the file is valid
  */
 export const validateDocumentFile = (file, toast, showErrorToast) => {
+  if (!file) {
+    showErrorToast(toast, "No file selected for upload");
+    return false;
+  }
+  
   // Check file size (10MB limit)
   const MAX_SIZE = 10 * 1024 * 1024; // 10MB
   if (file.size > MAX_SIZE) {
@@ -49,4 +54,53 @@ export const validateDocumentFile = (file, toast, showErrorToast) => {
   }
 
   return true;
+};
+
+/**
+ * Ensures the 'documents' bucket exists before upload
+ * @param {Object} supabase - Supabase client
+ * @param {Function} toast - Toast function for notifications
+ * @param {Function} showErrorToast - Error toast helper function
+ * @returns {Promise<boolean>} - Whether the bucket exists
+ */
+export const ensureDocumentsBucketExists = async (supabase, toast, showErrorToast) => {
+  try {
+    // Check if the documents bucket exists
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    if (bucketsError) {
+      console.error('Error checking buckets:', bucketsError);
+      showErrorToast(toast, `Storage error: ${bucketsError.message}`);
+      return false;
+    }
+    
+    const documentsBucket = buckets?.find(bucket => bucket.name === 'documents');
+    
+    if (!documentsBucket) {
+      console.log('Documents bucket not found, creating it...');
+      
+      // Create the bucket if it doesn't exist
+      const { error: createError } = await supabase.storage.createBucket('documents', {
+        public: true,
+        fileSizeLimit: 10485760, // 10MB
+        allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
+      });
+      
+      if (createError) {
+        console.error('Error creating documents bucket:', createError);
+        showErrorToast(toast, `Failed to create storage bucket: ${createError.message}`);
+        return false;
+      }
+      
+      console.log('Documents bucket created successfully');
+    } else {
+      console.log('Documents bucket already exists');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error in ensureDocumentsBucketExists:', error);
+    showErrorToast(toast, `Storage initialization error: ${error.message}`);
+    return false;
+  }
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +40,7 @@ const DocumentUploadTracker = () => {
   const [notes, setNotes] = useState('');
   const [keywords, setKeywords] = useState('');
   const [signedBy, setSignedBy] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   
   const {
     documents,
@@ -63,7 +63,7 @@ const DocumentUploadTracker = () => {
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.type === 'application/pdf' || file.type === 'image/jpeg' || file.type === 'image/jpg') {
+      if (file.type === 'application/pdf' || file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/png') {
         setUploadedFile(file);
         
         // Try to extract contract ID from filename if it follows the pattern
@@ -72,7 +72,7 @@ const DocumentUploadTracker = () => {
           setContractId(match[0]);
         }
       } else {
-        showErrorToast(toast, "Please upload a PDF, JPEG, or JPG file.");
+        showErrorToast(toast, "Please upload a PDF, JPEG, PNG, or JPG file.");
         setUploadedFile(null);
       }
     }
@@ -96,22 +96,41 @@ const DocumentUploadTracker = () => {
       return;
     }
 
-    const keywordsArray = keywords ? keywords.split(',').map(k => k.trim()) : [];
-    const signersArray = signedBy ? signedBy.split(',').map(s => s.trim()) : [];
+    setIsUploading(true);
 
-    const metadata = {
-      client: client || null,
-      notes: notes || null,
-      keywords: keywordsArray.length > 0 ? keywordsArray : null,
-      signed_by: signersArray.length > 0 ? signersArray : null
-    };
+    try {
+      const keywordsArray = keywords ? keywords.split(',').map(k => k.trim()) : [];
+      const signersArray = signedBy ? signedBy.split(',').map(s => s.trim()) : [];
 
-    const result = await uploadDocument(uploadedFile, contractId || null, metadata);
-    
-    if (result && result.success) {
-      resetForm();
-      setActiveTab('all');
-      showSuccessToast(toast, "Document uploaded successfully");
+      const metadata = {
+        client: client || null,
+        notes: notes || null,
+        keywords: keywordsArray.length > 0 ? keywordsArray : null,
+        signed_by: signersArray.length > 0 ? signersArray : null
+      };
+
+      console.log('Starting document upload with metadata:', metadata);
+      
+      const result = await uploadDocument(uploadedFile, contractId || null, metadata);
+      
+      if (result && result.success) {
+        console.log('Document uploaded successfully:', result.data);
+        resetForm();
+        
+        // Wait briefly before switching tabs to allow the user to see the success state
+        setTimeout(() => {
+          setActiveTab('all');
+          showSuccessToast(toast, "Document uploaded successfully");
+        }, 1000);
+      } else {
+        console.error('Upload failed:', result?.error);
+        showErrorToast(toast, result?.error?.message || "Upload failed");
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      showErrorToast(toast, `Upload error: ${error.message}`);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -300,7 +319,7 @@ const DocumentUploadTracker = () => {
             <div className="space-y-4">
               <div className="text-sm text-gray-500 flex items-start gap-2">
                 <Info className="h-4 w-4 mt-0.5" />
-                <p>Upload signed contract documents (PDF, JPEG, JPG) for record keeping and tracking. All uploaded documents will be reviewed for verification.</p>
+                <p>Upload signed contract documents (PDF, JPEG, JPG, PNG) for record keeping and tracking. All uploaded documents will be reviewed for verification.</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -310,7 +329,7 @@ const DocumentUploadTracker = () => {
                       type="file" 
                       ref={fileInputRef}
                       className="hidden" 
-                      accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg,image/jpg"
+                      accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/jpg,image/png"
                       onChange={handleFileSelect}
                     />
                     
@@ -327,7 +346,7 @@ const DocumentUploadTracker = () => {
                         </button>
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Supported formats: PDF, JPEG, JPG
+                        Supported formats: PDF, JPEG, JPG, PNG
                       </p>
                     </div>
                     
@@ -349,6 +368,7 @@ const DocumentUploadTracker = () => {
                           variant="ghost" 
                           size="sm" 
                           onClick={resetForm}
+                          disabled={isUploading}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -378,6 +398,7 @@ const DocumentUploadTracker = () => {
                           onChange={e => setContractId(e.target.value)}
                           placeholder="e.g., CNT-1001"
                           className="text-sm"
+                          disabled={isUploading}
                         />
                       </div>
                       
@@ -388,6 +409,7 @@ const DocumentUploadTracker = () => {
                           onChange={e => setClient(e.target.value)}
                           placeholder="Client name"
                           className="text-sm"
+                          disabled={isUploading}
                         />
                       </div>
                       
@@ -398,6 +420,7 @@ const DocumentUploadTracker = () => {
                           onChange={e => setSignedBy(e.target.value)}
                           placeholder="John Doe, Jane Smith"
                           className="text-sm"
+                          disabled={isUploading}
                         />
                       </div>
                       
@@ -408,6 +431,7 @@ const DocumentUploadTracker = () => {
                           onChange={e => setKeywords(e.target.value)}
                           placeholder="export, coffee, arabica"
                           className="text-sm"
+                          disabled={isUploading}
                         />
                       </div>
                       
@@ -418,6 +442,7 @@ const DocumentUploadTracker = () => {
                           onChange={e => setNotes(e.target.value)}
                           placeholder="Additional notes"
                           className="text-sm"
+                          disabled={isUploading}
                         />
                       </div>
                     </div>
@@ -429,7 +454,7 @@ const DocumentUploadTracker = () => {
                 <Button 
                   variant="outline"
                   onClick={resetForm}
-                  disabled={!uploadedFile && !contractId && !client && !notes && !keywords && !signedBy}
+                  disabled={(!uploadedFile && !contractId && !client && !notes && !keywords && !signedBy) || isUploading}
                   className="flex items-center gap-2"
                 >
                   <X className="h-4 w-4" />
@@ -438,10 +463,10 @@ const DocumentUploadTracker = () => {
                 
                 <Button 
                   onClick={handleUpload} 
-                  disabled={!uploadedFile || loading}
+                  disabled={!uploadedFile || isUploading}
                   className="flex items-center gap-2"
                 >
-                  {loading ? (
+                  {isUploading || loading ? (
                     <>
                       <span className="animate-spin">
                         <Upload className="h-4 w-4" />

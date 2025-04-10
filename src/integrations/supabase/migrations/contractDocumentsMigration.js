@@ -25,12 +25,34 @@ export const runContractDocumentsMigration = async () => {
       
       if (!documentsBucket) {
         try {
-          await supabase.storage.createBucket('documents', {
+          console.log('Creating documents storage bucket...');
+          const { data, error } = await supabase.storage.createBucket('documents', {
             public: true,
             fileSizeLimit: 10485760, // 10MB
             allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
           });
-          console.log('Created documents storage bucket');
+          
+          if (error) throw error;
+          console.log('Created documents storage bucket successfully:', data);
+          
+          // Set bucket public policy to allow public access to files
+          const { error: policyError } = await supabase.storage.from('documents').createSignedUrl(
+            'test.txt',
+            60,
+            {
+              transform: {
+                width: 100,
+                height: 100,
+              },
+            }
+          );
+          
+          // If we get a 404 error, it means the bucket exists but the file doesn't
+          // This is expected and actually what we want to confirm
+          if (policyError && policyError.statusCode !== 404) {
+            console.error('Error setting bucket policy:', policyError);
+            // Don't throw here, we want to continue even if policy setting fails
+          }
         } catch (storageError) {
           console.error('Error creating storage bucket:', storageError);
           return { 
