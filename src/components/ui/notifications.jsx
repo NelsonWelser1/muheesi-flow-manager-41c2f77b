@@ -56,6 +56,7 @@ export const dismissToast = (toastId) => {
   if (toastId) {
     return { id: toastId };
   }
+  return null;
 };
 
 // New notification helpers for reports

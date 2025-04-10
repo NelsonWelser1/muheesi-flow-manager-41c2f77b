@@ -20,22 +20,26 @@ export const runContractDocumentsMigration = async () => {
       console.log('contract_documents table already exists');
       
       // Check if the documents storage bucket exists
-      try {
-        const { data: buckets } = await supabase.storage.listBuckets();
-        const documentsBucket = buckets?.find(bucket => bucket.name === 'documents');
-        
-        if (!documentsBucket) {
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const documentsBucket = buckets?.find(bucket => bucket.name === 'documents');
+      
+      if (!documentsBucket) {
+        try {
           await supabase.storage.createBucket('documents', {
             public: true,
             fileSizeLimit: 10485760, // 10MB
-            allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/jpg']
+            allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
           });
           console.log('Created documents storage bucket');
-        } else {
-          console.log('Documents storage bucket already exists');
+        } catch (storageError) {
+          console.error('Error creating storage bucket:', storageError);
+          return { 
+            success: false, 
+            error: storageError
+          };
         }
-      } catch (storageError) {
-        console.error('Error checking or creating storage bucket:', storageError);
+      } else {
+        console.log('Documents storage bucket already exists');
       }
       
       return { success: true };

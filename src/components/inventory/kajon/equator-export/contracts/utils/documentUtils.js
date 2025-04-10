@@ -25,3 +25,28 @@ export const getFileIconName = (fileType) => {
     return 'file';
   }
 };
+
+/**
+ * Validates a document file before upload
+ * @param {File} file - The file to validate
+ * @param {Function} toast - Toast function for notifications
+ * @param {Function} showErrorToast - Error toast helper function
+ * @returns {boolean} - Whether the file is valid
+ */
+export const validateDocumentFile = (file, toast, showErrorToast) => {
+  // Check file size (10MB limit)
+  const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+  if (file.size > MAX_SIZE) {
+    showErrorToast(toast, `File size exceeds 10MB limit (${formatFileSize(file.size)})`);
+    return false;
+  }
+
+  // Check file type
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+  if (!allowedTypes.includes(file.type)) {
+    showErrorToast(toast, `File type "${file.type}" is not supported. Please use PDF, JPEG, or PNG.`);
+    return false;
+  }
+
+  return true;
+};

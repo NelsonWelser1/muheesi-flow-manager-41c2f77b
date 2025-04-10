@@ -1,6 +1,7 @@
+
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
+import { showSuccessToast, showErrorToast, showLoadingToast, dismissToast } from '@/components/ui/notifications.js';
 
 /**
  * Exports the contract template to PDF by capturing the HTML content
@@ -74,24 +75,5 @@ export const exportContractToPDF = async (templateRef, filename, toast) => {
     console.error('Error exporting contract to PDF:', error);
     showErrorToast(toast, `Failed to export PDF: ${error.message}`);
     return false;
-  }
-};
-
-// Helper function for a loading toast
-const showLoadingToast = (toast, message) => {
-  if (toast) {
-    return toast({
-      title: "Processing",
-      description: message,
-      duration: 10000, // 10s
-    });
-  }
-  return null;
-};
-
-// Helper function to dismiss a toast
-const dismissToast = (toastId) => {
-  if (toastId) {
-    return { id: toastId };
   }
 };

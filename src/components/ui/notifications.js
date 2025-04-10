@@ -52,3 +52,30 @@ export const showInfoToast = (toastInstance, message) => {
     variant: "default",
   });
 };
+
+/**
+ * Show a loading toast notification
+ * @param {Object} toastInstance - Toast instance from useToast hook
+ * @param {string} message - Message to display
+ * @returns {string} The toast ID for dismissal
+ */
+export const showLoadingToast = (toastInstance, message) => {
+  return toastInstance({
+    title: "Loading",
+    description: message,
+    variant: "default",
+    duration: Infinity, // Stays until manually dismissed
+  });
+};
+
+/**
+ * Dismiss a toast notification by ID
+ * @param {string} toastId - ID of the toast to dismiss
+ * @returns {Object} Object with toast ID
+ */
+export const dismissToast = (toastId) => {
+  if (toastId) {
+    return { id: toastId };
+  }
+  return null;
+};
