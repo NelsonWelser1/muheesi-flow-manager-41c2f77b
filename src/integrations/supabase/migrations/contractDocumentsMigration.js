@@ -1,11 +1,12 @@
 
 import { supabase } from '../supabase';
+import { showWarningToast } from '@/components/ui/notifications';
 
 /**
  * Creates the necessary storage bucket for contract documents
  * This function assumes the SQL migration has already been run to create the table
  */
-export const runContractDocumentsMigration = async () => {
+export const runContractDocumentsMigration = async (toast = null) => {
   try {
     console.log('Running contract documents migration...');
     
@@ -26,35 +27,65 @@ export const runContractDocumentsMigration = async () => {
       if (!documentsBucket) {
         try {
           console.log('Creating documents storage bucket...');
+          
+          // First, check if we're authenticated
+          const { data: user } = await supabase.auth.getUser();
+          if (!user?.user) {
+            console.warn('User is not authenticated, bucket creation may fail');
+          }
+          
+          // Try creating the bucket with public access
           const { data, error } = await supabase.storage.createBucket('documents', {
             public: true,
             fileSizeLimit: 10485760, // 10MB
             allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
           });
           
-          if (error) throw error;
+          if (error) {
+            if (error.message.includes('already exists')) {
+              console.log('Bucket already exists but was not found in list, continuing...');
+              return { success: true };
+            }
+            
+            // Check if this is an RLS error
+            if (error.message.includes('row-level security') || error.status === 400) {
+              console.warn('Contract documents migration notice: ' + error.message);
+              if (toast) {
+                showWarningToast(toast, 'Storage setup requires admin access. Some file uploads may fail.');
+              }
+              return { 
+                success: false,
+                bypassed: true,
+                error
+              };
+            }
+            
+            throw error;
+          }
+          
           console.log('Created documents storage bucket successfully:', data);
           
-          // Set bucket public policy to allow public access to files
-          const { error: policyError } = await supabase.storage.from('documents').createSignedUrl(
-            'test.txt',
-            60,
-            {
-              transform: {
-                width: 100,
-                height: 100,
-              },
-            }
-          );
+          // We'll skip the policy setting as it requires more permissions
+          return { success: true };
           
-          // If we get a 404 error, it means the bucket exists but the file doesn't
-          // This is expected and actually what we want to confirm
-          if (policyError && policyError.statusCode !== 404) {
-            console.error('Error setting bucket policy:', policyError);
-            // Don't throw here, we want to continue even if policy setting fails
-          }
         } catch (storageError) {
           console.error('Error creating storage bucket:', storageError);
+          
+          // If it's an RLS error, we'll warn but not treat as fatal
+          if (storageError.message?.includes('row-level security') || 
+              storageError.status === 400 || 
+              storageError.code === 'PGRST116') {
+            console.warn('Contract documents migration notice: ' + storageError.message);
+            if (toast) {
+              showWarningToast(toast, 'Storage setup requires admin access. Using fallback method.');
+            }
+            return { 
+              success: false,
+              bypassed: true,
+              error: storageError
+            };
+          }
+          
           return { 
             success: false, 
             error: storageError
@@ -62,9 +93,8 @@ export const runContractDocumentsMigration = async () => {
         }
       } else {
         console.log('Documents storage bucket already exists');
+        return { success: true };
       }
-      
-      return { success: true };
       
     } catch (checkError) {
       // If we get an error, the table might not exist

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
@@ -9,8 +8,10 @@ import {
 } from '@/components/ui/notifications';
 import { 
   validateDocumentFile, 
-  ensureDocumentsBucketExists 
+  ensureDocumentsBucketExists,
+  uploadFileWithRetry
 } from '../utils/documentUtils';
+import runContractDocumentsMigration from '@/integrations/supabase/migrations/contractDocumentsMigration';
 
 /**
  * Custom hook for managing contract documents
@@ -24,6 +25,7 @@ const useContractDocuments = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [isBucketInitialized, setIsBucketInitialized] = useState(false);
 
   /**
    * Load documents from the database
@@ -86,80 +88,46 @@ const useContractDocuments = () => {
       // Update progress
       setUploadProgress(10);
       
-      // Ensure documents bucket exists
-      const bucketExists = await ensureDocumentsBucketExists(supabase, toast, showErrorToast);
-      if (!bucketExists) {
-        return { success: false, error: new Error('Storage bucket not available') };
+      // Ensure bucket exists if not already verified
+      if (!isBucketInitialized) {
+        const bucketExists = await ensureDocumentsBucketExists(supabase, toast, showErrorToast, showWarningToast);
+        setIsBucketInitialized(bucketExists);
+        if (!bucketExists) {
+          return { success: false, error: new Error('Storage bucket not available') };
+        }
       }
       
       // Update progress
       setUploadProgress(20);
       
-      // Generate a unique filename
+      // Generate a unique filename with timestamp and random string to avoid collisions
       const fileExt = file.name.split('.').pop();
-      const fileName = `${contractId ? contractId + '_' : ''}${Date.now()}.${fileExt}`;
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 10);
+      const fileName = `${contractId ? contractId + '_' : ''}${timestamp}_${randomString}.${fileExt}`;
       const filePath = `contract-documents/${fileName}`;
       
       console.log('Uploading file to Supabase storage:', filePath);
       
-      // Upload to Supabase Storage with exponential backoff retry
-      let uploadAttempt = 0;
-      let uploadSuccess = false;
-      let uploadData = null;
-      let uploadError = null;
+      // Upload to Supabase Storage with retry
+      const uploadResult = await uploadFileWithRetry(
+        supabase, 
+        file, 
+        filePath, 
+        (progress) => setUploadProgress(progress)
+      );
       
-      while (uploadAttempt < 3 && !uploadSuccess) {
-        try {
-          uploadAttempt++;
-          
-          const { data, error } = await supabase.storage
-            .from('documents')
-            .upload(filePath, file, {
-              cacheControl: '3600',
-              upsert: false
-            });
-            
-          if (error) {
-            console.error(`Upload attempt ${uploadAttempt} failed:`, error);
-            uploadError = error;
-            // Wait before retrying
-            if (uploadAttempt < 3) {
-              await new Promise(resolve => setTimeout(resolve, 1000 * uploadAttempt));
-            }
-          } else {
-            uploadSuccess = true;
-            uploadData = data;
-          }
-        } catch (err) {
-          console.error(`Upload attempt ${uploadAttempt} exception:`, err);
-          uploadError = err;
-          if (uploadAttempt < 3) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * uploadAttempt));
-          }
-        }
+      // Check upload result
+      if (!uploadResult.success) {
+        console.error('Upload failed after multiple attempts:', uploadResult.error);
+        showErrorToast(toast, `Upload failed: ${uploadResult.error?.message || 'Unknown error'}`);
+        return { success: false, error: uploadResult.error };
       }
-      
-      // Check final upload result
-      if (!uploadSuccess) {
-        console.error('All upload attempts failed:', uploadError);
-        showErrorToast(toast, `Upload failed after multiple attempts: ${uploadError.message}`);
-        return { success: false, error: uploadError };
-      }
-      
-      // Update progress
-      setUploadProgress(50);
-        
-      console.log('File uploaded successfully, generating public URL');
-      
-      // Get public URL for the file
-      const { data: urlData } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-        
-      const publicUrl = urlData?.publicUrl || '';
       
       // Update progress
       setUploadProgress(70);
+      
+      const publicUrl = uploadResult.publicUrl || '';
       
       console.log('Creating database record for document');
       
@@ -207,8 +175,6 @@ const useContractDocuments = () => {
       // Refresh document list
       await loadDocuments();
       
-      showSuccessToast(toast, 'Document uploaded successfully');
-      
       return {
         success: true,
         data: documentRecord,
@@ -223,7 +189,7 @@ const useContractDocuments = () => {
       // Reset progress after a delay
       setTimeout(() => setUploadProgress(0), 2000);
     }
-  }, [loadDocuments, toast]);
+  }, [isBucketInitialized, loadDocuments, toast]);
 
   /**
    * Search for documents by query term
@@ -429,19 +395,33 @@ const useContractDocuments = () => {
     }
   }, [searchResults, toast]);
 
-  // Load documents on mount
+  // Initialize on mount
   useEffect(() => {
-    loadDocuments();
-    
-    // Also check if the documents bucket exists on mount
-    ensureDocumentsBucketExists(supabase, toast, showErrorToast)
-      .then(exists => {
-        if (exists) {
-          console.log('Documents bucket is ready for uploads');
+    // Run migrations and load documents
+    const initializeStorage = async () => {
+      try {
+        // Run migration to ensure the bucket exists
+        const migrationResult = await runContractDocumentsMigration(toast);
+        
+        if (migrationResult.success || migrationResult.bypassed) {
+          setIsBucketInitialized(true);
+          
+          if (migrationResult.bypassed) {
+            showWarningToast(toast, 'Document storage has limited permissions. Some operations may fail.');
+          }
         } else {
-          console.error('Failed to initialize documents bucket');
+          showWarningToast(toast, 'Document storage initialization had issues. Uploads may fail.');
         }
-      });
+        
+        // Load initial documents
+        await loadDocuments();
+      } catch (err) {
+        console.error('Initialization error:', err);
+        showErrorToast(toast, 'Failed to initialize document storage');
+      }
+    };
+    
+    initializeStorage();
   }, [loadDocuments, toast]);
 
   return {
@@ -455,7 +435,8 @@ const useContractDocuments = () => {
     loadDocuments,
     searchDocuments,
     updateDocument,
-    removeDocument
+    removeDocument,
+    isBucketInitialized
   };
 };
 

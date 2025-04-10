@@ -115,20 +115,34 @@ const DocumentUploadTracker = () => {
       
       if (result && result.success) {
         console.log('Document uploaded successfully:', result.data);
+        
+        // Automatically reset the form on success
         resetForm();
         
-        // Wait briefly before switching tabs to allow the user to see the success state
+        // Show success toast and switch to all documents tab
+        showSuccessToast(toast, "Document uploaded and saved successfully");
+        
+        // Wait briefly before switching tabs to allow the toast to be visible
         setTimeout(() => {
           setActiveTab('all');
-          showSuccessToast(toast, "Document uploaded successfully");
         }, 1000);
       } else {
         console.error('Upload failed:', result?.error);
-        showErrorToast(toast, result?.error?.message || "Upload failed");
+        
+        // Show a more specific error message
+        if (result?.error?.message?.includes('row-level security')) {
+          showErrorToast(toast, "Permission error: You may need admin rights for this operation.");
+        } else if (result?.error?.message?.includes('network')) {
+          showErrorToast(toast, "Network error: Please check your connection and try again.");
+        } else if (result?.error?.message?.includes('timeout')) {
+          showErrorToast(toast, "Upload timed out. The file may be too large or the server is busy.");
+        } else {
+          showErrorToast(toast, result?.error?.message || "Upload failed due to an unknown error.");
+        }
       }
     } catch (error) {
       console.error('Upload error:', error);
-      showErrorToast(toast, `Upload error: ${error.message}`);
+      showErrorToast(toast, `Upload error: ${error.message || "Unknown error occurred"}`);
     } finally {
       setIsUploading(false);
     }
@@ -324,7 +338,7 @@ const DocumentUploadTracker = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="md:col-span-3">
-                  <div className="border-2 border-dashed rounded-md p-6">
+                  <div className="border-2 border-dashed rounded-md p-6 relative">
                     <input 
                       type="file" 
                       ref={fileInputRef}
@@ -333,7 +347,7 @@ const DocumentUploadTracker = () => {
                       onChange={handleFileSelect}
                     />
                     
-                    <div className="text-center">
+                    <div className={`text-center ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
                       <Upload className="h-10 w-10 mx-auto text-gray-400" />
                       <p className="mt-2 text-sm text-gray-600">
                         Drop your file here, or{' '}
@@ -341,12 +355,13 @@ const DocumentUploadTracker = () => {
                           type="button"
                           className="text-blue-600 hover:text-blue-800"
                           onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
                         >
                           browse
                         </button>
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Supported formats: PDF, JPEG, JPG, PNG
+                        Supported formats: PDF, JPEG, JPG, PNG (Max size: 10MB)
                       </p>
                     </div>
                     
@@ -382,6 +397,17 @@ const DocumentUploadTracker = () => {
                           <span>{uploadProgress}%</span>
                         </div>
                         <Progress value={uploadProgress} className="h-2" />
+                      </div>
+                    )}
+                    
+                    {isUploading && (
+                      <div className="absolute inset-0 bg-white/50 flex items-center justify-center rounded-md">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="animate-spin">
+                            <Upload className="h-8 w-8 text-blue-500" />
+                          </div>
+                          <p className="text-sm font-medium text-blue-600">Uploading document...</p>
+                        </div>
                       </div>
                     )}
                   </div>
