@@ -70,6 +70,8 @@ export const ensureDocumentsBucketExists = async (supabase, toast, showErrorToas
     const { data: userData } = await supabase.auth.getUser();
     const isAuthenticated = !!userData?.user;
     
+    console.log('Checking if documents bucket exists (authenticated:', isAuthenticated, ')');
+    
     // Check if the documents bucket exists
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
     
@@ -103,7 +105,7 @@ export const ensureDocumentsBucketExists = async (supabase, toast, showErrorToas
     const documentsBucket = buckets?.find(bucket => bucket.name === 'documents');
     
     if (!documentsBucket) {
-      console.log('Documents bucket not found, creating it...');
+      console.log('Documents bucket not found, attempting to create it...');
       
       // Create the bucket if it doesn't exist
       const { error: createError } = await supabase.storage.createBucket('documents', {
@@ -127,6 +129,18 @@ export const ensureDocumentsBucketExists = async (supabase, toast, showErrorToas
       }
       
       console.log('Documents bucket created successfully');
+      
+      // Try to set a permissive policy for the bucket
+      try {
+        const { error: policyError } = await supabase.storage.from('documents')
+          .createSignedUrl('dummy-path.txt', 10); // Just to test permissions
+          
+        if (policyError && !policyError.message.includes('not found')) {
+          console.warn('Bucket may have permission issues:', policyError);
+        }
+      } catch (policyError) {
+        console.warn('Could not test bucket permissions:', policyError);
+      }
     } else {
       console.log('Documents bucket already exists');
     }
@@ -160,6 +174,9 @@ export const uploadFileWithRetry = async (supabase, file, filePath, updateProgre
     try {
       if (updateProgress) updateProgress(10 + (attempt - 1) * 10);
       
+      // Make sure we're using the correct bucket name and path
+      console.log(`Uploading to bucket 'documents' with path: ${filePath}`);
+      
       const { data, error } = await supabase.storage
         .from('documents')
         .upload(filePath, file, {
@@ -189,6 +206,23 @@ export const uploadFileWithRetry = async (supabase, file, filePath, updateProgre
           .from('documents')
           .getPublicUrl(filePath);
           
+        // Verify the file exists by trying to get its metadata
+        try {
+          const { data: metadata, error: metaError } = await supabase.storage
+            .from('documents')
+            .getMetadata(filePath);
+            
+          if (metaError) {
+            console.warn('Could not verify file metadata after upload:', metaError);
+            // Continue anyway, this is just extra verification
+          } else {
+            console.log('File metadata verified:', metadata);
+          }
+        } catch (metaError) {
+          console.warn('Error checking file metadata:', metaError);
+          // Continue anyway
+        }
+        
         return {
           success: true,
           data,

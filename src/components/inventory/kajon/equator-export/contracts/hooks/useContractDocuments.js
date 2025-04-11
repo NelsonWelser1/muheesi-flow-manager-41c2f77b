@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
@@ -105,6 +106,8 @@ const useContractDocuments = () => {
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 10);
       const fileName = `${contractId ? contractId + '_' : ''}${timestamp}_${randomString}.${fileExt}`;
+      
+      // Store files in contract-documents subfolder with special prefix for organization
       const filePath = `contract-documents/${fileName}`;
       
       console.log('Uploading file to Supabase storage:', filePath);
@@ -127,25 +130,41 @@ const useContractDocuments = () => {
       // Update progress
       setUploadProgress(70);
       
-      const publicUrl = uploadResult.publicUrl || '';
+      // Get public URL for the file - ensure this is constructed properly
+      let publicUrl = '';
+      try {
+        const { data: urlData } = supabase.storage
+          .from('documents')
+          .getPublicUrl(filePath);
+          
+        publicUrl = urlData?.publicUrl || '';
+        console.log('Generated public URL:', publicUrl);
+      } catch (urlError) {
+        console.warn('Could not generate public URL:', urlError);
+        // Continue anyway as this is not critical
+      }
       
       console.log('Creating database record for document');
       
       // Create metadata record in the database
-      const { data: documentRecord, error: recordError } = await supabase
+      const documentRecord = {
+        filename: file.name,
+        file_path: filePath,
+        contract_id: contractId,
+        file_type: file.type,
+        file_size: file.size,
+        file_url: publicUrl,
+        status: 'pending_verification',
+        upload_date: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        ...metadata
+      };
+      
+      console.log('Inserting document record:', documentRecord);
+      
+      const { data: insertedData, error: recordError } = await supabase
         .from('contract_documents')
-        .insert({
-          filename: file.name,
-          file_path: filePath,
-          contract_id: contractId,
-          file_type: file.type,
-          file_size: file.size,
-          file_url: publicUrl,
-          status: 'pending_verification',
-          upload_date: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          ...metadata
-        })
+        .insert(documentRecord)
         .select()
         .single();
         
@@ -170,15 +189,15 @@ const useContractDocuments = () => {
       // Update progress
       setUploadProgress(100);
       
-      console.log('Document record created successfully:', documentRecord);
+      console.log('Document record created successfully:', insertedData);
       
       // Refresh document list
       await loadDocuments();
       
       return {
         success: true,
-        data: documentRecord,
-        message: 'Document uploaded successfully'
+        data: insertedData,
+        message: 'Document uploaded and saved to database successfully'
       };
     } catch (err) {
       console.error('Upload error:', err);

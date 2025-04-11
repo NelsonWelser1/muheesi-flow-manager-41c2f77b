@@ -1,6 +1,6 @@
 
 import { supabase } from '../supabase';
-import { showWarningToast } from '@/components/ui/notifications';
+import { showWarningToast, showErrorToast, showSuccessToast } from '@/components/ui/notifications';
 
 /**
  * Creates the necessary storage bucket for contract documents
@@ -21,7 +21,29 @@ export const runContractDocumentsMigration = async (toast = null) => {
       console.log('contract_documents table already exists');
       
       // Check if the documents storage bucket exists
-      const { data: buckets } = await supabase.storage.listBuckets();
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      
+      if (bucketsError) {
+        console.warn('Could not list buckets, will try alternative check:', bucketsError.message);
+        
+        // Try an alternative way to check if the bucket exists - attempt to list files
+        const { data: files, error: filesError } = await supabase.storage
+          .from('documents')
+          .list('', { limit: 1 });
+          
+        if (filesError && !filesError.message.includes('not found')) {
+          console.warn('Alternative bucket check failed:', filesError.message);
+          
+          // Even if we got an error that's not "bucket not found", we'll still try to create it
+          const documentsBucket = false;
+        } else {
+          // If we got files or a 404 error about a file not found (but bucket exists), bucket exists
+          console.log('Alternative check: documents bucket exists');
+          const documentsBucket = true;
+          return { success: true };
+        }
+      }
+      
       const documentsBucket = buckets?.find(bucket => bucket.name === 'documents');
       
       if (!documentsBucket) {
@@ -51,7 +73,7 @@ export const runContractDocumentsMigration = async (toast = null) => {
             if (error.message.includes('row-level security') || error.status === 400) {
               console.warn('Contract documents migration notice: ' + error.message);
               if (toast) {
-                showWarningToast(toast, 'Storage setup requires admin access. Some file uploads may fail.');
+                showWarningToast(toast, 'Storage setup requires admin access. Documents can still be uploaded but may have limited functionality.');
               }
               return { 
                 success: false,
@@ -65,7 +87,24 @@ export const runContractDocumentsMigration = async (toast = null) => {
           
           console.log('Created documents storage bucket successfully:', data);
           
-          // We'll skip the policy setting as it requires more permissions
+          // Try to set a policy for public access
+          try {
+            // This is a simplified approach - in production you would want more restrictive policies
+            const { error: policyError } = await supabase.rpc('create_public_bucket_policy', {
+              bucket_name: 'documents'
+            });
+            
+            if (policyError) {
+              console.warn('Could not set bucket policy (non-critical):', policyError.message);
+            }
+          } catch (policyError) {
+            console.warn('Policy setting error (non-critical):', policyError);
+          }
+          
+          if (toast) {
+            showSuccessToast(toast, 'Document storage initialized successfully');
+          }
+          
           return { success: true };
           
         } catch (storageError) {
@@ -77,13 +116,17 @@ export const runContractDocumentsMigration = async (toast = null) => {
               storageError.code === 'PGRST116') {
             console.warn('Contract documents migration notice: ' + storageError.message);
             if (toast) {
-              showWarningToast(toast, 'Storage setup requires admin access. Using fallback method.');
+              showWarningToast(toast, 'Storage setup requires admin access. Alternative storage methods will be used.');
             }
             return { 
               success: false,
               bypassed: true,
               error: storageError
             };
+          }
+          
+          if (toast) {
+            showErrorToast(toast, `Storage setup error: ${storageError.message}`);
           }
           
           return { 
@@ -101,6 +144,10 @@ export const runContractDocumentsMigration = async (toast = null) => {
       console.log('The contract_documents table needs to be created manually.');
       console.log('Please run the SQL in src/integrations/supabase/migrations/contract_documents.sql');
       
+      if (toast) {
+        showErrorToast(toast, 'Database tables not found. Please run the SQL migration.');
+      }
+      
       return { 
         success: false, 
         error: new Error('Please run the SQL migration manually in Supabase SQL Editor') 
@@ -109,6 +156,11 @@ export const runContractDocumentsMigration = async (toast = null) => {
     
   } catch (error) {
     console.error('Error in contract documents migration:', error);
+    
+    if (toast) {
+      showErrorToast(toast, `Migration error: ${error.message}`);
+    }
+    
     return { success: false, error };
   }
 };

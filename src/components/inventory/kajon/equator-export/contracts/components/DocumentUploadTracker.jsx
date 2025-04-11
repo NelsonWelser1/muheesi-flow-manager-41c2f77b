@@ -41,7 +41,8 @@ const DocumentUploadTracker = () => {
   const [keywords, setKeywords] = useState('');
   const [signedBy, setSignedBy] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  
+  const [uploadStatus, setUploadStatus] = useState(null);
+
   const {
     documents,
     loading,
@@ -56,7 +57,6 @@ const DocumentUploadTracker = () => {
   } = useContractDocuments();
 
   useEffect(() => {
-    // Load documents when component mounts
     loadDocuments();
   }, [loadDocuments]);
 
@@ -66,7 +66,6 @@ const DocumentUploadTracker = () => {
       if (file.type === 'application/pdf' || file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/png') {
         setUploadedFile(file);
         
-        // Try to extract contract ID from filename if it follows the pattern
         const match = file.name.match(/^(CNT-\d+)/);
         if (match) {
           setContractId(match[0]);
@@ -85,6 +84,7 @@ const DocumentUploadTracker = () => {
     setNotes('');
     setKeywords('');
     setSignedBy('');
+    setUploadStatus(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -97,6 +97,7 @@ const DocumentUploadTracker = () => {
     }
 
     setIsUploading(true);
+    setUploadStatus(null);
 
     try {
       const keywordsArray = keywords ? keywords.split(',').map(k => k.trim()) : [];
@@ -114,35 +115,54 @@ const DocumentUploadTracker = () => {
       const result = await uploadDocument(uploadedFile, contractId || null, metadata);
       
       if (result && result.success) {
-        console.log('Document uploaded successfully:', result.data);
+        console.log('Document uploaded successfully, data saved to DB:', result.data);
         
-        // Automatically reset the form on success
+        setUploadStatus('success');
+        
+        showSuccessToast(
+          toast, 
+          `Document "${uploadedFile.name}" uploaded and saved to database successfully`
+        );
+        
         resetForm();
         
-        // Show success toast and switch to all documents tab
-        showSuccessToast(toast, "Document uploaded and saved successfully");
-        
-        // Wait briefly before switching tabs to allow the toast to be visible
         setTimeout(() => {
           setActiveTab('all');
-        }, 1000);
+        }, 1500);
       } else {
         console.error('Upload failed:', result?.error);
         
-        // Show a more specific error message
+        setUploadStatus('error');
+        
         if (result?.error?.message?.includes('row-level security')) {
-          showErrorToast(toast, "Permission error: You may need admin rights for this operation.");
+          showErrorToast(
+            toast, 
+            "Permission error: You may need admin rights. The document was not saved to the database."
+          );
         } else if (result?.error?.message?.includes('network')) {
-          showErrorToast(toast, "Network error: Please check your connection and try again.");
+          showErrorToast(
+            toast, 
+            "Network error: Please check your connection and try again. The document was not saved."
+          );
         } else if (result?.error?.message?.includes('timeout')) {
-          showErrorToast(toast, "Upload timed out. The file may be too large or the server is busy.");
+          showErrorToast(
+            toast, 
+            "Upload timed out. The file may be too large or the server is busy. The document was not saved."
+          );
         } else {
-          showErrorToast(toast, result?.error?.message || "Upload failed due to an unknown error.");
+          showErrorToast(
+            toast, 
+            `Upload failed: ${result?.error?.message || "Unknown error occurred"}. The document was not saved to the database.`
+          );
         }
       }
     } catch (error) {
       console.error('Upload error:', error);
-      showErrorToast(toast, `Upload error: ${error.message || "Unknown error occurred"}`);
+      setUploadStatus('error');
+      showErrorToast(
+        toast, 
+        `Upload error: ${error.message || "Unknown error occurred"}. The document was not saved to the database.`
+      );
     } finally {
       setIsUploading(false);
     }
@@ -336,6 +356,20 @@ const DocumentUploadTracker = () => {
                 <p>Upload signed contract documents (PDF, JPEG, JPG, PNG) for record keeping and tracking. All uploaded documents will be reviewed for verification.</p>
               </div>
               
+              {uploadStatus === 'success' && (
+                <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-3 flex items-center gap-2 animate-in fade-in">
+                  <Check className="h-5 w-5 text-green-600" />
+                  <p>Document successfully uploaded and saved to database!</p>
+                </div>
+              )}
+              
+              {uploadStatus === 'error' && (
+                <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-3 flex items-center gap-2 animate-in fade-in">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <p>Failed to save document to database. Please try again or contact support.</p>
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="md:col-span-3">
                   <div className="border-2 border-dashed rounded-md p-6 relative">
@@ -393,7 +427,11 @@ const DocumentUploadTracker = () => {
                     {uploadProgress > 0 && (
                       <div className="mt-4">
                         <div className="flex justify-between text-xs text-gray-500 mb-1">
-                          <span>Uploading...</span>
+                          <span>
+                            {uploadProgress < 50 ? 'Uploading to storage...' : 
+                             uploadProgress < 90 ? 'Saving to database...' : 
+                             'Finishing up...'}
+                          </span>
                           <span>{uploadProgress}%</span>
                         </div>
                         <Progress value={uploadProgress} className="h-2" />
@@ -406,7 +444,11 @@ const DocumentUploadTracker = () => {
                           <div className="animate-spin">
                             <Upload className="h-8 w-8 text-blue-500" />
                           </div>
-                          <p className="text-sm font-medium text-blue-600">Uploading document...</p>
+                          <p className="text-sm font-medium text-blue-600">
+                            {uploadProgress < 50 ? 'Uploading to storage...' : 
+                             uploadProgress < 90 ? 'Saving to database...' : 
+                             'Finalizing...'}
+                          </p>
                         </div>
                       </div>
                     )}
