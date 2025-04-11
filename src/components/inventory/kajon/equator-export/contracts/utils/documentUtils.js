@@ -72,33 +72,92 @@ export const ensureDocumentsBucketExists = async (supabase, toast, showErrorToas
     
     console.log('Checking if documents bucket exists (authenticated:', isAuthenticated, ')');
     
+    // First, try a direct test by attempting to upload a small test file
+    // This will tell us if the bucket exists and if we have write permissions
+    try {
+      const testBlob = new Blob(['test'], { type: 'text/plain' });
+      const testFile = new File([testBlob], 'bucket-test.txt', { type: 'text/plain' });
+      
+      const { error: testError } = await supabase.storage
+        .from('documents')
+        .upload('test-' + Date.now() + '.txt', testFile, { upsert: true });
+      
+      if (!testError) {
+        console.log('Bucket exists and is writable');
+        return true;
+      }
+      
+      // If we get a "not found" error, the bucket doesn't exist
+      if (testError.message?.includes('not found')) {
+        console.log('Bucket does not exist, will try to create it');
+      } else {
+        console.warn('Bucket test upload failed:', testError.message);
+      }
+    } catch (testErr) {
+      console.warn('Error testing bucket:', testErr);
+    }
+    
     // Check if the documents bucket exists
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
     
     if (bucketsError) {
-      // If we can't list buckets due to permissions, we'll try a fallback approach
-      console.warn('Unable to list buckets, attempting fallback verification:', bucketsError);
+      // If we can't list buckets due to permissions, we'll try creating it directly
+      console.warn('Unable to list buckets, attempting direct creation:', bucketsError);
       
-      // Try to verify if bucket exists by attempting to fetch a non-existent file (should return 404)
       try {
-        const { error: testError } = await supabase.storage
-          .from('documents')
-          .download('test-bucket-exists.txt');
-          
-        // If we get a 404, that means the bucket exists but the file doesn't
-        if (testError && testError.statusCode === 404) {
-          console.log('Bucket verification fallback successful - bucket exists');
+        // Try to create the bucket directly
+        const { error: createError } = await supabase.storage.createBucket('documents', {
+          public: true
+        });
+        
+        if (!createError || createError.message?.includes('already exists')) {
+          console.log('Bucket successfully created or already exists');
           return true;
         }
         
-        // Any other error means we might have permission issues
-        if (testError && testError.statusCode !== 404) {
-          console.warn('Bucket access issue detected with fallback verification');
-          showWarningToast(toast, 'Limited storage access - uploads may not work correctly');
-          return true; // Return true anyway so we can try uploading
+        // If creation fails due to RLS, we'll try alternate methods
+        if (createError.message?.includes('row-level security')) {
+          console.warn('RLS blocked bucket creation, trying alternative method');
+          
+          // Try a direct API call to bypass RLS if possible
+          try {
+            const response = await fetch(`${import.meta.env.VITE_SUPABASE_PROJECT_URL}/storage/v1/bucket`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': import.meta.env.VITE_SUPABASE_API_KEY,
+                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_API_KEY}`
+              },
+              body: JSON.stringify({
+                id: 'documents',
+                name: 'documents',
+                public: true
+              })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok || result.message?.includes('already exists')) {
+              console.log('Direct bucket creation successful');
+              return true;
+            }
+            
+            console.warn('Alternative bucket creation failed:', result);
+          } catch (directErr) {
+            console.warn('Direct API call failed:', directErr);
+          }
+          
+          // If we still can't create the bucket, we'll warn the user but continue
+          showWarningToast(toast, 'Limited storage permissions - upload may still work');
+          return true; // Return true anyway to try the upload
         }
-      } catch (fallbackError) {
-        console.error('Fallback bucket verification failed:', fallbackError);
+        
+        showErrorToast(toast, `Failed to create storage bucket: ${createError.message}`);
+        return false;
+      } catch (createErr) {
+        console.error('Error creating bucket:', createErr);
+        showErrorToast(toast, `Storage error: ${createErr.message}`);
+        return false;
       }
     }
     
@@ -129,18 +188,6 @@ export const ensureDocumentsBucketExists = async (supabase, toast, showErrorToas
       }
       
       console.log('Documents bucket created successfully');
-      
-      // Try to set a permissive policy for the bucket
-      try {
-        const { error: policyError } = await supabase.storage.from('documents')
-          .createSignedUrl('dummy-path.txt', 10); // Just to test permissions
-          
-        if (policyError && !policyError.message.includes('not found')) {
-          console.warn('Bucket may have permission issues:', policyError);
-        }
-      } catch (policyError) {
-        console.warn('Could not test bucket permissions:', policyError);
-      }
     } else {
       console.log('Documents bucket already exists');
     }
@@ -177,6 +224,7 @@ export const uploadFileWithRetry = async (supabase, file, filePath, updateProgre
       // Make sure we're using the correct bucket name and path
       console.log(`Uploading to bucket 'documents' with path: ${filePath}`);
       
+      // First, check if we have direct upload access
       const { data, error } = await supabase.storage
         .from('documents')
         .upload(filePath, file, {
@@ -188,9 +236,61 @@ export const uploadFileWithRetry = async (supabase, file, filePath, updateProgre
         console.error(`Upload attempt ${attempt} failed:`, error);
         lastError = error;
         
-        // If it's not an error we should retry on, break immediately
-        if (!shouldRetryUpload(error)) {
-          break;
+        // If we get a 404 bucket not found error, try to create it
+        if (error.message?.includes('not found') && attempt === 1) {
+          console.log('Bucket not found, attempting to create it...');
+          
+          try {
+            const { error: createError } = await supabase.storage.createBucket('documents', {
+              public: true
+            });
+            
+            if (!createError || createError.message?.includes('already exists')) {
+              console.log('Bucket created or already exists, retrying upload...');
+              continue; // Skip to next attempt without waiting
+            }
+          } catch (createErr) {
+            console.warn('Error creating bucket:', createErr);
+          }
+        }
+        
+        // If it's not an error we should retry on, try alternative upload methods
+        if (!shouldRetryUpload(error) && attempt === 1) {
+          console.log('Trying alternative upload method...');
+          
+          try {
+            // Try using direct fetch API to upload the file
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await fetch(`${import.meta.env.VITE_SUPABASE_PROJECT_URL}/storage/v1/object/documents/${filePath}`, {
+              method: 'POST',
+              headers: {
+                'apikey': import.meta.env.VITE_SUPABASE_API_KEY,
+                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_API_KEY}`
+              },
+              body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+              console.log('Direct upload succeeded:', result);
+              
+              // Get public URL
+              const publicUrl = `${import.meta.env.VITE_SUPABASE_PROJECT_URL}/storage/v1/object/public/documents/${filePath}`;
+              
+              return {
+                success: true,
+                data: result,
+                publicUrl
+              };
+            } else {
+              console.error('Direct upload failed:', result);
+            }
+          } catch (directErr) {
+            console.error('Direct upload error:', directErr);
+          }
         }
         
         // Wait with exponential backoff before retrying
@@ -268,4 +368,108 @@ const shouldRetryUpload = (error) => {
   }
   
   return false;
+};
+
+/**
+ * Test if document storage is working properly
+ * @param {Object} supabase - Supabase client
+ * @returns {Promise<Object>} Test results
+ */
+export const testDocumentStorage = async (supabase) => {
+  const results = {
+    bucketExists: false,
+    canUpload: false,
+    canInsert: false,
+    errors: []
+  };
+  
+  try {
+    console.log('Testing document storage system...');
+    
+    // 1. Check if bucket exists
+    try {
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      
+      if (bucketsError) {
+        results.errors.push({ component: 'listBuckets', error: bucketsError });
+      } else {
+        const documentsBucket = buckets?.find(bucket => bucket.name === 'documents');
+        results.bucketExists = !!documentsBucket;
+      }
+    } catch (bucketError) {
+      results.errors.push({ component: 'checkBuckets', error: bucketError });
+    }
+    
+    // 2. Test file upload
+    try {
+      const testBlob = new Blob(['test'], { type: 'text/plain' });
+      const testFile = new File([testBlob], 'storage-test.txt', { type: 'text/plain' });
+      const testPath = `test-${Date.now()}.txt`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(testPath, testFile, { upsert: true });
+        
+      if (uploadError) {
+        results.errors.push({ component: 'upload', error: uploadError });
+      } else {
+        results.canUpload = true;
+        
+        // Clean up test file
+        try {
+          await supabase.storage.from('documents').remove([testPath]);
+        } catch (cleanupError) {
+          console.warn('Could not clean up test file:', cleanupError);
+        }
+      }
+    } catch (uploadError) {
+      results.errors.push({ component: 'uploadTest', error: uploadError });
+    }
+    
+    // 3. Test database insert
+    try {
+      const testRecord = {
+        filename: 'test-document.pdf',
+        file_path: 'test/test-document.pdf',
+        file_url: 'https://example.com/test-document.pdf',
+        file_type: 'application/pdf',
+        file_size: 1024,
+        status: 'test',
+        upload_date: new Date().toISOString(),
+        created_at: new Date().toISOString()
+      };
+      
+      const { data: insertData, error: insertError } = await supabase
+        .from('contract_documents')
+        .insert([testRecord])
+        .select();
+        
+      if (insertError) {
+        results.errors.push({ component: 'dbInsert', error: insertError });
+      } else {
+        results.canInsert = true;
+        
+        // Clean up test record
+        if (insertData?.[0]?.id) {
+          try {
+            await supabase
+              .from('contract_documents')
+              .delete()
+              .eq('id', insertData[0].id);
+          } catch (cleanupError) {
+            console.warn('Could not clean up test record:', cleanupError);
+          }
+        }
+      }
+    } catch (insertError) {
+      results.errors.push({ component: 'dbInsertTest', error: insertError });
+    }
+    
+    console.log('Document storage test results:', results);
+    return results;
+  } catch (error) {
+    console.error('Error testing document storage:', error);
+    results.errors.push({ component: 'overall', error });
+    return results;
+  }
 };

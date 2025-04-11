@@ -28,6 +28,7 @@ import { format } from 'date-fns';
 import useContractDocuments from '../hooks/useContractDocuments';
 import { formatFileSize, getFileIconName } from '../utils/documentUtils';
 import { showWarningToast, showSuccessToast, showErrorToast } from '@/components/ui/notifications';
+import SupabaseDocumentTester from '../utils/SupabaseDocumentTester';
 
 const DocumentUploadTracker = () => {
   const { toast } = useToast();
@@ -516,6 +517,11 @@ const DocumentUploadTracker = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+              
+              <div className="p-4 border rounded-md">
+                <h3 className="text-lg font-semibold mb-4">Document Upload Diagnostics</h3>
+                <SupabaseDocumentTester />
               </div>
               
               <div className="flex justify-end gap-2">
