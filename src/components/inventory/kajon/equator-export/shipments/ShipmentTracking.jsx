@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -16,6 +15,7 @@ import ShipmentTemplates from './components/ShipmentTemplates';
 import NewShipmentForm from './components/NewShipmentForm';
 import { useShipments } from './hooks/useShipments';
 import { format } from 'date-fns';
+import GlobalShipmentMap from './components/GlobalShipmentMap';
 
 const statusColors = {
   'in-transit': "bg-blue-100 text-blue-800",
@@ -291,7 +291,7 @@ const ShipmentTracking = () => {
         </CardContent>
       </Card>
       
-      {/* Shipment Map Placeholder */}
+      {/* Shipment Map */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
@@ -300,19 +300,7 @@ const ShipmentTracking = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="bg-slate-100 h-80 flex items-center justify-center rounded-md">
-            <div className="text-center">
-              <MapPin className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-600">Interactive Global Shipment Map</h3>
-              <p className="text-sm text-slate-500 max-w-md">
-                Track shipments in real-time across global trade routes
-              </p>
-              <Button variant="outline" className="mt-4">
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Open Full Map
-              </Button>
-            </div>
-          </div>
+          <GlobalShipmentMap shipments={shipments} />
         </CardContent>
       </Card>
     </div>

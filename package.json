@@ -55,6 +55,7 @@
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.417.0",
+    "mapbox-gl": "^3.11.0",
     "next-themes": "^0.3.0",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
