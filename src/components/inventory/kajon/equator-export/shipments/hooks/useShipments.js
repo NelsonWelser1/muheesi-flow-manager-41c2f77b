@@ -130,6 +130,11 @@ export const useShipments = () => {
         )
       );
       
+      toast({
+        title: "Shipment Updated",
+        description: "Shipment has been updated successfully.",
+      });
+      
       console.log('Updated shipment:', data);
       return { success: true, data };
     } catch (err) {

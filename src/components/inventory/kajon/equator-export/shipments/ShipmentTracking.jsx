@@ -75,7 +75,11 @@ const ShipmentTracking = () => {
 
   const handleStatusChange = async (shipmentId, newStatus) => {
     try {
-      const result = await updateShipment(shipmentId, { status: newStatus });
+      const result = await updateShipment(shipmentId, { 
+        status: newStatus,
+        last_update: new Date().toISOString().split('T')[0]
+      });
+      
       if (result.success) {
         toast({
           title: "Status Updated",
@@ -97,7 +101,126 @@ const ShipmentTracking = () => {
       title: "Viewing Shipment",
       description: `Viewing details for shipment ${shipment.shipment_id}`,
     });
-    console.log("Viewing shipment details:", shipment);
+    
+    const viewWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    if (!viewWindow) {
+      toast({
+        title: "View Failed",
+        description: "Pop-up blocked. Please allow pop-ups and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    viewWindow.document.write(`
+      <html>
+        <head>
+          <title>Shipment ${shipment.shipment_id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }
+            h1 { color: #2563eb; margin-bottom: 20px; }
+            .status-badge { 
+              display: inline-block; 
+              padding: 5px 10px; 
+              border-radius: 4px; 
+              font-weight: 500; 
+              margin-left: 10px;
+              font-size: 14px;
+            }
+            .status-in-transit { background: #dbeafe; color: #1e40af; }
+            .status-loading { background: #fef3c7; color: #92400e; }
+            .status-preparing { background: #f3e8ff; color: #6b21a8; }
+            .status-delivered { background: #dcfce7; color: #166534; }
+            .status-scheduled { background: #f3f4f6; color: #1f2937; }
+            .status-delayed { background: #fee2e2; color: #b91c1c; }
+            .header { display: flex; align-items: center; margin-bottom: 30px; }
+            .section { margin-bottom: 30px; }
+            .section h2 { color: #4b5563; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
+            .detail-row { display: flex; margin-bottom: 10px; }
+            .detail-label { width: 200px; font-weight: 600; color: #4b5563; }
+            .detail-value { flex: 1; }
+            .instructions { 
+              background-color: #f9fafb; 
+              border-left: 4px solid #3b82f6; 
+              padding: 15px;
+              margin-top: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Shipment Details: ${shipment.shipment_id}</h1>
+            <span class="status-badge status-${shipment.status || 'scheduled'}">
+              ${statusLabels[shipment.status] || shipment.status || 'Unknown'}
+            </span>
+          </div>
+          
+          <div class="section">
+            <h2>General Information</h2>
+            <div class="detail-row">
+              <div class="detail-label">Container</div>
+              <div class="detail-value">${shipment.container || 'N/A'}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Volume</div>
+              <div class="detail-value">${shipment.volume || 'N/A'}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Last Updated</div>
+              <div class="detail-value">${shipment.last_update || 'N/A'}</div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <h2>Route & Schedule</h2>
+            <div class="detail-row">
+              <div class="detail-label">Departure Date</div>
+              <div class="detail-value">${format(new Date(shipment.departure_date), 'MMM d, yyyy')}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Estimated Arrival</div>
+              <div class="detail-value">${format(new Date(shipment.eta), 'MMM d, yyyy')}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Destination</div>
+              <div class="detail-value">${shipment.destination || 'N/A'}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Route</div>
+              <div class="detail-value">${shipment.route || 'N/A'}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Vessel</div>
+              <div class="detail-value">${shipment.vessel || 'N/A'}</div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <h2>Client Information</h2>
+            <div class="detail-row">
+              <div class="detail-label">Client</div>
+              <div class="detail-value">${shipment.client || 'N/A'}</div>
+            </div>
+          </div>
+          
+          ${shipment.special_instructions ? `
+          <div class="section">
+            <h2>Special Instructions</h2>
+            <div class="instructions">
+              ${shipment.special_instructions}
+            </div>
+          </div>
+          ` : ''}
+          
+          <div style="margin-top: 40px; text-align: center; color: #6b7280; font-size: 14px;">
+            Equator Export Management System - ${new Date().toISOString().split('T')[0]}
+          </div>
+        </body>
+      </html>
+    `);
+    
+    viewWindow.document.close();
   };
 
   const handleDownloadShipment = (shipment) => {
@@ -229,6 +352,10 @@ const ShipmentTracking = () => {
     `);
     
     printWindow.document.close();
+    
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
     
     toast({
       title: "Print Prepared",
