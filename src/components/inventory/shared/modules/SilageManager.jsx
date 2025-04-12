@@ -13,7 +13,6 @@ import { RefreshCw, Download, Leaf, FileText, BarChart2, PlusCircle, Trash2, Pen
 import { useToast } from "@/components/ui/use-toast";
 import { useSilageInventory } from "@/hooks/useSilageInventory";
 import { format, parseISO } from 'date-fns';
-
 const SilageManager = ({
   farmId,
   isDataEntry = true
@@ -199,7 +198,6 @@ const SilageManager = ({
     if (!ingredients || ingredients.length === 0) return 'None';
     return ingredients.join(', ');
   };
-  
   return <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Silage Management</h2>
@@ -216,10 +214,14 @@ const SilageManager = ({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2 mb-4">
+        <TabsList className="grid grid-cols-3 mb-4">
           <TabsTrigger value="inventory" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Inventory
+          </TabsTrigger>
+          <TabsTrigger value="add" className="flex items-center gap-2" disabled={!isDataEntry}>
+            <PlusCircle className="h-4 w-4" />
+            Add Silage
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <BarChart2 className="h-4 w-4" />
@@ -291,7 +293,7 @@ const SilageManager = ({
                                   <Pencil className="h-4 w-4" />
                                 </Button>
                                 <Button variant="ghost" size="icon" onClick={() => deleteSilageRecord(silage.id)}>
-                                  <Trash2 className="h-4 w-4" />
+                                  
                                 </Button>
                               </div>
                             </TableCell>
@@ -303,134 +305,132 @@ const SilageManager = ({
           </Card>
         </TabsContent>
 
-        {isDataEntry && (
-          <TabsContent value="add">
-            <Card>
-              <CardHeader>
-                <CardTitle>Add New Silage</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <TabsContent value="add">
+          <Card>
+            <CardHeader>
+              <CardTitle>Add New Silage</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Silage Type *</Label>
+                    <Select value={newSilage.type} onValueChange={value => handleSelectChange('type', value)} required>
+                      <SelectTrigger id="type" className={formErrors.type ? "border-red-500" : ""}>
+                        <SelectValue placeholder="Select silage type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="maize">Maize Silage</SelectItem>
+                        <SelectItem value="grass">Grass Silage</SelectItem>
+                        <SelectItem value="alfalfa">Alfalfa Silage</SelectItem>
+                        <SelectItem value="mixed">Mixed Silage</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {formErrors.type && <p className="text-xs text-red-500">{formErrors.type}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="type">Silage Type *</Label>
-                      <Select value={newSilage.type} onValueChange={value => handleSelectChange('type', value)} required>
-                        <SelectTrigger id="type" className={formErrors.type ? "border-red-500" : ""}>
-                          <SelectValue placeholder="Select silage type" />
+                      <Label htmlFor="amount">Amount *</Label>
+                      <Input id="amount" name="amount" type="number" step="0.01" value={newSilage.amount} onChange={handleInputChange} placeholder="Enter amount" required className={formErrors.amount ? "border-red-500" : ""} />
+                      {formErrors.amount && <p className="text-xs text-red-500">{formErrors.amount}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="unit">Unit *</Label>
+                      <Select value={newSilage.unit} onValueChange={value => handleSelectChange('unit', value)} required>
+                        <SelectTrigger id="unit" className={formErrors.unit ? "border-red-500" : ""}>
+                          <SelectValue placeholder="Select unit" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="maize">Maize Silage</SelectItem>
-                          <SelectItem value="grass">Grass Silage</SelectItem>
-                          <SelectItem value="alfalfa">Alfalfa Silage</SelectItem>
-                          <SelectItem value="mixed">Mixed Silage</SelectItem>
+                          <SelectItem value="tons">Tons</SelectItem>
+                          <SelectItem value="kg">Kilograms</SelectItem>
+                          <SelectItem value="bales">Bales</SelectItem>
                         </SelectContent>
                       </Select>
-                      {formErrors.type && <p className="text-xs text-red-500">{formErrors.type}</p>}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="amount">Amount *</Label>
-                        <Input id="amount" name="amount" type="number" step="0.01" value={newSilage.amount} onChange={handleInputChange} placeholder="Enter amount" required className={formErrors.amount ? "border-red-500" : ""} />
-                        {formErrors.amount && <p className="text-xs text-red-500">{formErrors.amount}</p>}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="unit">Unit *</Label>
-                        <Select value={newSilage.unit} onValueChange={value => handleSelectChange('unit', value)} required>
-                          <SelectTrigger id="unit" className={formErrors.unit ? "border-red-500" : ""}>
-                            <SelectValue placeholder="Select unit" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="tons">Tons</SelectItem>
-                            <SelectItem value="kg">Kilograms</SelectItem>
-                            <SelectItem value="bales">Bales</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {formErrors.unit && <p className="text-xs text-red-500">{formErrors.unit}</p>}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="productionDate">Production Date *</Label>
-                      <Input id="productionDate" name="productionDate" type="date" value={newSilage.productionDate} onChange={handleInputChange} required className={formErrors.productionDate ? "border-red-500" : ""} />
-                      {formErrors.productionDate && <p className="text-xs text-red-500">{formErrors.productionDate}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="expiryDate">Expiry Date</Label>
-                      <Input id="expiryDate" name="expiryDate" type="date" value={newSilage.expiryDate} onChange={handleInputChange} className={formErrors.expiryDate ? "border-red-500" : ""} />
-                      {formErrors.expiryDate && <p className="text-xs text-red-500">{formErrors.expiryDate}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="storageLocation">Storage Location</Label>
-                      <Input id="storageLocation" name="storageLocation" value={newSilage.storageLocation} onChange={handleInputChange} placeholder="Enter storage location" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="quality">Quality *</Label>
-                      <Select value={newSilage.quality} onValueChange={value => handleSelectChange('quality', value)} required>
-                        <SelectTrigger id="quality" className={formErrors.quality ? "border-red-500" : ""}>
-                          <SelectValue placeholder="Select quality" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="excellent">Excellent</SelectItem>
-                          <SelectItem value="good">Good</SelectItem>
-                          <SelectItem value="average">Average</SelectItem>
-                          <SelectItem value="poor">Poor</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {formErrors.quality && <p className="text-xs text-red-500">{formErrors.quality}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Ingredients</Label>
-                      <div className="grid grid-cols-2 gap-2 border rounded-md p-3">
-                        {ingredientOptions.map(ingredient => <div key={ingredient} className="flex items-center space-x-2">
-                            <Checkbox id={`ingredient-${ingredient}`} checked={newSilage.ingredients?.includes(ingredient)} onCheckedChange={checked => handleIngredientChange(ingredient, checked)} />
-                            <label htmlFor={`ingredient-${ingredient}`} className="text-sm cursor-pointer capitalize">
-                              {ingredient}
-                            </label>
-                          </div>)}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="expensesIncurred">Expenses Incurred</Label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                        <Input id="expensesIncurred" name="expensesIncurred" type="number" step="0.01" value={newSilage.expensesIncurred} onChange={handleInputChange} placeholder="Enter expenses" className={`pl-8 ${formErrors.expensesIncurred ? "border-red-500" : ""}`} />
-                      </div>
-                      {formErrors.expensesIncurred && <p className="text-xs text-red-500">{formErrors.expensesIncurred}</p>}
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="personInCharge">Person in Charge</Label>
-                      <div className="relative">
-                        <User className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                        <Input id="personInCharge" name="personInCharge" value={newSilage.personInCharge} onChange={handleInputChange} placeholder="Enter responsible person" className="pl-8" />
-                      </div>
+                      {formErrors.unit && <p className="text-xs text-red-500">{formErrors.unit}</p>}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Textarea id="notes" name="notes" value={newSilage.notes} onChange={handleInputChange} placeholder="Enter any additional notes" rows={3} />
+                    <Label htmlFor="productionDate">Production Date *</Label>
+                    <Input id="productionDate" name="productionDate" type="date" value={newSilage.productionDate} onChange={handleInputChange} required className={formErrors.productionDate ? "border-red-500" : ""} />
+                    {formErrors.productionDate && <p className="text-xs text-red-500">{formErrors.productionDate}</p>}
                   </div>
 
-                  <div className="flex justify-end">
-                    <Button type="submit" disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
-                      {isSubmitting ? <>
-                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                          Saving...
-                        </> : 'Add Silage Record'}
-                    </Button>
+                  <div className="space-y-2">
+                    <Label htmlFor="expiryDate">Expiry Date</Label>
+                    <Input id="expiryDate" name="expiryDate" type="date" value={newSilage.expiryDate} onChange={handleInputChange} className={formErrors.expiryDate ? "border-red-500" : ""} />
+                    {formErrors.expiryDate && <p className="text-xs text-red-500">{formErrors.expiryDate}</p>}
                   </div>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="storageLocation">Storage Location</Label>
+                    <Input id="storageLocation" name="storageLocation" value={newSilage.storageLocation} onChange={handleInputChange} placeholder="Enter storage location" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="quality">Quality *</Label>
+                    <Select value={newSilage.quality} onValueChange={value => handleSelectChange('quality', value)} required>
+                      <SelectTrigger id="quality" className={formErrors.quality ? "border-red-500" : ""}>
+                        <SelectValue placeholder="Select quality" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="excellent">Excellent</SelectItem>
+                        <SelectItem value="good">Good</SelectItem>
+                        <SelectItem value="average">Average</SelectItem>
+                        <SelectItem value="poor">Poor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {formErrors.quality && <p className="text-xs text-red-500">{formErrors.quality}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Ingredients</Label>
+                    <div className="grid grid-cols-2 gap-2 border rounded-md p-3">
+                      {ingredientOptions.map(ingredient => <div key={ingredient} className="flex items-center space-x-2">
+                          <Checkbox id={`ingredient-${ingredient}`} checked={newSilage.ingredients?.includes(ingredient)} onCheckedChange={checked => handleIngredientChange(ingredient, checked)} />
+                          <label htmlFor={`ingredient-${ingredient}`} className="text-sm cursor-pointer capitalize">
+                            {ingredient}
+                          </label>
+                        </div>)}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="expensesIncurred">Expenses Incurred</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                      <Input id="expensesIncurred" name="expensesIncurred" type="number" step="0.01" value={newSilage.expensesIncurred} onChange={handleInputChange} placeholder="Enter expenses" className={`pl-8 ${formErrors.expensesIncurred ? "border-red-500" : ""}`} />
+                    </div>
+                    {formErrors.expensesIncurred && <p className="text-xs text-red-500">{formErrors.expensesIncurred}</p>}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="personInCharge">Person in Charge</Label>
+                    <div className="relative">
+                      <User className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                      <Input id="personInCharge" name="personInCharge" value={newSilage.personInCharge} onChange={handleInputChange} placeholder="Enter responsible person" className="pl-8" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea id="notes" name="notes" value={newSilage.notes} onChange={handleInputChange} placeholder="Enter any additional notes" rows={3} />
+                </div>
+
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
+                    {isSubmitting ? <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </> : 'Add Silage Record'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="analytics">
           <Card>
