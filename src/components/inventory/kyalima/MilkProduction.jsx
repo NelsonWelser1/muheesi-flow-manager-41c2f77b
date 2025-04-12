@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,6 @@ import {
   Search, 
   RefreshCw, 
   FileDown, 
-  Plus, 
   Filter, 
   Pencil,
   Trash2,
@@ -33,21 +32,136 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { KyalimaPDFExport } from "./utils/KyalimaPDFExport";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
+import { supabase } from '@/integrations/supabase/supabase';
 
 const MilkProduction = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterShift, setFilterShift] = useState('all');
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [milkData, setMilkData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [milkSalesSummary, setMilkSalesSummary] = useState({
+    totalLiters: 0,
+    soldLiters: 0,
+    averagePrice: 'UGX 0',
+    totalRevenue: 'UGX 0',
+    topCustomers: []
+  });
   
-  // Fetch milk records function would be implemented here in a real app
+  // Function to fetch milk production data from Supabase
+  const fetchMilkData = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch from the milk_production table
+      const { data, error } = await supabase
+        .from('milk_production')
+        .select('*')
+        .eq('farm_id', 'bukomero') // Filter to only get milk data from Bukomero farm
+        .order('date', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Transform the data to match the component's expected format
+      const transformedData = data.map((record, index) => ({
+        id: record.id || `MP-${index+1}`,
+        date: record.date,
+        shift: record.session === 'morning' ? 'Morning' : record.session === 'midday' ? 'Midday' : 'Evening',
+        cowId: record.cow_id || 'HERD',
+        cowName: record.cow_name || 'Entire Herd',
+        quantity: record.volume,
+        milkingTime: record.created_at ? format(parseISO(record.created_at), 'HH:mm') : '06:30',
+        quality: record.fat_content > 4 ? 'A' : record.fat_content > 3 ? 'B' : 'C',
+        collectedBy: record.collected_by || 'Staff'
+      }));
+      
+      setMilkData(transformedData);
+      calculateSummaryData(data);
+      
+      toast({
+        title: "Data Loaded",
+        description: `Successfully loaded ${data.length} milk production records.`,
+      });
+    } catch (error) {
+      console.error('Error fetching milk data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load milk production data. " + error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Calculate summary data from fetched records
+  const calculateSummaryData = (data) => {
+    if (!data || data.length === 0) return;
+    
+    try {
+      // Calculate total liters produced
+      const totalLiters = data.reduce((sum, record) => sum + (record.volume || 0), 0);
+      
+      // Assuming 90% of milk is sold
+      const soldLiters = Math.round(totalLiters * 0.9);
+      
+      // Calculate average price (example: 2500 UGX per liter)
+      const averagePrice = 2500;
+      const totalRevenue = soldLiters * averagePrice;
+      
+      // Set estimated top customers
+      const topCustomers = [
+        { 
+          name: 'Local Dairy Cooperative', 
+          volume: `${Math.round(soldLiters * 0.6)} liters`, 
+          amount: `UGX ${(Math.round(soldLiters * 0.6 * averagePrice)).toLocaleString()}`
+        },
+        { 
+          name: 'Community Market Vendors', 
+          volume: `${Math.round(soldLiters * 0.3)} liters`, 
+          amount: `UGX ${(Math.round(soldLiters * 0.3 * averagePrice)).toLocaleString()}`
+        },
+        { 
+          name: 'Direct Consumers', 
+          volume: `${Math.round(soldLiters * 0.1)} liters`, 
+          amount: `UGX ${(Math.round(soldLiters * 0.1 * averagePrice)).toLocaleString()}`
+        },
+      ];
+      
+      // Weekly average (last 7 days)
+      const last7DaysData = data.filter(record => {
+        const recordDate = new Date(record.date);
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        return recordDate >= sevenDaysAgo;
+      });
+      
+      const weeklyTotal = last7DaysData.reduce((sum, record) => sum + (record.volume || 0), 0);
+      const weeklyAvg = last7DaysData.length > 0 ? Math.round(weeklyTotal / 7) : 0;
+      
+      setMilkSalesSummary({
+        totalLiters,
+        soldLiters,
+        averagePrice: `UGX ${averagePrice.toLocaleString()}`,
+        totalRevenue: `UGX ${totalRevenue.toLocaleString()}`,
+        topCustomers,
+        weeklyAvg
+      });
+    } catch (error) {
+      console.error('Error calculating summary data:', error);
+    }
+  };
+  
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchMilkData();
+  }, []);
+  
   const refreshData = () => {
-    toast({
-      title: "Data Refreshed",
-      description: "Milk production data has been refreshed.",
-    });
+    fetchMilkData();
   };
   
   // Handle export to PDF
@@ -68,120 +182,10 @@ const MilkProduction = () => {
     });
   };
   
-  // Sample milk production data for demo
-  const sampleMilkData = [
-    { 
-      id: 'MP-001', 
-      date: '2023-12-20', 
-      shift: 'Morning', 
-      cowId: 'KYL-C001', 
-      cowName: 'Bella', 
-      quantity: 15, 
-      milkingTime: '06:30', 
-      quality: 'A', 
-      collectedBy: 'John' 
-    },
-    { 
-      id: 'MP-002', 
-      date: '2023-12-20', 
-      shift: 'Evening', 
-      cowId: 'KYL-C001', 
-      cowName: 'Bella', 
-      quantity: 12, 
-      milkingTime: '17:30', 
-      quality: 'A', 
-      collectedBy: 'David' 
-    },
-    { 
-      id: 'MP-003', 
-      date: '2023-12-20', 
-      shift: 'Morning', 
-      cowId: 'KYL-C018', 
-      cowName: 'Daisy', 
-      quantity: 14, 
-      milkingTime: '06:45', 
-      quality: 'A', 
-      collectedBy: 'John' 
-    },
-    { 
-      id: 'MP-004', 
-      date: '2023-12-20', 
-      shift: 'Evening', 
-      cowId: 'KYL-C018', 
-      cowName: 'Daisy', 
-      quantity: 11.5, 
-      milkingTime: '17:45', 
-      quality: 'B', 
-      collectedBy: 'David' 
-    },
-    { 
-      id: 'MP-005', 
-      date: '2023-12-19', 
-      shift: 'Morning', 
-      cowId: 'KYL-C001', 
-      cowName: 'Bella', 
-      quantity: 14.5, 
-      milkingTime: '06:30', 
-      quality: 'A', 
-      collectedBy: 'John' 
-    },
-    { 
-      id: 'MP-006', 
-      date: '2023-12-19', 
-      shift: 'Evening', 
-      cowId: 'KYL-C001', 
-      cowName: 'Bella', 
-      quantity: 12.5, 
-      milkingTime: '17:30', 
-      quality: 'A', 
-      collectedBy: 'Sarah' 
-    },
-    { 
-      id: 'MP-007', 
-      date: '2023-12-19', 
-      shift: 'Morning', 
-      cowId: 'KYL-C018', 
-      cowName: 'Daisy', 
-      quantity: 13.5, 
-      milkingTime: '06:45', 
-      quality: 'A', 
-      collectedBy: 'John' 
-    },
-  ];
-  
-  // Filter and search logic
-  const filteredMilkData = sampleMilkData.filter(record => {
-    // Apply search term filter
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = 
-      record.id.toLowerCase().includes(searchLower) ||
-      record.cowId.toLowerCase().includes(searchLower) ||
-      record.cowName.toLowerCase().includes(searchLower) ||
-      record.collectedBy.toLowerCase().includes(searchLower);
-      
-    // Apply shift filter
-    const matchesShift = filterShift === 'all' || record.shift.toLowerCase() === filterShift.toLowerCase();
-    
-    return matchesSearch && matchesShift;
-  });
-  
-  // Milk sales summary data (sample)
-  const milkSalesSummary = {
-    totalLiters: 480,
-    soldLiters: 450,
-    averagePrice: 'UGX 2,500',
-    totalRevenue: 'UGX 1,125,000',
-    topCustomers: [
-      { name: 'Local Dairy Cooperative', volume: '300 liters', amount: 'UGX 750,000' },
-      { name: 'Community Market Vendors', volume: '100 liters', amount: 'UGX 250,000' },
-      { name: 'Direct Consumers', volume: '50 liters', amount: 'UGX 125,000' },
-    ]
-  };
-  
   // Get total milk by date
-  const getTotalMilkByDate = (date) => {
-    return sampleMilkData
-      .filter(record => record.date === date)
+  const getTotalMilkByDate = (dateStr) => {
+    return milkData
+      .filter(record => record.date === dateStr)
       .reduce((total, record) => total + record.quantity, 0);
   };
   
@@ -198,6 +202,22 @@ const MilkProduction = () => {
         return <Badge className="bg-red-100 text-red-800 border-red-200">Grade D</Badge>;
     }
   };
+  
+  // Filter milk based on search term and category
+  const filteredMilkData = milkData.filter(record => {
+    // Apply search term filter
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = 
+      record.id.toLowerCase().includes(searchLower) ||
+      (record.cowId && record.cowId.toLowerCase().includes(searchLower)) ||
+      (record.cowName && record.cowName.toLowerCase().includes(searchLower)) ||
+      (record.collectedBy && record.collectedBy.toLowerCase().includes(searchLower));
+      
+    // Apply shift filter
+    const matchesShift = filterShift === 'all' || record.shift.toLowerCase() === filterShift.toLowerCase();
+    
+    return matchesSearch && matchesShift;
+  });
   
   return (
     <div className="space-y-4">
@@ -221,7 +241,7 @@ const MilkProduction = () => {
             <CardTitle className="text-sm font-medium">Weekly Average</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">482 Liters/day</div>
+            <div className="text-2xl font-bold">{milkSalesSummary.weeklyAvg || 0} Liters/day</div>
             <p className="text-xs text-muted-foreground mt-1">Last 7 days</p>
             <div className="flex items-center justify-between mt-2">
               <div className="h-2 rounded-full bg-slate-100 w-full mr-2">
@@ -272,91 +292,6 @@ const MilkProduction = () => {
           </Button>
         </div>
         <div className="flex items-center space-x-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                <span>Record Milk</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>Record Milk Production</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="date">Date</Label>
-                    <Input id="date" type="date" defaultValue={format(new Date(), 'yyyy-MM-dd')} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="shift">Shift</Label>
-                    <Select defaultValue="morning">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="morning">Morning</SelectItem>
-                        <SelectItem value="evening">Evening</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cowId">Cow ID</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select cow" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="kyl-c001">KYL-C001 (Bella)</SelectItem>
-                        <SelectItem value="kyl-c018">KYL-C018 (Daisy)</SelectItem>
-                        <SelectItem value="kyl-c023">KYL-C023 (Lucy)</SelectItem>
-                        <SelectItem value="kyl-c037">KYL-C037 (Molly)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantity (Liters)</Label>
-                    <Input id="quantity" type="number" step="0.1" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="milkingTime">Milking Time</Label>
-                    <Input id="milkingTime" type="time" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="quality">Quality Grade</Label>
-                    <Select defaultValue="A">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="A">Grade A</SelectItem>
-                        <SelectItem value="B">Grade B</SelectItem>
-                        <SelectItem value="C">Grade C</SelectItem>
-                        <SelectItem value="D">Grade D</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="collectedBy">Collected By</Label>
-                  <Input id="collectedBy" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes (Optional)</Label>
-                  <Input id="notes" />
-                </div>
-                <div className="flex justify-end space-x-2 pt-2">
-                  <Button variant="outline">Cancel</Button>
-                  <Button type="submit">Save Record</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
           <Button variant="outline" size="icon" onClick={handlePrint}>
             <Printer className="h-4 w-4" />
           </Button>
@@ -367,51 +302,57 @@ const MilkProduction = () => {
       </div>
 
       <div className="border rounded-md">
-        <div className="overflow-x-auto">
-          <Table id="milk-table">
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Shift</TableHead>
-                <TableHead>Cow ID</TableHead>
-                <TableHead>Cow Name</TableHead>
-                <TableHead>Quantity (L)</TableHead>
-                <TableHead>Quality</TableHead>
-                <TableHead>Collected By</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredMilkData.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-700"></div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table id="milk-table">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-10">No milk records found. Record your first production.</TableCell>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Shift</TableHead>
+                  <TableHead>Cow ID</TableHead>
+                  <TableHead>Cow Name</TableHead>
+                  <TableHead>Quantity (L)</TableHead>
+                  <TableHead>Quality</TableHead>
+                  <TableHead>Collected By</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ) : (
-                filteredMilkData.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell className="font-medium">{record.id}</TableCell>
-                    <TableCell>{record.date}</TableCell>
-                    <TableCell>{record.shift}</TableCell>
-                    <TableCell>{record.cowId}</TableCell>
-                    <TableCell>{record.cowName}</TableCell>
-                    <TableCell>{record.quantity}</TableCell>
-                    <TableCell>{getQualityBadge(record.quality)}</TableCell>
-                    <TableCell>{record.collectedBy}</TableCell>
-                    <TableCell className="text-right space-x-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+              </TableHeader>
+              <TableBody>
+                {filteredMilkData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-10">No milk records found.</TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                ) : (
+                  filteredMilkData.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell className="font-medium">{record.id}</TableCell>
+                      <TableCell>{record.date}</TableCell>
+                      <TableCell>{record.shift}</TableCell>
+                      <TableCell>{record.cowId}</TableCell>
+                      <TableCell>{record.cowName}</TableCell>
+                      <TableCell>{record.quantity}</TableCell>
+                      <TableCell>{getQualityBadge(record.quality)}</TableCell>
+                      <TableCell>{record.collectedBy}</TableCell>
+                      <TableCell className="text-right space-x-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
 
       <div className="mt-6">
