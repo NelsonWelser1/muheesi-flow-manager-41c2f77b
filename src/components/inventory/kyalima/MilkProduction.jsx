@@ -1,42 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { 
-  Search, 
-  RefreshCw, 
-  FileDown, 
-  Filter, 
-  Pencil,
-  Trash2,
-  Droplet,
-  Printer
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Search, RefreshCw, FileDown, Filter, Pencil, Trash2, Droplet, Printer } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { KyalimaPDFExport } from "./utils/KyalimaPDFExport";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { supabase } from '@/integrations/supabase/supabase';
-
 const MilkProduction = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterShift, setFilterShift] = useState('all');
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -49,25 +27,26 @@ const MilkProduction = () => {
     totalRevenue: 'UGX 0',
     topCustomers: []
   });
-  
+
   // Function to fetch milk production data from Supabase
   const fetchMilkData = async () => {
     setIsLoading(true);
     try {
       // Fetch from the milk_production table
-      const { data, error } = await supabase
-        .from('milk_production')
-        .select('*')
-        .eq('farm_id', 'bukomero') // Filter to only get milk data from Bukomero farm
-        .order('date', { ascending: false });
-      
+      const {
+        data,
+        error
+      } = await supabase.from('milk_production').select('*').eq('farm_id', 'bukomero') // Filter to only get milk data from Bukomero farm
+      .order('date', {
+        ascending: false
+      });
       if (error) {
         throw error;
       }
-      
+
       // Transform the data to match the component's expected format
       const transformedData = data.map((record, index) => ({
-        id: record.id || `MP-${index+1}`,
+        id: record.id || `MP-${index + 1}`,
         date: record.date,
         shift: record.session === 'morning' ? 'Morning' : record.session === 'midday' ? 'Midday' : 'Evening',
         cowId: record.cow_id || 'HERD',
@@ -77,13 +56,11 @@ const MilkProduction = () => {
         quality: record.fat_content > 4 ? 'A' : record.fat_content > 3 ? 'B' : 'C',
         collectedBy: record.collected_by || 'Staff'
       }));
-      
       setMilkData(transformedData);
       calculateSummaryData(data);
-      
       toast({
         title: "Data Loaded",
-        description: `Successfully loaded ${data.length} milk production records.`,
+        description: `Successfully loaded ${data.length} milk production records.`
       });
     } catch (error) {
       console.error('Error fetching milk data:', error);
@@ -96,41 +73,36 @@ const MilkProduction = () => {
       setIsLoading(false);
     }
   };
-  
+
   // Calculate summary data from fetched records
-  const calculateSummaryData = (data) => {
+  const calculateSummaryData = data => {
     if (!data || data.length === 0) return;
-    
     try {
       // Calculate total liters produced
       const totalLiters = data.reduce((sum, record) => sum + (record.volume || 0), 0);
-      
+
       // Assuming 90% of milk is sold
       const soldLiters = Math.round(totalLiters * 0.9);
-      
+
       // Calculate average price (example: 2500 UGX per liter)
       const averagePrice = 2500;
       const totalRevenue = soldLiters * averagePrice;
-      
+
       // Set estimated top customers
-      const topCustomers = [
-        { 
-          name: 'Local Dairy Cooperative', 
-          volume: `${Math.round(soldLiters * 0.6)} liters`, 
-          amount: `UGX ${(Math.round(soldLiters * 0.6 * averagePrice)).toLocaleString()}`
-        },
-        { 
-          name: 'Community Market Vendors', 
-          volume: `${Math.round(soldLiters * 0.3)} liters`, 
-          amount: `UGX ${(Math.round(soldLiters * 0.3 * averagePrice)).toLocaleString()}`
-        },
-        { 
-          name: 'Direct Consumers', 
-          volume: `${Math.round(soldLiters * 0.1)} liters`, 
-          amount: `UGX ${(Math.round(soldLiters * 0.1 * averagePrice)).toLocaleString()}`
-        },
-      ];
-      
+      const topCustomers = [{
+        name: 'Local Dairy Cooperative',
+        volume: `${Math.round(soldLiters * 0.6)} liters`,
+        amount: `UGX ${Math.round(soldLiters * 0.6 * averagePrice).toLocaleString()}`
+      }, {
+        name: 'Community Market Vendors',
+        volume: `${Math.round(soldLiters * 0.3)} liters`,
+        amount: `UGX ${Math.round(soldLiters * 0.3 * averagePrice).toLocaleString()}`
+      }, {
+        name: 'Direct Consumers',
+        volume: `${Math.round(soldLiters * 0.1)} liters`,
+        amount: `UGX ${Math.round(soldLiters * 0.1 * averagePrice).toLocaleString()}`
+      }];
+
       // Weekly average (last 7 days)
       const last7DaysData = data.filter(record => {
         const recordDate = new Date(record.date);
@@ -138,10 +110,8 @@ const MilkProduction = () => {
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         return recordDate >= sevenDaysAgo;
       });
-      
       const weeklyTotal = last7DaysData.reduce((sum, record) => sum + (record.volume || 0), 0);
       const weeklyAvg = last7DaysData.length > 0 ? Math.round(weeklyTotal / 7) : 0;
-      
       setMilkSalesSummary({
         totalLiters,
         soldLiters,
@@ -154,44 +124,41 @@ const MilkProduction = () => {
       console.error('Error calculating summary data:', error);
     }
   };
-  
+
   // Fetch data on component mount
   useEffect(() => {
     fetchMilkData();
   }, []);
-  
   const refreshData = () => {
     fetchMilkData();
   };
-  
+
   // Handle export to PDF
   const handleExportPDF = () => {
     KyalimaPDFExport.exportTableToPDF('milk-table', 'Kyalima_Milk_Production_Data');
     toast({
       title: "Export Complete",
-      description: "Your milk production data has been exported to PDF.",
+      description: "Your milk production data has been exported to PDF."
     });
   };
-  
+
   // Handle print
   const handlePrint = () => {
     KyalimaPDFExport.printTable('milk-table');
     toast({
       title: "Print Prepared",
-      description: "Sending milk production data to printer...",
+      description: "Sending milk production data to printer..."
     });
   };
-  
+
   // Get total milk by date
-  const getTotalMilkByDate = (dateStr) => {
-    return milkData
-      .filter(record => record.date === dateStr)
-      .reduce((total, record) => total + record.quantity, 0);
+  const getTotalMilkByDate = dateStr => {
+    return milkData.filter(record => record.date === dateStr).reduce((total, record) => total + record.quantity, 0);
   };
-  
+
   // Get quality badge color
-  const getQualityBadge = (quality) => {
-    switch(quality) {
+  const getQualityBadge = quality => {
+    switch (quality) {
       case 'A':
         return <Badge className="bg-green-100 text-green-800 border-green-200">Grade A</Badge>;
       case 'B':
@@ -202,25 +169,18 @@ const MilkProduction = () => {
         return <Badge className="bg-red-100 text-red-800 border-red-200">Grade D</Badge>;
     }
   };
-  
+
   // Filter milk based on search term and category
   const filteredMilkData = milkData.filter(record => {
     // Apply search term filter
     const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = 
-      record.id.toLowerCase().includes(searchLower) ||
-      (record.cowId && record.cowId.toLowerCase().includes(searchLower)) ||
-      (record.cowName && record.cowName.toLowerCase().includes(searchLower)) ||
-      (record.collectedBy && record.collectedBy.toLowerCase().includes(searchLower));
-      
+    const matchesSearch = record.id.toLowerCase().includes(searchLower) || record.cowId && record.cowId.toLowerCase().includes(searchLower) || record.cowName && record.cowName.toLowerCase().includes(searchLower) || record.collectedBy && record.collectedBy.toLowerCase().includes(searchLower);
+
     // Apply shift filter
     const matchesShift = filterShift === 'all' || record.shift.toLowerCase() === filterShift.toLowerCase();
-    
     return matchesSearch && matchesShift;
   });
-  
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
@@ -270,12 +230,7 @@ const MilkProduction = () => {
         <div className="flex flex-1 items-center space-x-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by ID, cow, or collector..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <Input placeholder="Search by ID, cow, or collector..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
           </div>
           <Select value={filterShift} onValueChange={setFilterShift}>
             <SelectTrigger className="w-[140px]">
@@ -302,12 +257,9 @@ const MilkProduction = () => {
       </div>
 
       <div className="border rounded-md">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-64">
+        {isLoading ? <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-700"></div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
+          </div> : <div className="overflow-x-auto">
             <Table id="milk-table">
               <TableHeader>
                 <TableRow>
@@ -323,13 +275,9 @@ const MilkProduction = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMilkData.length === 0 ? (
-                  <TableRow>
+                {filteredMilkData.length === 0 ? <TableRow>
                     <TableCell colSpan={9} className="text-center py-10">No milk records found.</TableCell>
-                  </TableRow>
-                ) : (
-                  filteredMilkData.map((record) => (
-                    <TableRow key={record.id}>
+                  </TableRow> : filteredMilkData.map(record => <TableRow key={record.id}>
                       <TableCell className="font-medium">{record.id}</TableCell>
                       <TableCell>{record.date}</TableCell>
                       <TableCell>{record.shift}</TableCell>
@@ -342,17 +290,12 @@ const MilkProduction = () => {
                         <Button variant="ghost" size="icon" className="h-8 w-8">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        
                       </TableCell>
-                    </TableRow>
-                  ))
-                )}
+                    </TableRow>)}
               </TableBody>
             </Table>
-          </div>
-        )}
+          </div>}
       </div>
 
       <div className="mt-6">
@@ -398,21 +341,17 @@ const MilkProduction = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {milkSalesSummary.topCustomers.map((customer, index) => (
-                    <TableRow key={index}>
+                  {milkSalesSummary.topCustomers.map((customer, index) => <TableRow key={index}>
                       <TableCell>{customer.name}</TableCell>
                       <TableCell>{customer.volume}</TableCell>
                       <TableCell>{customer.amount}</TableCell>
-                    </TableRow>
-                  ))}
+                    </TableRow>)}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default MilkProduction;
