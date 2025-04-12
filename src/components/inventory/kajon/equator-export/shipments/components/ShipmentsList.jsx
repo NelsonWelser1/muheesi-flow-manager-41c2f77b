@@ -1,173 +1,116 @@
 
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Ship, 
-  Plus, 
-  Search, 
-  CalendarClock,
-  RefreshCw,
-  FileDown,
-  MapPin,
-  Users
-} from "lucide-react";
-import { format, parseISO } from 'date-fns';
+import React, { useEffect } from 'react';
 import { useShipments } from '../hooks/useShipments';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import ShipmentStatusCell from './ShipmentStatusCell';
+import ShipmentActionsCell from './ShipmentActionsCell';
+import { Button } from '@/components/ui/button';
+import { PlusCircle, RefreshCw } from 'lucide-react';
+import { format } from 'date-fns';
 
 const ShipmentsList = ({ onCreateNew }) => {
-  const [searchTerm, setSearchTerm] = useState('');
   const { shipments, isLoading, fetchShipments } = useShipments();
-  
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-800';
-      case 'preparing': return 'bg-orange-100 text-orange-800';
-      case 'loading': return 'bg-purple-100 text-purple-800';
-      case 'in-transit': return 'bg-green-100 text-green-800';
-      case 'delivered': return 'bg-gray-100 text-gray-800';
-      case 'delayed': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+
+  useEffect(() => {
+    fetchShipments();
+  }, []);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      return format(new Date(dateString), 'MMM dd, yyyy');
+    } catch (error) {
+      return dateString;
     }
   };
-  
-  const filteredShipments = shipments.filter(shipment => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      shipment.shipment_id.toLowerCase().includes(searchLower) ||
-      shipment.destination?.toLowerCase().includes(searchLower) ||
-      shipment.client?.toLowerCase().includes(searchLower) ||
-      shipment.vessel?.toLowerCase().includes(searchLower) ||
-      shipment.status?.toLowerCase().includes(searchLower)
-    );
-  });
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Ship className="h-6 w-6 text-blue-600" />
-          <h2 className="text-2xl font-bold">Shipments</h2>
+        <h2 className="text-xl font-semibold">Active Shipments</h2>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={fetchShipments} 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1"
+            disabled={isLoading}
+          >
+            <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+            Refresh
+          </Button>
+          <Button 
+            onClick={onCreateNew} 
+            size="sm" 
+            className="flex items-center gap-1"
+          >
+            <PlusCircle size={16} />
+            New Shipment
+          </Button>
         </div>
-        <Button onClick={onCreateNew} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
-          New Shipment
-        </Button>
-      </div>
-      
-      <div className="flex gap-2">
-        <div className="relative flex-grow">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search shipments..."
-            className="pl-9"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Button variant="outline" onClick={() => fetchShipments()}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-        <Button variant="outline">
-          <FileDown className="h-4 w-4 mr-2" />
-          Export
-        </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-4 space-y-3">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          ) : filteredShipments.length === 0 ? (
-            <div className="p-8 text-center">
-              <Ship className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-              <h3 className="text-lg font-medium text-gray-900">No shipments found</h3>
-              <p className="text-gray-500 mt-1">
-                {searchTerm ? 'Try adjusting your search term' : 'Create your first shipment to get started'}
-              </p>
-              <Button 
-                onClick={onCreateNew} 
-                className="mt-4 bg-blue-600 hover:bg-blue-700"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create New Shipment
-              </Button>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Shipment ID</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Destination</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Vessel</TableHead>
-                    <TableHead>Departure</TableHead>
-                    <TableHead>ETA</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredShipments.map((shipment) => (
-                    <TableRow key={shipment.id}>
-                      <TableCell className="font-medium">{shipment.shipment_id}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(shipment.status)}>
-                          {shipment.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3 text-gray-500" />
-                        {shipment.destination}
-                      </TableCell>
-                      <TableCell className="flex items-center gap-1">
-                        <Users className="h-3 w-3 text-gray-500" />
-                        {shipment.client}
-                      </TableCell>
-                      <TableCell>{shipment.vessel}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-sm">
-                          <CalendarClock className="h-3 w-3 text-gray-500" />
-                          {format(new Date(shipment.departure_date), 'MMM d, yyyy')}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-sm">
-                          <CalendarClock className="h-3 w-3 text-gray-500" />
-                          {format(new Date(shipment.eta), 'MMM d, yyyy')}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">View</Button>
-                          <Button variant="outline" size="sm">Edit</Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="rounded-md border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50">
+              <tr className="text-left">
+                <th className="px-4 py-3 font-medium">Shipment ID</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Container</th>
+                <th className="px-4 py-3 font-medium">Departs</th>
+                <th className="px-4 py-3 font-medium">ETA</th>
+                <th className="px-4 py-3 font-medium">Destination</th>
+                <th className="px-4 py-3 font-medium">Client</th>
+                <th className="px-4 py-3 font-medium">Last Update</th>
+                <th className="px-4 py-3 font-medium text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-8 text-center">
+                    <div className="flex justify-center">
+                      <RefreshCw size={24} className="animate-spin text-muted-foreground" />
+                    </div>
+                    <p className="mt-2 text-sm text-muted-foreground">Loading shipments...</p>
+                  </td>
+                </tr>
+              ) : shipments.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-8 text-center">
+                    <p className="text-muted-foreground">No shipments found</p>
+                    <Button 
+                      variant="link" 
+                      onClick={onCreateNew} 
+                      className="mt-2"
+                    >
+                      Create your first shipment
+                    </Button>
+                  </td>
+                </tr>
+              ) : (
+                shipments.map(shipment => (
+                  <tr key={shipment.id} className="hover:bg-muted/50">
+                    <td className="px-4 py-3 font-medium">{shipment.shipment_id}</td>
+                    <td className="px-4 py-3">
+                      <ShipmentStatusCell shipment={shipment} />
+                    </td>
+                    <td className="px-4 py-3">{shipment.container}</td>
+                    <td className="px-4 py-3">{formatDate(shipment.departure_date)}</td>
+                    <td className="px-4 py-3">{formatDate(shipment.eta)}</td>
+                    <td className="px-4 py-3">{shipment.destination || 'N/A'}</td>
+                    <td className="px-4 py-3">{shipment.client || 'N/A'}</td>
+                    <td className="px-4 py-3">{formatDate(shipment.last_update)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <ShipmentActionsCell shipment={shipment} />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

@@ -150,6 +150,28 @@ export const useShipments = () => {
     }
   };
 
+  // Update shipment status
+  const updateShipmentStatus = async (id, newStatus) => {
+    try {
+      const result = await updateShipment(id, { 
+        status: newStatus, 
+        last_update: new Date().toISOString().split('T')[0]  // Update the last_update date
+      });
+      
+      if (result.success) {
+        toast({
+          title: "Status Updated",
+          description: `Shipment status changed to ${newStatus}`,
+        });
+      }
+      
+      return result;
+    } catch (err) {
+      console.error('Error updating status:', err);
+      return { success: false, error: err };
+    }
+  };
+
   // Load shipments on component mount
   useEffect(() => {
     fetchShipments();
@@ -162,6 +184,7 @@ export const useShipments = () => {
     fetchShipments,
     createShipment,
     deleteShipment,
-    updateShipment
+    updateShipment,
+    updateShipmentStatus
   };
 };
