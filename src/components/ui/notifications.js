@@ -1,81 +1,38 @@
 
-import { toast } from "@/components/ui/use-toast";
-
 /**
- * Show a success toast notification
- * @param {Object} toastInstance - Toast instance from useToast hook
- * @param {string} message - Message to display
+ * Utility functions for displaying toast notifications
  */
-export const showSuccessToast = (toastInstance, message) => {
-  toastInstance({
+
+export const showSuccessToast = (toast, message) => {
+  toast({
     title: "Success",
     description: message,
     variant: "default",
   });
 };
 
-/**
- * Show an error toast notification
- * @param {Object} toastInstance - Toast instance from useToast hook
- * @param {string} message - Message to display
- */
-export const showErrorToast = (toastInstance, message) => {
-  toastInstance({
+export const showErrorToast = (toast, message) => {
+  toast({
     title: "Error",
     description: message,
     variant: "destructive",
   });
 };
 
-/**
- * Show a warning toast notification
- * @param {Object} toastInstance - Toast instance from useToast hook
- * @param {string} message - Message to display
- */
-export const showWarningToast = (toastInstance, message) => {
-  toastInstance({
+export const showWarningToast = (toast, message) => {
+  toast({
     title: "Warning",
     description: message,
-    variant: "warning",
+    variant: "default",
+    className: "bg-yellow-100 border-yellow-400 text-yellow-800",
   });
 };
 
-/**
- * Show an info toast notification
- * @param {Object} toastInstance - Toast instance from useToast hook
- * @param {string} message - Message to display
- */
-export const showInfoToast = (toastInstance, message) => {
-  toastInstance({
-    title: "Information",
+export const showInfoToast = (toast, message) => {
+  toast({
+    title: "Info",
     description: message,
     variant: "default",
+    className: "bg-blue-100 border-blue-400 text-blue-800",
   });
-};
-
-/**
- * Show a loading toast notification
- * @param {Object} toastInstance - Toast instance from useToast hook
- * @param {string} message - Message to display
- * @returns {string} The toast ID for dismissal
- */
-export const showLoadingToast = (toastInstance, message) => {
-  return toastInstance({
-    title: "Loading",
-    description: message,
-    variant: "default",
-    duration: Infinity, // Stays until manually dismissed
-  });
-};
-
-/**
- * Dismiss a toast notification by ID
- * @param {string} toastId - ID of the toast to dismiss
- * @returns {Object} Object with toast ID
- */
-export const dismissToast = (toastId) => {
-  if (toastId) {
-    return { id: toastId };
-  }
-  return null;
 };
