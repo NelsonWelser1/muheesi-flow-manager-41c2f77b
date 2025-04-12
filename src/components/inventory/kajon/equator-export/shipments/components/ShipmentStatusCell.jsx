@@ -44,7 +44,7 @@ const ShipmentStatusCell = ({ shipment }) => {
     <DropdownMenu>
       <DropdownMenuTrigger disabled={isUpdating} className="w-full focus:outline-none">
         <div className="flex items-center justify-between">
-          <Badge className={`${statusColor} flex items-center gap-1 px-2.5 py-1 text-xs font-medium`}>
+          <Badge variant="outline" className={`${statusColor} flex items-center gap-1 px-2.5 py-1 text-xs font-medium`}>
             <StatusIcon size={14} />
             <span>{currentStatus}</span>
           </Badge>

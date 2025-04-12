@@ -152,6 +152,7 @@ export const useShipments = () => {
 
   // Update shipment status
   const updateShipmentStatus = async (id, newStatus) => {
+    console.log('Updating shipment status:', id, newStatus);
     try {
       const result = await updateShipment(id, { 
         status: newStatus, 
