@@ -34,6 +34,9 @@ const NewShipmentForm = ({ onCancel }) => {
   const { toast } = useToast();
   const [date, setDate] = useState(new Date());
   const [etaDate, setEtaDate] = useState(new Date());
+  const [customVessel, setCustomVessel] = useState('');
+  const [customRoute, setCustomRoute] = useState('');
+  const [customClient, setCustomClient] = useState('');
   
   const form = useForm({
     defaultValues: {
@@ -89,20 +92,23 @@ const NewShipmentForm = ({ onCancel }) => {
   ];
 
   const onSubmit = (data) => {
-    // Combine form data with dates
-    const shipmentData = {
+    // Use custom values if they were entered
+    const finalData = {
       ...data,
+      vessel: data.vessel || customVessel,
+      route: data.route || customRoute,
+      client: data.client || customClient,
       departureDate: format(date, 'yyyy-MM-dd'),
       eta: format(etaDate, 'yyyy-MM-dd'),
       lastUpdate: format(new Date(), 'yyyy-MM-dd')
     };
 
-    console.log('Shipment data submitted:', shipmentData);
+    console.log('Shipment data submitted:', finalData);
     
     // Show success toast
     toast({
       title: "Shipment Created",
-      description: `Shipment ${shipmentData.shipmentId} has been created successfully.`,
+      description: `Shipment ${finalData.shipmentId} has been created successfully.`,
       duration: 5000,
     });
 
@@ -110,6 +116,9 @@ const NewShipmentForm = ({ onCancel }) => {
     form.reset();
     setDate(new Date());
     setEtaDate(new Date());
+    setCustomVessel('');
+    setCustomRoute('');
+    setCustomClient('');
     
     // In a real app, you would save this to your database
     if (onCancel) onCancel();
@@ -314,57 +323,93 @@ const NewShipmentForm = ({ onCancel }) => {
                     )}
                   />
 
+                  {/* Modified Vessel field with custom input option */}
                   <FormField
                     control={form.control}
                     name="vessel"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="space-y-2">
                         <FormLabel>Vessel</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select vessel" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {vesselOptions.map(option => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="space-y-2">
+                          <Select 
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              setCustomVessel('');
+                            }}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select or enter vessel name" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {vesselOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          <div className="text-sm text-gray-500">or enter custom vessel:</div>
+                          <Input 
+                            placeholder="Enter custom vessel name if not in list" 
+                            value={customVessel}
+                            onChange={(e) => {
+                              setCustomVessel(e.target.value);
+                              if (e.target.value) {
+                                field.onChange('');
+                              }
+                            }}
+                          />
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
+                  {/* Modified Route field with custom input option */}
                   <FormField
                     control={form.control}
                     name="route"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="space-y-2">
                         <FormLabel>Route</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select route" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {routeOptions.map(option => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="space-y-2">
+                          <Select 
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              setCustomRoute('');
+                            }}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select or enter shipping route" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {routeOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          <div className="text-sm text-gray-500">or enter custom route:</div>
+                          <Input 
+                            placeholder="E.g., Mombasa → Dar es Salaam → Zanzibar" 
+                            value={customRoute}
+                            onChange={(e) => {
+                              setCustomRoute(e.target.value);
+                              if (e.target.value) {
+                                field.onChange('');
+                              }
+                            }}
+                          />
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -380,29 +425,47 @@ const NewShipmentForm = ({ onCancel }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Modified Client field with custom input option */}
                   <FormField
                     control={form.control}
                     name="client"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="space-y-2">
                         <FormLabel>Client</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select client" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {clientOptions.map(option => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="space-y-2">
+                          <Select 
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              setCustomClient('');
+                            }}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select or enter client name" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {clientOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          <div className="text-sm text-gray-500">or enter custom client:</div>
+                          <Input 
+                            placeholder="Enter new client name if not in list" 
+                            value={customClient}
+                            onChange={(e) => {
+                              setCustomClient(e.target.value);
+                              if (e.target.value) {
+                                field.onChange('');
+                              }
+                            }}
+                          />
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -434,3 +497,4 @@ const NewShipmentForm = ({ onCancel }) => {
 };
 
 export default NewShipmentForm;
+
