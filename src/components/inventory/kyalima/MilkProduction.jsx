@@ -286,12 +286,7 @@ const MilkProduction = () => {
                       <TableCell>{record.quantity}</TableCell>
                       <TableCell>{getQualityBadge(record.quality)}</TableCell>
                       <TableCell>{record.collectedBy}</TableCell>
-                      <TableCell className="text-right space-x-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        
-                      </TableCell>
+                      
                     </TableRow>)}
               </TableBody>
             </Table>
