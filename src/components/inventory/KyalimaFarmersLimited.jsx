@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -109,34 +108,34 @@ const KyalimaFarmersLimited = () => {
 
         <CardContent className="pt-6">
           <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-1 bg-purple-50 p-1">
-              <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-purple-800">
-                <BookOpen className="h-4 w-4" />
-                <span>Overview</span>
+            <TabsList className="grid grid-cols-7 gap-0.5 bg-purple-50 p-1">
+              <TabsTrigger value="overview" className="flex flex-col py-1 px-1.5 gap-0.5 data-[state=active]:bg-white data-[state=active]:text-purple-800">
+                <BookOpen className="h-3.5 w-3.5 mx-auto" />
+                <span className="text-xs">Overview</span>
               </TabsTrigger>
-              <TabsTrigger value="cattle" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-purple-800">
-                <Beef className="h-4 w-4" />
-                <span>Cattle Management</span>
+              <TabsTrigger value="cattle" className="flex flex-col py-1 px-1.5 gap-0.5 data-[state=active]:bg-white data-[state=active]:text-purple-800">
+                <Beef className="h-3.5 w-3.5 mx-auto" />
+                <span className="text-xs">Cattle</span>
               </TabsTrigger>
-              <TabsTrigger value="milk" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-purple-800">
-                <Droplet className="h-4 w-4" />
-                <span>Milk Production</span>
+              <TabsTrigger value="milk" className="flex flex-col py-1 px-1.5 gap-0.5 data-[state=active]:bg-white data-[state=active]:text-purple-800">
+                <Droplet className="h-3.5 w-3.5 mx-auto" />
+                <span className="text-xs">Milk</span>
               </TabsTrigger>
-              <TabsTrigger value="fattening" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-purple-800">
-                <Beef className="h-4 w-4" />
-                <span>Cattle Fattening</span>
+              <TabsTrigger value="fattening" className="flex flex-col py-1 px-1.5 gap-0.5 data-[state=active]:bg-white data-[state=active]:text-purple-800">
+                <Beef className="h-3.5 w-3.5 mx-auto" />
+                <span className="text-xs">Fattening</span>
               </TabsTrigger>
-              <TabsTrigger value="silage" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-purple-800">
-                <Tractor className="h-4 w-4" />
-                <span>Silage & Feed</span>
+              <TabsTrigger value="silage" className="flex flex-col py-1 px-1.5 gap-0.5 data-[state=active]:bg-white data-[state=active]:text-purple-800">
+                <Tractor className="h-3.5 w-3.5 mx-auto" />
+                <span className="text-xs">Silage</span>
               </TabsTrigger>
-              <TabsTrigger value="loans" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-purple-800">
-                <DollarSign className="h-4 w-4" />
-                <span>Loan Manager</span>
+              <TabsTrigger value="loans" className="flex flex-col py-1 px-1.5 gap-0.5 data-[state=active]:bg-white data-[state=active]:text-purple-800">
+                <DollarSign className="h-3.5 w-3.5 mx-auto" />
+                <span className="text-xs">Loans</span>
               </TabsTrigger>
-              <TabsTrigger value="staff" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-purple-800 md:col-start-1 md:col-span-1">
-                <Users className="h-4 w-4" />
-                <span>Staff Members</span>
+              <TabsTrigger value="staff" className="flex flex-col py-1 px-1.5 gap-0.5 data-[state=active]:bg-white data-[state=active]:text-purple-800">
+                <Users className="h-3.5 w-3.5 mx-auto" />
+                <span className="text-xs">Staff</span>
               </TabsTrigger>
             </TabsList>
 
