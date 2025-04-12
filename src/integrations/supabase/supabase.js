@@ -1,5 +1,4 @@
 
-
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_PROJECT_URL;
@@ -32,3 +31,15 @@ supabase
     }
   });
 
+// Verify loans table exists
+supabase
+  .from('loans')
+  .select('count', { count: 'exact', head: true })
+  .then(({ count, error }) => {
+    if (error) {
+      console.error('Error checking loans table:', error);
+      console.info('You may need to run the migration to create the loans table');
+    } else {
+      console.log('Loans table exists. Row count:', count);
+    }
+  });
