@@ -1,44 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { 
-  Search, 
-  RefreshCw, 
-  FileDown, 
-  Filter, 
-  Beef,
-  ArrowUpRight,
-  Printer,
-  Calendar,
-  Scale,
-  BarChart2,
-  Trash2,
-  Pencil
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Search, RefreshCw, FileDown, Filter, Beef, ArrowUpRight, Printer, Calendar, Scale, BarChart2, Trash2, Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
-
 const CattleFattening = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [fatteningCattleData, setFatteningCattleData] = useState([]);
@@ -49,19 +23,19 @@ const CattleFattening = () => {
     averageProgress: 68,
     feedConsumption: 1250
   });
-  
+
   // Fetch data from Supabase
   const fetchFatteningData = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('cattle_fattening')
-        .select('*')
-        .eq('farm_id', 'bukomero')
-        .order('entry_date', { ascending: false });
-        
+      const {
+        data,
+        error
+      } = await supabase.from('cattle_fattening').select('*').eq('farm_id', 'bukomero').order('entry_date', {
+        ascending: false
+      });
       if (error) throw error;
-      
+
       // Transform data to match the component's expected format
       const transformedData = data.map(item => ({
         id: item.id,
@@ -77,10 +51,8 @@ const CattleFattening = () => {
         feedType: formatFeedingRegime(item.feeding_regime),
         notes: item.notes
       }));
-      
       setFatteningCattleData(transformedData);
       calculateAnalytics(data);
-      
       toast({
         title: "Data Loaded",
         description: `Successfully loaded ${data.length} cattle fattening records.`
@@ -96,11 +68,10 @@ const CattleFattening = () => {
       setIsLoading(false);
     }
   };
-  
+
   // Format feeding regime for display
-  const formatFeedingRegime = (regime) => {
+  const formatFeedingRegime = regime => {
     if (!regime) return 'Standard';
-    
     const regimeMap = {
       'standard': 'Standard',
       'intensive': 'High Energy',
@@ -111,56 +82,50 @@ const CattleFattening = () => {
       'silage_based': 'Silage Based',
       'pasture_silage': 'Pasture + Silage'
     };
-    
     return regimeMap[regime] || regime.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
-  
+
   // Calculate status based on daily gain and target
   const calculateStatus = (dailyGain, currentWeight, targetWeight) => {
     if (!dailyGain) return 'on-track';
-    
     const gain = parseFloat(dailyGain);
-    
     if (gain < 0.5) return 'behind';
     if (gain > 0.8) return 'ahead';
     return 'on-track';
   };
-  
+
   // Calculate analytics from fetched data
-  const calculateAnalytics = (data) => {
+  const calculateAnalytics = data => {
     if (!data || data.length === 0) return;
-    
+
     // Calculate total active
     const activeData = data.filter(item => item.status === 'active');
     const totalActive = activeData.length;
-    
+
     // Calculate average daily gain
     let totalDailyGain = 0;
     let validGainCount = 0;
-    
     activeData.forEach(item => {
       if (item.daily_gain && !isNaN(item.daily_gain)) {
         totalDailyGain += parseFloat(item.daily_gain);
         validGainCount++;
       }
     });
-    
     const averageDailyGain = validGainCount > 0 ? totalDailyGain / validGainCount : 0;
-    
+
     // Calculate average progress percentage
     let totalProgress = 0;
     activeData.forEach(item => {
       if (item.current_weight && item.target_weight) {
-        const progress = (item.current_weight / item.target_weight) * 100;
+        const progress = item.current_weight / item.target_weight * 100;
         totalProgress += progress;
       }
     });
-    
     const averageProgress = activeData.length > 0 ? totalProgress / activeData.length : 0;
-    
+
     // Estimate feed consumption (this would ideally come from a feed tracking table)
     const feedConsumption = totalActive * 10 * 7; // 10kg per animal per day on average * 7 days
-    
+
     setAnalytics({
       totalActive,
       averageDailyGain,
@@ -168,27 +133,22 @@ const CattleFattening = () => {
       feedConsumption
     });
   };
-  
+
   // Fetch data on component mount
   useEffect(() => {
     fetchFatteningData();
   }, []);
-  
+
   // Filter cattle based on search term and category filter
   const filteredCattle = fatteningCattleData.filter(cattle => {
-    const matchesSearch = 
-      cattle.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      cattle.tagNumber.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      cattle.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch = cattle.id.toLowerCase().includes(searchTerm.toLowerCase()) || cattle.tagNumber.toLowerCase().includes(searchTerm.toLowerCase()) || cattle.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'all' || cattle.status === filterCategory;
-    
     return matchesSearch && matchesCategory;
   });
-  
+
   // Handle status badge display
-  const getStatusBadge = (status) => {
-    switch(status) {
+  const getStatusBadge = status => {
+    switch (status) {
       case 'on-track':
         return <Badge className="bg-green-100 text-green-800">On Track</Badge>;
       case 'behind':
@@ -199,33 +159,26 @@ const CattleFattening = () => {
         return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
     }
   };
-  
+
   // Calculate weight gain percentage
   const calculateGainPercentage = (current, entry) => {
     const currentWeight = parseInt(current.replace(' kg', ''));
     const entryWeight = parseInt(entry.replace(' kg', ''));
     return ((currentWeight - entryWeight) / entryWeight * 100).toFixed(1);
   };
-  
+
   // Calculate progress to target weight
   const calculateProgress = (current, target) => {
     const currentWeight = parseInt(current.replace(' kg', ''));
     const targetWeight = parseInt(target.replace(' kg', ''));
     return (currentWeight / targetWeight * 100).toFixed(0);
   };
-  
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="flex flex-1 items-center space-x-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by ID, tag number or name..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <Input placeholder="Search by ID, tag number or name..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
           </div>
           <Select value={filterCategory} onValueChange={setFilterCategory}>
             <SelectTrigger className="w-[180px]">
@@ -244,15 +197,15 @@ const CattleFattening = () => {
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="icon" onClick={() => toast({
-            title: "Print Prepared",
-            description: "Sending fattening program data to printer..."
-          })}>
+          title: "Print Prepared",
+          description: "Sending fattening program data to printer..."
+        })}>
             <Printer className="h-4 w-4" />
           </Button>
           <Button variant="outline" size="icon" onClick={() => toast({
-            title: "Export Complete",
-            description: "Your fattening program data has been exported."
-          })}>
+          title: "Export Complete",
+          description: "Your fattening program data has been exported."
+        })}>
             <FileDown className="h-4 w-4" />
           </Button>
         </div>
@@ -304,12 +257,9 @@ const CattleFattening = () => {
       </div>
 
       <div className="border rounded-md">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-64">
+        {isLoading ? <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-700"></div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
+          </div> : <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -327,13 +277,9 @@ const CattleFattening = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCattle.length === 0 ? (
-                  <TableRow>
+                {filteredCattle.length === 0 ? <TableRow>
                     <TableCell colSpan={11} className="text-center py-10">No cattle found in fattening program.</TableCell>
-                  </TableRow>
-                ) : (
-                  filteredCattle.map((cattle) => (
-                    <TableRow key={cattle.id}>
+                  </TableRow> : filteredCattle.map(cattle => <TableRow key={cattle.id}>
                       <TableCell>
                         <div className="font-medium">{cattle.id}</div>
                         <div className="text-xs text-muted-foreground">{cattle.tagNumber}</div>
@@ -351,10 +297,9 @@ const CattleFattening = () => {
                       <TableCell className="w-[140px]">
                         <div className="flex items-center gap-2">
                           <div className="w-full bg-slate-100 h-2 rounded-full">
-                            <div 
-                              className="bg-primary h-2 rounded-full" 
-                              style={{ width: `${calculateProgress(cattle.currentWeight, cattle.targetWeight)}%` }} 
-                            />
+                            <div className="bg-primary h-2 rounded-full" style={{
+                      width: `${calculateProgress(cattle.currentWeight, cattle.targetWeight)}%`
+                    }} />
                           </div>
                           <span className="text-xs">{calculateProgress(cattle.currentWeight, cattle.targetWeight)}%</span>
                         </div>
@@ -362,24 +307,12 @@ const CattleFattening = () => {
                       <TableCell>{getStatusBadge(cattle.status)}</TableCell>
                       <TableCell>{cattle.dailyGain}</TableCell>
                       <TableCell>{cattle.estimatedCompletion}</TableCell>
-                      <TableCell className="text-right space-x-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
+                      
+                    </TableRow>)}
               </TableBody>
             </Table>
-          </div>
-        )}
+          </div>}
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default CattleFattening;
