@@ -305,65 +305,65 @@ const CattleFattening = () => {
 
       <div className="border rounded-md">
         {isLoading ? <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-700"></div>
-          </div> : <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID & Tag</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Entry Date</TableHead>
-                  <TableHead>Entry Weight</TableHead>
-                  <TableHead>Current Weight</TableHead>
-                  <TableHead>Target Weight</TableHead>
-                  <TableHead>Progress</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Daily Gain</TableHead>
-                  <TableHead>Est. Completion</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCattle.length === 0 ? <TableRow>
-                    <TableCell colSpan={11} className="text-center py-10">No cattle found in fattening program.</TableCell>
-                  </TableRow> : filteredCattle.map(cattle => <TableRow key={cattle.id}>
-                      <TableCell>
-                        <div className="font-medium">{cattle.id}</div>
-                        <div className="text-xs text-muted-foreground">{cattle.tagNumber}</div>
-                      </TableCell>
-                      <TableCell>{cattle.name}</TableCell>
-                      <TableCell>{cattle.entryDate}</TableCell>
-                      <TableCell>{cattle.entryWeight}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span>{cattle.currentWeight}</span>
-                          <span className="text-xs text-green-600">+{calculateGainPercentage(cattle.currentWeight, cattle.entryWeight)}%</span>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-700"></div>
+        </div> : <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tag Number</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Entry Date</TableHead>
+                <TableHead>Entry Weight</TableHead>
+                <TableHead>Current Weight</TableHead>
+                <TableHead>Target Weight</TableHead>
+                <TableHead>Progress</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Daily Gain</TableHead>
+                <TableHead>Est. Completion</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredCattle.length === 0 ? <TableRow>
+                  <TableCell colSpan={11} className="text-center py-10">No cattle found in fattening program.</TableCell>
+                </TableRow> : filteredCattle.map(cattle => <TableRow key={cattle.tagNumber}>
+                    <TableCell>
+                      <div className="font-medium">{cattle.tagNumber}</div>
+                    </TableCell>
+                    <TableCell>{cattle.name}</TableCell>
+                    <TableCell>{cattle.entryDate}</TableCell>
+                    <TableCell>{cattle.entryWeight}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span>{cattle.currentWeight}</span>
+                        <span className="text-xs text-green-600">+{calculateGainPercentage(cattle.currentWeight, cattle.entryWeight)}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{cattle.targetWeight}</TableCell>
+                    <TableCell className="w-[140px]">
+                      <div className="flex items-center gap-2">
+                        <div className="w-full bg-slate-100 h-2 rounded-full">
+                          <div className="bg-primary h-2 rounded-full" style={{
+                            width: `${calculateProgress(cattle.currentWeight, cattle.targetWeight)}%`
+                          }} />
                         </div>
-                      </TableCell>
-                      <TableCell>{cattle.targetWeight}</TableCell>
-                      <TableCell className="w-[140px]">
-                        <div className="flex items-center gap-2">
-                          <div className="w-full bg-slate-100 h-2 rounded-full">
-                            <div className="bg-primary h-2 rounded-full" style={{
-                      width: `${calculateProgress(cattle.currentWeight, cattle.targetWeight)}%`
-                    }} />
-                          </div>
-                          <span className="text-xs">{calculateProgress(cattle.currentWeight, cattle.targetWeight)}%</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(cattle.status)}</TableCell>
-                      <TableCell>{cattle.dailyGain}</TableCell>
-                      <TableCell>{cattle.estimatedCompletion}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon">
-                          <Scale className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>)}
-              </TableBody>
-            </Table>
-          </div>}
-      </div>
-    </div>;
+                        <span className="text-xs">{calculateProgress(cattle.currentWeight, cattle.targetWeight)}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(cattle.status)}</TableCell>
+                    <TableCell>{cattle.dailyGain}</TableCell>
+                    <TableCell>{cattle.estimatedCompletion}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon">
+                        <Scale className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>)}
+            </TableBody>
+          </Table>
+        </div>}
+    </div>
+  </div>;
 };
+
 export default CattleFattening;
