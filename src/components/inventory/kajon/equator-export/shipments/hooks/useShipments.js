@@ -123,12 +123,14 @@ export const useShipments = () => {
       
       if (error) throw error;
       
-      toast({
-        title: "Shipment Updated",
-        description: `Shipment ${updatedData.shipment_id || ''} has been updated successfully.`,
-      });
+      // Update the local state to reflect the change immediately
+      setShipments(prevShipments => 
+        prevShipments.map(shipment => 
+          shipment.id === id ? { ...shipment, ...updatedData } : shipment
+        )
+      );
       
-      await fetchShipments(); // Refresh the list
+      console.log('Updated shipment:', data);
       return { success: true, data };
     } catch (err) {
       console.error('Error updating shipment:', err);

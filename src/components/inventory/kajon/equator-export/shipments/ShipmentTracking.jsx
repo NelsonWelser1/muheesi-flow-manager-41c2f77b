@@ -5,17 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Search, Plus, FileText, Download, Eye, 
   Ship, MapPin, Calendar, Clock, Filter,
   ExternalLink, CheckCircle, AlertCircle, Package,
-  FileCode
+  FileCode, ChevronDown, Printer
 } from 'lucide-react';
 import ShipmentTemplates from './components/ShipmentTemplates';
 import NewShipmentForm from './components/NewShipmentForm';
 import { useShipments } from './hooks/useShipments';
 import { format } from 'date-fns';
 import GlobalShipmentMap from './components/GlobalShipmentMap';
+import { useToast } from "@/components/ui/use-toast";
+import { generateAndDownloadPDF } from '@/utils/exports/pdfExportUtils';
 
 const statusColors = {
   'in-transit': "bg-blue-100 text-blue-800",
@@ -40,7 +48,9 @@ const ShipmentTracking = () => {
   const [showTemplates, setShowTemplates] = useState(false);
   const [showNewShipmentForm, setShowNewShipmentForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const { shipments, isLoading } = useShipments();
+  const [selectedShipment, setSelectedShipment] = useState(null);
+  const { shipments, isLoading, updateShipment } = useShipments();
+  const { toast } = useToast();
   
   const statusCounts = shipments.reduce((counts, shipment) => {
     const status = shipment.status || 'unknown';
@@ -62,6 +72,169 @@ const ShipmentTracking = () => {
       (shipment.status?.toLowerCase().includes(searchLower))
     );
   });
+
+  const handleStatusChange = async (shipmentId, newStatus) => {
+    try {
+      const result = await updateShipment(shipmentId, { status: newStatus });
+      if (result.success) {
+        toast({
+          title: "Status Updated",
+          description: `Shipment status has been changed to ${statusLabels[newStatus] || newStatus}`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update shipment status. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewShipment = (shipment) => {
+    setSelectedShipment(shipment);
+    toast({
+      title: "Viewing Shipment",
+      description: `Viewing details for shipment ${shipment.shipment_id}`,
+    });
+    console.log("Viewing shipment details:", shipment);
+  };
+
+  const handleDownloadShipment = (shipment) => {
+    const columns = [
+      'Shipment ID', 'Status', 'Container', 'Volume', 
+      'Departure Date', 'ETA', 'Destination', 'Vessel', 
+      'Route', 'Client', 'Special Instructions'
+    ];
+    
+    const rows = [[
+      shipment.shipment_id,
+      statusLabels[shipment.status] || shipment.status,
+      shipment.container,
+      shipment.volume || 'N/A',
+      format(new Date(shipment.departure_date), 'MMM d, yyyy'),
+      format(new Date(shipment.eta), 'MMM d, yyyy'),
+      shipment.destination || 'N/A',
+      shipment.vessel || 'N/A',
+      shipment.route || 'N/A',
+      shipment.client || 'N/A',
+      shipment.special_instructions || 'N/A'
+    ]];
+    
+    const success = generateAndDownloadPDF(
+      [shipment], 
+      `Shipment-${shipment.shipment_id}`, 
+      `Shipment Details: ${shipment.shipment_id}`,
+      columns,
+      rows
+    );
+    
+    if (success) {
+      toast({
+        title: "Download Started",
+        description: `Shipment ${shipment.shipment_id} details have been downloaded`,
+      });
+    } else {
+      toast({
+        title: "Download Failed",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePrintShipment = (shipment) => {
+    const printWindow = window.open('', '_blank');
+    
+    if (!printWindow) {
+      toast({
+        title: "Print Failed",
+        description: "Pop-up blocked. Please allow pop-ups and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Shipment ${shipment.shipment_id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #2563eb; }
+            .shipment-header { display: flex; justify-content: space-between; align-items: center; }
+            .status { padding: 5px 10px; border-radius: 4px; font-weight: bold; }
+            .status.in-transit { background: #dbeafe; color: #1e40af; }
+            .status.loading { background: #fef3c7; color: #92400e; }
+            .status.preparing { background: #f3e8ff; color: #6b21a8; }
+            .status.delivered { background: #dcfce7; color: #166534; }
+            .status.scheduled { background: #f3f4f6; color: #1f2937; }
+            .status.delayed { background: #fee2e2; color: #b91c1c; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #e5e7eb; padding: 12px; text-align: left; }
+            th { background-color: #f9fafb; }
+            @media print {
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="shipment-header">
+            <h1>Shipment Details: ${shipment.shipment_id}</h1>
+            <span class="status ${shipment.status || 'scheduled'}">
+              ${statusLabels[shipment.status] || shipment.status || 'Unknown'}
+            </span>
+          </div>
+          
+          <table>
+            <tr>
+              <th>Shipment ID</th>
+              <td>${shipment.shipment_id}</td>
+              <th>Container</th>
+              <td>${shipment.container}</td>
+            </tr>
+            <tr>
+              <th>Destination</th>
+              <td>${shipment.destination || 'N/A'}</td>
+              <th>Client</th>
+              <td>${shipment.client || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th>Vessel</th>
+              <td>${shipment.vessel || 'N/A'}</td>
+              <th>Volume</th>
+              <td>${shipment.volume || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th>Departure Date</th>
+              <td>${format(new Date(shipment.departure_date), 'MMM d, yyyy')}</td>
+              <th>ETA</th>
+              <td>${format(new Date(shipment.eta), 'MMM d, yyyy')}</td>
+            </tr>
+            <tr>
+              <th>Route</th>
+              <td colspan="3">${shipment.route || 'N/A'}</td>
+            </tr>
+            <tr>
+              <th>Special Instructions</th>
+              <td colspan="3">${shipment.special_instructions || 'N/A'}</td>
+            </tr>
+          </table>
+          
+          <button onclick="window.print();return false;" style="margin-top: 20px; padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Print
+          </button>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    
+    toast({
+      title: "Print Prepared",
+      description: "Print dialog should open automatically",
+    });
+  };
   
   if (showTemplates) {
     return <ShipmentTemplates onBack={() => setShowTemplates(false)} />;
@@ -94,7 +267,6 @@ const ShipmentTracking = () => {
         </div>
       </div>
       
-      {/* Shipment Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="bg-blue-50">
           <CardContent className="pt-6">
@@ -167,7 +339,6 @@ const ShipmentTracking = () => {
         </Card>
       </div>
       
-      {/* Urgent Alert - Only show if there's a relevant shipment */}
       {shipments.some(s => s.special_instructions?.includes('urgent') || s.status === 'delayed') && (
         <Card className="border-orange-200 bg-orange-50">
           <CardContent className="pt-6 flex items-center gap-3">
@@ -182,7 +353,6 @@ const ShipmentTracking = () => {
         </Card>
       )}
       
-      {/* Shipments Table */}
       <Card>
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
@@ -265,20 +435,68 @@ const ShipmentTracking = () => {
                         {shipment.eta ? format(new Date(shipment.eta), 'MMM d, yyyy') : 'N/A'}
                       </TableCell>
                       <TableCell>
-                        <Badge className={statusColors[shipment.status] || "bg-gray-100 text-gray-800"}>
-                          {statusLabels[shipment.status] || shipment.status || 'Unknown'}
-                        </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Badge 
+                              className={`${statusColors[shipment.status] || "bg-gray-100 text-gray-800"} cursor-pointer hover:opacity-80 flex items-center gap-1`}
+                            >
+                              {statusLabels[shipment.status] || shipment.status || 'Unknown'}
+                              <ChevronDown className="h-3 w-3 ml-1" />
+                            </Badge>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="w-[160px]">
+                            <DropdownMenuItem onClick={() => handleStatusChange(shipment.id, 'scheduled')}>
+                              <span className="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
+                              Scheduled
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(shipment.id, 'preparing')}>
+                              <span className="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>
+                              Preparing
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(shipment.id, 'loading')}>
+                              <span className="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
+                              Loading
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(shipment.id, 'in-transit')}>
+                              <span className="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+                              In Transit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(shipment.id, 'delivered')}>
+                              <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                              Delivered
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(shipment.id, 'delayed')}>
+                              <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                              Delayed
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleViewShipment(shipment)}
+                            title="View Shipment Details"
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleDownloadShipment(shipment)}
+                            title="Download Shipment Details"
+                          >
                             <Download className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon">
-                            <FileText className="h-4 w-4" />
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handlePrintShipment(shipment)}
+                            title="Print Shipment Details"
+                          >
+                            <Printer className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -291,7 +509,6 @@ const ShipmentTracking = () => {
         </CardContent>
       </Card>
       
-      {/* Shipment Map */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
