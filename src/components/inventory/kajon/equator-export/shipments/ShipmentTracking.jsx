@@ -14,75 +14,8 @@ import {
 } from 'lucide-react';
 import ShipmentTemplates from './components/ShipmentTemplates';
 import NewShipmentForm from './components/NewShipmentForm';
-
-// Sample shipment data
-const shipments = [
-  {
-    id: 'EQ-2453',
-    destination: 'Hamburg, Germany',
-    client: 'European Coffee Roasters GmbH',
-    departureDate: '2023-12-10',
-    status: 'in-transit',
-    eta: '2024-01-15',
-    container: '20ft',
-    volume: '18 tons',
-    vessel: 'MSC Augusta',
-    route: 'Mombasa → Suez Canal → Rotterdam → Hamburg',
-    lastUpdate: '2023-12-25'
-  },
-  {
-    id: 'EQ-2455',
-    destination: 'New York, USA',
-    client: 'Artisan Bean Co.',
-    departureDate: '2023-12-18',
-    status: 'loading',
-    eta: '2024-01-25',
-    container: '40ft',
-    volume: '24 tons',
-    vessel: 'Maersk Nebula',
-    route: 'Mombasa → Cape Town → New York',
-    lastUpdate: '2023-12-24'
-  },
-  {
-    id: 'EQ-2458',
-    destination: 'Tokyo, Japan',
-    client: 'Tokyo Coffee Imports',
-    departureDate: '2024-01-05',
-    status: 'preparing',
-    eta: '2024-02-10',
-    container: '20ft',
-    volume: '16 tons',
-    vessel: 'NYK Hermes',
-    route: 'Mombasa → Singapore → Tokyo',
-    lastUpdate: '2023-12-20'
-  },
-  {
-    id: 'EQ-2451',
-    destination: 'Dubai, UAE',
-    client: 'Middle East Coffee Trading LLC',
-    departureDate: '2023-11-15',
-    status: 'delivered',
-    eta: '2023-12-10',
-    container: '40ft',
-    volume: '22 tons',
-    vessel: 'CMA CGM Rhone',
-    route: 'Mombasa → Jeddah → Dubai',
-    lastUpdate: '2023-12-12'
-  },
-  {
-    id: 'EQ-2460',
-    destination: 'Amsterdam, Netherlands',
-    client: 'Nordic Coffee Collective',
-    departureDate: '2024-01-10',
-    status: 'scheduled',
-    eta: '2024-02-05',
-    container: '20ft',
-    volume: '15 tons',
-    vessel: 'MSC Sarah',
-    route: 'Mombasa → Suez Canal → Rotterdam → Amsterdam',
-    lastUpdate: '2023-12-22'
-  }
-];
+import { useShipments } from './hooks/useShipments';
+import { format } from 'date-fns';
 
 const statusColors = {
   'in-transit': "bg-blue-100 text-blue-800",
@@ -106,10 +39,29 @@ const ShipmentTracking = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [showTemplates, setShowTemplates] = useState(false);
   const [showNewShipmentForm, setShowNewShipmentForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const { shipments, isLoading } = useShipments();
+  
+  const statusCounts = shipments.reduce((counts, shipment) => {
+    const status = shipment.status || 'unknown';
+    counts[status] = (counts[status] || 0) + 1;
+    return counts;
+  }, {});
   
   const filteredShipments = filterStatus === 'all' 
     ? shipments 
     : shipments.filter(shipment => shipment.status === filterStatus);
+  
+  const searchFilteredShipments = filteredShipments.filter(shipment => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (shipment.shipment_id?.toLowerCase().includes(searchLower)) ||
+      (shipment.destination?.toLowerCase().includes(searchLower)) ||
+      (shipment.client?.toLowerCase().includes(searchLower)) ||
+      (shipment.vessel?.toLowerCase().includes(searchLower)) ||
+      (shipment.status?.toLowerCase().includes(searchLower))
+    );
+  });
   
   if (showTemplates) {
     return <ShipmentTemplates onBack={() => setShowTemplates(false)} />;
@@ -149,7 +101,7 @@ const ShipmentTracking = () => {
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-blue-700">In Transit</p>
-                <p className="text-2xl font-bold text-blue-900">3</p>
+                <p className="text-2xl font-bold text-blue-900">{statusCounts['in-transit'] || 0}</p>
               </div>
               <div className="bg-blue-100 p-2 rounded-full">
                 <Ship className="h-5 w-5 text-blue-700" />
@@ -163,7 +115,7 @@ const ShipmentTracking = () => {
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-amber-700">Loading</p>
-                <p className="text-2xl font-bold text-amber-900">1</p>
+                <p className="text-2xl font-bold text-amber-900">{statusCounts['loading'] || 0}</p>
               </div>
               <div className="bg-amber-100 p-2 rounded-full">
                 <Package className="h-5 w-5 text-amber-700" />
@@ -177,7 +129,7 @@ const ShipmentTracking = () => {
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-purple-700">Preparing</p>
-                <p className="text-2xl font-bold text-purple-900">1</p>
+                <p className="text-2xl font-bold text-purple-900">{statusCounts['preparing'] || 0}</p>
               </div>
               <div className="bg-purple-100 p-2 rounded-full">
                 <Clock className="h-5 w-5 text-purple-700" />
@@ -191,7 +143,7 @@ const ShipmentTracking = () => {
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-green-700">Delivered</p>
-                <p className="text-2xl font-bold text-green-900">8</p>
+                <p className="text-2xl font-bold text-green-900">{statusCounts['delivered'] || 0}</p>
               </div>
               <div className="bg-green-100 p-2 rounded-full">
                 <CheckCircle className="h-5 w-5 text-green-700" />
@@ -205,7 +157,7 @@ const ShipmentTracking = () => {
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-gray-700">Scheduled</p>
-                <p className="text-2xl font-bold text-gray-900">2</p>
+                <p className="text-2xl font-bold text-gray-900">{statusCounts['scheduled'] || 0}</p>
               </div>
               <div className="bg-gray-100 p-2 rounded-full">
                 <Calendar className="h-5 w-5 text-gray-700" />
@@ -215,18 +167,20 @@ const ShipmentTracking = () => {
         </Card>
       </div>
       
-      {/* Urgent Alert */}
-      <Card className="border-orange-200 bg-orange-50">
-        <CardContent className="pt-6 flex items-center gap-3">
-          <AlertCircle className="h-5 w-5 text-orange-600" />
-          <span className="text-orange-800">
-            Shipment EQ-2453 requires urgent documentation - Due in 48 hours
-          </span>
-          <Button size="sm" variant="outline" className="ml-auto border-orange-300 text-orange-700 hover:bg-orange-100">
-            View Details
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Urgent Alert - Only show if there's a relevant shipment */}
+      {shipments.some(s => s.special_instructions?.includes('urgent') || s.status === 'delayed') && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="pt-6 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-orange-600" />
+            <span className="text-orange-800">
+              Urgent documentation or delayed shipment requires attention
+            </span>
+            <Button size="sm" variant="outline" className="ml-auto border-orange-300 text-orange-700 hover:bg-orange-100">
+              View Details
+            </Button>
+          </CardContent>
+        </Card>
+      )}
       
       {/* Shipments Table */}
       <Card>
@@ -239,7 +193,12 @@ const ShipmentTracking = () => {
             <div className="flex items-center gap-3">
               <div className="flex items-center relative w-64">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                <Input placeholder="Search shipments..." className="pl-8" />
+                <Input 
+                  placeholder="Search shipments..." 
+                  className="pl-8" 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="w-[180px]">
@@ -259,54 +218,76 @@ const ShipmentTracking = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Shipment ID</TableHead>
-                  <TableHead>Destination</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Volume</TableHead>
-                  <TableHead>Vessel</TableHead>
-                  <TableHead>Departure</TableHead>
-                  <TableHead>ETA</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredShipments.map((shipment) => (
-                  <TableRow key={shipment.id}>
-                    <TableCell className="font-medium">{shipment.id}</TableCell>
-                    <TableCell>{shipment.destination}</TableCell>
-                    <TableCell>{shipment.client}</TableCell>
-                    <TableCell>{shipment.volume}</TableCell>
-                    <TableCell>{shipment.vessel}</TableCell>
-                    <TableCell>{shipment.departureDate}</TableCell>
-                    <TableCell>{shipment.eta}</TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[shipment.status]}>
-                        {statusLabels[shipment.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : searchFilteredShipments.length === 0 ? (
+            <div className="text-center py-8">
+              <Ship className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <h3 className="text-lg font-medium text-gray-900">No shipments found</h3>
+              <p className="text-gray-500 mt-1 mb-4">
+                {searchTerm || filterStatus !== 'all' ? 'Try adjusting your search or filter' : 'Create your first shipment to get started'}
+              </p>
+              <Button onClick={() => setShowNewShipmentForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Shipment
+              </Button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">Shipment ID</TableHead>
+                    <TableHead>Destination</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Volume</TableHead>
+                    <TableHead>Vessel</TableHead>
+                    <TableHead>Departure</TableHead>
+                    <TableHead>ETA</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {searchFilteredShipments.map((shipment) => (
+                    <TableRow key={shipment.id}>
+                      <TableCell className="font-medium">{shipment.shipment_id}</TableCell>
+                      <TableCell>{shipment.destination || 'N/A'}</TableCell>
+                      <TableCell>{shipment.client || 'N/A'}</TableCell>
+                      <TableCell>{shipment.volume || 'N/A'}</TableCell>
+                      <TableCell>{shipment.vessel || 'N/A'}</TableCell>
+                      <TableCell>
+                        {shipment.departure_date ? format(new Date(shipment.departure_date), 'MMM d, yyyy') : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        {shipment.eta ? format(new Date(shipment.eta), 'MMM d, yyyy') : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[shipment.status] || "bg-gray-100 text-gray-800"}>
+                          {statusLabels[shipment.status] || shipment.status || 'Unknown'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon">
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
       
