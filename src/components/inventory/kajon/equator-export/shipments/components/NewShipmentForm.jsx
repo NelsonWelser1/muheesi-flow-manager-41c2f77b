@@ -20,8 +20,6 @@ import {
   Package,
   Globe,
   Users,
-  Anchor,
-  Map,
   ArrowLeft
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -29,6 +27,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import { useShipments } from '../hooks/useShipments';
 
 const NewShipmentForm = ({ onCancel }) => {
   const { toast } = useToast();
@@ -37,6 +36,9 @@ const NewShipmentForm = ({ onCancel }) => {
   const [customVessel, setCustomVessel] = useState('');
   const [customRoute, setCustomRoute] = useState('');
   const [customClient, setCustomClient] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { createShipment } = useShipments();
   
   const form = useForm({
     defaultValues: {
@@ -91,37 +93,115 @@ const NewShipmentForm = ({ onCancel }) => {
     { value: 'Nordic Coffee Collective', label: 'Nordic Coffee Collective' }
   ];
 
-  const onSubmit = (data) => {
-    // Use custom values if they were entered
-    const finalData = {
-      ...data,
-      vessel: data.vessel || customVessel,
-      route: data.route || customRoute,
-      client: data.client || customClient,
-      departureDate: format(date, 'yyyy-MM-dd'),
-      eta: format(etaDate, 'yyyy-MM-dd'),
-      lastUpdate: format(new Date(), 'yyyy-MM-dd')
-    };
-
-    console.log('Shipment data submitted:', finalData);
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
     
-    // Show success toast
-    toast({
-      title: "Shipment Created",
-      description: `Shipment ${finalData.shipmentId} has been created successfully.`,
-      duration: 5000,
-    });
-
-    // Reset form after submission
-    form.reset();
-    setDate(new Date());
-    setEtaDate(new Date());
-    setCustomVessel('');
-    setCustomRoute('');
-    setCustomClient('');
-    
-    // In a real app, you would save this to your database
-    if (onCancel) onCancel();
+    try {
+      // Use custom values if they were entered
+      const finalVessel = data.vessel || customVessel;
+      const finalRoute = data.route || customRoute;
+      const finalClient = data.client || customClient;
+      
+      // Check if any required fields are empty
+      if (!finalVessel) {
+        toast({
+          title: "Missing information",
+          description: "Please select or enter a vessel name.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (!finalRoute) {
+        toast({
+          title: "Missing information",
+          description: "Please select or enter a shipping route.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (!finalClient) {
+        toast({
+          title: "Missing information",
+          description: "Please select or enter a client name.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (!data.destination || data.destination.trim() === '') {
+        toast({
+          title: "Missing information",
+          description: "Please enter a destination.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Format dates
+      const departureDate = format(date, 'yyyy-MM-dd');
+      const eta = format(etaDate, 'yyyy-MM-dd');
+      const lastUpdate = format(new Date(), 'yyyy-MM-dd');
+      
+      // Prepare data for Supabase
+      const shipmentData = {
+        shipment_id: data.shipmentId,
+        status: data.status,
+        container: data.container,
+        volume: data.volume || null,
+        departure_date: departureDate,
+        eta: eta,
+        destination: data.destination,
+        vessel: finalVessel,
+        route: finalRoute,
+        client: finalClient,
+        special_instructions: form.getValues("specialInstructions") || null,
+        last_update: lastUpdate
+      };
+      
+      console.log('Submitting shipment data:', shipmentData);
+      
+      // Call the createShipment function from our hook
+      const result = await createShipment(shipmentData);
+      
+      if (result.success) {
+        // Reset form after successful submission
+        form.reset({
+          shipmentId: `EQ-${Math.floor(1000 + Math.random() * 9000)}`,
+          destination: '',
+          client: '',
+          status: 'scheduled',
+          container: '20ft',
+          volume: '',
+          vessel: '',
+          route: '',
+          specialInstructions: '',
+        });
+        
+        setDate(new Date());
+        setEtaDate(new Date());
+        setCustomVessel('');
+        setCustomRoute('');
+        setCustomClient('');
+        
+        // Call the onCancel prop to go back to the shipments list
+        if (onCancel) onCancel();
+      }
+    } catch (error) {
+      console.error('Error in form submission:', error);
+      toast({
+        title: "Submission Error",
+        description: error.message || "Failed to create shipment",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -176,7 +256,7 @@ const NewShipmentForm = ({ onCancel }) => {
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
+                              <SelectValue placeholder="Select shipment status" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -256,7 +336,7 @@ const NewShipmentForm = ({ onCancel }) => {
                           )}
                         >
                           <Calendar className="mr-2 h-4 w-4" />
-                          {date ? format(date, "PPP") : <span>Pick a date</span>}
+                          {date ? format(date, "PPP") : <span>Pick a departure date</span>}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
@@ -282,7 +362,7 @@ const NewShipmentForm = ({ onCancel }) => {
                           )}
                         >
                           <Calendar className="mr-2 h-4 w-4" />
-                          {etaDate ? format(etaDate, "PPP") : <span>Pick a date</span>}
+                          {etaDate ? format(etaDate, "PPP") : <span>Pick an arrival date</span>}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
@@ -316,7 +396,7 @@ const NewShipmentForm = ({ onCancel }) => {
                       <FormItem>
                         <FormLabel>Destination</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="e.g., Hamburg, Germany" />
+                          <Input {...field} placeholder="Enter destination port or city (e.g., Hamburg, Germany)" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -340,7 +420,7 @@ const NewShipmentForm = ({ onCancel }) => {
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select or enter vessel name" />
+                                <SelectValue placeholder="Select a vessel like MSC Augusta, Maersk Nebula..." />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -354,7 +434,7 @@ const NewShipmentForm = ({ onCancel }) => {
                           
                           <div className="text-sm text-gray-500">or enter custom vessel:</div>
                           <Input 
-                            placeholder="Enter custom vessel name if not in list" 
+                            placeholder="Enter a vessel name not in the list (e.g., CMA CGM Marco Polo)" 
                             value={customVessel}
                             onChange={(e) => {
                               setCustomVessel(e.target.value);
@@ -386,7 +466,7 @@ const NewShipmentForm = ({ onCancel }) => {
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select or enter shipping route" />
+                                <SelectValue placeholder="Select a route like Mombasa → Hamburg..." />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -400,7 +480,7 @@ const NewShipmentForm = ({ onCancel }) => {
                           
                           <div className="text-sm text-gray-500">or enter custom route:</div>
                           <Input 
-                            placeholder="E.g., Mombasa → Dar es Salaam → Zanzibar" 
+                            placeholder="Describe your route (e.g., Mombasa → Dar es Salaam → Zanzibar)" 
                             value={customRoute}
                             onChange={(e) => {
                               setCustomRoute(e.target.value);
@@ -442,7 +522,7 @@ const NewShipmentForm = ({ onCancel }) => {
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select or enter client name" />
+                                <SelectValue placeholder="Select a client like European Coffee Roasters..." />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -456,7 +536,7 @@ const NewShipmentForm = ({ onCancel }) => {
                           
                           <div className="text-sm text-gray-500">or enter custom client:</div>
                           <Input 
-                            placeholder="Enter new client name if not in list" 
+                            placeholder="Enter a new client name (e.g., South African Coffee Exchange)" 
                             value={customClient}
                             onChange={(e) => {
                               setCustomClient(e.target.value);
@@ -478,6 +558,7 @@ const NewShipmentForm = ({ onCancel }) => {
                         placeholder="Enter any special handling instructions or notes"
                         className="resize-none"
                         rows={4}
+                        {...form.register("specialInstructions")}
                       />
                     </FormControl>
                   </FormItem>
@@ -488,7 +569,13 @@ const NewShipmentForm = ({ onCancel }) => {
 
           <div className="flex justify-end gap-4">
             <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">Create Shipment</Button>
+            <Button 
+              type="submit" 
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Creating...' : 'Create Shipment'}
+            </Button>
           </div>
         </form>
       </Form>
@@ -497,4 +584,3 @@ const NewShipmentForm = ({ onCancel }) => {
 };
 
 export default NewShipmentForm;
-
