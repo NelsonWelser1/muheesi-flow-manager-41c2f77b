@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import UpdateStock from '../components/inventory/UpdateStock';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
