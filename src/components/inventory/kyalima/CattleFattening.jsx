@@ -10,6 +10,7 @@ import { Search, RefreshCw, FileDown, Filter, Beef, ArrowUpRight, Printer, Calen
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
 import { differenceInDays, format, addDays } from 'date-fns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const CattleFattening = () => {
   const {
@@ -25,6 +26,9 @@ const CattleFattening = () => {
     averageProgress: 68,
     feedConsumption: 1250
   });
+  const [weightDialogOpen, setWeightDialogOpen] = useState(false);
+  const [selectedCattle, setSelectedCattle] = useState(null);
+  const [newWeight, setNewWeight] = useState('');
 
   const calculateDailyGain = (entryWeight, currentWeight, entryDate) => {
     const entry = parseFloat(entryWeight);
@@ -220,6 +224,59 @@ const CattleFattening = () => {
     return (currentWeight / targetWeight * 100).toFixed(0);
   };
 
+  const handleWeightUpdateClick = (cattle) => {
+    setSelectedCattle(cattle);
+    setNewWeight(cattle.currentWeight.replace(' kg', ''));
+    setWeightDialogOpen(true);
+  };
+
+  const handleWeightUpdate = async () => {
+    if (!selectedCattle || !newWeight || isNaN(parseFloat(newWeight))) {
+      toast({
+        title: "Invalid Weight",
+        description: "Please enter a valid weight value",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const cattleId = selectedCattle.id;
+      const updatedWeight = parseFloat(newWeight);
+      
+      const { error } = await supabase
+        .from('cattle_fattening')
+        .update({ 
+          current_weight: updatedWeight,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', cattleId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Weight Updated",
+        description: `Weight for ${selectedCattle.tagNumber} updated to ${updatedWeight} kg`
+      });
+
+      fetchFatteningData();
+      
+    } catch (error) {
+      console.error('Error updating weight:', error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update weight: " + error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+      setWeightDialogOpen(false);
+      setSelectedCattle(null);
+      setNewWeight('');
+    }
+  };
+
   return <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="flex flex-1 items-center space-x-2">
@@ -354,7 +411,12 @@ const CattleFattening = () => {
                     <TableCell>{cattle.dailyGain}</TableCell>
                     <TableCell>{cattle.estimatedCompletion}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleWeightUpdateClick(cattle)}
+                        title="Update Weight"
+                      >
                         <Scale className="h-4 w-4" />
                       </Button>
                     </TableCell>
@@ -362,8 +424,46 @@ const CattleFattening = () => {
             </TableBody>
           </Table>
         </div>}
-    </div>
-  </div>;
+      </div>
+
+      <Dialog open={weightDialogOpen} onOpenChange={setWeightDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Update Weight</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="cattle-tag">Cattle Tag</Label>
+              <Input id="cattle-tag" value={selectedCattle?.tagNumber || ''} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="current-weight">Current Weight</Label>
+              <Input id="current-weight" value={selectedCattle?.currentWeight || ''} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-weight">New Weight (kg)</Label>
+              <Input 
+                id="new-weight" 
+                value={newWeight} 
+                onChange={(e) => setNewWeight(e.target.value)}
+                type="number"
+                step="0.1"
+                min="0"
+                placeholder="Enter new weight"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setWeightDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleWeightUpdate}>
+              Update Weight
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>;
 };
 
 export default CattleFattening;
