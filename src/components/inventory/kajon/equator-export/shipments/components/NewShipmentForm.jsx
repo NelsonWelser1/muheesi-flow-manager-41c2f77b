@@ -326,7 +326,7 @@ const NewShipmentForm = ({ onCancel }) => {
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select vessel" />
+                              <SelectValue placeholder="Available vessels: MSC Augusta, Maersk Nebula, etc." />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -354,7 +354,7 @@ const NewShipmentForm = ({ onCancel }) => {
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select route" />
+                              <SelectValue placeholder="E.g.: East Africa to Europe, East Africa to Asia" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -392,7 +392,7 @@ const NewShipmentForm = ({ onCancel }) => {
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select client" />
+                              <SelectValue placeholder="E.g.: European Coffee Roasters, Tokyo Coffee Imports" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
