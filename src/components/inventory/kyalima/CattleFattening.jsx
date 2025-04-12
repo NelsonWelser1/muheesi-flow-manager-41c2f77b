@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, RefreshCw, FileDown, Filter, Beef, ArrowUpRight, Printer, Calendar, Scale, BarChart2, Trash2, Pencil } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
+import { differenceInDays, format, addDays } from 'date-fns';
+
 const CattleFattening = () => {
   const {
     toast
@@ -24,7 +26,51 @@ const CattleFattening = () => {
     feedConsumption: 1250
   });
 
-  // Fetch data from Supabase
+  const calculateDailyGain = (entryWeight, currentWeight, entryDate) => {
+    const entry = parseFloat(entryWeight);
+    const current = parseFloat(currentWeight);
+    
+    const today = new Date();
+    const startDate = new Date(entryDate);
+    const daysInProgram = differenceInDays(today, startDate);
+    
+    if (daysInProgram < 7) {
+      return 0.7;
+    }
+    
+    let gain = (current - entry) / daysInProgram;
+    
+    if (gain < 0.2) gain = 0.2;
+    if (gain > 2.0) gain = 2.0;
+    
+    return gain.toFixed(1);
+  };
+
+  const estimateCompletionDate = (currentWeight, targetWeight, dailyGain) => {
+    const current = parseFloat(currentWeight);
+    const target = parseFloat(targetWeight);
+    const gain = parseFloat(dailyGain);
+    
+    if (isNaN(current) || isNaN(target) || isNaN(gain) || gain <= 0) {
+      return "Not available";
+    }
+    
+    const remainingWeight = target - current;
+    
+    if (remainingWeight <= 0) {
+      return "Ready now";
+    }
+    
+    let daysToTarget = Math.ceil(remainingWeight / gain);
+    
+    if (current / target > 0.8) {
+      daysToTarget = Math.ceil(daysToTarget * 1.15);
+    }
+    
+    const completionDate = addDays(new Date(), daysToTarget);
+    return format(completionDate, 'yyyy-MM-dd');
+  };
+
   const fetchFatteningData = async () => {
     setIsLoading(true);
     try {
@@ -36,21 +82,26 @@ const CattleFattening = () => {
       });
       if (error) throw error;
 
-      // Transform data to match the component's expected format
-      const transformedData = data.map(item => ({
-        id: item.id,
-        tagNumber: item.tag_number,
-        name: item.name || `Cattle ${item.tag_number}`,
-        entryDate: item.entry_date,
-        entryWeight: `${item.entry_weight} kg`,
-        currentWeight: `${item.current_weight} kg`,
-        targetWeight: `${item.target_weight} kg`,
-        estimatedCompletion: item.expected_completion_date,
-        status: calculateStatus(item.daily_gain, item.current_weight, item.target_weight),
-        dailyGain: `${Number(item.daily_gain).toFixed(1)} kg`,
-        feedType: formatFeedingRegime(item.feeding_regime),
-        notes: item.notes
-      }));
+      const transformedData = data.map(item => {
+        const dailyGain = item.daily_gain || calculateDailyGain(item.entry_weight, item.current_weight, item.entry_date);
+        const formattedDailyGain = `${parseFloat(dailyGain).toFixed(1)} kg`;
+        const estimatedCompletion = item.expected_completion_date || estimateCompletionDate(item.current_weight, item.target_weight, dailyGain);
+        
+        return {
+          id: item.id,
+          tagNumber: item.tag_number,
+          name: item.name || `Cattle ${item.tag_number}`,
+          entryDate: item.entry_date,
+          entryWeight: `${item.entry_weight} kg`,
+          currentWeight: `${item.current_weight} kg`,
+          targetWeight: `${item.target_weight} kg`,
+          estimatedCompletion,
+          status: calculateStatus(dailyGain, item.current_weight, item.target_weight),
+          dailyGain: formattedDailyGain,
+          feedType: formatFeedingRegime(item.feeding_regime),
+          notes: item.notes
+        };
+      });
       setFatteningCattleData(transformedData);
       calculateAnalytics(data);
       toast({
@@ -69,7 +120,6 @@ const CattleFattening = () => {
     }
   };
 
-  // Format feeding regime for display
   const formatFeedingRegime = regime => {
     if (!regime) return 'Standard';
     const regimeMap = {
@@ -85,7 +135,6 @@ const CattleFattening = () => {
     return regimeMap[regime] || regime.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  // Calculate status based on daily gain and target
   const calculateStatus = (dailyGain, currentWeight, targetWeight) => {
     if (!dailyGain) return 'on-track';
     const gain = parseFloat(dailyGain);
@@ -94,26 +143,25 @@ const CattleFattening = () => {
     return 'on-track';
   };
 
-  // Calculate analytics from fetched data
   const calculateAnalytics = data => {
     if (!data || data.length === 0) return;
 
-    // Calculate total active
     const activeData = data.filter(item => item.status === 'active');
     const totalActive = activeData.length;
 
-    // Calculate average daily gain
     let totalDailyGain = 0;
     let validGainCount = 0;
     activeData.forEach(item => {
-      if (item.daily_gain && !isNaN(item.daily_gain)) {
-        totalDailyGain += parseFloat(item.daily_gain);
-        validGainCount++;
+      let gain = item.daily_gain;
+      if (!gain || isNaN(gain)) {
+        gain = calculateDailyGain(item.entry_weight, item.current_weight, item.entry_date);
       }
+      
+      totalDailyGain += parseFloat(gain);
+      validGainCount++;
     });
     const averageDailyGain = validGainCount > 0 ? totalDailyGain / validGainCount : 0;
 
-    // Calculate average progress percentage
     let totalProgress = 0;
     activeData.forEach(item => {
       if (item.current_weight && item.target_weight) {
@@ -123,30 +171,30 @@ const CattleFattening = () => {
     });
     const averageProgress = activeData.length > 0 ? totalProgress / activeData.length : 0;
 
-    // Estimate feed consumption (this would ideally come from a feed tracking table)
-    const feedConsumption = totalActive * 10 * 7; // 10kg per animal per day on average * 7 days
+    let feedConsumption = 0;
+    activeData.forEach(item => {
+      const feedPerDay = (item.current_weight * 0.025) * (1 + parseFloat(item.daily_gain || calculateDailyGain(item.entry_weight, item.current_weight, item.entry_date)) * 0.2);
+      feedConsumption += feedPerDay * 7;
+    });
 
     setAnalytics({
       totalActive,
       averageDailyGain,
       averageProgress,
-      feedConsumption
+      feedConsumption: Math.round(feedConsumption)
     });
   };
 
-  // Fetch data on component mount
   useEffect(() => {
     fetchFatteningData();
   }, []);
 
-  // Filter cattle based on search term and category filter
   const filteredCattle = fatteningCattleData.filter(cattle => {
     const matchesSearch = cattle.id.toLowerCase().includes(searchTerm.toLowerCase()) || cattle.tagNumber.toLowerCase().includes(searchTerm.toLowerCase()) || cattle.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'all' || cattle.status === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
-  // Handle status badge display
   const getStatusBadge = status => {
     switch (status) {
       case 'on-track':
@@ -160,19 +208,18 @@ const CattleFattening = () => {
     }
   };
 
-  // Calculate weight gain percentage
   const calculateGainPercentage = (current, entry) => {
     const currentWeight = parseInt(current.replace(' kg', ''));
     const entryWeight = parseInt(entry.replace(' kg', ''));
     return ((currentWeight - entryWeight) / entryWeight * 100).toFixed(1);
   };
 
-  // Calculate progress to target weight
   const calculateProgress = (current, target) => {
     const currentWeight = parseInt(current.replace(' kg', ''));
     const targetWeight = parseInt(target.replace(' kg', ''));
     return (currentWeight / targetWeight * 100).toFixed(0);
   };
+
   return <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="flex flex-1 items-center space-x-2">
@@ -307,7 +354,11 @@ const CattleFattening = () => {
                       <TableCell>{getStatusBadge(cattle.status)}</TableCell>
                       <TableCell>{cattle.dailyGain}</TableCell>
                       <TableCell>{cattle.estimatedCompletion}</TableCell>
-                      
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon">
+                          <Scale className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>)}
               </TableBody>
             </Table>
