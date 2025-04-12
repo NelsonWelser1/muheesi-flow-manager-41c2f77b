@@ -2,165 +2,145 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
 
 export const useStaffData = (farmId) => {
   const [staffData, setStaffData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const { toast } = useToast();
 
   const fetchStaffData = async () => {
-    setIsLoading(true);
-    setError(null);
-    
     try {
-      // Query the staff data table
-      const { data, error } = await supabase
-        .from('farm_staff')
+      setIsLoading(true);
+      setError(null);
+
+      let query = supabase
+        .from('staff_members')
         .select('*')
-        .eq('farm_id', farmId)
         .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Format and process the data
-      const formattedData = (data || []).map(item => ({
-        id: item.id,
-        firstName: item.first_name || '',
-        lastName: item.last_name || '',
-        role: item.role || 'farm_worker',
-        contactNumber: item.contact_number || '',
-        email: item.email || '',
-        startDate: item.start_date,
-        salary: item.salary || 0,
-        status: item.status || 'active',
-        address: item.address || '',
-        notes: item.notes || '',
-        avatar: item.avatar_url || '',
-        farm_id: item.farm_id,
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-      
-      setStaffData(formattedData);
-    } catch (err) {
-      console.error('Error fetching staff data:', err);
-      setError(err.message);
-      toast({
-        title: "Error fetching staff data",
-        description: err.message,
-        variant: "destructive"
-      });
+
+      // Add farm ID filter if provided
+      if (farmId) {
+        query = query.eq('farm_id', farmId);
+      }
+
+      const { data, error: fetchError } = await query;
+
+      if (fetchError) {
+        console.error('Error fetching staff data:', fetchError);
+        setError(fetchError.message);
+        showErrorToast(toast, `Failed to load staff data: ${fetchError.message}`);
+        return [];
+      }
+
+      setStaffData(data || []);
+      return data;
+    } catch (error) {
+      console.error('Unexpected error fetching staff data:', error);
+      setError('Failed to load staff data. Please try again later.');
+      showErrorToast(toast, 'Failed to load staff data. Please try again later.');
+      return [];
     } finally {
       setIsLoading(false);
     }
   };
 
-  const addStaffMember = async (newStaff) => {
-    setIsSubmitting(true);
+  const addStaffMember = async (staffData) => {
     try {
+      setIsSubmitting(true);
+      
       // Validate required fields
-      if (!newStaff.firstName || !newStaff.lastName || !newStaff.contactNumber) {
-        throw new Error('First name, last name, and contact number are required');
+      const requiredFields = ['firstName', 'lastName', 'contactNumber', 'role', 'status'];
+      for (const field of requiredFields) {
+        if (!staffData[field]) {
+          showErrorToast(toast, `${field.replace(/([A-Z])/g, ' $1').trim()} is required`);
+          return false;
+        }
       }
-      
-      // Prepare data for insertion
-      const staffToInsert = {
-        farm_id: farmId,
-        first_name: newStaff.firstName,
-        last_name: newStaff.lastName,
-        role: newStaff.role || 'farm_worker',
-        contact_number: newStaff.contactNumber,
-        email: newStaff.email || null,
-        start_date: newStaff.startDate || null,
-        salary: newStaff.salary ? parseFloat(newStaff.salary) : null,
-        status: newStaff.status || 'active',
-        address: newStaff.address || null,
-        notes: newStaff.notes || null,
-        avatar_url: newStaff.avatar || null
+
+      // Format the data for insertion
+      const staffRecord = {
+        first_name: staffData.firstName,
+        last_name: staffData.lastName,
+        contact_number: staffData.contactNumber,
+        email: staffData.email,
+        role: staffData.role,
+        start_date: staffData.startDate,
+        salary: staffData.salary,
+        status: staffData.status,
+        address: staffData.address,
+        notes: staffData.notes,
+        farm_id: farmId || null
       };
-      
-      const { data, error } = await supabase
-        .from('farm_staff')
-        .insert([staffToInsert])
+
+      console.log('Submitting staff data:', staffRecord);
+
+      const { data, error: insertError } = await supabase
+        .from('staff_members')
+        .insert([staffRecord])
         .select();
+
+      if (insertError) {
+        console.error('Error adding staff member:', insertError);
+        showErrorToast(toast, `Failed to add staff member: ${insertError.message}`);
+        return false;
+      }
+
+      console.log('Staff member added successfully:', data);
+      showSuccessToast(toast, 'Staff member added successfully');
       
-      if (error) throw error;
-      
-      toast({
-        title: "Staff Member Added",
-        description: `${newStaff.firstName} ${newStaff.lastName} has been successfully added to the team.`,
-        variant: "default"
-      });
-      
-      // Refresh staff data
+      // Refresh the staff data
       await fetchStaffData();
-      
-      return data[0];
-    } catch (err) {
-      console.error('Error adding staff member:', err);
-      toast({
-        title: "Error Adding Staff",
-        description: err.message,
-        variant: "destructive"
-      });
-      return null;
+      return true;
+    } catch (error) {
+      console.error('Unexpected error adding staff member:', error);
+      showErrorToast(toast, 'Failed to add staff member. Please try again later.');
+      return false;
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const updateStaffMember = async (id, updatedStaff) => {
-    setIsSubmitting(true);
+  const updateStaffMember = async (id, staffData) => {
     try {
-      // Validate required fields
-      if (!updatedStaff.firstName || !updatedStaff.lastName || !updatedStaff.contactNumber) {
-        throw new Error('First name, last name, and contact number are required');
-      }
+      setIsSubmitting(true);
       
-      // Prepare data for update
-      const staffToUpdate = {
-        first_name: updatedStaff.firstName,
-        last_name: updatedStaff.lastName,
-        role: updatedStaff.role || 'farm_worker',
-        contact_number: updatedStaff.contactNumber,
-        email: updatedStaff.email || null,
-        start_date: updatedStaff.startDate || null,
-        salary: updatedStaff.salary ? parseFloat(updatedStaff.salary) : null,
-        status: updatedStaff.status || 'active',
-        address: updatedStaff.address || null,
-        notes: updatedStaff.notes || null,
-        avatar_url: updatedStaff.avatar || null
+      // Format the data for update
+      const staffRecord = {
+        first_name: staffData.firstName,
+        last_name: staffData.lastName,
+        contact_number: staffData.contactNumber,
+        email: staffData.email,
+        role: staffData.role,
+        start_date: staffData.startDate,
+        salary: staffData.salary,
+        status: staffData.status,
+        address: staffData.address,
+        notes: staffData.notes,
+        farm_id: farmId || null
       };
-      
-      const { data, error } = await supabase
-        .from('farm_staff')
-        .update(staffToUpdate)
+
+      const { data, error: updateError } = await supabase
+        .from('staff_members')
+        .update(staffRecord)
         .eq('id', id)
-        .eq('farm_id', farmId)
         .select();
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Staff Member Updated",
-        description: `${updatedStaff.firstName} ${updatedStaff.lastName}'s information has been successfully updated.`,
-        variant: "default"
-      });
-      
-      // Refresh staff data
+
+      if (updateError) {
+        console.error('Error updating staff member:', updateError);
+        showErrorToast(toast, `Failed to update staff member: ${updateError.message}`);
+        return false;
+      }
+
+      showSuccessToast(toast, 'Staff member updated successfully');
       await fetchStaffData();
-      
-      return data[0];
-    } catch (err) {
-      console.error('Error updating staff member:', err);
-      toast({
-        title: "Error Updating Staff",
-        description: err.message,
-        variant: "destructive"
-      });
-      return null;
+      return true;
+    } catch (error) {
+      console.error('Unexpected error updating staff member:', error);
+      showErrorToast(toast, 'Failed to update staff member. Please try again later.');
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -168,62 +148,34 @@ export const useStaffData = (farmId) => {
 
   const deleteStaffMember = async (id) => {
     try {
-      // Find the staff member to be deleted for the notification message
-      const staffToDelete = staffData.find(staff => staff.id === id);
-      
-      const { error } = await supabase
-        .from('farm_staff')
+      setIsSubmitting(true);
+
+      const { error: deleteError } = await supabase
+        .from('staff_members')
         .delete()
-        .eq('id', id)
-        .eq('farm_id', farmId);
-      
-      if (error) throw error;
-      
-      // Update local state to remove the deleted staff member
-      setStaffData(staffData.filter(staff => staff.id !== id));
-      
-      toast({
-        title: "Staff Member Removed",
-        description: staffToDelete 
-          ? `${staffToDelete.firstName} ${staffToDelete.lastName} has been removed from the team.` 
-          : "Staff member has been removed.",
-        variant: "default"
-      });
-      
+        .eq('id', id);
+
+      if (deleteError) {
+        console.error('Error deleting staff member:', deleteError);
+        showErrorToast(toast, `Failed to delete staff member: ${deleteError.message}`);
+        return false;
+      }
+
+      showSuccessToast(toast, 'Staff member deleted successfully');
+      await fetchStaffData();
       return true;
-    } catch (err) {
-      console.error('Error deleting staff member:', err);
-      toast({
-        title: "Error Removing Staff",
-        description: err.message,
-        variant: "destructive"
-      });
+    } catch (error) {
+      console.error('Unexpected error deleting staff member:', error);
+      showErrorToast(toast, 'Failed to delete staff member. Please try again later.');
       return false;
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Fetch initial data on component mount
+  // Fetch staff data on component mount
   useEffect(() => {
-    if (farmId) {
-      fetchStaffData();
-    }
-    
-    // Set up real-time subscription for staff data changes
-    const channel = supabase
-      .channel('farm_staff_changes')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'farm_staff',
-        filter: `farm_id=eq.${farmId}`
-      }, () => {
-        fetchStaffData();
-      })
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    fetchStaffData();
   }, [farmId]);
 
   return {
