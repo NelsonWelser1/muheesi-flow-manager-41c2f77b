@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,6 @@ import {
   Search, 
   RefreshCw, 
   FileDown, 
-  Plus, 
   Filter, 
   Beef,
   ArrowUpRight,
@@ -36,21 +35,144 @@ import {
   Pencil
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/supabase';
 
 const CattleFattening = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [fatteningCattleData, setFatteningCattleData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [analytics, setAnalytics] = useState({
+    totalActive: 0,
+    averageDailyGain: 0.62,
+    averageProgress: 68,
+    feedConsumption: 1250
+  });
   
-  // Sample data for cattle in fattening program
-  const fatteningCattleData = [
-    { id: 'FP-001', tagNumber: 'KYL-C037', name: 'Bull 37', entryDate: '2023-10-15', entryWeight: '320 kg', currentWeight: '387 kg', targetWeight: '450 kg', estimatedCompletion: '2024-04-15', status: 'on-track', dailyGain: '0.7 kg', feedType: 'High Energy', notes: 'Performing well' },
-    { id: 'FP-002', tagNumber: 'KYL-C043', name: 'Bull 43', entryDate: '2023-10-20', entryWeight: '305 kg', currentWeight: '362 kg', targetWeight: '430 kg', estimatedCompletion: '2024-04-20', status: 'on-track', dailyGain: '0.65 kg', feedType: 'High Energy', notes: 'Slight limp in left hind leg - monitor' },
-    { id: 'FP-003', tagNumber: 'KYL-C052', name: 'Bull 52', entryDate: '2023-11-05', entryWeight: '330 kg', currentWeight: '378 kg', targetWeight: '460 kg', estimatedCompletion: '2024-05-05', status: 'behind', dailyGain: '0.5 kg', feedType: 'Standard', notes: 'Not gaining as expected' },
-    { id: 'FP-004', tagNumber: 'KYL-C061', name: 'Bull 61', entryDate: '2023-11-15', entryWeight: '345 kg', currentWeight: '410 kg', targetWeight: '470 kg', estimatedCompletion: '2024-04-15', status: 'ahead', dailyGain: '0.85 kg', feedType: 'High Energy + Supplement', notes: 'Excellent performer' },
-    { id: 'FP-005', tagNumber: 'KYL-C078', name: 'Bull 78', entryDate: '2023-12-01', entryWeight: '315 kg', currentWeight: '352 kg', targetWeight: '440 kg', estimatedCompletion: '2024-05-30', status: 'on-track', dailyGain: '0.6 kg', feedType: 'Standard', notes: 'Average performance' },
-    { id: 'FP-006', tagNumber: 'KYL-C085', name: 'Bull 85', entryDate: '2023-12-10', entryWeight: '325 kg', currentWeight: '345 kg', targetWeight: '450 kg', estimatedCompletion: '2024-06-10', status: 'behind', dailyGain: '0.4 kg', feedType: 'Standard + Supplement', notes: 'Consider switching feed strategy' },
-  ];
+  // Fetch data from Supabase
+  const fetchFatteningData = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('cattle_fattening')
+        .select('*')
+        .eq('farm_id', 'bukomero')
+        .order('entry_date', { ascending: false });
+        
+      if (error) throw error;
+      
+      // Transform data to match the component's expected format
+      const transformedData = data.map(item => ({
+        id: item.id,
+        tagNumber: item.tag_number,
+        name: item.name || `Cattle ${item.tag_number}`,
+        entryDate: item.entry_date,
+        entryWeight: `${item.entry_weight} kg`,
+        currentWeight: `${item.current_weight} kg`,
+        targetWeight: `${item.target_weight} kg`,
+        estimatedCompletion: item.expected_completion_date,
+        status: calculateStatus(item.daily_gain, item.current_weight, item.target_weight),
+        dailyGain: `${Number(item.daily_gain).toFixed(1)} kg`,
+        feedType: formatFeedingRegime(item.feeding_regime),
+        notes: item.notes
+      }));
+      
+      setFatteningCattleData(transformedData);
+      calculateAnalytics(data);
+      
+      toast({
+        title: "Data Loaded",
+        description: `Successfully loaded ${data.length} cattle fattening records.`
+      });
+    } catch (error) {
+      console.error('Error fetching fattening data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load fattening data. " + error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Format feeding regime for display
+  const formatFeedingRegime = (regime) => {
+    if (!regime) return 'Standard';
+    
+    const regimeMap = {
+      'standard': 'Standard',
+      'intensive': 'High Energy',
+      'premium': 'High Energy + Supplement',
+      'specialized': 'Custom Mix',
+      'semi_intensive': 'Medium Energy',
+      'pasture_based': 'Pasture Only',
+      'silage_based': 'Silage Based',
+      'pasture_silage': 'Pasture + Silage'
+    };
+    
+    return regimeMap[regime] || regime.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+  
+  // Calculate status based on daily gain and target
+  const calculateStatus = (dailyGain, currentWeight, targetWeight) => {
+    if (!dailyGain) return 'on-track';
+    
+    const gain = parseFloat(dailyGain);
+    
+    if (gain < 0.5) return 'behind';
+    if (gain > 0.8) return 'ahead';
+    return 'on-track';
+  };
+  
+  // Calculate analytics from fetched data
+  const calculateAnalytics = (data) => {
+    if (!data || data.length === 0) return;
+    
+    // Calculate total active
+    const activeData = data.filter(item => item.status === 'active');
+    const totalActive = activeData.length;
+    
+    // Calculate average daily gain
+    let totalDailyGain = 0;
+    let validGainCount = 0;
+    
+    activeData.forEach(item => {
+      if (item.daily_gain && !isNaN(item.daily_gain)) {
+        totalDailyGain += parseFloat(item.daily_gain);
+        validGainCount++;
+      }
+    });
+    
+    const averageDailyGain = validGainCount > 0 ? totalDailyGain / validGainCount : 0;
+    
+    // Calculate average progress percentage
+    let totalProgress = 0;
+    activeData.forEach(item => {
+      if (item.current_weight && item.target_weight) {
+        const progress = (item.current_weight / item.target_weight) * 100;
+        totalProgress += progress;
+      }
+    });
+    
+    const averageProgress = activeData.length > 0 ? totalProgress / activeData.length : 0;
+    
+    // Estimate feed consumption (this would ideally come from a feed tracking table)
+    const feedConsumption = totalActive * 10 * 7; // 10kg per animal per day on average * 7 days
+    
+    setAnalytics({
+      totalActive,
+      averageDailyGain,
+      averageProgress,
+      feedConsumption
+    });
+  };
+  
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchFatteningData();
+  }, []);
   
   // Filter cattle based on search term and category filter
   const filteredCattle = fatteningCattleData.filter(cattle => {
@@ -116,18 +238,11 @@ const CattleFattening = () => {
               <SelectItem value="ahead">Ahead</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" onClick={() => toast({
-            title: "Data Refreshed",
-            description: "Fattening program data has been refreshed."
-          })}>
+          <Button variant="outline" size="icon" onClick={fetchFatteningData}>
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
         <div className="flex items-center space-x-2">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            <span>Add Cattle</span>
-          </Button>
           <Button variant="outline" size="icon" onClick={() => toast({
             title: "Print Prepared",
             description: "Sending fattening program data to printer..."
@@ -149,7 +264,7 @@ const CattleFattening = () => {
             <CardTitle className="text-sm font-medium">Active in Program</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{fatteningCattleData.length}</div>
+            <div className="text-2xl font-bold">{analytics.totalActive}</div>
             <p className="text-xs text-muted-foreground mt-1">Current participants</p>
           </CardContent>
         </Card>
@@ -159,7 +274,7 @@ const CattleFattening = () => {
             <CardTitle className="text-sm font-medium">Average Daily Gain</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0.62 kg</div>
+            <div className="text-2xl font-bold">{analytics.averageDailyGain.toFixed(2)} kg</div>
             <div className="flex items-center mt-1">
               <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
               <p className="text-xs text-green-500">+0.05 kg from last month</p>
@@ -172,7 +287,7 @@ const CattleFattening = () => {
             <CardTitle className="text-sm font-medium">Average Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">68%</div>
+            <div className="text-2xl font-bold">{Math.round(analytics.averageProgress)}%</div>
             <p className="text-xs text-muted-foreground mt-1">To target weights</p>
           </CardContent>
         </Card>
@@ -182,80 +297,86 @@ const CattleFattening = () => {
             <CardTitle className="text-sm font-medium">Feed Consumption</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,250 kg</div>
+            <div className="text-2xl font-bold">{analytics.feedConsumption.toLocaleString()} kg</div>
             <p className="text-xs text-muted-foreground mt-1">Weekly average</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="border rounded-md">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID & Tag</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Entry Date</TableHead>
-                <TableHead>Entry Weight</TableHead>
-                <TableHead>Current Weight</TableHead>
-                <TableHead>Target Weight</TableHead>
-                <TableHead>Progress</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Daily Gain</TableHead>
-                <TableHead>Est. Completion</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCattle.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-700"></div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center py-10">No cattle found in fattening program.</TableCell>
+                  <TableHead>ID & Tag</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Entry Date</TableHead>
+                  <TableHead>Entry Weight</TableHead>
+                  <TableHead>Current Weight</TableHead>
+                  <TableHead>Target Weight</TableHead>
+                  <TableHead>Progress</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Daily Gain</TableHead>
+                  <TableHead>Est. Completion</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ) : (
-                filteredCattle.map((cattle) => (
-                  <TableRow key={cattle.id}>
-                    <TableCell>
-                      <div className="font-medium">{cattle.id}</div>
-                      <div className="text-xs text-muted-foreground">{cattle.tagNumber}</div>
-                    </TableCell>
-                    <TableCell>{cattle.name}</TableCell>
-                    <TableCell>{cattle.entryDate}</TableCell>
-                    <TableCell>{cattle.entryWeight}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span>{cattle.currentWeight}</span>
-                        <span className="text-xs text-green-600">+{calculateGainPercentage(cattle.currentWeight, cattle.entryWeight)}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{cattle.targetWeight}</TableCell>
-                    <TableCell className="w-[140px]">
-                      <div className="flex items-center gap-2">
-                        <div className="w-full bg-slate-100 h-2 rounded-full">
-                          <div 
-                            className="bg-primary h-2 rounded-full" 
-                            style={{ width: `${calculateProgress(cattle.currentWeight, cattle.targetWeight)}%` }} 
-                          />
-                        </div>
-                        <span className="text-xs">{calculateProgress(cattle.currentWeight, cattle.targetWeight)}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(cattle.status)}</TableCell>
-                    <TableCell>{cattle.dailyGain}</TableCell>
-                    <TableCell>{cattle.estimatedCompletion}</TableCell>
-                    <TableCell className="text-right space-x-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+              </TableHeader>
+              <TableBody>
+                {filteredCattle.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={11} className="text-center py-10">No cattle found in fattening program.</TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                ) : (
+                  filteredCattle.map((cattle) => (
+                    <TableRow key={cattle.id}>
+                      <TableCell>
+                        <div className="font-medium">{cattle.id}</div>
+                        <div className="text-xs text-muted-foreground">{cattle.tagNumber}</div>
+                      </TableCell>
+                      <TableCell>{cattle.name}</TableCell>
+                      <TableCell>{cattle.entryDate}</TableCell>
+                      <TableCell>{cattle.entryWeight}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span>{cattle.currentWeight}</span>
+                          <span className="text-xs text-green-600">+{calculateGainPercentage(cattle.currentWeight, cattle.entryWeight)}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{cattle.targetWeight}</TableCell>
+                      <TableCell className="w-[140px]">
+                        <div className="flex items-center gap-2">
+                          <div className="w-full bg-slate-100 h-2 rounded-full">
+                            <div 
+                              className="bg-primary h-2 rounded-full" 
+                              style={{ width: `${calculateProgress(cattle.currentWeight, cattle.targetWeight)}%` }} 
+                            />
+                          </div>
+                          <span className="text-xs">{calculateProgress(cattle.currentWeight, cattle.targetWeight)}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(cattle.status)}</TableCell>
+                      <TableCell>{cattle.dailyGain}</TableCell>
+                      <TableCell>{cattle.estimatedCompletion}</TableCell>
+                      <TableCell className="text-right space-x-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
     </div>
   );
