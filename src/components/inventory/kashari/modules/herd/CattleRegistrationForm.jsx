@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Label } from "@/components/ui/label";
-import { Cow, Save, RotateCcw } from "lucide-react";
+import { Beef, Save, RotateCcw } from "lucide-react";  // Changed from Cow to Beef
 
 const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
@@ -45,7 +45,7 @@ const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-xl flex items-center gap-2">
-          <Cow className="h-5 w-5 text-orange-500" />
+          <Beef className="h-5 w-5 text-orange-500" />  {/* Changed from Cow to Beef */}
           Register New Cattle
         </CardTitle>
       </CardHeader>
