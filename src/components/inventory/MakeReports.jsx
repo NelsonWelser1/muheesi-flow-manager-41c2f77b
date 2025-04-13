@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Mail, MessageSquare, Phone, FileText } from "lucide-react";
 import KazoReportsViewer from './kajon/KazoReportsViewer';
 import { supabase } from '@/integrations/supabase/supabase';
-import { showSuccessToast, showErrorToast, showLoadingToast, dismissToast } from '@/components/ui/notifications.js';
+import { showSuccessToast, showErrorToast, showLoadingToast, dismissToast } from '@/components/ui/notifications';
 
 const MakeReports = ({
   isKazo = false
