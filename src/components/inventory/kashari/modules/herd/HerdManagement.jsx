@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -11,8 +10,8 @@ import HealthRecordsForm from './HealthRecordsForm';
 import { supabase } from '@/integrations/supabase/supabase';
 import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
 
-const HerdManagement = () => {
-  const [activeTab, setActiveTab] = useState("inventory");
+const HerdManagement = ({ initialTab = "inventory" }) => {
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [cattleData, setCattleData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,6 +22,10 @@ const HerdManagement = () => {
   useEffect(() => {
     fetchCattleData();
   }, []);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const fetchCattleData = async () => {
     setIsLoading(true);
@@ -46,7 +49,6 @@ const HerdManagement = () => {
   const handleAddCattle = async (formData) => {
     setIsSubmitting(true);
     try {
-      // Format data for Supabase
       const newCattle = {
         tag_number: formData.tagNumber,
         name: formData.name || null,
@@ -80,7 +82,6 @@ const HerdManagement = () => {
   const handleAddHealthRecord = async (formData) => {
     setIsSubmitting(true);
     try {
-      // Format data for Supabase
       const newRecord = {
         cattle_id: formData.cattleId,
         record_date: formData.recordDate,
@@ -110,7 +111,6 @@ const HerdManagement = () => {
   };
 
   const handleViewDetails = (id) => {
-    // View details functionality to be implemented
     toast({
       title: "View Details",
       description: `Viewing details for cattle ID: ${id}`,
@@ -118,7 +118,6 @@ const HerdManagement = () => {
   };
 
   const handleEdit = (id) => {
-    // Edit functionality to be implemented
     toast({
       title: "Edit",
       description: `Editing cattle ID: ${id}`,

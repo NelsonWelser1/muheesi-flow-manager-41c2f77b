@@ -1,157 +1,174 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { showErrorToast } from '@/components/ui/notifications';
-import { supabase } from '@/integrations/supabase/supabase';
-import { ChartPie, LineChart, TrendingUp, Container, Calendar } from "lucide-react";
-import ProductionSummary from './ProductionSummary';
-import ProductionTrendsChart from './ProductionTrendsChart';
-import ProductionEfficiencyChart from './ProductionEfficiencyChart';
-import { format, subDays } from 'date-fns';
+import { Card } from "@/components/ui/card";
+import { LineChart, PieChart, BarChart3, ArrowUpRight, ArrowDownRight, TrendingUp, DollarSign, Receipt, Beef } from "lucide-react";
 
-const DairyAnalytics = () => {
-  const [activeTab, setActiveTab] = useState("summary");
-  const [milkData, setMilkData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [dateRange, setDateRange] = useState('week');  // 'week', 'month', 'quarter', 'year'
-  const { toast } = useToast();
+const DairyAnalytics = ({ initialTab = "production" }) => {
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
-    fetchMilkData();
-  }, [dateRange]);
-
-  const fetchMilkData = async () => {
-    setIsLoading(true);
-    try {
-      // Calculate date range
-      let startDate;
-      const today = new Date();
-      
-      switch (dateRange) {
-        case 'week':
-          startDate = format(subDays(today, 7), 'yyyy-MM-dd');
-          break;
-        case 'month':
-          startDate = format(subDays(today, 30), 'yyyy-MM-dd');
-          break;
-        case 'quarter':
-          startDate = format(subDays(today, 90), 'yyyy-MM-dd');
-          break;
-        case 'year':
-          startDate = format(subDays(today, 365), 'yyyy-MM-dd');
-          break;
-        default:
-          startDate = format(subDays(today, 7), 'yyyy-MM-dd');
-      }
-
-      const { data, error } = await supabase
-        .from('milk_production')
-        .select('*')
-        .gte('date', startDate)
-        .order('date', { ascending: true });
-
-      if (error) throw error;
-      setMilkData(data || []);
-    } catch (error) {
-      console.error('Error fetching milk production data:', error);
-      showErrorToast(toast, `Failed to fetch milk production data: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-medium">Dairy Analytics Dashboard</h3>
-        <select 
-          className="border rounded px-2 py-1 text-sm" 
-          value={dateRange}
-          onChange={(e) => setDateRange(e.target.value)}
-        >
-          <option value="week">Last 7 Days</option>
-          <option value="month">Last 30 Days</option>
-          <option value="quarter">Last 90 Days</option>
-          <option value="year">Last 365 Days</option>
-        </select>
-      </div>
-      
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5">
-          <TabsTrigger value="summary" className="flex items-center gap-2">
-            <ChartPie className="h-4 w-4" />
-            Summary
+        <TabsList className="w-full grid grid-cols-3 h-14 rounded-lg bg-muted/30 p-1">
+          <TabsTrigger 
+            value="production" 
+            className="flex items-center gap-2 h-12 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
+          >
+            <BarChart3 className="h-5 w-5 text-green-500" />
+            <span className="font-medium">Production Summary</span>
           </TabsTrigger>
-          <TabsTrigger value="trends" className="flex items-center gap-2">
-            <LineChart className="h-4 w-4" />
-            Production Trends
+          <TabsTrigger 
+            value="financial" 
+            className="flex items-center gap-2 h-12 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
+          >
+            <PieChart className="h-5 w-5 text-indigo-500" />
+            <span className="font-medium">Financial Reports</span>
           </TabsTrigger>
-          <TabsTrigger value="efficiency" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Efficiency
-          </TabsTrigger>
-          <TabsTrigger value="inventory" className="flex items-center gap-2">
-            <Container className="h-4 w-4" />
-            Inventory
-          </TabsTrigger>
-          <TabsTrigger value="forecast" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Forecast
+          <TabsTrigger 
+            value="trends" 
+            className="flex items-center gap-2 h-12 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
+          >
+            <TrendingUp className="h-5 w-5 text-amber-500" />
+            <span className="font-medium">Historical Trends</span>
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="summary" className="space-y-4">
-          <ProductionSummary 
-            milkData={milkData} 
-            isLoading={isLoading} 
-            dateRange={dateRange}
-          />
-        </TabsContent>
-        
-        <TabsContent value="trends" className="space-y-4">
-          <ProductionTrendsChart 
-            milkData={milkData} 
-            isLoading={isLoading} 
-            dateRange={dateRange}
-          />
-        </TabsContent>
-        
-        <TabsContent value="efficiency" className="space-y-4">
-          <ProductionEfficiencyChart 
-            milkData={milkData} 
-            isLoading={isLoading} 
-            dateRange={dateRange}
-          />
-        </TabsContent>
-        
-        <TabsContent value="inventory" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Inventory Analytics</CardTitle>
-              <CardDescription>
-                Track your dairy inventory levels and consumption rates
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80 flex items-center justify-center">
-              <p className="text-muted-foreground">Inventory analytics feature coming soon</p>
-            </CardContent>
+        <TabsContent value="production" className="space-y-4 pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <Card className="p-4 border-l-4 border-green-500 hover:shadow-md transition-all duration-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Milk Production</p>
+                  <h3 className="text-2xl font-bold">452 L</h3>
+                  <p className="text-xs text-green-600 flex items-center mt-1">
+                    <ArrowUpRight className="h-3 w-3 mr-1" /> 12% from previous week
+                  </p>
+                </div>
+                <LineChart className="h-10 w-10 text-green-500 opacity-80" />
+              </div>
+            </Card>
+            
+            <Card className="p-4 border-l-4 border-blue-500 hover:shadow-md transition-all duration-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Avg Yield Per Cow</p>
+                  <h3 className="text-2xl font-bold">18.4 L</h3>
+                  <p className="text-xs text-green-600 flex items-center mt-1">
+                    <ArrowUpRight className="h-3 w-3 mr-1" /> 5% from previous week
+                  </p>
+                </div>
+                <BarChart3 className="h-10 w-10 text-blue-500 opacity-80" />
+              </div>
+            </Card>
+            
+            <Card className="p-4 border-l-4 border-amber-500 hover:shadow-md transition-all duration-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Milking Cows</p>
+                  <h3 className="text-2xl font-bold">24</h3>
+                  <p className="text-xs text-red-600 flex items-center mt-1">
+                    <ArrowDownRight className="h-3 w-3 mr-1" /> 2 less than last month
+                  </p>
+                </div>
+                <Beef className="h-10 w-10 text-amber-500 opacity-80" />
+              </div>
+            </Card>
+          </div>
+          
+          <Card className="p-6 hover:shadow-md transition-all duration-200">
+            <h3 className="text-lg font-medium mb-4">Weekly Production Trend</h3>
+            <div className="h-72 flex items-center justify-center bg-muted/20 rounded-lg">
+              <p className="text-muted-foreground">Production trend chart will appear here</p>
+            </div>
           </Card>
         </TabsContent>
         
-        <TabsContent value="forecast" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Production Forecast</CardTitle>
-              <CardDescription>
-                AI-powered production forecasting based on historical data
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-80 flex items-center justify-center">
-              <p className="text-muted-foreground">Production forecasting feature coming soon</p>
-            </CardContent>
+        <TabsContent value="financial" className="space-y-4 pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <Card className="p-4 border-l-4 border-indigo-500 hover:shadow-md transition-all duration-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Revenue (Monthly)</p>
+                  <h3 className="text-2xl font-bold">$12,450</h3>
+                  <p className="text-xs text-green-600 flex items-center mt-1">
+                    <ArrowUpRight className="h-3 w-3 mr-1" /> 8% from previous month
+                  </p>
+                </div>
+                <DollarSign className="h-10 w-10 text-indigo-500 opacity-80" />
+              </div>
+            </Card>
+            
+            <Card className="p-4 border-l-4 border-purple-500 hover:shadow-md transition-all duration-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Expenses (Monthly)</p>
+                  <h3 className="text-2xl font-bold">$7,320</h3>
+                  <p className="text-xs text-red-600 flex items-center mt-1">
+                    <ArrowUpRight className="h-3 w-3 mr-1" /> 4% from previous month
+                  </p>
+                </div>
+                <Receipt className="h-10 w-10 text-purple-500 opacity-80" />
+              </div>
+            </Card>
+            
+            <Card className="p-4 border-l-4 border-green-500 hover:shadow-md transition-all duration-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Profit Margin</p>
+                  <h3 className="text-2xl font-bold">41.2%</h3>
+                  <p className="text-xs text-green-600 flex items-center mt-1">
+                    <ArrowUpRight className="h-3 w-3 mr-1" /> 2.5% from previous month
+                  </p>
+                </div>
+                <PieChart className="h-10 w-10 text-green-500 opacity-80" />
+              </div>
+            </Card>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card className="p-6 hover:shadow-md transition-all duration-200">
+              <h3 className="text-lg font-medium mb-4">Revenue Breakdown</h3>
+              <div className="h-64 flex items-center justify-center bg-muted/20 rounded-lg">
+                <p className="text-muted-foreground">Revenue breakdown chart will appear here</p>
+              </div>
+            </Card>
+            
+            <Card className="p-6 hover:shadow-md transition-all duration-200">
+              <h3 className="text-lg font-medium mb-4">Expense Allocation</h3>
+              <div className="h-64 flex items-center justify-center bg-muted/20 rounded-lg">
+                <p className="text-muted-foreground">Expense allocation chart will appear here</p>
+              </div>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="trends" className="space-y-4 pt-4">
+          <Card className="p-6 hover:shadow-md transition-all duration-200">
+            <h3 className="text-lg font-medium mb-4">Annual Production Comparison</h3>
+            <div className="h-80 flex items-center justify-center bg-muted/20 rounded-lg">
+              <p className="text-muted-foreground">Annual comparison chart will appear here</p>
+            </div>
           </Card>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card className="p-6 hover:shadow-md transition-all duration-200">
+              <h3 className="text-lg font-medium mb-4">Seasonal Production Patterns</h3>
+              <div className="h-64 flex items-center justify-center bg-muted/20 rounded-lg">
+                <p className="text-muted-foreground">Seasonal patterns chart will appear here</p>
+              </div>
+            </Card>
+            
+            <Card className="p-6 hover:shadow-md transition-all duration-200">
+              <h3 className="text-lg font-medium mb-4">Efficiency Metrics Over Time</h3>
+              <div className="h-64 flex items-center justify-center bg-muted/20 rounded-lg">
+                <p className="text-muted-foreground">Efficiency metrics chart will appear here</p>
+              </div>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

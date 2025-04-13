@@ -1,47 +1,48 @@
 
-import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from 'react';
 import MilkProductionForm from './MilkProductionForm';
 import MilkProductionRecords from './MilkProductionRecords';
 import HerdManagement from './herd/HerdManagement';
 import DairyAnalytics from './analytics/DairyAnalytics';
-import { Beef, Droplet, BarChart } from "lucide-react";
+import DairySidebar from './dairy/DairySidebar';
 
 const DairyManagement = () => {
+  const [activeSection, setActiveSection] = useState('herdManagement');
+  const [activeTab, setActiveTab] = useState('inventory');
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'herdManagement':
+        return <HerdManagement initialTab={activeTab} />;
+      case 'milkProduction':
+        return (
+          <div className="space-y-4">
+            <MilkProductionForm />
+            <MilkProductionRecords />
+          </div>
+        );
+      case 'analytics':
+        return <DairyAnalytics initialTab={activeTab} />;
+      default:
+        return <HerdManagement initialTab={activeTab} />;
+    }
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Dairy Management</h2>
       
-      <Tabs defaultValue="milk-production" className="w-full">
-        <TabsList className="grid grid-cols-3">
-          <TabsTrigger value="milk-production" className="flex items-center gap-2">
-            <Droplet className="h-4 w-4" />
-            Milk Production
-          </TabsTrigger>
-          <TabsTrigger value="herd-management" className="flex items-center gap-2">
-            <Beef className="h-4 w-4" />
-            Herd Management
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <BarChart className="h-4 w-4" />
-            Analytics
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="milk-production" className="space-y-4">
-          <MilkProductionForm />
-          <MilkProductionRecords />
-        </TabsContent>
-        
-        <TabsContent value="herd-management">
-          <HerdManagement />
-        </TabsContent>
-        
-        <TabsContent value="analytics">
-          <DairyAnalytics />
-        </TabsContent>
-      </Tabs>
+      <div className="flex w-full h-[calc(100vh-12rem)] overflow-hidden rounded-lg border bg-white shadow">
+        <DairySidebar 
+          activeSection={activeSection} 
+          setActiveSection={setActiveSection}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
+        <div className="flex-1 p-6 overflow-y-auto">
+          {renderContent()}
+        </div>
+      </div>
     </div>
   );
 };
