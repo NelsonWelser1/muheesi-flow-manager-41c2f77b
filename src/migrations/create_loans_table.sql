@@ -1,6 +1,9 @@
 
 -- Create loans table for Kyalima Farmers Limited
 
+-- Drop existing table if it exists to recreate with correct schema
+DROP TABLE IF EXISTS public.loans;
+
 CREATE TABLE IF NOT EXISTS public.loans (
   id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
   loan_id text NOT NULL,
@@ -33,6 +36,12 @@ CREATE TRIGGER set_timestamp
 BEFORE UPDATE ON loans
 FOR EACH ROW
 EXECUTE FUNCTION trigger_set_timestamp();
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS loans_select_policy ON loans;
+DROP POLICY IF EXISTS loans_insert_policy ON loans;
+DROP POLICY IF EXISTS loans_update_policy ON loans;
+DROP POLICY IF EXISTS loans_delete_policy ON loans;
 
 -- Add RLS policies
 ALTER TABLE public.loans ENABLE ROW LEVEL SECURITY;

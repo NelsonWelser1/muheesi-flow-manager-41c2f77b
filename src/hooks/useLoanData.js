@@ -17,6 +17,7 @@ export const useLoanData = () => {
     }
 
     setIsSubmitting(true);
+    console.log("Submitting loan data:", loanData);
 
     try {
       // Format the data for Supabase
@@ -36,6 +37,8 @@ export const useLoanData = () => {
         created_at: new Date().toISOString()
       };
 
+      console.log("Formatted loan data for Supabase:", formattedLoan);
+
       // Insert into the loans table
       const { data, error } = await supabase
         .from('loans')
@@ -48,6 +51,7 @@ export const useLoanData = () => {
         return null;
       }
 
+      console.log("Loan added successfully:", data);
       showSuccessToast(toast, "Loan successfully added");
       return data[0];
     } catch (error) {
