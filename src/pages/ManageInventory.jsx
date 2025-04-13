@@ -17,7 +17,7 @@ const companies = [{
   component: "kajon-coffee"
 }, {
   name: "Kyalima Farmers Limited",
-  description: "Assets and Cooperations, Agri-Business.",
+  description: "Assets and Cooperations, Agri-Business, Loan Management.",
   component: "kyalima-farmers"
 }, {
   name: "Kashari Mixed Farm",
@@ -53,8 +53,12 @@ const ManageInventory = () => {
       navigate('/manage-inventory/kashari-farm');
     } else if (company.component === 'bukomero-dairy') {
       navigate('/manage-inventory/bukomero-dairy');
-    } else if (company.component === 'equator-export') {
-      navigate('/manage-inventory/kajon-coffee', { state: { selectedInterface: 'equator' } });
+    } else if (company.component === 'kyalima-farmers') {
+      // Special handling for Kyalima Farmers Limited
+      setSelectedCompany({
+        ...company,
+        hasLoanManagement: true
+      });
     } else {
       setSelectedCompany(company);
     }
@@ -96,6 +100,17 @@ const ManageInventory = () => {
 
         <Card className="w-full">
           <CardContent className="p-6">
+            {selectedCompany.hasLoanManagement && (
+              <div className="mb-6">
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700 mb-4"
+                  onClick={() => navigate('/loans')}
+                >
+                  <Landmark className="mr-2 h-5 w-5" />
+                  Loan Management
+                </Button>
+              </div>
+            )}
             <UpdateStock defaultTab={selectedCompany.component} />
           </CardContent>
         </Card>
@@ -115,16 +130,6 @@ const ManageInventory = () => {
             Home
           </Button>
         </div>
-      </div>
-      
-      <div className="mb-6">
-        <Button 
-          className="bg-blue-600 hover:bg-blue-700"
-          onClick={() => navigate('/loans')}
-        >
-          <Landmark className="mr-2 h-5 w-5" />
-          Loan Management
-        </Button>
       </div>
       
       <div className="flex flex-col space-y-4">
