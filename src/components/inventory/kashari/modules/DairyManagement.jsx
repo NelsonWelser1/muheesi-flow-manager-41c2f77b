@@ -1,8 +1,11 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MilkProductionForm from './MilkProductionForm';
 import MilkProductionRecords from './MilkProductionRecords';
+import HerdManagement from './herd/HerdManagement';
+import DairyAnalytics from './analytics/DairyAnalytics';
 import { Beef, Droplet, BarChart } from "lucide-react";
 
 const DairyManagement = () => {
@@ -32,37 +35,11 @@ const DairyManagement = () => {
         </TabsContent>
         
         <TabsContent value="herd-management">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Beef className="h-5 w-5 text-orange-500" />
-                Herd Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Herd management features coming soon. This section will include cattle tracking, 
-                health records, breeding information, and feeding schedules.
-              </p>
-            </CardContent>
-          </Card>
+          <HerdManagement />
         </TabsContent>
         
         <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart className="h-5 w-5 text-green-500" />
-                Dairy Analytics
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Dairy analytics features coming soon. This section will include production trends, 
-                quality metrics, and financial performance indicators.
-              </p>
-            </CardContent>
-          </Card>
+          <DairyAnalytics />
         </TabsContent>
       </Tabs>
     </div>
