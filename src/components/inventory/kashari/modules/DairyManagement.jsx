@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MilkProductionForm from './MilkProductionForm';
 import MilkProductionRecords from './MilkProductionRecords';
-import { Cow, Droplet, BarChart } from "lucide-react";
+import { Beef, Droplet, BarChart } from "lucide-react";
 
 const DairyManagement = () => {
   return (
@@ -18,7 +17,7 @@ const DairyManagement = () => {
             Milk Production
           </TabsTrigger>
           <TabsTrigger value="herd-management" className="flex items-center gap-2">
-            <Cow className="h-4 w-4" />
+            <Beef className="h-4 w-4" />
             Herd Management
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
@@ -36,7 +35,7 @@ const DairyManagement = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Cow className="h-5 w-5 text-orange-500" />
+                <Beef className="h-5 w-5 text-orange-500" />
                 Herd Management
               </CardTitle>
             </CardHeader>
