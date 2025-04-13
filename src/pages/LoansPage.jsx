@@ -7,7 +7,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Home, Trash2, PenLine, Clock } from "lucide-react";
 import { format } from 'date-fns';
 import { useLoanData } from '@/hooks/useLoanData';
-import { toast } from 'sonner';
 
 const LoansPage = () => {
   const navigate = useNavigate();
@@ -15,10 +14,7 @@ const LoansPage = () => {
   
   const handleDeleteLoan = async (loanId) => {
     if (window.confirm(`Are you sure you want to delete loan ${loanId}?`)) {
-      const success = await deleteLoan(loanId);
-      if (success) {
-        toast.success(`Loan ${loanId} deleted successfully`);
-      }
+      await deleteLoan(loanId);
     }
   };
   

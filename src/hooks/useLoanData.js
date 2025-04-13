@@ -1,13 +1,15 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/use-toast';
+import { showSuccessToast, showErrorToast, showLoadingToast, dismissToast } from '@/components/ui/notifications';
 
 export const useLoanData = () => {
   const [loansData, setLoansData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const { toast } = useToast();
 
   // Fetch loans data on component mount
   const fetchLoansData = async () => {
@@ -26,7 +28,7 @@ export const useLoanData = () => {
       if (tableCheckError) {
         console.error('Error checking loans table:', tableCheckError);
         setError(`Table check failed: ${tableCheckError.message}`);
-        toast.error(`Failed to connect to loans database: ${tableCheckError.message}`);
+        showErrorToast(toast, `Failed to connect to loans database: ${tableCheckError.message}`);
         setLoansData([]);
         return [];
       }
@@ -41,7 +43,7 @@ export const useLoanData = () => {
       if (fetchError) {
         console.error('Error fetching loans:', fetchError);
         setError(fetchError.message);
-        toast.error(`Failed to load loans: ${fetchError.message}`);
+        showErrorToast(toast, `Failed to load loans: ${fetchError.message}`);
         return [];
       }
 
@@ -62,7 +64,7 @@ export const useLoanData = () => {
     } catch (error) {
       console.error('Unexpected error fetching loans:', error);
       setError('Failed to load loans. Please try again later.');
-      toast.error('Failed to load loans. Please try again later.');
+      showErrorToast(toast, 'Failed to load loans. Please try again later.');
       return [];
     } finally {
       setIsLoading(false);
@@ -72,8 +74,8 @@ export const useLoanData = () => {
   // Add new loan to the database
   const addLoan = async (loanData) => {
     try {
+      const loadingToastId = showLoadingToast(toast, 'Adding loan...');
       setIsSubmitting(true);
-      toast.loading('Adding loan...');
       
       console.log('Preparing loan data for submission:', loanData);
       
@@ -90,20 +92,23 @@ export const useLoanData = () => {
       if (missingFields.length > 0) {
         const errorMsg = `Missing required fields: ${missingFields.join(', ')}`;
         console.error(errorMsg);
-        toast.error(errorMsg);
+        showErrorToast(toast, errorMsg);
+        toast.dismiss(loadingToastId);
         return false;
       }
 
       // Convert string values to appropriate types
       const amount = parseFloat(loanData.amount);
       if (isNaN(amount)) {
-        toast.error('Loan amount must be a valid number');
+        showErrorToast(toast, 'Loan amount must be a valid number');
+        toast.dismiss(loadingToastId);
         return false;
       }
 
       const interestRate = parseFloat(loanData.interest_rate);
       if (isNaN(interestRate)) {
-        toast.error('Interest rate must be a valid number');
+        showErrorToast(toast, 'Interest rate must be a valid number');
+        toast.dismiss(loadingToastId);
         return false;
       }
 
@@ -115,7 +120,8 @@ export const useLoanData = () => {
       if (loanData.next_payment_amount) {
         nextPaymentAmount = parseFloat(loanData.next_payment_amount);
         if (isNaN(nextPaymentAmount)) {
-          toast.error('Next payment amount must be a valid number');
+          showErrorToast(toast, 'Next payment amount must be a valid number');
+          toast.dismiss(loadingToastId);
           return false;
         }
       }
@@ -141,19 +147,21 @@ export const useLoanData = () => {
 
       if (insertError) {
         console.error('Error adding loan:', insertError);
-        toast.error(`Failed to add loan: ${insertError.message}`);
+        showErrorToast(toast, `Failed to add loan: ${insertError.message}`);
+        toast.dismiss(loadingToastId);
         return false;
       }
 
       console.log('Loan added successfully:', data);
-      toast.success('Loan added successfully');
+      toast.dismiss(loadingToastId);
+      showSuccessToast(toast, 'Loan added successfully');
       
       // Refresh the loans data
       await fetchLoansData();
       return true;
     } catch (error) {
       console.error('Unexpected error adding loan:', error);
-      toast.error('Failed to add loan. Please try again later.');
+      showErrorToast(toast, 'Failed to add loan. Please try again later.');
       return false;
     } finally {
       setIsSubmitting(false);
@@ -164,7 +172,6 @@ export const useLoanData = () => {
   const deleteLoan = async (loanId) => {
     try {
       setIsSubmitting(true);
-      toast.loading('Deleting loan...');
 
       console.log('Attempting to delete loan with ID:', loanId);
 
@@ -175,17 +182,17 @@ export const useLoanData = () => {
 
       if (deleteError) {
         console.error('Error deleting loan:', deleteError);
-        toast.error(`Failed to delete loan: ${deleteError.message}`);
+        showErrorToast(toast, `Failed to delete loan: ${deleteError.message}`);
         return false;
       }
 
       console.log('Loan deleted successfully');
-      toast.success('Loan deleted successfully');
+      showSuccessToast(toast, 'Loan deleted successfully');
       await fetchLoansData();
       return true;
     } catch (error) {
       console.error('Unexpected error deleting loan:', error);
-      toast.error('Failed to delete loan. Please try again later.');
+      showErrorToast(toast, 'Failed to delete loan. Please try again later.');
       return false;
     } finally {
       setIsSubmitting(false);
@@ -195,21 +202,23 @@ export const useLoanData = () => {
   // Update an existing loan
   const updateLoan = async (loanId, loanData) => {
     try {
+      const loadingToastId = showLoadingToast(toast, 'Updating loan...');
       setIsSubmitting(true);
-      toast.loading('Updating loan...');
       
       console.log('Preparing loan update data:', loanData);
       
       // Convert string values to appropriate types
       const amount = parseFloat(loanData.amount);
       if (isNaN(amount)) {
-        toast.error('Loan amount must be a valid number');
+        showErrorToast(toast, 'Loan amount must be a valid number');
+        toast.dismiss(loadingToastId);
         return false;
       }
 
       const interestRate = parseFloat(loanData.interest_rate);
       if (isNaN(interestRate)) {
-        toast.error('Interest rate must be a valid number');
+        showErrorToast(toast, 'Interest rate must be a valid number');
+        toast.dismiss(loadingToastId);
         return false;
       }
 
@@ -248,19 +257,21 @@ export const useLoanData = () => {
 
       if (updateError) {
         console.error('Error updating loan:', updateError);
-        toast.error(`Failed to update loan: ${updateError.message}`);
+        showErrorToast(toast, `Failed to update loan: ${updateError.message}`);
+        toast.dismiss(loadingToastId);
         return false;
       }
 
       console.log('Loan updated successfully:', data);
-      toast.success('Loan updated successfully');
+      toast.dismiss(loadingToastId);
+      showSuccessToast(toast, 'Loan updated successfully');
       
       // Refresh the loans data
       await fetchLoansData();
       return true;
     } catch (error) {
       console.error('Unexpected error updating loan:', error);
-      toast.error('Failed to update loan. Please try again later.');
+      showErrorToast(toast, 'Failed to update loan. Please try again later.');
       return false;
     } finally {
       setIsSubmitting(false);
