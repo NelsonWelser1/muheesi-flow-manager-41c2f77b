@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -36,102 +36,50 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { KyalimaPDFExport } from "./utils/KyalimaPDFExport";
 import { Progress } from "@/components/ui/progress";
+import { useLoanData } from "@/hooks/useLoanData";
+import { showSuccessToast, showErrorToast, showInfoToast } from "@/components/ui/notifications";
 
 const LoanManager = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [loansData, setLoansData] = useState([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    loanId: '',
+    institution: '',
+    startDate: '',
+    dueDate: '',
+    amount: '',
+    interestRate: '',
+    paymentFrequency: 'monthly',
+    purpose: '',
+    collateral: '',
+    contact: '',
+    notes: ''
+  });
+  const [validationErrors, setValidationErrors] = useState({});
   
-  // Sample data for loans
-  const loansData = [
-    { 
-      id: 'KYL-L001', 
-      institution: 'Equity Bank',
-      startDate: '2023-05-15',
-      dueDate: '2025-05-15',
-      amount: 'UGX 50,000,000',
-      remainingAmount: 'UGX 32,500,000',
-      nextPayment: '2024-02-15',
-      nextPaymentAmount: 'UGX 2,250,000',
-      status: 'active',
-      interestRate: '12%',
-      paymentFrequency: 'Monthly',
-      purpose: 'Cattle Purchase',
-      collateral: 'Farm Land & Equipment',
-      contact: 'Sarah Mwangi'
-    },
-    { 
-      id: 'KYL-L002', 
-      institution: 'DFCU Bank',
-      startDate: '2022-11-10',
-      dueDate: '2026-11-10',
-      amount: 'UGX 75,000,000',
-      remainingAmount: 'UGX 61,250,000',
-      nextPayment: '2024-02-10',
-      nextPaymentAmount: 'UGX 1,875,000',
-      status: 'active',
-      interestRate: '10%',
-      paymentFrequency: 'Monthly',
-      purpose: 'Farm Expansion',
-      collateral: 'Business Assets',
-      contact: 'Joseph Omondi'
-    },
-    { 
-      id: 'KYL-L003', 
-      institution: 'Stanbic Bank',
-      startDate: '2023-08-22',
-      dueDate: '2024-08-22',
-      amount: 'UGX 25,000,000',
-      remainingAmount: 'UGX 18,750,000',
-      nextPayment: '2024-02-22',
-      nextPaymentAmount: 'UGX 2,150,000',
-      status: 'active',
-      interestRate: '14%',
-      paymentFrequency: 'Monthly',
-      purpose: 'Equipment Purchase',
-      collateral: 'Equipment',
-      contact: 'Emma Odhiambo'
-    },
-    { 
-      id: 'KYL-L004', 
-      institution: 'Absa Bank',
-      startDate: '2022-03-05',
-      dueDate: '2024-03-05',
-      amount: 'UGX 20,000,000',
-      remainingAmount: 'UGX 5,500,000',
-      nextPayment: '2024-02-05',
-      nextPaymentAmount: 'UGX 1,440,000',
-      status: 'active',
-      interestRate: '11.5%',
-      paymentFrequency: 'Monthly',
-      purpose: 'Working Capital',
-      collateral: 'Inventory',
-      contact: 'David Lusaka'
-    },
-    { 
-      id: 'KYL-L005', 
-      institution: 'Centenary Bank',
-      startDate: '2022-01-15',
-      dueDate: '2023-12-15',
-      amount: 'UGX 15,000,000',
-      remainingAmount: 'UGX 0',
-      nextPayment: 'N/A',
-      nextPaymentAmount: 'N/A',
-      status: 'completed',
-      interestRate: '13%',
-      paymentFrequency: 'Monthly',
-      purpose: 'Vehicle Purchase',
-      collateral: 'Vehicle',
-      contact: 'Martha Wangui'
-    },
-  ];
+  const { isLoading, isSubmitting, addLoan, fetchLoans } = useLoanData();
+  
+  // Fetch loans on component mount
+  useEffect(() => {
+    loadLoans();
+  }, []);
+  
+  const loadLoans = async () => {
+    const loans = await fetchLoans();
+    if (loans && loans.length > 0) {
+      setLoansData(loans);
+    }
+  };
   
   // Filter loans based on search term and status filter
   const filteredLoans = loansData.filter(loan => {
     const matchesSearch = 
-      loan.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      loan.institution.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      loan.purpose.toLowerCase().includes(searchTerm.toLowerCase());
+      loan.loanId?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      loan.institution?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      loan.purpose?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = filterStatus === 'all' || loan.status === filterStatus;
     
@@ -142,7 +90,7 @@ const LoanManager = () => {
   const activeLoans = loansData.filter(loan => loan.status === 'active');
   const totalActiveLoansAmount = activeLoans.reduce((total, loan) => {
     // Extract the numerical value from the UGX string
-    const amount = parseInt(loan.remainingAmount.replace(/\D/g, ''));
+    const amount = parseInt(loan.remainingAmount?.replace(/\D/g, '') || 0);
     return total + amount;
   }, 0);
   
@@ -155,10 +103,10 @@ const LoanManager = () => {
     }
     
     // If already formatted with UGX, return as is
-    if (amount.startsWith('UGX')) return amount;
+    if (amount && amount.startsWith('UGX')) return amount;
     
     // Otherwise, parse and format
-    const value = parseInt(amount.replace(/\D/g, ''));
+    const value = parseInt(amount?.replace(/\D/g, '') || 0);
     return `UGX ${value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
   };
   
@@ -166,8 +114,8 @@ const LoanManager = () => {
   const calculateRepaymentPercentage = (loan) => {
     if (loan.status === 'completed') return 100;
     
-    const totalAmount = parseInt(loan.amount.replace(/\D/g, ''));
-    const remainingAmount = parseInt(loan.remainingAmount.replace(/\D/g, ''));
+    const totalAmount = parseInt(loan.amount?.replace(/\D/g, '') || 0);
+    const remainingAmount = parseInt(loan.remainingAmount?.replace(/\D/g, '') || 0);
     const repaidAmount = totalAmount - remainingAmount;
     
     return Math.round((repaidAmount / totalAmount) * 100);
@@ -199,29 +147,132 @@ const LoanManager = () => {
     }
   };
   
-  const handleRefresh = () => {
-    toast({
-      title: "Data Refreshed",
-      description: "Loan data has been refreshed.",
-    });
+  const handleRefresh = async () => {
+    await loadLoans();
+    showSuccessToast(toast, "Loan data has been refreshed");
   };
   
   // Handle export to PDF
   const handleExportPDF = () => {
     KyalimaPDFExport.exportTableToPDF('loans-table', 'Kyalima_Loan_Data');
-    toast({
-      title: "Export Complete",
-      description: "Your loan data has been exported to PDF.",
-    });
+    showSuccessToast(toast, "Your loan data has been exported to PDF");
   };
   
   // Handle print
   const handlePrint = () => {
     KyalimaPDFExport.printTable('loans-table');
-    toast({
-      title: "Print Prepared",
-      description: "Sending loan data to printer...",
-    });
+    showInfoToast(toast, "Sending loan data to printer...");
+  };
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+    
+    // Clear validation error for this field if it exists
+    if (validationErrors[id]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[id];
+        return newErrors;
+      });
+    }
+  };
+  
+  // Handle select changes
+  const handleSelectChange = (value, field) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear validation error for this field if it exists
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+  
+  // Validate the form
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.loanId) errors.loanId = "Loan ID is required";
+    if (!formData.institution) errors.institution = "Institution is required";
+    if (!formData.startDate) errors.startDate = "Start date is required";
+    if (!formData.dueDate) errors.dueDate = "Due date is required";
+    if (!formData.amount) errors.amount = "Amount is required";
+    if (!formData.interestRate) errors.interestRate = "Interest rate is required";
+    if (!formData.paymentFrequency) errors.paymentFrequency = "Payment frequency is required";
+    if (!formData.purpose) errors.purpose = "Purpose is required";
+    
+    // Validate date logic
+    if (formData.startDate && formData.dueDate) {
+      const start = new Date(formData.startDate);
+      const due = new Date(formData.dueDate);
+      if (due <= start) {
+        errors.dueDate = "Due date must be after start date";
+      }
+    }
+    
+    // Validate numeric fields
+    if (formData.amount && isNaN(parseFloat(formData.amount.replace(/[^0-9.]/g, '')))) {
+      errors.amount = "Amount must be a number";
+    }
+    
+    if (formData.interestRate && isNaN(parseFloat(formData.interestRate))) {
+      errors.interestRate = "Interest rate must be a number";
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+  
+  // Handle form submit
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      showErrorToast(toast, "Please correct the errors in the form");
+      return;
+    }
+    
+    const result = await addLoan(formData);
+    if (result) {
+      await loadLoans();
+      setDialogOpen(false);
+      // Reset form data
+      setFormData({
+        loanId: '',
+        institution: '',
+        startDate: '',
+        dueDate: '',
+        amount: '',
+        interestRate: '',
+        paymentFrequency: 'monthly',
+        purpose: '',
+        collateral: '',
+        contact: '',
+        notes: ''
+      });
+    }
+  };
+  
+  // Generate a new loan ID
+  const generateLoanId = () => {
+    const prefix = "KYL-L";
+    const randomNum = Math.floor(100 + Math.random() * 900); // 3-digit number
+    return `${prefix}${randomNum}`;
+  };
+  
+  // Auto-populate loan ID when dialog opens
+  const handleDialogOpen = (open) => {
+    setDialogOpen(open);
+    
+    if (open) {
+      setFormData(prev => ({
+        ...prev,
+        loanId: generateLoanId()
+      }));
+    }
   };
 
   return (
@@ -311,7 +362,7 @@ const LoanManager = () => {
           </Button>
         </div>
         <div className="flex items-center space-x-2">
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={handleDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -326,38 +377,97 @@ const LoanManager = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="loanId">Loan ID</Label>
-                    <Input id="loanId" placeholder="KYL-L###" />
+                    <Input 
+                      id="loanId" 
+                      placeholder="KYL-L###" 
+                      value={formData.loanId}
+                      onChange={handleInputChange}
+                      className={validationErrors.loanId ? "border-red-500" : ""}
+                    />
+                    {validationErrors.loanId && (
+                      <p className="text-xs text-red-500">{validationErrors.loanId}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="institution">Financial Institution</Label>
-                    <Input id="institution" placeholder="Bank name" />
+                    <Input 
+                      id="institution" 
+                      placeholder="Bank name" 
+                      value={formData.institution}
+                      onChange={handleInputChange}
+                      className={validationErrors.institution ? "border-red-500" : ""}
+                    />
+                    {validationErrors.institution && (
+                      <p className="text-xs text-red-500">{validationErrors.institution}</p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="startDate">Start Date</Label>
-                    <Input id="startDate" type="date" />
+                    <Input 
+                      id="startDate" 
+                      type="date" 
+                      value={formData.startDate}
+                      onChange={handleInputChange}
+                      className={validationErrors.startDate ? "border-red-500" : ""}
+                    />
+                    {validationErrors.startDate && (
+                      <p className="text-xs text-red-500">{validationErrors.startDate}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="dueDate">Due Date</Label>
-                    <Input id="dueDate" type="date" />
+                    <Input 
+                      id="dueDate" 
+                      type="date" 
+                      value={formData.dueDate}
+                      onChange={handleInputChange}
+                      className={validationErrors.dueDate ? "border-red-500" : ""}
+                    />
+                    {validationErrors.dueDate && (
+                      <p className="text-xs text-red-500">{validationErrors.dueDate}</p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="amount">Loan Amount</Label>
-                    <Input id="amount" placeholder="UGX amount" />
+                    <Label htmlFor="amount">Loan Amount (UGX)</Label>
+                    <Input 
+                      id="amount" 
+                      placeholder="e.g. 50000000" 
+                      value={formData.amount}
+                      onChange={handleInputChange}
+                      className={validationErrors.amount ? "border-red-500" : ""}
+                    />
+                    {validationErrors.amount && (
+                      <p className="text-xs text-red-500">{validationErrors.amount}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="interestRate">Interest Rate (%)</Label>
-                    <Input id="interestRate" type="number" step="0.1" />
+                    <Input 
+                      id="interestRate" 
+                      type="number" 
+                      step="0.1" 
+                      placeholder="e.g. 12.5"
+                      value={formData.interestRate}
+                      onChange={handleInputChange}
+                      className={validationErrors.interestRate ? "border-red-500" : ""}
+                    />
+                    {validationErrors.interestRate && (
+                      <p className="text-xs text-red-500">{validationErrors.interestRate}</p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="paymentFrequency">Payment Frequency</Label>
-                    <Select>
-                      <SelectTrigger>
+                    <Select 
+                      value={formData.paymentFrequency} 
+                      onValueChange={(value) => handleSelectChange(value, 'paymentFrequency')}
+                    >
+                      <SelectTrigger id="paymentFrequency" className={validationErrors.paymentFrequency ? "border-red-500" : ""}>
                         <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
                       <SelectContent>
@@ -367,31 +477,64 @@ const LoanManager = () => {
                         <SelectItem value="annual">Annual</SelectItem>
                       </SelectContent>
                     </Select>
+                    {validationErrors.paymentFrequency && (
+                      <p className="text-xs text-red-500">{validationErrors.paymentFrequency}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="purpose">Purpose</Label>
-                    <Input id="purpose" placeholder="Loan purpose" />
+                    <Input 
+                      id="purpose" 
+                      placeholder="Loan purpose" 
+                      value={formData.purpose}
+                      onChange={handleInputChange}
+                      className={validationErrors.purpose ? "border-red-500" : ""}
+                    />
+                    {validationErrors.purpose && (
+                      <p className="text-xs text-red-500">{validationErrors.purpose}</p>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="collateral">Collateral</Label>
-                    <Input id="collateral" placeholder="Collateral details" />
+                    <Input 
+                      id="collateral" 
+                      placeholder="Collateral details" 
+                      value={formData.collateral}
+                      onChange={handleInputChange}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="contact">Contact Person</Label>
-                    <Input id="contact" placeholder="Bank contact person" />
+                    <Input 
+                      id="contact" 
+                      placeholder="Bank contact person" 
+                      value={formData.contact}
+                      onChange={handleInputChange}
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes</Label>
-                  <Input id="notes" placeholder="Additional notes" />
-                </div>
-                <div className="flex justify-end space-x-2 pt-2">
-                  <Button variant="outline">Cancel</Button>
-                  <Button type="submit">Save Loan</Button>
+                  <Input 
+                    id="notes" 
+                    placeholder="Additional notes" 
+                    value={formData.notes}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                <Button 
+                  type="submit" 
+                  onClick={handleSubmit} 
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Loan'}
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
           <Button variant="outline" size="icon" onClick={handlePrint}>
@@ -423,7 +566,13 @@ const LoanManager = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLoans.length === 0 ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-center py-10">
+                      Loading loan data...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredLoans.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center py-10">
                       No loan records found. Add your first loan record.
@@ -436,7 +585,7 @@ const LoanManager = () => {
                     
                     return (
                       <TableRow key={loan.id}>
-                        <TableCell className="font-medium">{loan.id}</TableCell>
+                        <TableCell className="font-medium">{loan.loanId}</TableCell>
                         <TableCell>{loan.institution}</TableCell>
                         <TableCell>{loan.startDate}</TableCell>
                         <TableCell>{loan.dueDate}</TableCell>
@@ -507,7 +656,7 @@ const LoanManager = () => {
                     return (
                       <div key={idx} className="flex items-center justify-between border-b pb-2 last:border-0">
                         <div>
-                          <p className="font-medium">{loan.institution} ({loan.id})</p>
+                          <p className="font-medium">{loan.institution} ({loan.loanId})</p>
                           <p className="text-sm text-muted-foreground">{loan.nextPayment}</p>
                         </div>
                         <div className="text-right">
