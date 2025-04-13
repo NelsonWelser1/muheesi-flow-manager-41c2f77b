@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import UpdateStock from '../components/inventory/UpdateStock';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Home, LogOut, Clock, Landmark } from "lucide-react";
+import { ArrowLeft, Home, LogOut, Clock } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 
@@ -115,17 +115,6 @@ const ManageInventory = () => {
           </Button>
         </div>
       </div>
-      
-      <div className="mb-6">
-        <Button 
-          className="bg-blue-600 hover:bg-blue-700"
-          onClick={() => navigate('/loans')}
-        >
-          <Landmark className="mr-2 h-5 w-5" />
-          Loan Management
-        </Button>
-      </div>
-      
       <div className="flex flex-col space-y-4">
         {companies.map(company => <Card key={company.name} onClick={() => handleCompanyClick(company)} className="w-full cursor-pointer hover:shadow-lg transition-shadow bg-[#e7f5e7]">
             <CardHeader className="my-[10px] bg-[#f6f9f6] rounded-none">

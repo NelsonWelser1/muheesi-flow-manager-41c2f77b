@@ -31,103 +31,122 @@ import {
   DollarSign,
   Pencil,
   Trash2,
-  AlertCircle,
-  Loader2
+  AlertCircle
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { KyalimaPDFExport } from "./utils/KyalimaPDFExport";
 import { Progress } from "@/components/ui/progress";
-import { format } from 'date-fns';
-import { useLoanData } from '@/hooks/useLoanData';
 
 const LoanManager = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [addLoanDialog, setAddLoanDialog] = useState(false);
   
-  const {
-    loansData,
-    isLoading,
-    isSubmitting,
-    error,
-    fetchLoansData,
-    addLoan,
-    deleteLoan
-  } = useLoanData();
+  // Sample data for loans
+  const loansData = [
+    { 
+      id: 'KYL-L001', 
+      institution: 'Equity Bank',
+      startDate: '2023-05-15',
+      dueDate: '2025-05-15',
+      amount: 'UGX 50,000,000',
+      remainingAmount: 'UGX 32,500,000',
+      nextPayment: '2024-02-15',
+      nextPaymentAmount: 'UGX 2,250,000',
+      status: 'active',
+      interestRate: '12%',
+      paymentFrequency: 'Monthly',
+      purpose: 'Cattle Purchase',
+      collateral: 'Farm Land & Equipment',
+      contact: 'Sarah Mwangi'
+    },
+    { 
+      id: 'KYL-L002', 
+      institution: 'DFCU Bank',
+      startDate: '2022-11-10',
+      dueDate: '2026-11-10',
+      amount: 'UGX 75,000,000',
+      remainingAmount: 'UGX 61,250,000',
+      nextPayment: '2024-02-10',
+      nextPaymentAmount: 'UGX 1,875,000',
+      status: 'active',
+      interestRate: '10%',
+      paymentFrequency: 'Monthly',
+      purpose: 'Farm Expansion',
+      collateral: 'Business Assets',
+      contact: 'Joseph Omondi'
+    },
+    { 
+      id: 'KYL-L003', 
+      institution: 'Stanbic Bank',
+      startDate: '2023-08-22',
+      dueDate: '2024-08-22',
+      amount: 'UGX 25,000,000',
+      remainingAmount: 'UGX 18,750,000',
+      nextPayment: '2024-02-22',
+      nextPaymentAmount: 'UGX 2,150,000',
+      status: 'active',
+      interestRate: '14%',
+      paymentFrequency: 'Monthly',
+      purpose: 'Equipment Purchase',
+      collateral: 'Equipment',
+      contact: 'Emma Odhiambo'
+    },
+    { 
+      id: 'KYL-L004', 
+      institution: 'Absa Bank',
+      startDate: '2022-03-05',
+      dueDate: '2024-03-05',
+      amount: 'UGX 20,000,000',
+      remainingAmount: 'UGX 5,500,000',
+      nextPayment: '2024-02-05',
+      nextPaymentAmount: 'UGX 1,440,000',
+      status: 'active',
+      interestRate: '11.5%',
+      paymentFrequency: 'Monthly',
+      purpose: 'Working Capital',
+      collateral: 'Inventory',
+      contact: 'David Lusaka'
+    },
+    { 
+      id: 'KYL-L005', 
+      institution: 'Centenary Bank',
+      startDate: '2022-01-15',
+      dueDate: '2023-12-15',
+      amount: 'UGX 15,000,000',
+      remainingAmount: 'UGX 0',
+      nextPayment: 'N/A',
+      nextPaymentAmount: 'N/A',
+      status: 'completed',
+      interestRate: '13%',
+      paymentFrequency: 'Monthly',
+      purpose: 'Vehicle Purchase',
+      collateral: 'Vehicle',
+      contact: 'Martha Wangui'
+    },
+  ];
   
-  const [newLoan, setNewLoan] = useState({
-    loan_id: '',
-    institution: '',
-    start_date: format(new Date(), 'yyyy-MM-dd'),
-    due_date: '',
-    amount: '',
-    interest_rate: '',
-    payment_frequency: 'monthly',
-    purpose: '',
-    collateral: '',
-    contact: '',
-    notes: ''
-  });
-  
-  const handleInputChange = (e) => {
-    const { id, value } = e.target;
-    setNewLoan(prev => ({
-      ...prev,
-      [id]: value
-    }));
-  };
-  
-  const handleSelectChange = (field, value) => {
-    setNewLoan(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-  
-  const clearForm = () => {
-    setNewLoan({
-      loan_id: '',
-      institution: '',
-      start_date: format(new Date(), 'yyyy-MM-dd'),
-      due_date: '',
-      amount: '',
-      interest_rate: '',
-      payment_frequency: 'monthly',
-      purpose: '',
-      collateral: '',
-      contact: '',
-      notes: ''
-    });
-  };
-  
-  const handleSubmit = async () => {
-    const success = await addLoan(newLoan);
-    if (success) {
-      setAddLoanDialog(false);
-      clearForm();
-    }
-  };
-  
+  // Filter loans based on search term and status filter
   const filteredLoans = loansData.filter(loan => {
     const matchesSearch = 
       loan.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
       loan.institution.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (loan.purpose && loan.purpose.toLowerCase().includes(searchTerm.toLowerCase()));
+      loan.purpose.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = filterStatus === 'all' || loan.status === filterStatus;
     
     return matchesSearch && matchesStatus;
   });
 
+  // Calculate total active loans amount
   const activeLoans = loansData.filter(loan => loan.status === 'active');
   const totalActiveLoansAmount = activeLoans.reduce((total, loan) => {
-    const amount = typeof loan.remainingAmount === 'string'
-      ? parseInt(loan.remainingAmount.replace(/\D/g, ''))
-      : (loan.remaining_amount || 0);
+    // Extract the numerical value from the UGX string
+    const amount = parseInt(loan.remainingAmount.replace(/\D/g, ''));
     return total + amount;
   }, 0);
   
+  // Format currency with UGX and commas
   const formatCurrency = (amount) => {
     if (amount === 'N/A') return amount;
     
@@ -135,37 +154,28 @@ const LoanManager = () => {
       return `UGX ${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
     }
     
-    if (amount && typeof amount === 'string' && amount.startsWith('UGX')) return amount;
+    // If already formatted with UGX, return as is
+    if (amount.startsWith('UGX')) return amount;
     
-    const value = parseInt(amount?.replace(/\D/g, '') || 0);
+    // Otherwise, parse and format
+    const value = parseInt(amount.replace(/\D/g, ''));
     return `UGX ${value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
   };
   
+  // Calculate percentage of repayment for a loan
   const calculateRepaymentPercentage = (loan) => {
     if (loan.status === 'completed') return 100;
     
-    let totalAmount, remainingAmount;
-    
-    if (typeof loan.amount === 'string' && loan.amount.startsWith('UGX')) {
-      totalAmount = parseInt(loan.amount.replace(/\D/g, ''));
-    } else {
-      totalAmount = parseFloat(loan.amount || 0);
-    }
-    
-    if (typeof loan.remainingAmount === 'string' && loan.remainingAmount.startsWith('UGX')) {
-      remainingAmount = parseInt(loan.remainingAmount.replace(/\D/g, ''));
-    } else {
-      remainingAmount = parseFloat(loan.remaining_amount || 0);
-    }
-    
-    if (totalAmount === 0) return 0;
-    
+    const totalAmount = parseInt(loan.amount.replace(/\D/g, ''));
+    const remainingAmount = parseInt(loan.remainingAmount.replace(/\D/g, ''));
     const repaidAmount = totalAmount - remainingAmount;
+    
     return Math.round((repaidAmount / totalAmount) * 100);
   };
   
+  // Days until next payment
   const getDaysUntilNextPayment = (nextPaymentDate) => {
-    if (!nextPaymentDate || nextPaymentDate === 'N/A') return 'N/A';
+    if (nextPaymentDate === 'N/A') return 'N/A';
     
     const today = new Date();
     const paymentDate = new Date(nextPaymentDate);
@@ -175,6 +185,7 @@ const LoanManager = () => {
     return diffDays > 0 ? diffDays : 'Due today';
   };
   
+  // Get badge for loan status
   const getStatusBadge = (status) => {
     switch(status) {
       case 'active':
@@ -189,13 +200,13 @@ const LoanManager = () => {
   };
   
   const handleRefresh = () => {
-    fetchLoansData();
     toast({
       title: "Data Refreshed",
-      description: "Loan data has been refreshed from the database.",
+      description: "Loan data has been refreshed.",
     });
   };
   
+  // Handle export to PDF
   const handleExportPDF = () => {
     KyalimaPDFExport.exportTableToPDF('loans-table', 'Kyalima_Loan_Data');
     toast({
@@ -204,6 +215,7 @@ const LoanManager = () => {
     });
   };
   
+  // Handle print
   const handlePrint = () => {
     KyalimaPDFExport.printTable('loans-table');
     toast({
@@ -212,15 +224,9 @@ const LoanManager = () => {
     });
   };
 
-  const handleDeleteLoan = async (loanId) => {
-    const confirmed = window.confirm("Are you sure you want to delete this loan? This action cannot be undone.");
-    if (confirmed) {
-      await deleteLoan(loanId);
-    }
-  };
-
   return (
     <div className="space-y-4">
+      {/* Metrics summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
@@ -255,7 +261,7 @@ const LoanManager = () => {
             <div className="flex items-center mt-1">
               <Calendar className="h-3 w-3 text-muted-foreground mr-1" />
               <p className="text-xs text-muted-foreground">
-                {activeLoans.length > 0 ? (activeLoans[0].next_payment || 'No date set') : 'No upcoming payments'}
+                {activeLoans.length > 0 ? activeLoans[0].nextPayment : 'No upcoming payments'}
               </p>
             </div>
           </CardContent>
@@ -277,6 +283,7 @@ const LoanManager = () => {
         </Card>
       </div>
 
+      {/* Search and filters */}
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="flex flex-1 items-center space-x-2">
           <div className="relative flex-1">
@@ -299,12 +306,12 @@ const LoanManager = () => {
               <SelectItem value="overdue">Overdue</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isLoading}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          <Button variant="outline" size="icon" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
         <div className="flex items-center space-x-2">
-          <Dialog open={addLoanDialog} onOpenChange={setAddLoanDialog}>
+          <Dialog>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -318,73 +325,38 @@ const LoanManager = () => {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="loan_id">Loan ID</Label>
-                    <Input 
-                      id="loan_id" 
-                      placeholder="KYL-L###" 
-                      value={newLoan.loan_id}
-                      onChange={handleInputChange}
-                    />
+                    <Label htmlFor="loanId">Loan ID</Label>
+                    <Input id="loanId" placeholder="KYL-L###" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="institution">Financial Institution</Label>
-                    <Input 
-                      id="institution" 
-                      placeholder="Bank name" 
-                      value={newLoan.institution}
-                      onChange={handleInputChange}
-                    />
+                    <Input id="institution" placeholder="Bank name" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="start_date">Start Date</Label>
-                    <Input 
-                      id="start_date" 
-                      type="date" 
-                      value={newLoan.start_date}
-                      onChange={handleInputChange}
-                    />
+                    <Label htmlFor="startDate">Start Date</Label>
+                    <Input id="startDate" type="date" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="due_date">Due Date</Label>
-                    <Input 
-                      id="due_date" 
-                      type="date" 
-                      value={newLoan.due_date}
-                      onChange={handleInputChange}
-                    />
+                    <Label htmlFor="dueDate">Due Date</Label>
+                    <Input id="dueDate" type="date" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="amount">Loan Amount</Label>
-                    <Input 
-                      id="amount" 
-                      placeholder="UGX amount" 
-                      type="number"
-                      value={newLoan.amount}
-                      onChange={handleInputChange}
-                    />
+                    <Input id="amount" placeholder="UGX amount" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="interest_rate">Interest Rate (%)</Label>
-                    <Input 
-                      id="interest_rate" 
-                      type="number" 
-                      step="0.1" 
-                      value={newLoan.interest_rate}
-                      onChange={handleInputChange}
-                    />
+                    <Label htmlFor="interestRate">Interest Rate (%)</Label>
+                    <Input id="interestRate" type="number" step="0.1" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="payment_frequency">Payment Frequency</Label>
-                    <Select 
-                      value={newLoan.payment_frequency} 
-                      onValueChange={(value) => handleSelectChange('payment_frequency', value)}
-                    >
+                    <Label htmlFor="paymentFrequency">Payment Frequency</Label>
+                    <Select>
                       <SelectTrigger>
                         <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
@@ -398,68 +370,26 @@ const LoanManager = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="purpose">Purpose</Label>
-                    <Input 
-                      id="purpose" 
-                      placeholder="Loan purpose" 
-                      value={newLoan.purpose}
-                      onChange={handleInputChange}
-                    />
+                    <Input id="purpose" placeholder="Loan purpose" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="collateral">Collateral</Label>
-                    <Input 
-                      id="collateral" 
-                      placeholder="Collateral details" 
-                      value={newLoan.collateral}
-                      onChange={handleInputChange}
-                    />
+                    <Input id="collateral" placeholder="Collateral details" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="contact">Contact Person</Label>
-                    <Input 
-                      id="contact" 
-                      placeholder="Bank contact person" 
-                      value={newLoan.contact}
-                      onChange={handleInputChange}
-                    />
+                    <Input id="contact" placeholder="Bank contact person" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes</Label>
-                  <Input 
-                    id="notes" 
-                    placeholder="Additional notes" 
-                    value={newLoan.notes}
-                    onChange={handleInputChange}
-                  />
+                  <Input id="notes" placeholder="Additional notes" />
                 </div>
                 <div className="flex justify-end space-x-2 pt-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      clearForm();
-                      setAddLoanDialog(false);
-                    }}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      'Save Loan'
-                    )}
-                  </Button>
+                  <Button variant="outline">Cancel</Button>
+                  <Button type="submit">Save Loan</Button>
                 </div>
               </div>
             </DialogContent>
@@ -473,6 +403,7 @@ const LoanManager = () => {
         </div>
       </div>
 
+      {/* Data table */}
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -492,23 +423,7 @@ const LoanManager = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-10">
-                      <div className="flex flex-col items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-                        <span>Loading loan data...</span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : error ? (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-10 text-red-500">
-                      <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-                      <p>{error}</p>
-                    </TableCell>
-                  </TableRow>
-                ) : filteredLoans.length === 0 ? (
+                {filteredLoans.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center py-10">
                       No loan records found. Add your first loan record.
@@ -517,22 +432,22 @@ const LoanManager = () => {
                 ) : (
                   filteredLoans.map((loan) => {
                     const repaymentPercentage = calculateRepaymentPercentage(loan);
-                    const daysUntilNextPayment = getDaysUntilNextPayment(loan.next_payment);
+                    const daysUntilNextPayment = getDaysUntilNextPayment(loan.nextPayment);
                     
                     return (
                       <TableRow key={loan.id}>
                         <TableCell className="font-medium">{loan.id}</TableCell>
                         <TableCell>{loan.institution}</TableCell>
-                        <TableCell>{loan.start_date}</TableCell>
-                        <TableCell>{loan.due_date}</TableCell>
+                        <TableCell>{loan.startDate}</TableCell>
+                        <TableCell>{loan.dueDate}</TableCell>
                         <TableCell>{loan.amount}</TableCell>
                         <TableCell>{loan.remainingAmount}</TableCell>
                         <TableCell>
-                          {loan.next_payment === 'N/A' || !loan.next_payment ? (
+                          {loan.nextPayment === 'N/A' ? (
                             'N/A'
                           ) : (
                             <div>
-                              {loan.next_payment}
+                              {loan.nextPayment}
                               <div className="text-xs text-muted-foreground">
                                 {daysUntilNextPayment !== 'N/A' && (
                                   <span className={daysUntilNextPayment < 5 ? 'text-red-500 font-medium' : ''}>
@@ -559,13 +474,7 @@ const LoanManager = () => {
                           <Button variant="ghost" size="icon" className="h-8 w-8">
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8"
-                            onClick={() => handleDeleteLoan(loan.id)}
-                            disabled={isSubmitting}
-                          >
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
@@ -579,6 +488,7 @@ const LoanManager = () => {
         </CardContent>
       </Card>
 
+      {/* Payment schedule section */}
       <div className="mt-8">
         <h3 className="text-lg font-medium mb-4">Payment Schedule & Insights</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

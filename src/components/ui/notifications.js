@@ -1,54 +1,69 @@
 
-/**
- * Utility functions for displaying toast notifications
- */
+import { toast } from "@/components/ui/use-toast";
 
-export const showSuccessToast = (toast, message) => {
-  toast({
+/**
+ * Show a success toast notification
+ * @param {Object} toastInstance - Toast instance from useToast hook
+ * @param {string} message - Message to display
+ */
+export const showSuccessToast = (toastInstance, message) => {
+  toastInstance({
     title: "Success",
     description: message,
     variant: "default",
   });
 };
 
-export const showErrorToast = (toast, message) => {
-  toast({
+/**
+ * Show an error toast notification
+ * @param {Object} toastInstance - Toast instance from useToast hook
+ * @param {string} message - Message to display
+ */
+export const showErrorToast = (toastInstance, message) => {
+  toastInstance({
     title: "Error",
     description: message,
     variant: "destructive",
   });
 };
 
-export const showWarningToast = (toast, message) => {
-  toast({
+/**
+ * Show a warning toast notification
+ * @param {Object} toastInstance - Toast instance from useToast hook
+ * @param {string} message - Message to display
+ */
+export const showWarningToast = (toastInstance, message) => {
+  toastInstance({
     title: "Warning",
     description: message,
-    variant: "default",
-    className: "bg-yellow-100 border-yellow-400 text-yellow-800",
-  });
-};
-
-export const showInfoToast = (toast, message) => {
-  toast({
-    title: "Info",
-    description: message,
-    variant: "default",
-    className: "bg-blue-100 border-blue-400 text-blue-800",
+    variant: "warning",
   });
 };
 
 /**
- * Show a loading toast notification that stays until manually dismissed
- * @param {Object} toast - Toast function from useToast hook
+ * Show an info toast notification
+ * @param {Object} toastInstance - Toast instance from useToast hook
+ * @param {string} message - Message to display
+ */
+export const showInfoToast = (toastInstance, message) => {
+  toastInstance({
+    title: "Information",
+    description: message,
+    variant: "default",
+  });
+};
+
+/**
+ * Show a loading toast notification
+ * @param {Object} toastInstance - Toast instance from useToast hook
  * @param {string} message - Message to display
  * @returns {string} The toast ID for dismissal
  */
-export const showLoadingToast = (toast, message) => {
-  return toast({
+export const showLoadingToast = (toastInstance, message) => {
+  return toastInstance({
     title: "Loading",
     description: message,
     variant: "default",
-    className: "bg-gray-50 border-gray-300",
     duration: Infinity, // Stays until manually dismissed
   });
 };
@@ -56,7 +71,7 @@ export const showLoadingToast = (toast, message) => {
 /**
  * Dismiss a toast notification by ID
  * @param {string} toastId - ID of the toast to dismiss
- * @returns {Object|null} Object with toast ID or null
+ * @returns {Object} Object with toast ID
  */
 export const dismissToast = (toastId) => {
   if (toastId) {
@@ -64,4 +79,3 @@ export const dismissToast = (toastId) => {
   }
   return null;
 };
-
