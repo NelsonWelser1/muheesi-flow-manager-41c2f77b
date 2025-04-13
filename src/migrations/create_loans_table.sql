@@ -3,7 +3,6 @@
 
 CREATE TABLE IF NOT EXISTS public.loans (
   id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-  farm_id text NOT NULL,
   loan_id text NOT NULL,
   institution text NOT NULL,
   start_date date NOT NULL,

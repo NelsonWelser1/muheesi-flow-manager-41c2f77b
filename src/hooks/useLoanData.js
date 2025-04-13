@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
 
-export const useLoanData = (farmId = 'kyalima') => {
+export const useLoanData = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -21,7 +21,6 @@ export const useLoanData = (farmId = 'kyalima') => {
     try {
       // Format the data for Supabase
       const formattedLoan = {
-        farm_id: farmId,
         loan_id: loanData.loanId,
         institution: loanData.institution,
         start_date: loanData.startDate,
@@ -30,9 +29,9 @@ export const useLoanData = (farmId = 'kyalima') => {
         interest_rate: parseFloat(loanData.interestRate),
         payment_frequency: loanData.paymentFrequency,
         purpose: loanData.purpose,
-        collateral: loanData.collateral,
-        contact_person: loanData.contact,
-        notes: loanData.notes,
+        collateral: loanData.collateral || null,
+        contact_person: loanData.contact || null,
+        notes: loanData.notes || null,
         status: 'active',
         created_at: new Date().toISOString()
       };
@@ -68,7 +67,6 @@ export const useLoanData = (farmId = 'kyalima') => {
       const { data, error } = await supabase
         .from('loans')
         .select('*')
-        .eq('farm_id', farmId)
         .order('created_at', { ascending: false });
         
       if (error) {
