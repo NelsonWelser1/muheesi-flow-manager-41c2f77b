@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { CalendarIcon, ArrowLeft, Home } from "lucide-react";
 import { useLoanData } from '@/hooks/useLoanData';
+import { toast } from 'sonner';
 
 const LoanManagerPage = () => {
   const navigate = useNavigate();
@@ -76,7 +77,6 @@ const LoanManagerPage = () => {
           const refreshedLoan = data.find(loan => loan.displayId === loanId);
           if (refreshedLoan) {
             // Similar logic as above for setting form data
-            // This is a fallback in case the loan data wasn't loaded initially
             console.log('Found loan after refresh:', refreshedLoan);
             // Set form data here...
           } else {
@@ -97,8 +97,42 @@ const LoanManagerPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const validateForm = () => {
+    const requiredFields = [
+      { name: 'loan_id', label: 'Loan ID' },
+      { name: 'institution', label: 'Institution' },
+      { name: 'amount', label: 'Loan Amount' },
+      { name: 'interest_rate', label: 'Interest Rate' }
+    ];
+    
+    for (const field of requiredFields) {
+      if (!formData[field.name]) {
+        toast.error(`${field.label} is required`);
+        return false;
+      }
+    }
+    
+    // Check if amount is a valid number
+    if (isNaN(parseFloat(formData.amount))) {
+      toast.error('Loan Amount must be a valid number');
+      return false;
+    }
+    
+    // Check if interest rate is a valid number
+    if (isNaN(parseFloat(formData.interest_rate))) {
+      toast.error('Interest Rate must be a valid number');
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
     
     // Prepare the complete loan data with dates
     const loanData = {
@@ -111,34 +145,40 @@ const LoanManagerPage = () => {
     console.log(`${isEditMode ? 'Updating' : 'Submitting'} loan data:`, loanData);
     
     let success;
-    if (isEditMode) {
-      success = await updateLoan(loanId, loanData);
-    } else {
-      success = await addLoan(loanData);
-    }
-    
-    if (success) {
-      // Reset form after successful submission (only for add mode)
-      if (!isEditMode) {
-        setFormData({
-          loan_id: `LOAN-${Date.now().toString().slice(-6)}`,
-          institution: '',
-          amount: '',
-          interest_rate: '',
-          payment_frequency: 'monthly',
-          next_payment_amount: '',
-          purpose: '',
-          notes: '',
-          status: 'active',
-          collateral: ''
-        });
-        setStartDate(new Date());
-        setDueDate(new Date());
-        setNextPaymentDate(new Date());
+    try {
+      if (isEditMode) {
+        success = await updateLoan(loanId, loanData);
+      } else {
+        success = await addLoan(loanData);
       }
       
-      // Navigate back to the loans listing page
-      navigate('/loans');
+      if (success) {
+        // Reset form after successful submission (only for add mode)
+        if (!isEditMode) {
+          setFormData({
+            loan_id: `LOAN-${Date.now().toString().slice(-6)}`,
+            institution: '',
+            amount: '',
+            interest_rate: '',
+            payment_frequency: 'monthly',
+            next_payment_amount: '',
+            purpose: '',
+            notes: '',
+            status: 'active',
+            collateral: ''
+          });
+          setStartDate(new Date());
+          setDueDate(new Date());
+          setNextPaymentDate(new Date());
+        }
+        
+        // Navigate back to the loans listing page
+        toast.success(`Loan ${isEditMode ? 'updated' : 'added'} successfully`);
+        navigate('/loans');
+      }
+    } catch (error) {
+      console.error('Error submitting loan:', error);
+      toast.error('An error occurred while submitting the loan');
     }
   };
 
