@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import CattleList from '../../cattle/CattleList';
-import CattleRegistration from '../../cattle/CattleRegistration';
+import CattleList from "../../../../CattleList";
+import CattleRegistration from "../../../../CattleRegistration";
 
 const CattleInventoryView = () => {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
