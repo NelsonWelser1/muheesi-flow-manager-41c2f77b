@@ -1,14 +1,9 @@
 
 import React from 'react';
-import CattleHealth from '../../health/HealthRecordsView';
+import HealthRecordsView from '../../cattle/health/HealthRecordsView';
 
-const HealthRecordsView = () => {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold mb-4">Health Records</h2>
-      <CattleHealth />
-    </div>
-  );
+const DairyHealthRecordsView = () => {
+  return <HealthRecordsView />;
 };
 
-export default HealthRecordsView;
+export default DairyHealthRecordsView;
