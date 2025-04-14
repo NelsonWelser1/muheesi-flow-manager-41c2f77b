@@ -1,22 +1,16 @@
-
 import React from 'react';
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, Calendar, Syringe, Activity } from "lucide-react";
+import { Calendar, Syringe, Activity } from "lucide-react";
 import HealthRecordsTable from './HealthRecordsTable';
+import AddHealthRecordDialog from './AddHealthRecordDialog';
 
-const HealthRecordsView = () => {
+const HealthRecordsView = ({ cattleData = [] }) => {
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Health Records</h2>
-        <Button 
-          className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
-        >
-          <PlusCircle className="h-4 w-4" />
-          Add Health Record
-        </Button>
+        <AddHealthRecordDialog cattleData={cattleData} />
       </div>
 
       {/* Stats Cards */}
