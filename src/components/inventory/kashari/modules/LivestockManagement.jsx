@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
 import CattleRegistration from './CattleRegistration';
 import CattleList from './CattleList';
+import CattleHealth from './CattleHealth';
+import CattleGrowth from './CattleGrowth';
 import LivestockSidebar from './livestock/LivestockSidebar';
 
 const LivestockManagement = () => {
@@ -15,34 +16,10 @@ const LivestockManagement = () => {
         return <CattleList />;
       case 'registration':
         return <CattleRegistration />;
-      case 'vaccinations':
-        return (
-          <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4">Vaccination Records</h3>
-            <p className="text-muted-foreground">Vaccination records form and history will appear here</p>
-          </Card>
-        );
-      case 'treatments':
-        return (
-          <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4">Treatment Records</h3>
-            <p className="text-muted-foreground">Treatment records form and history will appear here</p>
-          </Card>
-        );
-      case 'weightTracking':
-        return (
-          <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4">Weight Tracking</h3>
-            <p className="text-muted-foreground">Weight tracking form and history will appear here</p>
-          </Card>
-        );
-      case 'performance':
-        return (
-          <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4">Performance Metrics</h3>
-            <p className="text-muted-foreground">Performance metrics and analytics will appear here</p>
-          </Card>
-        );
+      case 'health':
+        return <CattleHealth />;
+      case 'growth':
+        return <CattleGrowth />;
       default:
         return <CattleList />;
     }

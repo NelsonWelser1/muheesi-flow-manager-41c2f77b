@@ -3,16 +3,15 @@ import React, { useState } from 'react';
 import { 
   Beef, 
   UserPlus, 
-  Stethoscope, 
-  LineChart,
+  Stethoscope,
+  Scale,
   ChevronDown,
   ChevronRight,
-  Scale,
   Activity,
   TrendingUp
 } from "lucide-react";
 
-const LivestockSidebar = ({ activeSection, setActiveSection, activeTab, setActiveTab }) => {
+const LivestockSidebar = ({ activeSection, setActiveSection }) => {
   const [expandedSections, setExpandedSections] = useState({
     cattleManagement: true,
     healthRecords: false,
@@ -26,15 +25,12 @@ const LivestockSidebar = ({ activeSection, setActiveSection, activeTab, setActiv
     }));
   };
 
-  const handleSectionClick = (section, tab = null) => {
+  const handleSectionClick = (section) => {
     setActiveSection(section);
-    if (tab) {
-      setActiveTab(tab);
-    }
   };
 
   return (
-    <div className="w-64 bg-white border-r h-[calc(100vh-7rem)] overflow-y-auto">
+    <div className="w-64 bg-white border-r h-full overflow-y-auto">
       <div className="p-4">
         <h3 className="text-xl font-bold mb-6 text-gray-700">Livestock Management</h3>
         
@@ -67,7 +63,7 @@ const LivestockSidebar = ({ activeSection, setActiveSection, activeTab, setActiv
               </button>
               <button 
                 className={`block w-full text-left p-2 text-sm rounded-md ${
-                  activeSection === 'registration' ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-100'
+                  activeSection === 'registration' ? 'bg-orange-50 text-orange-600 font-medium' : 'hover:bg-gray-100'
                 }`}
                 onClick={() => handleSectionClick('registration')}
               >
@@ -98,21 +94,12 @@ const LivestockSidebar = ({ activeSection, setActiveSection, activeTab, setActiv
             <div className="ml-7 mt-2 space-y-1 border-l-2 border-gray-200 pl-2">
               <button 
                 className={`block w-full text-left p-2 text-sm rounded-md ${
-                  activeSection === 'vaccinations' ? 'bg-purple-50 text-purple-600 font-medium' : 'hover:bg-gray-100'
+                  activeSection === 'health' ? 'bg-purple-50 text-purple-600 font-medium' : 'hover:bg-gray-100'
                 }`}
-                onClick={() => handleSectionClick('vaccinations')}
+                onClick={() => handleSectionClick('health')}
               >
                 <Activity className="inline-block mr-2 h-4 w-4" />
-                Vaccinations
-              </button>
-              <button 
-                className={`block w-full text-left p-2 text-sm rounded-md ${
-                  activeSection === 'treatments' ? 'bg-purple-50 text-purple-600 font-medium' : 'hover:bg-gray-100'
-                }`}
-                onClick={() => handleSectionClick('treatments')}
-              >
-                <Stethoscope className="inline-block mr-2 h-4 w-4" />
-                Treatments
+                Health Records
               </button>
             </div>
           )}
@@ -125,7 +112,7 @@ const LivestockSidebar = ({ activeSection, setActiveSection, activeTab, setActiv
             onClick={() => toggleSection('growthMetrics')}
           >
             <div className="flex items-center">
-              <LineChart className="mr-2 h-5 w-5 text-green-500" />
+              <Scale className="mr-2 h-5 w-5 text-green-500" />
               <span>Growth Metrics</span>
             </div>
             {expandedSections.growthMetrics ? 
@@ -138,21 +125,12 @@ const LivestockSidebar = ({ activeSection, setActiveSection, activeTab, setActiv
             <div className="ml-7 mt-2 space-y-1 border-l-2 border-gray-200 pl-2">
               <button 
                 className={`block w-full text-left p-2 text-sm rounded-md ${
-                  activeSection === 'weightTracking' ? 'bg-green-50 text-green-600 font-medium' : 'hover:bg-gray-100'
+                  activeSection === 'growth' ? 'bg-green-50 text-green-600 font-medium' : 'hover:bg-gray-100'
                 }`}
-                onClick={() => handleSectionClick('weightTracking')}
-              >
-                <Scale className="inline-block mr-2 h-4 w-4" />
-                Weight Tracking
-              </button>
-              <button 
-                className={`block w-full text-left p-2 text-sm rounded-md ${
-                  activeSection === 'performance' ? 'bg-green-50 text-green-600 font-medium' : 'hover:bg-gray-100'
-                }`}
-                onClick={() => handleSectionClick('performance')}
+                onClick={() => handleSectionClick('growth')}
               >
                 <TrendingUp className="inline-block mr-2 h-4 w-4" />
-                Performance Metrics
+                Growth Tracking
               </button>
             </div>
           )}
