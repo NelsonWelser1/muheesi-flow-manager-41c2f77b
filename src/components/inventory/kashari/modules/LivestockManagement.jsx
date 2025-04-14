@@ -1,70 +1,67 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import CattleRegistration from './CattleRegistration';
-import CattleHealth from './CattleHealth';
-import CattleGrowth from './CattleGrowth';
 import CattleList from './CattleList';
-import KyalimaCattleFattening from './KyalimaCattleFattening';
+import LivestockSidebar from './livestock/LivestockSidebar';
 
 const LivestockManagement = () => {
-  const [activeTab, setActiveTab] = useState('cattle');
+  const [activeSection, setActiveSection] = useState('cattleList');
+  const [activeTab, setActiveTab] = useState('overview');
 
-  // Custom wrapper for KyalimaCattleFattening component
-  const CustomCattleFattening = () => {
-    return (
-      <div className="cattle-fattening-wrapper">
-        <div className="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-          <h3 className="text-lg font-semibold text-amber-800 mb-2">Enhanced Fattening Program</h3>
-          <p className="text-amber-700 mb-2">
-            Track your cattle's growth progress, health records and fattening performance metrics.
-          </p>
-          <div className="flex flex-wrap gap-2 my-2">
-            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Weight Tracking</Badge>
-            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Feed Conversion</Badge>
-            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Performance Metrics</Badge>
-            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Health Monitoring</Badge>
-          </div>
-        </div>
-        <KyalimaCattleFattening />
-      </div>
-    );
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'cattleList':
+        return <CattleList />;
+      case 'registration':
+        return <CattleRegistration />;
+      case 'vaccinations':
+        return (
+          <Card className="p-6">
+            <h3 className="text-lg font-medium mb-4">Vaccination Records</h3>
+            <p className="text-muted-foreground">Vaccination records form and history will appear here</p>
+          </Card>
+        );
+      case 'treatments':
+        return (
+          <Card className="p-6">
+            <h3 className="text-lg font-medium mb-4">Treatment Records</h3>
+            <p className="text-muted-foreground">Treatment records form and history will appear here</p>
+          </Card>
+        );
+      case 'weightTracking':
+        return (
+          <Card className="p-6">
+            <h3 className="text-lg font-medium mb-4">Weight Tracking</h3>
+            <p className="text-muted-foreground">Weight tracking form and history will appear here</p>
+          </Card>
+        );
+      case 'performance':
+        return (
+          <Card className="p-6">
+            <h3 className="text-lg font-medium mb-4">Performance Metrics</h3>
+            <p className="text-muted-foreground">Performance metrics and analytics will appear here</p>
+          </Card>
+        );
+      default:
+        return <CattleList />;
+    }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Livestock Management</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-5 mb-4">
-            <TabsTrigger value="cattle">Cattle List</TabsTrigger>
-            <TabsTrigger value="registration">Registration</TabsTrigger>
-            <TabsTrigger value="health">Health Records</TabsTrigger>
-            <TabsTrigger value="growth">Growth Tracking</TabsTrigger>
-            <TabsTrigger value="fattening">Fattening Programs</TabsTrigger>
-          </TabsList>
-          <TabsContent value="cattle">
-            <CattleList />
-          </TabsContent>
-          <TabsContent value="registration">
-            <CattleRegistration />
-          </TabsContent>
-          <TabsContent value="health">
-            <CattleHealth />
-          </TabsContent>
-          <TabsContent value="growth">
-            <CattleGrowth />
-          </TabsContent>
-          <TabsContent value="fattening">
-            <CustomCattleFattening />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+    <div className="h-[calc(100vh-4rem)]">
+      <div className="flex w-full h-full bg-white shadow rounded-lg overflow-hidden">
+        <LivestockSidebar 
+          activeSection={activeSection} 
+          setActiveSection={setActiveSection}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
+        <div className="flex-1 p-6 overflow-y-auto">
+          {renderContent()}
+        </div>
+      </div>
+    </div>
   );
 };
 
