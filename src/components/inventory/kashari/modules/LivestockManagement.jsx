@@ -1,31 +1,23 @@
 
 import React, { useState } from 'react';
-import CattleRegistration from './CattleRegistration';
-import CattleList from './CattleList';
-import CattleHealth from './CattleHealth';
-import CattleGrowth from './CattleGrowth';
+import CattleInventoryView from './cattle/CattleInventoryView';
+import HealthRecordsView from './health/HealthRecordsView';
+import GrowthMetricsView from './growth/GrowthMetricsView';
 import LivestockSidebar from './livestock/LivestockSidebar';
 
 const LivestockManagement = () => {
-  const [activeSection, setActiveSection] = useState('cattleList');
-  const [activeSubSection, setActiveSubSection] = useState(null);
+  const [activeSection, setActiveSection] = useState('cattleInventory');
   
   const renderContent = () => {
     switch (activeSection) {
-      case 'cattleManagement':
-        switch (activeSubSection) {
-          case 'registration':
-            return <CattleRegistration />;
-          case 'list':
-          default:
-            return <CattleList />;
-        }
+      case 'cattleInventory':
+        return <CattleInventoryView />;
       case 'healthRecords':
-        return <CattleHealth />;
+        return <HealthRecordsView />;
       case 'growthMetrics':
-        return <CattleGrowth />;
+        return <GrowthMetricsView />;
       default:
-        return <CattleList />;
+        return <CattleInventoryView />;
     }
   };
 
@@ -35,8 +27,6 @@ const LivestockManagement = () => {
         <LivestockSidebar 
           activeSection={activeSection} 
           setActiveSection={setActiveSection}
-          activeSubSection={activeSubSection}
-          setActiveSubSection={setActiveSubSection}
         />
         <div className="flex-1 p-6 overflow-y-auto">
           {renderContent()}
