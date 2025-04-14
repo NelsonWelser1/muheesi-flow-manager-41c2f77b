@@ -43,6 +43,7 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
         <Button 
           className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
           disabled={cattleData.length === 0}
+          onClick={() => console.log("Add Health Record button clicked")}
         >
           <PlusCircle className="h-4 w-4" />
           Add Health Record
@@ -61,4 +62,3 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
 };
 
 export default AddHealthRecordDialog;
-
