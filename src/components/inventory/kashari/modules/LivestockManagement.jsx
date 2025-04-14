@@ -8,17 +8,21 @@ import LivestockSidebar from './livestock/LivestockSidebar';
 
 const LivestockManagement = () => {
   const [activeSection, setActiveSection] = useState('cattleList');
-  const [activeTab, setActiveTab] = useState('overview');
-
+  const [activeSubSection, setActiveSubSection] = useState(null);
+  
   const renderContent = () => {
     switch (activeSection) {
-      case 'cattleList':
-        return <CattleList />;
-      case 'registration':
-        return <CattleRegistration />;
-      case 'health':
+      case 'cattleManagement':
+        switch (activeSubSection) {
+          case 'registration':
+            return <CattleRegistration />;
+          case 'list':
+          default:
+            return <CattleList />;
+        }
+      case 'healthRecords':
         return <CattleHealth />;
-      case 'growth':
+      case 'growthMetrics':
         return <CattleGrowth />;
       default:
         return <CattleList />;
@@ -31,8 +35,8 @@ const LivestockManagement = () => {
         <LivestockSidebar 
           activeSection={activeSection} 
           setActiveSection={setActiveSection}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          activeSubSection={activeSubSection}
+          setActiveSubSection={setActiveSubSection}
         />
         <div className="flex-1 p-6 overflow-y-auto">
           {renderContent()}
