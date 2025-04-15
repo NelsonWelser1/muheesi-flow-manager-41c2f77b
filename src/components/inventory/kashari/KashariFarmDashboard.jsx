@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart2, Calendar, Users, Tractor, PieChart, DollarSign, BookOpen, Clock } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { Beef, Stethoscope, LineChart, PlusCircle, ChevronLeft, Activity, Scale, TagIcon } from "lucide-react";
 import DairyManagement from './modules/DairyManagement';
-import ProductionManagement from './modules/LivestockManagement';
 import BananaPlantation from './modules/BananaPlantation';
 import SalesExpenditure from './modules/SalesExpenditure';
 import EmployeeManagement from './modules/EmployeeManagement';
@@ -18,7 +17,6 @@ const KashariFarmDashboard = () => {
   const [weather, setWeather] = useState({ temp: '24°C', condition: 'Partly Cloudy' });
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Update time every minute
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -34,7 +32,6 @@ const KashariFarmDashboard = () => {
     { title: 'Scholarships', value: '15 Active', change: '+3', icon: <BookOpen className="h-4 w-4 text-amber-500" /> }
   ];
 
-  // Upcoming events
   const events = [
     { title: 'Cattle Vaccination', date: '2023-07-15', type: 'health' },
     { title: 'Banana Field Inspection', date: '2023-07-18', type: 'inspection' },
@@ -64,10 +61,9 @@ const KashariFarmDashboard = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid grid-cols-2 md:grid-cols-8 mb-6">
+            <TabsList className="grid grid-cols-2 md:grid-cols-7 mb-6">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="dairy">Dairy Products</TabsTrigger>
-              <TabsTrigger value="production">Production</TabsTrigger>
               <TabsTrigger value="banana">Banana Plantation</TabsTrigger>
               <TabsTrigger value="sales">Sales & Expenditure</TabsTrigger>
               <TabsTrigger value="employees">Employees & Contractors</TabsTrigger>
@@ -76,7 +72,6 @@ const KashariFarmDashboard = () => {
             </TabsList>
 
             <TabsContent value="dashboard" className="space-y-4">
-              {/* Farm Overview Dashboard */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map((stat, i) => (
                   <Card key={i}>
@@ -99,7 +94,6 @@ const KashariFarmDashboard = () => {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Calendar Events */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center">
@@ -129,7 +123,6 @@ const KashariFarmDashboard = () => {
                   </CardContent>
                 </Card>
                 
-                {/* Daily Tasks */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center">
@@ -174,10 +167,6 @@ const KashariFarmDashboard = () => {
 
             <TabsContent value="dairy">
               <DairyManagement />
-            </TabsContent>
-
-            <TabsContent value="production">
-              <ProductionManagement />
             </TabsContent>
 
             <TabsContent value="banana">
