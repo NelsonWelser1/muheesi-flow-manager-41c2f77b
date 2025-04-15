@@ -1,9 +1,9 @@
 
 import React from 'react';
-import BananaPlantationDashboard from './banana/BananaPlantationDashboard';
+import PlantationDashboard from './banana/BananaPlantationDashboard';
 
-const BananaPlantation = () => {
-  return <BananaPlantationDashboard />;
+const PlantationManagement = () => {
+  return <PlantationDashboard />;
 };
 
-export default BananaPlantation;
+export default PlantationManagement;

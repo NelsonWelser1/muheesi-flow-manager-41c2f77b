@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
-  Leaf,  // Replaced 'Plant' with 'Leaf'
+  Leaf,
   Calendar,
   LineChart,
   ClipboardList,
@@ -20,6 +20,11 @@ import {
   Warehouse,
   Activity,
   Settings,
+  Coffee,
+  Bean,
+  Wheat,
+  DollarSign,
+  FileText,
 } from 'lucide-react';
 
 const navigationItems = [
@@ -32,26 +37,37 @@ const navigationItems = [
     ],
   },
   {
+    label: 'Produce Management',
+    items: [
+      { title: 'Bananas', icon: Leaf, component: 'bananas' },
+      { title: 'Coffee', icon: Coffee, component: 'coffee' },
+      { title: 'Maize', icon: Wheat, component: 'maize' },
+      { title: 'Beans', icon: Bean, component: 'beans' },
+    ],
+  },
+  {
     label: 'Operations',
     items: [
-      { title: 'Task Management', icon: ClipboardList, component: 'tasks' },
+      { title: 'Planting Records', icon: FileText, component: 'planting-records' },
+      { title: 'Harvest Records', icon: ClipboardList, component: 'harvest-records' },
       { title: 'Worker Management', icon: Users, component: 'workers' },
-      { title: 'Irrigation Control', icon: Droplets, component: 'irrigation' },
+      { title: 'Expenses', icon: DollarSign, component: 'expenses' },
     ],
   },
   {
     label: 'Resources',
     items: [
       { title: 'Inventory', icon: Warehouse, component: 'inventory' },
+      { title: 'Irrigation Control', icon: Droplets, component: 'irrigation' },
       { title: 'Monitoring', icon: Activity, component: 'monitoring' },
       { title: 'Settings', icon: Settings, component: 'settings' },
     ],
   },
 ];
 
-const BananaSidebar = ({ activeComponent, onNavigate }) => {
+const PlantationSidebar = ({ activeComponent, onNavigate }) => {
   return (
-    <Sidebar>
+    <Sidebar className="hidden md:block">
       <SidebarContent>
         {navigationItems.map((group) => (
           <SidebarGroup key={group.label}>
@@ -78,4 +94,4 @@ const BananaSidebar = ({ activeComponent, onNavigate }) => {
   );
 };
 
-export default BananaSidebar;
+export default PlantationSidebar;
