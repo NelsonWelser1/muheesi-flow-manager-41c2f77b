@@ -3,7 +3,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Beef, Stethoscope, LineChart, PlusCircle, ChevronLeft, Activity, Scale, TagIcon } from "lucide-react";
+import { 
+  Beef, 
+  Stethoscope, 
+  LineChart, 
+  PlusCircle, 
+  ChevronLeft, 
+  Activity, 
+  Scale, 
+  TagIcon,
+  BarChart2,
+  Calendar,
+  Users,
+  Tractor,
+  BookOpen,
+  Clock
+} from "lucide-react";
 import DairyManagement from './modules/DairyManagement';
 import BananaPlantation from './modules/BananaPlantation';
 import SalesExpenditure from './modules/SalesExpenditure';
