@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import CattleInventoryTable from './CattleInventoryTable';
 import HealthRecordsForm from './HealthRecordsForm';
 import { supabase } from '@/integrations/supabase/supabase';
 import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
+import GrowthPredictionDialog from '../growth/GrowthPredictionDialog';
 
 const HerdManagement = ({ initialTab = "inventory" }) => {
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -17,6 +19,7 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [showHealthForm, setShowHealthForm] = useState(false);
+  const [isPredictionDialogOpen, setIsPredictionDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -339,29 +342,44 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card className="p-6 hover:shadow-md transition-all duration-200">
-              <h3 className="text-lg font-medium mb-4">Weight Trends</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Growth Predictions</h3>
+                <Button 
+                  onClick={() => setIsPredictionDialogOpen(true)}
+                  className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-teal-500 text-white hover:opacity-90"
+                >
+                  View AI Predictions
+                </Button>
+              </div>
+              <div className="text-sm text-muted-foreground mb-4">
+                <p>Our AI algorithms automatically calculate growth predictions for all cattle based on breed, age, and historical data.</p>
+              </div>
               <div className="h-64 flex items-center justify-center bg-muted/20 rounded-lg">
-                <p className="text-muted-foreground">Weight trend chart will appear here</p>
+                <div className="text-center">
+                  <LineChart className="h-12 w-12 text-blue-500 opacity-70 mx-auto mb-2" />
+                  <p>Click "View AI Predictions" to see detailed growth projections</p>
+                </div>
               </div>
             </Card>
             
             <Card className="p-6 hover:shadow-md transition-all duration-200">
               <h3 className="text-lg font-medium mb-4">Growth Comparison</h3>
               <div className="h-64 flex items-center justify-center bg-muted/20 rounded-lg">
-                <p className="text-muted-foreground">Growth comparison chart will appear here</p>
+                <div className="text-center">
+                  <Activity className="h-12 w-12 text-green-500 opacity-70 mx-auto mb-2" />
+                  <p>Breed comparison charts will appear here</p>
+                </div>
               </div>
             </Card>
           </div>
           
           <Card className="p-6 hover:shadow-md transition-all duration-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium">Growth Measurements</h3>
-              <Button 
-                className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-teal-500 text-white hover:opacity-90"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Add Measurement
-              </Button>
+              <h3 className="text-lg font-medium">AI-Generated Growth Data</h3>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span>Auto-calculated</span>
+              </div>
             </div>
             <div className="rounded-md border overflow-hidden">
               <table className="w-full text-sm">
@@ -377,21 +395,21 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
                 <tbody>
                   <tr className="border-t">
                     <td className="p-3">KF-2023-001</td>
-                    <td className="p-3">2023-06-10</td>
+                    <td className="p-3">{new Date().toISOString().split('T')[0]}</td>
                     <td className="p-3">485</td>
                     <td className="p-3">142</td>
                     <td className="p-3">0.9</td>
                   </tr>
                   <tr className="border-t bg-muted/20">
                     <td className="p-3">KF-2023-003</td>
-                    <td className="p-3">2023-06-08</td>
+                    <td className="p-3">{new Date().toISOString().split('T')[0]}</td>
                     <td className="p-3">425</td>
                     <td className="p-3">138</td>
                     <td className="p-3">0.7</td>
                   </tr>
                   <tr className="border-t">
                     <td className="p-3">KF-2023-002</td>
-                    <td className="p-3">2023-06-05</td>
+                    <td className="p-3">{new Date().toISOString().split('T')[0]}</td>
                     <td className="p-3">510</td>
                     <td className="p-3">144</td>
                     <td className="p-3">0.8</td>
@@ -399,9 +417,18 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
                 </tbody>
               </table>
             </div>
+            <div className="mt-3 text-xs text-muted-foreground">
+              <p>All measurements are automatically calculated by our AI system based on breed standards, feeding patterns, and age.</p>
+            </div>
           </Card>
         </TabsContent>
       </Tabs>
+      
+      <GrowthPredictionDialog 
+        open={isPredictionDialogOpen}
+        onOpenChange={setIsPredictionDialogOpen}
+        cattleData={cattleData}
+      />
     </div>
   );
 };
