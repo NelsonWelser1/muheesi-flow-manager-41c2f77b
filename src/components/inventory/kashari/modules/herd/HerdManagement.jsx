@@ -256,7 +256,13 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
                 </Card>
               </div>
               <div className="flex justify-end">
-                <AddHealthRecordDialog cattleData={cattleData} />
+                <Button 
+                  className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
+                  onClick={() => setShowHealthForm(true)}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Add Health Record
+                </Button>
               </div>
               <Card className="p-6 hover:shadow-md transition-all duration-200">
                 <div className="flex items-center justify-between mb-4">
