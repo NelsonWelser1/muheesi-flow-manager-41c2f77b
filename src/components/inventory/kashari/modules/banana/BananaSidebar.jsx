@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
-  Plant,
+  Leaf,  // Replaced 'Plant' with 'Leaf'
   Calendar,
   LineChart,
   ClipboardList,
@@ -26,7 +26,7 @@ const navigationItems = [
   {
     label: 'Plantation Overview',
     items: [
-      { title: 'Crop Planning', icon: Plant, component: 'planning' },
+      { title: 'Crop Planning', icon: Leaf, component: 'planning' },
       { title: 'Harvest Schedule', icon: Calendar, component: 'schedule' },
       { title: 'Growth Analytics', icon: LineChart, component: 'analytics' },
     ],
