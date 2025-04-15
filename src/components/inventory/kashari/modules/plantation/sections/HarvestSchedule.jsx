@@ -3,287 +3,439 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CalendarIcon, PlusCircle, Search, Calendar as CalendarIcon2 } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { format } from 'date-fns';
-
-// Mock data for scheduled harvests - in a real app, this would come from a database
-const mockSchedules = [
-  { id: 1, crop: 'banana', variety: 'Gonja', location: 'Kashari Eastern Block A', startDate: '2025-05-10', endDate: '2025-05-15', status: 'scheduled', estimatedYield: '2.5 tons' },
-  { id: 2, crop: 'coffee', variety: 'Robusta', location: 'Kashari Western Block C', startDate: '2025-06-01', endDate: '2025-06-10', status: 'scheduled', estimatedYield: '1.8 tons' },
-  { id: 3, crop: 'maize', variety: 'Longe 5', location: 'Kashari Northern Block B', startDate: '2025-04-20', endDate: '2025-04-25', status: 'in-progress', estimatedYield: '4 tons' },
-  { id: 4, crop: 'beans', variety: 'K132', location: 'Kashari Southern Block A', startDate: '2025-04-16', endDate: '2025-04-18', status: 'completed', estimatedYield: '1.2 tons' },
-];
+import { format, addDays, isSameDay, isBefore, isAfter, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { usePlantingHarvestingSchedule } from '@/hooks/usePlantingHarvestingSchedule';
 
 const HarvestSchedule = () => {
-  const [showForm, setShowForm] = useState(false);
-  const [schedules, setSchedules] = useState(mockSchedules);
-  const [selectedCrop, setSelectedCrop] = useState('');
+  const { 
+    scheduleData, 
+    schedules, 
+    loading, 
+    error, 
+    setScheduleData, 
+    handleInputChange, 
+    handleDateChange, 
+    handleSelectChange, 
+    saveSchedule, 
+    fetchSchedules 
+  } = usePlantingHarvestingSchedule('kashari');
+
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [newSchedule, setNewSchedule] = useState({
-    crop: '',
-    variety: '',
-    location: '',
-    startDate: format(new Date(), 'yyyy-MM-dd'),
-    endDate: format(new Date(new Date().setDate(new Date().getDate() + 5)), 'yyyy-MM-dd'),
-    status: 'scheduled',
-    estimatedYield: ''
-  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [view, setView] = useState('calendar'); // 'calendar' or 'list'
   
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewSchedule({
-      ...newSchedule,
-      [name]: value
-    });
-  };
-  
-  const handleSelectChange = (name, value) => {
-    setNewSchedule({
-      ...newSchedule,
-      [name]: value
-    });
+  const cropTypes = [
+    { value: 'banana', label: 'Banana' },
+    { value: 'coffee', label: 'Coffee' },
+    { value: 'maize', label: 'Maize' },
+    { value: 'beans', label: 'Beans' },
+    { value: 'cassava', label: 'Cassava' }
+  ];
 
-    if (name === 'crop') {
-      setSelectedCrop(value);
-    }
+  const varieties = {
+    banana: ['Kibuzi', 'Mpologoma', 'Nakitembe', 'FHIA', 'Gonja'],
+    coffee: ['Arabica', 'Robusta', 'Bourbon', 'Typica'],
+    maize: ['Longe 5', 'Hybrid 6303', 'Local Variety'],
+    beans: ['K132', 'NABE 15', 'NABE 16', 'NABE 17'],
+    cassava: ['NASE 14', 'NASE 19', 'TME 14']
   };
 
-  const handleSubmit = (e) => {
+  const activityTypes = [
+    { value: 'planting', label: 'Planting' },
+    { value: 'harvesting', label: 'Harvesting' },
+    { value: 'pruning', label: 'Pruning' },
+    { value: 'fertilizing', label: 'Fertilizing' },
+    { value: 'weeding', label: 'Weeding' },
+    { value: 'spraying', label: 'Spraying' }
+  ];
+
+  const statusOptions = [
+    { value: 'scheduled', label: 'Scheduled' },
+    { value: 'in_progress', label: 'In Progress' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'cancelled', label: 'Cancelled' }
+  ];
+
+  const handleAddSchedule = async (e) => {
     e.preventDefault();
+    await saveSchedule();
+  };
+
+  // Filter schedules based on search term
+  const filteredSchedules = schedules.filter(schedule => {
+    if (!searchTerm) return true;
     
-    // Add the new schedule to our list
-    const updatedSchedules = [...schedules, {
-      id: Date.now(), // Simple ID generation
-      ...newSchedule
-    }];
-    
-    setSchedules(updatedSchedules);
-    
-    // Reset form and hide it
-    setNewSchedule({
-      crop: '',
-      variety: '',
-      location: '',
-      startDate: format(new Date(), 'yyyy-MM-dd'),
-      endDate: format(new Date(new Date().setDate(new Date().getDate() + 5)), 'yyyy-MM-dd'),
-      status: 'scheduled',
-      estimatedYield: ''
+    const search = searchTerm.toLowerCase();
+    return (
+      (schedule.activity_type && schedule.activity_type.toLowerCase().includes(search)) ||
+      (schedule.crop_variety && schedule.crop_variety.toLowerCase().includes(search)) ||
+      (schedule.responsible_person && schedule.responsible_person.toLowerCase().includes(search)) ||
+      (schedule.notes && schedule.notes.toLowerCase().includes(search))
+    );
+  });
+
+  // Get schedules for the selected date
+  const schedulesForDate = (date) => {
+    return schedules.filter(schedule => {
+      const scheduleDate = new Date(schedule.scheduled_date);
+      return isSameDay(scheduleDate, date);
     });
-    setShowForm(false);
   };
 
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case 'scheduled':
-        return 'bg-blue-100 text-blue-800';
-      case 'in-progress':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getVarietyOptions = () => {
-    switch (selectedCrop) {
-      case 'banana':
-        return ['Bogoya', 'Gonja', 'Kibuzi', 'Ndizi'];
-      case 'coffee':
-        return ['Arabica', 'Robusta'];
-      case 'maize':
-        return ['Longe 5', 'Longe 7', 'Hybrid', 'Open-Pollinated'];
-      case 'beans':
-        return ['K132', 'Nambale', 'NABE 15', 'NABE 16'];
-      default:
-        return [];
-    }
-  };
+  // Get all days in the current week
+  const daysInWeek = eachDayOfInterval({
+    start: startOfWeek(selectedDate, { weekStartsOn: 1 }),
+    end: endOfWeek(selectedDate, { weekStartsOn: 1 })
+  });
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Harvest Schedule</CardTitle>
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : 'Schedule Harvest'}
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {showForm && (
-          <form onSubmit={handleSubmit} className="space-y-4 mb-6 p-4 border rounded-md">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Crop</label>
-                <Select 
-                  name="crop" 
-                  onValueChange={(value) => handleSelectChange('crop', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select crop type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="banana">Banana</SelectItem>
-                    <SelectItem value="coffee">Coffee</SelectItem>
-                    <SelectItem value="maize">Maize</SelectItem>
-                    <SelectItem value="beans">Beans</SelectItem>
-                  </SelectContent>
-                </Select>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row gap-4 justify-between">
+        <h2 className="text-2xl font-bold">Planting & Harvesting Schedule</h2>
+        <div className="flex space-x-2">
+          <Button 
+            variant={view === 'calendar' ? 'default' : 'outline'} 
+            onClick={() => setView('calendar')}
+            className="flex items-center"
+          >
+            <CalendarIcon2 className="h-4 w-4 mr-2" />
+            Calendar
+          </Button>
+          <Button 
+            variant={view === 'list' ? 'default' : 'outline'} 
+            onClick={() => setView('list')}
+            className="flex items-center"
+          >
+            <Search className="h-4 w-4 mr-2" />
+            List View
+          </Button>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle>Add Schedule</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAddSchedule} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Farm Name</label>
+                <Input
+                  name="farm_name"
+                  value={scheduleData.farm_name}
+                  onChange={handleInputChange}
+                  placeholder="Enter farm name"
+                  required
+                />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Variety</label>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Activity Type</label>
                 <Select 
-                  name="variety" 
-                  onValueChange={(value) => handleSelectChange('variety', value)}
-                  disabled={!selectedCrop}
+                  name="activity_type"
+                  value={scheduleData.activity_type} 
+                  onValueChange={(value) => handleSelectChange('activity_type', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={selectedCrop ? "Select variety" : "Select crop first"} />
+                    <SelectValue placeholder="Select activity type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {getVarietyOptions().map(variety => (
-                      <SelectItem key={variety} value={variety}>{variety}</SelectItem>
+                    {activityTypes.map(activity => (
+                      <SelectItem key={activity.value} value={activity.value}>
+                        {activity.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Location</label>
-                <Select 
-                  name="location" 
-                  onValueChange={(value) => handleSelectChange('location', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Kashari Eastern Block A">Kashari Eastern Block A</SelectItem>
-                    <SelectItem value="Kashari Eastern Block B">Kashari Eastern Block B</SelectItem>
-                    <SelectItem value="Kashari Western Block A">Kashari Western Block A</SelectItem>
-                    <SelectItem value="Kashari Western Block B">Kashari Western Block B</SelectItem>
-                    <SelectItem value="Kashari Western Block C">Kashari Western Block C</SelectItem>
-                    <SelectItem value="Kashari Northern Block A">Kashari Northern Block A</SelectItem>
-                    <SelectItem value="Kashari Northern Block B">Kashari Northern Block B</SelectItem>
-                    <SelectItem value="Kashari Southern Block A">Kashari Southern Block A</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Estimated Yield</label>
-                <Input 
-                  name="estimatedYield" 
-                  value={newSchedule.estimatedYield} 
-                  onChange={handleInputChange} 
-                  placeholder="e.g. 2.5 tons" 
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Start Date</label>
-                <Input 
-                  type="date"
-                  name="startDate" 
-                  value={newSchedule.startDate} 
-                  onChange={handleInputChange} 
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">End Date</label>
-                <Input 
-                  type="date"
-                  name="endDate" 
-                  value={newSchedule.endDate} 
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Crop Variety</label>
+                <Input
+                  name="crop_variety"
+                  value={scheduleData.crop_variety || ''}
                   onChange={handleInputChange}
-                  required
+                  placeholder="E.g., Arabica, Robusta, Matooke"
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Status</label>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Plot Area (acres)</label>
+                <Input
+                  name="plot_area"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={scheduleData.plot_area || ''}
+                  onChange={handleInputChange}
+                  placeholder="Area in acres"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Scheduled Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {scheduleData.scheduled_date ? format(new Date(scheduleData.scheduled_date), 'PPP') : <span>Select date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={scheduleData.scheduled_date ? new Date(scheduleData.scheduled_date) : null}
+                      onSelect={(date) => handleDateChange('scheduled_date', date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Expected Completion Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {scheduleData.expected_completion_date ? format(new Date(scheduleData.expected_completion_date), 'PPP') : <span>Select date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={scheduleData.expected_completion_date ? new Date(scheduleData.expected_completion_date) : null}
+                      onSelect={(date) => handleDateChange('expected_completion_date', date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Responsible Person</label>
+                <Input
+                  name="responsible_person"
+                  value={scheduleData.responsible_person || ''}
+                  onChange={handleInputChange}
+                  placeholder="Person in charge"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Status</label>
                 <Select 
-                  name="status" 
-                  defaultValue="scheduled"
+                  name="status"
+                  value={scheduleData.status || 'scheduled'} 
                   onValueChange={(value) => handleSelectChange('status', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="scheduled">Scheduled</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    {statusOptions.map(status => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-              <Button type="submit">Save Schedule</Button>
-            </div>
-          </form>
-        )}
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Notes</label>
+                <Textarea
+                  name="notes"
+                  value={scheduleData.notes || ''}
+                  onChange={handleInputChange}
+                  placeholder="Additional notes"
+                  rows={3}
+                />
+              </div>
+              
+              <Button type="submit" className="w-full">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add to Schedule
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
         
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Crop</TableHead>
-                <TableHead>Variety</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Start Date</TableHead>
-                <TableHead>End Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Est. Yield</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {schedules.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-4">No harvests scheduled</TableCell>
-                </TableRow>
-              ) : (
-                schedules.map((schedule) => (
-                  <TableRow key={schedule.id}>
-                    <TableCell className="capitalize">{schedule.crop}</TableCell>
-                    <TableCell>{schedule.variety}</TableCell>
-                    <TableCell>{schedule.location}</TableCell>
-                    <TableCell>{new Date(schedule.startDate).toLocaleDateString()}</TableCell>
-                    <TableCell>{new Date(schedule.endDate).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(schedule.status)}`}>
-                        {schedule.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </span>
-                    </TableCell>
-                    <TableCell>{schedule.estimatedYield}</TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm">Edit</Button>
-                        <Button variant="ghost" size="sm" 
-                          disabled={schedule.status === 'completed' || schedule.status === 'cancelled'}>
-                          Update Status
-                        </Button>
+        <div className="lg:col-span-2">
+          {view === 'calendar' ? (
+            <Card>
+              <CardHeader className="flex flex-row justify-between items-center">
+                <CardTitle>Calendar View</CardTitle>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedDate(new Date())}
+                    size="sm"
+                  >
+                    Today
+                  </Button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <CalendarIcon className="h-4 w-4 mr-2" />
+                        {format(selectedDate, 'MMMM yyyy')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <div className="grid grid-cols-7 gap-px bg-muted">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                      <div key={day} className="bg-background p-2 text-center text-sm font-medium">
+                        {day}
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                    ))}
+                  </div>
+                  
+                  <div className="grid grid-cols-7 gap-px bg-muted">
+                    {daysInWeek.map((day) => {
+                      const daySchedules = schedulesForDate(day);
+                      const isToday = isSameDay(day, new Date());
+                      
+                      return (
+                        <div 
+                          key={day.toString()} 
+                          className={`bg-background min-h-[100px] p-2 ${isToday ? 'border border-primary' : ''}`}
+                        >
+                          <div className="font-medium text-sm mb-1">
+                            {format(day, 'd')}
+                          </div>
+                          <div className="space-y-1">
+                            {daySchedules.map((schedule) => (
+                              <div 
+                                key={schedule.id} 
+                                className={`text-xs p-1 rounded truncate ${
+                                  schedule.activity_type === 'planting' ? 'bg-green-100 text-green-800' : 
+                                  schedule.activity_type === 'harvesting' ? 'bg-amber-100 text-amber-800' : 
+                                  schedule.activity_type === 'pruning' ? 'bg-blue-100 text-blue-800' : 
+                                  schedule.activity_type === 'fertilizing' ? 'bg-purple-100 text-purple-800' : 
+                                  schedule.activity_type === 'weeding' ? 'bg-rose-100 text-rose-800' : 
+                                  schedule.activity_type === 'spraying' ? 'bg-cyan-100 text-cyan-800' : 
+                                  'bg-gray-100 text-gray-800'
+                                }`}
+                              >
+                                {activityTypes.find(a => a.value === schedule.activity_type)?.label || schedule.activity_type}: {schedule.crop_variety || 'N/A'}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                <CardTitle>Schedule List</CardTitle>
+                <div className="relative w-full md:w-64">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search schedules..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-4 text-muted-foreground">Loading schedules...</div>
+                ) : filteredSchedules.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground">
+                    {schedules.length === 0 
+                      ? "No schedules added yet. Use the form to add a schedule."
+                      : "No matching schedules found. Try a different search term."}
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Activity</TableHead>
+                          <TableHead>Crop</TableHead>
+                          <TableHead>Area</TableHead>
+                          <TableHead>Responsible</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredSchedules.map(schedule => (
+                          <TableRow key={schedule.id}>
+                            <TableCell>
+                              {schedule.scheduled_date ? format(new Date(schedule.scheduled_date), 'dd/MM/yyyy') : 'N/A'}
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={
+                                schedule.activity_type === 'planting' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 
+                                schedule.activity_type === 'harvesting' ? 'bg-amber-100 text-amber-800 hover:bg-amber-100' : 
+                                schedule.activity_type === 'pruning' ? 'bg-blue-100 text-blue-800 hover:bg-blue-100' : 
+                                schedule.activity_type === 'fertilizing' ? 'bg-purple-100 text-purple-800 hover:bg-purple-100' : 
+                                schedule.activity_type === 'weeding' ? 'bg-rose-100 text-rose-800 hover:bg-rose-100' : 
+                                schedule.activity_type === 'spraying' ? 'bg-cyan-100 text-cyan-800 hover:bg-cyan-100' : 
+                                'bg-gray-100 text-gray-800 hover:bg-gray-100'
+                              }>
+                                {activityTypes.find(a => a.value === schedule.activity_type)?.label || schedule.activity_type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{schedule.crop_variety || 'N/A'}</TableCell>
+                            <TableCell>{schedule.plot_area || 'N/A'} acres</TableCell>
+                            <TableCell>{schedule.responsible_person || 'N/A'}</TableCell>
+                            <TableCell>
+                              <Badge className={
+                                schedule.status === 'scheduled' ? 'bg-blue-100 text-blue-800 hover:bg-blue-100' : 
+                                schedule.status === 'in_progress' ? 'bg-amber-100 text-amber-800 hover:bg-amber-100' : 
+                                schedule.status === 'completed' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 
+                                schedule.status === 'pending' ? 'bg-purple-100 text-purple-800 hover:bg-purple-100' : 
+                                'bg-red-100 text-red-800 hover:bg-red-100'
+                              }>
+                                {statusOptions.find(s => s.value === schedule.status)?.label || schedule.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
