@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useGrowthPredictions } from '@/hooks/useGrowthPredictions';
 import { supabase } from '@/integrations/supabase/supabase';
-import { Chart, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const GrowthPredictionDialog = ({ open, onOpenChange, cattleData = [] }) => {
   const [selectedCattle, setSelectedCattle] = useState("");

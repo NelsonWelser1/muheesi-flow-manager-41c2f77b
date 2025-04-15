@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ import {
 import { format } from 'date-fns';
 import AddEditCattleDialog from './AddEditCattleDialog';
 import DeleteCattleDialog from './DeleteCattleDialog';
-import GrowthPredictionDialog from '../../growth/GrowthPredictionDialog';
+import GrowthPredictionDialog from '../growth/GrowthPredictionDialog';
 
 const HerdManagement = () => {
   const [isAddEditDialogOpen, setIsAddEditDialogOpen] = useState(false);
