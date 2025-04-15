@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
-import { Beef, Droplet, LineChart, ChevronDown, ChevronRight, Stethoscope, Scale, TagIcon, Factory, Truck, Users } from "lucide-react";
+import { 
+  Beef, 
+  Droplet, 
+  LineChart, 
+  ChevronDown, 
+  ChevronRight, 
+  Stethoscope, 
+  Scale, 
+  TagIcon, 
+  Factory, 
+  Truck, 
+  Users 
+} from "lucide-react";
+
 const DairySidebar = ({
   activeSection,
   setActiveSection,
@@ -64,10 +77,8 @@ const DairySidebar = ({
           </button>
           
           {expandedSections.milkProduction && <div className="ml-7 mt-2 space-y-1 border-l-2 border-gray-200 pl-2">
-              
-              
               <button className={`block w-full text-left p-2 text-sm rounded-md ${activeSection === 'milkProduction' && activeTab === 'quality' ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-gray-100'}`} onClick={() => handleSectionClick('milkProduction', 'quality')}>
-                Quality Control
+                Record Milk Production
               </button>
             </div>}
         </div>
@@ -111,4 +122,5 @@ const DairySidebar = ({
       </div>
     </div>;
 };
+
 export default DairySidebar;
