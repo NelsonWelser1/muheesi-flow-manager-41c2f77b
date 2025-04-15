@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,14 +59,12 @@ const HerdManagement = () => {
   const handleAddEditCattle = async (cattleData) => {
     try {
       if (selectedCattleId) {
-        // Update existing cattle
         await updateCattle({ id: selectedCattleId, ...cattleData });
         toast({
           title: "Cattle updated",
           description: "Cattle information has been updated successfully.",
         });
       } else {
-        // Add new cattle
         await addCattle(cattleData);
         toast({
           title: "Cattle added",
@@ -76,7 +73,7 @@ const HerdManagement = () => {
       }
       setIsAddEditDialogOpen(false);
       setSelectedCattleId(null);
-      refetch(); // Refresh cattle data
+      refetch();
     } catch (error) {
       toast({
         title: "Error",
@@ -96,7 +93,7 @@ const HerdManagement = () => {
       });
       setIsDeleteDialogOpen(false);
       setCattleToDelete(null);
-      refetch(); // Refresh cattle data
+      refetch();
     } catch (error) {
       toast({
         title: "Error",
@@ -146,7 +143,6 @@ const HerdManagement = () => {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  // Skeleton loading state
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={`skeleton-${i}`}>
                       <TableCell><Skeleton /></TableCell>
@@ -160,7 +156,6 @@ const HerdManagement = () => {
                     </TableRow>
                   ))
                 ) : cattleData && cattleData.length > 0 ? (
-                  // Actual data rows
                   cattleData.map((cattle) => (
                     <TableRow key={cattle.id}>
                       <TableCell>{cattle.tag_number}</TableCell>
@@ -196,7 +191,6 @@ const HerdManagement = () => {
                     </TableRow>
                   ))
                 ) : (
-                  // No data state
                   <TableRow>
                     <TableCell colSpan={8} className="text-center">No cattle found.</TableCell>
                   </TableRow>
