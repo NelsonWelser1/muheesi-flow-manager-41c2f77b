@@ -1,70 +1,43 @@
 
 import React, { useState } from 'react';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import PlantationSidebar from './PlantationSidebar';
-import CropPlanning from './sections/CropPlanning';
-import PlantingRecords from './sections/PlantingRecords';
-import HarvestRecords from './sections/HarvestRecords';
-import ExpensesTracker from './sections/ExpensesTracker';
-import WorkerManagement from './sections/WorkerManagement';
-import EquipmentTracker from './sections/EquipmentTracker';
-import HarvestSchedule from './sections/HarvestSchedule';
-import InventoryManagement from './sections/InventoryManagement';
-import GrowthAnalytics from './sections/GrowthAnalytics';
-import FarmMap from './sections/FarmMap';
+import PlantationSidebar from "./PlantationSidebar";
 import { useToast } from "@/components/ui/use-toast";
+import InventoryManagement from './sections/InventoryManagement';
+import StockLevels from './sections/StockLevels';
+import QualityControl from './sections/QualityControl';
 
 const PlantationDashboard = () => {
-  const [activeComponent, setActiveComponent] = useState('planning');
+  const [activeComponent, setActiveComponent] = useState("inventory");
   const { toast } = useToast();
 
   const handleNavigate = (component) => {
     setActiveComponent(component);
-    
-    // Check if component is implemented yet
-    const implementedComponents = [
-      'planning', 'planting-records', 'harvest-records', 'expenses',
-      'workers', 'equipment', 'schedule', 'inventory', 'analytics'
-    ];
+    const implementedComponents = ["inventory", "stock", "quality"];
     
     if (!implementedComponents.includes(component)) {
       toast({
         title: "Feature Coming Soon",
         description: "This feature is currently under development.",
-        duration: 3000,
+        duration: 3000
       });
     }
   };
 
   const renderContent = () => {
     switch (activeComponent) {
-      case 'planning':
-        return <CropPlanning />;
-      case 'planting-records':
-        return <PlantingRecords />;
-      case 'harvest-records':
-        return <HarvestRecords />;
-      case 'expenses':
-        return <ExpensesTracker />;
-      case 'workers':
-        return <WorkerManagement />;
-      case 'equipment':
-        return <EquipmentTracker />;
-      case 'schedule':
-        return <HarvestSchedule />;
-      case 'inventory':
+      case "inventory":
         return <InventoryManagement />;
-      case 'analytics':
-        return <GrowthAnalytics />;
-      case 'farm-map':
-        return <FarmMap />;
+      case "stock":
+        return <StockLevels />;
+      case "quality":
+        return <QualityControl />;
       default:
         return (
           <div className="p-6 text-center flex flex-col items-center justify-center min-h-[500px]">
             <div className="text-muted-foreground mb-2">Select a section from the sidebar</div>
             <p className="text-sm text-gray-500 max-w-md">
-              The Plantation Management System helps you track all aspects of your farming operation, 
-              from planning and planting to harvesting and selling your produce.
+              Track and manage plantation inventory, stock levels, and quality control for banana products.
             </p>
           </div>
         );
@@ -81,7 +54,7 @@ const PlantationDashboard = () => {
         <main className="flex-1 p-4 md:p-6 overflow-auto">
           <div className="mb-4 flex items-center">
             <SidebarTrigger className="md:hidden mr-2" />
-            <h1 className="text-xl md:text-2xl font-bold">Plantation Management</h1>
+            <h1 className="text-xl md:text-2xl font-bold">Plantation Inventory Management</h1>
           </div>
           {renderContent()}
         </main>
