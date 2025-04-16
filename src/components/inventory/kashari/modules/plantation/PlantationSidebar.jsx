@@ -14,6 +14,10 @@ import {
   Package,
   Boxes,
   ClipboardCheck,
+  DollarSign,
+  BarChart,
+  ShoppingCart,
+  FileText,
 } from 'lucide-react';
 
 const navigationItems = [
@@ -23,6 +27,9 @@ const navigationItems = [
       { title: 'Current Inventory', icon: Package, component: 'inventory' },
       { title: 'Stock Levels', icon: Boxes, component: 'stock' },
       { title: 'Quality Control', icon: ClipboardCheck, component: 'quality' },
+      { title: 'Sales Tracker', icon: ShoppingCart, component: 'sales' },
+      { title: 'Financial Ledger', icon: FileText, component: 'ledger' },
+      { title: 'Analytics', icon: BarChart, component: 'analytics' },
     ],
   }
 ];
