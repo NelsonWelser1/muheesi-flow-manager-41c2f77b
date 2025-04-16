@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -19,22 +20,22 @@ const ManageCompanies = () => {
         </Button>
       </div>
 
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Organizational Structure</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <OrganizationalChart />
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 gap-6 md:gap-8">
         <Card>
           <CardHeader>
             <CardTitle>System Accounts</CardTitle>
           </CardHeader>
           <CardContent>
             <SystemAccounts />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Organizational Structure</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <OrganizationalChart />
           </CardContent>
         </Card>
       </div>
