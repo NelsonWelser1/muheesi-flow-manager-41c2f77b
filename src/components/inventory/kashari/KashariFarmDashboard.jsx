@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,7 +15,6 @@ import {
   TagIcon,
   BarChart2,
   Calendar,
-  Users,
   Tractor,
   BookOpen,
   Clock
@@ -22,9 +22,6 @@ import {
 import DairyManagement from './modules/DairyManagement';
 import BananaPlantation from './modules/BananaPlantation';
 import SalesExpenditure from './modules/SalesExpenditure';
-import EmployeeManagement from './modules/EmployeeManagement';
-import ScholarshipProgram from './modules/ScholarshipProgram';
-import FinanceAccounts from './modules/FinanceAccounts';
 import { format } from 'date-fns';
 
 const KashariFarmDashboard = () => {
@@ -43,8 +40,6 @@ const KashariFarmDashboard = () => {
   const stats = [
     { title: 'Milk Production', value: '245 Liters', change: '+12%', icon: <BarChart2 className="h-4 w-4 text-blue-500" /> },
     { title: 'Banana Harvest', value: '680 Bunches', change: '+5%', icon: <Tractor className="h-4 w-4 text-green-500" /> },
-    { title: 'Active Employees', value: '32', change: '-2', icon: <Users className="h-4 w-4 text-purple-500" /> },
-    { title: 'Scholarships', value: '15 Active', change: '+3', icon: <BookOpen className="h-4 w-4 text-amber-500" /> }
   ];
 
   const events = [
@@ -76,14 +71,11 @@ const KashariFarmDashboard = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid grid-cols-2 md:grid-cols-7 mb-6">
+            <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-6">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="dairy">Dairy Products</TabsTrigger>
               <TabsTrigger value="banana">Banana Plantation</TabsTrigger>
               <TabsTrigger value="sales">Sales & Expenditure</TabsTrigger>
-              <TabsTrigger value="employees">Employees & Contractors</TabsTrigger>
-              <TabsTrigger value="scholarships">Scholarships</TabsTrigger>
-              <TabsTrigger value="finance">Finance & Accounts</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard" className="space-y-4">
@@ -191,18 +183,6 @@ const KashariFarmDashboard = () => {
             <TabsContent value="sales">
               <SalesExpenditure />
             </TabsContent>
-
-            <TabsContent value="employees">
-              <EmployeeManagement />
-            </TabsContent>
-
-            <TabsContent value="scholarships">
-              <ScholarshipProgram />
-            </TabsContent>
-
-            <TabsContent value="finance">
-              <FinanceAccounts />
-            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
@@ -211,3 +191,4 @@ const KashariFarmDashboard = () => {
 };
 
 export default KashariFarmDashboard;
+
