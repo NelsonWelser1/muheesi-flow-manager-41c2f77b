@@ -1,13 +1,16 @@
+
 import React, { useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import AuthenticationForm from '../inventory/kajon/AuthenticationForm';
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor, UserPlus, UserCog } from 'lucide-react';
+import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor, UserPlus, UserCog, ChevronDown } from 'lucide-react';
+import { useSupabaseAuth } from '@/integrations/supabase/auth';
 
 const SystemAccounts = () => {
   const { toast } = useToast();
   const [selectedRole, setSelectedRole] = useState(null);
+  const { session } = useSupabaseAuth();
 
   const handleAuthenticate = (managerName) => {
     console.log("Authenticating:", managerName, "for role:", selectedRole);
@@ -140,14 +143,39 @@ const SystemAccounts = () => {
           <p className="text-gray-600 text-sm">{role.description}</p>
         </div>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Login to {role.title}</DialogTitle>
+          <DialogTitle>Access {role.title} Dashboard</DialogTitle>
         </DialogHeader>
-        <AuthenticationForm 
-          onAuthenticate={handleAuthenticate}
-          title={`Enter ${role.title} Credentials`}
-        />
+        <div className="p-4 space-y-4">
+          <p className="text-sm text-gray-600">
+            You are accessing the dashboard as <span className="font-bold">{role.title}</span>
+          </p>
+          {session ? (
+            <Button 
+              className="w-full" 
+              onClick={() => handleAuthenticate(session.user.email)}
+            >
+              Continue to Dashboard
+            </Button>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">Enter your name to continue:</p>
+              <input 
+                type="text" 
+                placeholder="Your name" 
+                className="w-full p-2 border rounded-md" 
+                onChange={(e) => setSelectedRole({...role, user: e.target.value})}
+              />
+              <Button 
+                className="w-full" 
+                onClick={() => handleAuthenticate(selectedRole.user || "Guest User")}
+              >
+                Continue as Guest
+              </Button>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -159,7 +187,7 @@ const SystemAccounts = () => {
           Strategic/Executive Management
         </AccordionTrigger>
         <AccordionContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {roles.strategic.map((role, index) => renderRoleCard(role))}
           </div>
         </AccordionContent>
@@ -170,7 +198,7 @@ const SystemAccounts = () => {
           Tactical/Departmental Management
         </AccordionTrigger>
         <AccordionContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {roles.tactical.map((role, index) => renderRoleCard(role))}
           </div>
         </AccordionContent>
@@ -181,7 +209,7 @@ const SystemAccounts = () => {
           Operational/Field Management
         </AccordionTrigger>
         <AccordionContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {roles.operational.map((role, index) => renderRoleCard(role))}
           </div>
         </AccordionContent>

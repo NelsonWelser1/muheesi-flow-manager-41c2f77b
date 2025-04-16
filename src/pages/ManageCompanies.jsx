@@ -1,44 +1,60 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import OrganizationalChart from '../components/organization/OrganizationalChart';
 import SystemAccounts from '../components/organization/SystemAccounts';
+import InternalNotifications from '../components/organization/InternalNotifications';
+import RoleDashboard from '../components/organization/RoleDashboard';
 
 const ManageCompanies = () => {
   const navigate = useNavigate();
+  const [selectedRole, setSelectedRole] = useState(null);
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Manage Companies</h1>
-        <Button variant="ghost" onClick={() => navigate('/')} className="p-2">
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          Back to Dashboard
-        </Button>
+        <div className="flex items-center space-x-2">
+          <InternalNotifications />
+          <Button variant="ghost" onClick={() => navigate('/')} className="p-2">
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Back to Dashboard
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>System Accounts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SystemAccounts />
-          </CardContent>
-        </Card>
+      {selectedRole ? (
+        <div className="mb-6">
+          <Button variant="outline" onClick={() => setSelectedRole(null)} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Accounts
+          </Button>
+          <RoleDashboard role={selectedRole} />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 md:gap-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>System Accounts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SystemAccounts />
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Organizational Structure</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <OrganizationalChart />
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Organizational Structure</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <OrganizationalChart />
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
