@@ -1,11 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, LineChart, PieChart, Users, FileText, Settings, Calendar } from 'lucide-react';
+import { BarChart3, LineChart, PieChart, Users, FileText, Settings, Calendar, CheckSquare, Phone, CreditCard, Package, DollarSign, Box, Handshake, FolderArchive, BarChart, BellRing } from 'lucide-react';
+import PADashboard from './pa-dashboard/PADashboard';
 
 const RoleDashboard = ({ role }) => {
-  // Dynamic content based on role
+  // Return the specialized PA Dashboard if the role is CEO's Personal Assistant
+  if (role === "CEO's Personal Assistant") {
+    return <PADashboard />;
+  }
+
+  // Dynamic content based on role for other roles
   const getRoleSpecificContent = () => {
     switch (role) {
       case 'Chief Executive Officer (CEO)':
