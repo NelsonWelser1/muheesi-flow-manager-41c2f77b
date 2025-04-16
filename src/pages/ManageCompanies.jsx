@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,20 @@ import RoleDashboard from '../components/organization/RoleDashboard';
 const ManageCompanies = () => {
   const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState(null);
+
+  useEffect(() => {
+    // Add event listener for role selection
+    const handleRoleSelected = (event) => {
+      setSelectedRole(event.detail);
+    };
+    
+    window.addEventListener('roleSelected', handleRoleSelected);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('roleSelected', handleRoleSelected);
+    };
+  }, []);
 
   return (
     <div className="container mx-auto p-4">

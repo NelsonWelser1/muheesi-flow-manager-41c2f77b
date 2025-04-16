@@ -1,23 +1,30 @@
 
 import React, { useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor, UserPlus, UserCog, ChevronDown } from 'lucide-react';
+import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor, UserPlus, UserCog } from 'lucide-react';
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
+import { useNavigate } from 'react-router-dom';
 
 const SystemAccounts = () => {
   const { toast } = useToast();
-  const [selectedRole, setSelectedRole] = useState(null);
   const { session } = useSupabaseAuth();
+  const navigate = useNavigate();
 
-  const handleAuthenticate = (managerName) => {
-    console.log("Authenticating:", managerName, "for role:", selectedRole);
+  const handleRoleSelect = (roleTitle) => {
+    console.log("Selected role:", roleTitle);
     toast({
-      title: "Authentication Successful",
-      description: `Logged in as ${managerName} - ${selectedRole}`,
+      title: "Role Selected",
+      description: `You are now viewing the ${roleTitle} dashboard`,
     });
+    
+    // Pass the selected role to the parent component
+    if (typeof window !== 'undefined') {
+      // This only works on the client side
+      const event = new CustomEvent('roleSelected', { detail: roleTitle });
+      window.dispatchEvent(event);
+    }
   };
 
   const roles = {
@@ -130,54 +137,17 @@ const SystemAccounts = () => {
   };
 
   const renderRoleCard = (role) => (
-    <Dialog>
-      <DialogTrigger asChild>
-        <div 
-          className="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => setSelectedRole(role.title)}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            {role.icon}
-            <h3 className="font-semibold">{role.title}</h3>
-          </div>
-          <p className="text-gray-600 text-sm">{role.description}</p>
-        </div>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Access {role.title} Dashboard</DialogTitle>
-        </DialogHeader>
-        <div className="p-4 space-y-4">
-          <p className="text-sm text-gray-600">
-            You are accessing the dashboard as <span className="font-bold">{role.title}</span>
-          </p>
-          {session ? (
-            <Button 
-              className="w-full" 
-              onClick={() => handleAuthenticate(session.user.email)}
-            >
-              Continue to Dashboard
-            </Button>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600">Enter your name to continue:</p>
-              <input 
-                type="text" 
-                placeholder="Your name" 
-                className="w-full p-2 border rounded-md" 
-                onChange={(e) => setSelectedRole({...role, user: e.target.value})}
-              />
-              <Button 
-                className="w-full" 
-                onClick={() => handleAuthenticate(selectedRole.user || "Guest User")}
-              >
-                Continue as Guest
-              </Button>
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+    <div 
+      key={role.title}
+      className="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={() => handleRoleSelect(role.title)}
+    >
+      <div className="flex items-center gap-3 mb-2">
+        {role.icon}
+        <h3 className="font-semibold">{role.title}</h3>
+      </div>
+      <p className="text-gray-600 text-sm">{role.description}</p>
+    </div>
   );
 
   return (
@@ -188,7 +158,7 @@ const SystemAccounts = () => {
         </AccordionTrigger>
         <AccordionContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {roles.strategic.map((role, index) => renderRoleCard(role))}
+            {roles.strategic.map((role) => renderRoleCard(role))}
           </div>
         </AccordionContent>
       </AccordionItem>
@@ -199,7 +169,7 @@ const SystemAccounts = () => {
         </AccordionTrigger>
         <AccordionContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {roles.tactical.map((role, index) => renderRoleCard(role))}
+            {roles.tactical.map((role) => renderRoleCard(role))}
           </div>
         </AccordionContent>
       </AccordionItem>
@@ -210,7 +180,7 @@ const SystemAccounts = () => {
         </AccordionTrigger>
         <AccordionContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {roles.operational.map((role, index) => renderRoleCard(role))}
+            {roles.operational.map((role) => renderRoleCard(role))}
           </div>
         </AccordionContent>
       </AccordionItem>
