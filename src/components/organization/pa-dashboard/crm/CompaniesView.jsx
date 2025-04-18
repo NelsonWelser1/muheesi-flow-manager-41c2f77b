@@ -80,6 +80,7 @@ const CompaniesView = () => {
     setIsNewCompanyDialogOpen(false);
   };
 
+  // Get avatar text from company name - with null check
   const getAvatarText = (name) => {
     if (!name) return 'CO';
     return name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase();
@@ -90,8 +91,9 @@ const CompaniesView = () => {
     return value !== undefined && value !== null ? value : defaultValue;
   };
 
+  // Check if company has contacts - with null check
   const hasContacts = (company) => {
-    return company && typeof company.contacts === 'number' && company.contacts > 0;
+    return company && typeof company?.contacts === 'number' && company.contacts > 0;
   };
 
   return (
@@ -122,17 +124,17 @@ const CompaniesView = () => {
               <TabsTrigger value="recent" className="rounded-none">Recently Added</TabsTrigger>
             </TabsList>
             <ScrollArea className="h-[calc(100vh-380px)]">
-              {companies.map((company) => (
+              {companies && companies.length > 0 ? companies.map((company) => (
                 <div
-                  key={company.id}
+                  key={company?.id || 'unknown'}
                   className={`p-3 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-                    selectedCompany?.id === company.id ? 'bg-gray-50' : ''
+                    selectedCompany?.id === company?.id ? 'bg-gray-50' : ''
                   }`}
                   onClick={() => handleSelectCompany(company)}
                 >
                   <div className="flex items-start gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={company?.logoUrl} alt={handleSafeProp(company?.name)} />
+                      <AvatarImage src={company?.logoUrl || ''} alt={handleSafeProp(company?.name)} />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {getAvatarText(handleSafeProp(company?.name))}
                       </AvatarFallback>
@@ -156,7 +158,11 @@ const CompaniesView = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="p-3 text-center text-gray-500">
+                  No companies found
+                </div>
+              )}
             </ScrollArea>
           </Tabs>
         </CardContent>
@@ -178,7 +184,10 @@ const CompaniesView = () => {
               <div className="flex justify-between items-start">
                 <div className="flex items-center">
                   <Avatar className="h-12 w-12 mr-4">
-                    <AvatarImage src={selectedCompany?.logoUrl} alt={handleSafeProp(selectedCompany?.name)} />
+                    <AvatarImage 
+                      src={selectedCompany?.logoUrl || ''} 
+                      alt={handleSafeProp(selectedCompany?.name)} 
+                    />
                     <AvatarFallback className="bg-primary/10 text-primary text-lg">
                       {getAvatarText(handleSafeProp(selectedCompany?.name))}
                     </AvatarFallback>
@@ -348,7 +357,7 @@ const CompaniesView = () => {
               <Input 
                 id="company-name" 
                 placeholder="Enter company name" 
-                value={newCompany.name}
+                value={newCompany.name || ''}
                 onChange={(e) => setNewCompany({...newCompany, name: e.target.value})}
               />
             </div>
@@ -358,7 +367,7 @@ const CompaniesView = () => {
               <Input 
                 id="company-industry" 
                 placeholder="Enter industry" 
-                value={newCompany.industry}
+                value={newCompany.industry || ''}
                 onChange={(e) => setNewCompany({...newCompany, industry: e.target.value})}
               />
             </div>
@@ -368,7 +377,7 @@ const CompaniesView = () => {
               <Input 
                 id="company-location" 
                 placeholder="Enter location" 
-                value={newCompany.location}
+                value={newCompany.location || ''}
                 onChange={(e) => setNewCompany({...newCompany, location: e.target.value})}
               />
             </div>
@@ -378,7 +387,7 @@ const CompaniesView = () => {
               <Textarea 
                 id="company-description" 
                 placeholder="Enter company description" 
-                value={newCompany.description}
+                value={newCompany.description || ''}
                 onChange={(e) => setNewCompany({...newCompany, description: e.target.value})}
               />
             </div>
