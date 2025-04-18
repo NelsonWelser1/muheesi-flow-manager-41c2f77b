@@ -1,7 +1,20 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, CheckSquare, Phone, CreditCard, Package, DollarSign, Box, Handshake, FolderArchive, BarChart, BellRing } from 'lucide-react';
+import { 
+  Calendar, 
+  CheckSquare, 
+  Phone, 
+  CreditCard, 
+  Package, 
+  DollarSign, 
+  Box, 
+  Handshake, 
+  FolderArchive, 
+  BarChart, 
+  BellRing 
+} from 'lucide-react';
+import { SidebarProvider } from "@/components/ui/sidebar";
+import DashboardSidebar from './sidebar/DashboardSidebar';
 import DashboardOverview from './DashboardOverview';
 import TaskManager from './TaskManager';
 import EntitySelector from './EntitySelector';
@@ -18,9 +31,12 @@ import NotificationsAlerts from './NotificationsAlerts';
 const PADashboard = () => {
   const [selectedEntity, setSelectedEntity] = useState('all');
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [currentView, setCurrentView] = useState('list');
 
   const handleTabChange = (value) => {
     setActiveTab(value);
+    setCurrentView('list');
   };
 
   return (
@@ -82,45 +98,59 @@ const PADashboard = () => {
           </TabsList>
         </div>
         
-        <TabsContent value="dashboard" className="space-y-4">
-          <DashboardOverview selectedEntity={selectedEntity} />
-        </TabsContent>
-        
-        <TabsContent value="tasks" className="space-y-4">
-          <TaskManager selectedEntity={selectedEntity} />
-        </TabsContent>
-        
-        <TabsContent value="crm" className="space-y-4">
-          <ClientCRM selectedEntity={selectedEntity} />
-        </TabsContent>
-        
-        <TabsContent value="finance" className="space-y-4">
-          <FinanceLedger selectedEntity={selectedEntity} />
-        </TabsContent>
-        
-        <TabsContent value="procurement" className="space-y-4">
-          <ProcurementAssets selectedEntity={selectedEntity} />
-        </TabsContent>
-        
-        <TabsContent value="payroll" className="space-y-4">
-          <PayrollExpenses selectedEntity={selectedEntity} />
-        </TabsContent>
-        
-        <TabsContent value="inventory" className="space-y-4">
-          <InventoryProduction selectedEntity={selectedEntity} />
-        </TabsContent>
-        
-        <TabsContent value="loans" className="space-y-4">
-          <LoansRepayments selectedEntity={selectedEntity} />
-        </TabsContent>
-        
-        <TabsContent value="documents" className="space-y-4">
-          <DocumentVault selectedEntity={selectedEntity} />
-        </TabsContent>
-        
-        <TabsContent value="reports" className="space-y-4">
-          <ReportsAnalytics selectedEntity={selectedEntity} />
-        </TabsContent>
+        <SidebarProvider>
+          <div className="flex min-h-[500px]">
+            {activeTab !== 'dashboard' && (
+              <DashboardSidebar 
+                activeTab={activeTab} 
+                onViewChange={setCurrentView}
+                isCollapsed={isCollapsed}
+              />
+            )}
+            
+            <div className="flex-1 p-4">
+              <TabsContent value="dashboard" className="space-y-4">
+                <DashboardOverview selectedEntity={selectedEntity} />
+              </TabsContent>
+              
+              <TabsContent value="tasks" className="space-y-4">
+                <TaskManager selectedEntity={selectedEntity} view={currentView} />
+              </TabsContent>
+              
+              <TabsContent value="crm" className="space-y-4">
+                <ClientCRM selectedEntity={selectedEntity} view={currentView} />
+              </TabsContent>
+              
+              <TabsContent value="finance" className="space-y-4">
+                <FinanceLedger selectedEntity={selectedEntity} />
+              </TabsContent>
+              
+              <TabsContent value="procurement" className="space-y-4">
+                <ProcurementAssets selectedEntity={selectedEntity} />
+              </TabsContent>
+              
+              <TabsContent value="payroll" className="space-y-4">
+                <PayrollExpenses selectedEntity={selectedEntity} />
+              </TabsContent>
+              
+              <TabsContent value="inventory" className="space-y-4">
+                <InventoryProduction selectedEntity={selectedEntity} />
+              </TabsContent>
+              
+              <TabsContent value="loans" className="space-y-4">
+                <LoansRepayments selectedEntity={selectedEntity} />
+              </TabsContent>
+              
+              <TabsContent value="documents" className="space-y-4">
+                <DocumentVault selectedEntity={selectedEntity} />
+              </TabsContent>
+              
+              <TabsContent value="reports" className="space-y-4">
+                <ReportsAnalytics selectedEntity={selectedEntity} />
+              </TabsContent>
+            </div>
+          </div>
+        </SidebarProvider>
       </Tabs>
     </div>
   );
