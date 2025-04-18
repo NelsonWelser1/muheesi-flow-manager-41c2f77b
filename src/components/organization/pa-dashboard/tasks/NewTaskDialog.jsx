@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Plus, Clock } from 'lucide-react';
+import { toast } from "sonner";
 
 const TaskPriorityOptions = [
   { value: "high", label: "High Priority" },
@@ -37,6 +39,7 @@ const TaskStatusOptions = [
 ];
 
 const NewTaskDialog = ({ onTaskCreate }) => {
+  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -47,18 +50,40 @@ const NewTaskDialog = ({ onTaskCreate }) => {
     reminderTime: "",
   });
 
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      priority: "medium",
+      status: "pending",
+      dueDate: new Date(),
+      assignedTo: "",
+      reminderTime: "",
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onTaskCreate({
+    
+    if (!formData.title.trim()) {
+      toast.error("Task title is required");
+      return;
+    }
+    
+    const newTask = {
       ...formData,
       id: Date.now(),
       createdAt: new Date(),
-    });
-    // Reset form and close dialog
+    };
+    
+    onTaskCreate(newTask);
+    toast.success("Task created successfully");
+    setOpen(false);
+    resetForm();
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
@@ -169,9 +194,9 @@ const NewTaskDialog = ({ onTaskCreate }) => {
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <DialogTrigger asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogTrigger>
+            <DialogClose asChild>
+              <Button variant="outline" type="button" onClick={resetForm}>Cancel</Button>
+            </DialogClose>
             <Button type="submit">Create Task</Button>
           </div>
         </form>
