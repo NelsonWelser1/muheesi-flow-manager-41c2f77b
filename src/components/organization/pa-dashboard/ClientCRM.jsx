@@ -2,9 +2,27 @@
 import React, { useState } from 'react';
 import CRMRouter from './crm/CRMRouter';
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { BluetoothProvider } from '@/contexts/BluetoothContext';
 import { Bluetooth, Building, FileText, Mail, MessageSquare, Phone, User } from 'lucide-react';
+import { BluetoothProvider } from '@/contexts/BluetoothContext';
+import { 
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton 
+} from "@/components/ui/sidebar";
+
+const menuItems = [
+  { id: 'contacts', icon: User, label: 'Contacts' },
+  { id: 'companies', icon: Building, label: 'Companies' },
+  { id: 'messages', icon: MessageSquare, label: 'Messages' },
+  { id: 'calls', icon: Phone, label: 'Calls' },
+  { id: 'email', icon: Mail, label: 'Email' },
+  { id: 'documents', icon: FileText, label: 'Documents' },
+  { id: 'bluetooth', icon: Bluetooth, label: 'Bluetooth' }
+];
 
 const ClientCRM = ({ selectedEntity, view = 'contacts' }) => {
   const [activeView, setActiveView] = useState(view);
@@ -15,45 +33,36 @@ const ClientCRM = ({ selectedEntity, view = 'contacts' }) => {
 
   return (
     <BluetoothProvider>
-      <div className="space-y-4">
-        <Tabs value={activeView} onValueChange={handleViewChange} className="w-full">
-          <TabsList className="w-full grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
-            <TabsTrigger value="contacts" className="flex items-center gap-1 text-xs sm:text-sm">
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Contacts</span>
-            </TabsTrigger>
-            <TabsTrigger value="companies" className="flex items-center gap-1 text-xs sm:text-sm">
-              <Building className="h-4 w-4" />
-              <span className="hidden sm:inline">Companies</span>
-            </TabsTrigger>
-            <TabsTrigger value="messages" className="flex items-center gap-1 text-xs sm:text-sm">
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline">Messages</span>
-            </TabsTrigger>
-            <TabsTrigger value="calls" className="flex items-center gap-1 text-xs sm:text-sm">
-              <Phone className="h-4 w-4" />
-              <span className="hidden sm:inline">Calls</span>
-            </TabsTrigger>
-            <TabsTrigger value="email" className="flex items-center gap-1 text-xs sm:text-sm">
-              <Mail className="h-4 w-4" />
-              <span className="hidden sm:inline">Email</span>
-            </TabsTrigger>
-            <TabsTrigger value="documents" className="flex items-center gap-1 text-xs sm:text-sm">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Documents</span>
-            </TabsTrigger>
-            <TabsTrigger value="bluetooth" className="flex items-center gap-1 text-xs sm:text-sm">
-              <Bluetooth className="h-4 w-4" />
-              <span className="hidden sm:inline">Bluetooth</span>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value={activeView}>
-            <Card className="p-0 overflow-hidden">
-              <CRMRouter view={activeView} />
-            </Card>
-          </TabsContent>
-        </Tabs>
+      <div className="flex h-[calc(100vh-200px)]">
+        <Sidebar>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {menuItems.map((item) => (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        onClick={() => handleViewChange(item.id)}
+                        className={`w-full justify-start gap-2 ${
+                          activeView === item.id ? 'bg-accent' : ''
+                        }`}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+        </Sidebar>
+
+        <div className="flex-1 p-4">
+          <Card className="h-full overflow-hidden">
+            <CRMRouter view={activeView} />
+          </Card>
+        </div>
       </div>
     </BluetoothProvider>
   );
