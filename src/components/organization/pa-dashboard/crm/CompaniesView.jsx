@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Buildings, Phone, Mail, MapPin, FileText, MoreHorizontal, Building, PlusCircle } from 'lucide-react';
+import { Search, Building, Phone, Mail, MapPin, FileText, MoreHorizontal, PlusCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const CompaniesView = () => {
@@ -158,7 +158,7 @@ const CompaniesView = () => {
         {!selectedCompany ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center p-8">
-              <Buildings className="h-12 w-12 mx-auto text-gray-300" />
+              <Building className="h-12 w-12 mx-auto text-gray-300" />
               <h3 className="mt-4 text-lg font-medium">Company Details</h3>
               <p className="mt-2 text-sm text-gray-500">Select a company to view details</p>
             </div>
