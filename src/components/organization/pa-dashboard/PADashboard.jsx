@@ -1,6 +1,6 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, CheckSquare, Phone, CreditCard, Package, DollarSign, Box, Handshake, FolderArchive, BarChart, BellRing } from 'lucide-react';
 import DashboardOverview from './DashboardOverview';
 import TaskManager from './TaskManager';
