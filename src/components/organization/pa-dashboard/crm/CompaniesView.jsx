@@ -90,6 +90,10 @@ const CompaniesView = () => {
     return value !== undefined && value !== null ? value : defaultValue;
   };
 
+  const hasContacts = (company) => {
+    return company && typeof company.contacts === 'number' && company.contacts > 0;
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-280px)]">
       {/* Companies List */}
@@ -128,25 +132,25 @@ const CompaniesView = () => {
                 >
                   <div className="flex items-start gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={company.logoUrl} alt={handleSafeProp(company.name)} />
+                      <AvatarImage src={company?.logoUrl} alt={handleSafeProp(company?.name)} />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {getAvatarText(company.name)}
+                        {getAvatarText(handleSafeProp(company?.name))}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start">
-                        <h3 className="font-medium truncate">{handleSafeProp(company.name)}</h3>
+                        <h3 className="font-medium truncate">{handleSafeProp(company?.name)}</h3>
                       </div>
                       <p className="text-sm text-gray-600 truncate">
-                        {handleSafeProp(company.industry)}
+                        {handleSafeProp(company?.industry)}
                       </p>
                       <div className="flex justify-between items-center mt-1">
                         <span className="text-xs text-gray-500 flex items-center">
                           <MapPin className="h-3 w-3 mr-1" />
-                          {handleSafeProp(company.location)}
+                          {handleSafeProp(company?.location)}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {company.contacts || 0} contacts
+                          {(company?.contacts || 0)} contacts
                         </span>
                       </div>
                     </div>
@@ -174,14 +178,14 @@ const CompaniesView = () => {
               <div className="flex justify-between items-start">
                 <div className="flex items-center">
                   <Avatar className="h-12 w-12 mr-4">
-                    <AvatarImage src={selectedCompany.logoUrl} alt={handleSafeProp(selectedCompany.name)} />
+                    <AvatarImage src={selectedCompany?.logoUrl} alt={handleSafeProp(selectedCompany?.name)} />
                     <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                      {getAvatarText(selectedCompany.name)}
+                      {getAvatarText(handleSafeProp(selectedCompany?.name))}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <CardTitle className="text-xl">{handleSafeProp(selectedCompany.name)}</CardTitle>
-                    <p className="text-sm text-gray-500">{handleSafeProp(selectedCompany.industry)}</p>
+                    <CardTitle className="text-xl">{handleSafeProp(selectedCompany?.name)}</CardTitle>
+                    <p className="text-sm text-gray-500">{handleSafeProp(selectedCompany?.industry)}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -216,7 +220,7 @@ const CompaniesView = () => {
                     <div>
                       <h3 className="text-sm font-medium mb-1">Description</h3>
                       <p className="text-sm text-gray-600">
-                        {handleSafeProp(selectedCompany.description, 'No description available.')}
+                        {handleSafeProp(selectedCompany?.description, 'No description available.')}
                       </p>
                     </div>
                     
@@ -224,7 +228,7 @@ const CompaniesView = () => {
                       <h3 className="text-sm font-medium mb-1">Location</h3>
                       <div className="flex items-center text-sm text-gray-600">
                         <MapPin className="h-4 w-4 mr-2" />
-                        {handleSafeProp(selectedCompany.location)}
+                        {handleSafeProp(selectedCompany?.location)}
                       </div>
                     </div>
                     
@@ -276,9 +280,9 @@ const CompaniesView = () => {
                       Add Contact
                     </Button>
                     
-                    {(selectedCompany.contacts > 0) ? (
+                    {hasContacts(selectedCompany) ? (
                       <div className="space-y-2">
-                        {[...Array(selectedCompany.contacts)].map((_, index) => (
+                        {[...Array(selectedCompany?.contacts || 0)].map((_, index) => (
                           <div key={index} className="flex items-center gap-3 p-2 border rounded-md">
                             <Avatar className="h-8 w-8">
                               <AvatarFallback>
