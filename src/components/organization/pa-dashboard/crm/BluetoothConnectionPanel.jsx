@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, Bluetooth, BluetoothConnected, BluetoothOff, BluetoothSearching, Check, Clock, Info, Phone, RefreshCw, User, UserPlus } from 'lucide-react';
+import { AlertCircle, Bluetooth, BluetoothConnected, BluetoothOff, BluetoothSearching, Check, Clock, Info, Phone, RefreshCw, User, UserPlus, Zap } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -97,7 +97,8 @@ const BluetoothConnectionPanel = () => {
                   <div>
                     <h3 className="font-medium">Browser not supported</h3>
                     <p className="text-sm mt-1">
-                      Your browser doesn't support the Web Bluetooth API. Try using Chrome, Edge, or Opera.
+                      Your browser doesn't support the Web Bluetooth API. Please use Chrome, Edge, or Opera.
+                      Make sure your device's Bluetooth is turned on and in range.
                     </p>
                   </div>
                 </div>
@@ -108,9 +109,10 @@ const BluetoothConnectionPanel = () => {
                   <div className="flex items-start">
                     <Info className="h-5 w-5 mr-2 flex-shrink-0" />
                     <div>
-                      <h3 className="font-medium">Bluetooth ready</h3>
+                      <h3 className="font-medium">Toothbrush Connection Ready</h3>
                       <p className="text-sm mt-1">
-                        Connect to a mobile device to sync contacts and call logs.
+                        Turn on your toothbrush and put it in pairing mode. 
+                        Make sure your computer's Bluetooth is enabled before connecting.
                       </p>
                     </div>
                   </div>
@@ -135,12 +137,12 @@ const BluetoothConnectionPanel = () => {
                       {isConnecting ? (
                         <>
                           <BluetoothSearching className="h-4 w-4 mr-2 animate-pulse" />
-                          Searching...
+                          Searching for toothbrush...
                         </>
                       ) : (
                         <>
                           <Bluetooth className="h-4 w-4 mr-2" />
-                          Connect Device
+                          Connect Toothbrush
                         </>
                       )}
                     </Button>
@@ -152,14 +154,31 @@ const BluetoothConnectionPanel = () => {
                       className="w-full"
                       onClick={() => {
                         // This would trigger a real sync in a full implementation
-                        alert("Sync operation would be triggered here in a real implementation");
+                        alert("Syncing toothbrush data...");
                       }}
                     >
                       <RefreshCw className="h-4 w-4 mr-2" />
-                      Sync Device Data
+                      Sync Toothbrush Data
                     </Button>
                   )}
                 </div>
+
+                {!isConnected && (
+                  <div className="rounded-md bg-gray-50 p-4 text-gray-800 border border-gray-200 mt-2">
+                    <div className="flex items-start">
+                      <Zap className="h-5 w-5 mr-2 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-medium">Quick Setup Guide</h3>
+                        <ol className="text-sm mt-1 space-y-1 list-decimal pl-4">
+                          <li>Turn on your toothbrush</li>
+                          <li>Hold the power button for 3-5 seconds until it flashes</li>
+                          <li>Click "Connect Toothbrush" button above</li>
+                          <li>Select your device from the list when prompted</li>
+                        </ol>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
             

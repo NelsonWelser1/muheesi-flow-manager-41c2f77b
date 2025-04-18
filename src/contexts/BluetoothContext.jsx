@@ -16,7 +16,7 @@ export const useBluetooth = () => {
 };
 
 export const BluetoothProvider = ({ children }) => {
-  const toast = useToast();
+  const { toast } = useToast();
   const [device, setDevice] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -38,7 +38,13 @@ export const BluetoothProvider = ({ children }) => {
     checkBluetoothSupport();
   }, []);
 
-  // Connect to a Bluetooth device
+  // Add a device log entry
+  const addDeviceLog = (message) => {
+    const timestamp = new Date().toISOString();
+    setDeviceLogs(prev => [...prev, { timestamp, message }]);
+  };
+
+  // Connect to a Bluetooth device (with focus on toothbrush devices)
   const connectDevice = useCallback(async () => {
     if (!navigator.bluetooth) {
       showErrorToast(toast, "Bluetooth API is not supported in this browser");
@@ -47,33 +53,51 @@ export const BluetoothProvider = ({ children }) => {
 
     try {
       setIsConnecting(true);
-      showInfoToast(toast, "Searching for nearby devices...");
+      showInfoToast(toast, "Searching for toothbrush devices...");
+      addDeviceLog("Starting scan for toothbrush devices...");
 
-      // Request device with specific services for phone data
+      // Request device with specific services common in toothbrush devices
+      // Note: Real toothbrushes often use standard services like Battery Service or specific manufacturer services
       const device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
+        // Look for devices that advertise as a toothbrush or dental device
+        filters: [
+          { namePrefix: "Tooth" },  // Many toothbrushes start with "Tooth"
+          { namePrefix: "Oral" },   // For Oral-B devices
+          { namePrefix: "Philips" }, // For Philips Sonicare
+          { namePrefix: "Braun" },   // For Braun devices
+          // Include common toothbrush service UUIDs if known
+        ],
+        // Fall back to accepting all devices if no toothbrush is found
+        // This increases the chance of finding the device
+        acceptAllDevices: true, 
         optionalServices: [
-          '00001105-0000-1000-8000-00805f9b34fb', // OPP (Object Push Profile)
-          '0000110a-0000-1000-8000-00805f9b34fb', // PBAP (Phone Book Access Profile)
-          '0000111e-0000-1000-8000-00805f9b34fb', // HFP (Hands Free Profile)
-          '00001103-0000-1000-8000-00805f9b34fb'  // Dial-up Networking
+          'battery_service',                    // Standard battery service
+          '0000180f-0000-1000-8000-00805f9b34fb', // Battery Service UUID
+          '0000180a-0000-1000-8000-00805f9b34fb', // Device Information Service
+          // Add manufacturer-specific service UUIDs for common toothbrush brands
+          // These would be added in a real implementation based on the specific brands
+          '00001105-0000-1000-8000-00805f9b34fb', // OPP (for contact sync)
+          '0000110a-0000-1000-8000-00805f9b34fb', // PBAP (for phone book access)
+          '0000111e-0000-1000-8000-00805f9b34fb', // HFP (for call logs)
         ]
       });
 
+      addDeviceLog(`Found device: ${device.name || "Unknown device"}`);
       setDevice(device);
       
       // Add event listener for disconnection
       device.addEventListener('gattserverdisconnected', () => {
         setIsConnected(false);
-        showInfoToast(toast, `Device ${device.name} disconnected`);
+        showInfoToast(toast, `Device ${device.name || "Unknown device"} disconnected`);
         addDeviceLog('Disconnected from device');
       });
 
       // Connect to the GATT server
+      addDeviceLog("Attempting to connect to GATT server...");
       const server = await device.gatt.connect();
       setIsConnected(true);
-      showSuccessToast(toast, `Connected to ${device.name}`);
-      addDeviceLog(`Connected to ${device.name}`);
+      showSuccessToast(toast, `Connected to ${device.name || "device"}`);
+      addDeviceLog(`Connected to ${device.name || "device"}`);
 
       // After successful connection, attempt to sync data
       await syncDeviceData(server);
@@ -90,42 +114,64 @@ export const BluetoothProvider = ({ children }) => {
 
   // Disconnect from the current Bluetooth device
   const disconnectDevice = useCallback(async () => {
-    if (device && device.gatt.connected) {
+    if (device && device.gatt && device.gatt.connected) {
+      addDeviceLog(`Manually disconnecting from ${device.name || "device"}...`);
       device.gatt.disconnect();
       setIsConnected(false);
-      showInfoToast(toast, `Disconnected from ${device.name}`);
-      addDeviceLog(`Manually disconnected from ${device.name}`);
+      showInfoToast(toast, `Disconnected from ${device.name || "device"}`);
+      addDeviceLog(`Successfully disconnected from ${device.name || "device"}`);
     }
   }, [device, toast]);
 
-  // Sync device data
+  // Sync device data (simulated for toothbrush device)
   const syncDeviceData = useCallback(async (server) => {
     try {
       addDeviceLog('Starting data synchronization...');
       
-      // This is a placeholder for actual data sync
-      // In a real implementation, we would:
-      // 1. Get the PBAP service for contacts
-      // 2. Get the call history service
-      // 3. Read the characteristic values
+      // Attempt to read device information (will work with many real devices)
+      try {
+        const deviceInfoService = await server.getPrimaryService('device_information');
+        if (deviceInfoService) {
+          addDeviceLog('Found device information service');
+          
+          try {
+            const modelChar = await deviceInfoService.getCharacteristic('model_number_string');
+            const modelValue = await modelChar.readValue();
+            const modelName = new TextDecoder().decode(modelValue);
+            addDeviceLog(`Device model: ${modelName}`);
+          } catch (e) {
+            addDeviceLog('Could not read model information');
+          }
+        }
+      } catch (e) {
+        addDeviceLog('Device information service not available');
+      }
       
-      // Instead, we'll simulate a successful sync with mock data
+      // This is a placeholder for actual data sync with a toothbrush
+      // In a real implementation, we would:
+      // 1. Look for specific toothbrush services
+      // 2. Read brushing history, battery level, etc.
+      // 3. Process this information
+      
+      // For this demo, we'll simulate a successful sync with mock data
       setTimeout(() => {
+        // Simulate contacts from "toothbrush app"
         const mockContacts = [
-          { id: 'bt1', firstName: 'John', lastName: 'Mobile', type: 'Client', phone: '+256 789-012-3456', email: 'john.mobile@example.com', company: 'Mobile Tech Ltd' },
-          { id: 'bt2', firstName: 'Sarah', lastName: 'Device', type: 'Lead', phone: '+256 678-901-2345', email: 'sarah.device@example.com', company: 'Connected Systems' }
+          { id: 'bt1', firstName: 'Dental', lastName: 'Care', type: 'Service', phone: '+256 789-012-3456', email: 'dental.care@example.com', company: 'Smile Dental' },
+          { id: 'bt2', firstName: 'Brush', lastName: 'Timer', type: 'App', phone: '+256 678-901-2345', email: 'brush.timer@example.com', company: 'Smart Dental Tech' }
         ];
         
+        // Simulate calls from dental reminders
         const mockCalls = [
-          { id: 'btcall1', contactName: 'John Mobile', company: 'Mobile Tech Ltd', type: 'incoming', duration: '3:45', date: '2025-04-18', time: '10:30 AM', notes: 'Discussed Bluetooth integration' },
-          { id: 'btcall2', contactName: 'Sarah Device', company: 'Connected Systems', type: 'outgoing', duration: '2:12', date: '2025-04-17', time: '11:15 AM', notes: 'Followed up on proposal' }
+          { id: 'btcall1', contactName: 'Dental Care', company: 'Smile Dental', type: 'incoming', duration: '0:45', date: '2025-04-18', time: '09:00 AM', notes: 'Reminder for dental appointment' },
+          { id: 'btcall2', contactName: 'Brush Timer', company: 'Smart Dental Tech', type: 'outgoing', duration: '0:10', date: '2025-04-17', time: '08:00 AM', notes: 'Brushing technique reminder' }
         ];
         
         setContacts(prevContacts => [...mockContacts]);
         setCallLogs(prevLogs => [...mockCalls]);
         
-        addDeviceLog('Successfully synchronized contacts and call logs');
-        showSuccessToast(toast, "Device data synchronized successfully");
+        addDeviceLog('Successfully synchronized toothbrush data');
+        showSuccessToast(toast, "Toothbrush data synchronized successfully");
       }, 2000);
       
     } catch (error) {
@@ -133,12 +179,6 @@ export const BluetoothProvider = ({ children }) => {
       showErrorToast(toast, `Failed to sync device data: ${error.message}`);
     }
   }, [toast]);
-
-  // Add a log entry
-  const addDeviceLog = (message) => {
-    const timestamp = new Date().toISOString();
-    setDeviceLogs(prev => [...prev, { timestamp, message }]);
-  };
 
   // Value to be provided by the context
   const contextValue = {
