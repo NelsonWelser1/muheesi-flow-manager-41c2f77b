@@ -23,7 +23,8 @@ const CRMRouter = ({ view = 'contacts' }) => {
       phone: '+256 123-456-7890',
       city: 'Kampala',
       country: 'Uganda',
-      avatarUrl: null
+      avatarUrl: null,
+      notes: 'Key client for coffee exports. Has been with us for 5 years.'
     },
     {
       id: 2,
@@ -34,6 +35,31 @@ const CRMRouter = ({ view = 'contacts' }) => {
       email: 'jane.smith@example.com',
       phone: '+256 987-654-3210',
       city: 'Entebbe',
+      country: 'Uganda',
+      avatarUrl: null,
+      notes: 'Supplies dairy products for office events.'
+    },
+    {
+      id: 3,
+      firstName: 'David',
+      lastName: 'Brown',
+      type: 'Partner',
+      company: 'FreshEco Farms',
+      email: 'david.brown@example.com',
+      phone: '+256 234-567-8901',
+      city: 'Jinja',
+      country: 'Uganda',
+      avatarUrl: null
+    },
+    {
+      id: 4,
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      type: 'Lead',
+      company: 'Organic Harvest Ltd',
+      email: 'sarah.johnson@example.com',
+      phone: '+256 345-678-9012',
+      city: 'Mbarara',
       country: 'Uganda',
       avatarUrl: null
     }
@@ -50,15 +76,23 @@ const CRMRouter = ({ view = 'contacts' }) => {
 
   const renderView = () => {
     switch (view) {
-      case 'contacts':
+      case 'contacts': {
+        const selectedContact = selectedContactId 
+          ? sampleContacts.find(contact => contact.id === selectedContactId) 
+          : null;
+        
         return (
-          <ContactList 
-            contacts={sampleContacts} 
-            selectedContactId={selectedContactId} 
-            onSelectContact={handleSelectContact}
-            onAddContact={handleAddContact}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ContactList 
+              contacts={sampleContacts} 
+              selectedContactId={selectedContactId} 
+              onSelectContact={handleSelectContact}
+              onAddContact={handleAddContact}
+            />
+            <ContactDetails contact={selectedContact} />
+          </div>
         );
+      }
       case 'add-contact':
         return <ContactForm onSubmit={(data) => console.log('Form submitted:', data)} />;
       case 'messages':
