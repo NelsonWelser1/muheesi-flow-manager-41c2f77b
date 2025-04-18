@@ -64,8 +64,6 @@ const DashboardSidebar = ({
   isCollapsed
 }) => {
   const currentItems = sidebarItems[activeTab] || [];
-  return <Sidebar className={`border-r ${isCollapsed ? 'w-16' : 'w-64'} transition-width duration-200`}>
-      
-    </Sidebar>;
+  return;
 };
 export default DashboardSidebar;
