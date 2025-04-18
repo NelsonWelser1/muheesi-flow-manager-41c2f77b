@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,49 +37,51 @@ const PADashboard = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 w-full">
-          <TabsTrigger value="dashboard" className="flex items-center gap-1 text-xs sm:text-sm">
-            <Calendar className="w-4 h-4" />
-            <span className="hidden sm:inline">Dashboard</span>
-          </TabsTrigger>
-          <TabsTrigger value="tasks" className="flex items-center gap-1 text-xs sm:text-sm">
-            <CheckSquare className="w-4 h-4" />
-            <span className="hidden sm:inline">Tasks</span>
-          </TabsTrigger>
-          <TabsTrigger value="crm" className="flex items-center gap-1 text-xs sm:text-sm">
-            <Phone className="w-4 h-4" />
-            <span className="hidden sm:inline">CRM</span>
-          </TabsTrigger>
-          <TabsTrigger value="finance" className="flex items-center gap-1 text-xs sm:text-sm">
-            <CreditCard className="w-4 h-4" />
-            <span className="hidden sm:inline">Finance</span>
-          </TabsTrigger>
-          <TabsTrigger value="procurement" className="flex items-center gap-1 text-xs sm:text-sm">
-            <Package className="w-4 h-4" />
-            <span className="hidden sm:inline">Procurement</span>
-          </TabsTrigger>
-          <TabsTrigger value="payroll" className="flex items-center gap-1 text-xs sm:text-sm">
-            <DollarSign className="w-4 h-4" />
-            <span className="hidden sm:inline">Payroll</span>
-          </TabsTrigger>
-          <TabsTrigger value="inventory" className="flex items-center gap-1 text-xs sm:text-sm">
-            <Box className="w-4 h-4" />
-            <span className="hidden sm:inline">Inventory</span>
-          </TabsTrigger>
-          <TabsTrigger value="loans" className="flex items-center gap-1 text-xs sm:text-sm">
-            <Handshake className="w-4 h-4" />
-            <span className="hidden sm:inline">Loans</span>
-          </TabsTrigger>
-          <TabsTrigger value="documents" className="flex items-center gap-1 text-xs sm:text-sm">
-            <FolderArchive className="w-4 h-4" />
-            <span className="hidden sm:inline">Documents</span>
-          </TabsTrigger>
-          <TabsTrigger value="reports" className="flex items-center gap-1 text-xs sm:text-sm">
-            <BarChart className="w-4 h-4" />
-            <span className="hidden sm:inline">Reports</span>
-          </TabsTrigger>
-        </TabsList>
-
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-4">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 w-full">
+            <TabsTrigger value="dashboard" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Calendar className="w-4 h-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger value="tasks" className="flex items-center gap-1 text-xs sm:text-sm">
+              <CheckSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">Tasks</span>
+            </TabsTrigger>
+            <TabsTrigger value="crm" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Phone className="w-4 h-4" />
+              <span className="hidden sm:inline">CRM</span>
+            </TabsTrigger>
+            <TabsTrigger value="finance" className="flex items-center gap-1 text-xs sm:text-sm">
+              <CreditCard className="w-4 h-4" />
+              <span className="hidden sm:inline">Finance</span>
+            </TabsTrigger>
+            <TabsTrigger value="procurement" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Package className="w-4 h-4" />
+              <span className="hidden sm:inline">Procurement</span>
+            </TabsTrigger>
+            <TabsTrigger value="payroll" className="flex items-center gap-1 text-xs sm:text-sm">
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">Payroll</span>
+            </TabsTrigger>
+            <TabsTrigger value="inventory" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Box className="w-4 h-4" />
+              <span className="hidden sm:inline">Inventory</span>
+            </TabsTrigger>
+            <TabsTrigger value="loans" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Handshake className="w-4 h-4" />
+              <span className="hidden sm:inline">Loans</span>
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="flex items-center gap-1 text-xs sm:text-sm">
+              <FolderArchive className="w-4 h-4" />
+              <span className="hidden sm:inline">Documents</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-1 text-xs sm:text-sm">
+              <BarChart className="w-4 h-4" />
+              <span className="hidden sm:inline">Reports</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        
         <TabsContent value="dashboard" className="space-y-4">
           <DashboardOverview selectedEntity={selectedEntity} />
         </TabsContent>
