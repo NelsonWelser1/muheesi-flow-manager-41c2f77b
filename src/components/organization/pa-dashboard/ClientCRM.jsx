@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import CRMRouter from './crm/CRMRouter';
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BluetoothProvider } from '@/contexts/BluetoothContext';
 import { Bluetooth, Building, FileText, Mail, MessageSquare, Phone, User } from 'lucide-react';
 
@@ -47,11 +47,13 @@ const ClientCRM = ({ selectedEntity, view = 'contacts' }) => {
               <span className="hidden sm:inline">Bluetooth</span>
             </TabsTrigger>
           </TabsList>
+          
+          <TabsContent value={activeView}>
+            <Card className="p-0 overflow-hidden">
+              <CRMRouter view={activeView} />
+            </Card>
+          </TabsContent>
         </Tabs>
-
-        <Card className="p-0 overflow-hidden">
-          <CRMRouter view={activeView} />
-        </Card>
       </div>
     </BluetoothProvider>
   );
