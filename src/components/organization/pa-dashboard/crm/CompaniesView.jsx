@@ -3,936 +3,391 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { 
-  Search, 
-  Building, 
-  BuildingAdd, 
-  Users, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  BarChart2, 
-  CalendarClock, 
-  FileText, 
-  Trash, 
-  Edit, 
-  Globe, 
-  MoreHorizontal,
-  Tag
-} from 'lucide-react';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Buildings, Phone, Mail, MapPin, FileText, MoreHorizontal, Building, PlusCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-
-const companySchema = z.object({
-  name: z.string().min(2, "Company name must be at least 2 characters"),
-  type: z.string().min(1, "Please select a type"),
-  phone: z.string().optional(),
-  email: z.string().email("Please enter a valid email address").optional().or(z.literal("")),
-  website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  postalCode: z.string().optional(),
-  country: z.string().optional(),
-  industryType: z.string().optional(),
-  employeeCount: z.string().optional(),
-  revenue: z.string().optional(),
-  notes: z.string().optional(),
-  tags: z.string().optional(),
-});
 
 const CompaniesView = () => {
   const [companies, setCompanies] = useState([
     {
       id: 1,
-      name: "Grand Berna Dairies",
-      type: "Client",
-      phone: "+256 123 456 789",
-      email: "info@grandberna.com",
-      website: "https://www.grandberna.com",
-      address: "Plot 14, Industrial Area",
-      city: "Kampala",
-      state: "Central",
-      postalCode: "10101",
-      country: "Uganda",
-      industryType: "Dairy",
-      employeeCount: "50-100",
-      revenue: "$1M-$5M",
-      notes: "Key client for dairy products distribution in the Central region.",
-      tags: "dairy, client, distribution",
-      contactCount: 3,
-      dealCount: 2,
-      lastActivity: "2024-04-17T09:30:00"
+      name: 'Grand Berna Dairies',
+      industry: 'Dairy Production',
+      location: 'Kampala, Uganda',
+      contacts: 3,
+      logoUrl: null,
+      description: 'Leading dairy producer in the region specializing in milk, cheese, and yogurt products.'
     },
     {
       id: 2,
-      name: "KAJON Coffee Limited",
-      type: "Vendor",
-      phone: "+256 987 654 321",
-      email: "info@kajoncoffee.com",
-      website: "https://www.kajoncoffee.com",
-      address: "27 Coffee Plaza",
-      city: "Entebbe",
-      state: "Central",
-      postalCode: "10203",
-      country: "Uganda",
-      industryType: "Coffee",
-      employeeCount: "100-250",
-      revenue: "$5M-$10M",
-      notes: "Premium coffee supplier with export operations.",
-      tags: "coffee, vendor, export",
-      contactCount: 5,
-      dealCount: 1,
-      lastActivity: "2024-04-15T14:45:00"
+      name: 'KAJON Coffee Limited',
+      industry: 'Coffee Export',
+      location: 'Mbarara, Uganda',
+      contacts: 2,
+      logoUrl: null,
+      description: 'Premium coffee exporter working with local farmers to bring Ugandan coffee to international markets.'
     },
     {
       id: 3,
-      name: "FreshEco Farms",
-      type: "Partner",
-      phone: "+256 765 432 109",
-      email: "contact@fresheco.org",
-      website: "https://www.fresheco.org",
-      address: "Rural Highway 5",
-      city: "Jinja",
-      state: "Eastern",
-      postalCode: "40506",
-      country: "Uganda",
-      industryType: "Agriculture",
-      employeeCount: "10-50",
-      revenue: "$500K-$1M",
-      notes: "Organic produce partner with a focus on sustainability.",
-      tags: "organic, partner, produce",
-      contactCount: 2,
-      dealCount: 1,
-      lastActivity: "2024-04-10T11:15:00"
+      name: 'FreshEco Farms',
+      industry: 'Agriculture',
+      location: 'Jinja, Uganda',
+      contacts: 1,
+      logoUrl: null,
+      description: 'Sustainable farming operation focusing on organic vegetables and fruits for local markets.'
     },
-    {
-      id: 4,
-      name: "Organic Co-op",
-      type: "Lead",
-      phone: "+256 234 567 890",
-      email: "hello@organiccoop.co.ug",
-      website: "https://www.organiccoop.co.ug",
-      address: "Plot 78, Farmer's Market",
-      city: "Mbale",
-      state: "Eastern",
-      postalCode: "30405",
-      country: "Uganda",
-      industryType: "Agriculture",
-      employeeCount: "1-10",
-      revenue: "Under $500K",
-      notes: "Potential partner for organic produce distribution.",
-      tags: "organic, lead, small-business",
-      contactCount: 1,
-      dealCount: 0,
-      lastActivity: "2024-04-05T10:00:00"
-    },
-    {
-      id: 5,
-      name: "Produce Distributors",
-      type: "Client",
-      phone: "+256 345 678 901",
-      email: "sales@producedist.com",
-      website: "https://www.producedist.com",
-      address: "Distribution Center, Block 12",
-      city: "Kampala",
-      state: "Central",
-      postalCode: "10104",
-      country: "Uganda",
-      industryType: "Distribution",
-      employeeCount: "25-50",
-      revenue: "$1M-$5M",
-      notes: "Regional food distributor with multiple retail contracts.",
-      tags: "distribution, client, retail",
-      contactCount: 2,
-      dealCount: 1,
-      lastActivity: "2024-04-12T16:30:00"
-    }
   ]);
 
-  const [openNewCompanyDialog, setOpenNewCompanyDialog] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
-
-  const form = useForm({
-    resolver: zodResolver(companySchema),
-    defaultValues: {
-      name: "",
-      type: "",
-      phone: "",
-      email: "",
-      website: "",
-      address: "",
-      city: "",
-      state: "",
-      postalCode: "",
-      country: "",
-      industryType: "",
-      employeeCount: "",
-      revenue: "",
-      notes: "",
-      tags: ""
-    }
+  const [isNewCompanyDialogOpen, setIsNewCompanyDialogOpen] = useState(false);
+  const [newCompany, setNewCompany] = useState({
+    name: '',
+    industry: '',
+    location: '',
+    description: '',
   });
 
-  const handleAddCompany = (values) => {
-    const newCompany = {
-      id: companies.length + 1,
-      ...values,
-      contactCount: 0,
-      dealCount: 0,
-      lastActivity: new Date().toISOString()
-    };
-    
-    setCompanies([newCompany, ...companies]);
-    setOpenNewCompanyDialog(false);
-    form.reset();
-  };
-
-  const handleViewCompany = (company) => {
+  const handleSelectCompany = (company) => {
     setSelectedCompany(company);
   };
 
-  const handleCloseCompanyView = () => {
-    setSelectedCompany(null);
+  const handleAddCompany = () => {
+    // Validation
+    if (!newCompany.name || !newCompany.industry || !newCompany.location) {
+      // You could add toast notifications here
+      return;
+    }
+
+    const createdCompany = {
+      id: companies.length + 1,
+      ...newCompany,
+      contacts: 0,
+      logoUrl: null,
+    };
+
+    setCompanies([...companies, createdCompany]);
+    setNewCompany({
+      name: '',
+      industry: '',
+      location: '',
+      description: '',
+    });
+    setIsNewCompanyDialogOpen(false);
   };
 
-  const handleDeleteCompany = (id) => {
-    setCompanies(companies.filter(company => company.id !== id));
-    if (selectedCompany && selectedCompany.id === id) {
-      setSelectedCompany(null);
-    }
-  };
-
-  const getStatusBadge = (type) => {
-    switch (type) {
-      case "Client":
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{type}</Badge>;
-      case "Vendor":
-        return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">{type}</Badge>;
-      case "Partner":
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">{type}</Badge>;
-      case "Lead":
-        return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">{type}</Badge>;
-      default:
-        return <Badge variant="outline">{type}</Badge>;
-    }
+  const getAvatarText = (name) => {
+    if (!name) return 'CO';
+    return name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase();
   };
 
   return (
-    <div className="space-y-4">
-      {selectedCompany ? (
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="mb-2" 
-                  onClick={handleCloseCompanyView}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-280px)]">
+      {/* Companies List */}
+      <Card className="md:col-span-1">
+        <CardHeader className="p-4 pb-2">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg">Companies</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setIsNewCompanyDialogOpen(true)}>
+              <PlusCircle className="h-4 w-4 mr-1" />
+              New
+            </Button>
+          </div>
+          <div className="relative mt-2">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search companies..."
+              className="pl-8"
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 p-0 h-10 rounded-none border-b">
+              <TabsTrigger value="all" className="rounded-none">All Companies</TabsTrigger>
+              <TabsTrigger value="recent" className="rounded-none">Recently Added</TabsTrigger>
+            </TabsList>
+            <ScrollArea className="h-[calc(100vh-380px)]">
+              {companies.map((company) => (
+                <div
+                  key={company.id}
+                  className={`p-3 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
+                    selectedCompany?.id === company.id ? 'bg-gray-50' : ''
+                  }`}
+                  onClick={() => handleSelectCompany(company)}
                 >
-                  &larr; Back to Companies
-                </Button>
-                <CardTitle className="text-2xl">{selectedCompany.name}</CardTitle>
-                <div className="flex items-center mt-1 space-x-2">
-                  {getStatusBadge(selectedCompany.type)}
-                  <span className="text-sm text-muted-foreground">{selectedCompany.industryType}</span>
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={company.logoUrl} alt={company.name} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {getAvatarText(company.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-medium truncate">{company.name}</h3>
+                      </div>
+                      <p className="text-sm text-gray-600 truncate">
+                        {company.industry}
+                      </p>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-xs text-gray-500 flex items-center">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {company.location}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {company.contacts} contacts
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </ScrollArea>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Company Details */}
+      <Card className="md:col-span-2 flex flex-col">
+        {!selectedCompany ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center p-8">
+              <Buildings className="h-12 w-12 mx-auto text-gray-300" />
+              <h3 className="mt-4 text-lg font-medium">Company Details</h3>
+              <p className="mt-2 text-sm text-gray-500">Select a company to view details</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <CardHeader className="p-4 border-b flex-shrink-0">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center">
+                  <Avatar className="h-12 w-12 mr-4">
+                    <AvatarImage src={selectedCompany.logoUrl} alt={selectedCompany.name} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                      {getAvatarText(selectedCompany.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <CardTitle className="text-xl">{selectedCompany.name}</CardTitle>
+                    <p className="text-sm text-gray-500">{selectedCompany.industry}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>Edit Company</DropdownMenuItem>
+                      <DropdownMenuItem>Add Contact</DropdownMenuItem>
+                      <DropdownMenuItem>Add Note</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive">Delete Company</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
-              <div className="flex space-x-2">
-                <Button variant="outline" size="sm">
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => handleDeleteCompany(selectedCompany.id)}
-                >
-                  <Trash className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="overview">
-              <TabsList className="mb-4">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="contacts">Contacts</TabsTrigger>
-                <TabsTrigger value="deals">Deals</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
+            </CardHeader>
+            
+            <Tabs defaultValue="overview" className="flex-1 flex flex-col">
+              <TabsList className="p-0 h-10 rounded-none border-b">
+                <TabsTrigger value="overview" className="rounded-none">Overview</TabsTrigger>
+                <TabsTrigger value="contacts" className="rounded-none">Contacts</TabsTrigger>
+                <TabsTrigger value="notes" className="rounded-none">Notes</TabsTrigger>
+                <TabsTrigger value="files" className="rounded-none">Files</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="overview">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <Users className="h-5 w-5 text-blue-500" />
-                        <div>
-                          <div className="text-sm text-muted-foreground">Contacts</div>
-                          <div className="text-2xl font-semibold">{selectedCompany.contactCount}</div>
-                        </div>
+              <ScrollArea className="flex-1 p-4">
+                <TabsContent value="overview" className="mt-0 p-0">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-medium mb-1">Description</h3>
+                      <p className="text-sm text-gray-600">
+                        {selectedCompany.description || 'No description available.'}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium mb-1">Location</h3>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="h-4 w-4 mr-2" />
+                        {selectedCompany.location}
                       </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <FileText className="h-5 w-5 text-green-500" />
-                        <div>
-                          <div className="text-sm text-muted-foreground">Deals</div>
-                          <div className="text-2xl font-semibold">{selectedCompany.dealCount}</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <CalendarClock className="h-5 w-5 text-purple-500" />
-                        <div>
-                          <div className="text-sm text-muted-foreground">Last Activity</div>
-                          <div className="text-sm font-medium">
-                            {selectedCompany.lastActivity ? new Date(selectedCompany.lastActivity).toLocaleDateString() : 'N/A'}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Company Information</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-2">
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <div className="text-sm text-muted-foreground">Industry Type</div>
-                            <div className="font-medium">{selectedCompany.industryType || 'N/A'}</div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">Employees</div>
-                            <div className="font-medium">{selectedCompany.employeeCount || 'N/A'}</div>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <div className="text-sm text-muted-foreground">Annual Revenue</div>
-                          <div className="font-medium">{selectedCompany.revenue || 'N/A'}</div>
-                        </div>
-                        
-                        <div>
-                          <div className="text-sm text-muted-foreground">Tags</div>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {selectedCompany.tags && selectedCompany.tags.split(',').map((tag, i) => (
-                              <Badge key={i} variant="outline" className="text-xs">
-                                {tag.trim()}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Contact Information</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-2">
-                      <div className="space-y-3">
-                        <div className="flex items-start">
-                          <Phone className="h-4 w-4 mt-0.5 mr-2 text-muted-foreground" />
-                          <span>{selectedCompany.phone || 'No phone number'}</span>
-                        </div>
-                        
-                        <div className="flex items-start">
-                          <Mail className="h-4 w-4 mt-0.5 mr-2 text-muted-foreground" />
-                          <span>{selectedCompany.email || 'No email'}</span>
-                        </div>
-                        
-                        {selectedCompany.website && (
-                          <div className="flex items-start">
-                            <Globe className="h-4 w-4 mt-0.5 mr-2 text-muted-foreground" />
-                            <a href={selectedCompany.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                              {selectedCompany.website.replace(/^https?:\/\//, '')}
-                            </a>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-start">
-                          <MapPin className="h-4 w-4 mt-0.5 mr-2 text-muted-foreground" />
-                          <div>
-                            {selectedCompany.address && (
-                              <div>{selectedCompany.address}</div>
-                            )}
-                            {(selectedCompany.city || selectedCompany.state) && (
-                              <div>
-                                {selectedCompany.city}
-                                {selectedCompany.city && selectedCompany.state && ', '}
-                                {selectedCompany.state}
-                                {selectedCompany.postalCode && ` ${selectedCompany.postalCode}`}
-                              </div>
-                            )}
-                            {selectedCompany.country && (
-                              <div>{selectedCompany.country}</div>
-                            )}
-                            {!selectedCompany.address && !selectedCompany.city && !selectedCompany.country && (
-                              <span className="text-muted-foreground">No address available</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                {selectedCompany.notes && (
-                  <Card className="mt-6">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Notes</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-2">
-                      <p className="whitespace-pre-line">{selectedCompany.notes}</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="contacts">
-                {selectedCompany.contactCount > 0 ? (
-                  <Card>
-                    <CardContent className="p-4">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Title</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Phone</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center py-8">
-                              <div className="text-muted-foreground">
-                                Contact details will appear here
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Alert>
-                    <Users className="h-4 w-4" />
-                    <AlertTitle>No contacts found</AlertTitle>
-                    <AlertDescription>
-                      There are no contacts associated with this company yet.
-                      <Button variant="outline" size="sm" className="mt-2">
-                        Add Contact
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="deals">
-                {selectedCompany.dealCount > 0 ? (
-                  <Card>
-                    <CardContent className="p-4">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Deal Name</TableHead>
-                            <TableHead>Value</TableHead>
-                            <TableHead>Stage</TableHead>
-                            <TableHead>Expected Close</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center py-8">
-                              <div className="text-muted-foreground">
-                                Deal details will appear here
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Alert>
-                    <FileText className="h-4 w-4" />
-                    <AlertTitle>No deals found</AlertTitle>
-                    <AlertDescription>
-                      There are no deals associated with this company yet.
-                      <Button variant="outline" size="sm" className="mt-2">
-                        Add Deal
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="documents">
-                <Alert>
-                  <FileText className="h-4 w-4" />
-                  <AlertTitle>No documents found</AlertTitle>
-                  <AlertDescription>
-                    There are no documents associated with this company yet.
-                    <Button variant="outline" size="sm" className="mt-2">
-                      Upload Document
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-xl">Companies</CardTitle>
-              <Dialog open={openNewCompanyDialog} onOpenChange={setOpenNewCompanyDialog}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <BuildingAdd className="h-4 w-4 mr-2" />
-                    Add Company
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleAddCompany)}>
-                      <DialogHeader>
-                        <DialogTitle>Add New Company</DialogTitle>
-                        <DialogDescription>
-                          Enter company details to add it to your CRM.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
-                        <Tabs defaultValue="basic" className="w-full">
-                          <TabsList className="mb-4 grid grid-cols-3">
-                            <TabsTrigger value="basic">Basic</TabsTrigger>
-                            <TabsTrigger value="details">Details</TabsTrigger>
-                            <TabsTrigger value="additional">Additional</TabsTrigger>
-                          </TabsList>
-                          
-                          <TabsContent value="basic" className="space-y-4">
-                            <FormField
-                              control={form.control}
-                              name="name"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Company Name *</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={form.control}
-                              name="type"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Company Type *</FormLabel>
-                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select type" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="Client">Client</SelectItem>
-                                      <SelectItem value="Vendor">Vendor</SelectItem>
-                                      <SelectItem value="Partner">Partner</SelectItem>
-                                      <SelectItem value="Lead">Lead</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <FormField
-                                control={form.control}
-                                name="phone"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Phone Number</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            
-                            <FormField
-                              control={form.control}
-                              name="website"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Website</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </TabsContent>
-                          
-                          <TabsContent value="details" className="space-y-4">
-                            <FormField
-                              control={form.control}
-                              name="address"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Address</FormLabel>
-                                  <FormControl>
-                                    <Textarea rows={2} {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                              <FormField
-                                control={form.control}
-                                name="city"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>City</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={form.control}
-                                name="state"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>State/Region</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                              <FormField
-                                control={form.control}
-                                name="postalCode"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Postal Code</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={form.control}
-                                name="country"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Country</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          </TabsContent>
-                          
-                          <TabsContent value="additional" className="space-y-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <FormField
-                                control={form.control}
-                                name="industryType"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Industry Type</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                      <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select industry" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        <SelectItem value="Agriculture">Agriculture</SelectItem>
-                                        <SelectItem value="Coffee">Coffee</SelectItem>
-                                        <SelectItem value="Dairy">Dairy</SelectItem>
-                                        <SelectItem value="Distribution">Distribution</SelectItem>
-                                        <SelectItem value="Manufacturing">Manufacturing</SelectItem>
-                                        <SelectItem value="Retail">Retail</SelectItem>
-                                        <SelectItem value="Technology">Technology</SelectItem>
-                                        <SelectItem value="Other">Other</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              <FormField
-                                control={form.control}
-                                name="employeeCount"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Number of Employees</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                      <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select range" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        <SelectItem value="1-10">1-10</SelectItem>
-                                        <SelectItem value="10-50">10-50</SelectItem>
-                                        <SelectItem value="50-100">50-100</SelectItem>
-                                        <SelectItem value="100-250">100-250</SelectItem>
-                                        <SelectItem value="250-500">250-500</SelectItem>
-                                        <SelectItem value="500+">500+</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            
-                            <FormField
-                              control={form.control}
-                              name="revenue"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Annual Revenue</FormLabel>
-                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select revenue range" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="Under $500K">Under $500K</SelectItem>
-                                      <SelectItem value="$500K-$1M">$500K-$1M</SelectItem>
-                                      <SelectItem value="$1M-$5M">$1M-$5M</SelectItem>
-                                      <SelectItem value="$5M-$10M">$5M-$10M</SelectItem>
-                                      <SelectItem value="$10M-$50M">$10M-$50M</SelectItem>
-                                      <SelectItem value="$50M+">$50M+</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={form.control}
-                              name="tags"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Tags (Comma-separated)</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="e.g. dairy, vendor, important" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={form.control}
-                              name="notes"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Notes</FormLabel>
-                                  <FormControl>
-                                    <Textarea rows={3} {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </TabsContent>
-                        </Tabs>
-                      </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setOpenNewCompanyDialog(false)} type="button">
-                          Cancel
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium mb-1">Quick Actions</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button variant="outline" size="sm" className="justify-start">
+                          <Mail className="h-4 w-4 mr-2" />
+                          Send Email
                         </Button>
-                        <Button type="submit">Create Company</Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <div className="flex items-center space-x-2 mt-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search companies..."
-                  className="pl-8"
-                />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="all">
-              <TabsList className="mb-4">
-                <TabsTrigger value="all">All Companies</TabsTrigger>
-                <TabsTrigger value="client">Clients</TabsTrigger>
-                <TabsTrigger value="vendor">Vendors</TabsTrigger>
-                <TabsTrigger value="partner">Partners</TabsTrigger>
-                <TabsTrigger value="lead">Leads</TabsTrigger>
-              </TabsList>
-              
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Company Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Industry</TableHead>
-                    <TableHead>Phone/Email</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Contacts</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {companies.map((company) => (
-                    <TableRow key={company.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center">
-                          <Building className="h-4 w-4 mr-2 text-muted-foreground" />
-                          <span className="cursor-pointer hover:text-primary" onClick={() => handleViewCompany(company)}>
-                            {company.name}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(company.type)}</TableCell>
-                      <TableCell>{company.industryType}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col space-y-1">
-                          {company.phone && (
-                            <div className="flex items-center text-sm">
-                              <Phone className="h-3 w-3 mr-1 text-muted-foreground" />
-                              <span>{company.phone}</span>
+                        <Button variant="outline" size="sm" className="justify-start">
+                          <Phone className="h-4 w-4 mr-2" />
+                          Call
+                        </Button>
+                        <Button variant="outline" size="sm" className="justify-start">
+                          <FileText className="h-4 w-4 mr-2" />
+                          Create Document
+                        </Button>
+                        <Button variant="outline" size="sm" className="justify-start">
+                          <Building className="h-4 w-4 mr-2" />
+                          View on Map
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium mb-1">Recent Activity</h3>
+                      <div className="space-y-2">
+                        {[1, 2, 3].map((item) => (
+                          <div key={item} className="text-sm text-gray-600 border-b pb-2">
+                            <div className="flex justify-between">
+                              <span>Activity {item}</span>
+                              <span className="text-xs text-gray-500">2 days ago</span>
                             </div>
-                          )}
-                          {company.email && (
-                            <div className="flex items-center text-sm">
-                              <Mail className="h-3 w-3 mr-1 text-muted-foreground" />
-                              <span>{company.email}</span>
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {company.city && company.country && (
-                          <div className="flex items-center">
-                            <MapPin className="h-3 w-3 mr-1 text-muted-foreground" />
-                            {company.city}, {company.country}
+                            <p className="text-xs mt-1">
+                              Brief description of activity {item} related to this company.
+                            </p>
                           </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Users className="h-4 w-4 mr-1 text-muted-foreground" />
-                          {company.contactCount}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="cursor-pointer" onClick={() => handleViewCompany(company)}>
-                              <Building className="h-4 w-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">
-                              <UserPlus className="h-4 w-4 mr-2" />
-                              Add Contact
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">
-                              <FileText className="h-4 w-4 mr-2" />
-                              Add Deal
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer text-destructive" onClick={() => handleDeleteCompany(company.id)}>
-                              <Trash className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="contacts" className="mt-0 p-0">
+                  <div className="space-y-4">
+                    <Button variant="outline" size="sm">
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Add Contact
+                    </Button>
+                    
+                    {selectedCompany.contacts > 0 ? (
+                      <div className="space-y-2">
+                        {[...Array(selectedCompany.contacts)].map((_, index) => (
+                          <div key={index} className="flex items-center gap-3 p-2 border rounded-md">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback>
+                                {String.fromCharCode(65 + index)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">Contact {index + 1}</div>
+                              <div className="text-xs text-gray-500">contact{index + 1}@example.com</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center p-4 text-gray-500">
+                        No contacts added yet
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="notes" className="mt-0 p-0">
+                  <div className="space-y-4">
+                    <Button variant="outline" size="sm">
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Add Note
+                    </Button>
+                    
+                    <div className="text-center p-4 text-gray-500">
+                      No notes added yet
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="files" className="mt-0 p-0">
+                  <div className="space-y-4">
+                    <Button variant="outline" size="sm">
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Upload File
+                    </Button>
+                    
+                    <div className="text-center p-4 text-gray-500">
+                      No files uploaded yet
+                    </div>
+                  </div>
+                </TabsContent>
+              </ScrollArea>
             </Tabs>
-          </CardContent>
-        </Card>
-      )}
+          </>
+        )}
+      </Card>
+      
+      {/* New Company Dialog */}
+      <Dialog open={isNewCompanyDialogOpen} onOpenChange={setIsNewCompanyDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Company</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="company-name">Company Name</Label>
+              <Input 
+                id="company-name" 
+                placeholder="Enter company name" 
+                value={newCompany.name}
+                onChange={(e) => setNewCompany({...newCompany, name: e.target.value})}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="company-industry">Industry</Label>
+              <Input 
+                id="company-industry" 
+                placeholder="Enter industry" 
+                value={newCompany.industry}
+                onChange={(e) => setNewCompany({...newCompany, industry: e.target.value})}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="company-location">Location</Label>
+              <Input 
+                id="company-location" 
+                placeholder="Enter location" 
+                value={newCompany.location}
+                onChange={(e) => setNewCompany({...newCompany, location: e.target.value})}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="company-description">Description</Label>
+              <Textarea 
+                id="company-description" 
+                placeholder="Enter company description" 
+                value={newCompany.description}
+                onChange={(e) => setNewCompany({...newCompany, description: e.target.value})}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter className="sm:justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsNewCompanyDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleAddCompany}>
+              Add Company
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
