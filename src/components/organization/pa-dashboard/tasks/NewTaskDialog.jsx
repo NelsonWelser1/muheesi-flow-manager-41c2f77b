@@ -84,7 +84,7 @@ const NewTaskDialog = ({ onTaskCreate }) => {
   }
 
   return (
-    <div className="border rounded-lg bg-background p-6 space-y-4 mb-6">
+    <div className="w-full bg-background rounded-lg shadow-sm border p-6 space-y-4">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">Create New Task</h3>
         <Button variant="ghost" size="icon" onClick={resetForm}>
@@ -116,7 +116,7 @@ const NewTaskDialog = ({ onTaskCreate }) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label>Priority</Label>
               <Select
@@ -156,7 +156,7 @@ const NewTaskDialog = ({ onTaskCreate }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label>Due Date</Label>
               <DatePicker
