@@ -1,26 +1,19 @@
-
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckSquare, Plus, Filter, Search, MoreHorizontal, Clock, Calendar } from 'lucide-react';
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, Filter } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import NewTaskDialog from './tasks/NewTaskDialog';
 
 const TaskManager = ({ selectedEntity }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [tasks, setTasks] = useState(allTasks);
   
+  const handleCreateTask = (newTask) => {
+    setTasks([newTask, ...tasks]);
+  };
+
   // Mock task data
   const allTasks = [
     {
@@ -164,10 +157,7 @@ const TaskManager = ({ selectedEntity }) => {
           <Button variant="outline" size="icon">
             <Filter className="h-4 w-4" />
           </Button>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            New Task
-          </Button>
+          <NewTaskDialog onTaskCreate={handleCreateTask} />
         </div>
       </div>
 
