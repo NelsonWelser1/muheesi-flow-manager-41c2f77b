@@ -9,7 +9,9 @@ import {
   ClipboardList,
   Calendar,
   MessageSquare,
-  Settings
+  Settings,
+  Columns,
+  List
 } from 'lucide-react';
 import {
   Sidebar,
@@ -23,9 +25,9 @@ import {
 
 const sidebarItems = {
   tasks: [
-    { icon: CheckSquare, label: 'Task List', value: 'list' },
+    { icon: List, label: 'Task List', value: 'list' },
     { icon: Calendar, label: 'Calendar View', value: 'calendar' },
-    { icon: ClipboardList, label: 'Task Board', value: 'board' },
+    { icon: Columns, label: 'Task Board', value: 'board' },
   ],
   crm: [
     { icon: Users, label: 'Contacts', value: 'contacts' },

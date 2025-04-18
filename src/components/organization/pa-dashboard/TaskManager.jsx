@@ -1,13 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, MoreHorizontal, Plus } from 'lucide-react';
-import { format } from "date-fns";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus } from 'lucide-react';
 import TaskSearchBar from './tasks/TaskSearchBar';
 import TaskList from './tasks/TaskList';
 import NewTaskDialog from './tasks/NewTaskDialog';
+import TaskCalendarView from './tasks/TaskCalendarView';
+import TaskBoardView from './tasks/TaskBoardView';
 
 const TaskManager = ({ selectedEntity, view = 'list' }) => {
   const [tasks, setTasks] = useState([]);
@@ -57,7 +56,11 @@ const TaskManager = ({ selectedEntity, view = 'list' }) => {
   };
 
   const handleCompleteTask = (taskId) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
+    setTasks(tasks.map(task => 
+      task.id === taskId 
+        ? {...task, status: 'completed'} 
+        : task
+    ));
   };
 
   const handleDeleteTask = (taskId) => {
@@ -100,9 +103,15 @@ const TaskManager = ({ selectedEntity, view = 'list' }) => {
   const renderView = () => {
     switch (view) {
       case 'calendar':
-        return <div>Calendar View Coming Soon</div>;
+        return <TaskCalendarView tasks={filteredTasks} />;
       case 'board':
-        return <div>Board View Coming Soon</div>;
+        return (
+          <TaskBoardView 
+            tasks={filteredTasks} 
+            handleCompleteTask={handleCompleteTask} 
+            handleDeleteTask={handleDeleteTask} 
+          />
+        );
       case 'list':
       default:
         return (
@@ -125,7 +134,7 @@ const TaskManager = ({ selectedEntity, view = 'list' }) => {
 
   return (
     <div className="space-y-4">
-      {!showForm && (
+      {!showForm && view === 'list' && (
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           New Task
