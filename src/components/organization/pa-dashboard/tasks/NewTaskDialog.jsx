@@ -2,14 +2,6 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { format } from "date-fns";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Plus, Clock } from 'lucide-react';
+import { Plus, Clock, X } from 'lucide-react';
 import { toast } from "sonner";
 
 const TaskPriorityOptions = [
@@ -39,7 +31,7 @@ const TaskStatusOptions = [
 ];
 
 const NewTaskDialog = ({ onTaskCreate }) => {
-  const [open, setOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -60,6 +52,7 @@ const NewTaskDialog = ({ onTaskCreate }) => {
       assignedTo: "",
       reminderTime: "",
     });
+    setShowForm(false);
   };
 
   const handleSubmit = (e) => {
@@ -78,130 +71,132 @@ const NewTaskDialog = ({ onTaskCreate }) => {
     
     onTaskCreate(newTask);
     toast.success("Task created successfully");
-    setOpen(false);
     resetForm();
   };
 
+  if (!showForm) {
+    return (
+      <Button onClick={() => setShowForm(true)}>
+        <Plus className="h-4 w-4 mr-2" />
+        New Task
+      </Button>
+    );
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          New Task
+    <div className="border rounded-lg bg-background p-6 space-y-4 mb-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Create New Task</h3>
+        <Button variant="ghost" size="icon" onClick={resetForm}>
+          <X className="h-4 w-4" />
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[525px]">
-        <DialogHeader>
-          <DialogTitle>Create New Task</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="grid gap-4">
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="title">Task Title</Label>
+            <Input
+              id="title"
+              placeholder="Enter task title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              required
+            />
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Enter task description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="h-24"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">Task Title</Label>
-              <Input
-                id="title"
-                placeholder="Enter task title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                required
+              <Label>Priority</Label>
+              <Select
+                value={formData.priority}
+                onValueChange={(value) => setFormData({ ...formData, priority: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TaskPriorityOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => setFormData({ ...formData, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TaskStatusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label>Due Date</Label>
+              <DatePicker
+                date={formData.dueDate}
+                setDate={(date) => setFormData({ ...formData, dueDate: date })}
               />
             </div>
-            
+
             <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Enter task description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="h-24"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Priority</Label>
-                <Select
-                  value={formData.priority}
-                  onValueChange={(value) => setFormData({ ...formData, priority: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TaskPriorityOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label>Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) => setFormData({ ...formData, status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TaskStatusOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Due Date</Label>
-                <DatePicker
-                  date={formData.dueDate}
-                  setDate={(date) => setFormData({ ...formData, dueDate: date })}
+              <Label htmlFor="reminderTime">Reminder Time</Label>
+              <div className="relative">
+                <Input
+                  id="reminderTime"
+                  type="time"
+                  value={formData.reminderTime}
+                  onChange={(e) => setFormData({ ...formData, reminderTime: e.target.value })}
+                  className="pl-9"
                 />
+                <Clock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="reminderTime">Reminder Time</Label>
-                <div className="relative">
-                  <Input
-                    id="reminderTime"
-                    type="time"
-                    value={formData.reminderTime}
-                    onChange={(e) => setFormData({ ...formData, reminderTime: e.target.value })}
-                    className="pl-9"
-                  />
-                  <Clock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="assignedTo">Assigned To</Label>
-              <Input
-                id="assignedTo"
-                placeholder="Enter assignee name"
-                value={formData.assignedTo}
-                onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-              />
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <DialogClose asChild>
-              <Button variant="outline" type="button" onClick={resetForm}>Cancel</Button>
-            </DialogClose>
-            <Button type="submit">Create Task</Button>
+          <div className="grid gap-2">
+            <Label htmlFor="assignedTo">Assigned To</Label>
+            <Input
+              id="assignedTo"
+              placeholder="Enter assignee name"
+              value={formData.assignedTo}
+              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+            />
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </div>
+
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button variant="outline" type="button" onClick={resetForm}>Cancel</Button>
+          <Button type="submit">Create Task</Button>
+        </div>
+      </form>
+    </div>
   );
 };
 
