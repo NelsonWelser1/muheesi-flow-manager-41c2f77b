@@ -8,45 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Phone, PlusCircle, User, Calendar, Clock, MoreHorizontal, PhoneCall, PhoneIncoming, PhoneOutgoing, PhoneMissed } from 'lucide-react';
+import { Search, Phone, PlusCircle, User, Calendar, Clock, MoreHorizontal, PhoneCall, PhoneIncoming, PhoneOutgoing, PhoneMissed, Bluetooth } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
+import { useBluetooth } from '@/contexts/BluetoothContext';
 
-const CallLogView = () => {
-  const [callLogs, setCallLogs] = useState([
-    {
-      id: 1,
-      contactName: 'John Doe',
-      company: 'KAJON Coffee Limited',
-      type: 'outgoing',
-      duration: '5:23',
-      date: '2025-04-18',
-      time: '09:30 AM',
-      notes: 'Discussed upcoming coffee shipment',
-      avatarUrl: null
-    },
-    {
-      id: 2,
-      contactName: 'Jane Smith',
-      company: 'Grand Berna Dairies',
-      type: 'incoming',
-      duration: '3:12',
-      date: '2025-04-17',
-      time: '02:15 PM',
-      notes: 'Inquired about invoice payment',
-      avatarUrl: null
-    },
-    {
-      id: 3,
-      contactName: 'David Brown',
-      company: 'FreshEco Farms',
-      type: 'missed',
-      duration: '0:00',
-      date: '2025-04-15',
-      time: '11:45 AM',
-      notes: '',
-      avatarUrl: null
-    }
-  ]);
+const CallLogView = ({ callLogs: propCallLogs = [] }) => {
+  const { isConnected, callLogs: bluetoothCallLogs } = useBluetooth();
+  
+  // Use the prop callLogs if provided, otherwise use []
+  const [callLogs, setCallLogs] = useState(propCallLogs);
 
   const [selectedCall, setSelectedCall] = useState(null);
   const [newCallForm, setNewCallForm] = useState({
@@ -59,6 +29,7 @@ const CallLogView = () => {
     notes: ''
   });
   const [isAddingCall, setIsAddingCall] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleSelectCall = (call) => {
     setSelectedCall(call);
@@ -109,6 +80,28 @@ const CallLogView = () => {
     setNewCallForm(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleImportBluetoothCalls = () => {
+    if (bluetoothCallLogs && bluetoothCallLogs.length > 0) {
+      // Generate new IDs for imported call logs to avoid conflicts
+      const newCalls = bluetoothCallLogs.map(call => ({
+        ...call,
+        id: Math.max(...callLogs.map(c => c.id), 0) + Math.floor(Math.random() * 1000) + 1
+      }));
+      
+      setCallLogs(prev => [...prev, ...newCalls]);
+      setSelectedCall(null);
+    }
+  };
+
+  const filteredCallLogs = callLogs.filter(call => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (call.contactName && call.contactName.toLowerCase().includes(searchLower)) ||
+      (call.company && call.company.toLowerCase().includes(searchLower)) ||
+      (call.notes && call.notes.toLowerCase().includes(searchLower))
+    );
+  });
+
   const getInitials = (name) => {
     if (!name) return '??';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -147,10 +140,19 @@ const CallLogView = () => {
         <CardHeader className="p-4 pb-2">
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg">Call Log</CardTitle>
-            <Button size="sm" onClick={handleAddCall}>
-              <PlusCircle className="h-4 w-4 mr-1" />
-              Add
-            </Button>
+            <div className="flex gap-2">
+              {isConnected && bluetoothCallLogs && bluetoothCallLogs.length > 0 && (
+                <Button size="sm" variant="outline" onClick={handleImportBluetoothCalls} className="flex items-center gap-1">
+                  <Bluetooth className="h-4 w-4" />
+                  <span className="text-xs">Import</span>
+                  <Badge className="ml-1 text-[10px] h-4 px-1">{bluetoothCallLogs.length}</Badge>
+                </Button>
+              )}
+              <Button size="sm" onClick={handleAddCall}>
+                <PlusCircle className="h-4 w-4 mr-1" />
+                Add
+              </Button>
+            </div>
           </div>
           <div className="relative mt-2">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -158,44 +160,58 @@ const CallLogView = () => {
               type="text"
               placeholder="Search calls..."
               className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <ScrollArea className="h-[calc(100vh-380px)]">
-            {callLogs.map((call) => (
-              <div
-                key={call.id}
-                className={`p-3 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-                  selectedCall?.id === call.id ? 'bg-gray-50' : ''
-                }`}
-                onClick={() => handleSelectCall(call)}
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={call.avatarUrl} alt={call.contactName} />
-                    <AvatarFallback>{getInitials(call.contactName)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start">
-                      <h3 className="font-medium truncate">{call.contactName}</h3>
-                      {getCallTypeIcon(call.type)}
-                    </div>
-                    <p className="text-sm text-gray-500 truncate">{call.company}</p>
-                    <div className="flex justify-between items-center mt-1">
-                      <span className="text-xs text-gray-500 flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {call.date}
-                      </span>
-                      <span className="text-xs text-gray-500 flex items-center">
-                        <Clock className="h-3 w-3 mr-1" />
-                        {call.time}
-                      </span>
+            {filteredCallLogs.length > 0 ? (
+              filteredCallLogs.map((call) => (
+                <div
+                  key={call.id}
+                  className={`p-3 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
+                    selectedCall?.id === call.id ? 'bg-gray-50' : ''
+                  }`}
+                  onClick={() => handleSelectCall(call)}
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={call.avatarUrl} alt={call.contactName} />
+                      <AvatarFallback>{getInitials(call.contactName)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-medium truncate">{call.contactName}</h3>
+                        {getCallTypeIcon(call.type)}
+                      </div>
+                      <p className="text-sm text-gray-500 truncate">{call.company}</p>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-xs text-gray-500 flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {call.date}
+                        </span>
+                        <span className="text-xs text-gray-500 flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {call.time}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <Phone className="h-8 w-8 mx-auto text-gray-300" />
+                <p className="text-gray-500 mt-2">No call logs found</p>
+                {searchTerm && (
+                  <p className="text-gray-500 mt-1 text-sm">
+                    Try adjusting your search or clear the filter
+                  </p>
+                )}
               </div>
-            ))}
+            )}
           </ScrollArea>
         </CardContent>
       </Card>
@@ -396,10 +412,23 @@ const CallLogView = () => {
               <Phone className="h-12 w-12 mx-auto text-gray-300" />
               <h3 className="mt-4 text-lg font-medium">Call Details</h3>
               <p className="mt-2 text-sm text-gray-500">Select a call to view details or add a new call</p>
-              <Button className="mt-4" onClick={handleAddCall}>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Log a New Call
-              </Button>
+              {isConnected && bluetoothCallLogs && bluetoothCallLogs.length > 0 ? (
+                <div className="mt-4 space-y-2">
+                  <Button onClick={handleImportBluetoothCalls} variant="outline" className="w-full flex items-center justify-center gap-2">
+                    <Bluetooth className="h-4 w-4" />
+                    Import Bluetooth Calls ({bluetoothCallLogs.length})
+                  </Button>
+                  <Button onClick={handleAddCall}>
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Log a New Call
+                  </Button>
+                </div>
+              ) : (
+                <Button className="mt-4" onClick={handleAddCall}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Log a New Call
+                </Button>
+              )}
             </div>
           </div>
         )}
