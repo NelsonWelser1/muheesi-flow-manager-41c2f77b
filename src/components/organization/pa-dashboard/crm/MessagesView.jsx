@@ -54,7 +54,7 @@ const MessagesView = () => {
         avatarUrl: null
       },
       lastMessage: {
-        content: 'I've attached the signed contract for your review',
+        content: "I've attached the signed contract for your review",
         timestamp: 'Monday',
         isRead: true,
         sender: 'user'
