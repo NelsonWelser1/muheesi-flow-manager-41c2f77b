@@ -11,7 +11,11 @@ import {
   MessageSquare,
   Settings,
   Columns,
-  List
+  List,
+  UserPlus,
+  Phone,
+  Mail,
+  Building
 } from 'lucide-react';
 import {
   Sidebar,
@@ -30,8 +34,12 @@ const sidebarItems = {
     { icon: Columns, label: 'Task Board', value: 'board' },
   ],
   crm: [
-    { icon: Users, label: 'Contacts', value: 'contacts' },
+    { icon: Users, label: 'All Contacts', value: 'contacts' },
+    { icon: UserPlus, label: 'Add Contact', value: 'add-contact' },
+    { icon: Building, label: 'Companies', value: 'companies' },
     { icon: MessageSquare, label: 'Messages', value: 'messages' },
+    { icon: Phone, label: 'Call Log', value: 'calls' },
+    { icon: Mail, label: 'Email', value: 'email' },
     { icon: FileText, label: 'Documents', value: 'documents' },
   ],
   finance: [
