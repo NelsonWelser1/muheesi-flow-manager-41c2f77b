@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import ContactForm from './ContactForm';
 import ContactList from './ContactList';
@@ -107,9 +106,14 @@ const CRMRouter = ({ view = 'contacts' }) => {
     setSelectedContactId(contactId);
   };
 
-  const handleAddContact = () => {
-    console.log('Add contact clicked');
-    // This would typically navigate to the add contact form
+  const handleAddContact = (data) => {
+    const newContact = {
+      id: Math.max(...contacts.map(c => c.id), 0) + 1,
+      ...data,
+      avatarUrl: null
+    };
+    
+    setContacts(prevContacts => [...prevContacts, newContact]);
   };
 
   const handleImportContacts = (importedContacts) => {
