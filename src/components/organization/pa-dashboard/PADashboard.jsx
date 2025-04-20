@@ -67,9 +67,9 @@ const PADashboard = () => {
               <Phone className="w-4 h-4" />
               <span className="hidden sm:inline">CRM</span>
             </TabsTrigger>
-            <TabsTrigger value="primary-source" className="flex items-center gap-1 text-xs sm:text-sm">
+            <TabsTrigger value="finance" className="flex items-center gap-1 text-xs sm:text-sm">
               <CreditCard className="w-4 h-4" />
-              <span className="hidden sm:inline">Primary Source</span>
+              <span className="hidden sm:inline">Finance</span>
             </TabsTrigger>
             <TabsTrigger value="procurement" className="flex items-center gap-1 text-xs sm:text-sm">
               <Package className="w-4 h-4" />
@@ -121,7 +121,7 @@ const PADashboard = () => {
                 <ClientCRM selectedEntity={selectedEntity} view={currentView} />
               </TabsContent>
               
-              <TabsContent value="primary-source" className="space-y-4">
+              <TabsContent value="finance" className="space-y-4">
                 <FinanceLedger selectedEntity={selectedEntity} />
               </TabsContent>
               
