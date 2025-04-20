@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
+import ContactForm from './ContactForm';
 import ContactList from './ContactList';
 import ContactDetails from './ContactDetails';
 import MessagesView from './MessagesView';
@@ -7,28 +9,11 @@ import DocumentsView from './DocumentsView';
 import CompaniesView from './CompaniesView';
 import BluetoothConnectionPanel from './BluetoothConnectionPanel';
 import BluetoothCRMIntegration from './BluetoothCRMIntegration';
-import AddContactPage from './pages/AddContactPage';
 
 const CRMRouter = ({ view = 'contacts' }) => {
   const [selectedContactId, setSelectedContactId] = useState(null);
-  const [currentView, setCurrentView] = useState(view);
   
-  useEffect(() => {
-    const handlePopState = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const viewParam = urlParams.get('view');
-      if (viewParam) {
-        setCurrentView(viewParam);
-      }
-    };
-
-    handlePopState();
-    window.addEventListener('popstate', handlePopState);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, []);
-
+  // Sample data for demonstration purposes
   const [contacts, setContacts] = useState([
     {
       id: 1,
@@ -122,24 +107,13 @@ const CRMRouter = ({ view = 'contacts' }) => {
     setSelectedContactId(contactId);
   };
 
-  const handleAddContact = (data) => {
-    const newContact = {
-      id: Math.max(...contacts.map(c => c.id), 0) + 1,
-      ...data,
-      avatarUrl: null
-    };
-    
-    setContacts(prevContacts => [...prevContacts, newContact]);
-    window.history.pushState({}, '', '?view=contacts');
-    setCurrentView('contacts');
-  };
-
-  const handleNavigate = (newView) => {
-    window.history.pushState({}, '', `?view=${newView}`);
-    setCurrentView(newView);
+  const handleAddContact = () => {
+    console.log('Add contact clicked');
+    // This would typically navigate to the add contact form
   };
 
   const handleImportContacts = (importedContacts) => {
+    // Generate new IDs for imported contacts to avoid conflicts
     const newContacts = importedContacts.map(contact => ({
       ...contact,
       id: Math.max(...contacts.map(c => c.id), 0) + Math.floor(Math.random() * 1000) + 1
@@ -149,6 +123,7 @@ const CRMRouter = ({ view = 'contacts' }) => {
   };
 
   const handleImportCalls = (importedCalls) => {
+    // Generate new IDs for imported call logs to avoid conflicts
     const newCalls = importedCalls.map(call => ({
       ...call,
       id: Math.max(...callLogs.map(c => c.id), 0) + Math.floor(Math.random() * 1000) + 1
@@ -158,7 +133,7 @@ const CRMRouter = ({ view = 'contacts' }) => {
   };
 
   const renderView = () => {
-    switch (currentView) {
+    switch (view) {
       case 'contacts': {
         const selectedContact = selectedContactId 
           ? contacts.find(contact => contact.id === selectedContactId) 
@@ -170,23 +145,18 @@ const CRMRouter = ({ view = 'contacts' }) => {
               contacts={contacts} 
               selectedContactId={selectedContactId} 
               onSelectContact={handleSelectContact}
-              onAddContact={() => handleNavigate('add-contact')}
+              onAddContact={handleAddContact}
             />
             <ContactDetails contact={selectedContact} />
           </div>
         );
       }
       case 'add-contact':
-        return (
-          <AddContactPage 
-            onSubmit={handleAddContact} 
-            onCancel={() => handleNavigate('contacts')} 
-          />
-        );
+        return <ContactForm onSubmit={(data) => console.log('Form submitted:', data)} />;
       case 'messages':
         return <MessagesView />;
       case 'calls':
-        return <CallLogView />;
+        return <CallLogView callLogs={callLogs} />;
       case 'documents':
         return <DocumentsView />;
       case 'companies':
@@ -216,7 +186,7 @@ const CRMRouter = ({ view = 'contacts' }) => {
             contacts={contacts}
             selectedContactId={selectedContactId}
             onSelectContact={handleSelectContact}
-            onAddContact={() => handleNavigate('add-contact')}
+            onAddContact={handleAddContact}
           />
         );
     }

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Filter, UserPlus, Phone, Mail, MapPin, Building } from 'lucide-react';
 
 const ContactList = ({ contacts = [], selectedContactId, onSelectContact, onAddContact }) => {
-
   const getInitials = (name) => {
     if (!name) return '??';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -24,20 +24,11 @@ const ContactList = ({ contacts = [], selectedContactId, onSelectContact, onAddC
     }
   };
 
-  const handleAddContactClick = () => {
-    console.log("Add Contact button clicked");
-    if (onAddContact) {
-      onAddContact();
-    } else {
-      window.history.pushState({}, '', '?view=add-contact');
-      window.dispatchEvent(new Event('popstate'));
-    }
-  };
-
   return (
     <Card className="w-full">
       <CardContent className="p-4">
         <div className="space-y-4">
+          {/* Search and Filter */}
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -51,15 +42,13 @@ const ContactList = ({ contacts = [], selectedContactId, onSelectContact, onAddC
               <Filter className="h-4 w-4" />
               <span>Filter</span>
             </Button>
-            <Button 
-              className="flex gap-2 w-full sm:w-auto" 
-              onClick={handleAddContactClick}
-            >
+            <Button className="flex gap-2 w-full sm:w-auto" onClick={onAddContact}>
               <UserPlus className="h-4 w-4" />
               <span>Add Contact</span>
             </Button>
           </div>
 
+          {/* Contact Type Tabs */}
           <Tabs defaultValue="all">
             <TabsList className="grid grid-cols-5">
               <TabsTrigger value="all">All</TabsTrigger>
@@ -70,12 +59,13 @@ const ContactList = ({ contacts = [], selectedContactId, onSelectContact, onAddC
             </TabsList>
           </Tabs>
 
+          {/* Contact List */}
           <div className="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto pr-2">
             {!contacts || contacts.length === 0 ? (
               <div className="text-center py-8">
                 <UserPlus className="h-8 w-8 mx-auto text-gray-400" />
                 <p className="text-gray-500 mt-2">No contacts found</p>
-                <Button variant="outline" size="sm" className="mt-4" onClick={handleAddContactClick}>
+                <Button variant="outline" size="sm" className="mt-4" onClick={onAddContact}>
                   Add your first contact
                 </Button>
               </div>
