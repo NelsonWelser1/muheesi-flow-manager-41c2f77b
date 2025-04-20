@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ContactForm from './ContactForm';
 import ContactList from './ContactList';
 import ContactDetails from './ContactDetails';
@@ -12,6 +12,25 @@ import AddContactPage from './pages/AddContactPage';
 
 const CRMRouter = ({ view = 'contacts' }) => {
   const [selectedContactId, setSelectedContactId] = useState(null);
+  const [currentView, setCurrentView] = useState(view);
+  
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const viewParam = urlParams.get('view');
+      if (viewParam) {
+        setCurrentView(viewParam);
+      }
+    };
+
+    handlePopState();
+    
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
   
   const [contacts, setContacts] = useState([
     {
@@ -114,6 +133,13 @@ const CRMRouter = ({ view = 'contacts' }) => {
     };
     
     setContacts(prevContacts => [...prevContacts, newContact]);
+    window.history.pushState({}, '', '?view=contacts');
+    setCurrentView('contacts');
+  };
+
+  const handleNavigate = (newView) => {
+    window.history.pushState({}, '', `?view=${newView}`);
+    setCurrentView(newView);
   };
 
   const handleImportContacts = (importedContacts) => {
@@ -135,7 +161,7 @@ const CRMRouter = ({ view = 'contacts' }) => {
   };
 
   const renderView = () => {
-    switch (view) {
+    switch (currentView) {
       case 'contacts': {
         const selectedContact = selectedContactId 
           ? contacts.find(contact => contact.id === selectedContactId) 
@@ -147,7 +173,7 @@ const CRMRouter = ({ view = 'contacts' }) => {
               contacts={contacts} 
               selectedContactId={selectedContactId} 
               onSelectContact={handleSelectContact}
-              onAddContact={() => window.history.pushState({}, '', '?view=add-contact')}
+              onAddContact={() => handleNavigate('add-contact')}
             />
             <ContactDetails contact={selectedContact} />
           </div>
@@ -157,7 +183,7 @@ const CRMRouter = ({ view = 'contacts' }) => {
         return (
           <AddContactPage 
             onSubmit={handleAddContact} 
-            onCancel={() => window.history.pushState({}, '', '?view=contacts')} 
+            onCancel={() => handleNavigate('contacts')} 
           />
         );
       case 'messages':
@@ -193,7 +219,7 @@ const CRMRouter = ({ view = 'contacts' }) => {
             contacts={contacts}
             selectedContactId={selectedContactId}
             onSelectContact={handleSelectContact}
-            onAddContact={() => window.history.pushState({}, '', '?view=add-contact')}
+            onAddContact={() => handleNavigate('add-contact')}
           />
         );
     }
