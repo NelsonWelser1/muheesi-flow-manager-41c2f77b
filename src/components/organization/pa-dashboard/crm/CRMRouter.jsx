@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ContactForm from './ContactForm';
 import ContactList from './ContactList';
 import ContactDetails from './ContactDetails';
 import MessagesView from './MessagesView';
@@ -24,14 +23,12 @@ const CRMRouter = ({ view = 'contacts' }) => {
     };
 
     handlePopState();
-    
     window.addEventListener('popstate', handlePopState);
-    
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
   }, []);
-  
+
   const [contacts, setContacts] = useState([
     {
       id: 1,
@@ -189,7 +186,7 @@ const CRMRouter = ({ view = 'contacts' }) => {
       case 'messages':
         return <MessagesView />;
       case 'calls':
-        return <CallLogView callLogs={callLogs} />;
+        return <CallLogView />;
       case 'documents':
         return <DocumentsView />;
       case 'companies':
