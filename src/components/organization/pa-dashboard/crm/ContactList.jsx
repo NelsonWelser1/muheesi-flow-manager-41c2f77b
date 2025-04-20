@@ -6,10 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Filter, UserPlus, Phone, Mail, MapPin, Building } from 'lucide-react';
-import AddContactSheet from './AddContactSheet';
 
 const ContactList = ({ contacts = [], selectedContactId, onSelectContact, onAddContact }) => {
-  const [isAddContactOpen, setIsAddContactOpen] = useState(false);
 
   const getInitials = (name) => {
     if (!name) return '??';
@@ -23,12 +21,6 @@ const ContactList = ({ contacts = [], selectedContactId, onSelectContact, onAddC
       case "Partner": return "bg-green-100 text-green-800";
       case "Lead": return "bg-orange-100 text-orange-800";
       default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const handleAddContact = (data) => {
-    if (onAddContact) {
-      onAddContact(data);
     }
   };
 
@@ -52,7 +44,7 @@ const ContactList = ({ contacts = [], selectedContactId, onSelectContact, onAddC
             </Button>
             <Button 
               className="flex gap-2 w-full sm:w-auto" 
-              onClick={() => setIsAddContactOpen(true)}
+              onClick={onAddContact}
             >
               <UserPlus className="h-4 w-4" />
               <span>Add Contact</span>
@@ -133,12 +125,6 @@ const ContactList = ({ contacts = [], selectedContactId, onSelectContact, onAddC
           </div>
         </div>
       </CardContent>
-
-      <AddContactSheet 
-        isOpen={isAddContactOpen}
-        onOpenChange={setIsAddContactOpen}
-        onSubmit={handleAddContact}
-      />
     </Card>
   );
 };

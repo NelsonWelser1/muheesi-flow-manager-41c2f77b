@@ -8,11 +8,11 @@ import DocumentsView from './DocumentsView';
 import CompaniesView from './CompaniesView';
 import BluetoothConnectionPanel from './BluetoothConnectionPanel';
 import BluetoothCRMIntegration from './BluetoothCRMIntegration';
+import AddContactPage from './pages/AddContactPage';
 
 const CRMRouter = ({ view = 'contacts' }) => {
   const [selectedContactId, setSelectedContactId] = useState(null);
   
-  // Sample data for demonstration purposes
   const [contacts, setContacts] = useState([
     {
       id: 1,
@@ -117,7 +117,6 @@ const CRMRouter = ({ view = 'contacts' }) => {
   };
 
   const handleImportContacts = (importedContacts) => {
-    // Generate new IDs for imported contacts to avoid conflicts
     const newContacts = importedContacts.map(contact => ({
       ...contact,
       id: Math.max(...contacts.map(c => c.id), 0) + Math.floor(Math.random() * 1000) + 1
@@ -127,7 +126,6 @@ const CRMRouter = ({ view = 'contacts' }) => {
   };
 
   const handleImportCalls = (importedCalls) => {
-    // Generate new IDs for imported call logs to avoid conflicts
     const newCalls = importedCalls.map(call => ({
       ...call,
       id: Math.max(...callLogs.map(c => c.id), 0) + Math.floor(Math.random() * 1000) + 1
@@ -149,14 +147,19 @@ const CRMRouter = ({ view = 'contacts' }) => {
               contacts={contacts} 
               selectedContactId={selectedContactId} 
               onSelectContact={handleSelectContact}
-              onAddContact={handleAddContact}
+              onAddContact={() => window.history.pushState({}, '', '?view=add-contact')}
             />
             <ContactDetails contact={selectedContact} />
           </div>
         );
       }
       case 'add-contact':
-        return <ContactForm onSubmit={(data) => console.log('Form submitted:', data)} />;
+        return (
+          <AddContactPage 
+            onSubmit={handleAddContact} 
+            onCancel={() => window.history.pushState({}, '', '?view=contacts')} 
+          />
+        );
       case 'messages':
         return <MessagesView />;
       case 'calls':
@@ -190,7 +193,7 @@ const CRMRouter = ({ view = 'contacts' }) => {
             contacts={contacts}
             selectedContactId={selectedContactId}
             onSelectContact={handleSelectContact}
-            onAddContact={handleAddContact}
+            onAddContact={() => window.history.pushState({}, '', '?view=add-contact')}
           />
         );
     }
