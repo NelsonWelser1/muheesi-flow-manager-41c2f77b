@@ -1,191 +1,25 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/supabase";
-import { BarChart3, PieChart, Activity, BarChart, LineChart, Layers, Users, Building, Package, DollarSign, TrendingUp, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { BarChart3, PieChart, Activity, BarChart, LineChart, Layers, Users, Building, Package, DollarSign, TrendingUp, Calendar } from "lucide-react";
 import CEOSidebar from './CEOSidebar';
 import CompanyOverview from './dashboard/CompanyOverview';
 import FinancialSummary from './dashboard/FinancialSummary';
 import OperationsInsights from './dashboard/OperationsInsights';
 import StrategicInitiatives from './dashboard/StrategicInitiatives';
 import ActivityFeed from './dashboard/ActivityFeed';
+import { useCEODashboardData } from '@/hooks/useCEODashboardData';
 
 const CEODashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [dashboardData, setDashboardData] = useState({
-    companies: [],
-    sales: [],
-    inventory: [],
-    operations: [],
-    personnel: [],
-    finance: [],
-    recentActivity: []
-  });
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({
-    totalRevenue: 0,
-    totalSales: 0,
-    activeProjects: 0,
-    employeeCount: 0,
-    inventoryValue: 0,
-    pendingApprovals: 0
-  });
+  const { dashboardData, isLoading, metrics } = useCEODashboardData();
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        
-        const { data, error } = await supabase
-          .from('ceo_dashboard_data')
-          .select('*')
-          .not('company', 'eq', 'Fresheco Farming Limited')
-          .order('created_at', { ascending: false })
-          .limit(500);
-          
-        if (error) throw error;
-        
-        const companies = [];
-        const sales = [];
-        const inventory = [];
-        const operations = [];
-        const personnel = [];
-        const finance = [];
-        const recentActivity = [];
-        
-        let totalRevenue = 0;
-        let totalSales = 0;
-        let activeProjects = 0;
-        let employeeCount = 0;
-        let inventoryValue = 0;
-        let pendingApprovals = 0;
-        
-        data.forEach(item => {
-          if (item.created_at) {
-            recentActivity.push({
-              id: item.id,
-              type: item.data_type,
-              company: item.company,
-              module: item.module,
-              summary: generateSummary(item),
-              timestamp: new Date(item.created_at).toLocaleString()
-            });
-          }
-          
-          switch(item.data_type) {
-            case 'sales':
-              sales.push(item);
-              if (item.data && item.data.unitPrice && item.data.quantity) {
-                totalRevenue += item.data.unitPrice * item.data.quantity;
-                totalSales++;
-              }
-              break;
-            case 'inventory':
-              inventory.push(item);
-              if (item.data && item.data.value) {
-                inventoryValue += item.data.value;
-              }
-              break;
-            case 'operations':
-              operations.push(item);
-              if (item.data && item.data.status === 'active') {
-                activeProjects++;
-              }
-              break;
-            case 'personnel':
-              personnel.push(item);
-              if (item.data && item.data.count) {
-                employeeCount += item.data.count;
-              }
-              break;
-            case 'finance':
-              finance.push(item);
-              break;
-            case 'approval':
-              if (item.data && item.data.status === 'pending') {
-                pendingApprovals++;
-              }
-              break;
-            case 'company':
-              const existingCompany = companies.find(c => c.name === item.company);
-              if (!existingCompany) {
-                companies.push({
-                  name: item.company,
-                  data: item.data
-                });
-              }
-              break;
-            default:
-              break;
-          }
-        });
-        
-        setDashboardData({
-          companies,
-          sales,
-          inventory,
-          operations,
-          personnel,
-          finance,
-          recentActivity
-        });
-        
-        setMetrics({
-          totalRevenue,
-          totalSales,
-          activeProjects,
-          employeeCount,
-          inventoryValue,
-          pendingApprovals
-        });
-        
-      } catch (err) {
-        console.error("Error fetching CEO dashboard data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchDashboardData();
-    
-    const subscription = supabase
-      .channel('ceo_dashboard_changes')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'ceo_dashboard_data',
-        filter: 'company!eq.Fresheco Farming Limited'
-      }, (payload) => {
-        console.log('New dashboard data received:', payload);
-        fetchDashboardData();
-      })
-      .subscribe();
-      
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const generateSummary = (item) => {
-    switch(item.data_type) {
-      case 'sales':
-        return `New sale of ${item.data?.quantity || ''} ${item.data?.product || 'items'} to ${item.data?.customer || 'customer'}`;
-      case 'inventory':
-        return `Inventory update: ${item.data?.action || 'change'} for ${item.data?.product || 'items'}`;
-      case 'operations':
-        return `Operations update in ${item.module}`;
-      case 'personnel':
-        return `Personnel update: ${item.data?.action || ''} ${item.data?.role || 'employee'}`;
-      case 'finance':
-        return `Financial update: ${item.data?.type || ''} of UGX ${item.data?.amount?.toLocaleString() || ''}`;
-      case 'approval':
-        return `${item.data?.type || 'Item'} waiting for your approval`;
-      default:
-        return `Update from ${item.company} - ${item.module}`;
-    }
-  };
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">Loading dashboard data...</div>;
+  }
 
   return (
     <div className="flex">
@@ -318,41 +152,41 @@ const CEODashboard = () => {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="overview" className="space-y-4">
+          <TabsContent value="overview">
             <CompanyOverview 
               companies={dashboardData.companies}
-              loading={loading}
+              loading={isLoading}
             />
           </TabsContent>
           
-          <TabsContent value="financial" className="space-y-4">
+          <TabsContent value="financial">
             <FinancialSummary 
               sales={dashboardData.sales}
               finance={dashboardData.finance}
-              loading={loading}
+              loading={isLoading}
             />
           </TabsContent>
           
-          <TabsContent value="operations" className="space-y-4">
+          <TabsContent value="operations">
             <OperationsInsights 
               operations={dashboardData.operations}
               inventory={dashboardData.inventory}
               personnel={dashboardData.personnel}
-              loading={loading}
+              loading={isLoading}
             />
           </TabsContent>
           
-          <TabsContent value="strategic" className="space-y-4">
+          <TabsContent value="strategic">
             <StrategicInitiatives 
               data={dashboardData}
-              loading={loading}
+              loading={isLoading}
             />
           </TabsContent>
           
-          <TabsContent value="activity" className="space-y-4">
+          <TabsContent value="activity">
             <ActivityFeed 
               activities={dashboardData.recentActivity}
-              loading={loading}
+              loading={isLoading}
             />
           </TabsContent>
         </Tabs>
