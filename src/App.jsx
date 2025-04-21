@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -18,6 +17,7 @@ import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDair
 import SmartProductionDashboard from "./components/inventory/dairy/production/SmartProductionDashboard";
 import Sales from "./pages/Sales";
 import Accounts from "./pages/Accounts";
+import Personnel from "./pages/Personnel";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +42,11 @@ const App = () => (
               <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
               <Route path="/sales" element={<Sales />} />
               <Route path="/accounts" element={<Accounts />} />
+              <Route path="/personnel" element={<Personnel />} />
+              <Route path="/inventory" element={<ManageInventory />} />
+              <Route path="/reports" element={<Dashboard />} />
+              <Route path="/approvals" element={<Dashboard />} />
+              <Route path="/meetings" element={<Dashboard />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
