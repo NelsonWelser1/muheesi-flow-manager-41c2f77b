@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -110,7 +111,7 @@ const FinancialLedger = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Package className="h-5 w-5 text-blue-500 mr-2" />
-                <span className="text-2xl font-bold">UGX {netProfit.toLocaleString()}</span>
+                <span className="text-2xl font-bold">UGX {closingBalance.toLocaleString()}</span>
               </div>
               <div className="text-sm text-blue-500">
                 <span>+10%</span>
