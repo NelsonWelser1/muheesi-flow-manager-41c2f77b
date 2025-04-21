@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Clock, AlertTriangle, ArrowRightCircle } from 'lucide-react';
@@ -52,21 +51,6 @@ const StrategicInitiatives = ({ data, loading }) => {
         { name: "Certification", target: "100%", current: "85%" },
         { name: "Water Usage", target: "-30%", current: "-25%" },
         { name: "Organic Yield", target: "+15%", current: "+12%" }
-      ]
-    },
-    {
-      id: 4,
-      title: "Export Market Diversification",
-      company: "Fresheco Farming",
-      description: "Diversify export markets to reduce dependency on single regions",
-      progress: 32,
-      status: "delayed",
-      priority: "high",
-      due: "2025-10-15",
-      kpis: [
-        { name: "New Markets", target: 8, current: 3 },
-        { name: "Market Share Shift", target: "40%", current: "15%" },
-        { name: "Revenue Stability", target: "22%", current: "10%" }
       ]
     }
   ];

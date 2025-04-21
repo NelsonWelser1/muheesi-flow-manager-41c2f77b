@@ -34,16 +34,9 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/manage-inventory" element={<ManageInventory />} />
               <Route path="/manage-companies" element={<ManageCompanies />} />
-              <Route path="/feedback" element={<Feedback />} />
-              <Route path="/manage-inventory/kajon-export" element={<ExportManagementDashboard />} />
-              <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
-              <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
-              <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
-              <Route path="/manage-inventory/smart-production" element={<SmartProductionDashboard />} />
+              <Route path="/personnel" element={<Personnel />} />
               <Route path="/sales" element={<Sales />} />
               <Route path="/accounts" element={<Accounts />} />
-              <Route path="/personnel" element={<Personnel />} />
-              <Route path="/inventory" element={<ManageInventory />} />
               <Route path="/reports" element={<Dashboard />} />
               <Route path="/approvals" element={<Dashboard />} />
               <Route path="/meetings" element={<Dashboard />} />

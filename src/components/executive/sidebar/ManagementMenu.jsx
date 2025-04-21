@@ -71,6 +71,11 @@ const ManagementMenu = () => {
     }
   ];
 
+  const handleClick = (route) => {
+    console.log('Navigating to:', route);
+    navigate(route);
+  };
+
   return (
     <div className="p-4 overflow-y-auto flex-grow">
       <h4 className="text-xs uppercase font-semibold text-[#8E9196] mb-3">Management</h4>
@@ -82,7 +87,7 @@ const ManagementMenu = () => {
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-[#1A1F2C] hover:bg-[#F1F0FB] hover:text-[#6E59A5]"
-                  onClick={() => navigate(item.route)}
+                  onClick={() => handleClick(item.route)}
                 >
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center">

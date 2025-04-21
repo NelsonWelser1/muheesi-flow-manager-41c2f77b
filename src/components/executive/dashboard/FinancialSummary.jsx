@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -6,14 +5,14 @@ import { ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
 const FinancialSummary = ({ sales, finance, loading }) => {
-  // Sample financial data
+  // Updated monthly revenue data without Fresheco
   const monthlyRevenue = [
-    { name: 'Jan', grand_berna: 35000000, kajon: 25000000, kyalima: 22000000, fresheco: 18000000 },
-    { name: 'Feb', grand_berna: 38000000, kajon: 27000000, kyalima: 21000000, fresheco: 19000000 },
-    { name: 'Mar', grand_berna: 42000000, kajon: 29000000, kyalima: 24000000, fresheco: 21000000 },
-    { name: 'Apr', grand_berna: 40000000, kajon: 28000000, kyalima: 26000000, fresheco: 23000000 },
-    { name: 'May', grand_berna: 45000000, kajon: 32000000, kyalima: 28000000, fresheco: 24000000 },
-    { name: 'Jun', grand_berna: 48000000, kajon: 30000000, kyalima: 27000000, fresheco: 25000000 }
+    { name: 'Jan', grand_berna: 35000000, kajon: 25000000, kyalima: 22000000 },
+    { name: 'Feb', grand_berna: 38000000, kajon: 27000000, kyalima: 21000000 },
+    { name: 'Mar', grand_berna: 42000000, kajon: 29000000, kyalima: 24000000 },
+    { name: 'Apr', grand_berna: 40000000, kajon: 28000000, kyalima: 26000000 },
+    { name: 'May', grand_berna: 45000000, kajon: 32000000, kyalima: 28000000 },
+    { name: 'Jun', grand_berna: 48000000, kajon: 30000000, kyalima: 27000000 }
   ];
   
   const profitLoss = [
@@ -25,7 +24,6 @@ const FinancialSummary = ({ sales, finance, loading }) => {
     { name: 'Jun', profit: 42000000, expenses: 28000000 }
   ];
   
-  // Recent financial transactions
   const recentTransactions = [
     {
       id: 1,
@@ -99,7 +97,6 @@ const FinancialSummary = ({ sales, finance, loading }) => {
                   <Line type="monotone" dataKey="grand_berna" name="Grand Berna" stroke="#8B5CF6" activeDot={{ r: 8 }} />
                   <Line type="monotone" dataKey="kajon" name="KAJON Coffee" stroke="#0EA5E9" />
                   <Line type="monotone" dataKey="kyalima" name="Kyalima Farmers" stroke="#10B981" />
-                  <Line type="monotone" dataKey="fresheco" name="Fresheco" stroke="#F97316" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
