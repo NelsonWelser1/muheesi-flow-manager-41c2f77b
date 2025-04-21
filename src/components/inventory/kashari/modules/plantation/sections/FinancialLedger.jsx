@@ -12,14 +12,29 @@ const FinancialLedger = () => {
     { id: 2, date: '2025-04-03', type: 'expense', amount: 175000, description: 'Fertilizer purchase' },
     { id: 3, date: '2025-04-07', type: 'income', amount: 260000, description: 'Sale to Fresh Foods Market' },
   ]);
-
   const [showAddForm, setShowAddForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  const openingBalance = 0;
+  const sortedLedger = [...ledger].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  let currentBalance = openingBalance;
+  const ledgerRows = sortedLedger.map((item) => {
+    if (item.type === "income") {
+      currentBalance += item.amount;
+    } else if (item.type === "expense") {
+      currentBalance -= item.amount;
+    }
+    return {
+      ...item,
+      runningBalance: currentBalance,
+    };
+  });
+
   const totalIncome = ledger.filter(item => item.type === 'income').reduce((total, item) => total + item.amount, 0);
   const totalExpenses = ledger.filter(item => item.type === 'expense').reduce((total, item) => total + item.amount, 0);
-  const netProfit = totalIncome - totalExpenses;
+  const closingBalance = openingBalance + totalIncome - totalExpenses;
 
   const handleAddTransactionClick = () => {
     setShowAddForm(true);
@@ -32,7 +47,6 @@ const FinancialLedger = () => {
   const handleSubmitAddTransaction = (form) => {
     setIsSubmitting(true);
 
-    // Create new entry and add to the ledger
     const newEntry = {
       id: Date.now(),
       type: form.type,
@@ -40,7 +54,6 @@ const FinancialLedger = () => {
       date: form.date,
       description: form.description,
     };
-    // Ideally, submit to backend/db here
     setLedger((prev) => [newEntry, ...prev]);
     setIsSubmitting(false);
     setShowAddForm(false);
@@ -107,7 +120,6 @@ const FinancialLedger = () => {
         </Card>
       </div>
 
-      {/* Add Transaction Button & Inline Form */}
       <div className="mb-4">
         {!showAddForm && (
           <Button onClick={handleAddTransactionClick}>
@@ -130,19 +142,51 @@ const FinancialLedger = () => {
               <TableRow>
                 <TableHead>Date</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Amount</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead>Income</TableHead>
+                <TableHead>Expense</TableHead>
+                <TableHead>Balance</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ledger.map((item) => (
+              <TableRow>
+                <TableCell colSpan={5} className="font-bold">Opening Balance</TableCell>
+                <TableCell className="font-bold">UGX {openingBalance.toLocaleString()}</TableCell>
+              </TableRow>
+              {ledgerRows.map((item, idx) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.date}</TableCell>
-                  <TableCell>{item.type}</TableCell>
-                  <TableCell>UGX {item.amount.toLocaleString()}</TableCell>
+                  <TableCell className={
+                    item.type === "income"
+                      ? "text-green-600"
+                      : item.type === "expense"
+                      ? "text-red-600"
+                      : "text-yellow-600"
+                  }>
+                    {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                  </TableCell>
                   <TableCell>{item.description}</TableCell>
+                  <TableCell className="text-green-700">
+                    {item.type === "income" ? `UGX ${item.amount.toLocaleString()}` : ""}
+                  </TableCell>
+                  <TableCell className="text-red-700">
+                    {item.type === "expense" ? `UGX ${item.amount.toLocaleString()}` : ""}
+                  </TableCell>
+                  <TableCell className="font-bold">
+                    UGX {item.runningBalance.toLocaleString()}
+                  </TableCell>
                 </TableRow>
               ))}
+              <TableRow>
+                <TableCell colSpan={3} className="font-bold text-right">Total</TableCell>
+                <TableCell className="font-bold text-green-700">UGX {totalIncome.toLocaleString()}</TableCell>
+                <TableCell className="font-bold text-red-700">UGX {totalExpenses.toLocaleString()}</TableCell>
+                <TableCell className="font-bold"></TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell colSpan={5} className="font-bold">Closing Balance</TableCell>
+                <TableCell className="font-bold">UGX {closingBalance.toLocaleString()}</TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </CardContent>
