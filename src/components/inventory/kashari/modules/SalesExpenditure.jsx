@@ -1,9 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/supabase";
+import { toast } from "sonner";
 
 const INITIAL_SALES = [
   { id: 1, product: "Bananas (Ripe)", quantity: 40, unitPrice: 6500, customer: "Nakumatt Supermarket", date: "2025-04-07" },
@@ -21,6 +23,27 @@ const SalesExpenditure = () => {
     customer: "",
   });
 
+  // Function to publish data to the CEO dashboard
+  const publishToCEODashboard = async (saleData) => {
+    try {
+      const { error } = await supabase
+        .from('ceo_dashboard_data')
+        .insert({
+          data_type: 'sales',
+          company: 'Kashari Farm',
+          module: 'Sales Expenditure',
+          data: saleData,
+          created_at: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+      toast.success("Data shared with CEO Dashboard");
+    } catch (err) {
+      console.error("Error publishing to CEO Dashboard:", err);
+      toast.error("Failed to share data with CEO Dashboard");
+    }
+  };
+
   const handleOpenForm = () => setShowForm(true);
   const handleCloseForm = () => {
     setShowForm(false);
@@ -34,17 +57,21 @@ const SalesExpenditure = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.product || !form.quantity || !form.unitPrice || !form.customer) return;
-    setSales([
-      {
-        id: Date.now(),
-        product: form.product,
-        quantity: Number(form.quantity),
-        unitPrice: Number(form.unitPrice),
-        customer: form.customer,
-        date: new Date().toISOString().split("T")[0],
-      },
-      ...sales,
-    ]);
+    
+    const newSale = {
+      id: Date.now(),
+      product: form.product,
+      quantity: Number(form.quantity),
+      unitPrice: Number(form.unitPrice),
+      customer: form.customer,
+      date: new Date().toISOString().split("T")[0],
+    };
+    
+    setSales([newSale, ...sales]);
+    
+    // Publish to CEO Dashboard
+    publishToCEODashboard(newSale);
+    
     handleCloseForm();
   };
 
@@ -210,4 +237,3 @@ const SalesExpenditure = () => {
 };
 
 export default SalesExpenditure;
-
