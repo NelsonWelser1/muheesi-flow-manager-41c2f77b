@@ -15,7 +15,20 @@ import { useCEODashboardData } from '@/hooks/useCEODashboardData';
 
 const CEODashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const { dashboardData, isLoading, metrics } = useCEODashboardData();
+  const { dashboardData, isLoading, metrics = {} } = useCEODashboardData();
+
+  // Add fallback metrics with default values to prevent undefined errors
+  const defaultMetrics = {
+    totalRevenue: 0,
+    totalSales: 0,
+    activeProjects: 0,
+    employeeCount: 0,
+    inventoryValue: 0,
+    pendingApprovals: 0
+  };
+
+  // Use spread to ensure we have default values if metrics is undefined
+  const displayMetrics = { ...defaultMetrics, ...(metrics || {}) };
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading dashboard data...</div>;
@@ -42,7 +55,7 @@ const CEODashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[#8E9196] text-sm">Total Revenue</p>
-                  <h3 className="text-2xl font-bold">UGX {metrics.totalRevenue.toLocaleString()}</h3>
+                  <h3 className="text-2xl font-bold">UGX {displayMetrics.totalRevenue.toLocaleString()}</h3>
                 </div>
                 <div className="p-2 bg-[#F2FCE2] rounded-full">
                   <DollarSign className="h-5 w-5 text-green-600" />
@@ -57,7 +70,7 @@ const CEODashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[#8E9196] text-sm">Active Projects</p>
-                  <h3 className="text-2xl font-bold">{metrics.activeProjects}</h3>
+                  <h3 className="text-2xl font-bold">{displayMetrics.activeProjects}</h3>
                 </div>
                 <div className="p-2 bg-[#E5DEFF] rounded-full">
                   <Activity className="h-5 w-5 text-[#6E59A5]" />
@@ -72,7 +85,7 @@ const CEODashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[#8E9196] text-sm">Personnel</p>
-                  <h3 className="text-2xl font-bold">{metrics.employeeCount}</h3>
+                  <h3 className="text-2xl font-bold">{displayMetrics.employeeCount}</h3>
                 </div>
                 <div className="p-2 bg-[#FFDEE2] rounded-full">
                   <Users className="h-5 w-5 text-red-500" />
@@ -87,7 +100,7 @@ const CEODashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[#8E9196] text-sm">Inventory Value</p>
-                  <h3 className="text-2xl font-bold">UGX {metrics.inventoryValue.toLocaleString()}</h3>
+                  <h3 className="text-2xl font-bold">UGX {displayMetrics.inventoryValue.toLocaleString()}</h3>
                 </div>
                 <div className="p-2 bg-[#D3E4FD] rounded-full">
                   <Package className="h-5 w-5 text-blue-500" />
@@ -102,7 +115,7 @@ const CEODashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[#8E9196] text-sm">Total Sales</p>
-                  <h3 className="text-2xl font-bold">{metrics.totalSales}</h3>
+                  <h3 className="text-2xl font-bold">{displayMetrics.totalSales}</h3>
                 </div>
                 <div className="p-2 bg-[#FDE1D3] rounded-full">
                   <TrendingUp className="h-5 w-5 text-orange-500" />
@@ -117,7 +130,7 @@ const CEODashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[#8E9196] text-sm">Pending Approvals</p>
-                  <h3 className="text-2xl font-bold">{metrics.pendingApprovals}</h3>
+                  <h3 className="text-2xl font-bold">{displayMetrics.pendingApprovals}</h3>
                 </div>
                 <div className="p-2 bg-[#FEF7CD] rounded-full">
                   <Calendar className="h-5 w-5 text-yellow-600" />
@@ -154,24 +167,24 @@ const CEODashboard = () => {
           
           <TabsContent value="overview">
             <CompanyOverview 
-              companies={dashboardData.companies}
+              companies={dashboardData.companies || []}
               loading={isLoading}
             />
           </TabsContent>
           
           <TabsContent value="financial">
             <FinancialSummary 
-              sales={dashboardData.sales}
-              finance={dashboardData.finance}
+              sales={dashboardData.sales || []}
+              finance={dashboardData.finance || []}
               loading={isLoading}
             />
           </TabsContent>
           
           <TabsContent value="operations">
             <OperationsInsights 
-              operations={dashboardData.operations}
-              inventory={dashboardData.inventory}
-              personnel={dashboardData.personnel}
+              operations={dashboardData.operations || []}
+              inventory={dashboardData.inventory || []}
+              personnel={dashboardData.personnel || []}
               loading={isLoading}
             />
           </TabsContent>
@@ -185,7 +198,7 @@ const CEODashboard = () => {
           
           <TabsContent value="activity">
             <ActivityFeed 
-              activities={dashboardData.recentActivity}
+              activities={dashboardData.recentActivity || []}
               loading={isLoading}
             />
           </TabsContent>
