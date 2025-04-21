@@ -14,7 +14,6 @@ import Personnel from "./pages/Personnel";
 import Sales from "./pages/Sales";
 import Accounts from "./pages/Accounts";
 import CEODashboard from "./components/executive/CEODashboard";
-import ManagementDashboard from "./components/executive/management/ManagementDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,19 +38,19 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               
               {/* Management routes */}
-              <Route path="/manage-companies" element={<ManagementDashboard />} />
-              <Route path="/personnel" element={<ManagementDashboard />} />
-              <Route path="/inventory" element={<ManagementDashboard />} />
-              <Route path="/reports" element={<ManagementDashboard />} />
-              <Route path="/approvals" element={<ManagementDashboard />} />
-              <Route path="/meetings" element={<ManagementDashboard />} />
-              
-              {/* Legacy routes */}
+              <Route path="/manage-companies" element={<ManageCompanies />} />
               <Route path="/manage-inventory" element={<ManageInventory />} />
+              <Route path="/inventory" element={<ManageInventory />} />
+              <Route path="/personnel" element={<Personnel />} />
               <Route path="/sales" element={<Sales />} />
               <Route path="/accounts" element={<Accounts />} />
               
               {/* Executive routes */}
+              <Route path="/reports/*" element={<CEODashboard />} />
+              <Route path="/approvals/*" element={<CEODashboard />} />
+              <Route path="/meetings/*" element={<CEODashboard />} />
+              
+              {/* Default CEO Dashboard for unmatched management routes */}
               <Route path="/management/*" element={<CEODashboard />} />
               
               {/* Fallback route */}
