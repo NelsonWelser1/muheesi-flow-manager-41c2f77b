@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -9,8 +8,7 @@ const CompanyOverview = ({ companies, loading }) => {
   const companyPerformance = [
     { name: 'Grand Berna Dairies', value: 35, color: '#8B5CF6' },
     { name: 'KAJON Coffee Limited', value: 25, color: '#0EA5E9' },
-    { name: 'Kyalima Farmers Ltd', value: 20, color: '#10B981' },
-    { name: 'Fresheco Farming', value: 20, color: '#F97316' }
+    { name: 'Kyalima Farmers Ltd', value: 20, color: '#10B981' }
   ];
   
   // Sample data for revenue distribution
@@ -41,13 +39,6 @@ const CompanyOverview = ({ companies, loading }) => {
       employees: 42,
       inventory: 120,
       profitMargin: 14.8
-    },
-    {
-      name: "Fresheco Farming",
-      revenue: 275000000,
-      employees: 31,
-      inventory: 95,
-      profitMargin: 16.2
     }
   ];
 

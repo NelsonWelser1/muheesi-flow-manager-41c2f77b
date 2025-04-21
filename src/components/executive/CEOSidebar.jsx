@@ -32,9 +32,9 @@ const CEOSidebar = ({ activeTab, onChangeTab }) => {
   ];
   
   const secondaryMenuItems = [
-    { id: "companies", label: "Companies", icon: Building, count: 4 },
-    { id: "personnel", label: "Personnel", icon: Users, count: 156 },
-    { id: "inventory", label: "Inventory", icon: Package, count: 243 },
+    { id: "companies", label: "Companies", icon: Building, count: 3 }, // Updated count
+    { id: "personnel", label: "Personnel", icon: Users, count: 125 }, // Updated count
+    { id: "inventory", label: "Inventory", icon: Package, count: 200 }, // Updated count
     { id: "reports", label: "Reports", icon: FileText, count: 12 },
     { id: "approvals", label: "Approvals", icon: Eye, count: 7 },
     { id: "meetings", label: "Meetings", icon: Calendar, count: 3 }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,22 +33,20 @@ const CEODashboard = () => {
     pendingApprovals: 0
   });
 
-  // Fetch data from all sources
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
         
-        // Fetch all dashboard data sent to CEO
         const { data, error } = await supabase
           .from('ceo_dashboard_data')
           .select('*')
+          .not('company', 'eq', 'Fresheco Farming Limited')
           .order('created_at', { ascending: false })
           .limit(500);
           
         if (error) throw error;
         
-        // Process and categorize the data
         const companies = [];
         const sales = [];
         const inventory = [];
@@ -66,7 +63,6 @@ const CEODashboard = () => {
         let pendingApprovals = 0;
         
         data.forEach(item => {
-          // Add to recent activity feed
           if (item.created_at) {
             recentActivity.push({
               id: item.id,
@@ -78,7 +74,6 @@ const CEODashboard = () => {
             });
           }
           
-          // Categorize by data type
           switch(item.data_type) {
             case 'sales':
               sales.push(item);
@@ -155,16 +150,15 @@ const CEODashboard = () => {
     
     fetchDashboardData();
     
-    // Set up real-time subscription for new data
     const subscription = supabase
       .channel('ceo_dashboard_changes')
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
-        table: 'ceo_dashboard_data' 
+        table: 'ceo_dashboard_data',
+        filter: 'company!eq.Fresheco Farming Limited'
       }, (payload) => {
         console.log('New dashboard data received:', payload);
-        // Refresh data when new entries arrive
         fetchDashboardData();
       })
       .subscribe();
@@ -173,8 +167,7 @@ const CEODashboard = () => {
       subscription.unsubscribe();
     };
   }, []);
-  
-  // Helper function to generate human-readable summaries
+
   const generateSummary = (item) => {
     switch(item.data_type) {
       case 'sales':
@@ -209,7 +202,6 @@ const CEODashboard = () => {
           </Badge>
         </div>
         
-        {/* Key Metrics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <Card>
             <CardContent className="pt-6">
@@ -302,7 +294,6 @@ const CEODashboard = () => {
           </Card>
         </div>
         
-        {/* Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid w-full grid-cols-5 h-12">
             <TabsTrigger value="overview" className="flex items-center gap-2">
