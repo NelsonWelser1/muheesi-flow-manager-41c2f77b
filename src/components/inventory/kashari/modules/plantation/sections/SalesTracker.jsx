@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DollarSign, Plus, Percent, ShoppingCart, Package } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import RecordSaleForm from "./RecordSaleForm";
 
 const SalesTracker = () => {
   const [salesData, setSalesData] = useState([
@@ -21,14 +21,8 @@ const SalesTracker = () => {
     { id: 2, product: 'Bananas (Green)', totalStock: 430, sold: 75, remaining: 355, unit: 'Bunches' },
   ]);
   
-  const [newSale, setNewSale] = useState({
-    product: '',
-    quantity: '',
-    unitPrice: '',
-    customer: '',
-  });
-  
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showRecordSaleForm, setShowRecordSaleForm] = useState(false);
+  const [isSubmittingSale, setIsSubmittingSale] = useState(false);
   const { toast } = useToast();
   
   const totalSalesAmount = salesData.reduce((total, sale) => total + sale.totalAmount, 0);
@@ -37,38 +31,41 @@ const SalesTracker = () => {
   
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewSale({ ...newSale, [name]: value });
   };
   
   const handleAddSale = () => {
-    if (!newSale.product || !newSale.quantity || !newSale.unitPrice || !newSale.customer) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const quantity = parseInt(newSale.quantity);
-    const unitPrice = parseFloat(newSale.unitPrice);
-    
-    // Update sales data
+  };
+  
+  // New: Inline record sale form handlers
+  const handleShowRecordSaleForm = () => {
+    setShowRecordSaleForm(true);
+  };
+
+  const handleCancelRecordSale = () => {
+    setShowRecordSaleForm(false);
+  };
+
+  const handleSubmitRecordSale = (form) => {
+    setIsSubmittingSale(true);
+
+    const quantity = parseInt(form.quantity);
+    const unitPrice = parseFloat(form.unitPrice);
+
+    // Append sale entry
     const newSaleEntry = {
       id: salesData.length + 1,
       date: new Date().toISOString().split('T')[0],
-      product: newSale.product,
-      quantity: quantity,
-      unitPrice: unitPrice,
+      product: form.product,
+      quantity,
+      unitPrice,
       totalAmount: quantity * unitPrice,
-      customer: newSale.customer
+      customer: form.customer
     };
-    
     setSalesData([...salesData, newSaleEntry]);
-    
-    // Update inventory data
+
+    // Update inventory
     const updatedInventory = inventoryData.map(item => {
-      if (item.product === newSale.product) {
+      if (item.product === form.product) {
         return {
           ...item,
           sold: item.sold + quantity,
@@ -77,25 +74,17 @@ const SalesTracker = () => {
       }
       return item;
     });
-    
     setInventoryData(updatedInventory);
-    
-    // Reset form and close dialog
-    setNewSale({
-      product: '',
-      quantity: '',
-      unitPrice: '',
-      customer: ''
-    });
-    
-    setIsDialogOpen(false);
-    
+
+    setIsSubmittingSale(false);
+    setShowRecordSaleForm(false);
+
     toast({
       title: "Sale Added",
       description: "The sale has been recorded successfully",
     });
   };
-  
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -154,70 +143,22 @@ const SalesTracker = () => {
       
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Sales History</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Record Sale
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Record New Sale</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="product">Product</Label>
-                <select
-                  id="product"
-                  name="product"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  value={newSale.product}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select product</option>
-                  {inventoryData.map(item => (
-                    <option key={item.id} value={item.product}>{item.product}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="quantity">Quantity (Bunches)</Label>
-                <Input
-                  id="quantity"
-                  name="quantity"
-                  type="number"
-                  value={newSale.quantity}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="unitPrice">Unit Price (UGX)</Label>
-                <Input
-                  id="unitPrice"
-                  name="unitPrice"
-                  type="number"
-                  value={newSale.unitPrice}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="customer">Customer</Label>
-                <Input
-                  id="customer"
-                  name="customer"
-                  value={newSale.customer}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleAddSale}>Save Sale</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {!showRecordSaleForm && (
+          <Button onClick={handleShowRecordSaleForm}>
+            <Plus className="h-4 w-4 mr-2" />
+            Record Sale
+          </Button>
+        )}
       </div>
-      
+      {/* Inline Record Sale Form below the button */}
+      {showRecordSaleForm && (
+        <RecordSaleForm
+          inventoryData={inventoryData}
+          onSubmit={handleSubmitRecordSale}
+          onCancel={handleCancelRecordSale}
+          isSubmitting={isSubmittingSale}
+        />
+      )}
       <Card>
         <CardContent className="pt-6">
           <Table>
@@ -246,7 +187,6 @@ const SalesTracker = () => {
           </Table>
         </CardContent>
       </Card>
-      
       <h2 className="text-xl font-semibold mt-8">Inventory Status</h2>
       <Card>
         <CardContent className="pt-6">
