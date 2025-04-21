@@ -35,7 +35,7 @@ const ActivityFeed = ({ activities = [], loading }) => {
     {
       id: 4,
       type: "operations",
-      company: "Fresheco Farming",
+      company: "Kyalima Farmers Limited",
       module: "Farm Operations",
       summary: "Harvest yield exceeded expectations by 22%",
       timestamp: "2025-04-20 14:18:32"
@@ -59,7 +59,7 @@ const ActivityFeed = ({ activities = [], loading }) => {
     {
       id: 7,
       type: "sales",
-      company: "Fresheco Farming",
+      company: "Kyalima Farmers Limited",
       module: "Sales System",
       summary: "New contract secured with Shoprite for fresh produce supply",
       timestamp: "2025-04-18 15:56:39"

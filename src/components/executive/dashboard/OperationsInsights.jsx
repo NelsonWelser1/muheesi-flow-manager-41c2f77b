@@ -34,15 +34,6 @@ const OperationsInsights = ({ operations, inventory, personnel, loading }) => {
       inventoryLevel: 76,
       staffing: 92,
       alerts: []
-    },
-    {
-      company: "Fresheco Farming",
-      status: "critical",
-      productionRate: 62,
-      downtime: 15.3,
-      inventoryLevel: 38,
-      staffing: 78,
-      alerts: ["Equipment failure in cold storage", "Packaging material shortage", "Transportation delays"]
     }
   ];
   
@@ -58,8 +49,7 @@ const OperationsInsights = ({ operations, inventory, personnel, loading }) => {
   const inventoryStatus = [
     { product: "Dairy Products", stock: 85, status: "optimal", daysSupply: 14 },
     { product: "Coffee Beans", stock: 45, status: "warning", daysSupply: 7 },
-    { product: "Farm Produce", stock: 76, status: "optimal", daysSupply: 12 },
-    { product: "Fresh Vegetables", stock: 38, status: "critical", daysSupply: 4 }
+    { product: "Farm Produce", stock: 76, status: "optimal", daysSupply: 12 }
   ];
 
   const getStatusColor = (status) => {
