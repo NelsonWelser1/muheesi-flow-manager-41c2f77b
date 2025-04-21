@@ -1,26 +1,29 @@
-
 import React from 'react';
 import { 
-  BarChart3, 
-  PieChart, 
-  Users, 
   Building, 
+  Users, 
   Package, 
-  DollarSign, 
-  Settings, 
   FileText, 
-  Calendar, 
-  Bell, 
   Eye, 
+  Calendar,
+  Bell,
   Briefcase,
-  LineChart,
+  Settings,
+  BarChart3,
+  DollarSign,
   Layers,
-  Activity,
-  BarChart
+  BarChart,
+  Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const CEOSidebar = ({ activeTab, onChangeTab }) => {
   const primaryMenuItems = [
@@ -31,13 +34,49 @@ const CEOSidebar = ({ activeTab, onChangeTab }) => {
     { id: "activity", label: "Activity Feed", icon: Activity }
   ];
   
-  const secondaryMenuItems = [
-    { id: "companies", label: "Companies", icon: Building, count: 3 }, // Updated count
-    { id: "personnel", label: "Personnel", icon: Users, count: 125 }, // Updated count
-    { id: "inventory", label: "Inventory", icon: Package, count: 200 }, // Updated count
-    { id: "reports", label: "Reports", icon: FileText, count: 12 },
-    { id: "approvals", label: "Approvals", icon: Eye, count: 7 },
-    { id: "meetings", label: "Meetings", icon: Calendar, count: 3 }
+  const managementItems = [
+    { 
+      id: "companies", 
+      label: "Companies", 
+      icon: Building, 
+      count: 3,
+      tooltip: "Manage company structure, subsidiaries, and organizational hierarchy"
+    },
+    { 
+      id: "personnel", 
+      label: "Personnel", 
+      icon: Users, 
+      count: 125,
+      tooltip: "Oversee workforce management and organizational structure" 
+    },
+    { 
+      id: "inventory", 
+      label: "Inventory", 
+      icon: Package, 
+      count: 200,
+      tooltip: "Monitor group-wide inventory and resource allocation"
+    },
+    { 
+      id: "reports", 
+      label: "Reports", 
+      icon: FileText, 
+      count: 12,
+      tooltip: "Access comprehensive business reports and analytics"
+    },
+    { 
+      id: "approvals", 
+      label: "Approvals", 
+      icon: Eye, 
+      count: 7,
+      tooltip: "Review and manage pending executive approvals"
+    },
+    { 
+      id: "meetings", 
+      label: "Meetings", 
+      icon: Calendar, 
+      count: 3,
+      tooltip: "Schedule and manage executive meetings and appointments"
+    }
   ];
   
   const quickMenu = [
@@ -86,24 +125,38 @@ const CEOSidebar = ({ activeTab, onChangeTab }) => {
       <div className="p-4 overflow-y-auto flex-grow">
         <h4 className="text-xs uppercase font-semibold text-[#8E9196] mb-3">Management</h4>
         <nav className="space-y-1">
-          {secondaryMenuItems.map(item => (
-            <Button
-              key={item.id}
-              variant="ghost"
-              className="w-full justify-start text-[#1A1F2C] hover:bg-[#F1F0FB] hover:text-[#6E59A5]"
-            >
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center">
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.label}
-                </div>
-                {item.count && (
-                  <Badge className="bg-[#D6BCFA] text-[#6E59A5] hover:bg-[#6E59A5] hover:text-white">
-                    {item.count}
-                  </Badge>
-                )}
-              </div>
-            </Button>
+          {managementItems.map(item => (
+            <TooltipProvider key={item.id} delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-[#1A1F2C] hover:bg-[#F1F0FB] hover:text-[#6E59A5]"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center">
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {item.label}
+                      </div>
+                      {item.count && (
+                        <Badge 
+                          className={`${
+                            item.id === 'approvals' 
+                              ? 'bg-[#FFDEE2] text-red-500' 
+                              : 'bg-[#D6BCFA] text-[#6E59A5] hover:bg-[#6E59A5] hover:text-white'
+                          }`}
+                        >
+                          {item.count}
+                        </Badge>
+                      )}
+                    </div>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-[200px]">
+                  <p>{item.tooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           ))}
         </nav>
       </div>
