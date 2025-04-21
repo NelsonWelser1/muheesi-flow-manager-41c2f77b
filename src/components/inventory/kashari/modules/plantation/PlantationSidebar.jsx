@@ -26,7 +26,7 @@ const navigationItems = [
     items: [
       { title: 'Current Inventory', icon: Package, component: 'inventory' },
       { title: 'Stock Levels', icon: Boxes, component: 'stock' },
-      { title: 'Quality Control', icon: ClipboardCheck, component: 'quality' },
+      // Removed Quality Control menu item here
       { title: 'Sales Tracker', icon: ShoppingCart, component: 'sales' },
       { title: 'Financial Ledger', icon: FileText, component: 'ledger' },
       { title: 'Analytics', icon: BarChart, component: 'analytics' },
@@ -64,3 +64,4 @@ const PlantationSidebar = ({ activeComponent, onNavigate }) => {
 };
 
 export default PlantationSidebar;
+
