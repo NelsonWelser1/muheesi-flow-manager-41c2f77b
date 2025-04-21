@@ -38,7 +38,7 @@ const CEODashboard = () => {
     <div className="flex">
       <CEOSidebar activeTab={activeTab} onChangeTab={setActiveTab} />
       
-      <div className="flex-1 p-4 space-y-6 overflow-y-auto h-screen">
+      <div className="flex-1 p-4 space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-[#1A1F2C]">Executive Dashboard</h1>
