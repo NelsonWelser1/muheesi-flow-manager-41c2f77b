@@ -1,7 +1,8 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AutoFillProvider } from "./contexts/AutoFillContext";
 import { SupabaseAuthProvider } from "./integrations/supabase/auth";
 import Navigation from "./components/Navigation";
@@ -9,17 +10,21 @@ import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import ManageInventory from "./pages/ManageInventory";
 import ManageCompanies from "./pages/ManageCompanies";
-import Feedback from "./pages/Feedback";
-import ExportManagementDashboard from "./components/inventory/kajon/export-business/ExportManagementDashboard";
-import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-business/CoffeeExportManagerDashboard";
-import KashariFarmDashboard from "./components/inventory/kashari/KashariFarmDashboard";
-import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDairyDashboard";
-import SmartProductionDashboard from "./components/inventory/dairy/production/SmartProductionDashboard";
+import Personnel from "./pages/Personnel";
 import Sales from "./pages/Sales";
 import Accounts from "./pages/Accounts";
-import Personnel from "./pages/Personnel";
+import CEODashboard from "./components/executive/CEODashboard";
 
-const queryClient = new QueryClient();
+// Create Query Client with optimized configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 30000
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -32,14 +37,22 @@ const App = () => (
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              
+              {/* Management routes */}
               <Route path="/manage-inventory" element={<ManageInventory />} />
+              <Route path="/inventory" element={<ManageInventory />} />
               <Route path="/manage-companies" element={<ManageCompanies />} />
               <Route path="/personnel" element={<Personnel />} />
               <Route path="/sales" element={<Sales />} />
               <Route path="/accounts" element={<Accounts />} />
-              <Route path="/reports" element={<Dashboard />} />
-              <Route path="/approvals" element={<Dashboard />} />
-              <Route path="/meetings" element={<Dashboard />} />
+              
+              {/* Ensure all management routes have a fallback to prevent white screens */}
+              <Route path="/reports" element={<CEODashboard />} />
+              <Route path="/approvals" element={<CEODashboard />} />
+              <Route path="/meetings" element={<CEODashboard />} />
+              
+              {/* Fallback route for any undefined paths */}
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>

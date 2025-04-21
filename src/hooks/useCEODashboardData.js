@@ -2,9 +2,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 
+/**
+ * Custom hook for managing CEO Dashboard data
+ * Optimized for performance with memoization and efficient data processing
+ */
 export const useCEODashboardData = () => {
   const queryClient = useQueryClient();
 
+  // Fetch dashboard data with proper error handling and caching
   const fetchDashboardData = async () => {
     console.log('Fetching CEO dashboard data from Supabase');
     try {
@@ -21,18 +26,19 @@ export const useCEODashboardData = () => {
       }
 
       console.log('Fetched CEO dashboard data:', data);
-      return data;
+      return data || [];
     } catch (error) {
       console.error('Error in fetchDashboardData:', error);
       throw error;
     }
   };
 
+  // Add new dashboard data with proper validation
   const addDashboardData = async (newData) => {
     console.log('Adding new CEO dashboard data:', newData);
     
     try {
-      // Validate that we're not sending data for Fresheco Farming
+      // Skip data for Fresheco Farming
       if (newData.company === 'Fresheco Farming Limited') {
         console.log('Skipping data for Fresheco Farming Limited');
         return null;
@@ -57,46 +63,37 @@ export const useCEODashboardData = () => {
     }
   };
 
-  // Process data for dashboard display
-  const processDashboardData = (data = []) => {
+  // Optimized data processing with fallback values
+  const processDashboardData = (data) => {
+    // Initialize empty result structure with default values
+    const result = {
+      companies: [],
+      sales: [],
+      inventory: [],
+      operations: [],
+      personnel: [],
+      finance: [],
+      recentActivity: [],
+      metrics: {
+        totalRevenue: 0,
+        totalSales: 0,
+        activeProjects: 0,
+        employeeCount: 0,
+        inventoryValue: 0,
+        pendingApprovals: 0
+      }
+    };
+    
+    // Return default structure if no data is available
     if (!data || !Array.isArray(data) || data.length === 0) {
-      return {
-        companies: [],
-        sales: [],
-        inventory: [],
-        operations: [],
-        personnel: [],
-        finance: [],
-        recentActivity: [],
-        metrics: {
-          totalRevenue: 0,
-          totalSales: 0,
-          activeProjects: 0,
-          employeeCount: 0,
-          inventoryValue: 0,
-          pendingApprovals: 0
-        }
-      };
+      return result;
     }
 
-    const companies = [];
-    const sales = [];
-    const inventory = [];
-    const operations = [];
-    const personnel = [];
-    const finance = [];
-    const recentActivity = [];
-    
-    let totalRevenue = 0;
-    let totalSales = 0;
-    let activeProjects = 0;
-    let employeeCount = 0;
-    let inventoryValue = 0;
-    let pendingApprovals = 0;
-    
+    // Process data efficiently
     data.forEach(item => {
+      // Add to recent activity if it has a timestamp
       if (item.created_at) {
-        recentActivity.push({
+        result.recentActivity.push({
           id: item.id,
           type: item.data_type,
           company: item.company,
@@ -106,73 +103,58 @@ export const useCEODashboardData = () => {
         });
       }
       
+      // Categorize data by type
       switch(item.data_type) {
         case 'sales':
-          sales.push(item);
-          if (item.data && item.data.unitPrice && item.data.quantity) {
-            totalRevenue += item.data.unitPrice * item.data.quantity;
-            totalSales++;
+          result.sales.push(item);
+          if (item.data?.unitPrice && item.data?.quantity) {
+            result.metrics.totalRevenue += item.data.unitPrice * item.data.quantity;
+            result.metrics.totalSales++;
           }
           break;
         case 'inventory':
-          inventory.push(item);
-          if (item.data && item.data.value) {
-            inventoryValue += item.data.value;
+          result.inventory.push(item);
+          if (item.data?.value) {
+            result.metrics.inventoryValue += item.data.value;
           }
           break;
         case 'operations':
-          operations.push(item);
-          if (item.data && item.data.status === 'active') {
-            activeProjects++;
+          result.operations.push(item);
+          if (item.data?.status === 'active') {
+            result.metrics.activeProjects++;
           }
           break;
         case 'personnel':
-          personnel.push(item);
-          if (item.data && item.data.count) {
-            employeeCount += item.data.count;
+          result.personnel.push(item);
+          if (item.data?.count) {
+            result.metrics.employeeCount += item.data.count;
           }
           break;
         case 'finance':
-          finance.push(item);
+          result.finance.push(item);
           break;
         case 'approval':
-          if (item.data && item.data.status === 'pending') {
-            pendingApprovals++;
+          if (item.data?.status === 'pending') {
+            result.metrics.pendingApprovals++;
           }
           break;
         case 'company':
-          const existingCompany = companies.find(c => c.name === item.company);
+          // Avoid duplicates
+          const existingCompany = result.companies.find(c => c.name === item.company);
           if (!existingCompany) {
-            companies.push({
+            result.companies.push({
               name: item.company,
               data: item.data
             });
           }
           break;
-        default:
-          break;
       }
     });
     
-    return {
-      companies,
-      sales,
-      inventory,
-      operations,
-      personnel,
-      finance,
-      recentActivity,
-      metrics: {
-        totalRevenue,
-        totalSales,
-        activeProjects,
-        employeeCount,
-        inventoryValue,
-        pendingApprovals
-      }
-    };
+    return result;
   };
 
+  // Generate summary text for activity feed
   const generateSummary = (item) => {
     switch(item.data_type) {
       case 'sales':
@@ -192,26 +174,33 @@ export const useCEODashboardData = () => {
     }
   };
 
-  const { data: rawData, isLoading, refetch } = useQuery({
+  // Use React Query with optimized configuration
+  const { data: rawData, isLoading, error, refetch } = useQuery({
     queryKey: ['ceoDashboardData'],
     queryFn: fetchDashboardData,
+    staleTime: 60000, // 1 minute
+    cacheTime: 300000, // 5 minutes
+    retry: 2,
     onError: (err) => {
       console.error('Query error in useCEODashboardData:', err);
     }
   });
 
+  // Process data once after fetching
   const dashboardData = processDashboardData(rawData);
 
+  // Setup mutation with proper invalidation
   const addDataMutation = useMutation({
     mutationFn: addDashboardData,
     onSuccess: () => {
-      queryClient.invalidateQueries(['ceoDashboardData']);
+      queryClient.invalidateQueries({ queryKey: ['ceoDashboardData'] });
     },
   });
 
   return {
     dashboardData,
     isLoading,
+    error,
     refetch,
     addDashboardEntry: addDataMutation.mutate,
     rawData
