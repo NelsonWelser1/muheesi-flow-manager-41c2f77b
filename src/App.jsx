@@ -15,7 +15,6 @@ import Sales from "./pages/Sales";
 import Accounts from "./pages/Accounts";
 import CEODashboard from "./components/executive/CEODashboard";
 
-// Create Query Client with optimized configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -39,19 +38,22 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               
               {/* Management routes */}
+              <Route path="/manage-companies" element={<ManageCompanies />} />
               <Route path="/manage-inventory" element={<ManageInventory />} />
               <Route path="/inventory" element={<ManageInventory />} />
-              <Route path="/manage-companies" element={<ManageCompanies />} />
               <Route path="/personnel" element={<Personnel />} />
               <Route path="/sales" element={<Sales />} />
               <Route path="/accounts" element={<Accounts />} />
               
-              {/* Ensure all management routes have a fallback to prevent white screens */}
-              <Route path="/reports" element={<CEODashboard />} />
-              <Route path="/approvals" element={<CEODashboard />} />
-              <Route path="/meetings" element={<CEODashboard />} />
+              {/* Executive routes */}
+              <Route path="/reports/*" element={<CEODashboard />} />
+              <Route path="/approvals/*" element={<CEODashboard />} />
+              <Route path="/meetings/*" element={<CEODashboard />} />
               
-              {/* Fallback route for any undefined paths */}
+              {/* Default CEO Dashboard for unmatched management routes */}
+              <Route path="/management/*" element={<CEODashboard />} />
+              
+              {/* Fallback route */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </BrowserRouter>
