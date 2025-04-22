@@ -1,6 +1,6 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import BukomeroDairyCoolers from './sections/DairyCoolers';
 import BukomeroCattle from './sections/Cattle';
 import BukomeroMilkProduction from './sections/MilkProduction';
 import BukomeroAnalytics from './sections/Analytics';
