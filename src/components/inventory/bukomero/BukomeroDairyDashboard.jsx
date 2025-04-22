@@ -1,13 +1,15 @@
-
 import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Overview from "./modules/Overview";
-import Production from "./modules/Production";
-import QualityControl from "./modules/QualityControl";
-import Distribution from "./modules/Distribution";
-import Sales from "./modules/Sales";
-import Financials from "./modules/Financials";
+import { Overview } from "./modules/Overview";
+import { Production } from "./modules/Production";
+import { QualityControl } from "./modules/QualityControl";
+import { Distribution } from "./modules/Distribution";
+import { Sales } from "./modules/Sales";
+import { Financials } from "./modules/Financials";
 import LedgerTab from "./LedgerTab";
 
 const TABS = [
