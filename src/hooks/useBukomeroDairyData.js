@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
+import { useToast } from '@/components/ui/use-toast';
 
 export const useBukomeroDairyData = () => {
-  // Re-using the existing hook functionality from the provided code
   const [farmMetrics, setFarmMetrics] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { toast } = useToast();
 
   const fetchFarmMetrics = async () => {
     setIsLoading(true);
