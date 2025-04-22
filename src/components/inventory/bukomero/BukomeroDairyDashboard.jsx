@@ -1,16 +1,15 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useDairyData } from '@/hooks/useDairyData';
-import OverviewTab from './tabs/OverviewTab';
-import FinanceTab from './tabs/FinanceTab';
-import CattleTab from './tabs/CattleTab';
-import MilkTab from './tabs/MilkTab';
-import AnalyticsTab from './tabs/AnalyticsTab';
-import PersonnelTab from './tabs/PersonnelTab';
-import LogisticsTab from './tabs/LogisticsTab';
-import QualityTab from './tabs/QualityTab';
-import ReportsTab from './tabs/ReportsTab';
+import { useDairyData } from "@/hooks/useDairyData";
+import OverviewTab from "./tabs/OverviewTab";
+import FinanceTab from "./tabs/FinanceTab";
+import CattleTab from "./tabs/CattleTab";
+import MilkTab from "./tabs/MilkTab";
+import AnalyticsTab from "./tabs/AnalyticsTab";
+import PersonnelTab from "./tabs/PersonnelTab";
+import LogisticsTab from "./tabs/LogisticsTab";
+import QualityTab from "./tabs/QualityTab";
+import ReportsTab from "./tabs/ReportsTab";
 
 const BukomeroDairyDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
