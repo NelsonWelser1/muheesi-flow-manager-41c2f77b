@@ -1,13 +1,13 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import BukomeroOverview from "./sections/Overview";
+import BukomeroFinance from "./sections/Finance";
 import BukomeroCattle from "./sections/Cattle";
 import BukomeroMilkProduction from "./sections/MilkProduction";
 import BukomeroAnalytics from "./sections/Analytics";
 import BukomeroPersonnel from "./sections/Personnel";
 import BukomeroLogistics from "./sections/Logistics";
-import BukomeroOverview from "./sections/Overview";
-import BukomeroFinance from "./sections/Finance";
 
 const BukomeroDairyDashboard = () => {
   return (
