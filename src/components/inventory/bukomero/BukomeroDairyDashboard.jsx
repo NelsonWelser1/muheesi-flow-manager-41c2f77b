@@ -7,7 +7,7 @@ import BukomeroAnalytics from "./sections/Analytics";
 import BukomeroPersonnel from "./sections/Personnel";
 import BukomeroLogistics from "./sections/Logistics";
 import BukomeroOverview from "./sections/Overview";
-import BukomeroFinance from "./sections/Finance"; // Add import for the Finance section
+import BukomeroFinance from "./sections/Finance";
 
 const BukomeroDairyDashboard = () => {
   return (
@@ -15,7 +15,7 @@ const BukomeroDairyDashboard = () => {
       <Tabs defaultValue="overview">
         <TabsList className="grid grid-cols-7 gap-1 bg-green-50 p-1">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="finance">Finance</TabsTrigger> {/* New Finance tab */}
+          <TabsTrigger value="finance">Finance</TabsTrigger>
           <TabsTrigger value="cattle">Cattle</TabsTrigger>
           <TabsTrigger value="milk">Milk Production</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
