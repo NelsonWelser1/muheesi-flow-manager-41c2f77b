@@ -13,7 +13,7 @@ const BukomeroDairyDashboard = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="overview">
-        <TabsList className="grid grid-cols-7 gap-1 bg-green-50 p-1">
+        <TabsList className="grid grid-cols-8 gap-1 bg-green-50 p-1">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="cattle">Cattle</TabsTrigger>
           <TabsTrigger value="milk">Milk</TabsTrigger>
