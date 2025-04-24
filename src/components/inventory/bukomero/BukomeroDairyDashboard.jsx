@@ -1,54 +1,54 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import CattleInventory from './sections/CattleInventory';
-import MilkProduction from './sections/MilkProduction';
-import HealthRecords from './sections/HealthRecords';
-import FeedingProgram from './sections/FeedingProgram';
-import BreedingManagement from './sections/BreedingManagement';
-import FinancialReports from './sections/FinancialReports';
+import BukomeroCattle from "./sections/Cattle";
+import BukomeroMilkProduction from "./sections/MilkProduction";
+import BukomeroAnalytics from "./sections/Analytics";
+import BukomeroPersonnel from "./sections/Personnel";
+import BukomeroLogistics from "./sections/Logistics";
+import BukomeroOverview from "./sections/Overview";
+import BukomeroFinance from "./sections/Finance";
 
 const BukomeroDairyDashboard = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="overview">
-        <TabsList className="grid grid-cols-7 gap-1 bg-green-50 p-1">
+        <TabsList className="grid grid-cols-8 gap-1 bg-green-50 p-1">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="cattle">Cattle</TabsTrigger>
           <TabsTrigger value="milk">Milk</TabsTrigger>
-          <TabsTrigger value="health">Health</TabsTrigger>
-          <TabsTrigger value="feeding">Feeding</TabsTrigger>
-          <TabsTrigger value="breeding">Breeding</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="personnel">Personnel</TabsTrigger>
+          <TabsTrigger value="logistics">Logistics</TabsTrigger>
           <TabsTrigger value="finance">Finance</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Overview content */}
-          </div>
+          <BukomeroOverview />
         </TabsContent>
         
         <TabsContent value="cattle">
-          <CattleInventory />
+          <BukomeroCattle />
         </TabsContent>
         
         <TabsContent value="milk">
-          <MilkProduction />
+          <BukomeroMilkProduction />
         </TabsContent>
         
-        <TabsContent value="health">
-          <HealthRecords />
+        <TabsContent value="analytics">
+          <BukomeroAnalytics />
         </TabsContent>
         
-        <TabsContent value="feeding">
-          <FeedingProgram />
+        <TabsContent value="personnel">
+          <BukomeroPersonnel />
         </TabsContent>
         
-        <TabsContent value="breeding">
-          <BreedingManagement />
+        <TabsContent value="logistics">
+          <BukomeroLogistics />
         </TabsContent>
         
         <TabsContent value="finance">
-          {/* Placeholder for Finance content */}
+          <BukomeroFinance />
         </TabsContent>
       </Tabs>
     </div>
