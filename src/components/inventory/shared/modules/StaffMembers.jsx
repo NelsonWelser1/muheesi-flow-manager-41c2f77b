@@ -1,36 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from 'date-fns';
 import { UserPlus, Trash2, RefreshCw, Search, Calendar, User, Phone, Mail, DollarSign, MapPin, FileText } from 'lucide-react';
@@ -39,7 +15,7 @@ import { useStaffData } from '@/hooks/useStaffData';
 const StaffMembers = ({ farmId }) => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [addStaffDialogOpen, setAddStaffDialogOpen] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState(null);
   
@@ -50,7 +26,6 @@ const StaffMembers = ({ farmId }) => {
     error,
     fetchStaffData,
     addStaffMember,
-    updateStaffMember,
     deleteStaffMember
   } = useStaffData(farmId);
 
@@ -85,7 +60,7 @@ const StaffMembers = ({ farmId }) => {
   const handleAddStaff = async () => {
     const result = await addStaffMember(newStaff);
     if (result) {
-      setAddStaffDialogOpen(false);
+      setShowAddForm(false);
       resetForm();
     }
   };
@@ -154,13 +129,165 @@ const StaffMembers = ({ farmId }) => {
           <Button variant="outline" size="icon" onClick={fetchStaffData}>
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <Button onClick={() => setAddStaffDialogOpen(true)} className="flex items-center gap-2">
+          <Button onClick={() => setShowAddForm(true)} className="flex items-center gap-2">
             <UserPlus className="h-4 w-4" />
             Add Staff
           </Button>
         </div>
       </CardHeader>
       <CardContent>
+        {showAddForm && (
+          <Card className="mb-6 border-2 border-dashed">
+            <CardHeader>
+              <CardTitle className="text-lg">Add New Staff Member</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    name="firstName"
+                    value={newStaff.firstName}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    value={newStaff.lastName}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select name="role" value={newStaff.role} onValueChange={(value) => handleSelectChange('role', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(roleLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="contactNumber">Contact Number</Label>
+                  <Input
+                    id="contactNumber"
+                    name="contactNumber"
+                    value={newStaff.contactNumber}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={newStaff.email}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <Input
+                    id="startDate"
+                    name="startDate"
+                    type="date"
+                    value={newStaff.startDate}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="salary">Salary (UGX)</Label>
+                  <Input
+                    id="salary"
+                    name="salary"
+                    type="number"
+                    value={newStaff.salary}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 250000"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select name="status" value={newStaff.status} onValueChange={(value) => handleSelectChange('status', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="on_leave">On Leave</SelectItem>
+                      <SelectItem value="terminated">Terminated</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={newStaff.address}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    name="notes"
+                    value={newStaff.notes}
+                    onChange={handleInputChange}
+                    className="min-h-[100px]"
+                  />
+                </div>
+
+                <div className="md:col-span-2 flex justify-end space-x-2 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      resetForm();
+                      setShowAddForm(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleAddStaff}
+                    disabled={isSubmitting || !newStaff.firstName || !newStaff.lastName || !newStaff.contactNumber}
+                  >
+                    {isSubmitting ? (
+                      <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Adding...</>
+                    ) : (
+                      'Add Staff Member'
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Staff List Table */}
         {isLoading ? (
           <div className="flex justify-center py-10">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -229,184 +356,6 @@ const StaffMembers = ({ farmId }) => {
             </Table>
           </div>
         )}
-
-        {/* Add Staff Dialog */}
-        <Dialog open={addStaffDialogOpen} onOpenChange={setAddStaffDialogOpen}>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Staff Member</DialogTitle>
-              <DialogDescription>
-                Fill in the details of the new staff member. Fields marked with * are required.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-2 gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName" className="flex items-center gap-1">
-                  <User className="h-4 w-4" />
-                  First Name *
-                </Label>
-                <Input 
-                  id="firstName" 
-                  name="firstName" 
-                  value={newStaff.firstName} 
-                  onChange={handleInputChange} 
-                  required 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName" className="flex items-center gap-1">
-                  <User className="h-4 w-4" />
-                  Last Name *
-                </Label>
-                <Input 
-                  id="lastName" 
-                  name="lastName" 
-                  value={newStaff.lastName} 
-                  onChange={handleInputChange} 
-                  required 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role" className="flex items-center gap-1">
-                  Role *
-                </Label>
-                <Select 
-                  name="role" 
-                  value={newStaff.role} 
-                  onValueChange={(value) => handleSelectChange('role', value)}
-                >
-                  <SelectTrigger id="role">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="farm_worker">Farm Worker</SelectItem>
-                    <SelectItem value="farm_manager">Farm Manager</SelectItem>
-                    <SelectItem value="herd_manager">Herd Manager</SelectItem>
-                    <SelectItem value="vet_technician">Veterinary Technician</SelectItem>
-                    <SelectItem value="dairy_technician">Dairy Technician</SelectItem>
-                    <SelectItem value="maintenance_staff">Maintenance Staff</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contactNumber" className="flex items-center gap-1">
-                  <Phone className="h-4 w-4" />
-                  Contact Number *
-                </Label>
-                <Input 
-                  id="contactNumber" 
-                  name="contactNumber" 
-                  value={newStaff.contactNumber} 
-                  onChange={handleInputChange} 
-                  required 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-1">
-                  <Mail className="h-4 w-4" />
-                  Email
-                </Label>
-                <Input 
-                  id="email" 
-                  name="email" 
-                  type="email" 
-                  value={newStaff.email} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="startDate" className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  Start Date
-                </Label>
-                <Input 
-                  id="startDate" 
-                  name="startDate" 
-                  type="date" 
-                  value={newStaff.startDate} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="salary" className="flex items-center gap-1">
-                  <DollarSign className="h-4 w-4" />
-                  Salary (UGX)
-                </Label>
-                <Input 
-                  id="salary" 
-                  name="salary" 
-                  type="number" 
-                  value={newStaff.salary} 
-                  onChange={handleInputChange} 
-                  placeholder="e.g. 250000" 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status" className="flex items-center gap-1">
-                  Status *
-                </Label>
-                <Select 
-                  name="status" 
-                  value={newStaff.status} 
-                  onValueChange={(value) => handleSelectChange('status', value)}
-                >
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="on_leave">On Leave</SelectItem>
-                    <SelectItem value="terminated">Terminated</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="address" className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  Address
-                </Label>
-                <Input 
-                  id="address" 
-                  name="address" 
-                  value={newStaff.address} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="notes" className="flex items-center gap-1">
-                  <FileText className="h-4 w-4" />
-                  Notes
-                </Label>
-                <Input 
-                  id="notes" 
-                  name="notes" 
-                  value={newStaff.notes} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  resetForm();
-                  setAddStaffDialogOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleAddStaff} 
-                disabled={isSubmitting || !newStaff.firstName || !newStaff.lastName || !newStaff.contactNumber}
-              >
-                {isSubmitting ? 
-                  <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Adding...</> : 
-                  'Add Staff Member'
-                }
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
