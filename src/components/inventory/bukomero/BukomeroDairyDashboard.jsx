@@ -1,76 +1,53 @@
-
-import React from 'react';
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
-import StaffMembers from '../shared/modules/StaffMembers';
+import OverviewDashboardContent from "./dashboard/OverviewDashboardContent";
+import CattleDashboardContent from "./dashboard/CattleDashboardContent";
+import MilkProductionDashboardContent from "./dashboard/MilkProductionDashboardContent";
+import AnalyticsDashboardContent from "./dashboard/AnalyticsDashboardContent";
+import PersonnelDashboardContent from "./dashboard/PersonnelDashboardContent";
+import LogisticsDashboardContent from "./dashboard/LogisticsDashboardContent";
+import FinanceDashboardContent from "./dashboard/FinanceDashboardContent";
 
 const BukomeroDairyDashboard = () => {
   return (
     <div className="space-y-6 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-      <Alert className="mb-6 bg-blue-50 border-blue-200">
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          This is a data entry terminal for Bukomero Dairy Farm. All information entered here will be shared with Kyalima Farmers Limited Executive Management for strategic decision-making.
-        </AlertDescription>
-      </Alert>
-      
-      <Tabs defaultValue="staff" className="w-full">
+      <Tabs defaultValue="overview">
         <TabsList className="flex flex-wrap gap-1 bg-green-50 p-1 overflow-x-auto">
-          <TabsTrigger value="staff">Staff Management</TabsTrigger>
-          <TabsTrigger value="cattle">Cattle Records</TabsTrigger>
-          <TabsTrigger value="milk">Milk Production</TabsTrigger>
-          <TabsTrigger value="expenses">Expenses</TabsTrigger>
-          <TabsTrigger value="inventory">Inventory</TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="cattle">Cattle</TabsTrigger>
+          <TabsTrigger value="milk">Milk</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="personnel">Personnel</TabsTrigger>
+          <TabsTrigger value="logistics">Logistics</TabsTrigger>
+          <TabsTrigger value="finance">Finance</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="staff" className="mt-4">
-          <StaffMembers farmId="bukomero" />
+        <TabsContent value="overview">
+          <OverviewDashboardContent />
         </TabsContent>
 
         <TabsContent value="cattle">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cattle Records Entry</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Cattle management interface will be implemented based on executive requirements.</p>
-            </CardContent>
-          </Card>
+          <CattleDashboardContent />
         </TabsContent>
 
         <TabsContent value="milk">
-          <Card>
-            <CardHeader>
-              <CardTitle>Milk Production Entry</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Milk production tracking interface will be implemented based on executive requirements.</p>
-            </CardContent>
-          </Card>
+          <MilkProductionDashboardContent />
         </TabsContent>
 
-        <TabsContent value="expenses">
-          <Card>
-            <CardHeader>
-              <CardTitle>Expenses Entry</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Expense tracking interface will be implemented based on executive requirements.</p>
-            </CardContent>
-          </Card>
+        <TabsContent value="analytics">
+          <AnalyticsDashboardContent />
         </TabsContent>
 
-        <TabsContent value="inventory">
-          <Card>
-            <CardHeader>
-              <CardTitle>Inventory Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Inventory tracking interface will be implemented based on executive requirements.</p>
-            </CardContent>
-          </Card>
+        <TabsContent value="personnel">
+          <PersonnelDashboardContent />
+        </TabsContent>
+
+        <TabsContent value="logistics">
+          <LogisticsDashboardContent />
+        </TabsContent>
+
+        <TabsContent value="finance">
+          <FinanceDashboardContent />
         </TabsContent>
       </Tabs>
     </div>
