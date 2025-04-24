@@ -1,78 +1,10 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useBukomeroDairyData } from '@/hooks/useBukomeroDairyData';
-
-// Placeholder components until the actual dashboard components are implemented
-const PlaceholderComponent = ({ title }) => {
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <Card className="col-span-full">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>
-            This section is under development. Data entry interface coming soon.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            The data entry interface for this section is being prepared. When complete, 
-            authorized personnel will be able to input and manage {title.toLowerCase()} data here.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-const Overview = () => {
-  const { farmMetrics, isLoading, error } = useBukomeroDairyData();
-  
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <Card>
-        <CardHeader>
-          <CardTitle>Farm Overview</CardTitle>
-          <CardDescription>Key performance indicators</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p>Loading farm data...</p>
-          ) : error ? (
-            <p className="text-red-500">Error loading farm data</p>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Total Cattle:</span>
-                <span className="font-medium">{farmMetrics?.totalCattle || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Milk Production:</span>
-                <span className="font-medium">{farmMetrics?.milkProduction || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Active Fattening:</span>
-                <span className="font-medium">{farmMetrics?.activeFattening || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Last Updated:</span>
-                <span>{farmMetrics?.lastUpdated 
-                  ? new Date(farmMetrics.lastUpdated).toLocaleString() 
-                  : 'Never'}</span>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-const MilkProduction = () => <PlaceholderComponent title="Milk Production" />;
-const CattleManagement = () => <PlaceholderComponent title="Cattle Management" />;
-const FinancialRecords = () => <PlaceholderComponent title="Financial Records" />;
-const ReportsAnalytics = () => <PlaceholderComponent title="Reports & Analytics" />;
+import Overview from './dashboard/Overview';
+import MilkProduction from './dashboard/MilkProduction';
+import CattleManagement from './dashboard/CattleManagement';
+import FinancialRecords from './dashboard/FinancialRecords';
+import ReportsAnalytics from './dashboard/ReportsAnalytics';
 
 const BukomeroDairyDashboard = () => {
   return (
