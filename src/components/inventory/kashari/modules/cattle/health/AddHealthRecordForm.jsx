@@ -50,6 +50,7 @@ const AddHealthRecordForm = ({ onCancel, cattleData = [] }) => {
 
   const onSubmit = async (data) => {
     try {
+      console.log("Form data being submitted:", data);
       await addHealthRecord.mutateAsync(data);
       form.reset();
       if (onCancel) onCancel();

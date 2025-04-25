@@ -35,18 +35,33 @@ export const useHealthRecords = (cattleId = null) => {
   // Add health record
   const addHealthRecord = useMutation({
     mutationFn: async (recordData) => {
+      console.log("Submitting health record data:", recordData);
+      
       // Validate required fields
-      if (!recordData.cattle_id || !recordData.record_date || !recordData.record_type || !recordData.description) {
-        throw new Error('Missing required fields: All fields marked with * are required');
-      }
+      if (!recordData.cattle_id) throw new Error('Cattle ID is required');
+      if (!recordData.record_date) throw new Error('Record date is required');
+      if (!recordData.record_type) throw new Error('Record type is required');
+      if (!recordData.description) throw new Error('Description is required');
+
+      // Convert empty strings to nulls for optional fields
+      const dataToInsert = {
+        ...recordData,
+        treatment: recordData.treatment || null,
+        administered_by: recordData.administered_by || null,
+        next_due_date: recordData.next_due_date || null,
+        notes: recordData.notes || null
+      };
 
       const { data, error } = await supabase
         .from('cattle_health_records')
-        .insert([recordData])
+        .insert([dataToInsert])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase insertion error:", error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -134,4 +149,3 @@ export const useHealthRecords = (cattleId = null) => {
     refetch
   };
 };
-
