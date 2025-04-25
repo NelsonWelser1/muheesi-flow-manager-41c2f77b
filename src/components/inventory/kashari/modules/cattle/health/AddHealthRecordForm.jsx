@@ -7,23 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useHealthRecords } from '@/hooks/useHealthRecords';
 
 // Form validation schema
 const formSchema = z.object({
-  cattleId: z.string({
+  cattle_id: z.string({
     required_error: "Cattle is required",
   }),
-  recordDate: z.string({
+  record_date: z.string({
     required_error: "Record date is required",
   }),
-  recordType: z.string({
+  record_type: z.string({
     required_error: "Record type is required",
   }),
   description: z.string({
@@ -32,45 +27,48 @@ const formSchema = z.object({
     message: "Description must be at least 3 characters",
   }),
   treatment: z.string().optional(),
-  administeredBy: z.string().optional(),
-  nextDueDate: z.string().optional(),
+  administered_by: z.string().optional(),
+  next_due_date: z.string().optional(),
   notes: z.string().optional(),
 });
 
-const AddHealthRecordForm = ({ onSubmit, isSubmitting, onCancel, cattleData = [] }) => {
+const AddHealthRecordForm = ({ onCancel, cattleData = [] }) => {
+  const { addHealthRecord } = useHealthRecords();
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      cattleId: "",
-      recordDate: new Date().toISOString().split('T')[0],
-      recordType: "",
+      record_date: new Date().toISOString().split('T')[0],
+      record_type: "",
       description: "",
       treatment: "",
-      administeredBy: "",
-      nextDueDate: "",
+      administered_by: "",
+      next_due_date: "",
       notes: "",
     },
   });
 
-  const handleSubmit = (values) => {
-    onSubmit(values);
+  const onSubmit = async (data) => {
+    try {
+      await addHealthRecord.mutateAsync(data);
+      form.reset();
+      if (onCancel) onCancel();
+    } catch (error) {
+      console.error('Form submission error:', error);
+    }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
-            name="cattleId"
+            name="cattle_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Cattle *</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                  disabled={cattleData.length === 0}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select cattle" />
@@ -91,7 +89,7 @@ const AddHealthRecordForm = ({ onSubmit, isSubmitting, onCancel, cattleData = []
 
           <FormField
             control={form.control}
-            name="recordDate"
+            name="record_date"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Record Date *</FormLabel>
@@ -105,7 +103,7 @@ const AddHealthRecordForm = ({ onSubmit, isSubmitting, onCancel, cattleData = []
 
           <FormField
             control={form.control}
-            name="recordType"
+            name="record_type"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Record Type *</FormLabel>
@@ -157,7 +155,7 @@ const AddHealthRecordForm = ({ onSubmit, isSubmitting, onCancel, cattleData = []
 
           <FormField
             control={form.control}
-            name="administeredBy"
+            name="administered_by"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Administered By</FormLabel>
@@ -171,7 +169,7 @@ const AddHealthRecordForm = ({ onSubmit, isSubmitting, onCancel, cattleData = []
 
           <FormField
             control={form.control}
-            name="nextDueDate"
+            name="next_due_date"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Next Due Date</FormLabel>
@@ -199,11 +197,11 @@ const AddHealthRecordForm = ({ onSubmit, isSubmitting, onCancel, cattleData = []
         />
 
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={addHealthRecord.isPending}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save Record"}
+          <Button type="submit" disabled={addHealthRecord.isPending}>
+            {addHealthRecord.isPending ? "Saving..." : "Save Record"}
           </Button>
         </div>
       </form>
