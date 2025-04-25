@@ -64,7 +64,7 @@ const ManageInventory = () => {
   };
   
   if (selectedCompany) {
-    return <div className="container mx-auto px-2 sm:px-4 py-4 max-w-[100vw] overflow-x-hidden">
+    return <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center space-x-4">
             <Button variant="ghost" onClick={handleBackToCompanies}>
@@ -101,7 +101,7 @@ const ManageInventory = () => {
       </div>;
   }
   
-  return <div className="container mx-auto px-2 sm:px-4 py-4 max-w-[100vw] overflow-x-hidden">
+  return <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Manage Inventory</h1>
         <div className="flex items-center space-x-4">

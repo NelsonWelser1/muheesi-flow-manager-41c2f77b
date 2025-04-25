@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -48,21 +49,21 @@ const KashariFarmDashboard = () => {
   ];
 
   return (
-    <div className="container mx-auto p-2 sm:p-4 space-y-4 sm:space-y-6 max-w-[100vw] overflow-x-hidden">
+    <div className="container mx-auto p-4 space-y-6">
       <Card>
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-2">
-          <div className="space-y-1">
-            <CardTitle className="text-xl sm:text-2xl font-bold">Kashari Mixed Farm Management System</CardTitle>
-            <CardDescription className="text-sm sm:text-base">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <div>
+            <CardTitle className="text-2xl font-bold">Kashari Mixed Farm Management System</CardTitle>
+            <CardDescription>
               Integrated management for dairy, crops, and community programs
             </CardDescription>
           </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mt-2 sm:mt-0">
+          <div className="flex items-center space-x-4">
             <div className="text-right">
               <p className="text-sm font-medium">{weather.temp}</p>
               <p className="text-xs text-muted-foreground">{weather.condition}</p>
             </div>
-            <div className="text-right">
+            <div className="text-right hidden md:block">
               <p className="text-sm font-medium">{format(currentTime, 'h:mm a')}</p>
               <p className="text-xs text-muted-foreground">{format(currentTime, 'MMM d, yyyy')}</p>
             </div>
@@ -70,22 +71,22 @@ const KashariFarmDashboard = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="flex flex-nowrap overflow-x-auto pb-2 -mb-2 sm:mb-0 sm:flex-wrap gap-2 w-full">
-              <TabsTrigger value="dashboard" className="whitespace-nowrap">Dashboard</TabsTrigger>
-              <TabsTrigger value="dairy" className="whitespace-nowrap">Dairy Products</TabsTrigger>
-              <TabsTrigger value="banana" className="whitespace-nowrap">Banana Plantation</TabsTrigger>
-              <TabsTrigger value="sales" className="whitespace-nowrap">Sales & Expenditure</TabsTrigger>
+            <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-6">
+              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+              <TabsTrigger value="dairy">Dairy Products</TabsTrigger>
+              <TabsTrigger value="banana">Banana Plantation</TabsTrigger>
+              <TabsTrigger value="sales">Sales & Expenditure</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard" className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.map((stat, i) => (
                   <Card key={i}>
-                    <CardContent className="p-4 sm:p-6">
+                    <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-xs sm:text-sm font-medium text-muted-foreground">{stat.title}</p>
-                          <p className="text-xl sm:text-2xl font-bold">{stat.value}</p>
+                          <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                          <p className="text-2xl font-bold">{stat.value}</p>
                         </div>
                         <div className="p-2 bg-muted rounded-full">{stat.icon}</div>
                       </div>
@@ -102,11 +103,11 @@ const KashariFarmDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base sm:text-lg flex items-center">
+                    <CardTitle className="flex items-center">
                       <Calendar className="mr-2 h-4 w-4" /> Upcoming Events
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent>
                     <div className="space-y-4">
                       {events.map((event, i) => (
                         <div key={i} className="flex items-center border-b pb-2">
@@ -131,11 +132,11 @@ const KashariFarmDashboard = () => {
                 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base sm:text-lg flex items-center">
+                    <CardTitle className="flex items-center">
                       <Clock className="mr-2 h-4 w-4" /> Daily Farm Tasks
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent>
                     <div className="space-y-4">
                       <div className="flex items-center">
                         <input type="checkbox" className="mr-2" id="task-1" />
@@ -190,3 +191,4 @@ const KashariFarmDashboard = () => {
 };
 
 export default KashariFarmDashboard;
+
