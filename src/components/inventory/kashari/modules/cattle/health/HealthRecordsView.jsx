@@ -10,7 +10,7 @@ import { useHealthRecords } from '@/hooks/useHealthRecords';
 const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
   const [cattleData, setCattleData] = useState(propsCattleData);
   const [loading, setLoading] = useState(propsCattleData.length === 0);
-  const { healthRecords } = useHealthRecords();
+  const { healthRecords, isLoading, error, refetch } = useHealthRecords();
   
   useEffect(() => {
     // If no cattle data is provided as props, fetch it
@@ -34,6 +34,11 @@ const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
 
     fetchCattleData();
   }, [propsCattleData.length]);
+
+  // Refresh records when component mounts
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   // Calculate statistics
   const totalRecords = healthRecords?.length || 0;

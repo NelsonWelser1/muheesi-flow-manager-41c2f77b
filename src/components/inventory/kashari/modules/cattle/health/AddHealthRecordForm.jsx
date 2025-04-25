@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
+import { useToast } from "@/components/ui/use-toast";
 
 // Form validation schema
 const formSchema = z.object({
@@ -32,7 +33,8 @@ const formSchema = z.object({
   notes: z.string().optional(),
 });
 
-const AddHealthRecordForm = ({ onCancel, cattleData = [] }) => {
+const AddHealthRecordForm = ({ onCancel, onSuccess, cattleData = [] }) => {
+  const { toast } = useToast();
   const { addHealthRecord } = useHealthRecords();
 
   const form = useForm({
@@ -53,9 +55,15 @@ const AddHealthRecordForm = ({ onCancel, cattleData = [] }) => {
       console.log("Form data being submitted:", data);
       await addHealthRecord.mutateAsync(data);
       form.reset();
-      if (onCancel) onCancel();
+      if (onSuccess) onSuccess();
+      else if (onCancel) onCancel();
     } catch (error) {
       console.error('Form submission error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add health record",
+        variant: "destructive",
+      });
     }
   };
 

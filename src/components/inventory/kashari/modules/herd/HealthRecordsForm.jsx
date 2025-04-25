@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Stethoscope, Save } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
@@ -55,7 +54,10 @@ const HealthRecordsForm = ({ cattleData = [] }) => {
 
   const onSubmit = async (data) => {
     try {
+      console.log("Form data being submitted:", data);
       await addHealthRecord.mutateAsync(data);
+      
+      // Reset form after successful submission
       form.reset({
         record_date: new Date().toISOString().split('T')[0],
         record_type: "",
@@ -65,6 +67,7 @@ const HealthRecordsForm = ({ cattleData = [] }) => {
         next_due_date: "",
         notes: "",
       });
+      
       toast({
         title: "Success",
         description: "Health record added successfully",
@@ -97,7 +100,7 @@ const HealthRecordsForm = ({ cattleData = [] }) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Select Cattle <span className="text-red-500">*</span></FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select cattle" />
@@ -139,7 +142,7 @@ const HealthRecordsForm = ({ cattleData = [] }) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Record Type <span className="text-red-500">*</span></FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select record type" />

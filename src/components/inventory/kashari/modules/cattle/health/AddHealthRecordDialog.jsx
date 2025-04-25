@@ -9,6 +9,13 @@ import { useHealthRecords } from '@/hooks/useHealthRecords';
 
 const AddHealthRecordDialog = ({ cattleData = [] }) => {
   const [open, setOpen] = React.useState(false);
+  const { healthRecords, refetch } = useHealthRecords();
+
+  // Close dialog and refetch data
+  const handleSuccess = () => {
+    setOpen(false);
+    refetch();
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -29,6 +36,7 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
         </DialogHeader>
         <AddHealthRecordForm
           onCancel={() => setOpen(false)}
+          onSuccess={handleSuccess}
           cattleData={cattleData}
         />
       </DialogContent>

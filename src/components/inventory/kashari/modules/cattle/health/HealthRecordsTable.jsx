@@ -79,6 +79,7 @@ const HealthRecordsTable = ({ cattleId }) => {
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
+              <TableHead>Cattle</TableHead>
               <TableHead>Type</TableHead>
               <TableHead className="max-w-[500px]">Description</TableHead>
               <TableHead>Administered By</TableHead>
@@ -92,6 +93,9 @@ const HealthRecordsTable = ({ cattleId }) => {
                   <TableCell className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-gray-500" />
                     {formatDate(record.record_date)}
+                  </TableCell>
+                  <TableCell>
+                    {record.cattle_inventory?.tag_number} {record.cattle_inventory?.name ? `- ${record.cattle_inventory.name}` : ''}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -114,7 +118,7 @@ const HealthRecordsTable = ({ cattleId }) => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-6 text-gray-500">
+                <TableCell colSpan={6} className="text-center py-6 text-gray-500">
                   No health records found
                 </TableCell>
               </TableRow>

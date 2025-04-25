@@ -27,7 +27,11 @@ export const useHealthRecords = (cattleId = null) => {
 
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching health records:", error);
+        throw error;
+      }
+      
       return data || [];
     },
   });
