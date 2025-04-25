@@ -31,6 +31,19 @@ export const useCattleInventory = (farmId = 'kashari') => {
   // Add a new cattle record
   const addCattle = useMutation({
     mutationFn: async (cattleData) => {
+      // Log what we're submitting to help with debugging
+      console.log("Submitting cattle data:", cattleData);
+      
+      // Ensure required fields are present
+      if (!cattleData.tag_number || !cattleData.type || !cattleData.breed) {
+        const missingFields = [];
+        if (!cattleData.tag_number) missingFields.push('Tag Number');
+        if (!cattleData.type) missingFields.push('Type');
+        if (!cattleData.breed) missingFields.push('Breed');
+        
+        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+      }
+      
       const payload = {
         ...cattleData,
         farm_id: farmId

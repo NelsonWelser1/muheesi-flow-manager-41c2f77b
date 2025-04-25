@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,9 +12,18 @@ import { Beef, Save, RotateCcw, Loader2 } from "lucide-react";
 import { useCattleInventory } from '@/hooks/useCattleInventory';
 
 const CattleRegistrationForm = () => {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
+    defaultValues: {
+      health_status: 'good'
+    }
+  });
   const { toast } = useToast();
   const { addCattle } = useCattleInventory('kashari');
+  
+  // Track selected values for dropdown fields
+  const [selectedType, setSelectedType] = useState('');
+  const [selectedBreed, setSelectedBreed] = useState('');
+  const [selectedHealth, setSelectedHealth] = useState('good');
 
   const cattleBreeds = [
     "Holstein-Friesian", "Jersey", "Guernsey", "Ayrshire", "Brown Swiss",
@@ -25,12 +34,59 @@ const CattleRegistrationForm = () => {
     "Dairy Cow", "Bull", "Heifer", "Calf", "Steer"
   ];
 
+  // Handle select field changes and update form values
+  const handleTypeChange = (value) => {
+    setSelectedType(value);
+    setValue("type", value);
+  };
+
+  const handleBreedChange = (value) => {
+    setSelectedBreed(value);
+    setValue("breed", value);
+  };
+
+  const handleHealthChange = (value) => {
+    setSelectedHealth(value);
+    setValue("health_status", value);
+  };
+
   const handleFormSubmit = async (data) => {
     try {
+      console.log("Form data before submission:", data);
+      
+      // Ensure required fields are set
+      if (!data.tag_number) {
+        toast({
+          title: "Error",
+          description: "Tag number is required",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!data.type) {
+        toast({
+          title: "Error",
+          description: "Cattle type is required",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!data.breed) {
+        toast({
+          title: "Error",
+          description: "Breed is required",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       // Format data before submission
       const formattedData = {
         ...data,
         weight: data.weight ? parseFloat(data.weight) : null,
+        health_status: data.health_status || 'good'
       };
 
       // Submit to Supabase via our custom hook
@@ -38,6 +94,14 @@ const CattleRegistrationForm = () => {
       
       // Reset form after successful submission
       reset();
+      setSelectedType('');
+      setSelectedBreed('');
+      setSelectedHealth('good');
+      
+      toast({
+        title: "Success",
+        description: "Cattle registered successfully",
+      });
     } catch (error) {
       console.error("Error in form submission:", error);
       // Toast notification is handled in the hook's onError
@@ -77,8 +141,8 @@ const CattleRegistrationForm = () => {
             <div className="space-y-2">
               <Label htmlFor="type">Type <span className="text-red-500">*</span></Label>
               <Select 
-                onValueChange={(value) => register("type").onChange({ target: { value } })} 
-                defaultValue=""
+                value={selectedType}
+                onValueChange={handleTypeChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select cattle type" />
@@ -95,8 +159,8 @@ const CattleRegistrationForm = () => {
             <div className="space-y-2">
               <Label htmlFor="breed">Breed <span className="text-red-500">*</span></Label>
               <Select 
-                onValueChange={(value) => register("breed").onChange({ target: { value } })}
-                defaultValue=""
+                value={selectedBreed}
+                onValueChange={handleBreedChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select breed" />
@@ -138,8 +202,8 @@ const CattleRegistrationForm = () => {
             <div className="space-y-2">
               <Label htmlFor="healthStatus">Health Status</Label>
               <Select 
-                defaultValue="good"
-                onValueChange={(value) => register("health_status").onChange({ target: { value } })}
+                value={selectedHealth}
+                onValueChange={handleHealthChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select health status" />
@@ -178,7 +242,12 @@ const CattleRegistrationForm = () => {
             <Button 
               type="button" 
               variant="outline" 
-              onClick={() => reset()}
+              onClick={() => {
+                reset();
+                setSelectedType('');
+                setSelectedBreed('');
+                setSelectedHealth('good');
+              }}
               className="flex items-center gap-2"
             >
               <RotateCcw className="h-4 w-4" />
