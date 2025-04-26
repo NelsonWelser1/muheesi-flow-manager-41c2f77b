@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Beef, 
@@ -104,20 +105,6 @@ const DairySidebar = ({
                 Historical Trends
               </button>
             </div>}
-        </div>
-
-        {/* Other Management Areas */}
-        <div className="pt-4 mt-4 border-t border-gray-200">
-          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">Other Areas</h4>
-          
-          <button className="flex items-center w-full p-2 text-left font-medium hover:bg-gray-100 rounded-md transition-colors">
-            <Truck className="mr-2 h-5 w-5 text-gray-500" />
-            <span>Logistics</span>
-          </button>
-          <button className="flex items-center w-full p-2 text-left font-medium hover:bg-gray-100 rounded-md transition-colors">
-            <Users className="mr-2 h-5 w-5 text-gray-500" />
-            <span>Staff Management</span>
-          </button>
         </div>
       </div>
     </div>;
