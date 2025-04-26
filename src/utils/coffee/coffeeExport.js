@@ -276,19 +276,6 @@ export const exportToPDF = (data, filename = 'export', type = '') => {
       ? type.charAt(0).toUpperCase() + type.slice(1) + ' Report'
       : 'Data Report';
     
-    // Get columns and rows based on data type
-    const columns = getColumnsForType(type, data);
-    if (!columns.length) {
-      console.error('No columns found for PDF export');
-      return;
-    }
-    
-    const rows = getRowsForType(type, data, columns);
-    if (!rows.length) {
-      console.error('No rows found for PDF export');
-      return;
-    }
-    
     // Generate and download PDF
     generateAndDownloadPDF(data, filename, title);
     
