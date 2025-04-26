@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Sidebar,
@@ -12,24 +11,12 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Leaf,
-  Calendar,
-  LineChart,
   Coffee,
   Bean,
   Wheat,
-  Map,
 } from 'lucide-react';
 
 const navigationItems = [
-  {
-    label: 'Plantation Overview',
-    items: [
-      { title: 'Crop Planning', icon: Leaf, component: 'planning' },
-      { title: 'Harvest Schedule', icon: Calendar, component: 'schedule' },
-      { title: 'Growth Analytics', icon: LineChart, component: 'analytics' },
-      { title: 'Farm Map', icon: Map, component: 'farm-map' },
-    ],
-  },
   {
     label: 'Produce Management',
     items: [

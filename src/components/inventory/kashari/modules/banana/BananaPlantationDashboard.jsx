@@ -2,20 +2,14 @@
 import React, { useState } from 'react';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import PlantationSidebar from './BananaSidebar';
-import CropPlanning from './sections/CropPlanning';
-import PlantingRecords from './sections/PlantingRecords';
 import HarvestRecords from './sections/HarvestRecords';
 import ExpensesTracker from './sections/ExpensesTracker';
 
-const PlantationDashboard = () => {
-  const [activeComponent, setActiveComponent] = useState('planning');
+const BananaPlantationDashboard = () => {
+  const [activeComponent, setActiveComponent] = useState('bananas');
 
   const renderContent = () => {
     switch (activeComponent) {
-      case 'planning':
-        return <CropPlanning />;
-      case 'planting-records':
-        return <PlantingRecords />;
       case 'harvest-records':
         return <HarvestRecords />;
       case 'expenses':
@@ -35,7 +29,7 @@ const PlantationDashboard = () => {
         <main className="flex-1 p-4 md:p-6 overflow-auto">
           <div className="mb-4 flex items-center">
             <SidebarTrigger className="md:hidden mr-2" />
-            <h1 className="text-xl md:text-2xl font-bold">Plantation Management</h1>
+            <h1 className="text-xl md:text-2xl font-bold">Plantation Inventory Management</h1>
           </div>
           {renderContent()}
         </main>
@@ -44,4 +38,4 @@ const PlantationDashboard = () => {
   );
 };
 
-export default PlantationDashboard;
+export default BananaPlantationDashboard;
