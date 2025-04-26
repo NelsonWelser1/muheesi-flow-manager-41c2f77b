@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Leaf,
-  Coffee,
-  Bean,
-  Wheat,
+  TrendingUp,
+  Receipt,
+  DollarSign
 } from 'lucide-react';
 
 const navigationItems = [
@@ -22,9 +22,9 @@ const navigationItems = [
     label: 'Produce Management',
     items: [
       { title: 'Bananas', icon: Leaf, component: 'bananas' },
-      { title: 'Coffee', icon: Coffee, component: 'coffee' },
-      { title: 'Maize', icon: Wheat, component: 'maize' },
-      { title: 'Beans', icon: Bean, component: 'beans' },
+      { title: 'Harvest Records', icon: TrendingUp, component: 'harvest-records' },
+      { title: 'Expenses', icon: Receipt, component: 'expenses' },
+      { title: 'Sales', icon: DollarSign, component: 'sales' },
     ],
   },
 ];
