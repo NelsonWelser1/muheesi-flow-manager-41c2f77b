@@ -1,80 +1,155 @@
 
-import { useState, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from "@/components/ui/use-toast";
 
-export const useHealthRecords = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [cattleList, setCattleList] = useState([]);
+export const useHealthRecords = (cattleId = null) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchCattleList = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('cattle_inventory')
-        .select('id, tag_number, name')
-        .order('tag_number', { ascending: true });
+  // Fetch health records
+  const {
+    data: healthRecords,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['health-records', cattleId],
+    queryFn: async () => {
+      let query = supabase
+        .from('cattle_health_records')
+        .select('*, cattle_inventory(tag_number, name)')
+        .order('record_date', { ascending: false });
+
+      if (cattleId) {
+        query = query.eq('cattle_id', cattleId);
+      }
+
+      const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching health records:", error);
+        throw error;
+      }
       
-      setCattleList(data || []);
-    } catch (err) {
-      setError(err.message);
-      toast({
-        title: "Error fetching cattle list",
-        description: err.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+      return data || [];
+    },
+  });
 
-  const addHealthRecord = async (recordData) => {
-    try {
-      setLoading(true);
-      setError(null);
+  // Add health record
+  const addHealthRecord = useMutation({
+    mutationFn: async (recordData) => {
+      console.log("Submitting health record data:", recordData);
+      
+      // Validate required fields
+      if (!recordData.cattle_id) throw new Error('Cattle ID is required');
+      if (!recordData.record_date) throw new Error('Record date is required');
+      if (!recordData.record_type) throw new Error('Record type is required');
+      if (!recordData.description) throw new Error('Description is required');
 
-      // Format the dates correctly for Supabase
-      const formattedData = {
+      // Convert empty strings to nulls for optional fields
+      const dataToInsert = {
         ...recordData,
-        record_date: recordData.record_date?.toISOString().split('T')[0],
-        next_due_date: recordData.next_due_date?.toISOString().split('T')[0] || null
+        treatment: recordData.treatment || null,
+        administered_by: recordData.administered_by || null,
+        next_due_date: recordData.next_due_date || null,
+        notes: recordData.notes || null
       };
 
       const { data, error } = await supabase
         .from('cattle_health_records')
-        .insert([formattedData])
-        .select();
-      
+        .insert([dataToInsert])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Supabase insertion error:", error);
+        throw error;
+      }
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Health record added successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['health-records'] });
+    },
+    onError: (error) => {
+      console.error('Error adding health record:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add health record",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update health record
+  const updateHealthRecord = useMutation({
+    mutationFn: async ({ id, ...updateData }) => {
+      if (!id) throw new Error('Record ID is required for updates');
+
+      const { data, error } = await supabase
+        .from('cattle_health_records')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
       if (error) throw error;
-      
+      return data;
+    },
+    onSuccess: () => {
       toast({
-        title: "Record added successfully",
-        description: "The health record has been saved.",
+        title: "Success",
+        description: "Health record updated successfully",
       });
-      
-      return true;
-    } catch (err) {
-      setError(err.message);
+      queryClient.invalidateQueries({ queryKey: ['health-records'] });
+    },
+    onError: (error) => {
       toast({
-        title: "Error adding record",
-        description: err.message,
-        variant: "destructive"
+        title: "Error",
+        description: error.message || "Failed to update health record",
+        variant: "destructive",
       });
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
+
+  // Delete health record
+  const deleteHealthRecord = useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase
+        .from('cattle_health_records')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Health record deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['health-records'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete health record",
+        variant: "destructive",
+      });
+    },
+  });
 
   return {
-    loading,
+    healthRecords,
+    isLoading,
     error,
-    cattleList,
-    fetchCattleList,
-    addHealthRecord
+    addHealthRecord,
+    updateHealthRecord,
+    deleteHealthRecord,
+    refetch
   };
 };

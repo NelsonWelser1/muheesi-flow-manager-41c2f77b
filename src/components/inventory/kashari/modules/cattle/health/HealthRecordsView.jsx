@@ -1,72 +1,57 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Calendar, Syringe, Activity } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import HealthRecordsTable from './HealthRecordsTable';
 import AddHealthRecordDialog from './AddHealthRecordDialog';
+import { supabase } from '@/integrations/supabase/supabase';
+import { useHealthRecords } from '@/hooks/useHealthRecords';
 
-const HealthRecordsTable = ({ records = [] }) => {
-  return (
-    <div className="rounded-md border">
-      <table className="w-full">
-        <thead className="bg-muted/50">
-          <tr>
-            <th className="p-3 text-left font-medium">Date</th>
-            <th className="p-3 text-left font-medium">Cattle</th>
-            <th className="p-3 text-left font-medium">Type</th>
-            <th className="p-3 text-left font-medium">Description</th>
-            <th className="p-3 text-left font-medium">Treatment</th>
-            <th className="p-3 text-left font-medium">Next Due</th>
-          </tr>
-        </thead>
-        <tbody>
-          {records.length > 0 ? (
-            records.map((record) => (
-              <tr key={record.id} className="border-t">
-                <td className="p-3">{new Date(record.record_date).toLocaleDateString()}</td>
-                <td className="p-3">{record.cattle_inventory?.tag_number || 'Unknown'}</td>
-                <td className="p-3">
-                  <span className={`px-2 py-1 rounded text-xs ${
-                    record.record_type === 'vaccination' ? 'bg-blue-100 text-blue-800' :
-                    record.record_type === 'treatment' ? 'bg-yellow-100 text-yellow-800' :
-                    record.record_type === 'examination' ? 'bg-green-100 text-green-800' :
-                    record.record_type === 'deworming' ? 'bg-purple-100 text-purple-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {record.record_type}
-                  </span>
-                </td>
-                <td className="p-3">{record.description}</td>
-                <td className="p-3">{record.treatment || '-'}</td>
-                <td className="p-3">{record.next_due_date ? new Date(record.next_due_date).toLocaleDateString() : '-'}</td>
-              </tr>
-            ))
-          ) : (
-            <tr className="border-t">
-              <td className="p-3" colSpan="6">
-                <p className="text-center text-muted-foreground">No health records found</p>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-
-const HealthRecordsView = ({ records = [], onRefresh }) => {
-  // Calculate statistics from actual records
-  const totalRecords = records.length;
-  const vaccinationCount = records.filter(r => r.record_type === 'vaccination').length;
+const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
+  const [cattleData, setCattleData] = useState(propsCattleData);
+  const [loading, setLoading] = useState(propsCattleData.length === 0);
+  const { healthRecords, isLoading, error, refetch } = useHealthRecords();
   
-  // Calculate health score based on actual data
+  useEffect(() => {
+    // If no cattle data is provided as props, fetch it
+    const fetchCattleData = async () => {
+      if (propsCattleData.length === 0) {
+        try {
+          setLoading(true);
+          const { data, error } = await supabase
+            .from('cattle_inventory')
+            .select('id, tag_number, name');
+          
+          if (error) throw error;
+          setCattleData(data || []);
+        } catch (error) {
+          console.error('Error fetching cattle data:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchCattleData();
+  }, [propsCattleData.length]);
+
+  // Refresh records when component mounts
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  // Calculate statistics
+  const totalRecords = healthRecords?.length || 0;
+  const vaccinationCount = healthRecords?.filter(r => r.record_type === 'vaccination').length || 0;
+  
+  // Calculate a mock health score (for demonstration)
   const calculateHealthScore = () => {
-    if (records.length === 0) return '85%';
+    if (!healthRecords || healthRecords.length === 0) return '85%'; // Default value
     
     const lastMonth = new Date();
     lastMonth.setMonth(lastMonth.getMonth() - 1);
     
-    const recentRecords = records.filter(r => new Date(r.record_date) > lastMonth);
+    const recentRecords = healthRecords.filter(r => new Date(r.record_date) > lastMonth);
     return recentRecords.length > 0 ? '95%' : '85%';
   };
 
@@ -75,17 +60,7 @@ const HealthRecordsView = ({ records = [], onRefresh }) => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Health Records</h2>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onRefresh}
-            className="flex items-center gap-2"
-          >
-            Refresh Data
-          </Button>
-          <AddHealthRecordDialog onSuccess={onRefresh} />
-        </div>
+        <AddHealthRecordDialog cattleData={cattleData} />
       </div>
 
       {/* Stats Cards */}
@@ -122,10 +97,7 @@ const HealthRecordsView = ({ records = [], onRefresh }) => {
       </div>
 
       {/* Records Table */}
-      <Card className="p-4">
-        <h3 className="text-lg font-medium mb-4">Health Records</h3>
-        <HealthRecordsTable records={records} />
-      </Card>
+      <HealthRecordsTable />
     </div>
   );
 };
