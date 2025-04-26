@@ -1,19 +1,7 @@
-
 import React, { useState } from 'react';
-import { 
-  Beef, 
-  Droplet, 
-  LineChart, 
-  ChevronDown, 
-  ChevronRight,
-  ChevronLeft,
-  Tag,
-  Stethoscope, 
-  Scale
-} from "lucide-react";
+import { Beef, Droplet, LineChart, ChevronDown, ChevronRight, ChevronLeft, Tag, Stethoscope, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-
 const DairySidebar = ({
   activeSection,
   setActiveSection,
@@ -25,38 +13,24 @@ const DairySidebar = ({
     milkProduction: false,
     analytics: false
   });
-
   const [isCollapsed, setIsCollapsed] = useState(false);
-
   const toggleSection = section => {
     setExpandedSections(prev => ({
       ...prev,
       [section]: !prev[section]
     }));
   };
-
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
-
   const handleSectionClick = (section, tab = null) => {
     setActiveSection(section);
     if (tab) {
       setActiveTab(tab);
     }
   };
-
-  return (
-    <div className={cn(
-      "relative bg-white border-r h-[calc(100vh-7rem)] overflow-y-auto transition-all duration-300",
-      isCollapsed ? "w-16" : "w-64"
-    )}>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute -right-3 top-4 z-10 h-6 w-6 rounded-full bg-white border shadow-sm"
-        onClick={toggleSidebar}
-      >
+  return <div className={cn("relative bg-white border-r h-[calc(100vh-7rem)] overflow-y-auto transition-all duration-300", isCollapsed ? "w-16" : "w-64")}>
+      <Button variant="ghost" size="icon" onClick={toggleSidebar} className="absolute -right-3 top-4 z-10 h-6 w-6 rounded-full bg-white border shadow-sm mx-[32px]">
         {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
       </Button>
 
@@ -65,10 +39,7 @@ const DairySidebar = ({
         
         {/* Herd Management Section */}
         <div className="mb-4">
-          <button 
-            className="flex items-center justify-between w-full p-2 text-left font-medium hover:bg-gray-100 rounded-md transition-colors" 
-            onClick={() => !isCollapsed && toggleSection('herdManagement')}
-          >
+          <button className="flex items-center justify-between w-full p-2 text-left font-medium hover:bg-gray-100 rounded-md transition-colors" onClick={() => !isCollapsed && toggleSection('herdManagement')}>
             <div className="flex items-center">
               <Beef className="mr-2 h-5 w-5 text-orange-500" />
               {!isCollapsed && <span>Herd Management</span>}
@@ -94,10 +65,7 @@ const DairySidebar = ({
         
         {/* Milk Production Section */}
         <div className="mb-4">
-          <button 
-            className="flex items-center justify-between w-full p-2 text-left font-medium hover:bg-gray-100 rounded-md transition-colors"
-            onClick={() => !isCollapsed && toggleSection('milkProduction')}
-          >
+          <button className="flex items-center justify-between w-full p-2 text-left font-medium hover:bg-gray-100 rounded-md transition-colors" onClick={() => !isCollapsed && toggleSection('milkProduction')}>
             <div className="flex items-center">
               <Droplet className="mr-2 h-5 w-5 text-blue-500" />
               {!isCollapsed && <span>Milk Production</span>}
@@ -114,10 +82,7 @@ const DairySidebar = ({
         
         {/* Analytics Section */}
         <div className="mb-4">
-          <button 
-            className="flex items-center justify-between w-full p-2 text-left font-medium hover:bg-gray-100 rounded-md transition-colors"
-            onClick={() => !isCollapsed && toggleSection('analytics')}
-          >
+          <button className="flex items-center justify-between w-full p-2 text-left font-medium hover:bg-gray-100 rounded-md transition-colors" onClick={() => !isCollapsed && toggleSection('analytics')}>
             <div className="flex items-center">
               <LineChart className="mr-2 h-5 w-5 text-green-500" />
               {!isCollapsed && <span>Analytics</span>}
@@ -138,8 +103,6 @@ const DairySidebar = ({
             </div>}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default DairySidebar;
