@@ -4,8 +4,8 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -26,7 +26,7 @@ import {
   DollarSign,
   FileText,
   PieChart,
-  BarChart,
+  BarChart2,
   Tractor,
   Store,
   Map,
@@ -74,13 +74,13 @@ const navigationItems = [
   {
     label: 'Reports',
     items: [
-      { title: 'Production Reports', icon: BarChart, component: 'production-reports' },
+      { title: 'Production Reports', icon: BarChart2, component: 'production-reports' },
       { title: 'Financial Reports', icon: PieChart, component: 'financial-reports' },
     ],
   },
 ];
 
-const PlantationSidebar = ({ activeComponent, onNavigate }) => {
+const BananaSidebar = ({ activeComponent, onNavigate }) => {
   return (
     <Sidebar className="hidden md:block">
       <SidebarContent>
@@ -109,4 +109,4 @@ const PlantationSidebar = ({ activeComponent, onNavigate }) => {
   );
 };
 
-export default PlantationSidebar;
+export default BananaSidebar;
