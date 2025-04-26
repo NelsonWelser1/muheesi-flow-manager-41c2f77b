@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -14,9 +13,6 @@ const Navigation = () => {
   }, {
     to: "/manage-companies",
     label: "Manage Companies"
-  }, {
-    to: "/feedback",
-    label: "Feedback"
   }];
 
   return <nav className="bg-gray-800 text-white p-4">
