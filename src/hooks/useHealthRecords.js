@@ -147,9 +147,9 @@ export const useHealthRecords = (cattleId = null) => {
     healthRecords,
     isLoading,
     error,
+    refetch,
     addHealthRecord,
     updateHealthRecord,
-    deleteHealthRecord,
-    refetch
+    deleteHealthRecord
   };
 };

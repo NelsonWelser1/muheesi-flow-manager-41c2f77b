@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -30,9 +29,7 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
       </Dialog.Trigger>
       <DialogContent className="sm:max-w-[900px]">
         <DialogHeader>
-          <DialogTitle className="text-xl flex items-center gap-2">
-            Add Health Record
-          </DialogTitle>
+          <DialogTitle className="text-xl">Add Health Record</DialogTitle>
         </DialogHeader>
         <AddHealthRecordForm
           onCancel={() => setOpen(false)}
