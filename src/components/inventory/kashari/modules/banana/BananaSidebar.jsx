@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Sidebar,
@@ -27,7 +26,6 @@ import {
   FileText,
   PieChart,
   BarChart2,
-  Tractor,
   Store,
   Map,
 } from 'lucide-react';
@@ -49,16 +47,6 @@ const navigationItems = [
       { title: 'Coffee', icon: Coffee, component: 'coffee' },
       { title: 'Maize', icon: Wheat, component: 'maize' },
       { title: 'Beans', icon: Bean, component: 'beans' },
-    ],
-  },
-  {
-    label: 'Operations',
-    items: [
-      { title: 'Planting Records', icon: FileText, component: 'planting-records' },
-      { title: 'Harvest Records', icon: ClipboardList, component: 'harvest-records' },
-      { title: 'Worker Management', icon: Users, component: 'workers' },
-      { title: 'Expenses', icon: DollarSign, component: 'expenses' },
-      { title: 'Equipment', icon: Tractor, component: 'equipment' },
     ],
   },
   {
