@@ -11,8 +11,11 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Syringe, HeartPulse, Pill, Loader2 } from "lucide-react";
+import { useHealthRecords } from '@/hooks/useHealthRecords';
 
-const HealthRecordsTable = ({ records = [], isLoading = false }) => {
+const HealthRecordsTable = ({ cattleId }) => {
+  const { healthRecords, isLoading, error } = useHealthRecords(cattleId);
+
   const getStatusColor = (record) => {
     const now = new Date();
     const recordDate = new Date(record.record_date);
@@ -61,6 +64,14 @@ const HealthRecordsTable = ({ records = [], isLoading = false }) => {
     );
   }
 
+  if (error) {
+    return (
+      <Card className="p-6 text-red-500">
+        <p>Error loading health records: {error.message}</p>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-6">
       <div className="rounded-md border">
@@ -76,8 +87,8 @@ const HealthRecordsTable = ({ records = [], isLoading = false }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {records && records.length > 0 ? (
-              records.map((record) => (
+            {healthRecords && healthRecords.length > 0 ? (
+              healthRecords.map((record) => (
                 <TableRow key={record.id}>
                   <TableCell className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-gray-500" />

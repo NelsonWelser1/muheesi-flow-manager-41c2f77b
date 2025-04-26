@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import AddHealthRecordForm from './AddHealthRecordForm';
@@ -9,7 +9,7 @@ import { useHealthRecords } from '@/hooks/useHealthRecords';
 
 const AddHealthRecordDialog = ({ cattleData = [] }) => {
   const [open, setOpen] = React.useState(false);
-  const { refetch } = useHealthRecords();
+  const { healthRecords, refetch } = useHealthRecords();
 
   // Close dialog and refetch data
   const handleSuccess = () => {
@@ -19,7 +19,7 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+      <Dialog.Trigger asChild>
         <Button 
           className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
           disabled={cattleData.length === 0}
@@ -27,11 +27,10 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
           <PlusCircle className="h-4 w-4" />
           Add Health Record
         </Button>
-      </DialogTrigger>
+      </Dialog.Trigger>
       <DialogContent className="sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
-            <PlusCircle className="h-5 w-5" />
             Add Health Record
           </DialogTitle>
         </DialogHeader>

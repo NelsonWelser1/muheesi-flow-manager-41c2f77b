@@ -16,7 +16,6 @@ export const useHealthRecords = (cattleId = null) => {
   } = useQuery({
     queryKey: ['health-records', cattleId],
     queryFn: async () => {
-      console.log("Fetching health records with cattleId:", cattleId);
       let query = supabase
         .from('cattle_health_records')
         .select('*, cattle_inventory(tag_number, name)')
@@ -33,7 +32,6 @@ export const useHealthRecords = (cattleId = null) => {
         throw error;
       }
       
-      console.log("Fetched health records:", data);
       return data || [];
     },
   });
@@ -68,8 +66,6 @@ export const useHealthRecords = (cattleId = null) => {
         console.error("Supabase insertion error:", error);
         throw error;
       }
-      
-      console.log("Successfully added health record:", data);
       return data;
     },
     onSuccess: () => {
