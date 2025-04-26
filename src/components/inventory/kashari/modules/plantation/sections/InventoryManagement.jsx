@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import AddStockEntryForm from "./AddStockEntryForm";
+import InventoryTable from './inventory/InventoryTable';
 
 const InventoryManagement = () => {
   const [showForm, setShowForm] = useState(false);
@@ -32,18 +32,12 @@ const InventoryManagement = () => {
     }
   ]);
 
-  const handleAddClick = () => {
-    setShowForm(true);
-  };
-
+  const handleAddClick = () => setShowForm(true);
   const handleFormSubmit = (entry) => {
     setInventory([entry, ...inventory]);
     setShowForm(false);
   };
-
-  const handleFormCancel = () => {
-    setShowForm(false);
-  };
+  const handleFormCancel = () => setShowForm(false);
 
   return (
     <div className="space-y-4">
@@ -55,39 +49,20 @@ const InventoryManagement = () => {
           </Button>
         )}
       </div>
+
       {showForm && (
         <AddStockEntryForm
           onSubmit={handleFormSubmit}
           onCancel={handleFormCancel}
         />
       )}
+
       <Card>
         <CardHeader>
           <CardTitle>Current Inventory</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Unit</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Last Updated</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {inventory.map((item, idx) => (
-                <TableRow key={idx}>
-                  <TableCell>{item.product}</TableCell>
-                  <TableCell>{item.quantity}</TableCell>
-                  <TableCell>{item.unit}</TableCell>
-                  <TableCell>{item.location}</TableCell>
-                  <TableCell>{item.date}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <InventoryTable inventory={inventory} />
         </CardContent>
       </Card>
     </div>
