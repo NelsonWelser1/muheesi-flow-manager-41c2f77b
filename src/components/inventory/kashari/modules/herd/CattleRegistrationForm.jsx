@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,11 +8,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Label } from "@/components/ui/label";
-import { Beef, Save, RotateCcw } from "lucide-react";  // Changed from Cow to Beef
+import { Beef, Save, RotateCcw, Loader2 } from "lucide-react";
+import { useCattleInventory } from '@/hooks/useCattleInventory';
 
-const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+const CattleRegistrationForm = () => {
+  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
+    defaultValues: {
+      health_status: 'good'
+    }
+  });
   const { toast } = useToast();
+  const { addCattle } = useCattleInventory('kashari');
+  
+  // Track selected values for dropdown fields
+  const [selectedType, setSelectedType] = useState('');
+  const [selectedBreed, setSelectedBreed] = useState('');
+  const [selectedHealth, setSelectedHealth] = useState('good');
 
   const cattleBreeds = [
     "Holstein-Friesian", "Jersey", "Guernsey", "Ayrshire", "Brown Swiss",
@@ -23,21 +34,77 @@ const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
     "Dairy Cow", "Bull", "Heifer", "Calf", "Steer"
   ];
 
+  // Handle select field changes and update form values
+  const handleTypeChange = (value) => {
+    setSelectedType(value);
+    setValue("type", value);
+  };
+
+  const handleBreedChange = (value) => {
+    setSelectedBreed(value);
+    setValue("breed", value);
+  };
+
+  const handleHealthChange = (value) => {
+    setSelectedHealth(value);
+    setValue("health_status", value);
+  };
+
   const handleFormSubmit = async (data) => {
     try {
-      await onSubmit(data);
+      console.log("Form data before submission:", data);
+      
+      // Ensure required fields are set
+      if (!data.tag_number) {
+        toast({
+          title: "Error",
+          description: "Tag number is required",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!data.type) {
+        toast({
+          title: "Error",
+          description: "Cattle type is required",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!data.breed) {
+        toast({
+          title: "Error",
+          description: "Breed is required",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Format data before submission
+      const formattedData = {
+        ...data,
+        weight: data.weight ? parseFloat(data.weight) : null,
+        health_status: data.health_status || 'good'
+      };
+
+      // Submit to Supabase via our custom hook
+      await addCattle.mutateAsync(formattedData);
+      
+      // Reset form after successful submission
       reset();
+      setSelectedType('');
+      setSelectedBreed('');
+      setSelectedHealth('good');
+      
       toast({
         title: "Success",
         description: "Cattle registered successfully",
       });
     } catch (error) {
-      console.error("Error registering cattle:", error);
-      toast({
-        title: "Error",
-        description: "Failed to register cattle. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Error in form submission:", error);
+      // Toast notification is handled in the hook's onError
     }
   };
 
@@ -45,7 +112,7 @@ const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-xl flex items-center gap-2">
-          <Beef className="h-5 w-5 text-orange-500" />  {/* Changed from Cow to Beef */}
+          <Beef className="h-5 w-5 text-orange-500" />
           Register New Cattle
         </CardTitle>
       </CardHeader>
@@ -57,9 +124,9 @@ const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
               <Input
                 id="tagNumber"
                 placeholder="KF-2023-001"
-                {...register("tagNumber", { required: "Tag number is required" })}
+                {...register("tag_number", { required: "Tag number is required" })}
               />
-              {errors.tagNumber && <p className="text-red-500 text-sm">{errors.tagNumber.message}</p>}
+              {errors.tag_number && <p className="text-red-500 text-sm">{errors.tag_number.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -73,7 +140,10 @@ const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
 
             <div className="space-y-2">
               <Label htmlFor="type">Type <span className="text-red-500">*</span></Label>
-              <Select onValueChange={(value) => register("type").onChange({ target: { value } })}>
+              <Select 
+                value={selectedType}
+                onValueChange={handleTypeChange}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select cattle type" />
                 </SelectTrigger>
@@ -88,7 +158,10 @@ const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
 
             <div className="space-y-2">
               <Label htmlFor="breed">Breed <span className="text-red-500">*</span></Label>
-              <Select onValueChange={(value) => register("breed").onChange({ target: { value } })}>
+              <Select 
+                value={selectedBreed}
+                onValueChange={handleBreedChange}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select breed" />
                 </SelectTrigger>
@@ -106,7 +179,7 @@ const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
               <Input
                 id="dateOfBirth"
                 type="date"
-                {...register("dateOfBirth")}
+                {...register("date_of_birth")}
               />
             </div>
 
@@ -129,8 +202,8 @@ const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
             <div className="space-y-2">
               <Label htmlFor="healthStatus">Health Status</Label>
               <Select 
-                defaultValue="good"
-                onValueChange={(value) => register("healthStatus").onChange({ target: { value } })}
+                value={selectedHealth}
+                onValueChange={handleHealthChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select health status" />
@@ -150,7 +223,7 @@ const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
               <Input
                 id="purchaseDate"
                 type="date"
-                {...register("purchaseDate")}
+                {...register("purchase_date")}
               />
             </div>
           </div>
@@ -169,7 +242,12 @@ const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
             <Button 
               type="button" 
               variant="outline" 
-              onClick={() => reset()}
+              onClick={() => {
+                reset();
+                setSelectedType('');
+                setSelectedBreed('');
+                setSelectedHealth('good');
+              }}
               className="flex items-center gap-2"
             >
               <RotateCcw className="h-4 w-4" />
@@ -177,10 +255,14 @@ const CattleRegistrationForm = ({ onSubmit, isSubmitting }) => {
             </Button>
             <Button 
               type="submit" 
-              disabled={isSubmitting}
+              disabled={addCattle.isPending}
               className="flex items-center gap-2"
             >
-              <Save className="h-4 w-4" />
+              {addCattle.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
               Register Cattle
             </Button>
           </div>
