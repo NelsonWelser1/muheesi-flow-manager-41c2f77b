@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import AddHealthRecordForm from './AddHealthRecordForm';
@@ -19,7 +19,7 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
+      <DialogTrigger asChild>
         <Button 
           className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
           disabled={cattleData.length === 0}
@@ -27,7 +27,7 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
           <PlusCircle className="h-4 w-4" />
           Add Health Record
         </Button>
-      </Dialog.Trigger>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
