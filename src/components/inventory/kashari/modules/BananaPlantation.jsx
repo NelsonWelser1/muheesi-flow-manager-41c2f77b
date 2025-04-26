@@ -1,19 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import PlantationSidebar from './banana/BananaSidebar';
-import CropPlanning from './banana/sections/CropPlanning';
 import PlantingRecords from './banana/sections/PlantingRecords';
 import HarvestRecords from './banana/sections/HarvestRecords';
 import ExpensesTracker from './banana/sections/ExpensesTracker';
 
 const BananaPlantation = () => {
-  const [activeComponent, setActiveComponent] = React.useState('planning');
+  const [activeComponent, setActiveComponent] = useState('planting-records');
 
   const renderContent = () => {
     switch (activeComponent) {
-      case 'planning':
-        return <CropPlanning />;
       case 'planting-records':
         return <PlantingRecords />;
       case 'harvest-records':

@@ -21,10 +21,10 @@ const navigationItems = [
   {
     label: 'Produce Management',
     items: [
-      { title: 'Bananas', icon: Leaf, component: 'bananas' },
+      { title: 'Planting Records', icon: Leaf, component: 'planting-records' },
+      { title: 'Harvest Records', icon: Wheat, component: 'harvest-records' },
+      { title: 'Expenses Tracking', icon: Bean, component: 'expenses' },
       { title: 'Coffee', icon: Coffee, component: 'coffee' },
-      { title: 'Maize', icon: Wheat, component: 'maize' },
-      { title: 'Beans', icon: Bean, component: 'beans' },
     ],
   },
 ];
