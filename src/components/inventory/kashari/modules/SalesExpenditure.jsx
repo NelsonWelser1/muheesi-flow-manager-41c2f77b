@@ -5,8 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Calendar, ArrowUp, ArrowDown, Wallet, Banknote } from "lucide-react";
-import TransactionForm from "../plantation/TransactionForm";
-import { formatCurrency } from "../plantation/utils/formatters";
+import TransactionForm from "./plantation/TransactionForm";
+import { formatCurrency } from "./plantation/utils/formatters";
 
 const SalesExpenditure = () => {
   const [transactions, setTransactions] = useState([
