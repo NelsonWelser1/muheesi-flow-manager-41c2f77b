@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Sidebar,
@@ -12,8 +11,6 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Leaf,
-  Coffee,
-  Bean,
   Wheat,
 } from 'lucide-react';
 
@@ -23,8 +20,6 @@ const navigationItems = [
     items: [
       { title: 'Planting Records', icon: Leaf, component: 'planting-records' },
       { title: 'Harvest Records', icon: Wheat, component: 'harvest-records' },
-      { title: 'Expenses Tracking', icon: Bean, component: 'expenses' },
-      { title: 'Coffee', icon: Coffee, component: 'coffee' },
     ],
   },
 ];

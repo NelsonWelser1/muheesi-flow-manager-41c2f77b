@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import PlantationSidebar from './banana/BananaSidebar';
 import PlantingRecords from './plantation/sections/PlantingRecords';
 import HarvestRecords from './plantation/sections/HarvestRecords';
-import ExpensesTracker from './plantation/sections/ExpensesTracker';
 
 const BananaPlantation = () => {
   const [activeComponent, setActiveComponent] = useState('planting-records');
@@ -15,8 +13,6 @@ const BananaPlantation = () => {
         return <PlantingRecords />;
       case 'harvest-records':
         return <HarvestRecords />;
-      case 'expenses':
-        return <ExpensesTracker />;
       default:
         return <div className="p-6 text-center">Select a section from the sidebar</div>;
     }
