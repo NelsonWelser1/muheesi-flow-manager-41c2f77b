@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -11,8 +10,9 @@ import HealthRecordsForm from './HealthRecordsForm';
 import { supabase } from '@/integrations/supabase/supabase';
 import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
 import GrowthPredictionDialog from '../growth/GrowthPredictionDialog';
-
-const HerdManagement = ({ initialTab = "inventory" }) => {
+const HerdManagement = ({
+  initialTab = "inventory"
+}) => {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [cattleData, setCattleData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,25 +20,24 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
   const [showHealthForm, setShowHealthForm] = useState(false);
   const [isPredictionDialogOpen, setIsPredictionDialogOpen] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   useEffect(() => {
     fetchCattleData();
   }, []);
-
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
-
   const fetchCattleData = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('cattle_inventory')
-        .select('*')
-        .eq('farm_id', 'kashari')
-        .order('created_at', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('cattle_inventory').select('*').eq('farm_id', 'kashari').order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
       setCattleData(data || []);
     } catch (error) {
@@ -48,8 +47,7 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
       setIsLoading(false);
     }
   };
-
-  const handleAddCattle = async (formData) => {
+  const handleAddCattle = async formData => {
     setIsSubmitting(true);
     try {
       const newCattle = {
@@ -63,14 +61,11 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
         notes: formData.notes || null,
         farm_id: 'kashari'
       };
-
-      const { data, error } = await supabase
-        .from('cattle_inventory')
-        .insert([newCattle])
-        .select();
-
+      const {
+        data,
+        error
+      } = await supabase.from('cattle_inventory').insert([newCattle]).select();
       if (error) throw error;
-      
       showSuccessToast(toast, "Cattle registered successfully");
       fetchCattleData();
       setShowRegistrationForm(false);
@@ -81,8 +76,7 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
       setIsSubmitting(false);
     }
   };
-
-  const handleAddHealthRecord = async (formData) => {
+  const handleAddHealthRecord = async formData => {
     setIsSubmitting(true);
     try {
       const newRecord = {
@@ -95,14 +89,11 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
         next_due_date: formData.nextDueDate || null,
         notes: formData.notes || null
       };
-
-      const { data, error } = await supabase
-        .from('cattle_health_records')
-        .insert([newRecord])
-        .select();
-
+      const {
+        data,
+        error
+      } = await supabase.from('cattle_health_records').insert([newRecord]).select();
       if (error) throw error;
-      
       showSuccessToast(toast, "Health record added successfully");
       setShowHealthForm(false);
     } catch (error) {
@@ -112,32 +103,25 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
       setIsSubmitting(false);
     }
   };
-
-  const handleViewDetails = (id) => {
+  const handleViewDetails = id => {
     toast({
       title: "View Details",
-      description: `Viewing details for cattle ID: ${id}`,
+      description: `Viewing details for cattle ID: ${id}`
     });
   };
-
-  const handleEdit = (id) => {
+  const handleEdit = id => {
     toast({
       title: "Edit",
-      description: `Editing cattle ID: ${id}`,
+      description: `Editing cattle ID: ${id}`
     });
   };
-
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     if (!confirm("Are you sure you want to delete this cattle record?")) return;
-    
     try {
-      const { error } = await supabase
-        .from('cattle_inventory')
-        .delete()
-        .eq('id', id);
-
+      const {
+        error
+      } = await supabase.from('cattle_inventory').delete().eq('id', id);
       if (error) throw error;
-      
       showSuccessToast(toast, "Cattle record deleted successfully");
       fetchCattleData();
     } catch (error) {
@@ -145,90 +129,49 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
       showErrorToast(toast, `Failed to delete cattle: ${error.message}`);
     }
   };
-
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full grid grid-cols-3 h-14 rounded-lg bg-muted/30 p-1">
-          <TabsTrigger 
-            value="inventory" 
-            className="flex items-center gap-2 h-12 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
-          >
+          <TabsTrigger value="inventory" className="flex items-center gap-2 h-12 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200">
             <Beef className="h-5 w-5 text-orange-500" />
             <span className="font-medium">Cattle Inventory</span>
           </TabsTrigger>
-          <TabsTrigger 
-            value="health" 
-            className="flex items-center gap-2 h-12 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
-          >
+          <TabsTrigger value="health" className="flex items-center gap-2 h-12 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200">
             <Stethoscope className="h-5 w-5 text-purple-500" />
             <span className="font-medium">Health Records</span>
           </TabsTrigger>
-          <TabsTrigger 
-            value="growth" 
-            className="flex items-center gap-2 h-12 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
-          >
+          <TabsTrigger value="growth" className="flex items-center gap-2 h-12 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200">
             <LineChart className="h-5 w-5 text-blue-500" />
             <span className="font-medium">Growth Metrics</span>
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="inventory" className="space-y-4 pt-4">
-          {showRegistrationForm ? (
-            <>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowRegistrationForm(false)}
-                className="mb-2 flex items-center gap-2 hover:bg-slate-100"
-              >
+          {showRegistrationForm ? <>
+              <Button variant="outline" onClick={() => setShowRegistrationForm(false)} className="mb-2 flex items-center gap-2 hover:bg-slate-100">
                 <ChevronLeft className="h-4 w-4" />
                 Back to Inventory
               </Button>
-              <CattleRegistrationForm 
-                onSubmit={handleAddCattle}
-                isSubmitting={isSubmitting}
-              />
-            </>
-          ) : (
-            <>
+              <CattleRegistrationForm onSubmit={handleAddCattle} isSubmitting={isSubmitting} />
+            </> : <>
               <div className="flex justify-end">
-                <Button 
-                  onClick={() => setShowRegistrationForm(true)}
-                  className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:opacity-90"
-                >
+                <Button onClick={() => setShowRegistrationForm(true)} className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:opacity-90">
                   <PlusCircle className="h-4 w-4" />
                   Register New Cattle
                 </Button>
               </div>
-              <CattleInventoryTable 
-                cattleData={cattleData}
-                onViewDetails={handleViewDetails}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            </>
-          )}
+              <CattleInventoryTable cattleData={cattleData} onViewDetails={handleViewDetails} onEdit={handleEdit} onDelete={handleDelete} />
+            </>}
         </TabsContent>
         
         <TabsContent value="health" className="space-y-4 pt-4">
-          {showHealthForm ? (
-            <>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowHealthForm(false)}
-                className="mb-2 flex items-center gap-2 hover:bg-slate-100"
-              >
+          {showHealthForm ? <>
+              <Button variant="outline" onClick={() => setShowHealthForm(false)} className="mb-2 flex items-center gap-2 hover:bg-slate-100">
                 <ChevronLeft className="h-4 w-4" />
                 Back to Health Records
               </Button>
-              <HealthRecordsForm 
-                cattleData={cattleData}
-                onSubmit={handleAddHealthRecord}
-                isSubmitting={isSubmitting}
-              />
-            </>
-          ) : (
-            <>
+              <HealthRecordsForm cattleData={cattleData} onSubmit={handleAddHealthRecord} isSubmitting={isSubmitting} />
+            </> : <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <Card className="p-4 border-l-4 border-purple-500 hover:shadow-md transition-all duration-200">
                   <div className="flex justify-between items-center">
@@ -259,15 +202,12 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
                 </Card>
               </div>
               <div className="flex justify-end">
-                <Button 
-                  className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
-                  onClick={() => setShowHealthForm(true)}
-                >
+                <Button className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90" onClick={() => setShowHealthForm(true)}>
                   <PlusCircle className="h-4 w-4" />
                   Add Health Record
                 </Button>
               </div>
-              <Card className="p-6 hover:shadow-md transition-all duration-200">
+              <Card className="p-6 hover:shadow-md transition-all duration-200 ">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium">Recent Health Records</h3>
                   <Button variant="outline" size="sm">View All</Button>
@@ -305,8 +245,7 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
                   </table>
                 </div>
               </Card>
-            </>
-          )}
+            </>}
         </TabsContent>
         
         <TabsContent value="growth" className="space-y-4 pt-4">
@@ -344,10 +283,7 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
             <Card className="p-6 hover:shadow-md transition-all duration-200">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium">Growth Predictions</h3>
-                <Button 
-                  onClick={() => setIsPredictionDialogOpen(true)}
-                  className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-teal-500 text-white hover:opacity-90"
-                >
+                <Button onClick={() => setIsPredictionDialogOpen(true)} className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-teal-500 text-white hover:opacity-90">
                   View AI Predictions
                 </Button>
               </div>
@@ -424,13 +360,7 @@ const HerdManagement = ({ initialTab = "inventory" }) => {
         </TabsContent>
       </Tabs>
       
-      <GrowthPredictionDialog 
-        open={isPredictionDialogOpen}
-        onOpenChange={setIsPredictionDialogOpen}
-        cattleData={cattleData}
-      />
-    </div>
-  );
+      <GrowthPredictionDialog open={isPredictionDialogOpen} onOpenChange={setIsPredictionDialogOpen} cattleData={cattleData} />
+    </div>;
 };
-
 export default HerdManagement;
