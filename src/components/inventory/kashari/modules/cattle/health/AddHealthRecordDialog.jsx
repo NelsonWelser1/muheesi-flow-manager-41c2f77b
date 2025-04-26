@@ -9,7 +9,7 @@ import { useHealthRecords } from '@/hooks/useHealthRecords';
 
 const AddHealthRecordDialog = ({ cattleData = [] }) => {
   const [open, setOpen] = React.useState(false);
-  const { healthRecords, refetch } = useHealthRecords();
+  const { refetch } = useHealthRecords();
 
   // Close dialog and refetch data
   const handleSuccess = () => {
@@ -31,6 +31,7 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
       <DialogContent className="sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
+            <PlusCircle className="h-5 w-5" />
             Add Health Record
           </DialogTitle>
         </DialogHeader>
