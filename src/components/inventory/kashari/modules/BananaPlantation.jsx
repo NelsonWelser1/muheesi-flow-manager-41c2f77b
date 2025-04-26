@@ -32,7 +32,7 @@ const BananaPlantation = () => {
         <main className="flex-1 p-4 md:p-6 overflow-auto">
           <div className="mb-4 flex items-center">
             <SidebarTrigger className="md:hidden mr-2" />
-            <h1 className="text-xl md:text-2xl font-bold">Banana Plantation Management</h1>
+            <h1 className="text-xl md:text-2xl font-bold">Plantation Management</h1>
           </div>
           {renderContent()}
         </main>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -74,7 +73,7 @@ const KashariFarmDashboard = () => {
             <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-6">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="dairy">Dairy Products</TabsTrigger>
-              <TabsTrigger value="banana">Banana Plantation</TabsTrigger>
+              <TabsTrigger value="banana">Plantation Management</TabsTrigger>
               <TabsTrigger value="sales">Sales & Expenditure</TabsTrigger>
             </TabsList>
 
@@ -191,4 +190,3 @@ const KashariFarmDashboard = () => {
 };
 
 export default KashariFarmDashboard;
-
