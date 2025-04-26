@@ -2,8 +2,8 @@
 import React from 'react';
 import PlantationDashboard from './plantation/PlantationDashboard';
 
-const PlantationManagement = () => {
+const CropPlantations = () => {
   return <PlantationDashboard />;
 };
 
-export default PlantationManagement;
+export default CropPlantations;

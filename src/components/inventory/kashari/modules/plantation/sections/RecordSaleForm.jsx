@@ -4,7 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+
+const UNITS = ["Bunches", "Kgs", "Tonnes", "Sacks"];
 
 const RecordSaleForm = ({
   inventoryData,
@@ -15,26 +18,20 @@ const RecordSaleForm = ({
   const [form, setForm] = useState({
     product: "",
     quantity: "",
+    unit: "",
     unitPrice: "",
     customer: "",
   });
 
   const { toast } = useToast();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const handleChange = (field, value) => {
+    setForm(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Basic validation
-    if (
-      !form.product ||
-      !form.quantity ||
-      !form.unitPrice ||
-      !form.customer
-    ) {
+    if (!form.product || !form.quantity || !form.unit || !form.unitPrice || !form.customer) {
       toast({
         title: "Missing Information",
         description: "Please fill all required fields.",
@@ -54,37 +51,50 @@ const RecordSaleForm = ({
         <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleSubmit}>
           <div>
             <Label htmlFor="product">Product</Label>
-            <select
-              id="product"
-              name="product"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm
-              ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-              focus-visible:ring-offset-2"
-              value={form.product}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select product</option>
-              {inventoryData.map((item) => (
-                <option key={item.id} value={item.product}>
-                  {item.product}
-                </option>
-              ))}
-            </select>
+            <Select onValueChange={(value) => handleChange("product", value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select product" />
+              </SelectTrigger>
+              <SelectContent>
+                {inventoryData.map((item) => (
+                  <SelectItem key={item.id} value={item.product}>
+                    {item.product}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
           <div>
-            <Label htmlFor="quantity">Quantity (Bunches)</Label>
+            <Label htmlFor="quantity">Quantity</Label>
             <Input
               id="quantity"
               name="quantity"
               type="number"
               min={1}
               value={form.quantity}
-              onChange={handleChange}
+              onChange={(e) => handleChange("quantity", e.target.value)}
               placeholder="e.g. 10"
               required
             />
           </div>
+
+          <div>
+            <Label htmlFor="unit">Unit</Label>
+            <Select onValueChange={(value) => handleChange("unit", value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select unit" />
+              </SelectTrigger>
+              <SelectContent>
+                {UNITS.map((unit) => (
+                  <SelectItem key={unit} value={unit}>
+                    {unit}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
             <Label htmlFor="unitPrice">Unit Price (UGX)</Label>
             <Input
@@ -93,22 +103,24 @@ const RecordSaleForm = ({
               type="number"
               min={0}
               value={form.unitPrice}
-              onChange={handleChange}
+              onChange={(e) => handleChange("unitPrice", e.target.value)}
               placeholder="e.g. 6000"
               required
             />
           </div>
+
           <div>
             <Label htmlFor="customer">Customer</Label>
             <Input
               id="customer"
               name="customer"
               value={form.customer}
-              onChange={handleChange}
+              onChange={(e) => handleChange("customer", e.target.value)}
               placeholder="Customer name"
               required
             />
           </div>
+
           <div className="col-span-1 md:col-span-2 flex gap-2 mt-2">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Saving..." : "Save Sale"}

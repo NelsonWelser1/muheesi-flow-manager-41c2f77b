@@ -10,17 +10,26 @@ const InventoryManagement = () => {
   const [showForm, setShowForm] = useState(false);
   const [inventory, setInventory] = useState([
     {
-      product: "Bananas (Ripe)",
-      quantity: "250 Bunches",
+      product: "Bananas",
+      quantity: "250",
+      unit: "Bunches",
       location: "Warehouse A",
       date: "2025-04-16",
     },
     {
-      product: "Bananas (Green)",
-      quantity: "430 Bunches",
+      product: "Maize",
+      quantity: "1.5",
+      unit: "Tonnes",
       location: "Warehouse B",
       date: "2025-04-16",
     },
+    {
+      product: "Beans",
+      quantity: "500",
+      unit: "Kgs",
+      location: "Warehouse C",
+      date: "2025-04-16",
+    }
   ]);
 
   const handleAddClick = () => {
@@ -28,7 +37,7 @@ const InventoryManagement = () => {
   };
 
   const handleFormSubmit = (entry) => {
-    setInventory([{ ...entry, quantity: entry.quantity + " Bunches" }, ...inventory]);
+    setInventory([entry, ...inventory]);
     setShowForm(false);
   };
 
@@ -46,7 +55,6 @@ const InventoryManagement = () => {
           </Button>
         )}
       </div>
-      {/* Inline form appears here */}
       {showForm && (
         <AddStockEntryForm
           onSubmit={handleFormSubmit}
@@ -63,6 +71,7 @@ const InventoryManagement = () => {
               <TableRow>
                 <TableHead>Product</TableHead>
                 <TableHead>Quantity</TableHead>
+                <TableHead>Unit</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Last Updated</TableHead>
               </TableRow>
@@ -72,6 +81,7 @@ const InventoryManagement = () => {
                 <TableRow key={idx}>
                   <TableCell>{item.product}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
+                  <TableCell>{item.unit}</TableCell>
                   <TableCell>{item.location}</TableCell>
                   <TableCell>{item.date}</TableCell>
                 </TableRow>
