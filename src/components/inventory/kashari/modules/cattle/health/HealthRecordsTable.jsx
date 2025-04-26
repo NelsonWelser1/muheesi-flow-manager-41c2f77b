@@ -11,11 +11,8 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Syringe, HeartPulse, Pill, Loader2 } from "lucide-react";
-import { useHealthRecords } from '@/hooks/useHealthRecords';
 
-const HealthRecordsTable = ({ cattleId }) => {
-  const { healthRecords, isLoading, error } = useHealthRecords(cattleId);
-
+const HealthRecordsTable = ({ records = [] }) => {
   const getStatusColor = (record) => {
     const now = new Date();
     const recordDate = new Date(record.record_date);
@@ -55,23 +52,6 @@ const HealthRecordsTable = ({ cattleId }) => {
     }).format(date);
   };
 
-  if (isLoading) {
-    return (
-      <Card className="p-6 flex justify-center items-center">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
-        <p className="ml-2">Loading health records...</p>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="p-6 text-red-500">
-        <p>Error loading health records: {error.message}</p>
-      </Card>
-    );
-  }
-
   return (
     <Card className="p-6">
       <div className="rounded-md border">
@@ -87,15 +67,16 @@ const HealthRecordsTable = ({ cattleId }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {healthRecords && healthRecords.length > 0 ? (
-              healthRecords.map((record) => (
+            {records && records.length > 0 ? (
+              records.map((record) => (
                 <TableRow key={record.id}>
                   <TableCell className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-gray-500" />
                     {formatDate(record.record_date)}
                   </TableCell>
                   <TableCell>
-                    {record.cattle_inventory?.tag_number} {record.cattle_inventory?.name ? `- ${record.cattle_inventory.name}` : ''}
+                    {record.cattle_inventory?.tag_number} 
+                    {record.cattle_inventory?.name ? ` - ${record.cattle_inventory.name}` : ''}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
