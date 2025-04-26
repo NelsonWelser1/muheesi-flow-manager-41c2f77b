@@ -53,20 +53,22 @@ const BananaSidebar = ({ activeComponent, onNavigate }) => {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {group.items.map((item) => (
-                    <SidebarMenuItem key={item.title}>
+                    <SidebarMenuItem key={item.title} className="py-2">
                       <SidebarMenuButton
                         onClick={() => onNavigate(item.component)}
                         className={cn(
-                          "flex items-center",
+                          "flex items-center space-x-4 py-3", // Increased spacing and padding
+                          "touch:p-4", // Larger touch target for mobile
                           activeComponent === item.component ? 'bg-accent' : '',
-                          isCollapsed ? "justify-center px-2" : "justify-start px-3"
+                          isCollapsed ? "justify-center px-3" : "justify-start px-4"
                         )}
                       >
                         <item.icon className={cn(
-                          "h-4 w-4",
-                          !isCollapsed && "mr-2"
+                          "h-5 w-5", // Slightly larger icon
+                          "flex-shrink-0", // Prevent icon from shrinking
+                          !isCollapsed && "mr-3" // More spacing between icon and text
                         )} />
-                        {!isCollapsed && <span>{item.title}</span>}
+                        {!isCollapsed && <span className="text-sm">{item.title}</span>}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
