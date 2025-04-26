@@ -154,17 +154,6 @@ const FinancialLedger = () => {
     setEditingTransaction(null);
   };
   
-  // Handle deleting transaction
-  const handleDeleteTransaction = (id) => {
-    setTransactions(transactions.filter(t => t.id !== id));
-    
-    toast({
-      title: "Transaction Deleted",
-      description: "The transaction was successfully removed.",
-      variant: "destructive",
-    });
-  };
-  
   return (
     <div className="space-y-8 max-w-5xl mx-auto p-4">
       <div className="flex items-center justify-between">
