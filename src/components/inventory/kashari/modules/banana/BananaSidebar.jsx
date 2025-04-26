@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Sidebar,
@@ -13,20 +14,9 @@ import {
   Leaf,
   Calendar,
   LineChart,
-  ClipboardList,
-  Users,
-  Droplets,
-  Warehouse,
-  Activity,
-  Settings,
   Coffee,
   Bean,
   Wheat,
-  DollarSign,
-  FileText,
-  PieChart,
-  BarChart2,
-  Store,
   Map,
 } from 'lucide-react';
 
@@ -47,23 +37,6 @@ const navigationItems = [
       { title: 'Coffee', icon: Coffee, component: 'coffee' },
       { title: 'Maize', icon: Wheat, component: 'maize' },
       { title: 'Beans', icon: Bean, component: 'beans' },
-    ],
-  },
-  {
-    label: 'Resources',
-    items: [
-      { title: 'Inventory', icon: Warehouse, component: 'inventory' },
-      { title: 'Irrigation Control', icon: Droplets, component: 'irrigation' },
-      { title: 'Monitoring', icon: Activity, component: 'monitoring' },
-      { title: 'Market Prices', icon: Store, component: 'market-prices' },
-      { title: 'Settings', icon: Settings, component: 'settings' },
-    ],
-  },
-  {
-    label: 'Reports',
-    items: [
-      { title: 'Production Reports', icon: BarChart2, component: 'production-reports' },
-      { title: 'Financial Reports', icon: PieChart, component: 'financial-reports' },
     ],
   },
 ];
