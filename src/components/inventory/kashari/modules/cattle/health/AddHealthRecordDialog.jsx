@@ -1,44 +1,36 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PlusCircle } from "lucide-react";
 import AddHealthRecordForm from './AddHealthRecordForm';
-import { useToast } from "@/components/ui/use-toast";
-import { useHealthRecords } from '@/hooks/useHealthRecords';
 
-const AddHealthRecordDialog = ({ cattleData = [] }) => {
-  const [open, setOpen] = React.useState(false);
-  const { healthRecords, refetch } = useHealthRecords();
+const AddHealthRecordDialog = ({ onSuccess }) => {
+  const [open, setOpen] = useState(false);
 
-  // Close dialog and refetch data
   const handleSuccess = () => {
     setOpen(false);
-    refetch();
+    if (onSuccess) {
+      onSuccess();
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
-        <Button 
-          className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
-          disabled={cattleData.length === 0}
-        >
+      <DialogTrigger asChild>
+        <Button size="sm" className="flex items-center gap-2">
           <PlusCircle className="h-4 w-4" />
-          Add Health Record
+          Add Record
         </Button>
-      </Dialog.Trigger>
-      <DialogContent className="sm:max-w-[900px]">
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-xl flex items-center gap-2">
-            Add Health Record
-          </DialogTitle>
+          <DialogTitle>Add Health Record</DialogTitle>
+          <DialogDescription>
+            Add a new health record for a cattle in your herd.
+          </DialogDescription>
         </DialogHeader>
-        <AddHealthRecordForm
-          onCancel={() => setOpen(false)}
-          onSuccess={handleSuccess}
-          cattleData={cattleData}
-        />
+        <AddHealthRecordForm onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   );

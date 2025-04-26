@@ -1,220 +1,190 @@
 
-import React from 'react';
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
-import { useToast } from "@/components/ui/use-toast";
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from 'date-fns';
+import { CalendarIcon } from "lucide-react";
 
-// Form validation schema
-const formSchema = z.object({
-  cattle_id: z.string({
-    required_error: "Cattle is required",
-  }),
-  record_date: z.string({
-    required_error: "Record date is required",
-  }),
-  record_type: z.string({
-    required_error: "Record type is required",
-  }),
-  description: z.string({
-    required_error: "Description is required",
-  }).min(3, {
-    message: "Description must be at least 3 characters",
-  }),
-  treatment: z.string().optional(),
-  administered_by: z.string().optional(),
-  next_due_date: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-const AddHealthRecordForm = ({ onCancel, onSuccess, cattleData = [] }) => {
-  const { toast } = useToast();
-  const { addHealthRecord } = useHealthRecords();
-
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      record_date: new Date().toISOString().split('T')[0],
-      record_type: "",
-      description: "",
-      treatment: "",
-      administered_by: "",
-      next_due_date: "",
-      notes: "",
-    },
+const AddHealthRecordForm = ({ onSuccess }) => {
+  const { addHealthRecord, loading, error, cattleList, fetchCattleList } = useHealthRecords();
+  
+  const [formData, setFormData] = useState({
+    cattle_id: '',
+    record_date: new Date(),
+    record_type: 'vaccination',
+    description: '',
+    treatment: '',
+    administered_by: '',
+    next_due_date: null,
+    notes: '',
   });
 
-  const onSubmit = async (data) => {
-    try {
-      console.log("Form data being submitted:", data);
-      await addHealthRecord.mutateAsync(data);
-      form.reset();
-      if (onSuccess) onSuccess();
-      else if (onCancel) onCancel();
-    } catch (error) {
-      console.error('Form submission error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add health record",
-        variant: "destructive",
-      });
+  useEffect(() => {
+    fetchCattleList();
+  }, [fetchCattleList]);
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const success = await addHealthRecord(formData);
+    if (success && onSuccess) {
+      onSuccess();
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="cattle_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cattle *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select cattle" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {cattleData.map(cattle => (
-                      <SelectItem key={cattle.id} value={cattle.id}>
-                        {cattle.tag_number} - {cattle.name || 'Unnamed'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="record_date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Record Date *</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="record_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Record Type *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select record type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="vaccination">Vaccination</SelectItem>
-                    <SelectItem value="treatment">Treatment</SelectItem>
-                    <SelectItem value="examination">Examination</SelectItem>
-                    <SelectItem value="deworming">Deworming</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter description" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="treatment"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Treatment</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter treatment details (if applicable)" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="administered_by"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Administered By</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter person who administered" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="next_due_date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Next Due Date</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="cattle_id">Cattle</Label>
+          <Select 
+            value={formData.cattle_id} 
+            onValueChange={(value) => handleChange('cattle_id', value)}
+            required
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select cattle" />
+            </SelectTrigger>
+            <SelectContent>
+              {cattleList.map((cattle) => (
+                <SelectItem key={cattle.id} value={cattle.id}>
+                  {cattle.tag_number} - {cattle.name || 'Unnamed'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Additional notes or observations" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <div className="space-y-2">
+          <Label>Record Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left font-normal"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {formData.record_date ? format(formData.record_date, 'PPP') : "Select date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={formData.record_date}
+                onSelect={(date) => handleChange('record_date', date)}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="record_type">Record Type</Label>
+          <Select 
+            value={formData.record_type} 
+            onValueChange={(value) => handleChange('record_type', value)}
+            required
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="vaccination">Vaccination</SelectItem>
+              <SelectItem value="treatment">Treatment</SelectItem>
+              <SelectItem value="examination">Examination</SelectItem>
+              <SelectItem value="deworming">Deworming</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="administered_by">Administered By</Label>
+          <Input
+            id="administered_by"
+            value={formData.administered_by}
+            onChange={(e) => handleChange('administered_by', e.target.value)}
+            placeholder="Name of vet or staff"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Input
+          id="description"
+          value={formData.description}
+          onChange={(e) => handleChange('description', e.target.value)}
+          placeholder="Enter description"
+          required
         />
+      </div>
 
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={addHealthRecord.isPending}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={addHealthRecord.isPending}>
-            {addHealthRecord.isPending ? "Saving..." : "Save Record"}
-          </Button>
+      <div className="space-y-2">
+        <Label htmlFor="treatment">Treatment (if applicable)</Label>
+        <Input
+          id="treatment"
+          value={formData.treatment}
+          onChange={(e) => handleChange('treatment', e.target.value)}
+          placeholder="Enter treatment details"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Next Due Date (if applicable)</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left font-normal"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {formData.next_due_date ? format(formData.next_due_date, 'PPP') : "Select date (optional)"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={formData.next_due_date}
+              onSelect={(date) => handleChange('next_due_date', date)}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="notes">Notes</Label>
+        <Textarea
+          id="notes"
+          value={formData.notes}
+          onChange={(e) => handleChange('notes', e.target.value)}
+          placeholder="Any additional notes"
+          rows={3}
+        />
+      </div>
+
+      {error && (
+        <div className="text-sm text-red-500">
+          Error: {error}
         </div>
-      </form>
-    </Form>
+      )}
+
+      <div className="flex justify-end">
+        <Button type="submit" disabled={loading}>
+          {loading ? 'Saving...' : 'Save Record'}
+        </Button>
+      </div>
+    </form>
   );
 };
 

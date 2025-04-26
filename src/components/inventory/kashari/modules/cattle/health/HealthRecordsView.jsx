@@ -2,13 +2,59 @@
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Calendar, Syringe, Activity } from "lucide-react";
-import HealthRecordsTable from './HealthRecordsTable';
+import { Button } from "@/components/ui/button";
 import AddHealthRecordDialog from './AddHealthRecordDialog';
-import { useHealthRecords } from '@/hooks/useHealthRecords';
+
+const HealthRecordsTable = ({ records = [] }) => {
+  return (
+    <div className="rounded-md border">
+      <table className="w-full">
+        <thead className="bg-muted/50">
+          <tr>
+            <th className="p-3 text-left font-medium">Date</th>
+            <th className="p-3 text-left font-medium">Cattle</th>
+            <th className="p-3 text-left font-medium">Type</th>
+            <th className="p-3 text-left font-medium">Description</th>
+            <th className="p-3 text-left font-medium">Treatment</th>
+            <th className="p-3 text-left font-medium">Next Due</th>
+          </tr>
+        </thead>
+        <tbody>
+          {records.length > 0 ? (
+            records.map((record) => (
+              <tr key={record.id} className="border-t">
+                <td className="p-3">{new Date(record.record_date).toLocaleDateString()}</td>
+                <td className="p-3">{record.cattle_inventory?.tag_number || 'Unknown'}</td>
+                <td className="p-3">
+                  <span className={`px-2 py-1 rounded text-xs ${
+                    record.record_type === 'vaccination' ? 'bg-blue-100 text-blue-800' :
+                    record.record_type === 'treatment' ? 'bg-yellow-100 text-yellow-800' :
+                    record.record_type === 'examination' ? 'bg-green-100 text-green-800' :
+                    record.record_type === 'deworming' ? 'bg-purple-100 text-purple-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {record.record_type}
+                  </span>
+                </td>
+                <td className="p-3">{record.description}</td>
+                <td className="p-3">{record.treatment || '-'}</td>
+                <td className="p-3">{record.next_due_date ? new Date(record.next_due_date).toLocaleDateString() : '-'}</td>
+              </tr>
+            ))
+          ) : (
+            <tr className="border-t">
+              <td className="p-3" colSpan="6">
+                <p className="text-center text-muted-foreground">No health records found</p>
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 const HealthRecordsView = ({ records = [], onRefresh }) => {
-  const { addHealthRecord } = useHealthRecords();
-  
   // Calculate statistics from actual records
   const totalRecords = records.length;
   const vaccinationCount = records.filter(r => r.record_type === 'vaccination').length;
@@ -29,7 +75,17 @@ const HealthRecordsView = ({ records = [], onRefresh }) => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Health Records</h2>
-        <AddHealthRecordDialog onSuccess={onRefresh} />
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onRefresh}
+            className="flex items-center gap-2"
+          >
+            Refresh Data
+          </Button>
+          <AddHealthRecordDialog onSuccess={onRefresh} />
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -66,7 +122,10 @@ const HealthRecordsView = ({ records = [], onRefresh }) => {
       </div>
 
       {/* Records Table */}
-      <HealthRecordsTable records={records} />
+      <Card className="p-4">
+        <h3 className="text-lg font-medium mb-4">Health Records</h3>
+        <HealthRecordsTable records={records} />
+      </Card>
     </div>
   );
 };
