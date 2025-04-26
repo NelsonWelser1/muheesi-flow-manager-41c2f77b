@@ -16,6 +16,7 @@ export const useHealthRecords = (cattleId = null) => {
   } = useQuery({
     queryKey: ['health-records', cattleId],
     queryFn: async () => {
+      console.log("Fetching health records, cattleId:", cattleId);
       let query = supabase
         .from('cattle_health_records')
         .select('*, cattle_inventory(tag_number, name)')
@@ -32,6 +33,7 @@ export const useHealthRecords = (cattleId = null) => {
         throw error;
       }
       
+      console.log("Health records fetched:", data?.length || 0);
       return data || [];
     },
   });

@@ -6,6 +6,7 @@ import HealthRecordsTable from './HealthRecordsTable';
 import AddHealthRecordDialog from './AddHealthRecordDialog';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useHealthRecords } from '@/hooks/useHealthRecords';
+import RecentHealthRecords from './RecentHealthRecords';
 
 const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
   const [cattleData, setCattleData] = useState(propsCattleData);
@@ -96,7 +97,10 @@ const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
         </Card>
       </div>
 
-      {/* Records Table */}
+      {/* Recent Health Records Section */}
+      <RecentHealthRecords />
+
+      {/* Full Records Table */}
       <HealthRecordsTable />
     </div>
   );

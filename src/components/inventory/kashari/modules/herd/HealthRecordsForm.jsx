@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,6 +12,7 @@ import { Stethoscope, Save } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/supabase';
 
 // Form validation schema 
 const formSchema = z.object({
@@ -35,9 +36,39 @@ const formSchema = z.object({
   notes: z.string().optional(),
 });
 
-const HealthRecordsForm = ({ cattleData = [] }) => {
+const HealthRecordsForm = () => {
   const { toast } = useToast();
-  const { addHealthRecord } = useHealthRecords();
+  const { addHealthRecord, refetch } = useHealthRecords();
+  const [cattleData, setCattleData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    const fetchCattleData = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('cattle_inventory')
+          .select('id, tag_number, name');
+        
+        if (error) {
+          console.error("Error fetching cattle data:", error);
+          throw error;
+        }
+        
+        setCattleData(data || []);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load cattle data. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCattleData();
+  }, [toast]);
   
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -67,6 +98,9 @@ const HealthRecordsForm = ({ cattleData = [] }) => {
         next_due_date: "",
         notes: "",
       });
+      
+      // Refresh the data
+      refetch();
       
       toast({
         title: "Success",
@@ -250,7 +284,7 @@ const HealthRecordsForm = ({ cattleData = [] }) => {
             <div className="flex justify-end">
               <Button 
                 type="submit" 
-                disabled={addHealthRecord.isPending}
+                disabled={addHealthRecord.isPending || isLoading}
                 className="flex items-center gap-2"
               >
                 <Save className="h-4 w-4" />
