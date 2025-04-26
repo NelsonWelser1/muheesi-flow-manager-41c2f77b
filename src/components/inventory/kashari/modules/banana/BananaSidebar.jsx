@@ -56,9 +56,16 @@ const BananaSidebar = ({ activeComponent, onNavigate }) => {
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
                         onClick={() => onNavigate(item.component)}
-                        className={activeComponent === item.component ? 'bg-accent' : ''}
+                        className={cn(
+                          "flex items-center",
+                          activeComponent === item.component ? 'bg-accent' : '',
+                          isCollapsed ? "justify-center px-2" : "justify-start px-3"
+                        )}
                       >
-                        <item.icon className="h-4 w-4 mr-2" />
+                        <item.icon className={cn(
+                          "h-4 w-4",
+                          !isCollapsed && "mr-2"
+                        )} />
                         {!isCollapsed && <span>{item.title}</span>}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
