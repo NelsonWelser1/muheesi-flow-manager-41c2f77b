@@ -14,8 +14,6 @@ const BananaPlantationDashboard = () => {
         return <HarvestRecords />;
       case 'expenses':
         return <ExpensesTracker />;
-      case 'sales':
-        return <div className="p-6">Sales tracking module</div>;
       default:
         return <div className="p-6 text-center">Select a section from the sidebar</div>;
     }
