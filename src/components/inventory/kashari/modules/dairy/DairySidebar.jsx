@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Beef, 
@@ -6,7 +7,7 @@ import {
   ChevronDown, 
   ChevronRight,
   ChevronLeft,
-  ChevronRightIcon,
+  Tag,
   Stethoscope, 
   Scale
 } from "lucide-react";
@@ -77,7 +78,7 @@ const DairySidebar = ({
           
           {!isCollapsed && expandedSections.herdManagement && <div className="ml-7 mt-2 space-y-1 border-l-2 border-gray-200 pl-2">
               <button className={`block w-full text-left p-2 text-sm rounded-md ${activeSection === 'herdManagement' && activeTab === 'inventory' ? 'bg-orange-50 text-orange-600 font-medium' : 'hover:bg-gray-100'}`} onClick={() => handleSectionClick('herdManagement', 'inventory')}>
-                <TagIcon className="inline-block mr-2 h-4 w-4" />
+                <Tag className="inline-block mr-2 h-4 w-4" />
                 Cattle Inventory
               </button>
               <button className={`block w-full text-left p-2 text-sm rounded-md ${activeSection === 'herdManagement' && activeTab === 'health' ? 'bg-purple-50 text-purple-600 font-medium' : 'hover:bg-gray-100'}`} onClick={() => handleSectionClick('herdManagement', 'health')}>
