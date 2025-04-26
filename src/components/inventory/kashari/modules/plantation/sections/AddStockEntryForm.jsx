@@ -52,7 +52,7 @@ const AddStockEntryForm = ({ onSubmit, onCancel }) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="product">Product</Label>
             <Select
               value={formData.product}
@@ -71,7 +71,7 @@ const AddStockEntryForm = ({ onSubmit, onCancel }) => {
             </Select>
           </div>
           
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="quantity">Quantity</Label>
             <Input
               id="quantity"
@@ -85,7 +85,7 @@ const AddStockEntryForm = ({ onSubmit, onCancel }) => {
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="unit">Unit</Label>
             <Select
               value={formData.unit}
@@ -104,7 +104,7 @@ const AddStockEntryForm = ({ onSubmit, onCancel }) => {
             </Select>
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
             <Input
               id="location"
@@ -116,7 +116,7 @@ const AddStockEntryForm = ({ onSubmit, onCancel }) => {
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
             <Input
               id="date"
