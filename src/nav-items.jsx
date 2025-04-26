@@ -1,5 +1,5 @@
 
-import { HomeIcon, Factory, DollarSign, Receipt } from "lucide-react";
+import { HomeIcon, DollarSign, Receipt } from "lucide-react";
 
 /**
  * Central place for defining the navigation items. Used for navigation components and routing.
@@ -9,11 +9,6 @@ export const navItems = [
     title: "Home",
     to: "/",
     icon: <HomeIcon className="h-4 w-4" />,
-  },
-  {
-    title: "Smart Production",
-    to: "/manage-inventory/smart-production",
-    icon: <Factory className="h-4 w-4" />,
   },
   {
     title: "Sales",
