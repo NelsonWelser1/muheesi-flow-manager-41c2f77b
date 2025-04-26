@@ -82,7 +82,7 @@ const DairySidebar = ({
         
         {/* Analytics Section */}
         <div className="mb-4">
-          <button className="flex items-center justify-between w-full p-2 text-left font-medium hover:bg-gray-100 rounded-md transition-colors" onClick={() => !isCollapsed && toggleSection('analytics')}>
+          <button onClick={() => !isCollapsed && toggleSection('analytics')} className="flex items-center justify-between w-full p-2 text-left font-medium hover:bg-gray-100 rounded-md transition-colors my-[46px]">
             <div className="flex items-center">
               <LineChart className="mr-2 h-5 w-5 text-green-500" />
               {!isCollapsed && <span>Analytics</span>}
