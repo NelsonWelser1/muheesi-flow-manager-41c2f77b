@@ -39,7 +39,7 @@ const DairySidebar = ({
         
         {/* Herd Management Section */}
         <div className="mb-4">
-          <button className="flex items-center justify-between w-full p-2 text-left font-medium hover:bg-gray-100 rounded-md transition-colors" onClick={() => !isCollapsed && toggleSection('herdManagement')}>
+          <button onClick={() => !isCollapsed && toggleSection('herdManagement')} className="flex items-center justify-between w-full p-2 text-left font-medium hover:bg-gray-100 rounded-md transition-colors my-[40px]">
             <div className="flex items-center">
               <Beef className="mr-2 h-5 w-5 text-orange-500" />
               {!isCollapsed && <span>Herd Management</span>}
