@@ -4,30 +4,31 @@ import { Button } from "@/components/ui/button";
 import { Menu } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { navItems } from '../nav-items';
+
 const Navigation = () => {
   const location = useLocation();
   const dashboardNavItems = [{
-    to: "/dashboard",
-    label: "Dashboard"
-  }, {
     to: "/manage-inventory",
     label: "Manage Inventory"
   }, {
     to: "/manage-companies",
     label: "Manage Companies"
-  }, {
-    to: "/feedback",
-    label: "Feedback"
   }];
+
   return <nav className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold font-futuristic">
           Muheesi GKK Integrated System
         </Link>
         <div className="hidden md:flex space-x-4">
-          {dashboardNavItems.map(item => {})}
+          {dashboardNavItems.map(item => <Button key={item.to} asChild className="bg-[#9b87f5] hover:bg-[#9b87f5] text-white font-bold">
+              <Link to={item.to}>{item.label}</Link>
+            </Button>)}
           {navItems.map(item => item.to !== "/" && <Button key={item.to} asChild className={`${location.pathname === item.to ? 'bg-[#7a5af8]' : 'bg-[#9b87f5]'} hover:bg-[#7a5af8] text-white font-bold`}>
-                
+                <Link to={item.to}>
+                  {item.icon && <span className="mr-2">{item.icon}</span>}
+                  {item.title}
+                </Link>
               </Button>)}
         </div>
         <div className="md:hidden">
@@ -51,4 +52,5 @@ const Navigation = () => {
       </div>
     </nav>;
 };
+
 export default Navigation;
