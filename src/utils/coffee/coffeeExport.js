@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { generateAndDownloadPDF, createPDF } from '../exports/pdfExportUtils';
+import { generateAndDownloadPDF } from '../exports/pdfExportUtils';
 
 // Helper to format date objects to readable strings
 const formatDate = (dateString) => {
@@ -290,7 +290,7 @@ export const exportToPDF = (data, filename = 'export', type = '') => {
     }
     
     // Generate and download PDF
-    generateAndDownloadPDF(data, filename, title, columns, rows);
+    generateAndDownloadPDF(data, filename, title);
     
   } catch (error) {
     console.error('Error exporting to PDF:', error);
