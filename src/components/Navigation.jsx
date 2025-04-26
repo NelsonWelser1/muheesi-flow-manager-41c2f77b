@@ -1,15 +1,14 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Menu } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { navItems } from '../nav-items';
+
 const Navigation = () => {
   const location = useLocation();
   const dashboardNavItems = [{
-    to: "/dashboard",
-    label: "Dashboard"
-  }, {
     to: "/manage-inventory",
     label: "Manage Inventory"
   }, {
@@ -19,6 +18,7 @@ const Navigation = () => {
     to: "/feedback",
     label: "Feedback"
   }];
+
   return <nav className="bg-gray-800 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold font-futuristic">
@@ -29,7 +29,10 @@ const Navigation = () => {
               <Link to={item.to}>{item.label}</Link>
             </Button>)}
           {navItems.map(item => item.to !== "/" && <Button key={item.to} asChild className={`${location.pathname === item.to ? 'bg-[#7a5af8]' : 'bg-[#9b87f5]'} hover:bg-[#7a5af8] text-white font-bold`}>
-                
+                <Link to={item.to}>
+                  {item.icon && <span className="mr-2">{item.icon}</span>}
+                  {item.title}
+                </Link>
               </Button>)}
         </div>
         <div className="md:hidden">
@@ -53,4 +56,5 @@ const Navigation = () => {
       </div>
     </nav>;
 };
+
 export default Navigation;

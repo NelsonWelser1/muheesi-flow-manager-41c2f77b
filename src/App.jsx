@@ -7,7 +7,6 @@ import { AutoFillProvider } from "./contexts/AutoFillContext";
 import { SupabaseAuthProvider } from "./integrations/supabase/auth";
 import Navigation from "./components/Navigation";
 import LandingPage from "./pages/LandingPage";
-import Dashboard from "./pages/Dashboard";
 import ManageInventory from "./pages/ManageInventory";
 import ManageCompanies from "./pages/ManageCompanies";
 import Feedback from "./pages/Feedback";
@@ -31,7 +30,6 @@ const App = () => (
             <Navigation />
             <Routes>
               <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/manage-inventory" element={<ManageInventory />} />
               <Route path="/manage-companies" element={<ManageCompanies />} />
               <Route path="/feedback" element={<Feedback />} />
