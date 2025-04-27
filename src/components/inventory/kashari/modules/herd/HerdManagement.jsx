@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import CattleInventory from '../cattle/inventory/CattleInventory';
+import CattleInventoryView from '../cattle/CattleInventoryView';
 
 const HerdManagement = () => {
   const [activeTab, setActiveTab] = useState("inventory");
@@ -16,7 +16,7 @@ const HerdManagement = () => {
           </TabsList>
           
           <TabsContent value="inventory" className="space-y-4">
-            <CattleInventory />
+            <CattleInventoryView />
           </TabsContent>
         </Tabs>
       </Card>
