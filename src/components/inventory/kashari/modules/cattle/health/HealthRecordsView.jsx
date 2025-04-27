@@ -1,52 +1,107 @@
 
-import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
-import HealthRecordMetrics from './HealthRecordMetrics';
-import HealthRecordsList from './HealthRecordsList';
-import HealthRecordDialog from './HealthRecordDialog';
+import React, { useState, useEffect } from 'react';
+import { Card } from "@/components/ui/card";
+import { Calendar, Syringe, Activity } from "lucide-react";
+import HealthRecordsTable from './HealthRecordsTable';
+import AddHealthRecordDialog from './AddHealthRecordDialog';
+import { supabase } from '@/integrations/supabase/supabase';
+import { useHealthRecords } from '@/hooks/useHealthRecords';
+import RecentHealthRecords from './RecentHealthRecords';
 
-const HealthRecordsView = ({ cattleId = null }) => {
-  const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
+const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
+  const [cattleData, setCattleData] = useState(propsCattleData);
+  const [loading, setLoading] = useState(propsCattleData.length === 0);
+  const { healthRecords, isLoading, error, refetch } = useHealthRecords();
+  
+  useEffect(() => {
+    // If no cattle data is provided as props, fetch it
+    const fetchCattleData = async () => {
+      if (propsCattleData.length === 0) {
+        try {
+          setLoading(true);
+          const { data, error } = await supabase
+            .from('cattle_inventory')
+            .select('id, tag_number, name');
+          
+          if (error) throw error;
+          setCattleData(data || []);
+        } catch (error) {
+          console.error('Error fetching cattle data:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchCattleData();
+  }, [propsCattleData.length]);
+
+  // Refresh records when component mounts
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  // Calculate statistics based on actual health records
+  const totalRecords = healthRecords?.length || 0;
+  const vaccinationCount = healthRecords?.filter(r => r.record_type === 'vaccination').length || 0;
+  
+  // Calculate a health score based on recent health records
+  const calculateHealthScore = () => {
+    if (!healthRecords || healthRecords.length === 0) return '85%'; // Default value
+    
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    
+    const recentRecords = healthRecords.filter(r => new Date(r.record_date) > lastMonth);
+    return recentRecords.length > 0 ? '95%' : '85%';
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      {/* Header */}
+      <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Health Records</h2>
-        <HealthRecordDialog
-          trigger={
-            <Button className="flex items-center gap-2">
-              <PlusCircle className="h-4 w-4" />
-              Add Health Record
-            </Button>
-          }
-          onSuccess={() => setIsAddDialogOpen(false)}
-        />
+        <AddHealthRecordDialog cattleData={cattleData} />
       </div>
 
-      <HealthRecordMetrics cattleId={cattleId} />
-      
-      <Tabs defaultValue="records" className="mt-6">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="records" className="flex items-center gap-2 h-12 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200">
-            All Health Records
-          </TabsTrigger>
-          <TabsTrigger value="calendar" className="flex items-center gap-2 h-12 data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200">
-            Calendar View
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="records">
-          <HealthRecordsList cattleId={cattleId} />
-        </TabsContent>
-        
-        <TabsContent value="calendar">
-          <div className="h-[400px] flex items-center justify-center border rounded-md">
-            <p className="text-muted-foreground">Calendar view coming soon!</p>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4 border-l-4 border-purple-500">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Records</p>
+              <h3 className="text-2xl font-bold">{totalRecords}</h3>
+            </div>
+            <Calendar className="h-8 w-8 text-purple-500 opacity-80" />
           </div>
-        </TabsContent>
-      </Tabs>
+        </Card>
+        
+        <Card className="p-4 border-l-4 border-blue-500">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-muted-foreground">Vaccinations</p>
+              <h3 className="text-2xl font-bold">{vaccinationCount}</h3>
+            </div>
+            <Syringe className="h-8 w-8 text-blue-500 opacity-80" />
+          </div>
+        </Card>
+        
+        <Card className="p-4 border-l-4 border-green-500">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-muted-foreground">Health Score</p>
+              <h3 className="text-2xl font-bold">{calculateHealthScore()}</h3>
+            </div>
+            <Activity className="h-8 w-8 text-green-500 opacity-80" />
+          </div>
+        </Card>
+      </div>
+
+      {/* Recent Health Records Section */}
+      <RecentHealthRecords />
+
+      {/* Full Records Table */}
+      <HealthRecordsTable />
     </div>
   );
 };
