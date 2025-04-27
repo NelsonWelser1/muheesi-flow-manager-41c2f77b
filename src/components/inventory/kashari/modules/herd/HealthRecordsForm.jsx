@@ -5,16 +5,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/ui/form";
 import { Stethoscope, Save } from "lucide-react";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
+import BasicInfoSection from './health-records/form-sections/BasicInfoSection';
+import RecordDetailsSection from './health-records/form-sections/RecordDetailsSection';
+import TreatmentSection from './health-records/form-sections/TreatmentSection';
+import AdditionalDetailsSection from './health-records/form-sections/AdditionalDetailsSection';
 
-// Form validation schema 
+// Form validation schema
 const formSchema = z.object({
   cattle_id: z.string({
     required_error: "Cattle is required",
@@ -51,11 +52,7 @@ const HealthRecordsForm = () => {
           .from('cattle_inventory')
           .select('id, tag_number, name');
         
-        if (error) {
-          console.error("Error fetching cattle data:", error);
-          throw error;
-        }
-        
+        if (error) throw error;
         setCattleData(data || []);
       } catch (error) {
         toast({
@@ -89,12 +86,10 @@ const HealthRecordsForm = () => {
       setIsSubmitting(true);
       console.log("Form data being submitted:", data);
       
-      // Ensure all data is properly formatted
       const formattedData = {
         ...data,
-        cattle_id: data.cattle_id, // Ensure we have a valid cattle_id
-        record_date: data.record_date, // Ensure we have a valid date
-        // Make sure optional fields are handled correctly
+        cattle_id: data.cattle_id,
+        record_date: data.record_date,
         treatment: data.treatment || null,
         administered_by: data.administered_by || null,
         next_due_date: data.next_due_date || null,
@@ -103,7 +98,6 @@ const HealthRecordsForm = () => {
       
       await addHealthRecord.mutateAsync(formattedData);
       
-      // Reset form after successful submission
       form.reset({
         record_date: new Date().toISOString().split('T')[0],
         record_type: "",
@@ -114,7 +108,6 @@ const HealthRecordsForm = () => {
         notes: "",
       });
       
-      // Refresh the data
       refetch();
       
       toast({
@@ -144,159 +137,10 @@ const HealthRecordsForm = () => {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="cattle_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select Cattle <span className="text-red-500">*</span></FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select cattle" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {cattleData.map((cattle) => (
-                          <SelectItem key={cattle.id} value={cattle.id}>
-                            {cattle.tag_number} - {cattle.name || "Unnamed"}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="record_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Record Date <span className="text-red-500">*</span></FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="date" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="record_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Record Type <span className="text-red-500">*</span></FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select record type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="vaccination">Vaccination</SelectItem>
-                        <SelectItem value="treatment">Treatment</SelectItem>
-                        <SelectItem value="examination">Examination</SelectItem>
-                        <SelectItem value="deworming">Deworming</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="administered_by"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Administered By</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Name of vet or caretaker"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description <span className="text-red-500">*</span></FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe the treatment, vaccination or examination"
-                      className="min-h-[80px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="treatment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Treatment/Medication</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Medication or treatment provided"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="next_due_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Next Due Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Additional notes or observations"
-                      className="min-h-[80px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <BasicInfoSection form={form} cattleData={cattleData} />
+            <RecordDetailsSection form={form} />
+            <TreatmentSection form={form} />
+            <AdditionalDetailsSection form={form} />
 
             <div className="flex justify-end">
               <Button 
