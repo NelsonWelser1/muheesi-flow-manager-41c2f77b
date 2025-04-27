@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useCattleHealthRecords } from '@/hooks/useCattleHealthRecords';
 import { 
@@ -17,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
-  Vaccination, 
+  Syringe, 
   Pill, 
   HeartPulse, 
   Calendar, 
@@ -27,7 +26,9 @@ import {
   LayoutGrid, 
   List, 
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Eye,
+  Edit
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import HealthRecordCard from './HealthRecordCard';
@@ -48,15 +49,12 @@ const HealthRecordsList = ({ cattleId = null }) => {
   
   const { records, isLoading, error, refetch } = useCattleHealthRecords(cattleId);
 
-  // Filtered records based on search term and type
   const filteredRecords = React.useMemo(() => {
     if (!records) return [];
     
     return records.filter(record => {
-      // Filter by type if not "all"
       const matchesType = recordTypeFilter === "all" || record.record_type === recordTypeFilter;
       
-      // Filter by search term
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = searchTerm === "" || 
         record.description?.toLowerCase().includes(searchLower) ||
@@ -69,7 +67,6 @@ const HealthRecordsList = ({ cattleId = null }) => {
     });
   }, [records, searchTerm, recordTypeFilter]);
 
-  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -80,7 +77,6 @@ const HealthRecordsList = ({ cattleId = null }) => {
     });
   };
 
-  // Get status badge based on next due date
   const getStatusBadge = (nextDueDate) => {
     if (!nextDueDate) return null;
     
@@ -97,11 +93,10 @@ const HealthRecordsList = ({ cattleId = null }) => {
     }
   };
 
-  // Get icon for record type
   const getTypeIcon = (type) => {
     switch (type) {
       case 'vaccination':
-        return <Vaccination className="h-4 w-4 text-blue-500" />;
+        return <Syringe className="h-4 w-4 text-blue-500" />;
       case 'treatment':
         return <Pill className="h-4 w-4 text-orange-500" />;
       case 'examination':
@@ -115,7 +110,6 @@ const HealthRecordsList = ({ cattleId = null }) => {
 
   return (
     <div className="space-y-4">
-      {/* Filtering and search */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -136,7 +130,6 @@ const HealthRecordsList = ({ cattleId = null }) => {
           )}
         </div>
         
-        {/* Record type filter */}
         <div className="flex gap-2">
           <div className="w-[180px]">
             <Select
@@ -159,7 +152,6 @@ const HealthRecordsList = ({ cattleId = null }) => {
             </Select>
           </div>
           
-          {/* View mode toggle */}
           <div className="flex gap-1 border rounded-md">
             <Button
               variant={viewMode === "grid" ? "default" : "ghost"}
@@ -190,7 +182,6 @@ const HealthRecordsList = ({ cattleId = null }) => {
         </div>
       </div>
       
-      {/* Loading state */}
       {isLoading && (
         <div className="flex justify-center items-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -198,7 +189,6 @@ const HealthRecordsList = ({ cattleId = null }) => {
         </div>
       )}
       
-      {/* Error state */}
       {error && (
         <div className="bg-destructive/10 text-destructive p-4 rounded-md">
           <p className="font-semibold">Error loading health records</p>
@@ -214,7 +204,6 @@ const HealthRecordsList = ({ cattleId = null }) => {
         </div>
       )}
       
-      {/* No records state */}
       {!isLoading && !error && filteredRecords.length === 0 && (
         <div className="text-center py-12">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4">
@@ -229,7 +218,6 @@ const HealthRecordsList = ({ cattleId = null }) => {
         </div>
       )}
       
-      {/* Grid view */}
       {!isLoading && !error && filteredRecords.length > 0 && viewMode === "grid" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredRecords.map(record => (
@@ -243,7 +231,6 @@ const HealthRecordsList = ({ cattleId = null }) => {
         </div>
       )}
       
-      {/* List view */}
       {!isLoading && !error && filteredRecords.length > 0 && viewMode === "list" && (
         <div className="border rounded-md overflow-hidden">
           <table className="w-full">
@@ -317,7 +304,6 @@ const HealthRecordsList = ({ cattleId = null }) => {
         </div>
       )}
       
-      {/* View record dialog */}
       <Dialog open={!!viewRecord} onOpenChange={() => setViewRecord(null)}>
         <DialogContent className="max-w-[600px]">
           <DialogHeader>
@@ -393,7 +379,6 @@ const HealthRecordsList = ({ cattleId = null }) => {
         </DialogContent>
       </Dialog>
       
-      {/* Edit record dialog */}
       {editRecord && (
         <HealthRecordDialog
           title="Edit Health Record"
