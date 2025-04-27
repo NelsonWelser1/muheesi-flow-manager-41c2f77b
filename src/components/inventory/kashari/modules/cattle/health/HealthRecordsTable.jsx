@@ -80,7 +80,6 @@ const HealthRecordsTable = ({ cattleId }) => {
             <TableRow>
               <TableHead>Date</TableHead>
               <TableHead>Cattle</TableHead>
-              <TableHead>Tag Number</TableHead>
               <TableHead>Type</TableHead>
               <TableHead className="max-w-[500px]">Description</TableHead>
               <TableHead>Administered By</TableHead>
@@ -96,10 +95,7 @@ const HealthRecordsTable = ({ cattleId }) => {
                     {formatDate(record.record_date)}
                   </TableCell>
                   <TableCell>
-                    {record.cattle_inventory?.name || 'N/A'}
-                  </TableCell>
-                  <TableCell>
-                    {record.cattle_inventory?.tag_number || 'N/A'}
+                    {record.cattle_inventory?.tag_number} {record.cattle_inventory?.name ? `- ${record.cattle_inventory.name}` : ''}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -122,7 +118,7 @@ const HealthRecordsTable = ({ cattleId }) => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-6 text-gray-500">
+                <TableCell colSpan={6} className="text-center py-6 text-gray-500">
                   No health records found
                 </TableCell>
               </TableRow>
