@@ -5,9 +5,17 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import AddHealthRecordForm from './AddHealthRecordForm';
 import { useToast } from "@/components/ui/use-toast";
+import { useHealthRecords } from '@/hooks/useHealthRecords';
 
 const AddHealthRecordDialog = ({ cattleData = [] }) => {
   const [open, setOpen] = React.useState(false);
+  const { refetch } = useHealthRecords();
+
+  // Close dialog and refetch data
+  const handleSuccess = () => {
+    setOpen(false);
+    refetch(); // Refresh the records after successful submission
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -28,7 +36,7 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
         </DialogHeader>
         <AddHealthRecordForm
           onCancel={() => setOpen(false)}
-          onSuccess={() => setOpen(false)}
+          onSuccess={handleSuccess}
           cattleData={cattleData}
         />
       </DialogContent>
