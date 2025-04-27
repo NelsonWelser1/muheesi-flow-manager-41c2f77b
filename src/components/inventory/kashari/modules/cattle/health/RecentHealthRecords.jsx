@@ -115,6 +115,7 @@ const RecentHealthRecords = () => {
               <tr className="border-b">
                 <th className="text-left py-2">Date</th>
                 <th className="text-left py-2">Cattle</th>
+                <th className="text-left py-2">Tag Number</th>
                 <th className="text-left py-2">Type</th>
                 <th className="text-left py-2 hidden sm:table-cell">Description</th>
                 <th className="text-left py-2 hidden lg:table-cell">Administered By</th>
@@ -123,20 +124,21 @@ const RecentHealthRecords = () => {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-4">Loading records...</td>
+                  <td colSpan={6} className="text-center py-4">Loading records...</td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-4 text-red-500">Error loading records</td>
+                  <td colSpan={6} className="text-center py-4 text-red-500">Error loading records: {error.message}</td>
                 </tr>
               ) : filteredRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-4">No health records found</td>
+                  <td colSpan={6} className="text-center py-4">No health records found</td>
                 </tr>
               ) : (
                 filteredRecords.slice(0, 5).map((record) => (
                   <tr key={record.id} className="border-b hover:bg-muted/50">
                     <td className="py-2">{new Date(record.record_date).toLocaleDateString()}</td>
+                    <td className="py-2">{record.cattle_inventory?.name || 'N/A'}</td>
                     <td className="py-2">{record.cattle_inventory?.tag_number || 'N/A'}</td>
                     <td className="py-2 capitalize">{record.record_type}</td>
                     <td className="py-2 hidden sm:table-cell">{record.description}</td>
@@ -161,6 +163,7 @@ const RecentHealthRecords = () => {
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Cattle</TableHead>
+                  <TableHead>Tag Number</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Treatment</TableHead>
@@ -171,23 +174,22 @@ const RecentHealthRecords = () => {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4">Loading records...</TableCell>
+                    <TableCell colSpan={8} className="text-center py-4">Loading records...</TableCell>
                   </TableRow>
                 ) : error ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4 text-red-500">Error loading records</TableCell>
+                    <TableCell colSpan={8} className="text-center py-4 text-red-500">Error loading records</TableCell>
                   </TableRow>
                 ) : filteredRecords.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4">No health records found</TableCell>
+                    <TableCell colSpan={8} className="text-center py-4">No health records found</TableCell>
                   </TableRow>
                 ) : (
                   filteredRecords.map((record) => (
                     <TableRow key={record.id} className="hover:bg-muted/50">
                       <TableCell>{new Date(record.record_date).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        {record.cattle_inventory?.tag_number || 'N/A'} - {record.cattle_inventory?.name || 'Unnamed'}
-                      </TableCell>
+                      <TableCell>{record.cattle_inventory?.name || 'Unnamed'}</TableCell>
+                      <TableCell>{record.cattle_inventory?.tag_number || 'N/A'}</TableCell>
                       <TableCell className="capitalize">{record.record_type}</TableCell>
                       <TableCell>{record.description}</TableCell>
                       <TableCell>{record.treatment || 'N/A'}</TableCell>

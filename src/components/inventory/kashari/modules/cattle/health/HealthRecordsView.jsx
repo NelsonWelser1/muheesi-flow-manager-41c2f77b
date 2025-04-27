@@ -41,11 +41,11 @@ const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
     refetch();
   }, [refetch]);
 
-  // Calculate statistics
+  // Calculate statistics based on actual health records
   const totalRecords = healthRecords?.length || 0;
   const vaccinationCount = healthRecords?.filter(r => r.record_type === 'vaccination').length || 0;
   
-  // Calculate a mock health score (for demonstration)
+  // Calculate a health score based on recent health records
   const calculateHealthScore = () => {
     if (!healthRecords || healthRecords.length === 0) return '85%'; // Default value
     
