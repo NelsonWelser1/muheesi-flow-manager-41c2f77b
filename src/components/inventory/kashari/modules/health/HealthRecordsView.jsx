@@ -1,8 +1,13 @@
 
 import React from 'react';
 import { Card } from "@/components/ui/card";
+import { useHealthRecords } from '@/hooks/useHealthRecords';
 
 const HealthRecordsView = () => {
+  const { healthRecords, isLoading, error } = useHealthRecords();
+  
+  console.log("HealthRecordsView component rendering with data:", healthRecords);
+
   return (
     <Card className="p-6">
       <h3 className="text-lg font-medium mb-4">Cattle Health Records</h3>
@@ -19,11 +24,38 @@ const HealthRecordsView = () => {
             </tr>
           </thead>
           <tbody>
-            <tr className="border-t">
-              <td className="p-3" colSpan="6">
-                <p className="text-center text-muted-foreground">No health records found</p>
-              </td>
-            </tr>
+            {isLoading ? (
+              <tr className="border-t">
+                <td className="p-3" colSpan="6">
+                  <p className="text-center text-muted-foreground">Loading health records...</p>
+                </td>
+              </tr>
+            ) : error ? (
+              <tr className="border-t">
+                <td className="p-3" colSpan="6">
+                  <p className="text-center text-red-500">Error loading health records: {error.message}</p>
+                </td>
+              </tr>
+            ) : healthRecords && healthRecords.length > 0 ? (
+              healthRecords.map(record => (
+                <tr key={record.id} className="border-t">
+                  <td className="p-3">{record.cattle_inventory?.tag_number || 'N/A'}</td>
+                  <td className="p-3">{record.record_type === 'examination' ? 'Healthy' : 'Under Treatment'}</td>
+                  <td className="p-3">{new Date(record.record_date).toLocaleDateString()}</td>
+                  <td className="p-3">{record.record_type === 'vaccination' ? record.description : 'N/A'}</td>
+                  <td className="p-3">{record.treatment || 'N/A'}</td>
+                  <td className="p-3">
+                    <button className="text-blue-600 hover:underline">View</button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr className="border-t">
+                <td className="p-3" colSpan="6">
+                  <p className="text-center text-muted-foreground">No health records found</p>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

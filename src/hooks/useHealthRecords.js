@@ -33,7 +33,7 @@ export const useHealthRecords = (cattleId = null) => {
         throw error;
       }
       
-      console.log("Health records fetched:", data?.length || 0);
+      console.log("Health records fetched:", data?.length || 0, data);
       return data || [];
     },
   });
@@ -72,9 +72,18 @@ export const useHealthRecords = (cattleId = null) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['health-records'] });
+      toast({
+        title: "Success",
+        description: "Health record added successfully",
+      });
     },
     onError: (error) => {
       console.error('Error adding health record:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add health record",
+        variant: "destructive",
+      });
     },
   });
 

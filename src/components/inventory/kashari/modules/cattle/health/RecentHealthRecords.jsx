@@ -16,6 +16,8 @@ const RecentHealthRecords = () => {
   const [viewAllOpen, setViewAllOpen] = useState(false);
   const { healthRecords, isLoading, error, refetch } = useHealthRecords();
 
+  console.log("Health records in RecentHealthRecords:", healthRecords);
+
   const filteredRecords = healthRecords?.filter(
     (record) => 
       record.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
