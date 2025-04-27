@@ -4,6 +4,7 @@ import { useDairyContext } from './context/DairyContext';
 import HerdManagement from './sections/HerdManagement';
 import MilkProductionView from './sections/MilkProductionView';
 import DairyAnalytics from './sections/DairyAnalytics';
+import DairyLayout from './layout/DairyLayout';
 
 const DairyContent = () => {
   const { activeSection } = useDairyContext();
