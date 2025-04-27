@@ -71,19 +71,10 @@ export const useHealthRecords = (cattleId = null) => {
       return data;
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Health record added successfully",
-      });
       queryClient.invalidateQueries({ queryKey: ['health-records'] });
     },
     onError: (error) => {
       console.error('Error adding health record:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add health record",
-        variant: "destructive",
-      });
     },
   });
 
@@ -103,18 +94,10 @@ export const useHealthRecords = (cattleId = null) => {
       return data;
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Health record updated successfully",
-      });
       queryClient.invalidateQueries({ queryKey: ['health-records'] });
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update health record",
-        variant: "destructive",
-      });
+      console.error('Error updating health record:', error);
     },
   });
 
@@ -130,18 +113,10 @@ export const useHealthRecords = (cattleId = null) => {
       return id;
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Health record deleted successfully",
-      });
       queryClient.invalidateQueries({ queryKey: ['health-records'] });
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete health record",
-        variant: "destructive",
-      });
+      console.error('Error deleting health record:', error);
     },
   });
 

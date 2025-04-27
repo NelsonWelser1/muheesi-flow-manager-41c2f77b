@@ -41,6 +41,7 @@ const HealthRecordsForm = () => {
   const { addHealthRecord, refetch } = useHealthRecords();
   const [cattleData, setCattleData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   useEffect(() => {
     const fetchCattleData = async () => {
@@ -85,8 +86,22 @@ const HealthRecordsForm = () => {
 
   const onSubmit = async (data) => {
     try {
+      setIsSubmitting(true);
       console.log("Form data being submitted:", data);
-      await addHealthRecord.mutateAsync(data);
+      
+      // Ensure all data is properly formatted
+      const formattedData = {
+        ...data,
+        cattle_id: data.cattle_id, // Ensure we have a valid cattle_id
+        record_date: data.record_date, // Ensure we have a valid date
+        // Make sure optional fields are handled correctly
+        treatment: data.treatment || null,
+        administered_by: data.administered_by || null,
+        next_due_date: data.next_due_date || null,
+        notes: data.notes || null
+      };
+      
+      await addHealthRecord.mutateAsync(formattedData);
       
       // Reset form after successful submission
       form.reset({
@@ -113,6 +128,8 @@ const HealthRecordsForm = () => {
         description: error.message || "Failed to add health record. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -284,11 +301,11 @@ const HealthRecordsForm = () => {
             <div className="flex justify-end">
               <Button 
                 type="submit" 
-                disabled={addHealthRecord.isPending || isLoading}
+                disabled={isSubmitting || isLoading}
                 className="flex items-center gap-2"
               >
                 <Save className="h-4 w-4" />
-                {addHealthRecord.isPending ? "Saving..." : "Save Record"}
+                {isSubmitting ? "Saving..." : "Save Record"}
               </Button>
             </div>
           </form>
