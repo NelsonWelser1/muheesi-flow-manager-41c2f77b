@@ -8,7 +8,7 @@ import { FileText, FileSpreadsheet, RefreshCw, Eye } from "lucide-react";
 import AddHealthRecordDialog from './AddHealthRecordDialog';
 import { useHealthRecords } from '@/hooks/useHealthRecords';
 import { generateAndDownloadPDF } from "@/utils/exports/pdfExportUtils";
-import { exportToExcel } from "@/utils/exports/reportExportUtils";
+import { exportToExcel, exportToCSV } from "@/utils/exports/reportExportUtils";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
 const RecentHealthRecords = () => {
@@ -40,6 +40,10 @@ const RecentHealthRecords = () => {
 
   const handleExcelExport = () => {
     exportToExcel(filteredRecords, "health_records");
+  };
+  
+  const handleCSVExport = () => {
+    exportToCSV(filteredRecords, "health_records");
   };
 
   return (
