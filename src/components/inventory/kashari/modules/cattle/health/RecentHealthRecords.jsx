@@ -1,221 +1,400 @@
 
-import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FileText, FileSpreadsheet, RefreshCw, Eye } from "lucide-react";
-import AddHealthRecordDialog from './AddHealthRecordDialog';
-import { useHealthRecords } from '@/hooks/useHealthRecords';
-import { generateAndDownloadPDF } from "@/utils/exports/pdfExportUtils";
-import { exportToExcel, exportToCSV } from "@/utils/exports/reportExportUtils";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { 
+  Table, TableHeader, TableRow, TableHead, 
+  TableBody, TableCell 
+} from "@/components/ui/table";
+import { 
+  FileText, Filter, RefreshCw, Calendar, 
+  Syringe, Pill, HeartPulse, Search, X, Eye
+} from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from "@/components/ui/select";
+import { supabase } from '@/integrations/supabase/supabase';
+import { useToast } from "@/components/ui/use-toast";
 
 const RecentHealthRecords = () => {
+  const { toast } = useToast();
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewAllOpen, setViewAllOpen] = useState(false);
-  const { healthRecords, isLoading, error, refetch } = useHealthRecords();
+  const [selectedType, setSelectedType] = useState('all');
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
-  console.log("Health records in RecentHealthRecords:", healthRecords);
+  // Fetch records on component mount
+  useEffect(() => {
+    fetchHealthRecords();
+  }, []);
 
-  const filteredRecords = healthRecords?.filter(
-    (record) => 
-      record.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.record_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.cattle_inventory?.tag_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.cattle_inventory?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // Function to fetch health records from Supabase
+  const fetchHealthRecords = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log("Fetching health records from Supabase...");
+      
+      const { data, error } = await supabase
+        .from('cattle_health_records')
+        .select(`
+          *,
+          cattle_inventory:cattle_id (
+            id,
+            tag_number,
+            name
+          )
+        `)
+        .order('record_date', { ascending: false });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      console.log("Health records fetched:", data.length, data);
+      setRecords(data || []);
+    } catch (err) {
+      console.error("Error fetching health records:", err);
+      setError(err.message);
+      toast({
+        variant: "destructive",
+        title: "Failed to load health records",
+        description: err.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handlePDFExport = () => {
-    const formattedData = filteredRecords.map(record => ({
-      "Date": new Date(record.record_date).toLocaleDateString(),
-      "Cattle": `${record.cattle_inventory?.tag_number || 'N/A'} - ${record.cattle_inventory?.name || 'Unnamed'}`,
-      "Type": record.record_type,
-      "Description": record.description,
-      "Treatment": record.treatment || 'N/A',
-      "Administered By": record.administered_by || 'N/A',
-      "Next Due": record.next_due_date ? new Date(record.next_due_date).toLocaleDateString() : 'N/A'
-    }));
+  // Filter records by search term and selected type
+  const filteredRecords = records.filter(record => {
+    const matchesSearch = 
+      (record.description?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (record.cattle_inventory?.tag_number?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (record.cattle_inventory?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (record.administered_by?.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    generateAndDownloadPDF(formattedData, "health_records", "Recent Health Records");
+    const matchesType = selectedType === 'all' || record.record_type === selectedType;
+    
+    return matchesSearch && matchesType;
+  });
+
+  // Get the type icon
+  const getTypeIcon = (type) => {
+    switch (type) {
+      case 'vaccination':
+        return <Syringe className="h-4 w-4 text-blue-500" />;
+      case 'treatment':
+        return <Pill className="h-4 w-4 text-orange-500" />;
+      case 'examination':
+        return <HeartPulse className="h-4 w-4 text-green-500" />;
+      case 'deworming':
+        return <Pill className="h-4 w-4 text-purple-500" />;
+      default:
+        return null;
+    }
   };
 
-  const handleExcelExport = () => {
-    exportToExcel(filteredRecords, "health_records");
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric'
+    });
   };
-  
-  const handleCSVExport = () => {
-    exportToCSV(filteredRecords, "health_records");
+
+  // Get status badge for next due date
+  const getStatusBadge = (record) => {
+    if (!record.next_due_date) return null;
+    
+    const now = new Date();
+    const dueDate = new Date(record.next_due_date);
+    const daysDiff = Math.floor((dueDate - now) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff < 0) {
+      return <Badge className="bg-red-500">Overdue ({-daysDiff} days)</Badge>;
+    } else if (daysDiff <= 7) {
+      return <Badge className="bg-yellow-500">Due soon ({daysDiff} days)</Badge>;
+    } else {
+      return <Badge className="bg-green-500">Upcoming</Badge>;
+    }
+  };
+
+  // Open record details dialog
+  const viewRecordDetails = (record) => {
+    setSelectedRecord(record);
+    setDetailsOpen(true);
   };
 
   return (
-    <Card className="p-6 hover:shadow-md transition-all duration-200">
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h3 className="text-lg font-semibold">Recent Health Records</h3>
+    <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+      <CardHeader className="pb-2">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <CardTitle className="text-xl font-semibold flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            Recent Health Records
+          </CardTitle>
+          
           <div className="flex gap-2">
             <Button 
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-              onClick={() => setViewAllOpen(true)}
+              variant="outline" 
+              size="sm" 
+              onClick={fetchHealthRecords}
+              disabled={loading}
             >
-              <Eye className="h-4 w-4" />
-              View All
-            </Button>
-            <AddHealthRecordDialog />
-          </div>
-        </div>
-
-        {/* Search and Export */}
-        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-          <Input
-            type="search"
-            placeholder="Search records..."
-            className="flex-1"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={refetch}
-              disabled={isLoading}
-              title="Refresh"
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handlePDFExport}
-              title="Export as PDF"
-              disabled={filteredRecords.length === 0}
-            >
-              <FileText className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleExcelExport}
-              title="Export as Excel"
-              disabled={filteredRecords.length === 0}
-            >
-              <FileSpreadsheet className="h-4 w-4" />
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              {loading ? "Loading..." : "Refresh"}
             </Button>
           </div>
         </div>
+      </CardHeader>
 
-        {/* Records Table */}
-        <div className="overflow-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">Date</th>
-                <th className="text-left py-2">Cattle</th>
-                <th className="text-left py-2">Tag Number</th>
-                <th className="text-left py-2">Type</th>
-                <th className="text-left py-2 hidden sm:table-cell">Description</th>
-                <th className="text-left py-2 hidden lg:table-cell">Administered By</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-4">Loading records...</td>
-                </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-4 text-red-500">Error loading records: {error.message}</td>
-                </tr>
-              ) : filteredRecords.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-4">No health records found</td>
-                </tr>
-              ) : (
-                filteredRecords.slice(0, 5).map((record) => (
-                  <tr key={record.id} className="border-b hover:bg-muted/50">
-                    <td className="py-2">{new Date(record.record_date).toLocaleDateString()}</td>
-                    <td className="py-2">{record.cattle_inventory?.name || 'N/A'}</td>
-                    <td className="py-2">{record.cattle_inventory?.tag_number || 'N/A'}</td>
-                    <td className="py-2 capitalize">{record.record_type}</td>
-                    <td className="py-2 hidden sm:table-cell">{record.description}</td>
-                    <td className="py-2 hidden lg:table-cell">{record.administered_by || 'N/A'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      <CardContent>
+        {/* Search and filter section */}
+        <div className="flex flex-col sm:flex-row gap-2 mb-4">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-10 pr-10"
+              placeholder="Search by tag number, description, admin..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full"
+                onClick={() => setSearchTerm('')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex-shrink-0">
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger className="w-[180px]">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  <span>Filter by type</span>
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All records</SelectItem>
+                <SelectItem value="vaccination">Vaccinations</SelectItem>
+                <SelectItem value="treatment">Treatments</SelectItem>
+                <SelectItem value="examination">Examinations</SelectItem>
+                <SelectItem value="deworming">Deworming</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </div>
 
-      {/* View All Dialog */}
-      <Dialog open={viewAllOpen} onOpenChange={setViewAllOpen}>
-        <DialogContent className="max-w-6xl w-[90vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>All Health Records</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4 overflow-x-auto">
+        {/* Error state */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-4 mb-4">
+            <p className="flex items-center">
+              <span className="font-medium">Error:</span>
+              <span className="ml-2">{error}</span>
+            </p>
+          </div>
+        )}
+
+        {/* Loading state */}
+        {loading && (
+          <div className="flex justify-center items-center py-8">
+            <div className="flex flex-col items-center gap-2">
+              <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Loading health records...</p>
+            </div>
+          </div>
+        )}
+
+        {/* No records state */}
+        {!loading && filteredRecords.length === 0 && (
+          <div className="text-center py-8 border border-dashed rounded-md">
+            <FileText className="h-10 w-10 mx-auto text-muted-foreground mb-2 opacity-50" />
+            <p className="text-muted-foreground">No health records found.</p>
+            {searchTerm && (
+              <p className="text-sm text-muted-foreground mt-1">Try adjusting your search criteria.</p>
+            )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-4"
+              onClick={fetchHealthRecords}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
+        )}
+
+        {/* Records table */}
+        {!loading && filteredRecords.length > 0 && (
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Cattle</TableHead>
+                  <TableHead className="w-[120px]">Date</TableHead>
                   <TableHead>Tag Number</TableHead>
+                  <TableHead>Cattle</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Treatment</TableHead>
-                  <TableHead>Administered By</TableHead>
-                  <TableHead>Next Due Date</TableHead>
+                  <TableHead className="hidden sm:table-cell">Description</TableHead>
+                  <TableHead className="hidden md:table-cell">Next Due</TableHead>
+                  <TableHead className="text-right">View</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-4">Loading records...</TableCell>
+                {filteredRecords.slice(0, 5).map((record) => (
+                  <TableRow key={record.id}>
+                    <TableCell className="font-medium">
+                      {formatDate(record.record_date)}
+                    </TableCell>
+                    <TableCell>
+                      {record.cattle_inventory?.tag_number || 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      {record.cattle_inventory?.name || 'Unknown'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getTypeIcon(record.record_type)}
+                        <span className="capitalize">{record.record_type}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell max-w-[200px] truncate">
+                      {record.description}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {record.next_due_date ? (
+                        <div className="flex flex-col">
+                          <span className="text-xs">{formatDate(record.next_due_date)}</span>
+                          {getStatusBadge(record)}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">None</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => viewRecordDetails(record)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
-                ) : error ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-4 text-red-500">Error loading records</TableCell>
-                  </TableRow>
-                ) : filteredRecords.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-4">No health records found</TableCell>
-                  </TableRow>
-                ) : (
-                  filteredRecords.map((record) => (
-                    <TableRow key={record.id} className="hover:bg-muted/50">
-                      <TableCell>{new Date(record.record_date).toLocaleDateString()}</TableCell>
-                      <TableCell>{record.cattle_inventory?.name || 'Unnamed'}</TableCell>
-                      <TableCell>{record.cattle_inventory?.tag_number || 'N/A'}</TableCell>
-                      <TableCell className="capitalize">{record.record_type}</TableCell>
-                      <TableCell>{record.description}</TableCell>
-                      <TableCell>{record.treatment || 'N/A'}</TableCell>
-                      <TableCell>{record.administered_by || 'N/A'}</TableCell>
-                      <TableCell>{record.next_due_date ? new Date(record.next_due_date).toLocaleDateString() : 'N/A'}</TableCell>
-                    </TableRow>
-                  ))
-                )}
+                ))}
               </TableBody>
             </Table>
-          </div>
-          <div className="flex justify-between mt-4">
-            <div className="text-sm text-muted-foreground">
-              {filteredRecords.length} record{filteredRecords.length !== 1 ? 's' : ''}
+
+            {/* Footer showing record count and view more */}
+            <div className="flex justify-between items-center mt-4 px-2">
+              <p className="text-sm text-muted-foreground">
+                Showing {Math.min(filteredRecords.length, 5)} of {filteredRecords.length} records
+              </p>
+              {filteredRecords.length > 5 && (
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="flex items-center gap-1"
+                  onClick={() => {
+                    toast({
+                      title: "View All Records",
+                      description: "This would open a full view of all health records.",
+                    });
+                  }}
+                >
+                  View all records
+                </Button>
+              )}
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handlePDFExport} disabled={filteredRecords.length === 0}>
-                <FileText className="h-4 w-4 mr-2" />
-                Export PDF
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleExcelExport} disabled={filteredRecords.length === 0}>
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Export Excel
-              </Button>
-            </div>
           </div>
+        )}
+      </CardContent>
+
+      {/* Record details dialog */}
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="sm:max-w-[550px]">
+          <DialogHeader>
+            <DialogTitle>Health Record Details</DialogTitle>
+          </DialogHeader>
+          
+          {selectedRecord && (
+            <div className="space-y-4 mt-2">
+              <div className="flex items-center gap-2">
+                {getTypeIcon(selectedRecord.record_type)}
+                <span className="capitalize text-lg font-medium">
+                  {selectedRecord.record_type} Record
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                <div>
+                  <p className="text-sm text-muted-foreground">Cattle</p>
+                  <p className="font-medium">{selectedRecord.cattle_inventory?.name || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Tag Number</p>
+                  <p className="font-medium">{selectedRecord.cattle_inventory?.tag_number || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Record Date</p>
+                  <p className="font-medium">{formatDate(selectedRecord.record_date)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Next Due Date</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">
+                      {selectedRecord.next_due_date ? formatDate(selectedRecord.next_due_date) : 'None'}
+                    </p>
+                    {getStatusBadge(selectedRecord)}
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-sm text-muted-foreground">Description</p>
+                  <p>{selectedRecord.description}</p>
+                </div>
+                {selectedRecord.treatment && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground">Treatment</p>
+                    <p>{selectedRecord.treatment}</p>
+                  </div>
+                )}
+                {selectedRecord.administered_by && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground">Administered By</p>
+                    <p>{selectedRecord.administered_by}</p>
+                  </div>
+                )}
+                {selectedRecord.notes && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground">Notes</p>
+                    <p>{selectedRecord.notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailsOpen(false)}>Close</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>

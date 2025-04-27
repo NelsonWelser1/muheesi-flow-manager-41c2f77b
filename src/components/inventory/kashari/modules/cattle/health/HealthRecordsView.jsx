@@ -97,7 +97,7 @@ const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
         </Card>
       </div>
 
-      {/* Recent Health Records Section */}
+      {/* Recent Health Records Section - Now completely revamped */}
       <RecentHealthRecords />
 
       {/* Full Records Table */}
