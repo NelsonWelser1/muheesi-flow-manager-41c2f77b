@@ -1,11 +1,15 @@
+
 import React, { useState } from 'react';
-import { Beef, Droplet, LineChart, ChevronDown, ChevronRight, ChevronLeft } from "lucide-react";
+import { Beef, Droplet, LineChart, ChevronDown, ChevronRight, ChevronLeft, Tag, Stethoscope, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useDairyContext } from './context/DairyContext';
 
-const DairySidebar = () => {
-  const { activeSection, setActiveSection, activeTab, setActiveTab } = useDairyContext();
+const DairySidebar = ({
+  activeSection,
+  setActiveSection,
+  activeTab,
+  setActiveTab
+}) => {
   const [expandedSections, setExpandedSections] = useState({
     herdManagement: true,
     milkProduction: false,
