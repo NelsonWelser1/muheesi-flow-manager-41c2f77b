@@ -6,20 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
-
-let AddHealthRecordDialog = () => null;
-try {
-  AddHealthRecordDialog = require('@/components/inventory/kashari/modules/cattle/health/AddHealthRecordDialog').default;
-} catch (err) {
-  console.error('Error loading AddHealthRecordDialog:', err);
-  AddHealthRecordDialog = () => (
-    <Button 
-      className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
-    >
-      Add Health Record
-    </Button>
-  );
-}
+import AddHealthRecordDialog from "@/components/inventory/kashari/modules/cattle/health/AddHealthRecordDialog";
 
 const HealthRecordsView = () => {
   const { healthRecords, isLoading, error, refetch } = useHealthRecords();
@@ -45,7 +32,7 @@ const HealthRecordsView = () => {
         <h2 className="text-2xl font-semibold">Cattle Health Records</h2>
         <div className="flex space-x-2">
           <Button onClick={() => refetch()} variant="outline">Refresh Data</Button>
-          {AddHealthRecordDialog ? <AddHealthRecordDialog /> : null}
+          <AddHealthRecordDialog />
         </div>
       </div>
 
