@@ -1,20 +1,17 @@
 
 import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
 import DairySidebar from './DairySidebar';
 import CattleInventoryView from './sections/CattleInventoryView';
-import GrowthMetricsView from './sections/GrowthMetricsView';
 import MilkProductionView from './sections/MilkProductionView';
-import AnalyticsView from './sections/AnalyticsView';
 import HealthRecordsView from './sections/HealthRecordsView';
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import GrowthMetricsView from './sections/GrowthMetricsView';
+import AnalyticsView from './sections/AnalyticsView';
 
 const DairyDashboard = () => {
   const [activeSection, setActiveSection] = useState('cattleInventory');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const renderContent = () => {
+  const renderSection = () => {
     switch (activeSection) {
       case 'cattleInventory':
         return <CattleInventoryView />;
@@ -32,26 +29,25 @@ const DairyDashboard = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)]">
-      <div className="flex w-full h-full bg-white shadow rounded-lg overflow-hidden">
-        <div className={`relative ${isSidebarCollapsed ? 'w-16' : 'w-64'} transition-width duration-300 ease-in-out`}>
-          <DairySidebar 
-            activeSection={activeSection} 
-            setActiveSection={setActiveSection}
-            isCollapsed={isSidebarCollapsed}
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute -right-3 top-1/2 transform -translate-y-1/2 z-10"
+    <div className="h-full flex">
+      <div className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} transition-all duration-300`}>
+        <DairySidebar 
+          activeSection={activeSection} 
+          setActiveSection={setActiveSection}
+          isCollapsed={isSidebarCollapsed}
+        />
+      </div>
+      <div className="flex-1 p-6 overflow-auto">
+        <div className="mb-4 flex items-center">
+          <button 
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="mr-4 p-2 hover:bg-gray-100 rounded"
           >
-            {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
+            {isSidebarCollapsed ? '→' : '←'}
+          </button>
+          <h1 className="text-3xl font-bold">Dairy Management</h1>
         </div>
-        <div className="flex-1 p-6 overflow-y-auto">
-          {renderContent()}
-        </div>
+        {renderSection()}
       </div>
     </div>
   );

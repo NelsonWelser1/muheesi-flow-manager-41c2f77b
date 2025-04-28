@@ -2,11 +2,13 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle, List } from "lucide-react";
-import CattleList from "@/components/inventory/CattleList";
-import CattleRegistration from "@/components/inventory/CattleRegistration";
+import { useCattleInventory } from '@/hooks/useCattleInventory';
+import CattleRegistrationForm from "@/components/inventory/kashari/modules/herd/CattleRegistrationForm";
+import CattleList from "@/components/inventory/kashari/modules/herd/CattleList";
 
 const CattleInventoryView = () => {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const { cattleList, isLoading, error } = useCattleInventory('kashari');
   
   return (
     <div className="space-y-4">
@@ -15,6 +17,7 @@ const CattleInventoryView = () => {
         <Button 
           onClick={() => setShowRegistrationForm(!showRegistrationForm)}
           className="flex items-center gap-2"
+          variant="default"
         >
           {showRegistrationForm ? (
             <>
@@ -30,7 +33,7 @@ const CattleInventoryView = () => {
         </Button>
       </div>
       
-      {showRegistrationForm ? <CattleRegistration /> : <CattleList />}
+      {showRegistrationForm ? <CattleRegistrationForm /> : <CattleList />}
     </div>
   );
 };
