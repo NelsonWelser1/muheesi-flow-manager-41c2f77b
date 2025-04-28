@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { Beef, LineChart, Droplet, BarChart2, Stethoscope } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+
 const DairySidebar = ({
   activeSection,
   setActiveSection,
@@ -37,4 +39,5 @@ const DairySidebar = ({
       </div>
     </div>;
 };
+
 export default DairySidebar;
