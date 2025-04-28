@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useToast } from "@/components/ui/use-toast";
 
 const HarvestRecords = () => {
   const [date, setDate] = useState(null);
@@ -23,6 +24,7 @@ const HarvestRecords = () => {
   const [notes, setNotes] = useState('');
   const [records, setRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
   
   const cropTypes = [
     { value: 'banana', label: 'Banana' },
@@ -55,8 +57,43 @@ const HarvestRecords = () => {
     { value: 'poor', label: 'Poor' }
   ];
 
+  // Load records from localStorage on component mount
+  useEffect(() => {
+    const savedRecords = localStorage.getItem('harvestRecords');
+    if (savedRecords) {
+      try {
+        const parsedRecords = JSON.parse(savedRecords);
+        
+        // Convert date strings back to Date objects
+        const recordsWithDates = parsedRecords.map(record => ({
+          ...record,
+          date: record.date ? new Date(record.date) : null,
+          createdAt: record.createdAt ? new Date(record.createdAt) : new Date()
+        }));
+        
+        setRecords(recordsWithDates);
+      } catch (error) {
+        console.error('Error parsing harvest records from localStorage:', error);
+      }
+    }
+  }, []);
+
+  // Save records to localStorage whenever records change
+  useEffect(() => {
+    localStorage.setItem('harvestRecords', JSON.stringify(records));
+  }, [records]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!date || !cropType || !variety || !plotId || !quantity) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newRecord = {
       id: Date.now(),
       date,
@@ -70,7 +107,14 @@ const HarvestRecords = () => {
       notes,
       createdAt: new Date()
     };
-    setRecords([...records, newRecord]);
+    
+    setRecords(prevRecords => [newRecord, ...prevRecords]);
+    
+    toast({
+      title: "Record added successfully",
+      description: "Your harvest record has been saved.",
+      variant: "default",
+    });
     
     // Reset form
     setDate(null);
@@ -291,7 +335,7 @@ const HarvestRecords = () => {
                 <TableBody>
                   {filteredRecords.map(record => (
                     <TableRow key={record.id}>
-                      <TableCell>{record.date ? format(record.date, 'dd/MM/yyyy') : 'N/A'}</TableCell>
+                      <TableCell>{record.date ? format(new Date(record.date), 'dd/MM/yyyy') : 'N/A'}</TableCell>
                       <TableCell>{cropTypes.find(c => c.value === record.cropType)?.label || 'N/A'}</TableCell>
                       <TableCell>{record.variety || 'N/A'}</TableCell>
                       <TableCell>{record.plotId || 'N/A'}</TableCell>
