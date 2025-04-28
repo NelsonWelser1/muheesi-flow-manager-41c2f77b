@@ -30,14 +30,28 @@ const DairySidebar = ({
     label: 'Analytics',
     icon: <BarChart2 className="h-5 w-5" />
   }];
-  return <div className="h-full bg-gray-50 border-r p-3 px-0 py-[30px]">
+
+  return (
+    <div className="h-full bg-gray-50 border-r p-3 px-0 py-[30px]">
       <div className="space-y-2">
-        {menuItems.map(item => <Button key={item.id} variant="ghost" className={cn("w-full justify-start", activeSection === item.id && "bg-gray-100", isCollapsed ? "px-2" : "px-4")} onClick={() => setActiveSection(item.id)}>
+        {menuItems.map(item => (
+          <Button 
+            key={item.id} 
+            variant="ghost" 
+            className={cn(
+              "w-full justify-start", 
+              activeSection === item.id && "bg-gray-100",
+              isCollapsed ? "px-2" : "px-4"
+            )} 
+            onClick={() => setActiveSection(item.id)}
+          >
             {item.icon}
             {!isCollapsed && <span className="ml-2">{item.label}</span>}
-          </Button>)}
+          </Button>
+        ))}
       </div>
-    </div>;
+    </div>
+  );
 };
 
 export default DairySidebar;
