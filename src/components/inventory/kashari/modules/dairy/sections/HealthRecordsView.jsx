@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar, Syringe, Activity } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -7,7 +6,41 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
-import AddHealthRecordDialog from '@/components/inventory/kashari/modules/cattle/health/AddHealthRecordDialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PlusCircle } from "lucide-react";
+
+const AddHealthRecordDialog = ({ cattleData = [] }) => {
+  const [open, setOpen] = React.useState(false);
+  const { refetch } = useHealthRecords();
+
+  const handleSuccess = () => {
+    setOpen(false);
+    refetch(); 
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger asChild>
+        <Button 
+          className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
+          disabled={cattleData.length === 0}
+        >
+          <PlusCircle className="h-4 w-4" />
+          Add Health Record
+        </Button>
+      </Dialog.Trigger>
+      <DialogContent className="sm:max-w-[900px]">
+        <DialogHeader>
+          <DialogTitle>Add Health Record</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          <p>Health record form will be implemented here.</p>
+          <Button onClick={handleSuccess} className="mt-4">Close</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const HealthRecordsView = () => {
   const { healthRecords, isLoading, error, refetch } = useHealthRecords();
@@ -19,12 +52,10 @@ const HealthRecordsView = () => {
     { id: '3', tag_number: 'KMF-003', name: 'Lola' },
   ]);
   
-  // Calculate statistics
   const totalRecords = healthRecords?.length || 0;
   const vaccinationCount = healthRecords?.filter(r => r.record_type === 'vaccination').length || 0;
   const treatmentCount = healthRecords?.filter(r => r.record_type === 'treatment').length || 0;
   
-  // Filter records based on type and search term
   const filteredRecords = healthRecords?.filter(record => {
     const matchesType = filterType === 'all' || record.record_type === filterType;
     const matchesSearch = searchTerm === '' || 
