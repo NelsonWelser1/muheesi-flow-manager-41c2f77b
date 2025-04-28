@@ -7,17 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
-import AddHealthRecordDialog from "@/components/inventory/kashari/modules/cattle/health/AddHealthRecordDialog";
 
 const HealthRecordsView = () => {
   const { healthRecords, isLoading, error, refetch } = useHealthRecords();
   const [filterType, setFilterType] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   
+  // Calculate statistics
   const totalRecords = healthRecords?.length || 0;
   const vaccinationCount = healthRecords?.filter(r => r.record_type === 'vaccination').length || 0;
   const treatmentCount = healthRecords?.filter(r => r.record_type === 'treatment').length || 0;
   
+  // Filter records based on type and search term
   const filteredRecords = healthRecords?.filter(record => {
     const matchesType = filterType === 'all' || record.record_type === filterType;
     const matchesSearch = searchTerm === '' || 
@@ -30,11 +31,8 @@ const HealthRecordsView = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Dairy Health Records</h2>
-        <div className="flex space-x-2">
-          <Button onClick={() => refetch()} variant="outline">Refresh Data</Button>
-          <AddHealthRecordDialog />
-        </div>
+        <h2 className="text-2xl font-semibold">Cattle Health Records</h2>
+        <Button onClick={() => refetch()} variant="outline">Refresh Data</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
