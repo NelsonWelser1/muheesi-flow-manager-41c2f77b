@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Beef, Droplet, LineChart, ChevronDown, ChevronRight, ChevronLeft, Tag, Scale } from "lucide-react";
+import { Beef, Droplet, LineChart, ChevronDown, ChevronRight, ChevronLeft, Tag, Stethoscope, Scale } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -79,6 +79,17 @@ const DairySidebar = ({
               >
                 <Tag className="inline-block mr-2 h-4 w-4" />
                 Cattle Inventory
+              </button>
+              <button 
+                className={`block w-full text-left p-2 text-sm rounded-md ${
+                  activeSection === 'herdManagement' && activeTab === 'health' 
+                    ? 'bg-purple-50 text-purple-600 font-medium' 
+                    : 'hover:bg-gray-100'
+                }`} 
+                onClick={() => handleSectionClick('herdManagement', 'health')}
+              >
+                <Stethoscope className="inline-block mr-2 h-4 w-4" />
+                Health Records
               </button>
               <button 
                 className={`block w-full text-left p-2 text-sm rounded-md ${

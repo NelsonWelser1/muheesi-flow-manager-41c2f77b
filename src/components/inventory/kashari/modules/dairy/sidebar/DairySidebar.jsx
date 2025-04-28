@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { 
-  Beef,
+  Beef, 
+  Stethoscope, 
   LineChart,
   Droplet,
   BarChart2
@@ -15,6 +16,11 @@ const DairySidebar = ({ activeSection, setActiveSection, isCollapsed }) => {
       id: 'cattleInventory',
       label: 'Cattle Inventory',
       icon: <Beef className="h-5 w-5" />
+    },
+    {
+      id: 'healthRecords',
+      label: 'Health Records',
+      icon: <Stethoscope className="h-5 w-5" />
     },
     {
       id: 'growthMetrics',
