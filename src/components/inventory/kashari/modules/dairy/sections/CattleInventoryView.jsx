@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, List } from "lucide-react";
 import CattleList from "@/components/inventory/CattleList";
 import CattleRegistration from "@/components/inventory/CattleRegistration";
 
@@ -16,8 +16,17 @@ const CattleInventoryView = () => {
           onClick={() => setShowRegistrationForm(!showRegistrationForm)}
           className="flex items-center gap-2"
         >
-          <PlusCircle className="h-4 w-4" />
-          {showRegistrationForm ? 'View Inventory' : 'Register New Cattle'}
+          {showRegistrationForm ? (
+            <>
+              <List className="h-4 w-4" />
+              View Inventory
+            </>
+          ) : (
+            <>
+              <PlusCircle className="h-4 w-4" />
+              Register New Cattle
+            </>
+          )}
         </Button>
       </div>
       
