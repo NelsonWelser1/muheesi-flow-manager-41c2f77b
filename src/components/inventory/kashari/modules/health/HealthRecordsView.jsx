@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,7 +15,7 @@ const HealthRecordsView = () => {
       <ScrollArea className="h-[500px]">
         <div className="rounded-md border">
           <table className="w-full">
-            <thead className="bg-muted/50">
+            <thead className="bg-muted/50 sticky top-0">
               <tr>
                 <th className="p-3 text-left font-medium">Tag #</th>
                 <th className="p-3 text-left font-medium">Health Status</th>
