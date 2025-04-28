@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar, Syringe, Activity } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
+import AddHealthRecordDialog from '../../../cattle/health/AddHealthRecordDialog';
 
 const HealthRecordsView = () => {
   const { healthRecords, isLoading, error, refetch } = useHealthRecords();
@@ -32,7 +32,10 @@ const HealthRecordsView = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Cattle Health Records</h2>
-        <Button onClick={() => refetch()} variant="outline">Refresh Data</Button>
+        <div className="flex space-x-2">
+          <Button onClick={() => refetch()} variant="outline">Refresh Data</Button>
+          <AddHealthRecordDialog />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
