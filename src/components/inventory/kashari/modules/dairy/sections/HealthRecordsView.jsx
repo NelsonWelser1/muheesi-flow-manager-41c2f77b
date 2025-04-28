@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Calendar, Syringe, Activity } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PlusCircle } from "lucide-react";
 
 const AddHealthRecordDialog = ({ cattleData = [] }) => {
@@ -20,7 +21,7 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
+      <DialogTrigger asChild>
         <Button 
           className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
           disabled={cattleData.length === 0}
@@ -28,7 +29,7 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
           <PlusCircle className="h-4 w-4" />
           Add Health Record
         </Button>
-      </Dialog.Trigger>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle>Add Health Record</DialogTitle>
