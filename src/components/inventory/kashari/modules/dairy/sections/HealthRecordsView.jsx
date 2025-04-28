@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
-import AddHealthRecordDialog from "../../../cattle/health/AddHealthRecordDialog";
+import AddHealthRecordDialog from "../../cattle/health/AddHealthRecordDialog";
 
 const HealthRecordsView = () => {
   const { healthRecords, isLoading, error, refetch } = useHealthRecords();
