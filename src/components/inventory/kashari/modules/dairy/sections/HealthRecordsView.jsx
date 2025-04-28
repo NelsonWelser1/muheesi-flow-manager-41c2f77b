@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar, Syringe, Activity } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -7,19 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
-import AddHealthRecordDialog from "../../../../cattle/health/AddHealthRecordDialog";
+import AddHealthRecordDialog from "../../../cattle/health/AddHealthRecordDialog";
 
 const HealthRecordsView = () => {
   const { healthRecords, isLoading, error, refetch } = useHealthRecords();
   const [filterType, setFilterType] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Calculate statistics
   const totalRecords = healthRecords?.length || 0;
   const vaccinationCount = healthRecords?.filter(r => r.record_type === 'vaccination').length || 0;
   const treatmentCount = healthRecords?.filter(r => r.record_type === 'treatment').length || 0;
   
-  // Filter records based on type and search term
   const filteredRecords = healthRecords?.filter(record => {
     const matchesType = filterType === 'all' || record.record_type === filterType;
     const matchesSearch = searchTerm === '' || 
