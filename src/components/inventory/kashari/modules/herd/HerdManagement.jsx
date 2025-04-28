@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import CattleList from './CattleList';
 import CattleRegistrationForm from './CattleRegistrationForm';
-import HealthRecordsForm from './HealthRecordsForm';
 
 const HerdManagement = ({ initialTab = 'inventory' }) => {
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -19,10 +18,9 @@ const HerdManagement = ({ initialTab = 'inventory' }) => {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="inventory">Cattle Inventory</TabsTrigger>
             <TabsTrigger value="registration">New Registration</TabsTrigger>
-            <TabsTrigger value="health">Health Records</TabsTrigger>
           </TabsList>
           
           <TabsContent value="inventory" className="p-4">
@@ -31,10 +29,6 @@ const HerdManagement = ({ initialTab = 'inventory' }) => {
           
           <TabsContent value="registration" className="p-4">
             <CattleRegistrationForm />
-          </TabsContent>
-          
-          <TabsContent value="health" className="p-4">
-            <HealthRecordsForm />
           </TabsContent>
         </Tabs>
       </Card>
