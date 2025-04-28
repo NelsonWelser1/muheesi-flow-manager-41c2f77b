@@ -7,11 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
+import AddHealthRecordDialog from '@/components/inventory/kashari/modules/cattle/health/AddHealthRecordDialog';
 
 const HealthRecordsView = () => {
   const { healthRecords, isLoading, error, refetch } = useHealthRecords();
   const [filterType, setFilterType] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [cattleData, setCattleData] = useState([
+    { id: '1', tag_number: 'KMF-001', name: 'Bella' },
+    { id: '2', tag_number: 'KMF-002', name: 'Daisy' },
+    { id: '3', tag_number: 'KMF-003', name: 'Lola' },
+  ]);
   
   // Calculate statistics
   const totalRecords = healthRecords?.length || 0;
@@ -32,7 +38,10 @@ const HealthRecordsView = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Cattle Health Records</h2>
-        <Button onClick={() => refetch()} variant="outline">Refresh Data</Button>
+        <div className="flex space-x-2">
+          <Button onClick={() => refetch()} variant="outline">Refresh Data</Button>
+          <AddHealthRecordDialog cattleData={cattleData} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
