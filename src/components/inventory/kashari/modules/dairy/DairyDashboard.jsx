@@ -6,6 +6,7 @@ import CattleInventoryView from './sections/CattleInventoryView';
 import GrowthMetricsView from './sections/GrowthMetricsView';
 import MilkProductionView from './sections/MilkProductionView';
 import AnalyticsView from './sections/AnalyticsView';
+import HealthRecordsView from '../cattle/health/HealthRecordsView';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -17,6 +18,8 @@ const DairyDashboard = () => {
     switch (activeSection) {
       case 'cattleInventory':
         return <CattleInventoryView />;
+      case 'healthRecords':
+        return <HealthRecordsView />;
       case 'growthMetrics':
         return <GrowthMetricsView />;
       case 'milkProduction':
