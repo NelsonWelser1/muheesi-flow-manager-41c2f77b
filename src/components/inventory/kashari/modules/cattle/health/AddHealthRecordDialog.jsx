@@ -29,11 +29,6 @@ const AddHealthRecordDialog = ({ cattleData = [] }) => {
         </Button>
       </Dialog.Trigger>
       <DialogContent className="sm:max-w-[900px]">
-        <DialogHeader>
-          <DialogTitle className="text-xl flex items-center gap-2">
-            Add Health Record
-          </DialogTitle>
-        </DialogHeader>
         <AddHealthRecordForm
           onCancel={() => setOpen(false)}
           onSuccess={handleSuccess}
