@@ -1,11 +1,19 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { useCattleInventory } from '@/hooks/useCattleInventory';
 import { Button } from '@/components/ui/button';
 import { Edit2, Trash2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { useToast } from '@/components/ui/use-toast';
+
 const CattleList = () => {
   const {
     cattleList,
@@ -14,9 +22,8 @@ const CattleList = () => {
     deleteCattle,
     updateCattle
   } = useCattleInventory('kashari');
-  const {
-    toast
-  } = useToast();
+  
+  const { toast } = useToast();
 
   // Calculate age from date of birth
   const calculateAge = dateOfBirth => {
@@ -42,9 +49,10 @@ const CattleList = () => {
         id: cattleId,
         health_status: newStatus
       });
+      
       toast({
         title: "Status Updated",
-        description: `Cattle health status updated to ${newStatus}`
+        description: `Cattle health status updated to ${newStatus}`,
       });
     } catch (error) {
       toast({
@@ -56,8 +64,8 @@ const CattleList = () => {
   };
 
   // Get status style based on health status
-  const getStatusStyle = status => {
-    switch (status) {
+  const getStatusStyle = (status) => {
+    switch(status) {
       case 'good':
         return 'bg-green-100 text-green-800';
       case 'fair':
@@ -76,6 +84,7 @@ const CattleList = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
   if (isLoading) {
     return <Card className="p-6">
         <div className="flex justify-center items-center h-40">
@@ -84,6 +93,7 @@ const CattleList = () => {
         </div>
       </Card>;
   }
+  
   if (error) {
     return <Card className="p-6">
         <div className="text-center p-4 text-red-500">
@@ -92,6 +102,7 @@ const CattleList = () => {
         </div>
       </Card>;
   }
+  
   return <Card className="p-6">
       <h3 className="text-lg font-medium mb-4">Cattle List</h3>
       <div className="rounded-md border overflow-x-auto">
@@ -115,7 +126,10 @@ const CattleList = () => {
                   <td className="p-3">{cattle.breed}</td>
                   <td className="p-3">{calculateAge(cattle.date_of_birth)}</td>
                   <td className="p-3">
-                    <Select defaultValue={cattle.health_status || 'good'} onValueChange={value => handleHealthChange(cattle.id, value)}>
+                    <Select 
+                      defaultValue={cattle.health_status || 'good'}
+                      onValueChange={(value) => handleHealthChange(cattle.id, value)}
+                    >
                       <SelectTrigger className={`h-8 w-32 ${getStatusStyle(cattle.health_status)}`}>
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
@@ -130,7 +144,12 @@ const CattleList = () => {
                       </SelectContent>
                     </Select>
                   </td>
-                  
+                  <td className="p-3 flex gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600">
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    
+                  </td>
                 </tr>) : <tr className="border-t">
                 <td className="p-3" colSpan="7">
                   <p className="text-center text-muted-foreground">No cattle records found</p>
