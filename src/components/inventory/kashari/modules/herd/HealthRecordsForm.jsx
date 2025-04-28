@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from "@/components/ui/card";
-import HealthRecordsView from '../../cattle/health/HealthRecordsView';
+import HealthRecordsView from '../../../health/HealthRecordsView';
 
 const HealthRecordsForm = () => {
   return (
