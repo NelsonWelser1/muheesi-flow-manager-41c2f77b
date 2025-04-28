@@ -30,7 +30,7 @@ const HealthRecordsView = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Cattle Health Records</h2>
+        <h2 className="text-2xl font-semibold">Dairy Health Records</h2>
         <div className="flex space-x-2">
           <Button onClick={() => refetch()} variant="outline">Refresh Data</Button>
           <AddHealthRecordDialog />
