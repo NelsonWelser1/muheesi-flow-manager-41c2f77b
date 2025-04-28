@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import DairySidebar from './sidebar/DairySidebar';
 import CattleInventoryView from './sections/CattleInventoryView';
-import HealthRecordsView from './sections/HealthRecordsView';
 import GrowthMetricsView from './sections/GrowthMetricsView';
 import MilkProductionView from './sections/MilkProductionView';
 import AnalyticsView from './sections/AnalyticsView';
@@ -18,8 +17,6 @@ const DairyDashboard = () => {
     switch (activeSection) {
       case 'cattleInventory':
         return <CattleInventoryView />;
-      case 'healthRecords':
-        return <HealthRecordsView />;
       case 'growthMetrics':
         return <GrowthMetricsView />;
       case 'milkProduction':
