@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Beef, LineChart, Droplet, BarChart2, Stethoscope } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -56,7 +57,7 @@ const DairySidebar = ({
               </h4>}
             
             {/* Display items in this category */}
-            {category.items.map(item => <div key={item.id} className="menu-item-wrapper">
+            {category.items.map(item => <div key={item.id} className={`menu-item-wrapper menu-item-${item.id}`}>
                 <Button variant="ghost" onClick={() => handleMenuItemClick(item.id)} className="">
                   {item.icon}
                   {!isCollapsed && <span className="ml-2">{item.label}</span>}
