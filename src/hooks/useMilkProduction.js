@@ -1,7 +1,8 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { fromSupabase } from '@/integrations/supabase/utils/supabaseUtils';
 
 /**
  * Hook for working with milk production records for Kashari Farm
@@ -14,36 +15,28 @@ export const useMilkProduction = () => {
   const { toast } = useToast();
 
   // Fetch milk production records
-  const fetchMilkProduction = async () => {
+  const fetchMilkProduction = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const { data, error } = await supabase
-        .from('kashari_milk_production')
-        .select('*')
-        .order('date', { ascending: false })
-        .order('created_at', { ascending: false });
+      console.log('Fetching milk production records from Supabase...');
+      const data = await fromSupabase(
+        supabase
+          .from('kashari_milk_production')
+          .select('*')
+          .order('date', { ascending: false })
+          .order('created_at', { ascending: false })
+      );
         
-      if (error) {
-        console.error('Error fetching milk production records:', error.message);
-        toast({
-          title: "Error",
-          description: `Failed to fetch milk production records: ${error.message}`,
-          variant: "destructive"
-        });
-        setError(error.message);
-        return [];
-      }
-      
       console.log('Successfully fetched milk production records:', data);
       setMilkRecords(data || []);
-      return data || [];
+      return data;
     } catch (error) {
       console.error('Exception fetching milk production:', error.message);
       toast({
         title: "Error",
-        description: `Error: ${error.message}`,
+        description: `Error fetching milk production records: ${error.message}`,
         variant: "destructive"
       });
       setError(error.message);
@@ -51,7 +44,7 @@ export const useMilkProduction = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   // Add a new milk production record
   const addMilkProduction = async (milkData) => {
@@ -105,15 +98,12 @@ export const useMilkProduction = () => {
       console.log("Formatted milk production data for Supabase:", formattedRecord);
 
       // Insert into the kashari_milk_production table
-      const { data, error } = await supabase
-        .from('kashari_milk_production')
-        .insert([formattedRecord])
-        .select();
-
-      if (error) {
-        console.error('Error adding milk production record:', error.message);
-        throw new Error(`Failed to add milk production record: ${error.message}`);
-      }
+      const data = await fromSupabase(
+        supabase
+          .from('kashari_milk_production')
+          .insert([formattedRecord])
+          .select()
+      );
 
       console.log("Milk production record added successfully:", data);
       
@@ -147,7 +137,7 @@ export const useMilkProduction = () => {
   // Initialize - fetch records on hook mount
   useEffect(() => {
     fetchMilkProduction();
-  }, []);
+  }, [fetchMilkProduction]);
 
   return {
     milkRecords,

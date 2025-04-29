@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { RefreshCw, Search, Calendar, Droplet } from "lucide-react";
 import { format } from 'date-fns';
 import { useMilkProduction } from '@/hooks/useMilkProduction';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const MilkProductionRecords = () => {
   const { milkRecords, isLoading, fetchMilkProduction } = useMilkProduction();
@@ -42,6 +43,12 @@ const MilkProductionRecords = () => {
     return matchesSearch && matchesSession;
   });
 
+  // Initial fetch when component mounts
+  useEffect(() => {
+    console.log("MilkProductionRecords component mounted - fetching records");
+    fetchMilkProduction();
+  }, [fetchMilkProduction]);
+
   return (
     <Card className="mt-6">
       <CardHeader>
@@ -56,8 +63,8 @@ const MilkProductionRecords = () => {
             onClick={handleRefresh}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            <span className="ml-2">{isLoading ? 'Loading...' : 'Refresh'}</span>
+            <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>{isLoading ? 'Loading...' : 'Refresh'}</span>
           </Button>
         </div>
         
@@ -102,39 +109,39 @@ const MilkProductionRecords = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="py-2 px-3 text-left font-medium">Date</th>
-                  <th className="py-2 px-3 text-left font-medium">Session</th>
-                  <th className="py-2 px-3 text-left font-medium">Volume (L)</th>
-                  <th className="py-2 px-3 text-left font-medium">Cows</th>
-                  <th className="py-2 px-3 text-left font-medium">Avg L/Cow</th>
-                  <th className="py-2 px-3 text-left font-medium">Fat %</th>
-                  <th className="py-2 px-3 text-left font-medium">Protein %</th>
-                  <th className="py-2 px-3 text-left font-medium">Location</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Session</TableHead>
+                  <TableHead>Volume (L)</TableHead>
+                  <TableHead>Cows</TableHead>
+                  <TableHead>Avg L/Cow</TableHead>
+                  <TableHead>Fat %</TableHead>
+                  <TableHead>Protein %</TableHead>
+                  <TableHead>Location</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredRecords.map((record) => (
-                  <tr key={record.id} className="border-b hover:bg-muted/50">
-                    <td className="py-2 px-3">
+                  <TableRow key={record.id} className="hover:bg-muted/50">
+                    <TableCell>
                       <div className="flex items-center">
                         <Calendar className="h-3 w-3 mr-2 text-muted-foreground" />
                         {format(new Date(record.date), 'dd MMM yyyy')}
                       </div>
-                    </td>
-                    <td className="py-2 px-3">{sessionLabels[record.session]}</td>
-                    <td className="py-2 px-3 font-medium">{record.volume} L</td>
-                    <td className="py-2 px-3">{record.milking_cows}</td>
-                    <td className="py-2 px-3">{calculateAverage(record.volume, record.milking_cows)}</td>
-                    <td className="py-2 px-3">{record.fat_content ? `${record.fat_content}%` : 'N/A'}</td>
-                    <td className="py-2 px-3">{record.protein_content ? `${record.protein_content}%` : 'N/A'}</td>
-                    <td className="py-2 px-3">{record.location || 'Main Farm'}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell>{sessionLabels[record.session]}</TableCell>
+                    <TableCell className="font-medium">{record.volume} L</TableCell>
+                    <TableCell>{record.milking_cows}</TableCell>
+                    <TableCell>{calculateAverage(record.volume, record.milking_cows)}</TableCell>
+                    <TableCell>{record.fat_content ? `${record.fat_content}%` : 'N/A'}</TableCell>
+                    <TableCell>{record.protein_content ? `${record.protein_content}%` : 'N/A'}</TableCell>
+                    <TableCell>{record.location || 'Main Farm'}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </CardContent>
