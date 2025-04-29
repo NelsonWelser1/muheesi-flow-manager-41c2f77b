@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MilkProductionForm from "@/components/inventory/kashari/modules/MilkProductionForm";
 import MilkProductionRecords from "@/components/inventory/kashari/modules/MilkProductionRecords";
-import { Cow, Milk, BarChart3, Droplet } from "lucide-react";
+import { Droplet, BarChart3, Activity, Users } from "lucide-react";
 
 const MilkProductionView = () => {
   const [activeTab, setActiveTab] = useState('daily');
@@ -27,7 +27,7 @@ const MilkProductionView = () => {
           <CardContent>
             <div className="flex justify-between items-center">
               <div className="text-2xl font-bold">{totalMilkToday} L</div>
-              <Milk className="h-8 w-8 text-blue-500" />
+              <Droplet className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
@@ -39,7 +39,7 @@ const MilkProductionView = () => {
           <CardContent>
             <div className="flex justify-between items-center">
               <div className="text-2xl font-bold">{milkingCows}</div>
-              <Cow className="h-8 w-8 text-green-500" />
+              <Users className="h-8 w-8 text-green-500" />
             </div>
           </CardContent>
         </Card>
@@ -51,7 +51,7 @@ const MilkProductionView = () => {
           <CardContent>
             <div className="flex justify-between items-center">
               <div className="text-2xl font-bold">{avgPerCow} L</div>
-              <Droplet className="h-8 w-8 text-purple-500" />
+              <Activity className="h-8 w-8 text-purple-500" />
             </div>
           </CardContent>
         </Card>
