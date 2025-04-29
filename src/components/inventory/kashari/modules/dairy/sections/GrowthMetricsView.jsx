@@ -5,14 +5,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCattleInventory } from '@/hooks/useCattleInventory';
 import { useGrowthPredictions } from '@/hooks/useGrowthPredictions';
-import { LineChart, BarChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Line, Bar, Area } from 'recharts';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 const GrowthMetricsView = () => {
   const [activeTab, setActiveTab] = useState("weight-gain");
   const [selectedBreed, setSelectedBreed] = useState("all");
+  const { toast } = useToast();
   
   const { cattleList, isLoading: cattleLoading } = useCattleInventory();
-  const { predictions, isLoading: predictionsLoading } = useGrowthPredictions(cattleList);
+  const { predictions, isLoading: predictionsLoading, error, regeneratePredictions } = useGrowthPredictions(cattleList);
+  
+  // Handle error in useGrowthPredictions hook
+  useEffect(() => {
+    if (error) {
+      console.log("Growth predictions error:", error);
+      // We'll display an error message in the UI instead of toasting
+    }
+  }, [error]);
   
   // Filter data by breed
   const filteredCattle = selectedBreed === "all" 
@@ -25,16 +37,16 @@ const GrowthMetricsView = () => {
   
   // Prepare data for weight gain chart
   const weightGainData = filteredPredictions?.map(pred => {
-    const initialWeight = pred.projections[0].weight;
+    const initialWeight = pred?.projections?.[0]?.weight;
     return {
       tag: pred.tag_number,
       name: pred.name,
       currentWeight: initialWeight,
-      month1: pred.projections[1].weight,
-      month2: pred.projections[2].weight,
-      month3: pred.projections[3].weight,
-      month6: pred.projections[6].weight,
-      gainRate: pred.projections[0].daily_gain
+      month1: pred?.projections?.[1]?.weight,
+      month2: pred?.projections?.[2]?.weight,
+      month3: pred?.projections?.[3]?.weight,
+      month6: pred?.projections?.[6]?.weight,
+      gainRate: pred?.projections?.[0]?.daily_gain
     };
   }) || [];
   
@@ -51,7 +63,9 @@ const GrowthMetricsView = () => {
   
   predictions?.forEach(pred => {
     if (!breedGroups[pred.breed]) return;
-    breedGroups[pred.breed].averageDailyGain += pred.projections[0].daily_gain;
+    if (pred.projections && pred.projections[0]) {
+      breedGroups[pred.breed].averageDailyGain += pred.projections[0].daily_gain || 0;
+    }
   });
   
   // Calculate averages and prepare for chart
@@ -69,6 +83,8 @@ const GrowthMetricsView = () => {
   const conditionScores = [1, 2, 3, 4, 5];
   const bodyCounts = conditionScores.map(score => {
     const count = predictions?.filter(pred => 
+      pred.projections && 
+      pred.projections[0] && 
       pred.projections[0].body_condition_score === score &&
       (selectedBreed === "all" || pred.breed === selectedBreed)
     ).length || 0;
@@ -77,22 +93,65 @@ const GrowthMetricsView = () => {
   
   const isLoading = cattleLoading || predictionsLoading;
 
+  const handleRefreshPredictions = () => {
+    regeneratePredictions();
+    toast({
+      title: "Refreshing predictions",
+      description: "Growth predictions are being recalculated using AI.",
+    });
+  };
+
+  const renderErrorState = () => (
+    <div className="bg-red-50 border border-red-200 rounded-md p-4 mt-2">
+      <div className="flex items-start">
+        <AlertCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+        <div>
+          <h3 className="text-sm font-medium text-red-800">AI Model Error</h3>
+          <div className="mt-1 text-sm text-red-700">
+            <p>We encountered an issue with growth predictions. The AI model is having trouble accessing historical data.</p>
+            <Button 
+              onClick={handleRefreshPredictions}
+              size="sm"
+              variant="outline"
+              className="mt-2 text-red-700 border-red-300 hover:bg-red-50"
+            >
+              <RefreshCw className="h-4 w-4 mr-1" /> Retry with Sample Data
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Growth Metrics</h2>
-        <Select value={selectedBreed} onValueChange={setSelectedBreed}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by breed" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Breeds</SelectItem>
-            {breeds.map(breed => (
-              <SelectItem key={breed} value={breed}>{breed}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefreshPredictions}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh Predictions
+          </Button>
+          <Select value={selectedBreed} onValueChange={setSelectedBreed}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by breed" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Breeds</SelectItem>
+              {breeds.map(breed => (
+                <SelectItem key={breed} value={breed}>{breed}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+      
+      {error && renderErrorState()}
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-3">
@@ -130,12 +189,12 @@ const GrowthMetricsView = () => {
                 </ResponsiveContainer>
               )}
               <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                {weightGainData.slice(0, 4).map(data => (
-                  <Card key={data.tag} className="p-4 bg-muted/20">
-                    <div className="font-medium">{data.tag} - {data.name}</div>
-                    <div className="text-sm text-muted-foreground">Daily Gain: {data.gainRate} kg/day</div>
-                    <div className="text-sm text-muted-foreground">Current: {data.currentWeight} kg</div>
-                    <div className="text-sm text-green-600">6 Month: {data.month6} kg</div>
+                {weightGainData.slice(0, 4).map((data, index) => (
+                  <Card key={index} className="p-4 bg-muted/20">
+                    <div className="font-medium">{data.tag || 'Unknown'} - {data.name || 'Unnamed'}</div>
+                    <div className="text-sm text-muted-foreground">Daily Gain: {data.gainRate || 0} kg/day</div>
+                    <div className="text-sm text-muted-foreground">Current: {data.currentWeight || 0} kg</div>
+                    <div className="text-sm text-green-600">6 Month: {data.month6 || 0} kg</div>
                   </Card>
                 ))}
               </div>
