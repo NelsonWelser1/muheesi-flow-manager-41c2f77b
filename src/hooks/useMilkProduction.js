@@ -120,7 +120,7 @@ export const useMilkProduction = () => {
       // Show success message
       toast({
         title: "Success",
-        description: "Milk production record successfully added"
+        description: "Milk production record successfully added to Kashari Farm"
       });
       
       // Refresh the records
