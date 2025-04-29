@@ -2,39 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Calendar, Syringe, Activity } from "lucide-react";
-import HealthRecordsTable from './HealthRecordsTable';
 import AddHealthRecordDialog from './AddHealthRecordDialog';
-import { supabase } from '@/integrations/supabase/supabase';
 import { useHealthRecords } from '@/hooks/useHealthRecords';
+import { useCattleInventory } from '@/hooks/useCattleInventory';
 
 const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
-  const [cattleData, setCattleData] = useState(propsCattleData);
-  const [loading, setLoading] = useState(propsCattleData.length === 0);
+  const { cattleList } = useCattleInventory('kashari');
   const { healthRecords, isLoading, error, refetch } = useHealthRecords();
   
-  useEffect(() => {
-    // If no cattle data is provided as props, fetch it
-    const fetchCattleData = async () => {
-      if (propsCattleData.length === 0) {
-        try {
-          setLoading(true);
-          const { data, error } = await supabase
-            .from('cattle_inventory')
-            .select('id, tag_number, name');
-          
-          if (error) throw error;
-          setCattleData(data || []);
-        } catch (error) {
-          console.error('Error fetching cattle data:', error);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchCattleData();
-  }, [propsCattleData.length]);
-
   // Refresh records when component mounts
   useEffect(() => {
     refetch();
@@ -60,7 +35,7 @@ const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Health Records</h2>
-        <AddHealthRecordDialog cattleData={cattleData} />
+        <AddHealthRecordDialog onSuccess={refetch} />
       </div>
 
       {/* Stats Cards */}
