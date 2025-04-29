@@ -28,6 +28,7 @@ const DairyDashboard = () => {
     localStorage.setItem('dairySidebarCollapsed', isSidebarCollapsed.toString());
   }, [isSidebarCollapsed]);
 
+  // Function to determine which section component to render based on activeSection
   const renderSection = () => {
     switch (activeSection) {
       case 'cattleInventory':
