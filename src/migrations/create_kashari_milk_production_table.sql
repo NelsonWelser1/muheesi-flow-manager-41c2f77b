@@ -36,9 +36,10 @@ BEFORE UPDATE ON kashari_milk_production
 FOR EACH ROW
 EXECUTE FUNCTION update_kashari_milk_production_updated_at();
 
--- Add RLS policies with authentication disabled for now
+-- Add RLS policies without authentication (temporarily disabled)
 ALTER TABLE kashari_milk_production ENABLE ROW LEVEL SECURITY;
 
+-- Allow all operations without authentication temporarily
 CREATE POLICY kashari_milk_production_select_policy ON kashari_milk_production
   FOR SELECT
   USING (true);

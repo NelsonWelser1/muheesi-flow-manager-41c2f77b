@@ -1,3 +1,4 @@
+
 import { supabase } from '../supabase';
 
 /**
@@ -19,4 +20,4 @@ export const fromSupabase = async (query) => {
     }
 };
 
-// Coffee inventory schema refresh removed
+// Additional helper functions can be added here
