@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -123,7 +122,7 @@ const AddHealthRecordForm = ({ onCancel, onSuccess, cattleData = [] }) => {
                 </FormItem>
               )}
             />
-
+            
             <FormField
               control={form.control}
               name="record_date"
@@ -253,13 +252,22 @@ const AddHealthRecordForm = ({ onCancel, onSuccess, cattleData = [] }) => {
               Test Auto-Submit
             </Button>
             
-            <Button 
-              type="submit" 
-              disabled={addHealthRecord.isPending}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {addHealthRecord.isPending ? "Saving..." : "Save Record"}
-            </Button>
+            <div className="space-x-2">
+              <Button 
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={addHealthRecord.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {addHealthRecord.isPending ? "Saving..." : "Save Record"}
+              </Button>
+            </div>
           </div>
         </form>
       </Form>
