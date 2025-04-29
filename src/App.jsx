@@ -1,43 +1,38 @@
 
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AutoFillProvider } from "./contexts/AutoFillContext";
-import { SupabaseAuthProvider } from "./integrations/supabase/auth";
-import Navigation from "./components/Navigation";
-import LandingPage from "./pages/LandingPage";
-import ManageInventory from "./pages/ManageInventory";
-import ManageCompanies from "./pages/ManageCompanies";
-import ExportManagementDashboard from "./components/inventory/kajon/export-business/ExportManagementDashboard";
-import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-business/CoffeeExportManagerDashboard";
-import KashariFarmDashboard from "./components/inventory/kashari/KashariFarmDashboard";
-import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDairyDashboard";
+import { Routes, Route } from "react-router-dom";
+import MainLayout from "./layouts/MainLayout";
+import KashariFarmLayout from "./layouts/KashariFarmLayout";
+import KashariDairyLayout from "./layouts/KashariDairyLayout";
+import Dashboard from "./components/dashboard/Dashboard";
+import DairyOverview from "./components/inventory/kashari/modules/dairy/DairyOverview";
+import DairyProduction from "./components/inventory/kashari/modules/dairy/DairyProduction";
+import DairyReports from "./components/inventory/kashari/modules/dairy/DairyReports";
+import DairyEquipment from "./components/inventory/kashari/modules/dairy/DairyEquipment";
+import QualityControl from "./components/inventory/kashari/modules/dairy/QualityControl";
+import HealthRecordsView from "./components/inventory/kashari/modules/dairy/sections/HealthRecordsView";
+import GrowthMetricsView from "./components/inventory/kashari/modules/dairy/sections/GrowthMetricsView";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AutoFillProvider>
-      <SupabaseAuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
-            <Navigation />
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/manage-inventory" element={<ManageInventory />} />
-              <Route path="/manage-companies" element={<ManageCompanies />} />
-              <Route path="/manage-inventory/kajon-export" element={<ExportManagementDashboard />} />
-              <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
-              <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
-              <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </SupabaseAuthProvider>
-    </AutoFillProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<Dashboard />} />
+        
+        {/* Kashari Farm Routes */}
+        <Route path="manage-inventory/kashari-farm" element={<KashariFarmLayout />}>
+          <Route path="dairy" element={<KashariDairyLayout />}>
+            <Route index element={<DairyOverview />} />
+            <Route path="production" element={<DairyProduction />} />
+            <Route path="reports" element={<DairyReports />} />
+            <Route path="health" element={<HealthRecordsView />} />
+            <Route path="growth-metrics" element={<GrowthMetricsView />} />
+            <Route path="quality" element={<QualityControl />} />
+            <Route path="equipment" element={<DairyEquipment />} />
+          </Route>
+        </Route>
+      </Route>
+    </Routes>
+  );
+}
 
 export default App;

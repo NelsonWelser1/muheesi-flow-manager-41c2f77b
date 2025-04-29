@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
-import { predictProduction } from '@/utils/productionAI';
 
 /**
  * Hook for generating cattle growth predictions

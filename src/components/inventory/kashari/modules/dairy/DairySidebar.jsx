@@ -1,58 +1,54 @@
 
 import React from 'react';
-import { Beef, LineChart, Droplet, BarChart2, Stethoscope } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  Database,
+  LineChart,
+  Milk,
+  FileSpreadsheet,
+  Activity,
+  Thermometer,
+  Microscope
+} from "lucide-react";
+import { useLocation, useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
-const DairySidebar = ({
-  activeSection,
-  setActiveSection,
-  isCollapsed
-}) => {
-  const handleMenuItemClick = (sectionId) => {
-    setActiveSection(sectionId);
-    // Store the active section in localStorage for persistence
-    localStorage.setItem('dairyActiveSection', sectionId);
+const DairySidebar = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const basePath = "/manage-inventory/kashari-farm/dairy";
+  
+  const menuItems = [
+    { name: "Overview", icon: <Database className="h-5 w-5" />, path: `${basePath}` },
+    { name: "Production", icon: <Milk className="h-5 w-5" />, path: `${basePath}/production` },
+    { name: "Reports", icon: <FileSpreadsheet className="h-5 w-5" />, path: `${basePath}/reports` },
+    { name: "Health Records", icon: <Activity className="h-5 w-5" />, path: `${basePath}/health` },
+    { name: "Growth Metrics", icon: <LineChart className="h-5 w-5" />, path: `${basePath}/growth-metrics` },
+    { name: "Quality Control", icon: <Microscope className="h-5 w-5" />, path: `${basePath}/quality` },
+    { name: "Equipment", icon: <Thermometer className="h-5 w-5" />, path: `${basePath}/equipment` },
+  ];
+
+  const isActive = (path) => {
+    return location.pathname === path || 
+           (path !== basePath && location.pathname.startsWith(path));
   };
 
-  const menuItems = [{
-    id: 'cattleInventory',
-    label: 'Cattle Inventory',
-    icon: <Beef className="h-5 w-5" />
-  }, {
-    id: 'healthRecords',
-    label: 'Health Records',
-    icon: <Stethoscope className="h-5 w-5" />
-  }, {
-    id: 'growthMetrics',
-    label: 'Growth Metrics',
-    icon: <LineChart className="h-5 w-5" />
-  }, {
-    id: 'milkProduction',
-    label: 'Milk Production',
-    icon: <Droplet className="h-5 w-5" />
-  }, {
-    id: 'analytics',
-    label: 'Analytics',
-    icon: <BarChart2 className="h-5 w-5" />
-  }];
-
   return (
-    <div className="h-full bg-gray-50 border-r p-3 px-0 py-[30px]">
-      <div className="space-y-2">
-        {menuItems.map(item => (
-          <Button 
-            key={item.id} 
-            variant="ghost" 
+    <div className="min-w-[200px] bg-white border-r p-4 space-y-2">
+      <h2 className="font-semibold text-xl mb-4">Dairy Farm</h2>
+      <div className="flex flex-col gap-1">
+        {menuItems.map((item, idx) => (
+          <Button
+            key={idx}
+            variant={isActive(item.path) ? "secondary" : "ghost"}
             className={cn(
-              "w-full justify-start", 
-              activeSection === item.id && "bg-gray-100",
-              isCollapsed ? "px-2" : "px-4"
-            )} 
-            onClick={() => handleMenuItemClick(item.id)}
+              "justify-start gap-2",
+              isActive(item.path) && "bg-blue-100 text-blue-800 hover:bg-blue-100 hover:text-blue-800"
+            )}
+            onClick={() => navigate(item.path)}
           >
             {item.icon}
-            {!isCollapsed && <span className="ml-2">{item.label}</span>}
+            <span>{item.name}</span>
           </Button>
         ))}
       </div>
