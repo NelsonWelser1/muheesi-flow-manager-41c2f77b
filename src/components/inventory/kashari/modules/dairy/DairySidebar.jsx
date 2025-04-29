@@ -76,19 +76,20 @@ const DairySidebar = ({
             
             {/* Display items in this category */}
             {category.items.map(item => (
-              <Button 
-                key={item.id} 
-                variant="ghost" 
-                className={cn(
-                  "w-full justify-start", 
-                  activeSection === item.id && "bg-gray-100",
-                  isCollapsed ? "px-2" : "px-4"
-                )} 
-                onClick={() => handleMenuItemClick(item.id)}
-              >
-                {item.icon}
-                {!isCollapsed && <span className="ml-2">{item.label}</span>}
-              </Button>
+              <div key={item.id} className="menu-item-wrapper">
+                <Button 
+                  variant="ghost" 
+                  className={cn(
+                    "w-full justify-start", 
+                    activeSection === item.id && "bg-gray-100",
+                    isCollapsed ? "px-2" : "px-4"
+                  )} 
+                  onClick={() => handleMenuItemClick(item.id)}
+                >
+                  {item.icon}
+                  {!isCollapsed && <span className="ml-2">{item.label}</span>}
+                </Button>
+              </div>
             ))}
           </div>
         ))}
