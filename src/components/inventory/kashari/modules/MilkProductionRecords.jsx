@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { DropletIcon, Search, RefreshCw, Calendar, Table as TableIcon } from "lucide-react";
+import { RefreshCw, Search, Calendar, Droplet } from "lucide-react";
 import { format } from 'date-fns';
 import { useMilkProduction } from '@/hooks/useMilkProduction';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -47,7 +47,7 @@ const MilkProductionRecords = () => {
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2">
-            <TableIcon className="h-5 w-5 text-blue-500" />
+            <RefreshCw className="h-5 w-5 text-blue-500" />
             Milk Production Records
           </CardTitle>
           <Button 
@@ -96,7 +96,7 @@ const MilkProductionRecords = () => {
           </div>
         ) : filteredRecords.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <DropletIcon className="h-12 w-12 mx-auto opacity-20 mb-2" />
+            <Droplet className="h-12 w-12 mx-auto opacity-20 mb-2" />
             <p>No milk production records found</p>
             <p className="text-sm">Add your first record using the form above</p>
           </div>

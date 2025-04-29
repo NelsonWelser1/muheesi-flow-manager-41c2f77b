@@ -2,17 +2,21 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
-import { showSuccessToast, showErrorToast, showLoadingToast, dismissToast } from '@/components/ui/notifications';
 
+/**
+ * Hook for working with milk production records
+ */
 export const useMilkProduction = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [milkRecords, setMilkRecords] = useState([]);
+  const [error, setError] = useState(null);
   const { toast } = useToast();
 
   // Fetch milk production records
   const fetchMilkProduction = async () => {
     setIsLoading(true);
+    setError(null);
     
     try {
       const { data, error } = await supabase
@@ -23,7 +27,12 @@ export const useMilkProduction = () => {
         
       if (error) {
         console.error('Error fetching milk production records:', error.message);
-        showErrorToast(toast, `Failed to fetch milk production records: ${error.message}`);
+        toast({
+          title: "Error",
+          description: `Failed to fetch milk production records: ${error.message}`,
+          variant: "destructive"
+        });
+        setError(error.message);
         return [];
       }
       
@@ -32,7 +41,12 @@ export const useMilkProduction = () => {
       return data || [];
     } catch (error) {
       console.error('Exception fetching milk production:', error.message);
-      showErrorToast(toast, `Error: ${error.message}`);
+      toast({
+        title: "Error",
+        description: `Error: ${error.message}`,
+        variant: "destructive"
+      });
+      setError(error.message);
       return [];
     } finally {
       setIsLoading(false);
@@ -42,15 +56,26 @@ export const useMilkProduction = () => {
   // Add a new milk production record
   const addMilkProduction = async (milkData) => {
     if (!milkData) {
-      showErrorToast(toast, "No milk production data provided");
+      toast({
+        title: "Error", 
+        description: "No milk production data provided",
+        variant: "destructive"
+      });
       return null;
     }
 
     setIsSubmitting(true);
-    const loadingToastId = showLoadingToast(toast, "Submitting milk production data...");
-    console.log("Submitting milk production data:", milkData);
-
+    setError(null);
+    
     try {
+      // Show loading toast
+      toast({
+        title: "Submitting...", 
+        description: "Saving milk production data"
+      });
+      
+      console.log("Submitting milk production data:", milkData);
+
       // Validate required fields
       if (!milkData.date) {
         throw new Error("Date is required");
@@ -73,9 +98,8 @@ export const useMilkProduction = () => {
         milking_cows: Number(milkData.milkingCows),
         fat_content: milkData.fatContent ? Number(milkData.fatContent) : null,
         protein_content: milkData.proteinContent ? Number(milkData.proteinContent) : null,
-        location: milkData.location || 'Main Farm',
-        notes: milkData.notes || null,
-        created_at: new Date().toISOString()
+        location: milkData.location || null,
+        notes: milkData.notes || null
       };
 
       console.log("Formatted milk production data for Supabase:", formattedRecord);
@@ -93,11 +117,11 @@ export const useMilkProduction = () => {
 
       console.log("Milk production record added successfully:", data);
       
-      // Dismiss loading toast
-      dismissToast(loadingToastId);
-      
       // Show success message
-      showSuccessToast(toast, "Milk production record successfully added");
+      toast({
+        title: "Success",
+        description: "Milk production record successfully added"
+      });
       
       // Refresh the records
       fetchMilkProduction();
@@ -106,11 +130,14 @@ export const useMilkProduction = () => {
     } catch (error) {
       console.error('Exception adding milk production record:', error.message);
       
-      // Dismiss loading toast
-      dismissToast(loadingToastId);
-      
       // Show error message
-      showErrorToast(toast, error.message || "Failed to add milk production record");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add milk production record",
+        variant: "destructive"
+      });
+      
+      setError(error.message);
       return null;
     } finally {
       setIsSubmitting(false);
@@ -126,6 +153,7 @@ export const useMilkProduction = () => {
     milkRecords,
     isLoading,
     isSubmitting,
+    error,
     addMilkProduction,
     fetchMilkProduction
   };
