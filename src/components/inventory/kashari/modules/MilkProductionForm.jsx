@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from 'date-fns';
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Save, RefreshCw, Droplet, Users } from "lucide-react";
+import { CalendarIcon, Save, RefreshCw, Droplet } from "lucide-react";
 import { useMilkProduction } from '@/hooks/useMilkProduction';
 
 const MilkProductionForm = () => {
@@ -77,7 +77,7 @@ const MilkProductionForm = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Droplet className="h-5 w-5 text-blue-500" />
-          Record Milk Production
+          Record Kashari Farm Milk Production
         </CardTitle>
       </CardHeader>
       <CardContent>

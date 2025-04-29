@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/supabase';
 import { useToast } from '@/components/ui/use-toast';
 
 /**
- * Hook for working with milk production records
+ * Hook for working with milk production records for Kashari Farm
  */
 export const useMilkProduction = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +20,7 @@ export const useMilkProduction = () => {
     
     try {
       const { data, error } = await supabase
-        .from('milk_production')
+        .from('kashari_milk_production')
         .select('*')
         .order('date', { ascending: false })
         .order('created_at', { ascending: false });
@@ -104,9 +104,9 @@ export const useMilkProduction = () => {
 
       console.log("Formatted milk production data for Supabase:", formattedRecord);
 
-      // Insert into the milk_production table
+      // Insert into the kashari_milk_production table
       const { data, error } = await supabase
-        .from('milk_production')
+        .from('kashari_milk_production')
         .insert([formattedRecord])
         .select();
 

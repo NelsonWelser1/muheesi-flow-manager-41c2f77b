@@ -48,7 +48,7 @@ const MilkProductionRecords = () => {
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2">
             <RefreshCw className="h-5 w-5 text-blue-500" />
-            Milk Production Records
+            Kashari Farm Milk Production Records
           </CardTitle>
           <Button 
             variant="outline" 
