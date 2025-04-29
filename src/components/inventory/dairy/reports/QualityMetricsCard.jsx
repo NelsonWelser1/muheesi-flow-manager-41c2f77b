@@ -222,33 +222,17 @@ const QualityMetricsCard = ({ qualityMetrics = [] }) => {
                 tick={{ fill: isDark ? "#9CA3AF" : "#4B5563" }} 
                 stroke={isDark ? "#4B5563" : "#9CA3AF"}
                 domain={[0, 100]}
-              />
-              <YAxis 
-                yAxisId="right" 
-                orientation="right" 
-                tick={{ fill: isDark ? "#9CA3AF" : "#4B5563" }} 
-                stroke={isDark ? "#4B5563" : "#9CA3AF"}
+                label={{ value: 'Quality %', angle: -90, position: 'insideLeft', style: { fill: isDark ? "#9CA3AF" : "#4B5563" } }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area 
-                yAxisId="left"
                 type="monotone" 
                 dataKey="avgQuality" 
-                name="Quality Score"
                 stroke="#8884d8" 
-                strokeWidth={2}
-                fillOpacity={1}
+                fillOpacity={1} 
                 fill="url(#colorQuality)" 
-              />
-              <Area 
-                yAxisId="right"
-                type="monotone" 
-                dataKey="volume" 
-                name="Volume (L)"
-                stroke="#82ca9d" 
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#colorVolume)" 
+                yAxisId="left"
+                name="Quality Score"
               />
             </AreaChart>
           </ResponsiveContainer>

@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MilkProductionForm from "@/components/inventory/kashari/modules/MilkProductionForm";
 import MilkProductionRecords from "@/components/inventory/kashari/modules/MilkProductionRecords";
 import { Droplet, BarChart3, Activity, Users } from "lucide-react";
+import ProductionTrendsChart from '@/components/inventory/kashari/modules/analytics/ProductionTrendsChart';
+import { useMilkProduction } from '@/hooks/useMilkProduction';
 
 const MilkProductionView = () => {
   // Use more stable state management with localStorage to persist tab selection
@@ -19,10 +21,25 @@ const MilkProductionView = () => {
     localStorage.setItem('milkProductionActiveTab', activeTab);
   }, [activeTab]);
 
-  // Calculate summary metrics (these would come from actual data in a real implementation)
-  const totalMilkToday = 758; // liters
-  const milkingCows = 43;
-  const avgPerCow = (totalMilkToday / milkingCows).toFixed(1);
+  const { milkRecords } = useMilkProduction();
+
+  // Calculate summary metrics from actual data
+  const todayStr = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
+  const todayRecords = milkRecords.filter(record => record.date === todayStr);
+  
+  const totalMilkToday = todayRecords.reduce((sum, record) => sum + Number(record.volume || 0), 0);
+  
+  // Get unique count of cows from today's records (if multiple sessions have same cows, count once)
+  const milkingCowsSet = new Set();
+  todayRecords.forEach(record => {
+    if (record.milking_cows) {
+      milkingCowsSet.add(record.milking_cows);
+    }
+  });
+  const milkingCows = todayRecords.length > 0 ? 
+    Math.max(...todayRecords.map(r => Number(r.milking_cows || 0))) : 0;
+  
+  const avgPerCow = milkingCows > 0 ? (totalMilkToday / milkingCows).toFixed(1) : "0.0";
 
   return (
     <div className="space-y-4">
@@ -36,7 +53,7 @@ const MilkProductionView = () => {
           </CardHeader>
           <CardContent>
             <div className="flex justify-between items-center">
-              <div className="text-2xl font-bold">{totalMilkToday} L</div>
+              <div className="text-2xl font-bold">{totalMilkToday.toFixed(1)} L</div>
               <Droplet className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
@@ -83,17 +100,11 @@ const MilkProductionView = () => {
         </TabsContent>
         
         <TabsContent value="analytics" className="space-y-4 pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Production Analytics</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[400px] flex items-center justify-center">
-              <div className="text-center">
-                <BarChart3 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Production trend analytics will be displayed here</p>
-              </div>
-            </CardContent>
-          </Card>
+          <ProductionTrendsChart 
+            milkData={milkRecords} 
+            isLoading={false}
+            dateRange="month"
+          />
         </TabsContent>
       </Tabs>
     </div>
