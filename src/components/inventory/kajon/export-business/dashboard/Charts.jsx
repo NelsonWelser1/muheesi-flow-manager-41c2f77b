@@ -1,6 +1,18 @@
+
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { 
+  LineChart, 
+  Line, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
 
 const Charts = ({ data }) => {
   const mockData = {
