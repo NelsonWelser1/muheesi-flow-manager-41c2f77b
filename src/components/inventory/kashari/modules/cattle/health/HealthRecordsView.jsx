@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
-import { Calendar, Syringe, Activity, X } from "lucide-react";
-import { Button } from "@/components/ui/button"; 
-import AddHealthRecordForm from './AddHealthRecordForm';
+import { Calendar, Syringe, Activity } from "lucide-react";
+import HealthRecordsTable from './HealthRecordsTable';
+import AddHealthRecordDialog from './AddHealthRecordDialog';
 import { supabase } from '@/integrations/supabase/supabase';
 import { useHealthRecords } from '@/hooks/useHealthRecords';
 
@@ -11,7 +11,6 @@ const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
   const [cattleData, setCattleData] = useState(propsCattleData);
   const [loading, setLoading] = useState(propsCattleData.length === 0);
   const { healthRecords, isLoading, error, refetch } = useHealthRecords();
-  const [showForm, setShowForm] = useState(false);
   
   useEffect(() => {
     // If no cattle data is provided as props, fetch it
@@ -41,12 +40,6 @@ const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
     refetch();
   }, [refetch]);
 
-  // Handle success - hide form and refetch data
-  const handleSuccess = () => {
-    setShowForm(false);
-    refetch();
-  };
-
   // Calculate statistics
   const totalRecords = healthRecords?.length || 0;
   const vaccinationCount = healthRecords?.filter(r => r.record_type === 'vaccination').length || 0;
@@ -67,37 +60,8 @@ const HealthRecordsView = ({ cattleData: propsCattleData = [] }) => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Health Records</h2>
-        {!showForm && (
-          <Button 
-            className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
-            onClick={() => setShowForm(true)}
-            disabled={cattleData.length === 0}
-          >
-            <Syringe className="h-4 w-4" />
-            Add Health Record
-          </Button>
-        )}
+        <AddHealthRecordDialog cattleData={cattleData} />
       </div>
-
-      {/* Inline form when visible */}
-      {showForm && (
-        <Card className="relative p-6 border-2 border-purple-200 bg-gray-50">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setShowForm(false)} 
-            className="absolute top-4 right-4"
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </Button>
-          <AddHealthRecordForm
-            onCancel={() => setShowForm(false)}
-            onSuccess={handleSuccess}
-            cattleData={cattleData}
-          />
-        </Card>
-      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
