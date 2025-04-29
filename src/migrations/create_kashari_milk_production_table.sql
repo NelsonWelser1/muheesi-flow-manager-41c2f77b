@@ -4,6 +4,9 @@
 -- Drop existing table if it exists to recreate with correct schema
 DROP TABLE IF EXISTS public.kashari_milk_production;
 
+-- Check if uuid extension is available, if not create it
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE IF NOT EXISTS public.kashari_milk_production (
   id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
   date DATE NOT NULL,
@@ -19,8 +22,8 @@ CREATE TABLE IF NOT EXISTS public.kashari_milk_production (
 );
 
 -- Create indexes for better query performance
-CREATE INDEX IF NOT EXISTS idx_kashari_milk_production_date ON kashari_milk_production(date);
-CREATE INDEX IF NOT EXISTS idx_kashari_milk_production_session ON kashari_milk_production(session);
+CREATE INDEX IF NOT EXISTS idx_kashari_milk_production_date ON public.kashari_milk_production(date);
+CREATE INDEX IF NOT EXISTS idx_kashari_milk_production_session ON public.kashari_milk_production(session);
 
 -- Create trigger for updated_at functionality
 CREATE OR REPLACE FUNCTION update_kashari_milk_production_updated_at()
@@ -32,28 +35,28 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER update_kashari_milk_production_updated_at
-BEFORE UPDATE ON kashari_milk_production
+BEFORE UPDATE ON public.kashari_milk_production
 FOR EACH ROW
 EXECUTE FUNCTION update_kashari_milk_production_updated_at();
 
 -- Add RLS policies without authentication (temporarily disabled)
-ALTER TABLE kashari_milk_production ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.kashari_milk_production ENABLE ROW LEVEL SECURITY;
 
 -- Allow all operations without authentication temporarily
-CREATE POLICY kashari_milk_production_select_policy ON kashari_milk_production
+CREATE POLICY kashari_milk_production_select_policy ON public.kashari_milk_production
   FOR SELECT
   USING (true);
 
-CREATE POLICY kashari_milk_production_insert_policy ON kashari_milk_production
+CREATE POLICY kashari_milk_production_insert_policy ON public.kashari_milk_production
   FOR INSERT
   WITH CHECK (true);
 
-CREATE POLICY kashari_milk_production_update_policy ON kashari_milk_production
+CREATE POLICY kashari_milk_production_update_policy ON public.kashari_milk_production
   FOR UPDATE
   USING (true)
   WITH CHECK (true);
 
-CREATE POLICY kashari_milk_production_delete_policy ON kashari_milk_production
+CREATE POLICY kashari_milk_production_delete_policy ON public.kashari_milk_production
   FOR DELETE
   USING (true);
 
