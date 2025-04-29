@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Calendar, Syringe, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import AddHealthRecordForm from "../../../../cattle/health/AddHealthRecordForm";
+import AddHealthRecordForm from "../../../cattle/health/AddHealthRecordForm";
 import { useHealthRecords } from '@/hooks/useHealthRecords';
 import { useCattleInventory } from '@/hooks/useCattleInventory';
 
