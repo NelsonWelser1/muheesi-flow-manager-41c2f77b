@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DairySidebar from './DairySidebar';
 import CattleInventoryView from './sections/CattleInventoryView';
 import MilkProductionView from './sections/MilkProductionView';
@@ -8,23 +8,40 @@ import GrowthMetricsView from './sections/GrowthMetricsView';
 import AnalyticsView from './sections/AnalyticsView';
 
 const DairyDashboard = () => {
-  const [activeSection, setActiveSection] = useState('cattleInventory');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  // Use localStorage to persist the active section and sidebar state
+  const [activeSection, setActiveSection] = useState(() => {
+    const savedSection = localStorage.getItem('dairyActiveSection');
+    return savedSection || 'cattleInventory';
+  });
+  
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    const savedState = localStorage.getItem('dairySidebarCollapsed');
+    return savedState === 'true';
+  });
+
+  // Persist state changes to localStorage
+  useEffect(() => {
+    localStorage.setItem('dairyActiveSection', activeSection);
+  }, [activeSection]);
+
+  useEffect(() => {
+    localStorage.setItem('dairySidebarCollapsed', isSidebarCollapsed.toString());
+  }, [isSidebarCollapsed]);
 
   const renderSection = () => {
     switch (activeSection) {
       case 'cattleInventory':
-        return <CattleInventoryView />;
+        return <CattleInventoryView key="cattle-inventory-view" />;
       case 'healthRecords':
-        return <HealthRecordsView />;
+        return <HealthRecordsView key="health-records-view" />;
       case 'growthMetrics':
-        return <GrowthMetricsView />;
+        return <GrowthMetricsView key="growth-metrics-view" />;
       case 'milkProduction':
-        return <MilkProductionView />;
+        return <MilkProductionView key="milk-production-view" />;
       case 'analytics':
-        return <AnalyticsView />;
+        return <AnalyticsView key="analytics-view" />;
       default:
-        return <CattleInventoryView />;
+        return <CattleInventoryView key="cattle-inventory-default" />;
     }
   };
 

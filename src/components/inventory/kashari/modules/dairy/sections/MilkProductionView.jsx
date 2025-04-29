@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MilkProductionForm from "@/components/inventory/kashari/modules/MilkProductionForm";
@@ -15,10 +15,9 @@ const MilkProductionView = () => {
   });
 
   // Save the active tab to localStorage whenever it changes
-  const handleTabChange = (value) => {
-    setActiveTab(value);
-    localStorage.setItem('milkProductionActiveTab', value);
-  };
+  useEffect(() => {
+    localStorage.setItem('milkProductionActiveTab', activeTab);
+  }, [activeTab]);
 
   // Calculate summary metrics (these would come from actual data in a real implementation)
   const totalMilkToday = 758; // liters
@@ -68,7 +67,7 @@ const MilkProductionView = () => {
         </Card>
       </div>
       
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
+      <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue={activeTab}>
         <TabsList>
           <TabsTrigger value="daily">Record Production</TabsTrigger>
           <TabsTrigger value="history">Production History</TabsTrigger>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Beef, LineChart, Droplet, BarChart2, Stethoscope } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,12 @@ const DairySidebar = ({
   setActiveSection,
   isCollapsed
 }) => {
+  const handleMenuItemClick = (sectionId) => {
+    setActiveSection(sectionId);
+    // Store the active section in localStorage for persistence
+    localStorage.setItem('dairyActiveSection', sectionId);
+  };
+
   const menuItems = [{
     id: 'cattleInventory',
     label: 'Cattle Inventory',
@@ -43,7 +49,7 @@ const DairySidebar = ({
               activeSection === item.id && "bg-gray-100",
               isCollapsed ? "px-2" : "px-4"
             )} 
-            onClick={() => setActiveSection(item.id)}
+            onClick={() => handleMenuItemClick(item.id)}
           >
             {item.icon}
             {!isCollapsed && <span className="ml-2">{item.label}</span>}
