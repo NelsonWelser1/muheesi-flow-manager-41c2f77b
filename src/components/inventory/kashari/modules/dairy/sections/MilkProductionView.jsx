@@ -7,7 +7,18 @@ import MilkProductionRecords from "@/components/inventory/kashari/modules/MilkPr
 import { Droplet, BarChart3, Activity, Users } from "lucide-react";
 
 const MilkProductionView = () => {
-  const [activeTab, setActiveTab] = useState('daily');
+  // Use more stable state management with localStorage to persist tab selection
+  const [activeTab, setActiveTab] = useState(() => {
+    // Try to get the saved tab from localStorage, default to 'daily'
+    const savedTab = localStorage.getItem('milkProductionActiveTab');
+    return savedTab || 'daily';
+  });
+
+  // Save the active tab to localStorage whenever it changes
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    localStorage.setItem('milkProductionActiveTab', value);
+  };
 
   // Calculate summary metrics (these would come from actual data in a real implementation)
   const totalMilkToday = 758; // liters
@@ -57,7 +68,7 @@ const MilkProductionView = () => {
         </Card>
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="daily">Record Production</TabsTrigger>
           <TabsTrigger value="history">Production History</TabsTrigger>
