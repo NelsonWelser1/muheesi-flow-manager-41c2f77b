@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Droplet, Users, TrendingUp, CalendarDays } from "lucide-react";
@@ -117,7 +116,7 @@ const ProductionSummary = ({ milkData, isLoading, dateRange }) => {
             </p>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -133,7 +132,7 @@ const ProductionSummary = ({ milkData, isLoading, dateRange }) => {
             </p>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -149,7 +148,7 @@ const ProductionSummary = ({ milkData, isLoading, dateRange }) => {
             </p>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">

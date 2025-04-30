@@ -1,10 +1,20 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { format, parseISO } from 'date-fns';
 import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
-  ScatterChart, Scatter, ZAxis, BarChart, Bar
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer, 
+  ScatterChart, 
+  Scatter, 
+  ZAxis, 
+  BarChart, 
+  Bar 
 } from 'recharts';
 
 const ProductionEfficiencyChart = ({ milkData, isLoading, dateRange }) => {

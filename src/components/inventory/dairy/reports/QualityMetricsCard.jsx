@@ -1,244 +1,237 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useTheme } from 'next-themes';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/supabase';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { 
+  LineChart, 
+  Line, 
+  AreaChart, 
+  Area, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
+import { useTheme } from "@/hooks/useTheme";
 
-const QualityMetricsCard = ({ qualityMetrics = [] }) => {
+// Sample data
+const sampleQualityMetrics = [
+  { date: '2025-01-01', avgQuality: 91.2, volume: 210, ph: 6.8, temperature: 4.1, fat: 3.8, protein: 3.2 },
+  { date: '2025-01-02', avgQuality: 90.8, volume: 205, ph: 6.7, temperature: 4.2, fat: 3.7, protein: 3.3 },
+  { date: '2025-01-03', avgQuality: 92.1, volume: 215, ph: 6.9, temperature: 4.0, fat: 3.9, protein: 3.4 },
+  { date: '2025-01-04', avgQuality: 89.5, volume: 200, ph: 6.6, temperature: 4.3, fat: 3.6, protein: 3.1 },
+  { date: '2025-01-05', avgQuality: 93.2, volume: 220, ph: 6.8, temperature: 4.1, fat: 4.0, protein: 3.3 },
+  { date: '2025-01-06', avgQuality: 92.8, volume: 218, ph: 6.7, temperature: 4.2, fat: 3.9, protein: 3.2 },
+  { date: '2025-01-07', avgQuality: 91.5, volume: 212, ph: 6.8, temperature: 4.0, fat: 3.8, protein: 3.3 }
+];
+
+const QualityMetricsCard = ({ qualityMetrics = sampleQualityMetrics }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  
-  // Fetch quality data directly from Supabase
-  const { data: fetchedQualityMetrics, isLoading, error } = useQuery({
-    queryKey: ['qualityMetrics'],
-    queryFn: async () => {
-      console.log('Fetching quality metrics data...');
-      
-      // First try the quality_checks table
-      let { data: qualityData, error: qualityError } = await supabase
-        .from('quality_checks')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-      
-      if (qualityError || !qualityData || qualityData.length === 0) {
-        console.log('No data in quality_checks, checking milk_reception...');
-        
-        // Try milk_reception as fallback
-        const { data: receptionData, error: receptionError } = await supabase
-          .from('milk_reception')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(10);
-          
-        if (!receptionError && receptionData && receptionData.length > 0) {
-          console.log('Found quality data in milk_reception:', receptionData.length, 'records');
-          return formatMilkReceptionData(receptionData);
-        }
-      } else {
-        console.log('Found quality data in quality_checks:', qualityData.length, 'records');
-        return formatQualityChecksData(qualityData);
-      }
-      
-      // Return the provided fallback data if no data found in any table
-      console.log('No quality data found in any table, using fallback data');
-      return qualityMetrics.length > 0 ? qualityMetrics : generateFallbackData();
-    },
-  });
-  
-  // Format data from different tables
-  const formatMilkReceptionData = (data) => {
-    return data.map(item => ({
-      date: new Date(item.datetime || item.created_at).toLocaleDateString(),
-      avgQuality: parseQualityScore(item.quality_score),
-      volume: Number(item.milk_volume) || 0
-    }));
-  };
-  
-  const formatQualityChecksData = (data) => {
-    return data.map(item => {
-      // Calculate quality score based on various parameters
-      const totalChecks = 6; // Total number of checks
-      const passedChecks = [
-        item.temperature_status,
-        item.ph_status || item.ph_level_status,
-        item.moisture_status,
-        item.fat_status,
-        item.protein_status,
-        item.salt_status
-      ].filter(status => 
-        status && (status.toLowerCase() === 'pass' || status.toLowerCase() === 'passed')
-      ).length;
-      
-      const qualityScore = Math.round((passedChecks / totalChecks) * 100);
-      
-      return {
-        date: new Date(item.created_at).toLocaleDateString(),
-        avgQuality: qualityScore,
-        volume: 0 // Volume data might not be available in this table
-      };
-    });
-  };
-  
-  // Helper function to parse quality score from different formats
-  const parseQualityScore = (score) => {
-    if (!score) return 85; // Default score
-    
-    if (typeof score === 'number') {
-      return score;
-    }
-    
-    // Handle grade-based scores
-    if (typeof score === 'string') {
-      switch (score.trim()) {
-        case 'Grade A': return 90;
-        case 'Grade B': return 75;
-        case 'Grade C': return 60;
-        case 'Rejected': return 30;
-        default:
-          // Try to parse numeric string
-          const numericScore = parseFloat(score);
-          return isNaN(numericScore) ? 85 : numericScore;
-      }
-    }
-    
-    return 85; // Default fallback
+
+  // Format dates in the metrics
+  const formattedMetrics = qualityMetrics.map(metric => ({
+    ...metric,
+    dateFormatted: new Date(metric.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }));
+
+  const recentQuality = formattedMetrics.length > 0 ? formattedMetrics[formattedMetrics.length - 1].avgQuality : 0;
+
+  // Function to determine quality status
+  const getQualityStatus = (score) => {
+    if (score >= 90) return { status: 'Excellent', color: 'text-green-500' };
+    if (score >= 80) return { status: 'Good', color: 'text-blue-500' };
+    if (score >= 70) return { status: 'Average', color: 'text-yellow-500' };
+    return { status: 'Needs Improvement', color: 'text-red-500' };
   };
 
-  // Generate fallback data if no data is available
-  const generateFallbackData = () => {
-    const today = new Date();
-    return Array(5).fill().map((_, i) => {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      return {
-        date: date.toLocaleDateString(),
-        avgQuality: 80 + Math.floor(Math.random() * 15),
-        volume: 400 + Math.floor(Math.random() * 200)
-      };
-    }).reverse();
-  };
+  const qualityStatus = getQualityStatus(recentQuality);
 
-  // Use fetched data if available, otherwise use the provided data or fallback
-  const chartData = (fetchedQualityMetrics && fetchedQualityMetrics.length > 0) 
-    ? fetchedQualityMetrics 
-    : qualityMetrics.length > 0 
-      ? qualityMetrics 
-      : generateFallbackData();
+  // Quality metrics
+  const phValue = formattedMetrics.length > 0 ? formattedMetrics[formattedMetrics.length - 1].ph : 0;
+  const tempValue = formattedMetrics.length > 0 ? formattedMetrics[formattedMetrics.length - 1].temperature : 0;
+  const fatValue = formattedMetrics.length > 0 ? formattedMetrics[formattedMetrics.length - 1].fat : 0;
+  const proteinValue = formattedMetrics.length > 0 ? formattedMetrics[formattedMetrics.length - 1].protein : 0;
 
-  // Calculate average quality score
-  const avgQualityScore = Math.round(
-    chartData.reduce((sum, item) => sum + item.avgQuality, 0) / chartData.length
-  );
-
-  // Custom tooltip component
+  // Custom tooltip for charts
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white dark:bg-slate-800 p-3 border rounded shadow">
-          <p className="font-semibold">{`Date: ${label}`}</p>
-          <p className="text-blue-600 dark:text-blue-400">
-            {`Quality Score: ${payload[0].value}%`}
-          </p>
-          {payload.length > 1 && (
-            <p className="text-green-600 dark:text-green-400">
-              {`Volume: ${payload[1].value} L`}
+        <div className="bg-white p-2 border rounded shadow-sm text-sm">
+          <p className="font-medium">{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ color: entry.color }}>
+              {entry.name}: {entry.value.toFixed(entry.name === 'Quality Score' ? 1 : 1)}
+              {entry.name === 'Quality Score' ? '%' : entry.name === 'Volume (L)' ? 'L' : ''}
             </p>
-          )}
+          ))}
         </div>
       );
     }
     return null;
   };
 
-  if (isLoading) {
-    return (
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Quality Score Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart 
+                  data={formattedMetrics}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="colorQuality" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1}/>
+                    </linearGradient>
+                    <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#82ca9d" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="dateFormatted" 
+                    tick={{ fill: isDark ? "#9CA3AF" : "#4B5563" }}
+                    stroke={isDark ? "#4B5563" : "#9CA3AF"}
+                  />
+                  <YAxis 
+                    yAxisId="left" 
+                    tick={{ fill: isDark ? "#9CA3AF" : "#4B5563" }} 
+                    stroke={isDark ? "#4B5563" : "#9CA3AF"}
+                    domain={[0, 100]}
+                    label={{ value: 'Quality %', angle: -90, position: 'insideLeft', style: { fill: isDark ? "#9CA3AF" : "#4B5563" } }}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="avgQuality" 
+                    stroke="#8884d8" 
+                    fillOpacity={1} 
+                    fill="url(#colorQuality)" 
+                    yAxisId="left"
+                    name="Quality Score"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Quality Parameters</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={[
+                    { name: 'pH Level', value: phValue, target: 6.8, min: 6.4, max: 7.0 },
+                    { name: 'Temp (°C)', value: tempValue, target: 4.0, min: 2.0, max: 6.0 },
+                    { name: 'Fat (%)', value: fatValue, target: 3.8, min: 3.5, max: 4.5 },
+                    { name: 'Protein (%)', value: proteinValue, target: 3.3, min: 3.0, max: 3.6 }
+                  ]}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis domain={[0, 'dataMax + 2']} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="value" name="Actual" fill="#8884d8" />
+                  <Bar dataKey="target" name="Target" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>Quality Metrics</CardTitle>
+          <CardTitle>Current Quality Status</CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
-          <div className="h-[300px] flex items-center justify-center">
-            <p>Loading quality metrics data...</p>
+        <CardContent>
+          <div className="flex justify-between items-center">
+            <div className="space-y-2">
+              <h3 className={`text-2xl font-bold ${qualityStatus.color}`}>
+                {recentQuality.toFixed(1)}%
+              </h3>
+              <p className={`${qualityStatus.color} font-medium`}>
+                {qualityStatus.status}
+              </p>
+            </div>
+            <div className="space-y-2 text-right">
+              <p className="text-sm font-medium">Last Updated</p>
+              <p className="text-muted-foreground">
+                {formattedMetrics.length > 0 
+                  ? new Date(formattedMetrics[formattedMetrics.length - 1].date).toLocaleDateString('en-US', { 
+                      month: 'long', 
+                      day: 'numeric', 
+                      year: 'numeric' 
+                    }) 
+                  : 'No data'
+                }
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-6 space-y-4">
+            {formattedMetrics.length > 0 ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">pH Level</p>
+                    <p className="font-medium">{phValue.toFixed(1)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Temperature</p>
+                    <p className="font-medium">{tempValue.toFixed(1)}°C</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Fat Content</p>
+                    <p className="font-medium">{fatValue.toFixed(1)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Protein Content</p>
+                    <p className="font-medium">{proteinValue.toFixed(1)}%</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Quality Trend</p>
+                  <div className="h-8">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={formattedMetrics}>
+                        <Line 
+                          type="monotone" 
+                          dataKey="avgQuality" 
+                          stroke="#8884d8" 
+                          dot={false}
+                          strokeWidth={2}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="text-center text-muted-foreground">No quality data available</p>
+            )}
           </div>
         </CardContent>
       </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Quality Metrics</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <Alert variant="destructive">
-            <AlertCircle className="h-5 w-5" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              Error loading quality metrics: {error.message}
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Quality Metrics</CardTitle>
-        <div className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 px-2 py-1 rounded text-sm font-medium">
-          Avg: {avgQualityScore}%
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="colorQuality" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1}/>
-                </linearGradient>
-                <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#82ca9d" stopOpacity={0.1}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#374151" : "#e5e7eb"} />
-              <XAxis 
-                dataKey="date" 
-                tick={{ fill: isDark ? "#9CA3AF" : "#4B5563" }} 
-                stroke={isDark ? "#4B5563" : "#9CA3AF"}
-              />
-              <YAxis 
-                yAxisId="left"
-                tick={{ fill: isDark ? "#9CA3AF" : "#4B5563" }} 
-                stroke={isDark ? "#4B5563" : "#9CA3AF"}
-                domain={[0, 100]}
-                label={{ value: 'Quality %', angle: -90, position: 'insideLeft', style: { fill: isDark ? "#9CA3AF" : "#4B5563" } }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Area 
-                type="monotone" 
-                dataKey="avgQuality" 
-                stroke="#8884d8" 
-                fillOpacity={1} 
-                fill="url(#colorQuality)" 
-                yAxisId="left"
-                name="Quality Score"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 };
 

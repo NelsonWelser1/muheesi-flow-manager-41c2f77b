@@ -1,7 +1,19 @@
+
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { format, parseISO, startOfDay, isSameDay } from 'date-fns';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer, 
+  BarChart, 
+  Bar 
+} from 'recharts';
 
 const ProductionTrendsChart = ({ milkData, isLoading, dateRange }) => {
   const chartData = useMemo(() => {

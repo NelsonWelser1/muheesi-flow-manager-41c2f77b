@@ -1,6 +1,15 @@
+
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
 
 const ProductionTrends = ({ productionStats }) => {
   return (
