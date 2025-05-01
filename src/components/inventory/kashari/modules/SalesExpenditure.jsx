@@ -24,8 +24,8 @@ const SalesExpenditure = () => {
     updateTransaction
   } = useTransactions();
   
-  // Set the opening balance
-  const openingBalance = 29699000; // UGX 29,699,000
+  // Set the opening balance to 0 (was previously 29699000)
+  const openingBalance = 0; 
   
   // Fetch transactions from Supabase on component mount
   useEffect(() => {
