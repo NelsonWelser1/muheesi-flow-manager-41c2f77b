@@ -21,7 +21,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Save, X } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar, Check, ChevronsUpDown, Save, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Define the form validation schema
 const transactionSchema = z.object({
@@ -35,6 +48,14 @@ const transactionSchema = z.object({
     z.number().positive("Amount must be positive").min(1, "Amount is required")
   ),
 });
+
+// Predefined bank account options
+const bankAccounts = [
+  { label: "Primary Account", value: "Primary Account" },
+  { label: "Business Savings", value: "Business Savings" },
+  { label: "Capital Investment", value: "Capital Investment" },
+  { label: "Cash", value: "Cash" },
+];
 
 const TransactionForm = ({ transaction, onSubmit, onCancel }) => {
   // Initialize the form with default values or existing transaction data
@@ -59,6 +80,9 @@ const TransactionForm = ({ transaction, onSubmit, onCancel }) => {
       amount: Number(data.amount),
     });
   };
+
+  // Track if the dropdown is open
+  const [open, setOpen] = React.useState(false);
 
   return (
     <Card className="bg-white shadow-md border-t-4 border-[#8B5CF6]">
@@ -96,29 +120,84 @@ const TransactionForm = ({ transaction, onSubmit, onCancel }) => {
               )}
             />
 
-            {/* Bank Account Field */}
+            {/* Bank Account Field - Modified to support custom entries */}
             <FormField
               control={form.control}
               name="bankAccount"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Bank Account</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select account" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Primary Account">Primary Account</SelectItem>
-                      <SelectItem value="Business Savings">Business Savings</SelectItem>
-                      <SelectItem value="Capital Investment">Capital Investment</SelectItem>
-                      <SelectItem value="Cash">Cash</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={open}
+                          className={cn(
+                            "w-full justify-between",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value || "Select account"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search account..." />
+                        <CommandEmpty>
+                          <div className="px-2 py-1 text-sm">
+                            No account found. Press Enter to create "{form.watch("bankAccount") || "this account"}"
+                          </div>
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {bankAccounts.map((account) => (
+                            <CommandItem
+                              key={account.value}
+                              value={account.value}
+                              onSelect={() => {
+                                form.setValue("bankAccount", account.value);
+                                setOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  field.value === account.value
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              {account.label}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                      <div className="border-t p-2">
+                        <Input
+                          placeholder="Add custom account..."
+                          value={
+                            !bankAccounts.find((a) => a.value === form.watch("bankAccount"))
+                              ? form.watch("bankAccount") || ""
+                              : ""
+                          }
+                          onChange={(e) => {
+                            form.setValue("bankAccount", e.target.value);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              if (e.target.value) {
+                                setOpen(false);
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
