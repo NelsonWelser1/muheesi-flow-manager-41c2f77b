@@ -20,7 +20,16 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useGrowthPredictions } from "@/hooks/useGrowthPredictions";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
 import { Loader2, RefreshCw } from 'lucide-react';
 
 const GrowthPredictionDialog = ({ open, onOpenChange, cattleData = [] }) => {

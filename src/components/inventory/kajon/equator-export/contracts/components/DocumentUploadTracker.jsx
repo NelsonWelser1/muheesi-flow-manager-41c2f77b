@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
@@ -65,7 +64,7 @@ const DocumentUploadTracker = ({
         };
     }
   };
-
+  
   // Get status display information
   const statusDisplay = getStatusDisplay();
 

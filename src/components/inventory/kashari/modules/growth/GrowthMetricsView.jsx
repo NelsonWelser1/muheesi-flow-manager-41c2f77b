@@ -3,7 +3,18 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, BarChart, PieChart, AreaChart } from "lucide-react";
-import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart as RechartsLineChart, Line } from 'recharts';
+import { 
+  BarChart as RechartsBarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer, 
+  LineChart as RechartsLineChart, 
+  Line 
+} from 'recharts';
 import { useCattleInventory } from '@/hooks/useCattleInventory';
 import { useGrowthPredictions } from '@/hooks/useGrowthPredictions';
 import { Button } from "@/components/ui/button";
