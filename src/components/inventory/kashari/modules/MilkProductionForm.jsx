@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,10 @@ import { format } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Save, RefreshCw, Droplet } from "lucide-react";
 import { useMilkProduction } from '@/hooks/useMilkProduction';
+import { useToast } from "@/components/ui/use-toast";
+
 const MilkProductionForm = () => {
+  const { toast } = useToast();
   const [date, setDate] = useState(new Date());
   const [session, setSession] = useState('');
   const [volume, setVolume] = useState('');
@@ -20,21 +24,30 @@ const MilkProductionForm = () => {
   const [proteinContent, setProteinContent] = useState('');
   const [location, setLocation] = useState('Main Farm');
   const [notes, setNotes] = useState('');
+  
   const {
     addMilkProduction,
-    isSubmitting
+    isSubmitting,
+    error
   } = useMilkProduction();
+
   const locations = ['Main Farm', 'North Paddock', 'South Paddock', 'East Paddock', 'West Paddock', 'Milking Parlor 1', 'Milking Parlor 2'];
-  const sessions = [{
-    value: 'morning',
-    label: 'Morning (5am - 8am)'
-  }, {
-    value: 'midday',
-    label: 'Midday (11am - 1pm)'
-  }, {
-    value: 'evening',
-    label: 'Evening (4pm - 6pm)'
-  }];
+  
+  const sessions = [
+    {
+      value: 'morning',
+      label: 'Morning (5am - 8am)'
+    }, 
+    {
+      value: 'midday',
+      label: 'Midday (11am - 1pm)'
+    }, 
+    {
+      value: 'evening',
+      label: 'Evening (4pm - 6pm)'
+    }
+  ];
+
   const resetForm = () => {
     setDate(new Date());
     setSession('');
@@ -45,24 +58,72 @@ const MilkProductionForm = () => {
     setLocation('Main Farm');
     setNotes('');
   };
-  const handleSubmit = async e => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Form validation
+    if (!session) {
+      toast({
+        title: "Error",
+        description: "Please select a milking session",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!volume || isNaN(Number(volume)) || Number(volume) <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid milk volume",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!milkingCows || isNaN(Number(milkingCows)) || Number(milkingCows) <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid number of milking cows",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Prepare data for submission to Supabase
     const milkData = {
       date: format(date, 'yyyy-MM-dd'),
       session,
-      volume,
-      milkingCows,
-      fatContent,
-      proteinContent,
+      volume: Number(volume),
+      milkingCows: Number(milkingCows),
+      fatContent: fatContent ? Number(fatContent) : null,
+      proteinContent: proteinContent ? Number(proteinContent) : null,
       location,
       notes
     };
-    const result = await addMilkProduction(milkData);
-    if (result) {
-      resetForm();
+
+    try {
+      // Submit data using the hook
+      const result = await addMilkProduction(milkData);
+      
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Milk production record has been saved successfully",
+        });
+        resetForm();
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to save milk production record",
+        variant: "destructive"
+      });
     }
   };
-  return <Card>
+
+  return (
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Droplet className="h-5 w-5 text-blue-500" />
@@ -83,7 +144,7 @@ const MilkProductionForm = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={date} onSelect={newDate => setDate(newDate || new Date())} initialFocus />
+                  <Calendar mode="single" selected={date} onSelect={(newDate) => setDate(newDate || new Date())} initialFocus />
                 </PopoverContent>
               </Popover>
             </div>
@@ -96,9 +157,11 @@ const MilkProductionForm = () => {
                   <SelectValue placeholder="Select milking time" />
                 </SelectTrigger>
                 <SelectContent>
-                  {sessions.map(session => <SelectItem key={session.value} value={session.value}>
+                  {sessions.map(session => (
+                    <SelectItem key={session.value} value={session.value}>
                       {session.label}
-                    </SelectItem>)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -106,25 +169,60 @@ const MilkProductionForm = () => {
             {/* Milk Volume */}
             <div className="space-y-2">
               <Label htmlFor="volume">Milk Volume (Liters) *</Label>
-              <Input id="volume" type="number" min="0" step="0.1" value={volume} onChange={e => setVolume(e.target.value)} placeholder="Enter milk volume" />
+              <Input
+                id="volume"
+                type="number"
+                min="0"
+                step="0.1"
+                value={volume}
+                onChange={e => setVolume(e.target.value)}
+                placeholder="Enter milk volume"
+              />
             </div>
             
             {/* Number of Milking Cows */}
             <div className="space-y-2">
               <Label htmlFor="milkingCows">Number of Milking Cows *</Label>
-              <Input id="milkingCows" type="number" min="1" step="1" value={milkingCows} onChange={e => setMilkingCows(e.target.value)} placeholder="Enter number of cows" className="flex items-center" />
+              <Input
+                id="milkingCows"
+                type="number"
+                min="1"
+                step="1"
+                value={milkingCows}
+                onChange={e => setMilkingCows(e.target.value)}
+                placeholder="Enter number of cows"
+                className="flex items-center"
+              />
             </div>
             
             {/* Fat Content */}
             <div className="space-y-2">
               <Label htmlFor="fatContent">Fat Content (%)</Label>
-              <Input id="fatContent" type="number" min="0" max="100" step="0.1" value={fatContent} onChange={e => setFatContent(e.target.value)} placeholder="Fat percentage (optional)" />
+              <Input
+                id="fatContent"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={fatContent}
+                onChange={e => setFatContent(e.target.value)}
+                placeholder="Fat percentage (optional)"
+              />
             </div>
             
             {/* Protein Content */}
             <div className="space-y-2">
               <Label htmlFor="proteinContent">Protein Content (%)</Label>
-              <Input id="proteinContent" type="number" min="0" max="100" step="0.1" value={proteinContent} onChange={e => setProteinContent(e.target.value)} placeholder="Protein percentage (optional)" />
+              <Input
+                id="proteinContent"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={proteinContent}
+                onChange={e => setProteinContent(e.target.value)}
+                placeholder="Protein percentage (optional)"
+              />
             </div>
             
             {/* Location */}
@@ -135,9 +233,11 @@ const MilkProductionForm = () => {
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
                 <SelectContent>
-                  {locations.map(loc => <SelectItem key={loc} value={loc}>
+                  {locations.map(loc => (
+                    <SelectItem key={loc} value={loc}>
                       {loc}
-                    </SelectItem>)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -146,19 +246,50 @@ const MilkProductionForm = () => {
           {/* Notes */}
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
-            <Textarea id="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add any additional notes or observations" rows={3} />
+            <Textarea
+              id="notes"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Add any additional notes or observations"
+              rows={3}
+            />
           </div>
           
           {/* Form Actions */}
           <div className="flex justify-end space-x-2 pt-4">
-            
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={resetForm}
+              disabled={isSubmitting}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Reset
+            </Button>
             <Button type="submit" disabled={isSubmitting}>
-              <Save className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Saving..." : "Save Record"}
+              {isSubmitting ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Record
+                </>
+              )}
             </Button>
           </div>
+          
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
+              {error}
+            </div>
+          )}
         </form>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export default MilkProductionForm;
