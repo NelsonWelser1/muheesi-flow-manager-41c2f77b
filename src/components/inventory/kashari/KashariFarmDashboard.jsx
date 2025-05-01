@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,6 +22,7 @@ import DairyManagement from './modules/DairyManagement';
 import BananaPlantation from './modules/BananaPlantation';
 import SalesExpenditure from './modules/SalesExpenditure';
 import { format } from 'date-fns';
+import { useWeatherData } from '@/utils/weatherService';
 
 const KashariFarmDashboard = () => {
   // Make sure the activeTab state is properly persisted
@@ -30,11 +30,14 @@ const KashariFarmDashboard = () => {
     const savedTab = localStorage.getItem('kashariFarmActiveTab') || 'dashboard';
     return savedTab;
   });
-  const [weather, setWeather] = useState({ temp: '24°C', condition: 'Partly Cloudy' });
+  
   const [currentTime, setCurrentTime] = useState(new Date());
   // Add a key to force re-render of components when tab changes
   const [componentKey, setComponentKey] = useState(Date.now());
 
+  // Fetch real weather data using our custom hook
+  const { data: weatherData, isLoading: isWeatherLoading, error: weatherError } = useWeatherData();
+  
   // Save active tab to local storage whenever it changes
   useEffect(() => {
     localStorage.setItem('kashariFarmActiveTab', activeTab);
@@ -71,6 +74,9 @@ const KashariFarmDashboard = () => {
     { title: 'Staff Meeting', date: '2023-07-20', type: 'meeting' }
   ];
 
+  // Weather display data
+  const weather = weatherData || { temp: '24°C', condition: 'Partly Cloudy', location: 'Mbarara' };
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <Card>
@@ -84,7 +90,7 @@ const KashariFarmDashboard = () => {
           <div className="flex items-center space-x-4">
             <div className="text-right">
               <p className="text-sm font-medium">{weather.temp}</p>
-              <p className="text-xs text-muted-foreground">{weather.condition}</p>
+              <p className="text-xs text-muted-foreground">{weather.condition} - {weather.location}</p>
             </div>
             <div className="text-right hidden md:block">
               <p className="text-sm font-medium">{format(currentTime, 'h:mm a')}</p>
