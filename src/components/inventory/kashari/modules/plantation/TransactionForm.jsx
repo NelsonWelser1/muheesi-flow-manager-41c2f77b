@@ -27,6 +27,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -83,6 +84,10 @@ const TransactionForm = ({ transaction, onSubmit, onCancel }) => {
 
   // Track if the dropdown is open
   const [open, setOpen] = React.useState(false);
+  const [customAccount, setCustomAccount] = React.useState("");
+
+  const bankAccountValue = form.watch("bankAccount");
+  const isCustomAccount = !bankAccounts.find(acc => acc.value === bankAccountValue);
 
   return (
     <Card className="bg-white shadow-md border-t-4 border-[#8B5CF6]">
@@ -146,56 +151,46 @@ const TransactionForm = ({ transaction, onSubmit, onCancel }) => {
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0">
                       <Command>
-                        <CommandInput placeholder="Search account..." />
-                        <CommandEmpty>
-                          <div className="px-2 py-1 text-sm">
-                            No account found. Press Enter to create "{form.watch("bankAccount") || "this account"}"
-                          </div>
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {bankAccounts.map((account) => (
-                            <CommandItem
-                              key={account.value}
-                              value={account.value}
-                              onSelect={() => {
-                                form.setValue("bankAccount", account.value);
-                                setOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  field.value === account.value
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              {account.label}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </Command>
-                      <div className="border-t p-2">
-                        <Input
-                          placeholder="Add custom account..."
-                          value={
-                            !bankAccounts.find((a) => a.value === form.watch("bankAccount"))
-                              ? form.watch("bankAccount") || ""
-                              : ""
-                          }
-                          onChange={(e) => {
-                            form.setValue("bankAccount", e.target.value);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              if (e.target.value) {
-                                setOpen(false);
-                              }
+                        <CommandInput 
+                          placeholder="Search account..." 
+                          value={isCustomAccount ? customAccount : ""}
+                          onValueChange={(value) => {
+                            setCustomAccount(value);
+                            if (value) {
+                              form.setValue("bankAccount", value);
                             }
                           }}
                         />
-                      </div>
+                        <CommandList>
+                          <CommandEmpty>
+                            <div className="px-2 py-1 text-sm">
+                              No account found. Press Enter to create "{customAccount || "this account"}"
+                            </div>
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {bankAccounts.map((account) => (
+                              <CommandItem
+                                key={account.value}
+                                value={account.value}
+                                onSelect={() => {
+                                  form.setValue("bankAccount", account.value);
+                                  setOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    field.value === account.value
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {account.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
