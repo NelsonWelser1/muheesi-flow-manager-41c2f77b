@@ -8,17 +8,22 @@ import GrowthMetricsView from './sections/GrowthMetricsView';
 import AnalyticsView from './sections/AnalyticsView';
 
 const DairyDashboard = () => {
-  // Use localStorage to persist the active section and sidebar state
-  // Default to milkProduction section to ensure we see the updated UI
-  const [activeSection, setActiveSection] = useState(() => {
-    const savedSection = localStorage.getItem('dairyActiveSection');
-    return savedSection || 'milkProduction';
-  });
+  // Always start with a consistent default state
+  const [activeSection, setActiveSection] = useState('milkProduction');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+  // Load saved preferences after initial render
+  useEffect(() => {
+    const savedSection = localStorage.getItem('dairyActiveSection');
+    if (savedSection) {
+      setActiveSection(savedSection);
+    }
+    
     const savedState = localStorage.getItem('dairySidebarCollapsed');
-    return savedState === 'true';
-  });
+    if (savedState === 'true') {
+      setIsSidebarCollapsed(true);
+    }
+  }, []);
 
   // Persist state changes to localStorage
   useEffect(() => {
@@ -31,19 +36,22 @@ const DairyDashboard = () => {
 
   // Function to determine which section component to render based on activeSection
   const renderSection = () => {
+    // Add a unique key to each component to force re-render when switching
+    const renderKey = Date.now().toString();
+    
     switch (activeSection) {
       case 'cattleInventory':
-        return <CattleInventoryView key="cattle-inventory-view" />;
+        return <CattleInventoryView key={`cattle-inventory-${renderKey}`} />;
       case 'healthRecords':
-        return <HealthRecordsView key="health-records-view" />;
+        return <HealthRecordsView key={`health-records-${renderKey}`} />;
       case 'growthMetrics':
-        return <GrowthMetricsView key="growth-metrics-view" />;
+        return <GrowthMetricsView key={`growth-metrics-${renderKey}`} />;
       case 'milkProduction':
-        return <MilkProductionView key="milk-production-view" />;
+        return <MilkProductionView key={`milk-production-${renderKey}`} />;
       case 'analytics':
-        return <AnalyticsView key="analytics-view" />;
+        return <AnalyticsView key={`analytics-${renderKey}`} />;
       default:
-        return <MilkProductionView key="milk-production-default" />;
+        return <MilkProductionView key={`milk-production-default-${renderKey}`} />;
     }
   };
 

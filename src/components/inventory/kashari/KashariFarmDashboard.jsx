@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -31,10 +32,14 @@ const KashariFarmDashboard = () => {
   });
   const [weather, setWeather] = useState({ temp: '24°C', condition: 'Partly Cloudy' });
   const [currentTime, setCurrentTime] = useState(new Date());
+  // Add a key to force re-render of components when tab changes
+  const [componentKey, setComponentKey] = useState(Date.now());
 
   // Save active tab to local storage whenever it changes
   useEffect(() => {
     localStorage.setItem('kashariFarmActiveTab', activeTab);
+    // Generate a new key whenever the tab changes to force re-render
+    setComponentKey(Date.now());
   }, [activeTab]);
 
   useEffect(() => {
@@ -44,6 +49,16 @@ const KashariFarmDashboard = () => {
     
     return () => clearInterval(interval);
   }, []);
+
+  // Handle tab change with proper state management
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    // Clear any cached dairy section UI state when switching tabs
+    if (value === 'dairy') {
+      localStorage.removeItem('dairyActiveSection');
+      localStorage.removeItem('dairySidebarCollapsed');
+    }
+  };
 
   const stats = [
     { title: 'Milk Production', value: '245 Liters', change: '+12%', icon: <BarChart2 className="h-4 w-4 text-blue-500" /> },
@@ -78,7 +93,7 @@ const KashariFarmDashboard = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
             <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-6">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="dairy">Dairy Products</TabsTrigger>
@@ -181,7 +196,7 @@ const KashariFarmDashboard = () => {
             </TabsContent>
 
             <TabsContent value="dairy">
-              <DairyManagement key="dairy-management-tab" />
+              <DairyManagement key={`dairy-management-${componentKey}`} />
             </TabsContent>
 
             <TabsContent value="banana">

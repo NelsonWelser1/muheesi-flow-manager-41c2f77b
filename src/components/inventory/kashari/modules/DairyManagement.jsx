@@ -8,22 +8,26 @@ const DairyManagement = () => {
   const [initialized, setInitialized] = useState(false);
   
   useEffect(() => {
+    // Clear any stale state when component mounts
+    localStorage.removeItem('dairyActiveSection');
+    localStorage.removeItem('dairySidebarCollapsed');
+    
     // Mark component as initialized to prevent re-rendering issues
     if (!initialized) {
       setInitialized(true);
       
-      // Make sure the latest state is persisted in localStorage
+      // Set default values with current timestamp to force fresh state
       const timestamp = Date.now().toString();
       localStorage.setItem('dairyManagementInitialized', timestamp);
       
-      // Ensure we're using the latest state of the component
-      const activeSection = localStorage.getItem('dairyActiveSection') || 'milkProduction';
-      const sidebarState = localStorage.getItem('dairySidebarCollapsed') || 'false';
+      // Set default active section rather than using potentially stale data
+      localStorage.setItem('dairyActiveSection', 'milkProduction');
+      localStorage.setItem('dairySidebarCollapsed', 'false');
       
-      console.log('DairyManagement component initialized', { 
+      console.log('DairyManagement component initialized with fresh state', { 
         timestamp,
-        activeSection, 
-        sidebarCollapsed: sidebarState 
+        activeSection: 'milkProduction', 
+        sidebarCollapsed: 'false' 
       });
     }
     
@@ -36,8 +40,8 @@ const DairyManagement = () => {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Dairy Management</h2>
-      {/* Set the correct default active section and always include the key to avoid stale renders */}
-      <DairyDashboard key={`dairy-dashboard-${initialized ? 'initialized' : 'loading'}`} />
+      {/* Use the initialized state to ensure the dashboard always gets a fresh render */}
+      <DairyDashboard key={`dairy-dashboard-${initialized ? Date.now() : 'loading'}`} />
     </div>
   );
 };
