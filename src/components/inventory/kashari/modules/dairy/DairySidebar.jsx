@@ -79,6 +79,7 @@ const DairySidebar = ({
               <div 
                 key={item.id} 
                 className={`menu-item-wrapper menu-item-${item.id}`}
+                data-active={activeSection === item.id ? "true" : "false"}
               >
                 <Button 
                   variant={activeSection === item.id ? "secondary" : "ghost"}

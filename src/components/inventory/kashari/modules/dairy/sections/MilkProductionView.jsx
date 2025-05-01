@@ -21,7 +21,7 @@ const MilkProductionView = () => {
     localStorage.setItem('milkProductionActiveTab', activeTab);
   }, [activeTab]);
 
-  const { milkRecords } = useMilkProduction();
+  const { milkRecords, isLoading } = useMilkProduction();
 
   // Calculate summary metrics from actual data
   const todayStr = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
@@ -102,7 +102,7 @@ const MilkProductionView = () => {
         <TabsContent value="analytics" className="space-y-4 pt-4">
           <ProductionTrendsChart 
             milkData={milkRecords} 
-            isLoading={false}
+            isLoading={isLoading}
             dateRange="month"
           />
         </TabsContent>

@@ -24,9 +24,18 @@ import SalesExpenditure from './modules/SalesExpenditure';
 import { format } from 'date-fns';
 
 const KashariFarmDashboard = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  // Make sure the activeTab state is properly persisted
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = localStorage.getItem('kashariFarmActiveTab') || 'dashboard';
+    return savedTab;
+  });
   const [weather, setWeather] = useState({ temp: '24°C', condition: 'Partly Cloudy' });
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Save active tab to local storage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('kashariFarmActiveTab', activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -69,7 +78,7 @@ const KashariFarmDashboard = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-6">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="dairy">Dairy Products</TabsTrigger>
@@ -172,7 +181,7 @@ const KashariFarmDashboard = () => {
             </TabsContent>
 
             <TabsContent value="dairy">
-              <DairyManagement />
+              <DairyManagement key="dairy-management-tab" />
             </TabsContent>
 
             <TabsContent value="banana">

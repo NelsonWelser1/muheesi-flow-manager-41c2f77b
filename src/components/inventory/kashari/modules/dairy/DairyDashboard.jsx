@@ -9,9 +9,10 @@ import AnalyticsView from './sections/AnalyticsView';
 
 const DairyDashboard = () => {
   // Use localStorage to persist the active section and sidebar state
+  // Default to milkProduction section to ensure we see the updated UI
   const [activeSection, setActiveSection] = useState(() => {
     const savedSection = localStorage.getItem('dairyActiveSection');
-    return savedSection || 'cattleInventory';
+    return savedSection || 'milkProduction';
   });
   
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
@@ -42,7 +43,7 @@ const DairyDashboard = () => {
       case 'analytics':
         return <AnalyticsView key="analytics-view" />;
       default:
-        return <CattleInventoryView key="cattle-inventory-default" />;
+        return <MilkProductionView key="milk-production-default" />;
     }
   };
 
