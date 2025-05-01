@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -7,44 +7,31 @@ import { useToast } from "@/components/ui/use-toast";
 import { Plus, Calendar, ArrowUp, ArrowDown, Wallet, Banknote } from "lucide-react";
 import TransactionForm from "./plantation/TransactionForm";
 import { formatCurrency } from "./plantation/utils/formatters";
+import { useTransactions } from "@/hooks/useTransactions";
 
 const SalesExpenditure = () => {
-  const [transactions, setTransactions] = useState([
-    { 
-      id: 1, 
-      date: "2025-04-01", 
-      bankAccount: "Primary Account", 
-      type: "income", 
-      payee: "Nakumatt Supermarket", 
-      reason: "Banana Sales (Ripe)", 
-      amount: 325000 
-    },
-    { 
-      id: 2, 
-      date: "2025-04-03", 
-      bankAccount: "Primary Account", 
-      type: "income", 
-      payee: "Carrefour Uganda", 
-      reason: "Banana Sales (Green)", 
-      amount: 375000 
-    },
-    { 
-      id: 3, 
-      date: "2025-04-05", 
-      bankAccount: "Primary Account", 
-      type: "expense", 
-      payee: "Eng. Collins", 
-      reason: "Plantation Irrigation Repair", 
-      amount: 250000 
-    }
-  ]);
-  
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const { toast } = useToast();
   
+  // Use the custom hook for transactions
+  const { 
+    transactions, 
+    isLoading, 
+    isFetching, 
+    fetchTransactions, 
+    saveTransaction,
+    updateTransaction
+  } = useTransactions();
+  
   // Set the opening balance
   const openingBalance = 29699000; // UGX 29,699,000
+  
+  // Fetch transactions from Supabase on component mount
+  useEffect(() => {
+    console.log("Component mounted, fetching transactions");
+    fetchTransactions();
+  }, [fetchTransactions]);
   
   // Sort transactions by date
   const sortedTransactions = [...transactions].sort((a, b) => 
@@ -62,7 +49,8 @@ const SalesExpenditure = () => {
     
     return {
       ...transaction,
-      runningBalance
+      runningBalance,
+      bankAccount: transaction.bank_account // Map from database field to component field
     };
   });
   
@@ -71,11 +59,11 @@ const SalesExpenditure = () => {
   // Calculate summary metrics
   const totalIncome = transactions
     .filter(t => t.type === "income")
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + Number(t.amount), 0);
     
   const totalExpenses = transactions
     .filter(t => t.type === "expense")
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + Number(t.amount), 0);
   
   const netChange = totalIncome - totalExpenses;
   
@@ -92,32 +80,20 @@ const SalesExpenditure = () => {
   };
   
   // Handle form submission
-  const handleSubmitTransaction = (formData) => {
+  const handleSubmitTransaction = async (formData) => {
+    console.log("Form data submitted:", formData);
+    let success = false;
+    
     if (editingTransaction) {
-      setTransactions(transactions.map(t => 
-        t.id === editingTransaction.id ? { ...formData, id: t.id } : t
-      ));
-      
-      toast({
-        title: "Transaction Updated",
-        description: "The transaction was successfully updated.",
-      });
+      success = await updateTransaction(editingTransaction.id, formData);
     } else {
-      const newTransaction = {
-        ...formData,
-        id: Date.now(),
-      };
-      
-      setTransactions([...transactions, newTransaction]);
-      
-      toast({
-        title: "Transaction Added",
-        description: "The transaction was successfully recorded.",
-      });
+      success = await saveTransaction(formData);
     }
     
-    setShowForm(false);
-    setEditingTransaction(null);
+    if (success) {
+      setShowForm(false);
+      setEditingTransaction(null);
+    }
   };
   
   // Handle canceling form
@@ -197,89 +173,96 @@ const SalesExpenditure = () => {
 
       <Card className="bg-white shadow-lg">
         <CardContent className="pt-6">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead className="font-semibold">Date</TableHead>
-                  <TableHead className="font-semibold">Account</TableHead>
-                  <TableHead className="font-semibold">Payee</TableHead>
-                  <TableHead className="font-semibold">Description</TableHead>
-                  <TableHead className="font-semibold">Type</TableHead>
-                  <TableHead className="font-semibold">Amount</TableHead>
-                  <TableHead className="font-semibold text-right">Balance</TableHead>
-                  <TableHead className="w-[80px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow className="bg-blue-50 border-b border-blue-100">
-                  <TableCell colSpan={6} className="font-bold">Opening Balance</TableCell>
-                  <TableCell className="font-bold text-right">{formatCurrency(openingBalance)}</TableCell>
-                  <TableCell></TableCell>
-                </TableRow>
-                
-                {ledgerEntries.map((transaction) => (
-                  <TableRow key={transaction.id} className="hover:bg-gray-50">
-                    <TableCell>{transaction.date}</TableCell>
-                    <TableCell>{transaction.bankAccount}</TableCell>
-                    <TableCell>{transaction.payee}</TableCell>
-                    <TableCell>{transaction.reason}</TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        transaction.type === "income" 
-                          ? "bg-green-100 text-green-800" 
-                          : "bg-red-100 text-red-800"
-                      }`}>
-                        {transaction.type === "income" ? (
-                          <ArrowUp className="mr-1 h-3 w-3" />
-                        ) : (
-                          <ArrowDown className="mr-1 h-3 w-3" />
-                        )}
-                        {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
-                      </span>
-                    </TableCell>
-                    <TableCell className={`font-medium ${
-                      transaction.type === "income" ? "text-green-600" : "text-red-600"
-                    }`}>
-                      {transaction.type === "income" ? "+" : "-"} {formatCurrency(transaction.amount)}
-                    </TableCell>
-                    <TableCell className="font-medium text-right">
-                      {formatCurrency(transaction.runningBalance)}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditTransaction(transaction)}
-                        className="h-8 w-8"
-                      >
-                        <Calendar className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                    </TableCell>
+          {isFetching ? (
+            <div className="flex justify-center items-center p-8">
+              <span className="text-gray-500">Loading transactions...</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="font-semibold">Date</TableHead>
+                    <TableHead className="font-semibold">Account</TableHead>
+                    <TableHead className="font-semibold">Payee</TableHead>
+                    <TableHead className="font-semibold">Description</TableHead>
+                    <TableHead className="font-semibold">Type</TableHead>
+                    <TableHead className="font-semibold">Amount</TableHead>
+                    <TableHead className="font-semibold text-right">Balance</TableHead>
+                    <TableHead className="w-[80px]"></TableHead>
                   </TableRow>
-                ))}
-                
-                <TableRow className="bg-purple-50 border-t border-purple-100">
-                  <TableCell colSpan={5} className="font-bold">Totals</TableCell>
-                  <TableCell className="font-bold">
-                    <div className="text-green-600">+ {formatCurrency(totalIncome)}</div>
-                    <div className="text-red-600">- {formatCurrency(totalExpenses)}</div>
-                  </TableCell>
-                  <TableCell></TableCell>
-                  <TableCell></TableCell>
-                </TableRow>
-                
-                <TableRow className="bg-purple-100">
-                  <TableCell colSpan={6} className="font-bold">Closing Balance</TableCell>
-                  <TableCell className="font-bold text-right text-[#8B5CF6]">
-                    {formatCurrency(closingBalance)}
-                  </TableCell>
-                  <TableCell></TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  <TableRow className="bg-blue-50 border-b border-blue-100">
+                    <TableCell colSpan={6} className="font-bold">Opening Balance</TableCell>
+                    <TableCell className="font-bold text-right">{formatCurrency(openingBalance)}</TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                  
+                  {ledgerEntries.map((transaction) => (
+                    <TableRow key={transaction.id} className="hover:bg-gray-50">
+                      <TableCell>{transaction.date}</TableCell>
+                      <TableCell>{transaction.bankAccount}</TableCell>
+                      <TableCell>{transaction.payee}</TableCell>
+                      <TableCell>{transaction.reason}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          transaction.type === "income" 
+                            ? "bg-green-100 text-green-800" 
+                            : "bg-red-100 text-red-800"
+                        }`}>
+                          {transaction.type === "income" ? (
+                            <ArrowUp className="mr-1 h-3 w-3" />
+                          ) : (
+                            <ArrowDown className="mr-1 h-3 w-3" />
+                          )}
+                          {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
+                        </span>
+                      </TableCell>
+                      <TableCell className={`font-medium ${
+                        transaction.type === "income" ? "text-green-600" : "text-red-600"
+                      }`}>
+                        {transaction.type === "income" ? "+" : "-"} {formatCurrency(transaction.amount)}
+                      </TableCell>
+                      <TableCell className="font-medium text-right">
+                        {formatCurrency(transaction.runningBalance)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditTransaction(transaction)}
+                          className="h-8 w-8"
+                          disabled={isLoading}
+                        >
+                          <Calendar className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  
+                  <TableRow className="bg-purple-50 border-t border-purple-100">
+                    <TableCell colSpan={5} className="font-bold">Totals</TableCell>
+                    <TableCell className="font-bold">
+                      <div className="text-green-600">+ {formatCurrency(totalIncome)}</div>
+                      <div className="text-red-600">- {formatCurrency(totalExpenses)}</div>
+                    </TableCell>
+                    <TableCell></TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                  
+                  <TableRow className="bg-purple-100">
+                    <TableCell colSpan={6} className="font-bold">Closing Balance</TableCell>
+                    <TableCell className="font-bold text-right text-[#8B5CF6]">
+                      {formatCurrency(closingBalance)}
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

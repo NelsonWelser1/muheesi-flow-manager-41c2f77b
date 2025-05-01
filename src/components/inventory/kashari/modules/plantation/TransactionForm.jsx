@@ -63,7 +63,10 @@ const TransactionForm = ({ transaction, onSubmit, onCancel }) => {
   const form = useForm({
     resolver: zodResolver(transactionSchema),
     defaultValues: transaction
-      ? { ...transaction }
+      ? { 
+          ...transaction,
+          bankAccount: transaction.bankAccount || transaction.bank_account, // Handle both field names
+        }
       : {
           date: new Date().toISOString().split("T")[0],
           bankAccount: "Primary Account",
@@ -76,6 +79,7 @@ const TransactionForm = ({ transaction, onSubmit, onCancel }) => {
 
   // Handle form submission
   const handleSubmit = (data) => {
+    console.log("Form submitted:", data);
     onSubmit({
       ...data,
       amount: Number(data.amount),
