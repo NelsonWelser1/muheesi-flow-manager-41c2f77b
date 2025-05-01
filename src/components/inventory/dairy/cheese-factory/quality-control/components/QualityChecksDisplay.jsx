@@ -22,7 +22,8 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer 
+  ResponsiveContainer,
+  Legend
 } from 'recharts';
 
 const QualityChecksDisplay = () => {
@@ -245,6 +246,7 @@ const QualityChecksDisplay = () => {
                       <XAxis dataKey="date" />
                       <YAxis />
                       <Tooltip />
+                      <Legend />
                       <Line type="monotone" dataKey="temperature" name="Temperature (°C)" stroke="#8884d8" />
                       <Line type="monotone" dataKey="moisture" name="Moisture (%)" stroke="#82ca9d" />
                       <Line type="monotone" dataKey="acidity" name="Acidity (pH)" stroke="#ffc658" />
