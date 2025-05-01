@@ -81,218 +81,231 @@ const QualityChecksDisplay = () => {
       acc[date] = {
         date,
         temperature: 0,
-        ph: 0,
         moisture: 0,
-        fat: 0,
-        protein: 0,
+        acidity: 0,
         salt: 0,
         count: 0
       };
     }
-    acc[date].temperature += Number(check.temperature_actual);
-    acc[date].ph += Number(check.ph_level_actual);
-    acc[date].moisture += Number(check.moisture_actual);
-    acc[date].fat += Number(check.fat_actual);
-    acc[date].protein += Number(check.protein_actual);
-    acc[date].salt += Number(check.salt_actual);
+    
+    acc[date].temperature += parseFloat(check.temperature) || 0;
+    acc[date].moisture += parseFloat(check.moisture) || 0;
+    acc[date].acidity += parseFloat(check.acidity) || 0;
+    acc[date].salt += parseFloat(check.salt) || 0;
     acc[date].count += 1;
+    
     return acc;
   }, {});
+  
+  // Calculate averages for each date
+  const chartData = Object.values(trendData).map(item => ({
+    date: item.date,
+    temperature: item.temperature / item.count,
+    moisture: item.moisture / item.count,
+    acidity: item.acidity / item.count,
+    salt: item.salt / item.count
+  })).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-14); // Last 14 days
 
-  const chartData = Object.values(trendData).map(day => ({
-    date: day.date,
-    temperature: day.temperature / day.count,
-    ph: day.ph / day.count,
-    moisture: day.moisture / day.count,
-    fat: day.fat / day.count,
-    protein: day.protein / day.count,
-    salt: day.salt / day.count
-  }));
+  // Handle data export functions
+  const exportToExcel = () => {
+    const worksheetData = filteredChecks.map(check => ({
+      'Batch ID': check.batch_id,
+      'Date': format(new Date(check.created_at), 'MMM dd, yyyy HH:mm'),
+      'Temperature (°C)': check.temperature,
+      'Moisture (%)': check.moisture,
+      'Acidity (pH)': check.acidity,
+      'Salt (%)': check.salt,
+      'Status': check.status
+    }));
 
-  const handleRefresh = async () => {
-    try {
-      await refetch();
-      toast({
-        title: "Success",
-        description: "Data refreshed successfully"
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to refresh data",
-        variant: "destructive"
-      });
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Quality Checks");
+    XLSX.writeFile(workbook, `Quality_Checks_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+
+    toast({
+      title: "Export successful",
+      description: "Quality checks exported to Excel"
+    });
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text("Quality Check Records", 14, 22);
+    doc.setFontSize(11);
+    doc.text(`Generated on: ${format(new Date(), 'MMM dd, yyyy HH:mm')}`, 14, 30);
+    
+    const tableColumn = ["Batch ID", "Date", "Temp (°C)", "Moisture (%)", "Acidity (pH)", "Salt (%)", "Status"];
+    const tableRows = filteredChecks.map(check => [
+      check.batch_id,
+      format(new Date(check.created_at), 'MMM dd, yyyy'),
+      check.temperature,
+      check.moisture,
+      check.acidity,
+      check.salt,
+      check.status
+    ]);
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 40,
+      theme: 'grid',
+      styles: {
+        fontSize: 8
+      },
+      headStyles: {
+        fillColor: [102, 16, 242]
+      }
+    });
+    
+    doc.save(`Quality_Checks_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    
+    toast({
+      title: "Export successful",
+      description: "Quality checks exported to PDF"
+    });
+  };
+
+  // Helper function for status styling
+  const getStatusStyle = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'passed':
+        return 'bg-green-100 text-green-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      case 'warning':
+        return 'bg-amber-100 text-amber-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const renderStatusBadge = (status) => (
-    <Badge variant={status === 'Passed' ? 'success' : 'destructive'}>
-      {status}
-    </Badge>
-  );
-
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Quality Trends</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="temperature" stroke="#8884d8" name="Temperature" />
-                <Line type="monotone" dataKey="ph" stroke="#82ca9d" name="pH Level" />
-                <Line type="monotone" dataKey="moisture" stroke="#ffc658" name="Moisture" />
-                <Line type="monotone" dataKey="fat" stroke="#ff7300" name="Fat" />
-                <Line type="monotone" dataKey="protein" stroke="#00C49F" name="Protein" />
-                <Line type="monotone" dataKey="salt" stroke="#FFBB28" name="Salt" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="flex flex-1 items-center gap-2">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search by batch ID..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="max-w-xs"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Select defaultValue={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Time range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="day">Last 24 Hours</SelectItem>
+              <SelectItem value="week">Last Week</SelectItem>
+              <SelectItem value="month">Last Month</SelectItem>
+              <SelectItem value="year">Last Year</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" onClick={() => refetch()} disabled={isRefetching}>
+            <RefreshCw className={cn("h-4 w-4 mr-1", isRefetching && "animate-spin")} />
+            Refresh
+          </Button>
+          <Button variant="outline" onClick={exportToExcel}>
+            <FileDown className="h-4 w-4 mr-1" />
+            Excel
+          </Button>
+          <Button variant="outline" onClick={exportToPDF}>
+            <FileDown className="h-4 w-4 mr-1" />
+            PDF
+          </Button>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Quality Check Records</span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleRefresh}
-              disabled={isRefetching}
-            >
-              <RefreshCw className={cn(
-                "h-4 w-4 mr-2",
-                isRefetching && "animate-spin"
-              )} />
-              {isRefetching ? "Refreshing..." : "Refresh"}
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by batch ID..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select time range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Time</SelectItem>
-                  <SelectItem value="day">Last 24 Hours</SelectItem>
-                  <SelectItem value="week">Last Week</SelectItem>
-                  <SelectItem value="month">Last Month</SelectItem>
-                  <SelectItem value="year">Last Year</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-40">
+          <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <>
+          {chartData.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Quality Trends</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={chartData}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="temperature" name="Temperature (°C)" stroke="#8884d8" />
+                      <Line type="monotone" dataKey="moisture" name="Moisture (%)" stroke="#82ca9d" />
+                      <Line type="monotone" dataKey="acidity" name="Acidity (pH)" stroke="#ffc658" />
+                      <Line type="monotone" dataKey="salt" name="Salt (%)" stroke="#ff8042" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-            {isLoading ? (
-              <div className="text-center py-4">Loading records...</div>
-            ) : filteredChecks.length === 0 ? (
-              <div className="text-center py-4">No records found</div>
-            ) : (
-              <div className="rounded-md border overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Time</TableHead>
-                      <TableHead>Batch ID</TableHead>
-                      <TableHead>Parameter</TableHead>
-                      <TableHead>Actual</TableHead>
-                      <TableHead>Standard</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Notes</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredChecks.flatMap((check) => [
-                      {
-                        ...check,
-                        parameter: 'Temperature',
-                        actual: check.temperature_actual,
-                        standard: check.temperature_standard,
-                        status: check.temperature_status
-                      },
-                      {
-                        ...check,
-                        parameter: 'pH Level',
-                        actual: check.ph_level_actual,
-                        standard: check.ph_level_standard,
-                        status: check.ph_level_status
-                      },
-                      {
-                        ...check,
-                        parameter: 'Moisture',
-                        actual: check.moisture_actual,
-                        standard: check.moisture_standard,
-                        status: check.moisture_status
-                      },
-                      {
-                        ...check,
-                        parameter: 'Fat',
-                        actual: check.fat_actual,
-                        standard: check.fat_standard,
-                        status: check.fat_status
-                      },
-                      {
-                        ...check,
-                        parameter: 'Protein',
-                        actual: check.protein_actual,
-                        standard: check.protein_standard,
-                        status: check.protein_status
-                      },
-                      {
-                        ...check,
-                        parameter: 'Salt',
-                        actual: check.salt_actual,
-                        standard: check.salt_standard,
-                        status: check.salt_status
-                      }
-                    ]).map((row, index) => (
-                      <TableRow key={`${row.id}-${row.parameter}`}>
-                        {index % 6 === 0 && (
-                          <TableCell rowSpan={6} className="align-top">
-                            {format(new Date(row.created_at), 'PPp')}
-                          </TableCell>
-                        )}
-                        {index % 6 === 0 && (
-                          <TableCell rowSpan={6} className="align-top font-medium">
-                            {row.batch_id}
-                          </TableCell>
-                        )}
-                        <TableCell>{row.parameter}</TableCell>
-                        <TableCell>{row.actual}</TableCell>
-                        <TableCell>{row.standard}</TableCell>
-                        <TableCell>{renderStatusBadge(row.status)}</TableCell>
-                        {index % 6 === 0 && (
-                          <TableCell rowSpan={6} className="align-top">
-                            {row.notes}
-                          </TableCell>
-                        )}
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Batch ID</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Temp (°C)</TableHead>
+                    <TableHead>Moisture (%)</TableHead>
+                    <TableHead>Acidity (pH)</TableHead>
+                    <TableHead>Salt (%)</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredChecks.length > 0 ? (
+                    filteredChecks.map((check) => (
+                      <TableRow key={check.id}>
+                        <TableCell className="font-medium">{check.batch_id}</TableCell>
+                        <TableCell>
+                          {format(new Date(check.created_at), 'MMM dd, yyyy')}
+                          <br />
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(check.created_at), 'HH:mm')}
+                          </span>
+                        </TableCell>
+                        <TableCell>{check.temperature}°C</TableCell>
+                        <TableCell>{check.moisture}%</TableCell>
+                        <TableCell>{check.acidity}</TableCell>
+                        <TableCell>{check.salt}%</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusStyle(check.status)}>
+                            {check.status || 'Unknown'}
+                          </Badge>
+                        </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center">
+                        {searchQuery ? 'No matching records found' : 'No quality check records available'}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 };
