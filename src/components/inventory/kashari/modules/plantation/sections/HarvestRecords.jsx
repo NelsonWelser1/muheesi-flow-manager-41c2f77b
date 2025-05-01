@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, PlusCircle, Search } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Search, Loader } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
+import { useHarvestRecords } from "@/hooks/useHarvestRecords";
 
 const HarvestRecords = () => {
   const [date, setDate] = useState(null);
@@ -22,10 +24,18 @@ const HarvestRecords = () => {
   const [quality, setQuality] = useState('good');
   const [workers, setWorkers] = useState('');
   const [notes, setNotes] = useState('');
-  const [records, setRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   
+  // Use the custom hook for harvest records
+  const { 
+    records, 
+    isLoading, 
+    isFetching, 
+    fetchHarvestRecords, 
+    saveHarvestRecord 
+  } = useHarvestRecords();
+
   const cropTypes = [
     { value: 'banana', label: 'Banana' },
     { value: 'coffee', label: 'Coffee' },
@@ -57,75 +67,40 @@ const HarvestRecords = () => {
     { value: 'poor', label: 'Poor' }
   ];
 
-  // Load records from localStorage on component mount
+  // Fetch records from Supabase on component mount
   useEffect(() => {
-    const savedRecords = localStorage.getItem('harvestRecords');
-    if (savedRecords) {
-      try {
-        const parsedRecords = JSON.parse(savedRecords);
-        
-        // Convert date strings back to Date objects
-        const recordsWithDates = parsedRecords.map(record => ({
-          ...record,
-          date: record.date ? new Date(record.date) : null,
-          createdAt: record.createdAt ? new Date(record.createdAt) : new Date()
-        }));
-        
-        setRecords(recordsWithDates);
-      } catch (error) {
-        console.error('Error parsing harvest records from localStorage:', error);
-      }
-    }
+    fetchHarvestRecords();
   }, []);
 
-  // Save records to localStorage whenever records change
-  useEffect(() => {
-    localStorage.setItem('harvestRecords', JSON.stringify(records));
-  }, [records]);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!date || !cropType || !variety || !plotId || !quantity) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newRecord = {
-      id: Date.now(),
+    
+    const recordData = {
       date,
       cropType,
       variety,
       plotId,
-      quantity: Number(quantity),
+      quantity,
       unit,
       quality,
       workers,
-      notes,
-      createdAt: new Date()
+      notes
     };
     
-    setRecords(prevRecords => [newRecord, ...prevRecords]);
+    const { success } = await saveHarvestRecord(recordData);
     
-    toast({
-      title: "Record added successfully",
-      description: "Your harvest record has been saved.",
-      variant: "default",
-    });
-    
-    // Reset form
-    setDate(null);
-    setCropType('');
-    setVariety('');
-    setPlotId('');
-    setQuantity('');
-    setUnit('kg');
-    setQuality('good');
-    setWorkers('');
-    setNotes('');
+    if (success) {
+      // Reset form
+      setDate(null);
+      setCropType('');
+      setVariety('');
+      setPlotId('');
+      setQuantity('');
+      setUnit('kg');
+      setQuality('good');
+      setWorkers('');
+      setNotes('');
+    }
   };
 
   const filteredRecords = records.filter(record => {
@@ -133,9 +108,9 @@ const HarvestRecords = () => {
     
     const search = searchTerm.toLowerCase();
     return (
-      (record.cropType && cropTypes.find(c => c.value === record.cropType)?.label.toLowerCase().includes(search)) ||
+      (record.crop_type && cropTypes.find(c => c.value === record.crop_type)?.label.toLowerCase().includes(search)) ||
       (record.variety && record.variety.toLowerCase().includes(search)) ||
-      (record.plotId && record.plotId.toLowerCase().includes(search)) ||
+      (record.plot_id && record.plot_id.toLowerCase().includes(search)) ||
       (record.notes && record.notes.toLowerCase().includes(search))
     );
   });
@@ -290,9 +265,22 @@ const HarvestRecords = () => {
               </div>
             </div>
             
-            <Button type="submit" className="w-full md:w-auto">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Harvest Record
+            <Button 
+              type="submit" 
+              className="w-full md:w-auto"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  Saving Record...
+                </>
+              ) : (
+                <>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Harvest Record
+                </>
+              )}
             </Button>
           </form>
         </CardContent>
@@ -312,7 +300,12 @@ const HarvestRecords = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredRecords.length === 0 ? (
+          {isFetching ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2 text-lg">Loading records...</span>
+            </div>
+          ) : filteredRecords.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
               {records.length === 0 
                 ? "No harvest records added yet. Use the form above to add records."
@@ -336,9 +329,9 @@ const HarvestRecords = () => {
                   {filteredRecords.map(record => (
                     <TableRow key={record.id}>
                       <TableCell>{record.date ? format(new Date(record.date), 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                      <TableCell>{cropTypes.find(c => c.value === record.cropType)?.label || 'N/A'}</TableCell>
+                      <TableCell>{cropTypes.find(c => c.value === record.crop_type)?.label || 'N/A'}</TableCell>
                       <TableCell>{record.variety || 'N/A'}</TableCell>
-                      <TableCell>{record.plotId || 'N/A'}</TableCell>
+                      <TableCell>{record.plot_id || 'N/A'}</TableCell>
                       <TableCell>{record.quantity} {record.unit}</TableCell>
                       <TableCell>
                         <span className={`capitalize ${
