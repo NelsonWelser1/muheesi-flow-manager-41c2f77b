@@ -111,15 +111,64 @@ const ProductionTrendsChart = ({ milkData, isLoading, dateRange }) => {
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="dateFormatted" />
-                <YAxis yAxisId="left" orientation="left" label={{ value: 'Volume (Liters)', angle: -90, position: 'insideLeft' }} />
-                <YAxis yAxisId="right" orientation="right" label={{ value: 'Cows', angle: 90, position: 'insideRight' }} />
-                <Tooltip formatter={(value) => [`${value.toFixed(1)}`, '']} />
+                <YAxis 
+                  yAxisId="left" 
+                  orientation="left" 
+                  label={{ value: 'Volume (Liters)', angle: -90, position: 'insideLeft' }} 
+                />
+                <YAxis 
+                  yAxisId="right" 
+                  orientation="right" 
+                  label={{ value: 'Cows', angle: 90, position: 'insideRight' }} 
+                />
+                <Tooltip 
+                  formatter={(value, name) => {
+                    if (name === "Milking Cows") return [value, name];
+                    return [`${value.toFixed(1)} L`, name.replace(" (L)", "")];
+                  }}
+                  labelFormatter={(label) => `Date: ${label}`}
+                />
                 <Legend />
-                <Line yAxisId="left" type="monotone" dataKey="total" name="Total (L)" stroke="#8884d8" activeDot={{ r: 8 }} />
-                <Line yAxisId="left" type="monotone" dataKey="morning" name="Morning (L)" stroke="#ffc658" strokeDasharray="5 5" />
-                <Line yAxisId="left" type="monotone" dataKey="midday" name="Midday (L)" stroke="#ff7300" strokeDasharray="5 5" />
-                <Line yAxisId="left" type="monotone" dataKey="evening" name="Evening (L)" stroke="#0088fe" strokeDasharray="5 5" />
-                <Line yAxisId="right" type="monotone" dataKey="cows" name="Milking Cows" stroke="#82ca9d" />
+                <Line 
+                  yAxisId="left" 
+                  type="monotone" 
+                  dataKey="total" 
+                  name="Total (L)" 
+                  stroke="#8884d8" 
+                  strokeWidth={2}
+                  activeDot={{ r: 8 }} 
+                />
+                <Line 
+                  yAxisId="left" 
+                  type="monotone" 
+                  dataKey="morning" 
+                  name="Morning (L)" 
+                  stroke="#ffc658" 
+                  strokeDasharray="5 5" 
+                />
+                <Line 
+                  yAxisId="left" 
+                  type="monotone" 
+                  dataKey="midday" 
+                  name="Midday (L)" 
+                  stroke="#ff7300" 
+                  strokeDasharray="5 5" 
+                />
+                <Line 
+                  yAxisId="left" 
+                  type="monotone" 
+                  dataKey="evening" 
+                  name="Evening (L)" 
+                  stroke="#0088fe" 
+                  strokeDasharray="5 5" 
+                />
+                <Line 
+                  yAxisId="right" 
+                  type="monotone" 
+                  dataKey="cows" 
+                  name="Milking Cows" 
+                  stroke="#82ca9d" 
+                />
               </LineChart>
             </ResponsiveContainer>
           ) : (
