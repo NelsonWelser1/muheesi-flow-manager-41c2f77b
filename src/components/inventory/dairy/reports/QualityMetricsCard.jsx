@@ -15,7 +15,7 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts';
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/hooks/useTheme.jsx";
 
 // Sample data
 const sampleQualityMetrics = [

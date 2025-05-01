@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -233,8 +232,7 @@ const GlobalShipmentMap = ({ shipments = [] }) => {
       'rotterdam': [4.4777, 51.9244],
       'antwerp': [4.4026, 51.2194],
       'hamburg': [9.9937, 53.5511],
-      'marseille': [5.3698, 43.2965],
-      'shanghai': [121.4737, 31.2304]
+      'marseille': [5.3698, 43.2965]
     };
     
     // Try to find the location in our map
