@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,11 +68,18 @@ const HarvestRecords = () => {
 
   // Fetch records from Supabase on component mount
   useEffect(() => {
+    console.log("Component mounted, fetching harvest records");
     fetchHarvestRecords();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Form submitted with data:", { date, cropType, variety, plotId, quantity, unit, quality, workers, notes });
+    
+    if (!date) {
+      showErrorToast(toast, "Please select a harvest date");
+      return;
+    }
     
     const recordData = {
       date,
@@ -90,6 +96,7 @@ const HarvestRecords = () => {
     const { success } = await saveHarvestRecord(recordData);
     
     if (success) {
+      console.log("Reset form after successful submission");
       // Reset form
       setDate(null);
       setCropType('');

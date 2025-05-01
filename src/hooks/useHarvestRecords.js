@@ -14,6 +14,7 @@ export const useHarvestRecords = () => {
   const fetchHarvestRecords = async () => {
     try {
       setIsFetching(true);
+      console.log("Fetching harvest records...");
       const { data, error } = await supabase
         .from('harvest_records')
         .select('*')
@@ -24,6 +25,8 @@ export const useHarvestRecords = () => {
         showErrorToast(toast, `Failed to fetch records: ${error.message}`);
         return [];
       }
+      
+      console.log("Fetched harvest records:", data);
       
       // Format dates for display
       const formattedRecords = data.map(record => ({
@@ -45,6 +48,7 @@ export const useHarvestRecords = () => {
   const saveHarvestRecord = async (recordData) => {
     try {
       setIsLoading(true);
+      console.log("Saving harvest record:", recordData);
       
       // Validate required fields
       if (!recordData.date || !recordData.cropType || !recordData.variety || !recordData.plotId || !recordData.quantity) {
@@ -72,6 +76,8 @@ export const useHarvestRecords = () => {
         notes: recordData.notes || null
       };
       
+      console.log("Prepared record for insertion:", newRecord);
+      
       // Insert into Supabase
       const { data, error } = await supabase
         .from('harvest_records')
@@ -83,6 +89,8 @@ export const useHarvestRecords = () => {
         showErrorToast(toast, `Failed to save record: ${error.message}`);
         return { success: false, error };
       }
+      
+      console.log("Record inserted successfully:", data);
       
       // Format the returned record
       const insertedRecord = {
