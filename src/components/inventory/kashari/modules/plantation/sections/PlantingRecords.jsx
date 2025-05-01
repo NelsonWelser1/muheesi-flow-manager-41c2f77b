@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, PlusCircle, Search } from 'lucide-react';
+import { CalendarIcon, PlusCircle, Search, Loader } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/supabase';
+import { showSuccessToast, showErrorToast, showInfoToast } from "@/components/ui/notifications";
 
 const PlantingRecords = () => {
   const [date, setDate] = useState(null);
@@ -24,6 +26,8 @@ const PlantingRecords = () => {
   const [notes, setNotes] = useState('');
   const [records, setRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const { toast } = useToast();
   
   const cropTypes = [
@@ -42,75 +46,111 @@ const PlantingRecords = () => {
     cassava: ['NASE 14', 'NASE 19', 'TME 14']
   };
 
-  // Load records from localStorage on component mount
+  // Fetch records from Supabase on component mount
   useEffect(() => {
-    const savedRecords = localStorage.getItem('plantingRecords');
-    if (savedRecords) {
-      try {
-        const parsedRecords = JSON.parse(savedRecords);
-        
-        // Convert date strings back to Date objects
-        const recordsWithDates = parsedRecords.map(record => ({
-          ...record,
-          date: record.date ? new Date(record.date) : null,
-          createdAt: record.createdAt ? new Date(record.createdAt) : new Date()
-        }));
-        
-        setRecords(recordsWithDates);
-      } catch (error) {
-        console.error('Error parsing planting records from localStorage:', error);
-      }
-    }
+    fetchPlantingRecords();
   }, []);
 
-  // Save records to localStorage whenever records change
-  useEffect(() => {
-    localStorage.setItem('plantingRecords', JSON.stringify(records));
-  }, [records]);
+  const fetchPlantingRecords = async () => {
+    try {
+      setIsFetching(true);
+      const { data, error } = await supabase
+        .from('planting_records')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching planting records:', error);
+        showErrorToast(toast, `Failed to fetch records: ${error.message}`);
+        return;
+      }
+      
+      // Format dates for display
+      const formattedRecords = data.map(record => ({
+        ...record,
+        date: new Date(record.date)
+      }));
+      
+      setRecords(formattedRecords);
+      console.log('Fetched planting records:', formattedRecords);
+    } catch (error) {
+      console.error('Unexpected error fetching records:', error);
+      showErrorToast(toast, `Failed to fetch records: ${error.message}`);
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
     if (!date || !cropType || !variety || !plotId || !area) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Please fill in all required fields.");
       return;
     }
 
-    const newRecord = {
-      id: Date.now(),
-      date,
-      cropType,
-      variety,
-      plotId,
-      area: Number(area),
-      seedsQuantity,
-      fertilizer,
-      workers,
-      notes,
-      createdAt: new Date()
-    };
-    
-    setRecords(prevRecords => [newRecord, ...prevRecords]);
-    
-    toast({
-      title: "Record added successfully",
-      description: "Your planting record has been saved.",
-      variant: "default",
-    });
-    
-    // Reset form
-    setDate(null);
-    setCropType('');
-    setVariety('');
-    setPlotId('');
-    setArea('');
-    setSeedsQuantity('');
-    setFertilizer('');
-    setWorkers('');
-    setNotes('');
+    // Validate area is a number
+    const areaNumber = parseFloat(area);
+    if (isNaN(areaNumber) || areaNumber <= 0) {
+      showErrorToast(toast, "Area must be a positive number.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // Prepare data for insertion
+      const newRecord = {
+        date: format(date, 'yyyy-MM-dd'),
+        crop_type: cropType,
+        variety,
+        plot_id: plotId,
+        area: areaNumber,
+        seeds_quantity: seedsQuantity || null,
+        fertilizer: fertilizer || null,
+        workers: workers || null,
+        notes: notes || null
+      };
+      
+      // Insert into Supabase
+      const { data, error } = await supabase
+        .from('planting_records')
+        .insert([newRecord])
+        .select();
+      
+      if (error) {
+        console.error('Error inserting planting record:', error);
+        showErrorToast(toast, `Failed to save record: ${error.message}`);
+        return;
+      }
+      
+      // Update local records state with the newly inserted record
+      const insertedRecord = {
+        ...data[0],
+        date: new Date(data[0].date)
+      };
+      
+      setRecords(prevRecords => [insertedRecord, ...prevRecords]);
+      
+      showSuccessToast(toast, "Planting record saved successfully.");
+      
+      // Reset form
+      setDate(null);
+      setCropType('');
+      setVariety('');
+      setPlotId('');
+      setArea('');
+      setSeedsQuantity('');
+      setFertilizer('');
+      setWorkers('');
+      setNotes('');
+    } catch (error) {
+      console.error('Unexpected error saving record:', error);
+      showErrorToast(toast, `Failed to save record: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filteredRecords = records.filter(record => {
@@ -118,9 +158,9 @@ const PlantingRecords = () => {
     
     const search = searchTerm.toLowerCase();
     return (
-      (record.cropType && cropTypes.find(c => c.value === record.cropType)?.label.toLowerCase().includes(search)) ||
+      (record.crop_type && cropTypes.find(c => c.value === record.crop_type)?.label.toLowerCase().includes(search)) ||
       (record.variety && record.variety.toLowerCase().includes(search)) ||
-      (record.plotId && record.plotId.toLowerCase().includes(search)) ||
+      (record.plot_id && record.plot_id.toLowerCase().includes(search)) ||
       (record.notes && record.notes.toLowerCase().includes(search))
     );
   });
@@ -214,7 +254,7 @@ const PlantingRecords = () => {
                 <Input
                   id="area"
                   type="number"
-                  min="0"
+                  min="0.1"
                   step="0.1"
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
@@ -264,9 +304,22 @@ const PlantingRecords = () => {
               </div>
             </div>
             
-            <Button type="submit" className="w-full md:w-auto">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Planting Record
+            <Button 
+              type="submit" 
+              className="w-full md:w-auto"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  Saving Record...
+                </>
+              ) : (
+                <>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Planting Record
+                </>
+              )}
             </Button>
           </form>
         </CardContent>
@@ -286,7 +339,12 @@ const PlantingRecords = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredRecords.length === 0 ? (
+          {isFetching ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2 text-lg">Loading records...</span>
+            </div>
+          ) : filteredRecords.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
               {records.length === 0 
                 ? "No planting records added yet. Use the form above to add records."
@@ -310,11 +368,11 @@ const PlantingRecords = () => {
                   {filteredRecords.map(record => (
                     <TableRow key={record.id}>
                       <TableCell>{record.date ? format(new Date(record.date), 'dd/MM/yyyy') : 'N/A'}</TableCell>
-                      <TableCell>{cropTypes.find(c => c.value === record.cropType)?.label || 'N/A'}</TableCell>
+                      <TableCell>{cropTypes.find(c => c.value === record.crop_type)?.label || record.crop_type || 'N/A'}</TableCell>
                       <TableCell>{record.variety || 'N/A'}</TableCell>
-                      <TableCell>{record.plotId || 'N/A'}</TableCell>
+                      <TableCell>{record.plot_id || 'N/A'}</TableCell>
                       <TableCell>{record.area} acres</TableCell>
-                      <TableCell>{record.seedsQuantity || 'N/A'}</TableCell>
+                      <TableCell>{record.seeds_quantity || 'N/A'}</TableCell>
                       <TableCell className="max-w-xs truncate">{record.notes || 'N/A'}</TableCell>
                     </TableRow>
                   ))}
