@@ -63,7 +63,7 @@ const ManageCompanies = () => {
             <CardHeader>
               <CardTitle>Organizational Structure</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent data-select-id="org-structure-content">
               <OrganizationalChart />
             </CardContent>
           </Card>
