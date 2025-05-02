@@ -39,3 +39,32 @@ export const getRelativeTime = (dateStr) => {
     return 'Unknown';
   }
 };
+
+// Get a date from a time ago string (e.g. "today", "yesterday", "week", "month", "year")
+export const getDateFromTimeAgo = (timeAgo) => {
+  const now = new Date();
+  
+  switch (timeAgo) {
+    case 'today':
+      return new Date(now.setHours(0, 0, 0, 0));
+    case 'yesterday':
+      const yesterday = new Date(now);
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+      return yesterday;
+    case 'week':
+      const week = new Date(now);
+      week.setDate(week.getDate() - 7);
+      return week;
+    case 'month':
+      const month = new Date(now);
+      month.setMonth(month.getMonth() - 1);
+      return month;
+    case 'year':
+      const year = new Date(now);
+      year.setFullYear(year.getFullYear() - 1);
+      return year;
+    default:
+      return null;
+  }
+};
