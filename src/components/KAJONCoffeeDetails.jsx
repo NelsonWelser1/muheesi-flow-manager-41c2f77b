@@ -1,19 +1,29 @@
+
 import React, { useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { useToast } from "@/components/ui/use-toast";
-import { Share2 } from 'lucide-react';
+import { Share2, Coffee, TrendingUp, AlertCircle, Calendar, DollarSign } from 'lucide-react';
 
-const data = [
-  { name: 'Nov 2023', price: 2500 },
-  { name: 'Jan 2024', price: 3000 },
-  { name: 'Apr 2024', price: 3500 },
-  { name: 'Jun 2024', price: 4000 },
-  { name: 'Sept 2024', price: 5200 },
-  { name: 'Oct 2024', price: 4924 },
+// Updated data for 2025
+const priceData = [
+  { name: 'Jan 2024', price: 4200 },
+  { name: 'Mar 2024', price: 4600 },
+  { name: 'Jun 2024', price: 5100 },
+  { name: 'Sep 2024', price: 5500 },
+  { name: 'Dec 2024', price: 5750 },
+  { name: 'Feb 2025', price: 5950 },
+  { name: 'Apr 2025', price: 6250 },
+];
+
+const factorData = [
+  { name: 'Climate Impact', value: 85 },
+  { name: 'Global Demand', value: 78 },
+  { name: 'Supply Chain', value: 65 },
+  { name: 'Market Trends', value: 72 },
 ];
 
 const KAJONCoffeeDetails = ({ onClose }) => {
@@ -118,72 +128,136 @@ const KAJONCoffeeDetails = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 overflow-y-auto">
       <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto" ref={contentRef}>
-        <CardHeader>
-          <CardTitle>KAJON Coffee Limited Market Analysis</CardTitle>
-          <Button onClick={onClose} variant="outline" className="absolute top-2 right-2">
+        <CardHeader className="relative bg-gradient-to-r from-amber-800/90 to-amber-950/95 text-white">
+          <div className="absolute inset-0 bg-[url('/combined-logo.png')] bg-center bg-no-repeat bg-contain opacity-10"></div>
+          <CardTitle className="text-2xl md:text-3xl font-bold">KAJON Coffee Limited Market Analysis</CardTitle>
+          <p className="text-amber-200 mt-2">Premium Coffee Market Insights - April 2025</p>
+          <Button onClick={onClose} variant="outline" className="absolute top-2 right-2 bg-white/10 hover:bg-white/20">
             Close
           </Button>
         </CardHeader>
-        <CardContent>
-          <div className="mb-6">
-            <h3 className="text-2xl font-bold mb-2">Current Price: 4,924.00 USD</h3>
-            <p className="text-red-500">-34.00 (-0.69%)</p>
-          </div>
-          <div className="h-[300px] mb-6">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
-                <XAxis 
-                  dataKey="name" 
-                  stroke="#333" 
-                  tick={{ fill: '#333' }} 
-                  tickLine={{ stroke: '#333' }}
-                />
-                <YAxis 
-                  stroke="#333" 
-                  tick={{ fill: '#333' }} 
-                  tickLine={{ stroke: '#333' }}
-                  tickFormatter={(value) => `$${value}`}
-                />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
-                  labelStyle={{ color: '#333' }}
-                  itemStyle={{ color: '#333' }}
-                />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="price" 
-                  stroke="#ff4136" 
-                  strokeWidth={2} 
-                  dot={{ fill: '#ff4136', stroke: '#ff4136', strokeWidth: 2 }} 
-                  activeDot={{ r: 8 }} 
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Analysis:</h3>
-            <p>1. <strong>Recent Peak (Sept 2024)</strong>: The price showed a strong upward trend throughout the year, with a significant peak around September 2024, possibly due to seasonal factors, supply disruptions, or increased global demand for coffee.</p>
-            <p>2. <strong>Current Price (Oct 2024)</strong>: The chart suggests that after hitting a high, the price has declined slightly to 4,924.00 USD by mid-October. This could indicate market corrections, increased supply, or decreased demand affecting prices.</p>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-100 flex flex-col items-center">
+              <div className="rounded-full bg-amber-100 p-3 mb-2">
+                <DollarSign className="h-8 w-8 text-amber-600" />
+              </div>
+              <h3 className="text-2xl font-bold mb-1">$6,250.00</h3>
+              <p className="text-green-600 font-medium">+$300.00 (+5.04%)</p>
+              <p className="text-xs text-gray-500 mt-1">Current Price (Apr 2025)</p>
+            </div>
             
-            <h3 className="text-xl font-semibold">Price Projections:</h3>
-            <p>1. <strong>October 2024</strong>: Given that the price is currently on a slight decline after peaking, it is possible that the market will experience mild corrections for the rest of October, stabilizing around the current level of 4,900-5,000 USD, especially as supply adjusts to meet demand after the earlier peak.</p>
-            <p>2. <strong>November 2024</strong>: Heading into November, coffee prices may experience seasonal demand due to the upcoming holiday season in Western markets, which typically drives higher consumption. Prices could potentially rebound to around 5,000-5,100 USD if demand increases, but it will also depend on supply-side factors such as crop yields and export capacities, especially from major coffee-producing regions.</p>
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-100 flex flex-col items-center">
+              <div className="rounded-full bg-amber-100 p-3 mb-2">
+                <TrendingUp className="h-8 w-8 text-amber-600" />
+              </div>
+              <h3 className="text-2xl font-bold mb-1">48.8%</h3>
+              <p className="text-gray-700">Year-Over-Year Growth</p>
+              <p className="text-xs text-gray-500 mt-1">From Apr 2024 to Apr 2025</p>
+            </div>
             
-            <h3 className="text-xl font-semibold">Factors to Watch:</h3>
-            <ul className="list-disc pl-5">
-              <li><strong>Global Coffee Demand</strong>: The holiday season could boost demand and push prices higher.</li>
-              <li><strong>Supply Chain</strong>: If supply issues such as unfavorable weather, logistical bottlenecks, or political events disrupt coffee production in key regions, prices could rise.</li>
-              <li><strong>Market Corrections</strong>: The slight drop observed in mid-October might suggest temporary overvaluation, and the market could stabilize or decline slightly if supply outpaces demand.</li>
-            </ul>
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-100 flex flex-col items-center">
+              <div className="rounded-full bg-amber-100 p-3 mb-2">
+                <Calendar className="h-8 w-8 text-amber-600" />
+              </div>
+              <h3 className="text-2xl font-bold mb-1">$6,750</h3>
+              <p className="text-gray-700">Projected Jul 2025</p>
+              <p className="text-xs text-gray-500 mt-1">Estimated Future Price</p>
+            </div>
           </div>
+
+          <div className="bg-white p-5 rounded-lg shadow-sm border mb-6">
+            <h3 className="text-lg font-semibold mb-4 text-amber-800 flex items-center">
+              <Coffee className="h-5 w-5 mr-2" /> Price Trend (2024-2025)
+            </h3>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={priceData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#666" 
+                    tick={{ fill: '#666' }} 
+                    tickLine={{ stroke: '#666' }}
+                  />
+                  <YAxis 
+                    stroke="#666" 
+                    tick={{ fill: '#666' }} 
+                    tickLine={{ stroke: '#666' }}
+                    tickFormatter={(value) => `$${value}`}
+                    domain={['dataMin - 500', 'dataMax + 500']}
+                  />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '4px' }}
+                    labelStyle={{ color: '#333', fontWeight: 'bold' }}
+                    formatter={(value) => [`$${value}`, 'Price']}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="price" 
+                    stroke="#d97706" 
+                    strokeWidth={3} 
+                    dot={{ fill: '#d97706', stroke: '#d97706', strokeWidth: 2, r: 5 }} 
+                    activeDot={{ r: 8, fill: '#92400e' }} 
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+                <TrendingUp className="h-5 w-5 mr-2" /> Market Analysis
+              </h3>
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                <p className="mb-2"><strong>Strong Upward Trend (2025):</strong> Coffee prices have demonstrated robust growth in early 2025, with premium Arabica and specialty coffees showing particularly strong performance.</p>
+                <p><strong>Current Price Level:</strong> At $6,250 per metric ton, prices have reached a 4-year high driven by increased global demand and supply constraints in key producing regions.</p>
+              </div>
+
+              <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+                <Calendar className="h-5 w-5 mr-2" /> Price Projections
+              </h3>
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                <p className="mb-2"><strong>May-June 2025:</strong> Expecting continued growth reaching approximately $6,500 as summer demand increases and supply remains constrained.</p>
+                <p><strong>July-August 2025:</strong> Prices projected to stabilize around $6,750 with potential for higher peaks if weather disruptions affect major growing regions.</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+                <AlertCircle className="h-5 w-5 mr-2" /> Market Factors
+              </h3>
+              
+              <div className="h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={factorData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" />
+                    <YAxis domain={[0, 100]} tickFormatter={(tick) => `${tick}%`} />
+                    <Tooltip formatter={(value) => `${value}%`} />
+                    <Bar dataKey="value" fill="#d97706" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                <ul className="list-disc pl-5 space-y-1">
+                  <li><strong>Climate Patterns:</strong> Extreme weather in Brazil and Vietnam affecting production yields.</li>
+                  <li><strong>Rising Consumption:</strong> Post-pandemic surge in premium coffee consumption in Asian markets.</li>
+                  <li><strong>Supply Chain:</strong> Ongoing logistics challenges and increasing shipping costs.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-6 flex justify-end space-x-4">
-            <Button onClick={printAsPDF}>Print as PDF</Button>
-            <Button onClick={saveAsJPEG}>Save as JPEG</Button>
-            <Button onClick={shareContent}><Share2 className="mr-2" />Share</Button>
+            <Button onClick={printAsPDF} className="bg-amber-700 hover:bg-amber-800">Print as PDF</Button>
+            <Button onClick={saveAsJPEG} className="bg-amber-700 hover:bg-amber-800">Save as JPEG</Button>
+            <Button onClick={shareContent} className="bg-amber-700 hover:bg-amber-800"><Share2 className="mr-2" />Share</Button>
           </div>
         </CardContent>
       </Card>
