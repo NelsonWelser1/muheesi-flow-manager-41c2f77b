@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Milk, Cow, Factory, Truck } from 'lucide-react';
+import { X, Milk, Beef, Factory, Truck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -36,7 +36,7 @@ const GrandBernaDetails = ({ onClose }) => {
                   <p className="text-sm font-medium text-center">Milk Processing</p>
                 </div>
                 <div className="flex flex-col items-center p-4 bg-blue-50 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <Cow className="h-10 w-10 text-blue-600 mb-2" />
+                  <Beef className="h-10 w-10 text-blue-600 mb-2" />
                   <p className="text-sm font-medium text-center">Dairy Farming</p>
                 </div>
               </div>
