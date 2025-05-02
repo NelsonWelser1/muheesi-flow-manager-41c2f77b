@@ -9,36 +9,7 @@ import OrderForm from './orders/OrderForm';
 import ContactLinks from './ContactLinks';
 import GrandBernaDetails from './GrandBernaDetails';
 import KyalimaFarmersDetails from './KyalimaFarmersDetails';
-
-const fetchCompanyStocks = async () => {
-  return {
-    'Grand Berna Dairies': { 'Fresh Milk': '1000L', 'Yogurt': '500kg', 'Cheese': '200kg', 'Meat': '300kg' },
-    'KAJON Coffee Limited': { 
-      'Robusta Coffee: FAQ': '2000kg', 
-      'Robusta Coffee: Screen 18': '1500kg',
-      'Robusta Coffee: Screen 15': '1200kg',
-      'Robusta Coffee: Screen 12': '1000kg',
-      'Robusta Coffee: Organic Robusta': '800kg',
-      'Arabica Coffee: Bugisu AA': '1500kg',
-      'Arabica Coffee: Bugisu A': '1300kg',
-      'Arabica Coffee: Bugisu PB': '1100kg',
-      'Arabica Coffee: Bugisu B': '900kg',
-      'Arabica Coffee: DRUGAR': '700kg',
-      'Arabica Coffee: Parchment Arabica': '600kg'
-    },
-    'Kyalima Farmers Limited': { 
-      'Rice': '5000kg', 
-      'Maize': '20000MT',
-      'Hulled white sesame': '2000MT',
-      'Soybean': '50000MT',
-      'Cocoa': '500MT',
-      'Bulls': '50 heads',
-      'Heifers': '40 heads',
-      'Mothers': '30 heads',
-      'Calves': '20 heads'
-    }
-  };
-};
+import { useCompanyStocks } from '@/hooks/useCompanyStocks';
 
 const companies = [
   {
@@ -71,10 +42,69 @@ const companies = [
 
 const CompanyShowcase = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
-  const { data: stocks, isLoading, error } = useQuery({
-    queryKey: ['companyStocks'],
-    queryFn: fetchCompanyStocks,
-  });
+  
+  // Replace the static fetchCompanyStocks function with individual queries for each company
+  const { data: grandBernaStocks, isLoading: isLoadingGrandBerna } = useCompanyStocks('Grand Berna Dairies');
+  const { data: kajonStocks, isLoading: isLoadingKajon } = useCompanyStocks('KAJON Coffee Limited');
+  const { data: kyalimaStocks, isLoading: isLoadingKyalima } = useCompanyStocks('Kyalima Farmers Limited');
+  
+  // Organize the stocks data by company
+  const stocksByCompany = {
+    'Grand Berna Dairies': grandBernaStocks || [],
+    'KAJON Coffee Limited': kajonStocks || [],
+    'Kyalima Farmers Limited': kyalimaStocks || []
+  };
+
+  // Function to get stocks for a specific company
+  const getStocksForCompany = (companyName) => {
+    const stocks = stocksByCompany[companyName] || [];
+    const result = {};
+    
+    stocks.forEach(item => {
+      result[item.product_name] = `${item.quantity}${item.unit}`;
+    });
+    
+    // Return default data if no stocks found in the database
+    if (Object.keys(result).length === 0) {
+      switch(companyName) {
+        case 'Grand Berna Dairies':
+          return { 'Fresh Milk': '1000L', 'Yogurt': '500kg', 'Cheese': '200kg', 'Meat': '300kg' };
+        case 'KAJON Coffee Limited':
+          return { 
+            'Robusta Coffee: FAQ': '2000kg', 
+            'Robusta Coffee: Screen 18': '1500kg',
+            'Robusta Coffee: Screen 15': '1200kg',
+            'Robusta Coffee: Screen 12': '1000kg',
+            'Robusta Coffee: Organic Robusta': '800kg',
+            'Arabica Coffee: Bugisu AA': '1500kg',
+            'Arabica Coffee: Bugisu A': '1300kg',
+            'Arabica Coffee: Bugisu PB': '1100kg',
+            'Arabica Coffee: Bugisu B': '900kg',
+            'Arabica Coffee: DRUGAR': '700kg',
+            'Arabica Coffee: Parchment Arabica': '600kg'
+          };
+        case 'Kyalima Farmers Limited':
+          return { 
+            'Rice': '5000kg', 
+            'Maize': '20000MT',
+            'Hulled white sesame': '2000MT',
+            'Soybean': '50000MT',
+            'Cocoa': '500MT',
+            'Bulls': '50 heads',
+            'Heifers': '40 heads',
+            'Mothers': '30 heads',
+            'Calves': '20 heads'
+          };
+        default:
+          return {};
+      }
+    }
+    
+    return result;
+  };
+  
+  // Determine if any data is still loading
+  const isLoading = isLoadingGrandBerna || isLoadingKajon || isLoadingKyalima;
 
   return (
     <div className="bg-gray-100 py-4 sm:py-8">
@@ -122,11 +152,9 @@ const CompanyShowcase = () => {
                 <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase mb-4">Current Stock</h3>
                 {isLoading ? (
                   <p className="text-sm">Loading stock information...</p>
-                ) : error ? (
-                  <p className="text-sm text-red-500">Error loading stock information</p>
                 ) : (
                   <ul className="space-y-2">
-                    {Object.entries(stocks[company.name] || {}).map(([product, stock]) => (
+                    {Object.entries(getStocksForCompany(company.name) || {}).map(([product, stock]) => (
                       <li key={product} className="flex justify-between text-sm sm:text-base">
                         <span className="text-gray-500">{product}</span>
                         <span className="font-medium text-gray-900">{stock}</span>
