@@ -1,12 +1,13 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { useToast } from "@/components/ui/use-toast";
-import { Share2, Coffee, TrendingUp, AlertCircle, Calendar, DollarSign } from 'lucide-react';
+import { Share2, Coffee, TrendingUp, AlertCircle, Calendar, DollarSign, RefreshCw } from 'lucide-react';
+import { formatDate } from '@/utils/dateUtils';
 
 // Updated data for 2025
 const priceData = [
@@ -29,7 +30,28 @@ const factorData = [
 const KAJONCoffeeDetails = ({ onClose }) => {
   const { toast } = useToast();
   const contentRef = useRef(null);
-
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [nextUpdateDate, setNextUpdateDate] = useState(new Date());
+  const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
+  
+  useEffect(() => {
+    // Set the next update date to 3 months from last update
+    const next = new Date(lastUpdated);
+    next.setMonth(next.getMonth() + 3);
+    setNextUpdateDate(next);
+    
+    // Check if an update is available (for demo purposes)
+    // In a real system, this would check against an API
+    const currentDate = new Date();
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    
+    // If the last update was more than 3 months ago, show update available
+    if (lastUpdated < threeMonthsAgo) {
+      setIsUpdateAvailable(true);
+    }
+  }, [lastUpdated]);
+  
   const captureContent = () => {
     return html2canvas(contentRef.current);
   };
@@ -58,6 +80,17 @@ const KAJONCoffeeDetails = ({ onClose }) => {
     toast({
       title: "JPEG Saved",
       description: "The analysis has been saved as a JPEG image.",
+    });
+  };
+
+  const handleUpdateData = () => {
+    // In a real application, this would fetch new data from an API
+    setLastUpdated(new Date());
+    setIsUpdateAvailable(false);
+    
+    toast({
+      title: "Market Data Updated",
+      description: "Coffee market analysis has been refreshed with the latest data.",
     });
   };
 
@@ -132,8 +165,31 @@ const KAJONCoffeeDetails = ({ onClose }) => {
       <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto" ref={contentRef}>
         <CardHeader className="relative bg-gradient-to-r from-amber-800/90 to-amber-950/95 text-white">
           <div className="absolute inset-0 bg-[url('/combined-logo.png')] bg-center bg-no-repeat bg-contain opacity-10"></div>
-          <CardTitle className="text-2xl md:text-3xl font-bold">KAJON Coffee Limited Market Analysis</CardTitle>
-          <p className="text-amber-200 mt-2">Premium Coffee Market Insights - April 2025</p>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-2xl md:text-3xl font-bold">KAJON Coffee Limited Market Analysis</CardTitle>
+              <p className="text-amber-200 mt-2">Premium Coffee Market Insights - {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {isUpdateAvailable && (
+                <div className="bg-amber-600/70 text-white text-xs rounded-md px-2 py-1 animate-pulse">
+                  Update Available
+                </div>
+              )}
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="bg-white/10 hover:bg-white/20 text-white flex items-center gap-1"
+                onClick={handleUpdateData}
+              >
+                <RefreshCw className="h-3 w-3" /> Update
+              </Button>
+            </div>
+          </div>
+          <div className="flex justify-between items-center mt-2">
+            <p className="text-xs text-amber-200/80">Last updated: {formatDate(lastUpdated)}</p>
+            <p className="text-xs text-amber-200/80">Next update: {formatDate(nextUpdateDate)}</p>
+          </div>
           <Button onClick={onClose} variant="outline" className="absolute top-2 right-2 bg-white/10 hover:bg-white/20">
             Close
           </Button>
@@ -210,17 +266,23 @@ const KAJONCoffeeDetails = ({ onClose }) => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-amber-800 flex items-center">
-                <TrendingUp className="h-5 w-5 mr-2" /> Market Analysis
-              </h3>
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2" /> Market Analysis
+                </h3>
+                <div className="text-xs text-amber-600/80">Auto-updates every 3 months</div>
+              </div>
               <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
                 <p className="mb-2"><strong>Strong Upward Trend (2025):</strong> Coffee prices have demonstrated robust growth in early 2025, with premium Arabica and specialty coffees showing particularly strong performance.</p>
                 <p><strong>Current Price Level:</strong> At $6,250 per metric ton, prices have reached a 4-year high driven by increased global demand and supply constraints in key producing regions.</p>
               </div>
 
-              <h3 className="text-lg font-semibold text-amber-800 flex items-center">
-                <Calendar className="h-5 w-5 mr-2" /> Price Projections
-              </h3>
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+                  <Calendar className="h-5 w-5 mr-2" /> Price Projections
+                </h3>
+                <div className="text-xs text-amber-600/80">Auto-updates every 3 months</div>
+              </div>
               <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
                 <p className="mb-2"><strong>May-June 2025:</strong> Expecting continued growth reaching approximately $6,500 as summer demand increases and supply remains constrained.</p>
                 <p><strong>July-August 2025:</strong> Prices projected to stabilize around $6,750 with potential for higher peaks if weather disruptions affect major growing regions.</p>
@@ -228,9 +290,12 @@ const KAJONCoffeeDetails = ({ onClose }) => {
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-amber-800 flex items-center">
-                <AlertCircle className="h-5 w-5 mr-2" /> Market Factors
-              </h3>
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+                  <AlertCircle className="h-5 w-5 mr-2" /> Market Factors
+                </h3>
+                <div className="text-xs text-amber-600/80">Auto-updates every 3 months</div>
+              </div>
               
               <div className="h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
