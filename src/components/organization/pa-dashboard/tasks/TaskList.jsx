@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, MoreHorizontal } from 'lucide-react';
 import { format } from "date-fns";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import styles from './tasks.module.css';
 
 const TaskList = ({ tasks, handleCompleteTask, handleDeleteTask, getPriorityClass, getStatusClass }) => {
   const renderTaskCard = (task) => (
@@ -17,19 +18,15 @@ const TaskList = ({ tasks, handleCompleteTask, handleDeleteTask, getPriorityClas
               <Badge className={getPriorityClass(task.priority)}>
                 {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
               </Badge>
-              {task.entity && <span className="text-xs text-muted-foreground">{task.entity}</span>}
+              <span className="text-xs text-muted-foreground">{task.entity}</span>
             </div>
             <h3 className="font-medium mt-2">{task.title}</h3>
             <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
             <div className="flex items-center mt-3 text-xs text-muted-foreground">
               <Clock className="h-3 w-3 mr-1" />
-              <span>Due: {format(new Date(task.due_date), 'MMM dd, yyyy')}</span>
-              {task.assigned_to && (
-                <>
-                  <span className="mx-2">•</span>
-                  <span>Assigned to: {task.assigned_to}</span>
-                </>
-              )}
+              <span>Due: {format(new Date(task.dueDate), 'MMM dd, yyyy')}</span>
+              <span className="mx-2">•</span>
+              <span>Assigned to: {task.assignedTo}</span>
             </div>
           </div>
           <DropdownMenu>
@@ -39,9 +36,11 @@ const TaskList = ({ tasks, handleCompleteTask, handleDeleteTask, getPriorityClas
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem>Edit</DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleCompleteTask(task.id)}>
                 Mark Complete
               </DropdownMenuItem>
+              <DropdownMenuItem>Reassign</DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleDeleteTask(task.id)}>
                 Delete
               </DropdownMenuItem>
@@ -54,14 +53,7 @@ const TaskList = ({ tasks, handleCompleteTask, handleDeleteTask, getPriorityClas
 
   return (
     <div className="space-y-4">
-      {tasks.length === 0 ? (
-        <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-          <p className="text-lg">No tasks found</p>
-          <p className="text-sm mt-2">Create a new task to get started</p>
-        </div>
-      ) : (
-        tasks.map(renderTaskCard)
-      )}
+      {tasks.map(renderTaskCard)}
     </div>
   );
 };
