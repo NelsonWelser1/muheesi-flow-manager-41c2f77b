@@ -16,7 +16,6 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { Plus, Clock, X, Save, AlertCircle } from 'lucide-react';
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/supabase";
 import { useTasksData } from '../hooks/useTasksData';
 
 const TaskPriorityOptions = [

@@ -65,6 +65,11 @@ export const useTasksData = () => {
       const newTask = data[0];
       setTasks((prevTasks) => [newTask, ...prevTasks]);
       
+      toast({
+        title: "Success",
+        description: "Task created successfully",
+      });
+      
       return newTask;
     } catch (err) {
       console.error('Error adding task:', err);
