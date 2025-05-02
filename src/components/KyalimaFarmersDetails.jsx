@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Wheat, Tractor, Leaf } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Wheat, Tractor, Leaf } from 'lucide-react';
 
 const KyalimaFarmersDetails = ({ onClose }) => {
   return (

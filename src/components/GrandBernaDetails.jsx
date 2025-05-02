@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Beef, Droplet, CircleSlash } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Cow, Milk, Cheese } from 'lucide-react';
 
 const GrandBernaDetails = ({ onClose }) => {
   return (
@@ -28,15 +27,15 @@ const GrandBernaDetails = ({ onClose }) => {
             
             <div className="grid grid-cols-3 gap-4 w-full">
               <div className="flex flex-col items-center p-4 bg-blue-50 rounded-lg">
-                <Cow className="h-10 w-10 text-blue-600 mb-2" />
+                <Beef className="h-10 w-10 text-blue-600 mb-2" />
                 <p className="text-sm font-medium text-center">Quality Livestock</p>
               </div>
               <div className="flex flex-col items-center p-4 bg-blue-50 rounded-lg">
-                <Milk className="h-10 w-10 text-blue-600 mb-2" />
+                <Droplet className="h-10 w-10 text-blue-600 mb-2" />
                 <p className="text-sm font-medium text-center">Fresh Dairy Products</p>
               </div>
               <div className="flex flex-col items-center p-4 bg-blue-50 rounded-lg">
-                <Cheese className="h-10 w-10 text-blue-600 mb-2" />
+                <CircleSlash className="h-10 w-10 text-blue-600 mb-2" />
                 <p className="text-sm font-medium text-center">Artisanal Cheese</p>
               </div>
             </div>
