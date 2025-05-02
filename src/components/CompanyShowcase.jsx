@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import KAJONCoffeeDetails from './KAJONCoffeeDetails';
 import OrderForm from './orders/OrderForm';
 import ContactLinks from './ContactLinks';
+import GrandBernaDetails from './GrandBernaDetails';
+import KyalimaFarmersDetails from './KyalimaFarmersDetails';
 
 const fetchCompanyStocks = async () => {
   return {
@@ -138,6 +141,12 @@ const CompanyShowcase = () => {
       </div>
       {selectedCompany === 'KAJON Coffee Limited' && (
         <KAJONCoffeeDetails onClose={() => setSelectedCompany(null)} />
+      )}
+      {selectedCompany === 'Grand Berna Dairies' && (
+        <GrandBernaDetails onClose={() => setSelectedCompany(null)} />
+      )}
+      {selectedCompany === 'Kyalima Farmers Limited' && (
+        <KyalimaFarmersDetails onClose={() => setSelectedCompany(null)} />
       )}
     </div>
   );
