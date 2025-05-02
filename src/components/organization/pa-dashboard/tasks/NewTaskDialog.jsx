@@ -1,6 +1,6 @@
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Plus, Clock, X } from 'lucide-react';
+import { Plus, Clock, X, Save } from 'lucide-react';
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/supabase";
+import { useTasksData } from '../hooks/useTasksData';
 
 const TaskPriorityOptions = [
   { value: "high", label: "High Priority" },
@@ -32,14 +34,17 @@ const TaskStatusOptions = [
 
 const NewTaskDialog = ({ onTaskCreate }) => {
   const [showForm, setShowForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { addTask } = useTasksData();
+  
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     priority: "medium",
     status: "pending",
-    dueDate: new Date(),
-    assignedTo: "",
-    reminderTime: "",
+    due_date: new Date(),
+    assigned_to: "",
+    reminder_time: "",
   });
 
   const resetForm = () => {
@@ -48,14 +53,14 @@ const NewTaskDialog = ({ onTaskCreate }) => {
       description: "",
       priority: "medium",
       status: "pending",
-      dueDate: new Date(),
-      assignedTo: "",
-      reminderTime: "",
+      due_date: new Date(),
+      assigned_to: "",
+      reminder_time: "",
     });
     setShowForm(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.title.trim()) {
@@ -63,15 +68,30 @@ const NewTaskDialog = ({ onTaskCreate }) => {
       return;
     }
     
-    const newTask = {
-      ...formData,
-      id: Date.now(),
-      createdAt: new Date(),
-    };
+    setIsSubmitting(true);
     
-    onTaskCreate(newTask);
-    toast.success("Task created successfully");
-    resetForm();
+    try {
+      // Format the date and time for Supabase
+      const taskData = {
+        ...formData,
+        due_date: format(formData.due_date, 'yyyy-MM-dd'),
+      };
+      
+      const result = await addTask(taskData);
+      
+      // Call onTaskCreate callback if provided (for local state update)
+      if (onTaskCreate) {
+        onTaskCreate(result);
+      }
+      
+      toast.success("Task created successfully");
+      resetForm();
+    } catch (error) {
+      console.error("Error creating task:", error);
+      toast.error(`Failed to create task: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!showForm) {
@@ -160,8 +180,8 @@ const NewTaskDialog = ({ onTaskCreate }) => {
             <div className="grid gap-2">
               <Label>Due Date</Label>
               <DatePicker
-                date={formData.dueDate}
-                setDate={(date) => setFormData({ ...formData, dueDate: date })}
+                date={formData.due_date}
+                setDate={(date) => setFormData({ ...formData, due_date: date })}
               />
             </div>
 
@@ -171,8 +191,8 @@ const NewTaskDialog = ({ onTaskCreate }) => {
                 <Input
                   id="reminderTime"
                   type="time"
-                  value={formData.reminderTime}
-                  onChange={(e) => setFormData({ ...formData, reminderTime: e.target.value })}
+                  value={formData.reminder_time}
+                  onChange={(e) => setFormData({ ...formData, reminder_time: e.target.value })}
                   className="pl-9"
                 />
                 <Clock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -185,15 +205,32 @@ const NewTaskDialog = ({ onTaskCreate }) => {
             <Input
               id="assignedTo"
               placeholder="Enter assignee name"
-              value={formData.assignedTo}
-              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+              value={formData.assigned_to}
+              onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
             />
           </div>
         </div>
 
         <div className="flex justify-end space-x-2 pt-4">
-          <Button variant="outline" type="button" onClick={resetForm}>Cancel</Button>
-          <Button type="submit">Create Task</Button>
+          <Button variant="outline" type="button" onClick={resetForm} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving...
+              </span>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Create Task
+              </>
+            )}
+          </Button>
         </div>
       </form>
     </div>

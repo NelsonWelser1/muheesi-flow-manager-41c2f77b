@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
 import TaskSearchBar from './tasks/TaskSearchBar';
@@ -7,64 +7,19 @@ import TaskList from './tasks/TaskList';
 import NewTaskDialog from './tasks/NewTaskDialog';
 import TaskCalendarView from './tasks/TaskCalendarView';
 import TaskBoardView from './tasks/TaskBoardView';
+import { useTasksData } from './hooks/useTasksData';
 
 const TaskManager = ({ selectedEntity, view = 'list' }) => {
-  const [tasks, setTasks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const { tasks, isLoading, fetchTasks, updateTask, deleteTask } = useTasksData();
 
-  useEffect(() => {
-    // Mock data for tasks
-    const mockTasks = [
-      {
-        id: 1,
-        title: "Prepare Quarterly Report",
-        description: "Gather data and create the quarterly financial report.",
-        priority: "high",
-        status: "pending",
-        dueDate: "2024-08-15",
-        assignedTo: "John Doe",
-        entity: "Finance",
-      },
-      {
-        id: 2,
-        title: "Update Client Database",
-        description: "Clean and update the client contact information in the CRM.",
-        priority: "medium",
-        status: "in-progress",
-        dueDate: "2024-08-22",
-        assignedTo: "Jane Smith",
-        entity: "Sales",
-      },
-      {
-        id: 3,
-        title: "Schedule Team Training",
-        description: "Coordinate and schedule a training session for the marketing team.",
-        priority: "low",
-        status: "completed",
-        dueDate: "2024-08-01",
-        assignedTo: "Alice Johnson",
-        entity: "Marketing",
-      },
-    ];
-
-    setTasks(mockTasks);
-  }, []);
-
-  const handleCreateTask = (newTask) => {
-    setTasks([...tasks, newTask]);
+  const handleCompleteTask = async (taskId) => {
+    await updateTask(taskId, { status: 'completed' });
   };
 
-  const handleCompleteTask = (taskId) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId 
-        ? {...task, status: 'completed'} 
-        : task
-    ));
-  };
-
-  const handleDeleteTask = (taskId) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
+  const handleDeleteTask = async (taskId) => {
+    await deleteTask(taskId);
   };
 
   const getPriorityClass = (priority) => {
@@ -101,6 +56,14 @@ const TaskManager = ({ selectedEntity, view = 'list' }) => {
   );
 
   const renderView = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+
     switch (view) {
       case 'calendar':
         return <TaskCalendarView tasks={filteredTasks} />;
@@ -118,7 +81,12 @@ const TaskManager = ({ selectedEntity, view = 'list' }) => {
           <>
             <TaskSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
             {showForm && (
-              <NewTaskDialog onTaskCreate={handleCreateTask} />
+              <NewTaskDialog 
+                onTaskCreate={() => {
+                  setShowForm(false);
+                  fetchTasks();
+                }} 
+              />
             )}
             <TaskList
               tasks={filteredTasks}
