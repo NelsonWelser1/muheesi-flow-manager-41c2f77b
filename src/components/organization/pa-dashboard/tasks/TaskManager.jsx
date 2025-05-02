@@ -8,6 +8,13 @@ import NewTaskDialog from './tasks/NewTaskDialog';
 import TaskCalendarView from './tasks/TaskCalendarView';
 import TaskBoardView from './tasks/TaskBoardView';
 import { useTasksData } from './hooks/useTasksData';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const TaskManager = ({ selectedEntity, view = 'list' }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,7 +89,7 @@ const TaskManager = ({ selectedEntity, view = 'list' }) => {
             <TaskSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
             <div className="transition-all duration-300">
               {showForm && (
-                <div className="mb-6">
+                <div className="mb-6 animate-fade-in">
                   <NewTaskDialog 
                     onTaskCreate={() => {
                       setShowForm(false);
@@ -106,15 +113,51 @@ const TaskManager = ({ selectedEntity, view = 'list' }) => {
 
   return (
     <div className="space-y-4">
-      {!showForm && view === 'list' && (
+      {view === 'list' && (
         <div className="flex justify-between items-center">
-          <Button 
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            <Plus className="h-4 w-4" />
-            New Task
-          </Button>
+          {!showForm ? (
+            <div className="flex space-x-2">
+              {/* Button for inline form */}
+              <Button 
+                onClick={() => setShowForm(true)}
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                <Plus className="h-4 w-4" />
+                New Task
+              </Button>
+              
+              {/* Slide-out sheet for task creation */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="border-dashed border-blue-300 text-blue-600 hover:bg-blue-50 hover:text-blue-700">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Quick Add
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="sm:max-w-md">
+                  <SheetHeader>
+                    <SheetTitle className="text-xl font-bold text-blue-700">Create New Task</SheetTitle>
+                  </SheetHeader>
+                  <div className="py-6">
+                    <NewTaskDialog 
+                      onTaskCreate={() => {
+                        fetchTasks();
+                      }} 
+                      isSlideOver={true}
+                    />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          ) : (
+            <Button 
+              variant="outline" 
+              onClick={() => setShowForm(false)}
+              className="text-gray-600 hover:bg-gray-100"
+            >
+              Cancel
+            </Button>
+          )}
           
           <div className="text-sm text-slate-500">
             {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'} found

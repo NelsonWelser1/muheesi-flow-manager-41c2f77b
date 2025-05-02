@@ -32,7 +32,7 @@ const TaskStatusOptions = [
   { value: "postponed", label: "Postponed" },
 ];
 
-const NewTaskDialog = ({ onTaskCreate }) => {
+const NewTaskDialog = ({ onTaskCreate, isSlideOver = false }) => {
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addTask } = useTasksData();
@@ -102,7 +102,23 @@ const NewTaskDialog = ({ onTaskCreate }) => {
       }
       
       toast.success("Task created successfully");
-      resetForm();
+      
+      // Only reset the form if not in slide-over mode
+      if (!isSlideOver) {
+        resetForm();
+      } else {
+        // Just clear the form without hiding it for slide-over mode
+        setFormData({
+          title: "",
+          description: "",
+          priority: "medium",
+          status: "pending",
+          due_date: new Date(),
+          assigned_to: "",
+          reminder_time: "",
+        });
+        setErrors({});
+      }
     } catch (error) {
       console.error("Error creating task:", error);
       toast.error(`Failed to create task: ${error.message}`);
@@ -111,7 +127,14 @@ const NewTaskDialog = ({ onTaskCreate }) => {
     }
   };
 
-  if (!showForm) {
+  // If in slide-over mode, always show the form
+  useEffect(() => {
+    if (isSlideOver) {
+      setShowForm(true);
+    }
+  }, [isSlideOver]);
+
+  if (!showForm && !isSlideOver) {
     return (
       <Button 
         onClick={() => setShowForm(true)}
@@ -123,17 +146,24 @@ const NewTaskDialog = ({ onTaskCreate }) => {
     );
   }
 
+  // Different styling based on whether it's a slide-over or not
+  const formClassName = isSlideOver 
+    ? "w-full space-y-4" 
+    : "w-full bg-gradient-to-br from-slate-50 to-white rounded-xl shadow-lg border border-slate-200 p-6 space-y-4 animate-fade-in";
+
   return (
-    <div className="w-full bg-gradient-to-br from-slate-50 to-white rounded-xl shadow-lg border border-slate-200 p-6 space-y-4 animate-fade-in">
-      <div className="flex justify-between items-center border-b border-slate-200 pb-4">
-        <h3 className="text-xl font-semibold text-slate-800 flex items-center">
-          <div className="h-6 w-1.5 bg-blue-500 rounded mr-3"></div>
-          Create New Task
-        </h3>
-        <Button variant="ghost" size="icon" onClick={resetForm} className="rounded-full hover:bg-slate-100">
-          <X className="h-5 w-5 text-slate-500" />
-        </Button>
-      </div>
+    <div className={formClassName}>
+      {!isSlideOver && (
+        <div className="flex justify-between items-center border-b border-slate-200 pb-4">
+          <h3 className="text-xl font-semibold text-slate-800 flex items-center">
+            <div className="h-6 w-1.5 bg-blue-500 rounded mr-3"></div>
+            Create New Task
+          </h3>
+          <Button variant="ghost" size="icon" onClick={resetForm} className="rounded-full hover:bg-slate-100">
+            <X className="h-5 w-5 text-slate-500" />
+          </Button>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid gap-5">
@@ -291,15 +321,17 @@ const NewTaskDialog = ({ onTaskCreate }) => {
         </div>
 
         <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
-          <Button 
-            variant="outline" 
-            type="button" 
-            onClick={resetForm} 
-            disabled={isSubmitting}
-            className="border-slate-200 text-slate-700 hover:bg-slate-50"
-          >
-            Cancel
-          </Button>
+          {!isSlideOver && (
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={resetForm} 
+              disabled={isSubmitting}
+              className="border-slate-200 text-slate-700 hover:bg-slate-50"
+            >
+              Cancel
+            </Button>
+          )}
           <Button 
             type="submit" 
             disabled={isSubmitting}
@@ -316,7 +348,7 @@ const NewTaskDialog = ({ onTaskCreate }) => {
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                Create Task
+                {isSlideOver ? 'Add Task' : 'Create Task'}
               </>
             )}
           </Button>
