@@ -22,7 +22,7 @@ const ContactLinks = ({
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" onClick={() => window.location.href = `https://wa.me/${whatsappNumber}`} className="hover:bg-green-100">
+            <Button variant="outline" size="icon" onClick={() => window.location.href = `https://wa.me/${whatsappNumber}`} className="bg-green-50">
               <MessageCircle className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
