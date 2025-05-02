@@ -1,15 +1,11 @@
 
 import React, { useState } from 'react';
-import { Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { useQuery } from '@tanstack/react-query';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import KAJONCoffeeDetails from './KAJONCoffeeDetails';
-import OrderForm from './orders/OrderForm';
-import ContactLinks from './ContactLinks';
-import GrandBernaDetails from './GrandBernaDetails';
-import KyalimaFarmersDetails from './KyalimaFarmersDetails';
 import { useCompanyStocks } from '@/hooks/useCompanyStocks';
+import KAJONCoffeeDetails from './KAJONCoffeeDetails';
+import KyalimaFarmersDetails from './KyalimaFarmersDetails';
+import CompanyCard from './companies/CompanyCard';
+import GrandBernaDetails from './companies/GrandBernaDetails';
 
 const companies = [
   {
@@ -43,7 +39,7 @@ const companies = [
 const CompanyShowcase = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   
-  // Replace the static fetchCompanyStocks function with individual queries for each company
+  // Individual queries for each company
   const { data: grandBernaStocks, isLoading: isLoadingGrandBerna } = useCompanyStocks('Grand Berna Dairies');
   const { data: kajonStocks, isLoading: isLoadingKajon } = useCompanyStocks('KAJON Coffee Limited');
   const { data: kyalimaStocks, isLoading: isLoadingKyalima } = useCompanyStocks('Kyalima Farmers Limited');
@@ -107,66 +103,21 @@ const CompanyShowcase = () => {
   const isLoading = isLoadingGrandBerna || isLoadingKajon || isLoadingKyalima;
 
   return (
-    <div className="bg-gray-100 py-4 sm:py-8">
+    <div className="bg-gray-100 py-4 sm:py-8" data-select-id="company-showcase-container">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-select-id="companies-grid">
           {companies.map((company) => (
-            <div key={company.name} className="bg-white rounded-lg shadow-lg divide-y divide-gray-200">
-              <div className="p-4 sm:p-6">
-                <h2 className="text-xl sm:text-2xl leading-6 font-semibold text-gray-900">{company.name}</h2>
-                <p className="mt-4 text-base sm:text-lg text-gray-500">{company.description}</p>
-                <OrderForm company={company.name} />
-                <Button 
-                  className="mt-2 w-full text-sm sm:text-base" 
-                  onClick={() => setSelectedCompany(company.name)}
-                >
-                  About Us
-                </Button>
-                <ContactLinks email={company.email} phones={company.phones} />
-              </div>
-              <div className="p-4 sm:p-6">
-                <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase mb-4">Key Products</h3>
-                <ul className="space-y-2 sm:space-y-4">
-                  {company.features.map((feature) => (
-                    <li key={typeof feature === 'string' ? feature : feature.name} className="flex items-center">
-                      <Check className="flex-shrink-0 h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-2" aria-hidden="true" />
-                      {typeof feature === 'string' ? (
-                        <span className="text-sm sm:text-base text-gray-500">{feature}</span>
-                      ) : (
-                        <Select>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder={feature.name} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {feature.options.map((option) => (
-                              <SelectItem key={option} value={option}>{option}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="p-4 sm:p-6">
-                <h3 className="text-xs font-medium text-gray-900 tracking-wide uppercase mb-4">Current Stock</h3>
-                {isLoading ? (
-                  <p className="text-sm">Loading stock information...</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {Object.entries(getStocksForCompany(company.name) || {}).map(([product, stock]) => (
-                      <li key={product} className="flex justify-between text-sm sm:text-base">
-                        <span className="text-gray-500">{product}</span>
-                        <span className="font-medium text-gray-900">{stock}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
+            <CompanyCard
+              key={company.name}
+              company={company}
+              stockData={getStocksForCompany(company.name)}
+              isLoading={isLoading}
+              onViewDetailsClick={setSelectedCompany}
+            />
           ))}
         </div>
       </div>
+      
       {selectedCompany === 'KAJON Coffee Limited' && (
         <KAJONCoffeeDetails onClose={() => setSelectedCompany(null)} />
       )}
