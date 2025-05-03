@@ -12,7 +12,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar, Check, ChevronsUpDown, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
 
 // Define the form validation schema
@@ -63,45 +62,12 @@ const TransactionForm = ({
     }
   });
 
-  // Handle form submission with Supabase integration
+  // Handle form submission - now only calls the callback
   const handleSubmit = async (data) => {
     try {
       console.log("Form submitted:", data);
       
-      // Format data for Supabase
-      const transactionData = {
-        date: data.date,
-        bank_account: data.bankAccount,
-        type: data.type,
-        payee: data.payee,
-        reason: data.reason,
-        amount: Number(data.amount),
-      };
-
-      // Insert data into Supabase
-      const { data: savedData, error } = await supabase
-        .from('transactions')
-        .insert(transactionData)
-        .select();
-
-      if (error) {
-        console.error("Error saving transaction:", error);
-        toast({
-          variant: "destructive",
-          title: "Error saving transaction",
-          description: error.message || "Failed to save transaction",
-        });
-        return;
-      }
-
-      console.log("Transaction saved to Supabase:", savedData);
-      
-      toast({
-        title: "Transaction Added",
-        description: "The transaction was successfully saved to the database.",
-      });
-
-      // Also call the provided onSubmit callback to update UI
+      // Call the provided onSubmit callback to update UI and save to database
       onSubmit(data);
     } catch (err) {
       console.error("Unexpected error:", err);

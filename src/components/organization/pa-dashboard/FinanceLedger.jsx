@@ -12,6 +12,7 @@ import LedgerUpdates from './LedgerUpdates';
 
 const FinanceLedger = ({ selectedEntity }) => {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add state to track form submission
   const { toast } = useToast();
   const {
     transactions,
@@ -65,7 +66,10 @@ const FinanceLedger = ({ selectedEntity }) => {
   };
 
   const handleSubmitAddTransaction = async (formData) => {
+    if (isSubmitting) return; // Prevent multiple submissions
+    
     try {
+      setIsSubmitting(true); // Set flag to indicate submission in progress
       const success = await saveTransaction(formData);
       if (success) {
         setShowAddForm(false);
@@ -81,6 +85,8 @@ const FinanceLedger = ({ selectedEntity }) => {
         title: "Error",
         description: "Failed to add transaction. Please try again.",
       });
+    } finally {
+      setIsSubmitting(false); // Reset flag
     }
   };
 
