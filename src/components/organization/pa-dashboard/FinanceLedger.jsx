@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import TransactionForm from '../../../components/inventory/kashari/modules/plantation/TransactionForm';
 import { useTransactions } from '@/hooks/useTransactions';
 import { formatDate } from '@/utils/dateUtils';
+import LedgerUpdates from './LedgerUpdates';
 
 const FinanceLedger = ({ selectedEntity }) => {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -237,6 +238,9 @@ const FinanceLedger = ({ selectedEntity }) => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Add the new Ledger Updates component */}
+      <LedgerUpdates />
     </div>
   );
 };
