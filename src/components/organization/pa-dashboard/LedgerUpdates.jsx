@@ -6,11 +6,44 @@ import { formatDate } from '@/utils/dateUtils';
 
 const LedgerUpdates = () => {
   const { transactions } = useTransactions();
-  const [startingBalance, setStartingBalance] = useState(29699000);
+  const [startingBalance, setStartingBalance] = useState(0); // Default to 0 instead of hardcoded value
   const [endingBalance, setEndingBalance] = useState(0);
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [balanceSteps, setBalanceSteps] = useState([]);
   const [latestTransactionDate, setLatestTransactionDate] = useState(null);
+  const [previousClosingBalance, setPreviousClosingBalance] = useState(0);
+
+  // Fetch and calculate the previous closing balance from transactions
+  useEffect(() => {
+    if (!transactions || transactions.length === 0) {
+      setPreviousClosingBalance(0);
+      setStartingBalance(0);
+      return;
+    }
+    
+    // Sort transactions by date (oldest to newest)
+    const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Calculate the closing balance before recent transactions
+    let calculatedBalance = 0;
+    
+    // Calculate balance up to transactions that aren't in the most recent 5
+    if (sortedTransactions.length > 5) {
+      const olderTransactions = sortedTransactions.slice(0, -5);
+      
+      olderTransactions.forEach(tx => {
+        const amount = Number(tx.amount);
+        if (tx.type === 'income') {
+          calculatedBalance += amount;
+        } else if (tx.type === 'expense') {
+          calculatedBalance -= amount;
+        }
+      });
+    }
+    
+    setPreviousClosingBalance(calculatedBalance);
+    setStartingBalance(calculatedBalance);
+  }, [transactions]);
 
   // Process transactions when they load
   useEffect(() => {
@@ -68,7 +101,7 @@ const LedgerUpdates = () => {
       <CardContent className="pt-4">
         <div className="space-y-4">
           <div>
-            <p className="font-medium">Previous Closing Balance: UGX {startingBalance.toLocaleString()}</p>
+            <p className="font-medium">Previous Closing Balance: UGX {previousClosingBalance.toLocaleString()}</p>
           </div>
 
           {recentTransactions.length > 0 && (
