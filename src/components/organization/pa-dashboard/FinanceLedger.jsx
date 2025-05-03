@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -23,22 +23,22 @@ const FinanceLedger = ({ selectedEntity }) => {
     deleteTransaction,
   } = useTransactions();
 
-  // Sample data for demo purposes
-  const [ledger, setLedger] = useState([
-    { id: 1, date: '2025-04-01', type: 'income', amount: 325000, description: 'Sale to Nakumatt Supermarket' },
-    { id: 2, date: '2025-04-03', type: 'expense', amount: 175000, description: 'Fertilizer purchase' },
-    { id: 3, date: '2025-04-07', type: 'income', amount: 260000, description: 'Sale to Fresh Foods Market' },
-  ]);
-
+  // Calculate financial summaries from transactions
   const openingBalance = 0;
-  const sortedLedger = [...ledger].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const transactionsData = transactions || [];
+  
+  // Sort transactions by date
+  const sortedTransactions = [...transactionsData].sort((a, b) => 
+    new Date(a.date) - new Date(b.date)
+  );
 
+  // Calculate running balance
   let currentBalance = openingBalance;
-  const ledgerRows = sortedLedger.map((item) => {
+  const ledgerRows = sortedTransactions.map((item) => {
     if (item.type === "income") {
-      currentBalance += item.amount;
+      currentBalance += Number(item.amount);
     } else if (item.type === "expense") {
-      currentBalance -= item.amount;
+      currentBalance -= Number(item.amount);
     }
     return {
       ...item,
@@ -46,8 +46,14 @@ const FinanceLedger = ({ selectedEntity }) => {
     };
   });
 
-  const totalIncome = ledger.filter(item => item.type === 'income').reduce((total, item) => total + item.amount, 0);
-  const totalExpenses = ledger.filter(item => item.type === 'expense').reduce((total, item) => total + item.amount, 0);
+  const totalIncome = transactionsData
+    .filter(item => item.type === 'income')
+    .reduce((total, item) => total + Number(item.amount), 0);
+    
+  const totalExpenses = transactionsData
+    .filter(item => item.type === 'expense')
+    .reduce((total, item) => total + Number(item.amount), 0);
+    
   const closingBalance = openingBalance + totalIncome - totalExpenses;
 
   const handleAddTransactionClick = () => {
@@ -63,20 +69,9 @@ const FinanceLedger = ({ selectedEntity }) => {
       const success = await saveTransaction(formData);
       if (success) {
         setShowAddForm(false);
-        
-        // For demo purposes, also update the local state
-        const newEntry = {
-          id: Date.now(),
-          type: formData.type,
-          amount: Number(formData.amount),
-          date: formData.date,
-          description: formData.reason,
-        };
-        setLedger(prev => [newEntry, ...prev]);
-        
         toast({
           title: "Transaction Added",
-          description: "The transaction was successfully added.",
+          description: "The transaction was successfully added to the database.",
         });
       }
     } catch (error) {
@@ -88,6 +83,11 @@ const FinanceLedger = ({ selectedEntity }) => {
       });
     }
   };
+
+  // Refresh data when component mounts
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   return (
     <div className="space-y-6">
@@ -200,30 +200,46 @@ const FinanceLedger = ({ selectedEntity }) => {
                 <TableCell colSpan={5} className="font-bold">Opening Balance</TableCell>
                 <TableCell className="font-bold">UGX {openingBalance.toLocaleString()}</TableCell>
               </TableRow>
-              {ledgerRows.map((item, idx) => (
-                <TableRow key={item.id}>
-                  <TableCell>{formatDate(item.date)}</TableCell>
-                  <TableCell className={
-                    item.type === "income"
-                      ? "text-green-600"
-                      : item.type === "expense"
-                      ? "text-red-600"
-                      : "text-yellow-600"
-                  }>
-                    {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                  </TableCell>
-                  <TableCell>{item.description}</TableCell>
-                  <TableCell className="text-green-700">
-                    {item.type === "income" ? `UGX ${item.amount.toLocaleString()}` : ""}
-                  </TableCell>
-                  <TableCell className="text-red-700">
-                    {item.type === "expense" ? `UGX ${item.amount.toLocaleString()}` : ""}
-                  </TableCell>
-                  <TableCell className="font-bold">
-                    UGX {item.runningBalance.toLocaleString()}
+              
+              {isLoading || isFetching ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    Loading transactions...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : ledgerRows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                    No transactions found. Add your first transaction to get started.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                ledgerRows.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{formatDate(item.date)}</TableCell>
+                    <TableCell className={
+                      item.type === "income"
+                        ? "text-green-600"
+                        : item.type === "expense"
+                        ? "text-red-600"
+                        : "text-yellow-600"
+                    }>
+                      {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                    </TableCell>
+                    <TableCell>{item.reason}</TableCell>
+                    <TableCell className="text-green-700">
+                      {item.type === "income" ? `UGX ${Number(item.amount).toLocaleString()}` : ""}
+                    </TableCell>
+                    <TableCell className="text-red-700">
+                      {item.type === "expense" ? `UGX ${Number(item.amount).toLocaleString()}` : ""}
+                    </TableCell>
+                    <TableCell className="font-bold">
+                      UGX {item.runningBalance.toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+              
               <TableRow>
                 <TableCell colSpan={3} className="font-bold text-right">Total</TableCell>
                 <TableCell className="font-bold text-green-700">UGX {totalIncome.toLocaleString()}</TableCell>

@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/supabase";
 
@@ -16,7 +16,7 @@ export const useTransactions = () => {
       console.log("Fetching transactions from Supabase...");
       
       const { data, error } = await supabase
-        .from("kashari_transactions")
+        .from("transactions")
         .select("*")
         .order("date", { ascending: false });
 
@@ -43,6 +43,11 @@ export const useTransactions = () => {
       setIsFetching(false);
     }
   }, [toast]);
+
+  // Load transactions on component mount
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   // Save a new transaction
   const saveTransaction = useCallback(async (formData) => {
@@ -86,10 +91,9 @@ export const useTransactions = () => {
 
       // Insert into Supabase
       const { data, error } = await supabase
-        .from("kashari_transactions")
+        .from("transactions")
         .insert(transactionData)
-        .select()
-        .single();
+        .select();
 
       if (error) {
         console.error("Error saving transaction:", error);
@@ -104,7 +108,7 @@ export const useTransactions = () => {
       console.log("Transaction saved successfully:", data);
       
       // Update local state
-      setTransactions(prev => [data, ...prev]);
+      setTransactions(prev => [...data, ...prev]);
       
       toast({
         title: "Transaction Added",
@@ -143,11 +147,10 @@ export const useTransactions = () => {
       };
 
       const { data, error } = await supabase
-        .from("kashari_transactions")
+        .from("transactions")
         .update(transactionData)
         .eq("id", id)
-        .select()
-        .single();
+        .select();
 
       if (error) {
         console.error("Error updating transaction:", error);
@@ -164,7 +167,7 @@ export const useTransactions = () => {
       // Update local state
       setTransactions(prev => 
         prev.map(transaction => 
-          transaction.id === id ? data : transaction
+          transaction.id === id ? data[0] : transaction
         )
       );
       
@@ -194,7 +197,7 @@ export const useTransactions = () => {
       console.log("Deleting transaction from Supabase:", id);
 
       const { error } = await supabase
-        .from("kashari_transactions")
+        .from("transactions")
         .delete()
         .eq("id", id);
 

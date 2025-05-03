@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar, Check, ChevronsUpDown, Save, X } from "lucide-react";
+import { Calendar, Check, ChevronsUpDown, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/supabase";
+import { useToast } from "@/components/ui/use-toast";
 
 // Define the form validation schema
 const transactionSchema = z.object({
@@ -36,11 +39,14 @@ const bankAccounts = [{
   label: "Cash",
   value: "Cash"
 }];
+
 const TransactionForm = ({
   transaction,
   onSubmit,
   onCancel
 }) => {
+  const { toast } = useToast();
+  
   // Initialize the form with default values or existing transaction data
   const form = useForm({
     resolver: zodResolver(transactionSchema),
@@ -57,13 +63,54 @@ const TransactionForm = ({
     }
   });
 
-  // Handle form submission
-  const handleSubmit = data => {
-    console.log("Form submitted:", data);
-    onSubmit({
-      ...data,
-      amount: Number(data.amount)
-    });
+  // Handle form submission with Supabase integration
+  const handleSubmit = async (data) => {
+    try {
+      console.log("Form submitted:", data);
+      
+      // Format data for Supabase
+      const transactionData = {
+        date: data.date,
+        bank_account: data.bankAccount,
+        type: data.type,
+        payee: data.payee,
+        reason: data.reason,
+        amount: Number(data.amount),
+      };
+
+      // Insert data into Supabase
+      const { data: savedData, error } = await supabase
+        .from('transactions')
+        .insert(transactionData)
+        .select();
+
+      if (error) {
+        console.error("Error saving transaction:", error);
+        toast({
+          variant: "destructive",
+          title: "Error saving transaction",
+          description: error.message || "Failed to save transaction",
+        });
+        return;
+      }
+
+      console.log("Transaction saved to Supabase:", savedData);
+      
+      toast({
+        title: "Transaction Added",
+        description: "The transaction was successfully saved to the database.",
+      });
+
+      // Also call the provided onSubmit callback to update UI
+      onSubmit(data);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast({
+        variant: "destructive",
+        title: "Unexpected error",
+        description: "An unexpected error occurred. Please try again.",
+      });
+    }
   };
 
   // Track if the dropdown is open
@@ -71,7 +118,9 @@ const TransactionForm = ({
   const [customAccount, setCustomAccount] = React.useState("");
   const bankAccountValue = form.watch("bankAccount");
   const isCustomAccount = !bankAccounts.find(acc => acc.value === bankAccountValue);
-  return <Card className="bg-white shadow-md border-t-4 border-[#8B5CF6]">
+  
+  return (
+    <Card className="bg-white shadow-md border-t-4 border-[#8B5CF6]">
       <CardHeader>
         <CardTitle className="text-lg text-[#6E59A5]">
           {transaction ? "Edit Transaction" : "Add New Transaction"}
@@ -192,7 +241,9 @@ const TransactionForm = ({
 
             {/* Form Actions */}
             <div className="md:col-span-2 flex justify-end gap-2">
-              
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
               <Button type="submit" className="bg-[#8B5CF6] hover:bg-[#7C4FF3] text-white">
                 <Save className="h-4 w-4 mr-2" />
                 {transaction ? "Update Transaction" : "Save Transaction"}
@@ -201,6 +252,8 @@ const TransactionForm = ({
           </form>
         </Form>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export default TransactionForm;
