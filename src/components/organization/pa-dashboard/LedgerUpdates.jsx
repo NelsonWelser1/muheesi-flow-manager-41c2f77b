@@ -10,6 +10,7 @@ const LedgerUpdates = () => {
   const [endingBalance, setEndingBalance] = useState(0);
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [balanceSteps, setBalanceSteps] = useState([]);
+  const [latestDate, setLatestDate] = useState(null);
 
   // Process transactions when they load
   useEffect(() => {
@@ -21,6 +22,11 @@ const LedgerUpdates = () => {
       .slice(0, 5);
     
     setRecentTransactions(recent);
+    
+    // Set the latest date (from the most recent transaction)
+    if (recent.length > 0) {
+      setLatestDate(recent[0].date);
+    }
     
     // Calculate balance steps
     let currentBalance = startingBalance;
@@ -50,7 +56,7 @@ const LedgerUpdates = () => {
   return (
     <Card className="mt-6">
       <CardHeader className="pb-2">
-        <CardTitle>Ledger Update — Post 8th April</CardTitle>
+        <CardTitle>Ledger Update {latestDate ? `— Post ${formatDate(latestDate)}` : ""}</CardTitle>
         <p className="text-sm text-muted-foreground">Summary of financial position</p>
       </CardHeader>
       <CardContent className="pt-4">
