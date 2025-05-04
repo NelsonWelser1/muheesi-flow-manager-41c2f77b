@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 
-const ShipmentsList = ({ onCreateNew }) => {
+const ShipmentsList = ({ onCreateNew, viewOnly = false }) => {
   const { shipments, isLoading, fetchShipments } = useShipments();
 
   useEffect(() => {
@@ -38,14 +38,16 @@ const ShipmentsList = ({ onCreateNew }) => {
             <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
             Refresh
           </Button>
-          <Button 
-            onClick={onCreateNew} 
-            size="sm" 
-            className="flex items-center gap-1"
-          >
-            <PlusCircle size={16} />
-            New Shipment
-          </Button>
+          {!viewOnly && (
+            <Button 
+              onClick={onCreateNew} 
+              size="sm" 
+              className="flex items-center gap-1"
+            >
+              <PlusCircle size={16} />
+              New Shipment
+            </Button>
+          )}
         </div>
       </div>
 
@@ -79,13 +81,15 @@ const ShipmentsList = ({ onCreateNew }) => {
                 <tr>
                   <td colSpan={9} className="px-4 py-8 text-center">
                     <p className="text-muted-foreground">No shipments found</p>
-                    <Button 
-                      variant="link" 
-                      onClick={onCreateNew} 
-                      className="mt-2"
-                    >
-                      Create your first shipment
-                    </Button>
+                    {!viewOnly && (
+                      <Button 
+                        variant="link" 
+                        onClick={onCreateNew} 
+                        className="mt-2"
+                      >
+                        Create your first shipment
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ) : (
@@ -93,7 +97,7 @@ const ShipmentsList = ({ onCreateNew }) => {
                   <tr key={shipment.id} className="hover:bg-muted/50">
                     <td className="px-4 py-3 font-medium">{shipment.shipment_id}</td>
                     <td className="px-4 py-3">
-                      <ShipmentStatusCell shipment={shipment} />
+                      <ShipmentStatusCell shipment={shipment} readOnly={viewOnly} />
                     </td>
                     <td className="px-4 py-3">{shipment.container}</td>
                     <td className="px-4 py-3">{formatDate(shipment.departure_date)}</td>
@@ -102,7 +106,7 @@ const ShipmentsList = ({ onCreateNew }) => {
                     <td className="px-4 py-3">{shipment.client || 'N/A'}</td>
                     <td className="px-4 py-3">{formatDate(shipment.last_update)}</td>
                     <td className="px-4 py-3 text-right">
-                      <ShipmentActionsCell shipment={shipment} />
+                      <ShipmentActionsCell shipment={shipment} readOnly={viewOnly} />
                     </td>
                   </tr>
                 ))

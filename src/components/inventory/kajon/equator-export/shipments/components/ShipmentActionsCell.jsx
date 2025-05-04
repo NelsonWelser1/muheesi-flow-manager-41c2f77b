@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-const ShipmentActionsCell = ({ shipment }) => {
+const ShipmentActionsCell = ({ shipment, readOnly = false }) => {
   const [viewOpen, setViewOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 

@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import OrdersList from './modules/order-management/OrdersList';
+import Shipments from '../equator-export/shipments/Shipments';
 
 const CoffeeExportDashboard = ({ viewOnly = false }) => {
   const mockOrders = [
@@ -82,12 +83,7 @@ const CoffeeExportDashboard = ({ viewOnly = false }) => {
         <TabsContent value="shipments">
           <Card>
             <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Shipment Tracking</h3>
-              {viewOnly ? (
-                <p>Shipment tracking information is available for viewing in this executive dashboard.</p>
-              ) : (
-                <p>Create and manage shipments for coffee export orders.</p>
-              )}
+              <Shipments viewOnly={viewOnly} />
             </CardContent>
           </Card>
         </TabsContent>

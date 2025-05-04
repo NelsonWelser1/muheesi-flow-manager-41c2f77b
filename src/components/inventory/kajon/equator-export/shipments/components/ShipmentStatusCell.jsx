@@ -19,7 +19,7 @@ const statusConfig = {
   'Delayed': { color: 'bg-red-100 text-red-800', icon: AlertTriangle }
 };
 
-const ShipmentStatusCell = ({ shipment }) => {
+const ShipmentStatusCell = ({ shipment, readOnly = false }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const { updateShipmentStatus } = useShipments();
   const currentStatus = shipment.status || 'Scheduled';
@@ -28,7 +28,7 @@ const ShipmentStatusCell = ({ shipment }) => {
   const statusColor = statusConfig[currentStatus]?.color || 'bg-gray-100 text-gray-800';
 
   const handleStatusChange = async (newStatus) => {
-    if (newStatus === currentStatus) return;
+    if (newStatus === currentStatus || readOnly) return;
     
     setIsUpdating(true);
     try {
@@ -39,6 +39,16 @@ const ShipmentStatusCell = ({ shipment }) => {
       setIsUpdating(false);
     }
   };
+
+  // If in read-only mode, just display the status without dropdown
+  if (readOnly) {
+    return (
+      <Badge variant="outline" className={`${statusColor} flex items-center gap-1 px-2.5 py-1 text-xs font-medium`}>
+        <StatusIcon size={14} />
+        <span>{currentStatus}</span>
+      </Badge>
+    );
+  }
 
   return (
     <DropdownMenu>
