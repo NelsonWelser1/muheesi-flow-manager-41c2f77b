@@ -1,21 +1,36 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, Receipt, Calculator, BarChart3, Percent } from "lucide-react";
 import QuotationForm from './QuotationForm';
 import QuotationsList from './QuotationsList';
-import { useToast } from "@/components/ui/use-toast";
 import { useQuotes, useCreateQuote, useDeleteQuote } from '@/integrations/supabase/hooks/useQuotes';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
-const QuoteManagement = () => {
+const QuoteManagement = ({ viewOnly = false }) => {
   const { toast } = useToast();
   const { data: quotes, isLoading } = useQuotes();
   const createQuote = useCreateQuote();
   const deleteQuote = useDeleteQuote();
   const [view, setView] = useState('list');
+  const [activeTab, setActiveTab] = useState('quotes');
 
-  console.log('Rendering QuoteManagement', { quotes, isLoading });
+  console.log('Rendering QuoteManagement', { quotes, isLoading, viewOnly });
 
   const handleCreateQuote = async (quoteData) => {
+    if (viewOnly) {
+      toast({
+        title: "Access Restricted",
+        description: "You don't have permission to create quotes in view-only mode",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await createQuote.mutateAsync(quoteData);
       toast({
@@ -34,6 +49,15 @@ const QuoteManagement = () => {
   };
 
   const handleDeleteQuote = async (id) => {
+    if (viewOnly) {
+      toast({
+        title: "Access Restricted",
+        description: "You don't have permission to delete quotes in view-only mode",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await deleteQuote.mutateAsync(id);
       toast({
@@ -52,31 +76,156 @@ const QuoteManagement = () => {
 
   return (
     <div className="space-y-6">
-      {view === 'list' ? (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Quotations</h2>
-            <Button onClick={() => setView('form')}>Create New Quote</Button>
-          </div>
-          <QuotationsList 
-            quotes={quotes} 
-            isLoading={isLoading} 
-            onDelete={handleDeleteQuote}
-          />
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Create New Quote</h2>
-            <Button variant="outline" onClick={() => setView('list')}>Back to List</Button>
-          </div>
+      {viewOnly && (
+        <Alert variant="warning" className="bg-amber-50 border-amber-200 mb-4">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800">
+            You are in view-only mode. Creating or modifying quotes is restricted.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="quotes" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            <span>Quotations</span>
+          </TabsTrigger>
+          <TabsTrigger value="proforma" className="flex items-center gap-2">
+            <Receipt className="h-4 w-4" />
+            <span>Proforma</span>
+          </TabsTrigger>
+          <TabsTrigger value="calculator" className="flex items-center gap-2">
+            <Calculator className="h-4 w-4" />
+            <span>Price Calculator</span>
+          </TabsTrigger>
+          <TabsTrigger value="pricing" className="flex items-center gap-2">
+            <Percent className="h-4 w-4" />
+            <span>Pricing Strategy</span>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            <span>Pricing Analytics</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="quotes" className="mt-6">
+          {view === 'list' ? (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Quotations</h2>
+                {!viewOnly && (
+                  <Button onClick={() => setView('form')}>Create New Quote</Button>
+                )}
+              </div>
+              <QuotationsList 
+                quotes={quotes} 
+                isLoading={isLoading} 
+                onDelete={handleDeleteQuote}
+                viewOnly={viewOnly}
+              />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Create New Quote</h2>
+                <Button variant="outline" onClick={() => setView('list')}>Back to List</Button>
+              </div>
+              <Card>
+                <CardContent className="pt-6">
+                  <QuotationForm onSubmit={handleCreateQuote} />
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="proforma" className="mt-6">
           <Card>
-            <CardContent className="pt-6">
-              <QuotationForm onSubmit={handleCreateQuote} />
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold mb-4">Proforma Invoices</h2>
+              <p>Convert approved quotations into proforma invoices for customer approval before finalizing orders.</p>
+              <div className="mt-8 p-8 text-center border border-dashed rounded-lg">
+                <p className="text-gray-500">Select a quotation to generate a proforma invoice</p>
+                <Button className="mt-4" disabled={viewOnly}>Generate Proforma</Button>
+              </div>
             </CardContent>
           </Card>
-        </div>
-      )}
+        </TabsContent>
+
+        <TabsContent value="calculator" className="mt-6">
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold mb-4">Coffee Price Calculator</h2>
+              <p>Calculate coffee prices based on market rates, processing costs, logistics, and desired margins.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div className="space-y-4 p-4 border rounded-lg">
+                  <h3 className="font-semibold">Input Parameters</h3>
+                  <p className="text-gray-500">Coffee grade, quantity, origin, and other factors that affect pricing</p>
+                </div>
+                <div className="space-y-4 p-4 border rounded-lg">
+                  <h3 className="font-semibold">Price Breakdown</h3>
+                  <p className="text-gray-500">Base cost, processing, transport, margins and final quoted price</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pricing" className="mt-6">
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold mb-4">Pricing Strategy</h2>
+              <p>Develop and manage pricing strategies based on market conditions, competition, and customer relationships.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-semibold">Market-Based Pricing</h3>
+                  <p className="text-gray-500">Align prices with current market trends and indices</p>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-semibold">Relationship Pricing</h3>
+                  <p className="text-gray-500">Special pricing for long-term or strategic customers</p>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-semibold">Premium Quality Pricing</h3>
+                  <p className="text-gray-500">Price strategies for specialty and certified coffees</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="mt-6">
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold mb-4">Pricing Analytics</h2>
+              <p>Analyze quotation performance, conversion rates, and pricing trends over time.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div className="h-64 border rounded-lg flex items-center justify-center">
+                  <p className="text-gray-500">Quotation Conversion Rate Chart</p>
+                </div>
+                <div className="h-64 border rounded-lg flex items-center justify-center">
+                  <p className="text-gray-500">Average Quote Value Trends</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                <div className="p-4 border rounded-lg text-center">
+                  <h3 className="font-semibold">Quote Success Rate</h3>
+                  <p className="text-2xl font-bold mt-2">68%</p>
+                </div>
+                <div className="p-4 border rounded-lg text-center">
+                  <h3 className="font-semibold">Avg. Quote Value</h3>
+                  <p className="text-2xl font-bold mt-2">$42,500</p>
+                </div>
+                <div className="p-4 border rounded-lg text-center">
+                  <h3 className="font-semibold">Avg. Response Time</h3>
+                  <p className="text-2xl font-bold mt-2">2.3 days</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

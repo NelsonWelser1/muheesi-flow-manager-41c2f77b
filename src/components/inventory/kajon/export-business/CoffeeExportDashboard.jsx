@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,6 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import OrdersList from './modules/order-management/OrdersList';
 import Shipments from '../equator-export/shipments/Shipments';
+import QuoteManagement from './quotations/QuoteManagement';
 
 const CoffeeExportDashboard = ({ viewOnly = false }) => {
   const mockOrders = [
@@ -91,12 +91,7 @@ const CoffeeExportDashboard = ({ viewOnly = false }) => {
         <TabsContent value="quotes">
           <Card>
             <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Quotes & Pricing</h3>
-              {viewOnly ? (
-                <p>Current quotes and pricing information is available for executive review.</p>
-              ) : (
-                <p>Create and manage quotes for potential customers.</p>
-              )}
+              <QuoteManagement viewOnly={viewOnly} />
             </CardContent>
           </Card>
         </TabsContent>

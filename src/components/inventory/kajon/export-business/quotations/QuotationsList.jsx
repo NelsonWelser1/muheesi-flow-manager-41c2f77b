@@ -1,13 +1,15 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileText, Trash, Edit } from 'lucide-react';
+import { FileText, Trash, Edit, Eye, Download, MoreHorizontal } from 'lucide-react';
 import { useQuotations, useDeleteQuotation } from '@/integrations/supabase/hooks/useQuotations';
 import { useToast } from "@/components/ui/use-toast";
 import { format } from 'date-fns';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-const QuotationsList = () => {
+const QuotationsList = ({ viewOnly = false }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const { toast } = useToast();
@@ -24,6 +26,15 @@ const QuotationsList = () => {
   const deleteQuotation = useDeleteQuotation();
 
   const handleDelete = async (id) => {
+    if (viewOnly) {
+      toast({
+        title: "Access Restricted",
+        description: "You don't have permission to delete quotations in view-only mode",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await deleteQuotation.mutateAsync(id);
       toast({
@@ -40,7 +51,7 @@ const QuotationsList = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>Loading quotations...</div>;
   }
 
   return (
@@ -69,6 +80,7 @@ const QuotationsList = () => {
               <tr className="border-b">
                 <th className="text-left p-2">ID</th>
                 <th className="text-left p-2">Date</th>
+                <th className="text-left p-2">Customer</th>
                 <th className="text-left p-2">Revenue</th>
                 <th className="text-left p-2">Costs</th>
                 <th className="text-left p-2">Profit</th>
@@ -80,27 +92,51 @@ const QuotationsList = () => {
                 <tr key={quote.id} className="border-b">
                   <td className="p-2">{quote.id.slice(0, 8)}</td>
                   <td className="p-2">{format(new Date(quote.created_at), 'yyyy-MM-dd')}</td>
-                  <td className="p-2">${quote.total_revenue.toFixed(2)}</td>
-                  <td className="p-2">${quote.total_costs.toFixed(2)}</td>
-                  <td className="p-2">${quote.net_profit.toFixed(2)}</td>
+                  <td className="p-2">{quote.customer_name || "N/A"}</td>
+                  <td className="p-2">${quote.total_revenue?.toFixed(2) || "0.00"}</td>
+                  <td className="p-2">${quote.total_costs?.toFixed(2) || "0.00"}</td>
+                  <td className="p-2">${quote.net_profit?.toFixed(2) || "0.00"}</td>
                   <td className="p-2 space-x-2">
-                    <Button variant="ghost" size="icon">
-                      <FileText className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleDelete(quote.id)}
-                      disabled={deleteQuotation.isPending}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem>
+                          <Eye className="h-4 w-4 mr-2" /> View Details
+                        </DropdownMenuItem>
+                        {!viewOnly && (
+                          <DropdownMenuItem>
+                            <Edit className="h-4 w-4 mr-2" /> Edit Quote
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem>
+                          <Download className="h-4 w-4 mr-2" /> Export PDF
+                        </DropdownMenuItem>
+                        {!viewOnly && (
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleDelete(quote.id)}
+                            disabled={deleteQuotation.isPending}
+                          >
+                            <Trash className="h-4 w-4 mr-2" /> Delete
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                 </tr>
               ))}
+              
+              {(!quotations || quotations.length === 0) && (
+                <tr>
+                  <td colSpan={7} className="p-4 text-center">
+                    No quotations found. {!viewOnly && "Create your first quotation to get started."}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
