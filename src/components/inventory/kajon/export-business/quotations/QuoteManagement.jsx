@@ -8,6 +8,7 @@ import { FileText, Receipt, Calculator, BarChart3, Percent } from "lucide-react"
 import QuotationForm from './QuotationForm';
 import QuotationsList from './QuotationsList';
 import ProformaInvoiceManager from './ProformaInvoiceManager';
+import CoffeePriceCalculator from './calculator/CoffeePriceCalculator';
 import { useQuotations, useCreateQuotation, useDeleteQuotation } from '@/integrations/supabase/hooks/useQuotations';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -148,18 +149,7 @@ const QuoteManagement = ({ viewOnly = false }) => {
         <TabsContent value="calculator" className="mt-6">
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Coffee Price Calculator</h2>
-              <p>Calculate coffee prices based on market rates, processing costs, logistics, and desired margins.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div className="space-y-4 p-4 border rounded-lg">
-                  <h3 className="font-semibold">Input Parameters</h3>
-                  <p className="text-gray-500">Coffee grade, quantity, origin, and other factors that affect pricing</p>
-                </div>
-                <div className="space-y-4 p-4 border rounded-lg">
-                  <h3 className="font-semibold">Price Breakdown</h3>
-                  <p className="text-gray-500">Base cost, processing, transport, margins and final quoted price</p>
-                </div>
-              </div>
+              <CoffeePriceCalculator viewOnly={viewOnly} />
             </CardContent>
           </Card>
         </TabsContent>
