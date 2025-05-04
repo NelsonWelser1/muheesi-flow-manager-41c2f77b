@@ -7,15 +7,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Receipt, Calculator, BarChart3, Percent } from "lucide-react";
 import QuotationForm from './QuotationForm';
 import QuotationsList from './QuotationsList';
-import { useQuotes, useCreateQuote, useDeleteQuote } from '@/integrations/supabase/hooks/useQuotes';
+import ProformaInvoiceManager from './ProformaInvoiceManager';
+import { useQuotations, useCreateQuotation, useDeleteQuotation } from '@/integrations/supabase/hooks/useQuotations';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
 const QuoteManagement = ({ viewOnly = false }) => {
   const { toast } = useToast();
-  const { data: quotes, isLoading } = useQuotes();
-  const createQuote = useCreateQuote();
-  const deleteQuote = useDeleteQuote();
+  const { data: quotes, isLoading } = useQuotations();
+  const createQuote = useCreateQuotation();
+  const deleteQuote = useDeleteQuotation();
   const [view, setView] = useState('list');
   const [activeTab, setActiveTab] = useState('quotes');
 
@@ -141,16 +142,7 @@ const QuoteManagement = ({ viewOnly = false }) => {
         </TabsContent>
 
         <TabsContent value="proforma" className="mt-6">
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Proforma Invoices</h2>
-              <p>Convert approved quotations into proforma invoices for customer approval before finalizing orders.</p>
-              <div className="mt-8 p-8 text-center border border-dashed rounded-lg">
-                <p className="text-gray-500">Select a quotation to generate a proforma invoice</p>
-                <Button className="mt-4" disabled={viewOnly}>Generate Proforma</Button>
-              </div>
-            </CardContent>
-          </Card>
+          <ProformaInvoiceManager viewOnly={viewOnly} />
         </TabsContent>
 
         <TabsContent value="calculator" className="mt-6">
