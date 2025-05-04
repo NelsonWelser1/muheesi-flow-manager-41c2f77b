@@ -6,6 +6,7 @@ import { AlertCircle } from "lucide-react";
 import OrdersList from './modules/order-management/OrdersList';
 import Shipments from '../equator-export/shipments/Shipments';
 import QuoteManagement from './quotations/QuoteManagement';
+import CustomerManagement from './customers/CustomerManagement';
 
 const CoffeeExportDashboard = ({ viewOnly = false }) => {
   const mockOrders = [
@@ -99,12 +100,7 @@ const CoffeeExportDashboard = ({ viewOnly = false }) => {
         <TabsContent value="customers">
           <Card>
             <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Customer Management</h3>
-              {viewOnly ? (
-                <p>Customer information and relationship status is available for executive review.</p>
-              ) : (
-                <p>Manage customer information and relationships.</p>
-              )}
+              <CustomerManagement viewOnly={viewOnly} />
             </CardContent>
           </Card>
         </TabsContent>
