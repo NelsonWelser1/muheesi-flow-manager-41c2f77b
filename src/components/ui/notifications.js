@@ -69,6 +69,30 @@ export const showInfoToast = (toast, title, description) => {
 };
 
 /**
+ * Shows a warning toast notification
+ * @param {Function} toast - Toast function from useToast hook (optional)
+ * @param {string} title - Title of the toast
+ * @param {string} description - Description of the toast
+ * @returns {any} - Toast ID or response
+ */
+export const showWarningToast = (toast, title, description) => {
+  if (toast) {
+    return toast({
+      title,
+      description,
+      variant: "default",
+      className: "bg-amber-50 border-amber-300 text-amber-800",
+      duration: 4000,
+    });
+  } else {
+    return sonnerToast.warning(title, {
+      description,
+      duration: 4000,
+    });
+  }
+};
+
+/**
  * Shows a loading toast notification
  * @param {Function} toast - Toast function from useToast hook (optional)
  * @param {string} description - Description of the toast
