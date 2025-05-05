@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AutoFillProvider } from "./contexts/AutoFillContext";
 import { SupabaseAuthProvider } from "./integrations/supabase/auth";
 import Navigation from "./components/Navigation";
-import MobileNotification from "./components/layout/MobileNotification";
 import LandingPage from "./pages/LandingPage";
 import ManageInventory from "./pages/ManageInventory";
 import ManageCompanies from "./pages/ManageCompanies";
@@ -25,7 +24,6 @@ const App = () => (
           <Toaster />
           <BrowserRouter>
             <Navigation />
-            <MobileNotification />
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/manage-inventory" element={<ManageInventory />} />
