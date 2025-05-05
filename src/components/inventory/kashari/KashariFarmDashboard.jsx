@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from 'react-router-dom';
 import { 
   Beef, 
   Stethoscope, 
@@ -16,7 +18,8 @@ import {
   Calendar,
   Tractor,
   BookOpen,
-  Clock
+  Clock,
+  Home
 } from "lucide-react";
 import DairyManagement from './modules/DairyManagement';
 import BananaPlantation from './modules/BananaPlantation';
@@ -25,6 +28,7 @@ import { format } from 'date-fns';
 import { useWeatherData } from '@/utils/weatherService';
 
 const KashariFarmDashboard = () => {
+  const navigate = useNavigate();
   // Make sure the activeTab state is properly persisted
   const [activeTab, setActiveTab] = useState(() => {
     const savedTab = localStorage.getItem('kashariFarmActiveTab') || 'dashboard';
@@ -63,6 +67,10 @@ const KashariFarmDashboard = () => {
     }
   };
 
+  const handleGoHome = () => {
+    navigate('/manage-inventory');
+  };
+
   const stats = [
     { title: 'Milk Production', value: '245 Liters', change: '+12%', icon: <BarChart2 className="h-4 w-4 text-blue-500" /> },
     { title: 'Banana Harvest', value: '680 Bunches', change: '+5%', icon: <Tractor className="h-4 w-4 text-green-500" /> },
@@ -88,6 +96,10 @@ const KashariFarmDashboard = () => {
             </CardDescription>
           </div>
           <div className="flex items-center space-x-4">
+            <Button variant="outline" onClick={handleGoHome} className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              <span>Home</span>
+            </Button>
             <div className="text-right">
               <p className="text-sm font-medium">{weather.temp}</p>
               <p className="text-xs text-muted-foreground">{weather.condition} - {weather.location}</p>

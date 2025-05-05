@@ -1,14 +1,24 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Home } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 import OrdersList from './modules/order-management/OrdersList';
 import Shipments from '../equator-export/shipments/Shipments';
 import QuoteManagement from './quotations/QuoteManagement';
 import CustomerManagement from './customers/CustomerManagement';
+import { useUserRole } from '@/integrations/supabase/hooks/useAuth';
 
 const CoffeeExportDashboard = ({ viewOnly = false }) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { data: userRole } = useUserRole();
+  const isAdmin = userRole?.role === 'admin';
+
   const mockOrders = [
     {
       id: 'ORD-001',
@@ -53,6 +63,10 @@ const CoffeeExportDashboard = ({ viewOnly = false }) => {
     // Actual implementation to create a new order would go here
   };
 
+  const handleGoHome = () => {
+    navigate('/manage-inventory');
+  };
+
   return (
     <div className="space-y-6">
       {viewOnly && (
@@ -63,6 +77,16 @@ const CoffeeExportDashboard = ({ viewOnly = false }) => {
           </AlertDescription>
         </Alert>
       )}
+      
+      <div className="flex justify-between items-center mb-4">
+        <Button variant="outline" onClick={handleGoHome} className="flex items-center gap-2">
+          <Home className="h-4 w-4" />
+          <span>Home</span>
+        </Button>
+        {isAdmin && (
+          <Button variant="secondary">Update About Us</Button>
+        )}
+      </div>
       
       <Tabs defaultValue="orders">
         <TabsList className="mb-4">
