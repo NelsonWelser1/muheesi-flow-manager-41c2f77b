@@ -47,6 +47,28 @@ export const showSuccessToast = (toast, title, description) => {
 };
 
 /**
+ * Shows an informational toast notification
+ * @param {Function} toast - Toast function from useToast hook (optional)
+ * @param {string} title - Title of the toast
+ * @param {string} description - Description of the toast
+ * @returns {any} - Toast ID or response
+ */
+export const showInfoToast = (toast, title, description) => {
+  if (toast) {
+    return toast({
+      title,
+      description,
+      duration: 4000,
+    });
+  } else {
+    return sonnerToast(title, {
+      description,
+      duration: 4000,
+    });
+  }
+};
+
+/**
  * Shows a loading toast notification
  * @param {Function} toast - Toast function from useToast hook (optional)
  * @param {string} description - Description of the toast
