@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AutoFillProvider } from "./contexts/AutoFillContext";
 import { SupabaseAuthProvider } from "./integrations/supabase/auth";
 import Navigation from "./components/Navigation";
@@ -26,6 +26,7 @@ const App = () => (
             <Navigation />
             <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/home" element={<Navigate to="/" replace />} />
               <Route path="/manage-inventory" element={<ManageInventory />} />
               <Route path="/manage-companies" element={<ManageCompanies />} />
               <Route path="/manage-inventory/kajon-export" element={<ExportManagementDashboard />} />
