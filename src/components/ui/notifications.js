@@ -1,121 +1,67 @@
 
-import { toast as sonnerToast } from "sonner";
-
 /**
- * Shows an error toast notification
- * @param {Function} toast - Toast function from useToast hook (optional)
- * @param {string} title - Title of the toast
- * @param {string} description - Description of the toast
- * @returns {any} - Toast ID or response
+ * Helper functions for displaying toast notifications
  */
-export const showErrorToast = (toast, title, description) => {
-  if (toast) {
-    return toast({
-      title,
-      description,
-      variant: "destructive",
-      duration: 5000,
-    });
-  } else {
-    return sonnerToast.error(title, {
-      description,
-      duration: 5000,
-    });
-  }
+
+export const showSuccessToast = (toast, message) => {
+  toast({
+    title: "Success",
+    description: message,
+    variant: "success",
+    duration: 5000,
+  });
+};
+
+export const showErrorToast = (toast, message) => {
+  toast({
+    title: "Error",
+    description: message,
+    variant: "destructive",
+    duration: 8000,
+  });
+};
+
+export const showInfoToast = (toast, message) => {
+  toast({
+    title: "Information",
+    description: message,
+    duration: 5000,
+  });
+};
+
+export const showWarningToast = (toast, message) => {
+  toast({
+    title: "Warning",
+    description: message,
+    variant: "warning",
+    duration: 6000,
+  });
 };
 
 /**
- * Shows a success toast notification
- * @param {Function} toast - Toast function from useToast hook (optional)
- * @param {string} title - Title of the toast
- * @param {string} description - Description of the toast
- * @returns {any} - Toast ID or response
+ * Dismiss a toast notification by ID
+ * @param {string} toastId - ID of the toast to dismiss
+ * @returns {Object} Object with toast ID
  */
-export const showSuccessToast = (toast, title, description) => {
-  if (toast) {
-    return toast({
-      title,
-      description,
-      duration: 3000,
-    });
-  } else {
-    return sonnerToast.success(title, {
-      description,
-      duration: 3000,
-    });
+export const dismissToast = (toastId) => {
+  if (toastId) {
+    return { id: toastId };
   }
+  return null;
 };
 
 /**
- * Shows an informational toast notification
- * @param {Function} toast - Toast function from useToast hook (optional)
- * @param {string} title - Title of the toast
- * @param {string} description - Description of the toast
- * @returns {any} - Toast ID or response
+ * Show a loading toast notification
+ * @param {Object} toast - Toast function from useToast hook
+ * @param {string} message - Message to display
+ * @returns {string} The toast ID for dismissal
  */
-export const showInfoToast = (toast, title, description) => {
-  if (toast) {
-    return toast({
-      title,
-      description,
-      duration: 4000,
-    });
-  } else {
-    return sonnerToast(title, {
-      description,
-      duration: 4000,
-    });
-  }
-};
-
-/**
- * Shows a warning toast notification
- * @param {Function} toast - Toast function from useToast hook (optional)
- * @param {string} title - Title of the toast
- * @param {string} description - Description of the toast
- * @returns {any} - Toast ID or response
- */
-export const showWarningToast = (toast, title, description) => {
-  if (toast) {
-    return toast({
-      title,
-      description,
-      variant: "default",
-      className: "bg-amber-50 border-amber-300 text-amber-800",
-      duration: 4000,
-    });
-  } else {
-    return sonnerToast.warning(title, {
-      description,
-      duration: 4000,
-    });
-  }
-};
-
-/**
- * Shows a loading toast notification
- * @param {Function} toast - Toast function from useToast hook (optional)
- * @param {string} description - Description of the toast
- * @returns {any} - Toast ID or response
- */
-export const showLoadingToast = (toast, description) => {
-  if (toast) {
-    return toast({
-      title: "Loading",
-      description,
-      duration: 10000,
-    });
-  } else {
-    return sonnerToast.loading(description, {
-      duration: 10000,
-    });
-  }
-};
-
-/**
- * Dismisses a toast by ID
- * @param {string|number} id - ID of the toast to dismiss
- */
-export const dismissToast = (id) => {
-  sonnerToast.dismiss(id);
+export const showLoadingToast = (toast, message) => {
+  return toast({
+    title: "Loading",
+    description: message,
+    variant: "default",
+    className: "bg-gray-50 border-gray-300",
+    duration: Infinity, // Stays until manually dismissed
+  });
 };
