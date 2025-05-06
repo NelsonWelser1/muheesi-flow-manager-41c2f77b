@@ -1,21 +1,39 @@
 
 import React from 'react';
-import { X, Beef, Droplet, CircleSlash, Thermometer, Database, ChartBar } from 'lucide-react';
+import { X, Beef, Droplet, CircleSlash, Thermometer, Database, ChartBar, Home } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useNavigate } from 'react-router-dom';
 
 const GrandBernaDetails = ({ onClose }) => {
+  const navigate = useNavigate();
+
+  const handleHomeClick = () => {
+    navigate('/');
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
       <Card className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white p-6">
-        <Button 
-          variant="ghost" 
-          className="absolute right-2 top-2" 
-          onClick={onClose}
-          size="icon"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex justify-between items-center mb-4">
+          <Button 
+            variant="outline" 
+            className="flex items-center"
+            onClick={handleHomeClick}
+          >
+            <Home className="h-4 w-4 mr-2" />
+            Home
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            className="absolute right-2 top-2" 
+            onClick={onClose}
+            size="icon"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left column: Image and icons */}

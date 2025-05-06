@@ -63,6 +63,10 @@ const ManageInventory = () => {
   const handleBackToCompanies = () => {
     setSelectedCompany(null);
   };
+
+  const handleHomeClick = () => {
+    navigate('/');
+  };
   
   if (selectedCompany) {
     return <div className="container mx-auto p-4">
@@ -83,7 +87,7 @@ const ManageInventory = () => {
               <Clock className="inline mr-2" />
               {format(new Date(), 'PPpp')}
             </div>
-            <Button variant="outline" onClick={() => navigate('/')}>
+            <Button variant="outline" onClick={handleHomeClick}>
               <Home className="h-4 w-4 mr-2" />
               Home
             </Button>
@@ -110,7 +114,7 @@ const ManageInventory = () => {
             <Clock className="inline mr-2" />
             {format(new Date(), 'PPpp')}
           </div>
-          <Button variant="outline" onClick={() => navigate('/')}>
+          <Button variant="outline" onClick={handleHomeClick}>
             <Home className="h-4 w-4 mr-2" />
             Home
           </Button>

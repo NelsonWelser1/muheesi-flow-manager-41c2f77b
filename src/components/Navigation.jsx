@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Menu } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -8,6 +8,8 @@ import { navItems } from '../nav-items';
 
 const Navigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  
   const dashboardNavItems = [
     {
       to: "/manage-inventory",
@@ -18,6 +20,11 @@ const Navigation = () => {
       label: "Manage Companies"
     }
   ];
+
+  const handleHomeClick = (e) => {
+    e.preventDefault();
+    navigate('/');
+  };
 
   return (
     <nav className="bg-gray-800 text-white p-4">
