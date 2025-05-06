@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import UpdateStock from '../components/inventory/UpdateStock';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -82,7 +83,7 @@ const ManageInventory = () => {
               <Clock className="inline mr-2" />
               {format(new Date(), 'PPpp')}
             </div>
-            <Button variant="outline" onClick={() => navigate('/home')}>
+            <Button variant="outline" onClick={() => navigate('/')}>
               <Home className="h-4 w-4 mr-2" />
               Home
             </Button>
@@ -109,7 +110,7 @@ const ManageInventory = () => {
             <Clock className="inline mr-2" />
             {format(new Date(), 'PPpp')}
           </div>
-          <Button variant="outline" onClick={() => navigate('/home')}>
+          <Button variant="outline" onClick={() => navigate('/')}>
             <Home className="h-4 w-4 mr-2" />
             Home
           </Button>

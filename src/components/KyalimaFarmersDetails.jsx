@@ -3,8 +3,11 @@ import React from 'react';
 import { X, Wheat, Tractor, Leaf, Building, Factory, Milk } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useNavigate } from 'react-router-dom';
 
 const KyalimaFarmersDetails = ({ onClose }) => {
+  const navigate = useNavigate();
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
       <Card className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white p-6">
