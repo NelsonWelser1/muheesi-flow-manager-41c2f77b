@@ -20,11 +20,22 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { BarChart3, Globe, DollarSign, TrendingUp, ArrowRight } from 'lucide-react';
+import { BarChart3, Globe, DollarSign, TrendingUp, ArrowRight, Download } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/use-toast";
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 const ExportAnalyticsTab = () => {
   const [period, setPeriod] = useState('year');
   const [activeTab, setActiveTab] = useState('overview');
+  const { toast } = useToast();
 
   // Sample data for demonstration
   const overviewData = [
@@ -98,6 +109,147 @@ const ExportAnalyticsTab = () => {
     return `${value}%`;
   };
 
+  // Function to get current tab data for export
+  const getCurrentTabData = () => {
+    switch(activeTab) {
+      case 'overview':
+        return overviewData;
+      case 'market':
+        return destinationData;
+      case 'price':
+        return priceData;
+      case 'forecast':
+        return forecastData;
+      case 'financial':
+        return overviewData; // Using same data for financial tab in this demo
+      default:
+        return [];
+    }
+  };
+
+  // Function to get export filename based on active tab
+  const getExportFilename = () => {
+    const date = new Date().toISOString().split('T')[0];
+    return `coffee-exports-${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}-${date}`;
+  };
+
+  // Export to CSV function
+  const handleExportCSV = () => {
+    try {
+      const data = getCurrentTabData();
+      if (!data || data.length === 0) {
+        toast({
+          title: "No data to export",
+          description: "There are no records available to export.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Export Data");
+      XLSX.writeFile(workbook, `${getExportFilename()}.csv`, { bookType: 'csv' });
+
+      toast({
+        title: "Export Successful",
+        description: "Data has been exported to CSV successfully.",
+      });
+    } catch (error) {
+      console.error("CSV export error:", error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting the data.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Export to Excel function
+  const handleExportExcel = () => {
+    try {
+      const data = getCurrentTabData();
+      if (!data || data.length === 0) {
+        toast({
+          title: "No data to export",
+          description: "There are no records available to export.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Export Data");
+      XLSX.writeFile(workbook, `${getExportFilename()}.xlsx`);
+
+      toast({
+        title: "Export Successful",
+        description: "Data has been exported to Excel successfully.",
+      });
+    } catch (error) {
+      console.error("Excel export error:", error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting the data.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Export to PDF function
+  const handleExportPDF = () => {
+    try {
+      const data = getCurrentTabData();
+      if (!data || data.length === 0) {
+        toast({
+          title: "No data to export",
+          description: "There are no records available to export.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(16);
+      doc.text(`Coffee Exports - ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`, 14, 15);
+      
+      // Add date
+      doc.setFontSize(11);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
+      
+      // Convert data for table
+      const headers = Object.keys(data[0]);
+      const rows = data.map(item => headers.map(header => item[header]));
+      
+      // Add table
+      doc.autoTable({
+        head: [headers],
+        body: rows,
+        startY: 30,
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [71, 85, 119] }
+      });
+      
+      doc.save(`${getExportFilename()}.pdf`);
+
+      toast({
+        title: "Export Successful",
+        description: "Data has been exported to PDF successfully.",
+      });
+    } catch (error) {
+      console.error("PDF export error:", error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting the data.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -114,7 +266,25 @@ const ExportAnalyticsTab = () => {
               <SelectItem value="all">All Time</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">Export Data</Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Download className="h-4 w-4" />
+                Export Data
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportPDF}>
+                Export to PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportExcel}>
+                Export to Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportCSV}>
+                Export to CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
