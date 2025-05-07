@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +8,7 @@ import OrdersList from './modules/order-management/OrdersList';
 import Shipments from '../equator-export/shipments/Shipments';
 import QuoteManagement from './quotations/QuoteManagement';
 import CustomerManagement from './customers/CustomerManagement';
+import ExportAnalyticsTab from './ExportAnalyticsTab';
 
 const CoffeeExportDashboard = ({ viewOnly = false }) => {
   const mockOrders = [
@@ -108,8 +110,7 @@ const CoffeeExportDashboard = ({ viewOnly = false }) => {
         <TabsContent value="analytics">
           <Card>
             <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Export Analytics</h3>
-              <p>Analyze export performance, trends, and opportunities.</p>
+              <ExportAnalyticsTab />
             </CardContent>
           </Card>
         </TabsContent>
