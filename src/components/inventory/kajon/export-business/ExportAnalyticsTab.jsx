@@ -1,484 +1,521 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import {
+  BarChart3,
+  Globe,
+  DollarSign,
+  TrendingUp,
+  ArrowRight,
+  Download,
+  FilePdf,
+  FileSpreadsheet
+} from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  AreaChart,
-  Area
-} from 'recharts';
-import { BarChart3, Globe, DollarSign, TrendingUp, ArrowRight, Download } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
 const ExportAnalyticsTab = () => {
-  const [period, setPeriod] = useState('year');
-  const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('production');
+  const [timeRange, setTimeRange] = useState('6months');
+  const [isExporting, setIsExporting] = useState(false);
 
-  // Sample data for demonstration
-  const overviewData = [
-    { month: 'Jan', quantity: 120, value: 520000 },
-    { month: 'Feb', quantity: 132, value: 580000 },
-    { month: 'Mar', quantity: 101, value: 470000 },
-    { month: 'Apr', quantity: 134, value: 590000 },
-    { month: 'May', quantity: 140, value: 610000 },
-    { month: 'Jun', quantity: 145, value: 630000 },
-    { month: 'Jul', quantity: 150, value: 650000 },
-    { month: 'Aug', quantity: 160, value: 690000 },
-    { month: 'Sep', quantity: 170, value: 730000 },
-    { month: 'Oct', quantity: 180, value: 760000 },
-    { month: 'Nov', quantity: 195, value: 810000 },
-    { month: 'Dec', quantity: 210, value: 870000 },
+  // Mock data for various tabs
+  const productionData = [
+    { month: 'Jan', arabica: 2500, robusta: 1800 },
+    { month: 'Feb', arabica: 3200, robusta: 2100 },
+    { month: 'Mar', arabica: 2800, robusta: 1950 },
+    { month: 'Apr', arabica: 3100, robusta: 2400 },
+    { month: 'May', arabica: 3800, robusta: 2700 },
+    { month: 'Jun', arabica: 4200, robusta: 3000 }
   ];
 
-  const destinationData = [
-    { name: 'Europe', value: 35 },
-    { name: 'North America', value: 30 },
-    { name: 'Asia', value: 20 },
-    { name: 'Middle East', value: 10 },
-    { name: 'Africa', value: 5 },
+  const customersData = [
+    { month: 'Jan', europe: 12, namerica: 8, asia: 5 },
+    { month: 'Feb', europe: 15, namerica: 10, asia: 7 },
+    { month: 'Mar', europe: 13, namerica: 12, asia: 8 },
+    { month: 'Apr', europe: 18, namerica: 15, asia: 10 },
+    { month: 'May', europe: 21, namerica: 18, asia: 12 },
+    { month: 'Jun', europe: 25, namerica: 20, asia: 15 }
   ];
 
-  const priceData = [
-    { month: 'Jan', arabicaPrice: 4.2, robustaPrice: 2.1 },
-    { month: 'Feb', arabicaPrice: 4.3, robustaPrice: 2.0 },
-    { month: 'Mar', arabicaPrice: 4.5, robustaPrice: 2.2 },
-    { month: 'Apr', arabicaPrice: 4.6, robustaPrice: 2.3 },
-    { month: 'May', arabicaPrice: 4.8, robustaPrice: 2.4 },
-    { month: 'Jun', arabicaPrice: 4.7, robustaPrice: 2.3 },
-    { month: 'Jul', arabicaPrice: 4.9, robustaPrice: 2.5 },
-    { month: 'Aug', arabicaPrice: 5.0, robustaPrice: 2.6 },
-    { month: 'Sep', arabicaPrice: 5.2, robustaPrice: 2.7 },
-    { month: 'Oct', arabicaPrice: 5.1, robustaPrice: 2.6 },
-    { month: 'Nov', arabicaPrice: 5.3, robustaPrice: 2.8 },
-    { month: 'Dec', arabicaPrice: 5.4, robustaPrice: 2.9 },
+  const financialData = [
+    { month: 'Jan', revenue: 125000, costs: 80000 },
+    { month: 'Feb', revenue: 150000, costs: 90000 },
+    { month: 'Mar', revenue: 140000, costs: 85000 },
+    { month: 'Apr', revenue: 180000, costs: 100000 },
+    { month: 'May', revenue: 210000, costs: 120000 },
+    { month: 'Jun', revenue: 250000, costs: 140000 }
   ];
 
-  const forecastData = [
-    { month: 'Jan', actual: 520000, forecast: 510000 },
-    { month: 'Feb', actual: 580000, forecast: 570000 },
-    { month: 'Mar', actual: 470000, forecast: 490000 },
-    { month: 'Apr', actual: 590000, forecast: 580000 },
-    { month: 'May', actual: 610000, forecast: 600000 },
-    { month: 'Jun', actual: 630000, forecast: 640000 },
-    { month: 'Jul', actual: null, forecast: 670000 },
-    { month: 'Aug', actual: null, forecast: 700000 },
-    { month: 'Sep', actual: null, forecast: 730000 },
-    { month: 'Oct', actual: null, forecast: 760000 },
-    { month: 'Nov', actual: null, forecast: 790000 },
-    { month: 'Dec', actual: null, forecast: 820000 },
+  const qualityData = [
+    { name: 'AA Grade', value: 45 },
+    { name: 'AB Grade', value: 30 },
+    { name: 'PB Grade', value: 15 },
+    { name: 'C Grade', value: 10 }
   ];
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+  const impactData = [
+    { metric: 'Farmers Supported', value: '1,240' },
+    { metric: 'Training Sessions', value: '32' },
+    { metric: 'Sustainable Practices Implemented', value: '18' },
+    { metric: 'Community Projects', value: '7' },
+    { metric: 'Carbon Footprint Reduction', value: '12%' }
+  ];
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: <BarChart3 className="h-4 w-4" /> },
-    { id: 'financial', label: 'Financial', icon: <DollarSign className="h-4 w-4" /> },
-    { id: 'market', label: 'Market Analysis', icon: <Globe className="h-4 w-4" /> },
-    { id: 'price', label: 'Price Trends', icon: <TrendingUp className="h-4 w-4" /> },
-    { id: 'forecast', label: 'Forecasts', icon: <ArrowRight className="h-4 w-4" /> },
+    { id: 'production', label: 'Production Volumes', icon: <BarChart3 className="h-4 w-4" /> },
+    { id: 'customers', label: 'Customer Distribution', icon: <Globe className="h-4 w-4" /> },
+    { id: 'financial', label: 'Financial Performance', icon: <DollarSign className="h-4 w-4" /> },
+    { id: 'quality', label: 'Quality Metrics', icon: <TrendingUp className="h-4 w-4" /> },
+    { id: 'impact', label: 'Social Impact', icon: <ArrowRight className="h-4 w-4" /> }
   ];
 
-  const formatCurrency = (value) => {
-    return `$${(value / 1000).toFixed(0)}K`;
-  };
-
-  const formatValue = (value) => {
-    return `${value}%`;
-  };
-
-  // Function to get current tab data for export
-  const getCurrentTabData = () => {
-    switch(activeTab) {
-      case 'overview':
-        return overviewData;
-      case 'market':
-        return destinationData;
-      case 'price':
-        return priceData;
-      case 'forecast':
-        return forecastData;
+  const getActiveData = () => {
+    switch (activeTab) {
+      case 'production':
+        return productionData;
+      case 'customers':
+        return customersData;
       case 'financial':
-        return overviewData; // Using same data for financial tab in this demo
+        return financialData;
+      case 'quality':
+        return qualityData;
+      case 'impact':
+        return impactData;
       default:
         return [];
     }
   };
 
-  // Function to get export filename based on active tab
-  const getExportFilename = () => {
-    const date = new Date().toISOString().split('T')[0];
-    return `coffee-exports-${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}-${date}`;
+  const getTabTitle = () => {
+    const tab = tabs.find(tab => tab.id === activeTab);
+    return tab ? tab.label : 'Export Analytics';
   };
 
-  // Export to CSV function
-  const handleExportCSV = () => {
-    try {
-      const data = getCurrentTabData();
-      if (!data || data.length === 0) {
-        toast({
-          title: "No data to export",
-          description: "There are no records available to export.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Export Data");
-      XLSX.writeFile(workbook, `${getExportFilename()}.csv`, { bookType: 'csv' });
-
-      toast({
-        title: "Export Successful",
-        description: "Data has been exported to CSV successfully.",
-      });
-    } catch (error) {
-      console.error("CSV export error:", error);
-      toast({
-        title: "Export Failed",
-        description: "There was an error exporting the data.",
-        variant: "destructive"
-      });
+  // Process data for export based on analytics tab
+  const processDataForExport = (data) => {
+    switch (activeTab) {
+      case 'production':
+        return data.map(item => ({
+          'Month': item.month,
+          'Arabica (kg)': item.arabica,
+          'Robusta (kg)': item.robusta,
+          'Total (kg)': (item.arabica || 0) + (item.robusta || 0)
+        }));
+        
+      case 'customers':
+        return data.map(item => ({
+          'Month': item.month,
+          'Europe': item.europe,
+          'North America': item.namerica,
+          'Asia': item.asia,
+          'Total Customers': (item.europe || 0) + (item.namerica || 0) + (item.asia || 0)
+        }));
+        
+      case 'financial':
+        return data.map(item => ({
+          'Month': item.month,
+          'Revenue (USD)': item.revenue,
+          'Costs (USD)': item.costs,
+          'Profit (USD)': (item.revenue || 0) - (item.costs || 0),
+          'Profit Margin (%)': Math.round(((item.revenue - item.costs) / item.revenue) * 100)
+        }));
+        
+      case 'quality':
+        return data.map(item => ({
+          'Quality Grade': item.name,
+          'Percentage': `${item.value}%`
+        }));
+        
+      case 'impact':
+        return data.map(item => ({
+          'Metric': item.metric,
+          'Value': item.value
+        }));
+        
+      default:
+        return data;
     }
   };
 
-  // Export to Excel function
-  const handleExportExcel = () => {
+  const handleExportToCSV = () => {
     try {
-      const data = getCurrentTabData();
+      setIsExporting(true);
+      
+      // Get the data for the active tab
+      const data = getActiveData();
       if (!data || data.length === 0) {
-        toast({
-          title: "No data to export",
-          description: "There are no records available to export.",
-          variant: "destructive"
-        });
-        return;
+        throw new Error('No data available for export');
       }
-
-      const worksheet = XLSX.utils.json_to_sheet(data);
+      
+      // Process the data for CSV
+      const processedData = processDataForExport(data);
+      
+      // Create worksheet
+      const worksheet = XLSX.utils.json_to_sheet(processedData);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Export Data");
-      XLSX.writeFile(workbook, `${getExportFilename()}.xlsx`);
-
+      XLSX.utils.book_append_sheet(workbook, worksheet, activeTab);
+      
+      // Generate filename
+      const fileName = `coffee_export_${activeTab}_${format(new Date(), 'yyyy-MM-dd')}`;
+      
+      // Generate and download CSV file
+      XLSX.writeFile(workbook, `${fileName}.csv`, { bookType: 'csv' });
+      
       toast({
         title: "Export Successful",
-        description: "Data has been exported to Excel successfully.",
+        description: `Data exported to CSV successfully.`
       });
     } catch (error) {
-      console.error("Excel export error:", error);
+      console.error('CSV Export error:', error);
       toast({
         title: "Export Failed",
-        description: "There was an error exporting the data.",
+        description: error.message || "An error occurred during export.",
         variant: "destructive"
       });
+    } finally {
+      setIsExporting(false);
     }
   };
 
-  // Export to PDF function
-  const handleExportPDF = () => {
+  const handleExportToExcel = () => {
     try {
-      const data = getCurrentTabData();
+      setIsExporting(true);
+      
+      // Get the data for the active tab
+      const data = getActiveData();
       if (!data || data.length === 0) {
-        toast({
-          title: "No data to export",
-          description: "There are no records available to export.",
-          variant: "destructive"
-        });
-        return;
+        throw new Error('No data available for export');
       }
+      
+      // Process the data for Excel
+      const processedData = processDataForExport(data);
+      
+      // Create worksheet
+      const worksheet = XLSX.utils.json_to_sheet(processedData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, activeTab);
+      
+      // Generate filename
+      const fileName = `coffee_export_${activeTab}_${format(new Date(), 'yyyy-MM-dd')}`;
+      
+      // Generate and download Excel file
+      XLSX.writeFile(workbook, `${fileName}.xlsx`);
+      
+      toast({
+        title: "Export Successful",
+        description: `Data exported to Excel successfully.`
+      });
+    } catch (error) {
+      console.error('Excel Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: error.message || "An error occurred during export.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
+  const handleExportToPDF = () => {
+    try {
+      setIsExporting(true);
+      
+      // Get the data for the active tab
+      const data = getActiveData();
+      if (!data || data.length === 0) {
+        throw new Error('No data available for export');
+      }
+      
+      // Process the data for PDF
+      const processedData = processDataForExport(data);
+      
+      // Create new PDF document
       const doc = new jsPDF();
       
       // Add title
       doc.setFontSize(16);
-      doc.text(`Coffee Exports - ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`, 14, 15);
+      doc.text(`Coffee Export Analytics - ${getTabTitle()}`, 14, 20);
       
-      // Add date
-      doc.setFontSize(11);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
+      // Add export date
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${format(new Date(), 'PPP')}`, 14, 30);
       
       // Convert data for table
-      const headers = Object.keys(data[0]);
-      const rows = data.map(item => headers.map(header => item[header]));
+      const headers = Object.keys(processedData[0]);
+      const rows = processedData.map(item => headers.map(header => item[header]));
       
-      // Add table
+      // Add table to PDF
       doc.autoTable({
         head: [headers],
         body: rows,
-        startY: 30,
+        startY: 40,
         theme: 'grid',
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [71, 85, 119] }
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [71, 85, 119], textColor: 255 },
+        alternateRowStyles: { fillColor: [240, 240, 240] }
       });
       
-      doc.save(`${getExportFilename()}.pdf`);
-
+      // Generate filename
+      const fileName = `coffee_export_${activeTab}_${format(new Date(), 'yyyy-MM-dd')}`;
+      
+      // Save the PDF
+      doc.save(`${fileName}.pdf`);
+      
       toast({
         title: "Export Successful",
-        description: "Data has been exported to PDF successfully.",
+        description: `Data exported to PDF successfully.`
       });
     } catch (error) {
-      console.error("PDF export error:", error);
+      console.error('PDF Export error:', error);
       toast({
         title: "Export Failed",
-        description: "There was an error exporting the data.",
+        description: error.message || "An error occurred during export.",
         variant: "destructive"
       });
+    } finally {
+      setIsExporting(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Export Analytics</h2>
-        <div className="flex items-center gap-4">
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="year">Last 12 Months</SelectItem>
-              <SelectItem value="quarter">Last Quarter</SelectItem>
-              <SelectItem value="month">Last Month</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Download className="h-4 w-4" />
-                Export Data
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleExportPDF}>
-                Export to PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleExportExcel}>
-                Export to Excel
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleExportCSV}>
-                Export to CSV
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5 mb-6">
-          {tabs.map(tab => (
-            <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2">
-              {tab.icon}
-              <span>{tab.label}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {/* Overview Tab */}
-        {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Export Volume (Metric Tons)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={overviewData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="quantity" fill="#8884d8" name="MT of Coffee" />
-                    </BarChart>
-                  </ResponsiveContainer>
+    <div>
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="text-xl flex items-center justify-between">
+            <div>Export Analytics</div>
+            <div className="flex items-center gap-2">
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select time range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30days">Last 30 Days</SelectItem>
+                  <SelectItem value="3months">Last 3 Months</SelectItem>
+                  <SelectItem value="6months">Last 6 Months</SelectItem>
+                  <SelectItem value="1year">Last Year</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex items-center gap-2 ml-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportToCSV}
+                  disabled={isExporting}
+                  className="flex items-center gap-1"
+                >
+                  <FileSpreadsheet className="h-4 w-4" />
+                  CSV
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportToExcel}
+                  disabled={isExporting}
+                  className="flex items-center gap-1"
+                >
+                  <FileSpreadsheet className="h-4 w-4" />
+                  Excel
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportToPDF}
+                  disabled={isExporting}
+                  className="flex items-center gap-1"
+                >
+                  <FilePdf className="h-4 w-4" />
+                  PDF
+                </Button>
+              </div>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="production" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4">
+              {tabs.map((tab) => (
+                <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2">
+                  {tab.icon}
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            
+            {/* Production tab */}
+            <TabsContent value="production">
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={productionData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => `${value} kg`} />
+                    <Bar dataKey="arabica" name="Arabica" fill="#8884d8" />
+                    <Bar dataKey="robusta" name="Robusta" fill="#82ca9d" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 text-sm text-muted-foreground">
+                <p>Coffee production volumes showing Arabica and Robusta output over time.</p>
+              </div>
+            </TabsContent>
+            
+            {/* Customers tab */}
+            <TabsContent value="customers">
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={customersData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="europe" name="Europe" fill="#8884d8" />
+                    <Bar dataKey="namerica" name="North America" fill="#82ca9d" />
+                    <Bar dataKey="asia" name="Asia" fill="#ffc658" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 text-sm text-muted-foreground">
+                <p>Customer distribution across major markets over the last 6 months.</p>
+              </div>
+            </TabsContent>
+            
+            {/* Financial tab */}
+            <TabsContent value="financial">
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={financialData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                    <Bar dataKey="revenue" name="Revenue" fill="#82ca9d" />
+                    <Bar dataKey="costs" name="Costs" fill="#ff8042" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 text-sm text-muted-foreground">
+                <p>Financial performance showing revenue and cost trends over time.</p>
+              </div>
+            </TabsContent>
+            
+            {/* Quality tab */}
+            <TabsContent value="quality">
+              <div className="h-80 grid grid-cols-2 gap-4">
+                <div className="border rounded-md p-4">
+                  <h3 className="text-lg font-medium mb-4">Coffee Quality Distribution</h3>
+                  <div className="space-y-4">
+                    {qualityData.map((item) => (
+                      <div key={item.name} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span>{item.name}</span>
+                          <span className="font-medium">{item.value}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div 
+                            className="bg-primary h-2.5 rounded-full" 
+                            style={{ width: `${item.value}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Export Value (USD)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={overviewData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis tickFormatter={formatCurrency} />
-                      <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Value']} />
-                      <Legend />
-                      <Area type="monotone" dataKey="value" stroke="#82ca9d" fill="#82ca9d" name="Export Value" />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                <div className="border rounded-md p-4">
+                  <h3 className="text-lg font-medium mb-4">Quality Assurance Checks</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span>Total Samples Tested</span>
+                      <span className="font-medium">168</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Quality Assurance Pass Rate</span>
+                      <span className="font-medium text-green-600">94%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Average Cupping Score</span>
+                      <span className="font-medium">84.5 / 100</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>SCA Grade Average</span>
+                      <span className="font-medium">Specialty (83+)</span>
+                    </div>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Financial Tab */}
-        {activeTab === 'financial' && (
-          <div className="grid grid-cols-1 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue vs Costs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={overviewData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis tickFormatter={formatCurrency} />
-                      <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'USD']} />
-                      <Legend />
-                      <Bar dataKey="value" name="Revenue" fill="#8884d8" />
-                      <Bar dataKey="quantity" name="Costs" fill="#82ca9d" stackId="a" />
-                    </BarChart>
-                  </ResponsiveContainer>
+              </div>
+              <div className="mt-4 text-sm text-muted-foreground">
+                <p>Quality metrics showing coffee grade distribution and quality control results.</p>
+              </div>
+            </TabsContent>
+            
+            {/* Impact tab */}
+            <TabsContent value="impact">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="border rounded-md p-6 space-y-4">
+                  <h3 className="text-lg font-medium mb-4">Social Impact Metrics</h3>
+                  {impactData.map((item) => (
+                    <div key={item.metric} className="flex justify-between items-center border-b pb-2">
+                      <span>{item.metric}</span>
+                      <span className="font-medium">{item.value}</span>
+                    </div>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Market Analysis Tab */}
-        {activeTab === 'market' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Export Destinations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={destinationData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={100}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {destinationData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={formatValue} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="border rounded-md p-6">
+                  <h3 className="text-lg font-medium mb-4">Sustainability Initiatives</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-full bg-green-100 p-2 mt-0.5">
+                        <ArrowRight className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Sustainable Farming Practices</h4>
+                        <p className="text-sm text-muted-foreground">Implemented across 85% of partner farms</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-full bg-green-100 p-2 mt-0.5">
+                        <ArrowRight className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Water Conservation</h4>
+                        <p className="text-sm text-muted-foreground">Reduced water usage by 24% in processing</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-full bg-green-100 p-2 mt-0.5">
+                        <ArrowRight className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Farmer Training Program</h4>
+                        <p className="text-sm text-muted-foreground">32 training sessions conducted with 780+ attendees</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Market Share Growth</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={overviewData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="quantity" stroke="#8884d8" name="Market Share" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Price Trends Tab */}
-        {activeTab === 'price' && (
-          <div className="grid grid-cols-1 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Coffee Price Trends (USD/kg)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={priceData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => [`$${value}/kg`, '']} />
-                      <Legend />
-                      <Line type="monotone" dataKey="arabicaPrice" stroke="#8884d8" name="Arabica" />
-                      <Line type="monotone" dataKey="robustaPrice" stroke="#82ca9d" name="Robusta" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Forecasts Tab */}
-        {activeTab === 'forecast' && (
-          <div className="grid grid-cols-1 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue Forecast</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={forecastData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis tickFormatter={formatCurrency} />
-                      <Tooltip formatter={(value) => value ? [`$${value.toLocaleString()}`, ''] : ['N/A', '']} />
-                      <Legend />
-                      <Line type="monotone" dataKey="actual" stroke="#8884d8" name="Actual" strokeWidth={2} />
-                      <Line type="monotone" dataKey="forecast" stroke="#82ca9d" name="Forecast" strokeWidth={2} strokeDasharray="5 5" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </Tabs>
+              </div>
+              <div className="mt-4 text-sm text-muted-foreground">
+                <p>Social impact and sustainability metrics from our coffee export operations.</p>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
