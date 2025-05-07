@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Coffee, Globe, Factory, BarChart3, TrendingUp, AlertCircle, Calendar, Ship, FileText, Briefcase, Package, Settings } from 'lucide-react';
+import { ArrowLeft, Coffee, Globe, Factory, BarChart3, TrendingUp, AlertCircle, Calendar, Ship } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useLocation } from 'react-router-dom';
 import StockOperations from './stock-operations/StockOperations';
@@ -18,8 +17,6 @@ import ExecutiveDashboard from './kajon/executive/ExecutiveDashboard';
 import CoffeeExportDashboard from './kajon/export-business/CoffeeExportDashboard';
 import HullingGrading from './kajon/export-business/HullingGrading';
 import EquatorExportManagement from './kajon/equator-export/EquatorExportManagement';
-import ExportBusinessManagement from './kajon/export-operations/ExportBusinessManagement';
-
 const KAJONCoffeeLimited = () => {
   const {
     toast
@@ -81,15 +78,15 @@ const KAJONCoffeeLimited = () => {
               </Button>
             </div>
             
-            {/* KAJON Coffee Limited - EXPORTS */}
+            {/* KAJON Equata Coffee Management System - New Tile */}
             <div className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl h-[250px]">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-800/90 to-blue-950/95 opacity-90 transition-opacity group-hover:opacity-100"></div>
               <div className="absolute inset-0 bg-[url('/combined-logo.png')] bg-center bg-no-repeat bg-contain opacity-10"></div>
-              <Button variant="link" onClick={() => setSelectedInterface('exports')} className="relative h-full w-full flex flex-col items-center justify-center space-y-4 text-white border-0">
+              <Button variant="link" onClick={() => setSelectedInterface('equator')} className="relative h-full w-full flex flex-col items-center justify-center space-y-4 text-white border-0">
                 <div className="rounded-full bg-blue-700/50 p-4 mb-2 backdrop-blur-sm transition-all duration-300 group-hover:bg-blue-600/70">
-                  <Globe className="h-12 w-12" />
+                  <Ship className="h-12 w-12" />
                 </div>
-                <span className="text-2xl font-bold tracking-wide">KAJON Coffee Limited - EXPORTS</span>
+                <span className="text-2xl font-bold tracking-wide">KAJON Equata Coffee</span>
                 <p className="text-sm font-light max-w-[80%] text-center text-blue-100 opacity-90">
                   Global Export Management System
                 </p>
@@ -138,7 +135,7 @@ const KAJONCoffeeLimited = () => {
                     <div className="rounded-full bg-blue-700/50 p-4 mb-2 backdrop-blur-sm transition-all duration-300 group-hover:bg-blue-600/70">
                       <Globe className="h-12 w-12" />
                     </div>
-                    <span className="text-2xl font-bold tracking-wide">Equata Coffee Insights</span>
+                    <span className="text-2xl font-bold tracking-wide">KAJON Exports</span>
                     <p className="text-sm font-light max-w-[80%] text-center text-blue-100 opacity-90">
                       Global Market Insights and Export Performance
                     </p>
@@ -155,14 +152,14 @@ const KAJONCoffeeLimited = () => {
         <CardContent className="pt-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">
-              {selectedInterface === 'kajon' ? selectedSystem === 'coffee-insights' ? 'KAJON Coffee Business Insights' : selectedSystem === 'export-analytics' ? 'KAJON Export Analytics' : 'KAJON Coffee Factory Management' : selectedInterface === 'kazo' ? 'Kazo Coffee Development Project' : selectedInterface === 'exports' ? 'KAJON Coffee Limited - EXPORTS' : 'KAJON Coffee Limited - Exports'}
+              {selectedInterface === 'kajon' ? selectedSystem === 'coffee-insights' ? 'KAJON Coffee Business Insights' : selectedSystem === 'export-analytics' ? 'KAJON Export Analytics' : 'KAJON Coffee Factory Management' : selectedInterface === 'kazo' ? 'Kazo Coffee Development Project' : 'KAJON Equata Coffee Management System'}
             </h2>
             <Button variant="ghost" onClick={handleBack} className="p-2">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </div>
 
-          {selectedInterface === 'kajon' ? selectedSystem === 'coffee-insights' ? <ExecutiveDashboard /> : selectedSystem === 'export-analytics' ? <CoffeeExportDashboard viewOnly={true} /> : <HullingGrading viewOnly={true} /> : selectedInterface === 'kazo' ? <KazoCoffeeProject /> : selectedInterface === 'exports' ? <ExportBusinessManagement /> : <EquatorExportManagement />}
+          {selectedInterface === 'kajon' ? selectedSystem === 'coffee-insights' ? <ExecutiveDashboard /> : selectedSystem === 'export-analytics' ? <CoffeeExportDashboard viewOnly={true} /> : <HullingGrading viewOnly={true} /> : selectedInterface === 'kazo' ? <KazoCoffeeProject /> : <EquatorExportManagement />}
         </CardContent>
       </Card>
     </div>;

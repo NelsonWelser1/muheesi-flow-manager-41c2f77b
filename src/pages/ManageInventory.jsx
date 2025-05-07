@@ -16,10 +16,6 @@ const companies = [{
   description: "Robusta and Arabica Coffee, Kakyinga Coffee Farm, Kakyinga Factory, JBER, and additional stores and projects.",
   component: "kajon-coffee"
 }, {
-  name: "KAJON Coffee Limited - EXPORTS",
-  description: "Global coffee export operations, sourcing from KAZO Coffee Project and other suppliers. Manages contracts, shipments, compliance, and international market operations.",
-  component: "exports"
-}, {
   name: "Kyalima Farmers Limited",
   description: "Assets and Cooperations, Agri-Business.",
   component: "kyalima-farmers"
@@ -57,8 +53,8 @@ const ManageInventory = () => {
       navigate('/manage-inventory/kashari-farm');
     } else if (company.component === 'bukomero-dairy') {
       navigate('/manage-inventory/bukomero-dairy');
-    } else if (company.component === 'exports') {
-      navigate('/manage-inventory/kajon-coffee', { state: { selectedInterface: 'exports' } });
+    } else if (company.component === 'equator-export') {
+      navigate('/manage-inventory/kajon-coffee', { state: { selectedInterface: 'equator' } });
     } else {
       setSelectedCompany(company);
     }
