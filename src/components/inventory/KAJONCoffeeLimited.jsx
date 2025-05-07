@@ -135,7 +135,7 @@ const KAJONCoffeeLimited = () => {
                     <div className="rounded-full bg-blue-700/50 p-4 mb-2 backdrop-blur-sm transition-all duration-300 group-hover:bg-blue-600/70">
                       <Globe className="h-12 w-12" />
                     </div>
-                    <span className="text-2xl font-bold tracking-wide">Export Analytics</span>
+                    <span className="text-2xl font-bold tracking-wide">KAJON Exports</span>
                     <p className="text-sm font-light max-w-[80%] text-center text-blue-100 opacity-90">
                       Global Market Insights and Export Performance
                     </p>
