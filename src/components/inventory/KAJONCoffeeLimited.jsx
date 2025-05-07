@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -152,7 +153,7 @@ const KAJONCoffeeLimited = () => {
         <CardContent className="pt-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">
-              {selectedInterface === 'kajon' ? selectedSystem === 'coffee-insights' ? 'KAJON Coffee Business Insights' : selectedSystem === 'export-analytics' ? 'KAJON Export Analytics' : 'KAJON Coffee Factory Management' : selectedInterface === 'kazo' ? 'Kazo Coffee Development Project' : 'KAJON Equata Coffee Management System'}
+              {selectedInterface === 'kajon' ? selectedSystem === 'coffee-insights' ? 'KAJON Coffee Business Insights' : selectedSystem === 'export-analytics' ? 'KAJON Export Analytics' : 'KAJON Coffee Factory Management' : selectedInterface === 'kazo' ? 'Kazo Coffee Development Project' : 'KAJON Coffee Limited - Exports'}
             </h2>
             <Button variant="ghost" onClick={handleBack} className="p-2">
               <ArrowLeft className="h-5 w-5" />
