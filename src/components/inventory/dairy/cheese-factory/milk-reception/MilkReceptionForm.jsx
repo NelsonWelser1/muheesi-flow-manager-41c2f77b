@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,10 @@ import { useMilkReception } from '@/hooks/useMilkReception';
 const MilkReceptionForm = () => {
   const { toast } = useToast();
   const { addMilkReception } = useMilkReception();
+  const [submitting, setSubmitting] = useState(false);
+  const lastSubmitTimeRef = useRef(0);
+  const cooldownPeriod = 20000; // 20 seconds in milliseconds
+  
   const [formData, setFormData] = useState({
     tank_number: '',
     quality_score: 'Grade A',
@@ -23,6 +28,22 @@ const MilkReceptionForm = () => {
     acidity: '',
     notes: ''
   });
+
+  // Reset form to initial state
+  const resetForm = () => {
+    setFormData({
+      tank_number: '',
+      quality_score: 'Grade A',
+      supplier_name: '',
+      milk_volume: '',
+      temperature: '',
+      fat_percentage: '',
+      protein_percentage: '',
+      total_plate_count: '',
+      acidity: '',
+      notes: ''
+    });
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -101,6 +122,22 @@ const MilkReceptionForm = () => {
       return;
     }
 
+    // Rate limiting check
+    const now = Date.now();
+    const timeElapsed = now - lastSubmitTimeRef.current;
+    
+    if (timeElapsed < cooldownPeriod) {
+      const secondsRemaining = Math.ceil((cooldownPeriod - timeElapsed) / 1000);
+      toast({
+        title: "Rate Limit",
+        description: `Please wait ${secondsRemaining} seconds before submitting again`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+
     try {
       const dataToSubmit = {
         ...formData,
@@ -119,24 +156,16 @@ const MilkReceptionForm = () => {
       console.log('Submission result:', result);
 
       if (result) {
+        // Update last submit time
+        lastSubmitTimeRef.current = Date.now();
+        
         toast({
           title: "Success",
           description: "Milk reception record added successfully",
         });
 
         // Reset form after successful submission
-        setFormData({
-          supplier_name: '',
-          milk_volume: '',
-          temperature: '',
-          fat_percentage: '',
-          protein_percentage: '',
-          total_plate_count: '',
-          acidity: '',
-          quality_score: 'Grade A',
-          tank_number: '',
-          notes: ''
-        });
+        resetForm();
       } else {
         throw new Error('Failed to add record');
       }
@@ -147,7 +176,47 @@ const MilkReceptionForm = () => {
         description: "Please check your data and try again. " + (error.message || ''),
         variant: "destructive",
       });
+    } finally {
+      setSubmitting(false);
     }
+  };
+
+  const validateForm = () => {
+    const requiredFields = [
+      'supplier_name',
+      'milk_volume',
+      'temperature',
+      'fat_percentage',
+      'protein_percentage',
+      'total_plate_count',
+      'acidity',
+      'quality_score',
+      'tank_number'  // Added tank_number validation
+    ];
+
+    const errors = [];
+    requiredFields.forEach(field => {
+      if (!formData[field]) {
+        errors.push(`${field.replace('_', ' ')} is required`);
+      }
+    });
+
+    const numericFields = [
+      'milk_volume',
+      'temperature',
+      'fat_percentage',
+      'protein_percentage',
+      'total_plate_count',
+      'acidity'
+    ];
+
+    numericFields.forEach(field => {
+      if (isNaN(parseFloat(formData[field]))) {
+        errors.push(`${field.replace('_', ' ')} must be a valid number`);
+      }
+    });
+
+    return errors;
   };
 
   return (
@@ -297,8 +366,12 @@ const MilkReceptionForm = () => {
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Submit
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={submitting}
+          >
+            {submitting ? "Submitting..." : "Submit"}
           </Button>
         </form>
       </CardContent>
