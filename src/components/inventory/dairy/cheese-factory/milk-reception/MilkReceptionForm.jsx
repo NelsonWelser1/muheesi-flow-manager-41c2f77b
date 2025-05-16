@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -179,44 +178,6 @@ const MilkReceptionForm = () => {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const validateForm = () => {
-    const requiredFields = [
-      'supplier_name',
-      'milk_volume',
-      'temperature',
-      'fat_percentage',
-      'protein_percentage',
-      'total_plate_count',
-      'acidity',
-      'quality_score',
-      'tank_number'  // Added tank_number validation
-    ];
-
-    const errors = [];
-    requiredFields.forEach(field => {
-      if (!formData[field]) {
-        errors.push(`${field.replace('_', ' ')} is required`);
-      }
-    });
-
-    const numericFields = [
-      'milk_volume',
-      'temperature',
-      'fat_percentage',
-      'protein_percentage',
-      'total_plate_count',
-      'acidity'
-    ];
-
-    numericFields.forEach(field => {
-      if (isNaN(parseFloat(formData[field]))) {
-        errors.push(`${field.replace('_', ' ')} must be a valid number`);
-      }
-    });
-
-    return errors;
   };
 
   return (
