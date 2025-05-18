@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReceptionForm } from "./hooks/useMilkReceptionForm";
 import MilkReceptionFormFields from "./components/MilkReceptionFormFields";
-import { showSuccessToast } from "@/components/ui/notifications";
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 import { useToast } from "@/components/ui/use-toast";
 
 const MilkReceptionForm = () => {
@@ -22,8 +22,11 @@ const MilkReceptionForm = () => {
     const result = await submitForm(e);
     
     if (result && result.success) {
-      // Show the success toast notification below the form
+      // Show the success toast notification
       showSuccessToast(toast, "Milk reception record added successfully");
+    } else if (result && !result.success && !result.errors) {
+      // If there's a submission error (not validation errors which are handled in the hook)
+      showErrorToast(toast, "Failed to submit milk reception record. Please try again.");
     }
   };
 
