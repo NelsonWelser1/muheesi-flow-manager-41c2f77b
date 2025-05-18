@@ -3,16 +3,29 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReceptionForm } from "./hooks/useMilkReceptionForm";
 import MilkReceptionFormFields from "./components/MilkReceptionFormFields";
+import { showSuccessToast } from "@/components/ui/notifications";
+import { useToast } from "@/components/ui/use-toast";
 
 const MilkReceptionForm = () => {
+  const { toast } = useToast();
   const {
     formData,
     submitting,
     handleInputChange,
     handleQualityChange,
     handleTankSelection,
-    handleSubmit
+    handleSubmit: submitForm
   } = useMilkReceptionForm();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const result = await submitForm(e);
+    
+    if (result && result.success) {
+      // Show the success toast notification below the form
+      showSuccessToast(toast, "Milk reception record added successfully");
+    }
+  };
 
   return (
     <Card>

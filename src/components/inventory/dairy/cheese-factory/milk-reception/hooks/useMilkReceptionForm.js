@@ -103,7 +103,7 @@ export const useMilkReceptionForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     console.log('Form data before submission:', formData);
 
     const errors = validateForm();
@@ -113,7 +113,7 @@ export const useMilkReceptionForm = () => {
         description: errors.join(', '),
         variant: "destructive",
       });
-      return;
+      return { success: false, errors };
     }
 
     // Rate limiting check
@@ -127,7 +127,7 @@ export const useMilkReceptionForm = () => {
         description: `Please wait ${secondsRemaining} seconds before submitting again`,
         variant: "destructive",
       });
-      return;
+      return { success: false, error: 'Rate limited' };
     }
 
     setSubmitting(true);
@@ -160,6 +160,7 @@ export const useMilkReceptionForm = () => {
 
         // Reset form after successful submission
         resetForm();
+        return { success: true, result };
       } else {
         throw new Error('Failed to add record');
       }
@@ -170,6 +171,7 @@ export const useMilkReceptionForm = () => {
         description: "Please check your data and try again. " + (error.message || ''),
         variant: "destructive",
       });
+      return { success: false, error };
     } finally {
       setSubmitting(false);
     }
@@ -181,6 +183,6 @@ export const useMilkReceptionForm = () => {
     handleInputChange,
     handleQualityChange,
     handleTankSelection,
-    handleSubmit,
+    handleSubmit
   };
 };
