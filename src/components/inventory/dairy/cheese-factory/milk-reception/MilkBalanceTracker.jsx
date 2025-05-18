@@ -112,6 +112,12 @@ const MilkBalanceTracker = () => {
           <p className="text-xs text-muted-foreground">
             Combined volume across all tanks
           </p>
+          <div className="py-2 mt-2 border-t border-gray-200">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Tank B Total Volume:</span>
+              <span className="text-lg font-bold text-green-600">{tankB.volume.toFixed(2)}L</span>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -119,4 +125,3 @@ const MilkBalanceTracker = () => {
 };
 
 export default MilkBalanceTracker;
-
