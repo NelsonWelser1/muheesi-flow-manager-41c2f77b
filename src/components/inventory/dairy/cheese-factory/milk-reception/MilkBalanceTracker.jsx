@@ -45,6 +45,10 @@ const MilkBalanceTracker = () => {
     );
   }
 
+  // For debugging purposes
+  console.log('Tank balances:', { tankA, tankB, directProcessing });
+  console.log('Raw milk reception data:', milkReceptionData);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
       <Card className="bg-blue-50">
