@@ -2,10 +2,10 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
-import { Thermometer, Droplet } from 'lucide-react';
+import { Thermometer, Droplet, AlertTriangle } from 'lucide-react';
 
 const MilkBalanceTracker = () => {
-  const { data: milkReceptionData } = useMilkReception();
+  const { data: milkReceptionData, isLoading, error } = useMilkReception();
 
   const calculateTankBalance = (tankName) => {
     if (!milkReceptionData) return { volume: 0, lastTemperature: 0 };
@@ -32,6 +32,18 @@ const MilkBalanceTracker = () => {
   const tankA = calculateTankBalance('Tank A');
   const tankB = calculateTankBalance('Tank B');
   const directProcessing = calculateTankBalance('Direct-Processing');
+  
+  if (isLoading) {
+    return <div className="p-4 text-center">Loading tank data...</div>;
+  }
+  
+  if (error) {
+    return (
+      <div className="p-4 text-center text-red-500 flex items-center justify-center">
+        <AlertTriangle className="mr-2" /> Error loading tank data
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
