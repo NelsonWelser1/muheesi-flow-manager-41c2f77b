@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
-import { Thermometer, Droplet, AlertTriangle } from 'lucide-react';
+import { Thermometer, Droplet, AlertTriangle, Volume } from 'lucide-react';
 
 const MilkBalanceTracker = () => {
   const { data: milkReceptionData, isLoading, error } = useMilkReception();
@@ -33,6 +33,9 @@ const MilkBalanceTracker = () => {
   const tankB = calculateTankBalance('Tank B');
   const directProcessing = calculateTankBalance('Direct-Processing');
   
+  // Calculate total volume
+  const totalVolume = tankA.volume + tankB.volume + directProcessing.volume;
+  
   if (isLoading) {
     return <div className="p-4 text-center">Loading tank data...</div>;
   }
@@ -48,6 +51,7 @@ const MilkBalanceTracker = () => {
   // For debugging purposes
   console.log('Tank balances:', { tankA, tankB, directProcessing });
   console.log('Raw milk reception data:', milkReceptionData);
+  console.log('Total volume:', totalVolume);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
@@ -123,7 +127,7 @@ const MilkBalanceTracker = () => {
         </CardHeader>
         <CardContent className="py-2">
           <div className="text-2xl font-bold">
-            {(tankA.volume + tankB.volume + directProcessing.volume).toFixed(2)}L
+            {totalVolume.toFixed(2)}L
           </div>
           <p className="text-xs text-muted-foreground">
             Combined volume across all tanks
