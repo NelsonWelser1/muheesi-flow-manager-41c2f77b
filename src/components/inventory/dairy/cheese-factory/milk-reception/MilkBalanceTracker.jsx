@@ -8,20 +8,38 @@ const MilkBalanceTracker = () => {
   const { data: milkReceptionData, isLoading, error } = useMilkReception();
 
   const calculateTankBalance = (tankName) => {
-    if (!milkReceptionData) return { volume: 0, lastTemperature: 0 };
+    if (!milkReceptionData || !Array.isArray(milkReceptionData)) {
+      console.log(`No data or invalid data for ${tankName}`, milkReceptionData);
+      return { volume: 0, lastTemperature: 0 };
+    }
 
-    const tankData = milkReceptionData
-      .filter(record => record.tank_number === tankName)
-      .reduce((acc, record) => {
-        // Add positive volumes (receptions) and subtract negative volumes (offloads)
-        acc.volume += record.milk_volume;
-        // Update temperature only if it's the most recent record
-        if (!acc.lastTimestamp || new Date(record.created_at) > new Date(acc.lastTimestamp)) {
-          acc.lastTemperature = record.temperature;
-          acc.lastTimestamp = record.created_at;
-        }
-        return acc;
-      }, { volume: 0, lastTemperature: 0, lastTimestamp: null });
+    // Filter records by tank name
+    const tankRecords = milkReceptionData.filter(record => {
+      // Make sure tank_number exists and matches
+      return record && record.tank_number === tankName;
+    });
+    
+    console.log(`Records for ${tankName}:`, tankRecords.length, tankRecords);
+
+    if (tankRecords.length === 0) {
+      return { volume: 0, lastTemperature: 0 };
+    }
+
+    // Accumulate the tank data
+    const tankData = tankRecords.reduce((acc, record) => {
+      // Only add if we have valid milk_volume
+      if (record && typeof record.milk_volume !== 'undefined') {
+        acc.volume += Number(record.milk_volume);
+      }
+      
+      // Update temperature only if it's the most recent record
+      if (record && record.temperature && 
+          (!acc.lastTimestamp || new Date(record.created_at) > new Date(acc.lastTimestamp))) {
+        acc.lastTemperature = Number(record.temperature);
+        acc.lastTimestamp = record.created_at;
+      }
+      return acc;
+    }, { volume: 0, lastTemperature: 0, lastTimestamp: null });
 
     return {
       volume: Math.max(0, tankData.volume), // Ensure volume doesn't go below 0
@@ -29,12 +47,17 @@ const MilkBalanceTracker = () => {
     };
   };
 
+  // Calculate balances for each tank
   const tankA = calculateTankBalance('Tank A');
   const tankB = calculateTankBalance('Tank B');
   const directProcessing = calculateTankBalance('Direct-Processing');
   
   // Calculate total volume
   const totalVolume = tankA.volume + tankB.volume + directProcessing.volume;
+  
+  // For debugging purposes
+  console.log('Tank balances:', { tankA, tankB, directProcessing });
+  console.log('Total volume:', totalVolume);
   
   if (isLoading) {
     return <div className="p-4 text-center">Loading tank data...</div>;
@@ -48,10 +71,13 @@ const MilkBalanceTracker = () => {
     );
   }
 
-  // For debugging purposes
-  console.log('Tank balances:', { tankA, tankB, directProcessing });
-  console.log('Raw milk reception data:', milkReceptionData);
-  console.log('Total volume:', totalVolume);
+  // Additional debug info
+  if (milkReceptionData) {
+    console.log('Raw milk reception data count:', milkReceptionData.length);
+    console.log('Tank A records:', milkReceptionData.filter(r => r?.tank_number === 'Tank A').length);
+    console.log('Tank B records:', milkReceptionData.filter(r => r?.tank_number === 'Tank B').length);
+    console.log('Direct Processing records:', milkReceptionData.filter(r => r?.tank_number === 'Direct-Processing').length);
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
