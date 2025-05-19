@@ -8,56 +8,81 @@ const MilkBalanceTracker = () => {
   const { data: milkReceptionData, isLoading, error } = useMilkReception();
 
   const calculateTankBalance = (tankName) => {
-    if (!milkReceptionData || !Array.isArray(milkReceptionData)) {
-      console.log(`No data or invalid data for ${tankName}`, milkReceptionData);
+    // First, validate that we have data
+    if (!milkReceptionData || !Array.isArray(milkReceptionData) || milkReceptionData.length === 0) {
+      console.log(`No valid data for ${tankName} calculations`);
       return { volume: 0, lastTemperature: 0 };
     }
 
-    // Filter records by tank name
-    const tankRecords = milkReceptionData.filter(record => {
-      // Make sure tank_number exists and matches
-      return record && record.tank_number === tankName;
-    });
+    // Filter records by tank name with strict equality checking
+    const tankRecords = milkReceptionData.filter(record => 
+      record && record.tank_number && record.tank_number === tankName
+    );
     
-    console.log(`Records for ${tankName}:`, tankRecords.length, tankRecords);
+    console.log(`Records for ${tankName}:`, tankRecords.length);
 
     if (tankRecords.length === 0) {
+      console.log(`No records found for ${tankName}`);
       return { volume: 0, lastTemperature: 0 };
     }
 
-    // Accumulate the tank data
+    // Accumulate the tank data with explicit number conversions
     const tankData = tankRecords.reduce((acc, record) => {
-      // Only add if we have valid milk_volume
-      if (record && typeof record.milk_volume !== 'undefined') {
-        acc.volume += Number(record.milk_volume);
+      // Explicitly convert milk_volume to number and validate it exists
+      if (record && record.milk_volume !== null && record.milk_volume !== undefined) {
+        const volumeValue = Number(record.milk_volume);
+        if (!isNaN(volumeValue)) {
+          acc.volume += volumeValue;
+        } else {
+          console.log(`Invalid milk volume for record in ${tankName}:`, record.milk_volume);
+        }
       }
       
-      // Update temperature only if it's the most recent record
-      if (record && record.temperature && 
+      // Update temperature only if it's valid and the most recent record
+      if (record && record.temperature !== null && record.temperature !== undefined && 
           (!acc.lastTimestamp || new Date(record.created_at) > new Date(acc.lastTimestamp))) {
-        acc.lastTemperature = Number(record.temperature);
-        acc.lastTimestamp = record.created_at;
+        const tempValue = Number(record.temperature);
+        if (!isNaN(tempValue)) {
+          acc.lastTemperature = tempValue;
+          acc.lastTimestamp = record.created_at;
+        } else {
+          console.log(`Invalid temperature for record in ${tankName}:`, record.temperature);
+        }
       }
       return acc;
     }, { volume: 0, lastTemperature: 0, lastTimestamp: null });
 
+    // Ensure we don't return negative volumes
     return {
-      volume: Math.max(0, tankData.volume), // Ensure volume doesn't go below 0
+      volume: Math.max(0, tankData.volume),
       lastTemperature: tankData.lastTemperature
     };
   };
 
-  // Calculate balances for each tank
-  const tankA = calculateTankBalance('Tank A');
-  const tankB = calculateTankBalance('Tank B');
-  const directProcessing = calculateTankBalance('Direct-Processing');
+  // Calculate balances for each tank with robust error handling
+  const calculateSafeTankBalance = (tankName) => {
+    try {
+      return calculateTankBalance(tankName);
+    } catch (err) {
+      console.error(`Error calculating ${tankName} balance:`, err);
+      return { volume: 0, lastTemperature: 0 };
+    }
+  };
+
+  const tankA = calculateSafeTankBalance('Tank A');
+  const tankB = calculateSafeTankBalance('Tank B');
+  const directProcessing = calculateSafeTankBalance('Direct-Processing');
   
-  // Calculate total volume
-  const totalVolume = tankA.volume + tankB.volume + directProcessing.volume;
+  // Calculate total volume with explicit number conversions
+  const totalVolume = Number(tankA.volume || 0) + Number(tankB.volume || 0) + Number(directProcessing.volume || 0);
   
-  // For debugging purposes
-  console.log('Tank balances:', { tankA, tankB, directProcessing });
-  console.log('Total volume:', totalVolume);
+  // Comprehensive debugging output
+  console.log('Tank balances calculated:', { 
+    tankA: { volume: tankA.volume, temp: tankA.lastTemperature },
+    tankB: { volume: tankB.volume, temp: tankB.lastTemperature }, 
+    directProcessing: { volume: directProcessing.volume, temp: directProcessing.lastTemperature }
+  });
+  console.log('Total volume calculated:', totalVolume);
   
   if (isLoading) {
     return <div className="p-4 text-center">Loading tank data...</div>;
@@ -71,12 +96,25 @@ const MilkBalanceTracker = () => {
     );
   }
 
-  // Additional debug info
+  // Print detailed diagnostics about the data we're working with
   if (milkReceptionData) {
     console.log('Raw milk reception data count:', milkReceptionData.length);
-    console.log('Tank A records:', milkReceptionData.filter(r => r?.tank_number === 'Tank A').length);
-    console.log('Tank B records:', milkReceptionData.filter(r => r?.tank_number === 'Tank B').length);
-    console.log('Direct Processing records:', milkReceptionData.filter(r => r?.tank_number === 'Direct-Processing').length);
+    
+    // Count by tank with null check in filter
+    const tankACount = milkReceptionData.filter(r => r && r.tank_number === 'Tank A').length;
+    const tankBCount = milkReceptionData.filter(r => r && r.tank_number === 'Tank B').length;
+    const directCount = milkReceptionData.filter(r => r && r.tank_number === 'Direct-Processing').length;
+    
+    console.log('Tank A records:', tankACount);
+    console.log('Tank B records:', tankBCount);
+    console.log('Direct Processing records:', directCount);
+    console.log('Unassigned records:', milkReceptionData.length - tankACount - tankBCount - directCount);
+    
+    // Sample data from each tank for verification
+    if (tankBCount > 0) {
+      const sampleB = milkReceptionData.find(r => r && r.tank_number === 'Tank B');
+      console.log('Sample Tank B record:', sampleB);
+    }
   }
 
   return (
