@@ -153,10 +153,8 @@ export const useMilkReceptionForm = () => {
         // Update last submit time
         lastSubmitTimeRef.current = Date.now();
         
-        toast({
-          title: "Success",
-          description: "Milk reception record added successfully",
-        });
+        // Form-level toast is now handled in MilkReceptionForm.jsx
+        // so we don't need to show it here
 
         // Reset form after successful submission
         resetForm();
@@ -166,11 +164,10 @@ export const useMilkReceptionForm = () => {
       }
     } catch (error) {
       console.error('Error in form submission:', error);
-      toast({
-        title: "Submission Failed",
-        description: "Please check your data and try again. " + (error.message || ''),
-        variant: "destructive",
-      });
+      
+      // Form-level toast is now handled in MilkReceptionForm.jsx
+      // so we don't need to show it here
+      
       return { success: false, error };
     } finally {
       setSubmitting(false);
