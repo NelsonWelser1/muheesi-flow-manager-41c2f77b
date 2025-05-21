@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReceptionForm } from "./hooks/useMilkReceptionForm";
 import MilkReceptionFormFields from "./components/MilkReceptionFormFields";
-import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 import { useToast } from "@/components/ui/use-toast";
 
 const MilkReceptionForm = () => {
@@ -19,14 +18,28 @@ const MilkReceptionForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submitted, awaiting result...');
+    
     const result = await submitForm(e);
     
     if (result && result.success) {
-      // Show the success toast notification with 60 second duration
-      showSuccessToast(toast, "Milk reception record added successfully", 60000);
-    } else if (result && !result.success && !result.errors) {
-      // If there's a submission error (not validation errors which are handled in the hook)
-      showErrorToast(toast, "Failed to submit milk reception record. Please try again.", 60000);
+      // Show success notification for 60 seconds (60000ms)
+      toast({
+        title: "Success",
+        description: "Milk reception record added successfully",
+        duration: 60000, // 60 seconds
+        className: "bg-green-50 border-green-300 text-green-800",
+      });
+      console.log('Success toast triggered');
+    } else if (result && !result.success) {
+      // Show error notification for 60 seconds
+      toast({
+        title: "Error",
+        description: "Failed to submit milk reception record. Please try again.",
+        variant: "destructive",
+        duration: 60000, // 60 seconds
+      });
+      console.log('Error toast triggered');
     }
   };
 
