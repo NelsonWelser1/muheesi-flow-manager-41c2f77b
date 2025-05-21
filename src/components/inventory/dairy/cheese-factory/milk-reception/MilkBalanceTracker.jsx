@@ -15,11 +15,15 @@ const MilkBalanceTracker = () => {
     }
 
     // Filter records by tank name with strict equality checking
+    // Ensure case-insensitive comparison for more reliable matching
     const tankRecords = milkReceptionData.filter(record => 
-      record && record.tank_number && record.tank_number === tankName
+      record && record.tank_number && record.tank_number.trim().toLowerCase() === tankName.trim().toLowerCase()
     );
     
     console.log(`Records for ${tankName}:`, tankRecords.length);
+    if (tankRecords.length > 0) {
+      console.log(`Sample record for ${tankName}:`, tankRecords[0]);
+    }
 
     if (tankRecords.length === 0) {
       console.log(`No records found for ${tankName}`);
@@ -31,8 +35,11 @@ const MilkBalanceTracker = () => {
       // Explicitly convert milk_volume to number and validate it exists
       if (record && record.milk_volume !== null && record.milk_volume !== undefined) {
         const volumeValue = Number(record.milk_volume);
+        console.log(`Processing record for ${tankName}, volume: ${volumeValue}`);
+        
         if (!isNaN(volumeValue)) {
           acc.volume += volumeValue;
+          console.log(`Running total for ${tankName}: ${acc.volume}`);
         } else {
           console.log(`Invalid milk volume for record in ${tankName}:`, record.milk_volume);
         }
@@ -52,6 +59,8 @@ const MilkBalanceTracker = () => {
       return acc;
     }, { volume: 0, lastTemperature: 0, lastTimestamp: null });
 
+    console.log(`Final calculation for ${tankName}:`, tankData);
+
     // Ensure we don't return negative volumes
     return {
       volume: Math.max(0, tankData.volume),
@@ -69,18 +78,23 @@ const MilkBalanceTracker = () => {
     }
   };
 
+  // Force explicit tank names to ensure consistency
   const tankA = calculateSafeTankBalance('Tank A');
   const tankB = calculateSafeTankBalance('Tank B');
   const directProcessing = calculateSafeTankBalance('Direct-Processing');
   
   // Calculate total volume with explicit number conversions
-  const totalVolume = Number(tankA.volume || 0) + Number(tankB.volume || 0) + Number(directProcessing.volume || 0);
+  const tankAVolume = parseFloat(tankA.volume) || 0;
+  const tankBVolume = parseFloat(tankB.volume) || 0; 
+  const directProcessingVolume = parseFloat(directProcessing.volume) || 0;
+  
+  const totalVolume = tankAVolume + tankBVolume + directProcessingVolume;
   
   // Comprehensive debugging output
   console.log('Tank balances calculated:', { 
-    tankA: { volume: tankA.volume, temp: tankA.lastTemperature },
-    tankB: { volume: tankB.volume, temp: tankB.lastTemperature }, 
-    directProcessing: { volume: directProcessing.volume, temp: directProcessing.lastTemperature }
+    tankA: { volume: tankAVolume, temp: tankA.lastTemperature },
+    tankB: { volume: tankBVolume, temp: tankB.lastTemperature }, 
+    directProcessing: { volume: directProcessingVolume, temp: directProcessing.lastTemperature }
   });
   console.log('Total volume calculated:', totalVolume);
   
@@ -96,27 +110,6 @@ const MilkBalanceTracker = () => {
     );
   }
 
-  // Print detailed diagnostics about the data we're working with
-  if (milkReceptionData) {
-    console.log('Raw milk reception data count:', milkReceptionData.length);
-    
-    // Count by tank with null check in filter
-    const tankACount = milkReceptionData.filter(r => r && r.tank_number === 'Tank A').length;
-    const tankBCount = milkReceptionData.filter(r => r && r.tank_number === 'Tank B').length;
-    const directCount = milkReceptionData.filter(r => r && r.tank_number === 'Direct-Processing').length;
-    
-    console.log('Tank A records:', tankACount);
-    console.log('Tank B records:', tankBCount);
-    console.log('Direct Processing records:', directCount);
-    console.log('Unassigned records:', milkReceptionData.length - tankACount - tankBCount - directCount);
-    
-    // Sample data from each tank for verification
-    if (tankBCount > 0) {
-      const sampleB = milkReceptionData.find(r => r && r.tank_number === 'Tank B');
-      console.log('Sample Tank B record:', sampleB);
-    }
-  }
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
       <Card className="bg-blue-50">
@@ -128,7 +121,7 @@ const MilkBalanceTracker = () => {
           <div className="space-y-1">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Current Volume:</span>
-              <span className="text-lg font-bold text-blue-600">{tankA.volume.toFixed(2)}L</span>
+              <span className="text-lg font-bold text-blue-600">{tankAVolume.toFixed(2)}L</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Temperature:</span>
@@ -150,7 +143,7 @@ const MilkBalanceTracker = () => {
           <div className="space-y-1">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Current Volume:</span>
-              <span className="text-lg font-bold text-green-600">{tankB.volume.toFixed(2)}L</span>
+              <span className="text-lg font-bold text-green-600">{tankBVolume.toFixed(2)}L</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Temperature:</span>
@@ -172,7 +165,7 @@ const MilkBalanceTracker = () => {
           <div className="space-y-1">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Current Volume:</span>
-              <span className="text-lg font-bold text-purple-600">{directProcessing.volume.toFixed(2)}L</span>
+              <span className="text-lg font-bold text-purple-600">{directProcessingVolume.toFixed(2)}L</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Temperature:</span>
