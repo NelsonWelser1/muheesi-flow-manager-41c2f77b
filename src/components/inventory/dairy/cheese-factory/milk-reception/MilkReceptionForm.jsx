@@ -25,47 +25,47 @@ const MilkReceptionForm = () => {
       const result = await submitForm(e);
       
       if (result && result.success) {
-        // Show success notification with prominent styling and longer duration
+        // Show success toast
         toast({
           title: "Success!",
           description: "Milk reception record added successfully",
-          duration: 60000, // 60 seconds
-          className: "bg-green-100 border-2 border-green-500 text-green-800 font-medium",
+          duration: 6000,
+          className: "bg-green-50 border-2 border-green-500 text-green-800 font-medium",
           action: (
             <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
               <Check className="h-4 w-4 text-white" />
             </div>
           ),
         });
-        console.log('Success toast triggered with updated styling');
+        console.log('Success toast triggered');
       } else {
-        // Show error notification with prominent styling and longer duration
+        // Show error toast
         const errorMessage = result?.error?.message || "Failed to submit milk reception record. Please try again.";
         
         toast({
           title: "Submission Failed",
           description: errorMessage,
           variant: "destructive",
-          duration: 60000, // 60 seconds
-          className: "bg-red-100 border-2 border-red-500 text-red-800 font-medium",
+          duration: 6000,
+          className: "bg-red-50 border-2 border-red-500 text-red-800 font-medium",
           action: (
             <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
               <AlertCircle className="h-4 w-4 text-white" />
             </div>
           ),
         });
-        console.log('Error toast triggered with updated styling');
+        console.log('Error toast triggered');
       }
     } catch (error) {
       console.error('Error in form submission:', error);
       
-      // Show exception notification with prominent styling
+      // Show exception toast
       toast({
         title: "System Error",
         description: "An unexpected error occurred. Please try again or contact support.",
         variant: "destructive",
-        duration: 60000, // 60 seconds
-        className: "bg-red-100 border-2 border-red-500 text-red-800 font-medium",
+        duration: 6000,
+        className: "bg-red-50 border-2 border-red-500 text-red-800 font-medium",
         action: (
           <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
             <AlertCircle className="h-4 w-4 text-white" />
