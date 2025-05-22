@@ -108,12 +108,11 @@ export const useMilkReceptionForm = () => {
 
     const errors = validateForm();
     if (errors.length > 0) {
-      toast({
-        title: "Validation Error",
-        description: errors.join(', '),
-        variant: "destructive",
-      });
-      return { success: false, errors };
+      // Return error object for toast in parent component
+      return { 
+        success: false, 
+        error: { message: errors.join(', ') }
+      };
     }
 
     // Rate limiting check
@@ -122,12 +121,11 @@ export const useMilkReceptionForm = () => {
     
     if (timeElapsed < cooldownPeriod) {
       const secondsRemaining = Math.ceil((cooldownPeriod - timeElapsed) / 1000);
-      toast({
-        title: "Rate Limit",
-        description: `Please wait ${secondsRemaining} seconds before submitting again`,
-        variant: "destructive",
-      });
-      return { success: false, error: 'Rate limited' };
+      // Return error object for toast in parent component
+      return { 
+        success: false, 
+        error: { message: `Please wait ${secondsRemaining} seconds before submitting again` }
+      };
     }
 
     setSubmitting(true);
@@ -153,9 +151,6 @@ export const useMilkReceptionForm = () => {
         // Update last submit time
         lastSubmitTimeRef.current = Date.now();
         
-        // Form-level toast is now handled in MilkReceptionForm.jsx
-        // so we don't need to show it here
-
         // Reset form after successful submission
         resetForm();
         return { success: true, result };
@@ -164,11 +159,10 @@ export const useMilkReceptionForm = () => {
       }
     } catch (error) {
       console.error('Error in form submission:', error);
-      
-      // Form-level toast is now handled in MilkReceptionForm.jsx
-      // so we don't need to show it here
-      
-      return { success: false, error };
+      return { 
+        success: false, 
+        error: error 
+      };
     } finally {
       setSubmitting(false);
     }
