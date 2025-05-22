@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase';
 import { useMilkReception } from '@/hooks/useMilkReception';
+import { Check, AlertCircle } from "lucide-react";
 
 export const useMilkOffloadForm = () => {
   const { toast } = useToast();
@@ -81,6 +82,8 @@ export const useMilkOffloadForm = () => {
       toast({
         title: `${tankValue} Status`,
         description: `Available milk volume: ${availableMilk.toFixed(2)}L`,
+        className: "bg-blue-50 border-2 border-blue-400 text-blue-800 font-medium",
+        duration: 6000,
       });
     } else {
       setFormData(prev => ({
@@ -94,7 +97,9 @@ export const useMilkOffloadForm = () => {
       toast({
         title: `${tankValue} Status`,
         description: "No previous records found for this tank.",
-        variant: "warning"
+        variant: "warning",
+        className: "bg-amber-50 border-2 border-amber-400 text-amber-800 font-medium",
+        duration: 6000,
       });
     }
     
@@ -122,6 +127,8 @@ export const useMilkOffloadForm = () => {
           toast({
             title: "Alternative Tank Available",
             description: `${alternativeTank.name} has ${alternativeTank.available.toFixed(2)}L available`,
+            className: "bg-blue-50 border-2 border-blue-400 text-blue-800 font-medium",
+            duration: 6000,
           });
         }
 
@@ -161,6 +168,13 @@ export const useMilkOffloadForm = () => {
         title: "Submission Failed",
         description: "Requested volume exceeds available milk",
         variant: "destructive",
+        className: "bg-red-50 border-2 border-red-500 text-red-800 font-medium",
+        duration: 6000,
+        action: (
+          <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+            <AlertCircle className="h-4 w-4 text-white" />
+          </div>
+        ),
       });
       
       return;
@@ -217,8 +231,15 @@ export const useMilkOffloadForm = () => {
       console.log('Successfully recorded milk offload:', { receptionData, offloadData });
 
       toast({
-        title: "Success",
+        title: "Success!",
         description: `Milk offload recorded successfully with Batch ID: ${formData.batch_id}`,
+        className: "bg-green-50 border-2 border-green-500 text-green-800 font-medium",
+        duration: 6000,
+        action: (
+          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+            <Check className="h-4 w-4 text-white" />
+          </div>
+        ),
       });
 
       // Reset form
@@ -245,6 +266,13 @@ export const useMilkOffloadForm = () => {
         title: "Submission Failed",
         description: error.message || "An error occurred while submitting the form",
         variant: "destructive",
+        className: "bg-red-50 border-2 border-red-500 text-red-800 font-medium",
+        duration: 6000,
+        action: (
+          <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+            <AlertCircle className="h-4 w-4 text-white" />
+          </div>
+        ),
       });
     } finally {
       setLoading(false);
