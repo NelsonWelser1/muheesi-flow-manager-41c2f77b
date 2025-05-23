@@ -131,6 +131,18 @@ const MilkReceptionTable = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {/* Color Legend */}
+          <div className="flex gap-4 mb-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-green-50 border-l-4 border-green-500 rounded"></div>
+              <span>Milk Received</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-red-50 border-l-4 border-red-500 rounded"></div>
+              <span>Milk Offloaded</span>
+            </div>
+          </div>
+
           <div className="overflow-x-auto border rounded-lg">
             <Table>
               <TableHeader>
@@ -154,44 +166,58 @@ const MilkReceptionTable = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedRecords.map(record => (
-                    <TableRow key={record.id}>
-                      <TableCell className="whitespace-nowrap px-6 min-w-[150px] font-medium">
-                        {record.batch_id || 'N/A'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap px-6 min-w-[150px]">
-                        {record.supplier_name || 'N/A'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                        {record.tank_number || 'N/A'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap px-6 min-w-[120px] text-green-600 font-medium">
-                        {record.milk_volume ? `${record.milk_volume}L` : 'N/A'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                        {record.temperature ? `${record.temperature}°C` : 'N/A'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap px-6 min-w-[110px]">
-                        {record.fat_percentage ? `${record.fat_percentage}%` : 'N/A'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                        {record.protein_percentage ? `${record.protein_percentage}%` : 'N/A'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          record.quality_score === 'Grade A' ? 'bg-green-100 text-green-800' :
-                          record.quality_score === 'Grade B' ? 'bg-yellow-100 text-yellow-800' :
-                          record.quality_score === 'Grade C' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {record.quality_score || 'N/A'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap px-6 min-w-[130px]">
-                        {record.created_at ? format(new Date(record.created_at), 'dd/MM/yyyy HH:mm') : 'N/A'}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  paginatedRecords.map(record => {
+                    // Determine if this is an offload record (negative volume or has volume_offloaded field)
+                    const isOffload = record.volume_offloaded || (record.milk_volume && record.milk_volume < 0);
+                    const rowColorClass = isOffload ? 'bg-red-50 border-l-4 border-red-500' : 'bg-green-50 border-l-4 border-green-500';
+                    
+                    return (
+                      <TableRow key={record.id} className={rowColorClass}>
+                        <TableCell className="whitespace-nowrap px-6 min-w-[150px] font-medium">
+                          {record.batch_id || 'N/A'}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap px-6 min-w-[150px]">
+                          {record.supplier_name || 'N/A'}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
+                          {record.tank_number || 'N/A'}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap px-6 min-w-[120px] font-medium">
+                          {isOffload ? (
+                            <span className="text-red-600">
+                              -{Math.abs(record.volume_offloaded || record.milk_volume)}L
+                            </span>
+                          ) : (
+                            <span className="text-green-600">
+                              {record.milk_volume ? `${record.milk_volume}L` : 'N/A'}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
+                          {record.temperature ? `${record.temperature}°C` : 'N/A'}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap px-6 min-w-[110px]">
+                          {record.fat_percentage ? `${record.fat_percentage}%` : 'N/A'}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
+                          {record.protein_percentage ? `${record.protein_percentage}%` : 'N/A'}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            record.quality_score === 'Grade A' ? 'bg-green-100 text-green-800' :
+                            record.quality_score === 'Grade B' ? 'bg-yellow-100 text-yellow-800' :
+                            record.quality_score === 'Grade C' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {record.quality_score || 'N/A'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap px-6 min-w-[130px]">
+                          {record.created_at ? format(new Date(record.created_at), 'dd/MM/yyyy HH:mm') : 'N/A'}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
