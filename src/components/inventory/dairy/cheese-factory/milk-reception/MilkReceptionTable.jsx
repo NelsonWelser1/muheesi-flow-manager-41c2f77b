@@ -10,10 +10,14 @@ import { usePagination } from './hooks/usePagination';
 import CollapsibleColumnHeader from './components/CollapsibleColumnHeader';
 import { PaginationControls } from './components/PaginationControls';
 import ExportOptions from './components/ExportOptions';
+import { useMilkReception } from '@/hooks/useMilkReception';
 
-const MilkReceptionTable = ({ records = [], isLoading = false, onRefresh }) => {
+const MilkReceptionTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
+
+  // Fetch data using the hook
+  const { data: records = [], isLoading, error, refetch } = useMilkReception();
 
   // Calculate tank balances and temperatures
   const calculateTankMetrics = (tankName) => {
@@ -74,6 +78,27 @@ const MilkReceptionTable = ({ records = [], isLoading = false, onRefresh }) => {
       direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
     }));
   };
+
+  const handleRefresh = async () => {
+    await refetch();
+  };
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center text-red-600">
+              Error loading data: {error.message}
+              <Button onClick={handleRefresh} className="ml-4" variant="outline">
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -162,8 +187,8 @@ const MilkReceptionTable = ({ records = [], isLoading = false, onRefresh }) => {
                   className="pl-8 min-w-[250px]"
                 />
               </div>
-              <Button onClick={onRefresh} variant="outline" size="sm">
-                Refresh
+              <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isLoading}>
+                {isLoading ? 'Loading...' : 'Refresh'}
               </Button>
               <ExportOptions data={paginatedItems} />
             </div>
