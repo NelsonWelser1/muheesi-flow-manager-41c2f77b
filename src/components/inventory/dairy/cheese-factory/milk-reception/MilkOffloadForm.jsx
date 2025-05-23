@@ -6,6 +6,7 @@ import { RecentOffloadRecords } from './components/RecentOffloadRecords';
 import { MilkOffloadFormContent } from './components/MilkOffloadFormContent';
 import { useMilkOffloadForm } from './hooks/useMilkOffloadForm';
 import { useMilkReception } from '@/hooks/useMilkReception';
+import { MilkBalanceTracker } from './MilkBalanceTracker';
 
 const MilkOffloadForm = () => {
   const {
@@ -24,6 +25,9 @@ const MilkOffloadForm = () => {
 
   return (
     <div className="space-y-6">
+      {/* Tank Volumes Display */}
+      <MilkBalanceTracker />
+      
       <Card>
         <CardHeader>
           <CardTitle>New Tank Offload Entry</CardTitle>
