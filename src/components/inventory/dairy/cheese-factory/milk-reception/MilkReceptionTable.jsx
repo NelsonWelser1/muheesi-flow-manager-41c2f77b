@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -60,10 +61,11 @@ const MilkReceptionTable = ({ records = [], isLoading = false, onRefresh }) => {
   const {
     currentPage,
     totalPages,
-    paginatedData,
-    goToPage,
-    goToNextPage,
-    goToPreviousPage
+    paginatedItems,
+    startIndex,
+    pageSize,
+    totalItems,
+    handlePageChange
   } = usePagination(sortedRecords, 10);
 
   const handleSort = (key) => {
@@ -163,7 +165,7 @@ const MilkReceptionTable = ({ records = [], isLoading = false, onRefresh }) => {
               <Button onClick={onRefresh} variant="outline" size="sm">
                 Refresh
               </Button>
-              <ExportOptions data={paginatedData} />
+              <ExportOptions data={paginatedItems} />
             </div>
           </div>
         </CardHeader>
@@ -221,14 +223,14 @@ const MilkReceptionTable = ({ records = [], isLoading = false, onRefresh }) => {
                       Loading records...
                     </TableCell>
                   </TableRow>
-                ) : paginatedData.length === 0 ? (
+                ) : paginatedItems.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center py-8">
                       No records found
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedData.map((record) => (
+                  paginatedItems.map((record) => (
                     <TableRow key={record.id}>
                       <TableCell>
                         {new Date(record.created_at).toLocaleString()}
@@ -268,9 +270,10 @@ const MilkReceptionTable = ({ records = [], isLoading = false, onRefresh }) => {
           <PaginationControls
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={goToPage}
-            onPreviousPage={goToPreviousPage}
-            onNextPage={goToNextPage}
+            onPageChange={handlePageChange}
+            startIndex={startIndex}
+            pageSize={pageSize}
+            totalItems={totalItems}
           />
         </CardContent>
       </Card>
