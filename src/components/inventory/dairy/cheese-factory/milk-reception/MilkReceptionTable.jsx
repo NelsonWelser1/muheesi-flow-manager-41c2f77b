@@ -134,11 +134,11 @@ const MilkReceptionTable = () => {
           {/* Color Legend */}
           <div className="flex gap-4 mb-4 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-100 border-l-4 border-green-300 rounded"></div>
+              <div className="w-4 h-4 bg-green-50 border-l-4 border-green-500 rounded"></div>
               <span>Milk Received</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-100 border-l-4 border-red-300 rounded"></div>
+              <div className="w-4 h-4 bg-red-50 border-l-4 border-red-500 rounded"></div>
               <span>Milk Offloaded</span>
             </div>
           </div>
@@ -169,7 +169,7 @@ const MilkReceptionTable = () => {
                   paginatedRecords.map(record => {
                     // Determine if this is an offload record (negative volume or has volume_offloaded field)
                     const isOffload = record.volume_offloaded || (record.milk_volume && record.milk_volume < 0);
-                    const rowColorClass = isOffload ? 'bg-red-100 border-l-4 border-red-300' : 'bg-green-100 border-l-4 border-green-300';
+                    const rowColorClass = isOffload ? 'bg-red-50 border-l-4 border-red-500' : 'bg-green-50 border-l-4 border-green-500';
                     
                     return (
                       <TableRow key={record.id} className={rowColorClass}>
