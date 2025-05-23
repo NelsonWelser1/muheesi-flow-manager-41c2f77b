@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { useMilkReception } from '@/hooks/useMilkReception';
 import { usePagination } from './hooks/usePagination';
 import { PaginationControls } from './components/PaginationControls';
 import CollapsibleColumnHeader from './components/CollapsibleColumnHeader';
+import ExportOptions from './components/ExportOptions';
 import { format } from 'date-fns';
 
 const MilkReceptionTable = () => {
@@ -151,16 +153,22 @@ const MilkReceptionTable = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Color Legend */}
-          <div className="flex gap-4 mb-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-50 border-l-4 border-green-500 rounded"></div>
-              <span>Milk Received</span>
+          {/* Export Options */}
+          <div className="flex justify-between items-center">
+            {/* Color Legend */}
+            <div className="flex gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-green-50 border-l-4 border-green-500 rounded"></div>
+                <span>Milk Received</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-red-50 border-l-4 border-red-500 rounded"></div>
+                <span>Milk Offloaded</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-50 border-l-4 border-red-500 rounded"></div>
-              <span>Milk Offloaded</span>
-            </div>
+            
+            {/* Export Options */}
+            <ExportOptions records={records} />
           </div>
 
           <div className="overflow-x-auto border rounded-lg">
