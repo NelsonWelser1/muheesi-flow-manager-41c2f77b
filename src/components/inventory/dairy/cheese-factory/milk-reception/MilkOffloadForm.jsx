@@ -6,7 +6,7 @@ import { RecentOffloadRecords } from './components/RecentOffloadRecords';
 import { MilkOffloadFormContent } from './components/MilkOffloadFormContent';
 import { useMilkOffloadForm } from './hooks/useMilkOffloadForm';
 import { useMilkReception } from '@/hooks/useMilkReception';
-import { MilkBalanceTracker } from './MilkBalanceTracker';
+import MilkBalanceTracker from './MilkBalanceTracker';
 
 const MilkOffloadForm = () => {
   const {
