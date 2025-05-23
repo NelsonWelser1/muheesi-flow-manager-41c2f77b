@@ -1,339 +1,352 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Database, Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, RefreshCcw, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMilkReception } from '@/hooks/useMilkReception';
+import { Droplet, Thermometer, Volume } from 'lucide-react';
 import { usePagination } from './hooks/usePagination';
-import { PaginationControls } from './components/PaginationControls';
 import CollapsibleColumnHeader from './components/CollapsibleColumnHeader';
+import PaginationControls from './components/PaginationControls';
 import ExportOptions from './components/ExportOptions';
-import { format } from 'date-fns';
+
+// Add import for the calculateTankBalance utility
+const calculateTankBalance = (tankName, milkReceptionData) => {
+  if (!milkReceptionData || !Array.isArray(milkReceptionData)) {
+    return { volume: 0, lastTemperature: 0 };
+  }
+
+  const tankRecords = milkReceptionData.filter(record => 
+    record && record.tank_number && record.tank_number.trim().toLowerCase() === tankName.trim().toLowerCase()
+  );
+
+  if (tankRecords.length === 0) {
+    return { volume: 0, lastTemperature: 0 };
+  }
+
+  const tankData = tankRecords.reduce((acc, record) => {
+    if (record && record.milk_volume !== null && record.milk_volume !== undefined) {
+      const volumeValue = Number(record.milk_volume);
+      if (!isNaN(volumeValue)) {
+        acc.volume += volumeValue;
+      }
+    }
+    
+    if (record && record.temperature !== null && record.temperature !== undefined && 
+        (!acc.lastTimestamp || new Date(record.created_at) > new Date(acc.lastTimestamp))) {
+      const tempValue = Number(record.temperature);
+      if (!isNaN(tempValue)) {
+        acc.lastTemperature = tempValue;
+        acc.lastTimestamp = record.created_at;
+      }
+    }
+    return acc;
+  }, { volume: 0, lastTemperature: 0, lastTimestamp: null });
+
+  return {
+    volume: Math.max(0, tankData.volume),
+    lastTemperature: tankData.lastTemperature
+  };
+};
 
 const MilkReceptionTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const { data: records, isLoading, error } = useMilkReception();
-  const { toast } = useToast();
+  const [filterValue, setFilterValue] = useState('all');
+  const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
+  
+  const { data: milkReceptionData, isLoading, error, refetch } = useMilkReception();
+  
+  const [filteredData, setFilteredData] = useState([]);
+  const { currentPage, itemsPerPage, totalPages, setCurrentPage, paginate } = usePagination(filteredData);
 
-  // Column visibility state
-  const [columnVisibility, setColumnVisibility] = useState({
-    batchId: true,
-    supplier: true,
-    storageTank: true,
-    volume: true,
-    temperature: true,
-    fat: true,
-    protein: true,
-    quality: true,
-    dateTime: true
-  });
+  // Calculate tank balances
+  const tankA = calculateTankBalance('Tank A', milkReceptionData);
+  const tankB = calculateTankBalance('Tank B', milkReceptionData);
+  const directProcessing = calculateTankBalance('Direct-Processing', milkReceptionData);
+  
+  // Calculate total volume with explicit number conversions
+  const tankAVolume = parseFloat(tankA.volume) || 0;
+  const tankBVolume = parseFloat(tankB.volume) || 0; 
+  const directProcessingVolume = parseFloat(directProcessing.volume) || 0;
+  
+  const totalVolume = tankAVolume + tankBVolume + directProcessingVolume;
 
-  const toggleColumn = (columnKey) => {
-    setColumnVisibility(prev => ({
-      ...prev,
-      [columnKey]: !prev[columnKey]
-    }));
+  useEffect(() => {
+    // Filtering logic
+    let initialData = milkReceptionData || [];
+
+    if (searchTerm) {
+      initialData = initialData.filter(item =>
+        Object.values(item).some(value =>
+          value && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    }
+
+    if (filterValue !== 'all') {
+      initialData = initialData.filter(item => item.quality_score === filterValue);
+    }
+
+    // Sorting logic
+    if (sortConfig) {
+      initialData = [...initialData].sort((a, b) => {
+        const direction = sortConfig.direction === 'asc' ? 1 : -1;
+        const key = sortConfig.key;
+
+        // Handle potential undefined values
+        const valueA = a[key] === undefined ? '' : a[key];
+        const valueB = b[key] === undefined ? '' : b[key];
+
+        if (valueA < valueB) {
+          return -1 * direction;
+        }
+        if (valueA > valueB) {
+          return 1 * direction;
+        }
+        return 0;
+      });
+    }
+
+    setFilteredData(initialData);
+    setCurrentPage(1); // Reset to first page after filtering/sorting
+  }, [milkReceptionData, searchTerm, filterValue, sortConfig]);
+
+  const handleSort = (key) => {
+    setSortConfig(prevConfig => {
+      if (prevConfig && prevConfig.key === key && prevConfig.direction === 'asc') {
+        return { key: key, direction: 'desc' };
+      } else {
+        return { key: key, direction: 'asc' };
+      }
+    });
   };
 
-  // Filter records based on search term
-  const filteredRecords = records?.filter(record => 
-    record.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.batch_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.tank_number?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const renderSortIcon = (key) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return null;
+    }
+    return sortConfig.direction === 'asc' ? '▲' : '▼';
+  };
 
-  // Use pagination hook
-  const {
-    paginatedItems: paginatedRecords,
-    currentPage,
-    totalPages,
-    startIndex,
-    pageSize,
-    totalItems,
-    handlePageChange
-  } = usePagination(filteredRecords, 10);
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
+  const dateTimeFormatter = (dateString) => {
     try {
-      // Trigger a refetch by clearing and refetching data
-      window.location.reload();
-      toast({
-        title: "Refreshed Successfully",
-        description: "Milk reception records have been updated",
-        duration: 3000,
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
       });
     } catch (error) {
-      toast({
-        title: "Refresh Failed",
-        description: "Failed to refresh milk reception records",
-        variant: "destructive",
-        duration: 3000,
-      });
-    } finally {
-      setIsRefreshing(false);
+      console.error("Error formatting date:", error);
+      return 'Invalid Date';
     }
   };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Milk Reception Records
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-500">Loading milk reception records...</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Milk Reception Records
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-red-500">
-            <p>Error loading milk reception records: {error.message}</p>
-            <Button onClick={handleRefresh} className="mt-4">
-              Try Again
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Milk Reception Records ({totalItems})
-          </CardTitle>
-          <div className="flex gap-2">
-            <div className="relative">
-              <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input
-                placeholder="Search records..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-64"
-              />
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Refreshing...' : 'Refresh'}
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {/* Export Options */}
-          <div className="flex justify-between items-center">
-            {/* Color Legend */}
-            <div className="flex gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-green-50 border-l-4 border-green-500 rounded"></div>
-                <span>Milk Received</span>
+    <div className="space-y-6">
+      {/* Add Milk Volume Tiles */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+        <Card className="bg-blue-50">
+          <CardHeader className="flex flex-row items-center justify-between py-2">
+            <CardTitle className="text-lg font-medium">Tank A Status</CardTitle>
+            <Droplet className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent className="py-2">
+            <div className="space-y-1">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">Current Volume:</span>
+                <span className="text-lg font-bold text-blue-600">{tankAVolume.toFixed(2)}L</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-red-50 border-l-4 border-red-500 rounded"></div>
-                <span>Milk Offloaded</span>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">Temperature:</span>
+                <div className="flex items-center gap-1">
+                  <Thermometer className="h-4 w-4 text-red-500" />
+                  <span className="text-lg font-bold text-gray-700">{tankA.lastTemperature}°C</span>
+                </div>
               </div>
             </div>
-            
-            {/* Export Options */}
-            <ExportOptions records={records} />
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="overflow-x-auto border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <CollapsibleColumnHeader
-                    className="whitespace-nowrap px-6 min-w-[150px] font-semibold"
-                    isVisible={columnVisibility.batchId}
-                    onToggle={() => toggleColumn('batchId')}
-                  >
-                    Batch ID
-                  </CollapsibleColumnHeader>
-                  <CollapsibleColumnHeader
-                    className="whitespace-nowrap px-6 min-w-[150px] font-semibold"
-                    isVisible={columnVisibility.supplier}
-                    onToggle={() => toggleColumn('supplier')}
-                  >
-                    Supplier
-                  </CollapsibleColumnHeader>
-                  <CollapsibleColumnHeader
-                    className="whitespace-nowrap px-6 min-w-[120px] font-semibold"
-                    isVisible={columnVisibility.storageTank}
-                    onToggle={() => toggleColumn('storageTank')}
-                  >
-                    Storage Tank
-                  </CollapsibleColumnHeader>
-                  <CollapsibleColumnHeader
-                    className="whitespace-nowrap px-6 min-w-[120px] font-semibold"
-                    isVisible={columnVisibility.volume}
-                    onToggle={() => toggleColumn('volume')}
-                  >
-                    Volume (L)
-                  </CollapsibleColumnHeader>
-                  <CollapsibleColumnHeader
-                    className="whitespace-nowrap px-6 min-w-[120px] font-semibold"
-                    isVisible={columnVisibility.temperature}
-                    onToggle={() => toggleColumn('temperature')}
-                  >
-                    Temperature (°C)
-                  </CollapsibleColumnHeader>
-                  <CollapsibleColumnHeader
-                    className="whitespace-nowrap px-6 min-w-[110px] font-semibold"
-                    isVisible={columnVisibility.fat}
-                    onToggle={() => toggleColumn('fat')}
-                  >
-                    Fat %
-                  </CollapsibleColumnHeader>
-                  <CollapsibleColumnHeader
-                    className="whitespace-nowrap px-6 min-w-[120px] font-semibold"
-                    isVisible={columnVisibility.protein}
-                    onToggle={() => toggleColumn('protein')}
-                  >
-                    Protein %
-                  </CollapsibleColumnHeader>
-                  <CollapsibleColumnHeader
-                    className="whitespace-nowrap px-6 min-w-[120px] font-semibold"
-                    isVisible={columnVisibility.quality}
-                    onToggle={() => toggleColumn('quality')}
-                  >
-                    Quality
-                  </CollapsibleColumnHeader>
-                  <CollapsibleColumnHeader
-                    className="whitespace-nowrap px-6 min-w-[130px] font-semibold"
-                    isVisible={columnVisibility.dateTime}
-                    onToggle={() => toggleColumn('dateTime')}
-                  >
-                    Date & Time
-                  </CollapsibleColumnHeader>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedRecords.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-gray-500">
-                      {searchTerm ? 'No records match your search criteria' : 'No milk reception records found'}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedRecords.map(record => {
-                    // Determine if this is an offload record (negative volume or has volume_offloaded field)
-                    const isOffload = record.volume_offloaded || (record.milk_volume && record.milk_volume < 0);
-                    const rowColorClass = isOffload ? 'bg-red-50 border-l-4 border-red-500' : 'bg-green-50 border-l-4 border-green-500';
-                    
-                    return (
-                      <TableRow key={record.id} className={rowColorClass}>
-                        {columnVisibility.batchId && (
-                          <TableCell className="whitespace-nowrap px-6 min-w-[150px] font-medium">
-                            {record.batch_id || 'N/A'}
-                          </TableCell>
-                        )}
-                        {columnVisibility.supplier && (
-                          <TableCell className="whitespace-nowrap px-6 min-w-[150px]">
-                            {record.supplier_name || 'N/A'}
-                          </TableCell>
-                        )}
-                        {columnVisibility.storageTank && (
-                          <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                            {record.tank_number || 'N/A'}
-                          </TableCell>
-                        )}
-                        {columnVisibility.volume && (
-                          <TableCell className="whitespace-nowrap px-6 min-w-[120px] font-medium">
-                            {isOffload ? (
-                              <span className="text-red-600">
-                                -{Math.abs(record.volume_offloaded || record.milk_volume)}L
-                              </span>
-                            ) : (
-                              <span className="text-green-600">
-                                {record.milk_volume ? `${record.milk_volume}L` : 'N/A'}
-                              </span>
-                            )}
-                          </TableCell>
-                        )}
-                        {columnVisibility.temperature && (
-                          <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                            {record.temperature ? `${record.temperature}°C` : 'N/A'}
-                          </TableCell>
-                        )}
-                        {columnVisibility.fat && (
-                          <TableCell className="whitespace-nowrap px-6 min-w-[110px]">
-                            {record.fat_percentage ? `${record.fat_percentage}%` : 'N/A'}
-                          </TableCell>
-                        )}
-                        {columnVisibility.protein && (
-                          <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                            {record.protein_percentage ? `${record.protein_percentage}%` : 'N/A'}
-                          </TableCell>
-                        )}
-                        {columnVisibility.quality && (
-                          <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              record.quality_score === 'Grade A' ? 'bg-green-100 text-green-800' :
-                              record.quality_score === 'Grade B' ? 'bg-yellow-100 text-yellow-800' :
-                              record.quality_score === 'Grade C' ? 'bg-red-100 text-red-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {record.quality_score || 'N/A'}
-                            </span>
-                          </TableCell>
-                        )}
-                        {columnVisibility.dateTime && (
-                          <TableCell className="whitespace-nowrap px-6 min-w-[130px]">
-                            {record.created_at ? format(new Date(record.created_at), 'dd/MM/yyyy HH:mm') : 'N/A'}
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          
-          <PaginationControls
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            startIndex={startIndex}
-            pageSize={pageSize}
-            totalItems={totalItems}
+        <Card className="bg-green-50">
+          <CardHeader className="flex flex-row items-center justify-between py-2">
+            <CardTitle className="text-lg font-medium">Tank B Status</CardTitle>
+            <Droplet className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent className="py-2">
+            <div className="space-y-1">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">Current Volume:</span>
+                <span className="text-lg font-bold text-green-600">{tankBVolume.toFixed(2)}L</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">Temperature:</span>
+                <div className="flex items-center gap-1">
+                  <Thermometer className="h-4 w-4 text-red-500" />
+                  <span className="text-lg font-bold text-gray-700">{tankB.lastTemperature}°C</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-purple-50">
+          <CardHeader className="flex flex-row items-center justify-between py-2">
+            <CardTitle className="text-lg font-medium">Direct Processing</CardTitle>
+            <Droplet className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent className="py-2">
+            <div className="space-y-1">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">Current Volume:</span>
+                <span className="text-lg font-bold text-purple-600">{directProcessingVolume.toFixed(2)}L</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">Temperature:</span>
+                <div className="flex items-center gap-1">
+                  <Thermometer className="h-4 w-4 text-red-500" />
+                  <span className="text-lg font-bold text-gray-700">{directProcessing.lastTemperature}°C</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="py-2">
+            <CardTitle>Total Balance</CardTitle>
+          </CardHeader>
+          <CardContent className="py-2">
+            <div className="text-2xl font-bold">
+              {totalVolume.toFixed(2)}L
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Combined volume across all tanks
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search and Filter Section */}
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+        {/* Search Input */}
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search records..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
           />
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Filter Select */}
+        <Select value={filterValue} onValueChange={setFilterValue}>
+          <SelectTrigger className="w-[180px]">
+            <Filter className="mr-2 h-4 w-4" />
+            <SelectValue placeholder="Filter by Quality" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Qualities</SelectItem>
+            <SelectItem value="Grade A">Grade A</SelectItem>
+            <SelectItem value="Grade B">Grade B</SelectItem>
+            <SelectItem value="Grade C">Grade C</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Refresh Button */}
+        <Button variant="outline" size="sm" onClick={refetch} disabled={isLoading}>
+          <RefreshCcw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
+
+      {/* Table */}
+      <div className="border rounded-md overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <CollapsibleColumnHeader
+                title="Batch ID"
+                sortKey="batch_id"
+                handleSort={handleSort}
+                renderSortIcon={renderSortIcon}
+              />
+              <CollapsibleColumnHeader
+                title="Supplier"
+                sortKey="supplier_name"
+                handleSort={handleSort}
+                renderSortIcon={renderSortIcon}
+              />
+              <CollapsibleColumnHeader
+                title="Volume (L)"
+                sortKey="milk_volume"
+                handleSort={handleSort}
+                renderSortIcon={renderSortIcon}
+              />
+              <CollapsibleColumnHeader
+                title="Temperature (°C)"
+                sortKey="temperature"
+                handleSort={handleSort}
+                renderSortIcon={renderSortIcon}
+              />
+              <CollapsibleColumnHeader
+                title="Quality"
+                sortKey="quality_score"
+                handleSort={handleSort}
+                renderSortIcon={renderSortIcon}
+              />
+              <CollapsibleColumnHeader
+                title="Tank #"
+                sortKey="tank_number"
+                handleSort={handleSort}
+                renderSortIcon={renderSortIcon}
+              />
+              <CollapsibleColumnHeader
+                title="Destination"
+                sortKey="destination"
+                handleSort={handleSort}
+                renderSortIcon={renderSortIcon}
+              />
+              <CollapsibleColumnHeader
+                title="Date & Time"
+                sortKey="created_at"
+                handleSort={handleSort}
+                renderSortIcon={renderSortIcon}
+              />
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {paginate(filteredData).map(row => (
+              <tr key={row.id}>
+                <td className="px-4 py-2 whitespace-nowrap">{row.batch_id}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{row.supplier_name}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{row.milk_volume}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{row.temperature}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{row.quality_score}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{row.tank_number}</td>
+                 <td className="px-4 py-2 whitespace-nowrap">{row.destination}</td>
+                <td className="px-4 py-2 whitespace-nowrap">{dateTimeFormatter(row.created_at)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      <PaginationControls 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        setCurrentPage={setCurrentPage}
+      />
+
+      {/* Export Options */}
+      <ExportOptions data={filteredData} />
+    </div>
   );
 };
 
