@@ -13,7 +13,8 @@ export const useMilkOffloadForm = () => {
   const [cooldownTimeLeft, setCooldownTimeLeft] = useState(0);
   const cooldownTimerRef = useRef(null);
   
-  const [formData, setFormData] = useState({
+  // Initial form state
+  const initialFormState = {
     batch_id: '',
     storage_tank: '',
     supplier_name: 'Offload from Tank',
@@ -26,24 +27,15 @@ export const useMilkOffloadForm = () => {
     acidity: '',
     notes: '',
     destination: ''
-  });
+  };
 
-  const resetForm = () => {
-    setFormData({
-      batch_id: '',
-      storage_tank: '',
-      supplier_name: 'Offload from Tank',
-      milk_volume: '',
-      temperature: '',
-      quality_check: 'Grade A',
-      fat_percentage: '',
-      protein_percentage: '',
-      total_plate_count: '',
-      acidity: '',
-      notes: '',
-      destination: ''
-    });
+  const [formData, setFormData] = useState(initialFormState);
+
+  // Clear form function - resets all fields to initial state
+  const clearForm = () => {
+    setFormData(initialFormState);
     setValidationError(null);
+    console.log('Form cleared - all fields reset to initial state');
   };
 
   const startCooldown = () => {
@@ -289,14 +281,15 @@ export const useMilkOffloadForm = () => {
         ),
       });
 
-      // Clear form immediately and start cooldown
-      resetForm();
+      // Clear form immediately after successful submission
+      clearForm();
       startCooldown();
 
       await refetchMilkReception();
 
     } catch (error) {
       console.error('Form submission error:', error);
+      // Don't clear form on error - keep user data for retry
       toast({
         title: "Submission Failed",
         description: error.message || "An error occurred while submitting the form",
@@ -323,6 +316,7 @@ export const useMilkOffloadForm = () => {
     handleTankSelection,
     handleInputChange,
     handleSubmit,
+    clearForm,
     milkReceptionData
   };
 };

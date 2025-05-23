@@ -1,351 +1,279 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Search, ChevronLeft, ChevronRight, RefreshCcw, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useMilkReception } from '@/hooks/useMilkReception';
-import { Droplet, Thermometer, Volume } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Search, Thermometer, Droplets } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { usePagination } from './hooks/usePagination';
 import CollapsibleColumnHeader from './components/CollapsibleColumnHeader';
-import PaginationControls from './components/PaginationControls';
+import { PaginationControls } from './components/PaginationControls';
 import ExportOptions from './components/ExportOptions';
 
-// Add import for the calculateTankBalance utility
-const calculateTankBalance = (tankName, milkReceptionData) => {
-  if (!milkReceptionData || !Array.isArray(milkReceptionData)) {
-    return { volume: 0, lastTemperature: 0 };
-  }
-
-  const tankRecords = milkReceptionData.filter(record => 
-    record && record.tank_number && record.tank_number.trim().toLowerCase() === tankName.trim().toLowerCase()
-  );
-
-  if (tankRecords.length === 0) {
-    return { volume: 0, lastTemperature: 0 };
-  }
-
-  const tankData = tankRecords.reduce((acc, record) => {
-    if (record && record.milk_volume !== null && record.milk_volume !== undefined) {
-      const volumeValue = Number(record.milk_volume);
-      if (!isNaN(volumeValue)) {
-        acc.volume += volumeValue;
-      }
-    }
-    
-    if (record && record.temperature !== null && record.temperature !== undefined && 
-        (!acc.lastTimestamp || new Date(record.created_at) > new Date(acc.lastTimestamp))) {
-      const tempValue = Number(record.temperature);
-      if (!isNaN(tempValue)) {
-        acc.lastTemperature = tempValue;
-        acc.lastTimestamp = record.created_at;
-      }
-    }
-    return acc;
-  }, { volume: 0, lastTemperature: 0, lastTimestamp: null });
-
-  return {
-    volume: Math.max(0, tankData.volume),
-    lastTemperature: tankData.lastTemperature
-  };
-};
-
-const MilkReceptionTable = () => {
+const MilkReceptionTable = ({ records = [], isLoading = false, onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterValue, setFilterValue] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
-  
-  const { data: milkReceptionData, isLoading, error, refetch } = useMilkReception();
-  
-  const [filteredData, setFilteredData] = useState([]);
-  const { currentPage, itemsPerPage, totalPages, setCurrentPage, paginate } = usePagination(filteredData);
 
-  // Calculate tank balances
-  const tankA = calculateTankBalance('Tank A', milkReceptionData);
-  const tankB = calculateTankBalance('Tank B', milkReceptionData);
-  const directProcessing = calculateTankBalance('Direct-Processing', milkReceptionData);
-  
-  // Calculate total volume with explicit number conversions
-  const tankAVolume = parseFloat(tankA.volume) || 0;
-  const tankBVolume = parseFloat(tankB.volume) || 0; 
-  const directProcessingVolume = parseFloat(directProcessing.volume) || 0;
-  
-  const totalVolume = tankAVolume + tankBVolume + directProcessingVolume;
+  // Calculate tank balances and temperatures
+  const calculateTankMetrics = (tankName) => {
+    if (!records) return { balance: 0, lastTemp: null };
+    
+    const tankRecords = records.filter(record => record.tank_number === tankName);
+    const balance = tankRecords.reduce((total, record) => total + (record.milk_volume || 0), 0);
+    const lastRecord = tankRecords
+      .filter(record => record.temperature !== null)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+    
+    return { 
+      balance: Math.max(0, balance), 
+      lastTemp: lastRecord?.temperature || null 
+    };
+  };
 
-  useEffect(() => {
-    // Filtering logic
-    let initialData = milkReceptionData || [];
+  const tankAMetrics = calculateTankMetrics('Tank A');
+  const tankBMetrics = calculateTankMetrics('Tank B');
+  const directProcessingMetrics = calculateTankMetrics('Direct-Processing');
+  const totalVolume = tankAMetrics.balance + tankBMetrics.balance + directProcessingMetrics.balance;
 
-    if (searchTerm) {
-      initialData = initialData.filter(item =>
-        Object.values(item).some(value =>
-          value && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-    }
+  // Filtering, sorting, and pagination logic
+  const filteredRecords = useMemo(() => {
+    if (!records) return [];
+    return records.filter(record => 
+      record.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.tank_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.destination?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.batch_id?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [records, searchTerm]);
 
-    if (filterValue !== 'all') {
-      initialData = initialData.filter(item => item.quality_score === filterValue);
-    }
+  const sortedRecords = useMemo(() => {
+    return [...filteredRecords].sort((a, b) => {
+      let aValue = a[sortConfig.key];
+      let bValue = b[sortConfig.key];
+      
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredRecords, sortConfig]);
 
-    // Sorting logic
-    if (sortConfig) {
-      initialData = [...initialData].sort((a, b) => {
-        const direction = sortConfig.direction === 'asc' ? 1 : -1;
-        const key = sortConfig.key;
-
-        // Handle potential undefined values
-        const valueA = a[key] === undefined ? '' : a[key];
-        const valueB = b[key] === undefined ? '' : b[key];
-
-        if (valueA < valueB) {
-          return -1 * direction;
-        }
-        if (valueA > valueB) {
-          return 1 * direction;
-        }
-        return 0;
-      });
-    }
-
-    setFilteredData(initialData);
-    setCurrentPage(1); // Reset to first page after filtering/sorting
-  }, [milkReceptionData, searchTerm, filterValue, sortConfig]);
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    goToPage,
+    goToNextPage,
+    goToPreviousPage
+  } = usePagination(sortedRecords, 10);
 
   const handleSort = (key) => {
-    setSortConfig(prevConfig => {
-      if (prevConfig && prevConfig.key === key && prevConfig.direction === 'asc') {
-        return { key: key, direction: 'desc' };
-      } else {
-        return { key: key, direction: 'asc' };
-      }
-    });
-  };
-
-  const renderSortIcon = (key) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return null;
-    }
-    return sortConfig.direction === 'asc' ? '▲' : '▼';
-  };
-
-  const dateTimeFormatter = (dateString) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return 'Invalid Date';
-    }
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
   };
 
   return (
     <div className="space-y-6">
-      {/* Add Milk Volume Tiles */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-        <Card className="bg-blue-50">
-          <CardHeader className="flex flex-row items-center justify-between py-2">
-            <CardTitle className="text-lg font-medium">Tank A Status</CardTitle>
-            <Droplet className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent className="py-2">
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Current Volume:</span>
-                <span className="text-lg font-bold text-blue-600">{tankAVolume.toFixed(2)}L</span>
+      {/* Tank Volume Tiles */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="border-2 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-600">Tank A</p>
+                <p className="text-2xl font-bold">{tankAMetrics.balance.toFixed(1)}L</p>
+                {tankAMetrics.lastTemp && (
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Thermometer className="h-3 w-3 mr-1" />
+                    {tankAMetrics.lastTemp}°C
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Temperature:</span>
-                <div className="flex items-center gap-1">
-                  <Thermometer className="h-4 w-4 text-red-500" />
-                  <span className="text-lg font-bold text-gray-700">{tankA.lastTemperature}°C</span>
-                </div>
-              </div>
+              <Droplets className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-green-50">
-          <CardHeader className="flex flex-row items-center justify-between py-2">
-            <CardTitle className="text-lg font-medium">Tank B Status</CardTitle>
-            <Droplet className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent className="py-2">
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Current Volume:</span>
-                <span className="text-lg font-bold text-green-600">{tankBVolume.toFixed(2)}L</span>
+        <Card className="border-2 border-green-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-green-600">Tank B</p>
+                <p className="text-2xl font-bold">{tankBMetrics.balance.toFixed(1)}L</p>
+                {tankBMetrics.lastTemp && (
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Thermometer className="h-3 w-3 mr-1" />
+                    {tankBMetrics.lastTemp}°C
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Temperature:</span>
-                <div className="flex items-center gap-1">
-                  <Thermometer className="h-4 w-4 text-red-500" />
-                  <span className="text-lg font-bold text-gray-700">{tankB.lastTemperature}°C</span>
-                </div>
-              </div>
+              <Droplets className="h-8 w-8 text-green-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-purple-50">
-          <CardHeader className="flex flex-row items-center justify-between py-2">
-            <CardTitle className="text-lg font-medium">Direct Processing</CardTitle>
-            <Droplet className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent className="py-2">
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Current Volume:</span>
-                <span className="text-lg font-bold text-purple-600">{directProcessingVolume.toFixed(2)}L</span>
+        <Card className="border-2 border-purple-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-purple-600">Direct-Processing</p>
+                <p className="text-2xl font-bold">{directProcessingMetrics.balance.toFixed(1)}L</p>
+                {directProcessingMetrics.lastTemp && (
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Thermometer className="h-3 w-3 mr-1" />
+                    {directProcessingMetrics.lastTemp}°C
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Temperature:</span>
-                <div className="flex items-center gap-1">
-                  <Thermometer className="h-4 w-4 text-red-500" />
-                  <span className="text-lg font-bold text-gray-700">{directProcessing.lastTemperature}°C</span>
-                </div>
-              </div>
+              <Droplets className="h-8 w-8 text-purple-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="py-2">
-            <CardTitle>Total Balance</CardTitle>
-          </CardHeader>
-          <CardContent className="py-2">
-            <div className="text-2xl font-bold">
-              {totalVolume.toFixed(2)}L
+        <Card className="border-2 border-orange-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-orange-600">Total Volume</p>
+                <p className="text-2xl font-bold">{totalVolume.toFixed(1)}L</p>
+                <p className="text-sm text-gray-500">Combined</p>
+              </div>
+              <Droplets className="h-8 w-8 text-orange-500" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Combined volume across all tanks
-            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Search and Filter Section */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-        {/* Search Input */}
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search records..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
+      {/* Search and Export Controls */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <CardTitle>Milk Reception Records</CardTitle>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-initial">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search records..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 min-w-[250px]"
+                />
+              </div>
+              <Button onClick={onRefresh} variant="outline" size="sm">
+                Refresh
+              </Button>
+              <ExportOptions data={paginatedData} />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <CollapsibleColumnHeader 
+                    title="Date & Time" 
+                    sortKey="created_at"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <CollapsibleColumnHeader 
+                    title="Batch ID" 
+                    sortKey="batch_id"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <CollapsibleColumnHeader 
+                    title="Supplier" 
+                    sortKey="supplier_name"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <CollapsibleColumnHeader 
+                    title="Tank" 
+                    sortKey="tank_number"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <CollapsibleColumnHeader 
+                    title="Volume (L)" 
+                    sortKey="milk_volume"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <CollapsibleColumnHeader 
+                    title="Quality" 
+                    sortKey="quality_score"
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                  />
+                  <TableHead>Temp (°C)</TableHead>
+                  <TableHead>Fat %</TableHead>
+                  <TableHead>Protein %</TableHead>
+                  <TableHead>Destination</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-center py-8">
+                      Loading records...
+                    </TableCell>
+                  </TableRow>
+                ) : paginatedData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-center py-8">
+                      No records found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedData.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell>
+                        {new Date(record.created_at).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {record.batch_id}
+                      </TableCell>
+                      <TableCell>{record.supplier_name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {record.tank_number}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className={record.milk_volume < 0 ? 'text-red-600' : 'text-green-600'}>
+                          {record.milk_volume > 0 ? '+' : ''}{record.milk_volume}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={record.quality_score === 'Grade A' ? 'default' : 'secondary'}
+                        >
+                          {record.quality_score}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{record.temperature}</TableCell>
+                      <TableCell>{record.fat_percentage}%</TableCell>
+                      <TableCell>{record.protein_percentage}%</TableCell>
+                      <TableCell>{record.destination}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            onPreviousPage={goToPreviousPage}
+            onNextPage={goToNextPage}
           />
-        </div>
-
-        {/* Filter Select */}
-        <Select value={filterValue} onValueChange={setFilterValue}>
-          <SelectTrigger className="w-[180px]">
-            <Filter className="mr-2 h-4 w-4" />
-            <SelectValue placeholder="Filter by Quality" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Qualities</SelectItem>
-            <SelectItem value="Grade A">Grade A</SelectItem>
-            <SelectItem value="Grade B">Grade B</SelectItem>
-            <SelectItem value="Grade C">Grade C</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Refresh Button */}
-        <Button variant="outline" size="sm" onClick={refetch} disabled={isLoading}>
-          <RefreshCcw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
-
-      {/* Table */}
-      <div className="border rounded-md overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <CollapsibleColumnHeader
-                title="Batch ID"
-                sortKey="batch_id"
-                handleSort={handleSort}
-                renderSortIcon={renderSortIcon}
-              />
-              <CollapsibleColumnHeader
-                title="Supplier"
-                sortKey="supplier_name"
-                handleSort={handleSort}
-                renderSortIcon={renderSortIcon}
-              />
-              <CollapsibleColumnHeader
-                title="Volume (L)"
-                sortKey="milk_volume"
-                handleSort={handleSort}
-                renderSortIcon={renderSortIcon}
-              />
-              <CollapsibleColumnHeader
-                title="Temperature (°C)"
-                sortKey="temperature"
-                handleSort={handleSort}
-                renderSortIcon={renderSortIcon}
-              />
-              <CollapsibleColumnHeader
-                title="Quality"
-                sortKey="quality_score"
-                handleSort={handleSort}
-                renderSortIcon={renderSortIcon}
-              />
-              <CollapsibleColumnHeader
-                title="Tank #"
-                sortKey="tank_number"
-                handleSort={handleSort}
-                renderSortIcon={renderSortIcon}
-              />
-              <CollapsibleColumnHeader
-                title="Destination"
-                sortKey="destination"
-                handleSort={handleSort}
-                renderSortIcon={renderSortIcon}
-              />
-              <CollapsibleColumnHeader
-                title="Date & Time"
-                sortKey="created_at"
-                handleSort={handleSort}
-                renderSortIcon={renderSortIcon}
-              />
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {paginate(filteredData).map(row => (
-              <tr key={row.id}>
-                <td className="px-4 py-2 whitespace-nowrap">{row.batch_id}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{row.supplier_name}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{row.milk_volume}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{row.temperature}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{row.quality_score}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{row.tank_number}</td>
-                 <td className="px-4 py-2 whitespace-nowrap">{row.destination}</td>
-                <td className="px-4 py-2 whitespace-nowrap">{dateTimeFormatter(row.created_at)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <PaginationControls 
-        currentPage={currentPage}
-        totalPages={totalPages}
-        setCurrentPage={setCurrentPage}
-      />
-
-      {/* Export Options */}
-      <ExportOptions data={filteredData} />
+        </CardContent>
+      </Card>
     </div>
   );
 };
