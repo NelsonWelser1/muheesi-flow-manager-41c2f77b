@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Printer, Search, Calendar } from 'lucide-react';
+import { Download, Printer, Search, Calendar, RefreshCw } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import jsPDF from 'jspdf';
@@ -13,11 +12,13 @@ import * as XLSX from 'xlsx';
 import { useToast } from "@/components/ui/use-toast";
 
 export const RecentOffloadRecords = ({
-  records
+  records,
+  onRefresh
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showReport, setShowReport] = useState(false);
   const [reportData, setReportData] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
   if (!records || records.length === 0) {
@@ -32,6 +33,29 @@ export const RecentOffloadRecords = ({
       )
     )
     .filter(record => !record.batch_id?.startsWith('LEGACY-')); // Filter out legacy batch IDs
+
+  const handleRefresh = async () => {
+    if (!onRefresh) return;
+    
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+      toast({
+        title: "Records Refreshed",
+        description: "Offload records have been updated successfully",
+        duration: 3000,
+      });
+    } catch (error) {
+      toast({
+        title: "Refresh Failed",
+        description: "Failed to refresh records. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handlePrint = () => {
     window.print();
@@ -190,6 +214,16 @@ export const RecentOffloadRecords = ({
           />
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
