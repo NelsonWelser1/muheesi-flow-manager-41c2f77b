@@ -21,7 +21,7 @@ const MilkReceptionTable = () => {
   const filteredRecords = records?.filter(record => 
     record.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     record.batch_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.storage_tank?.toLowerCase().includes(searchTerm.toLowerCase())
+    record.tank_number?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   // Use pagination hook
@@ -163,10 +163,10 @@ const MilkReceptionTable = () => {
                         {record.supplier_name || 'N/A'}
                       </TableCell>
                       <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                        {record.storage_tank || 'N/A'}
+                        {record.tank_number || 'N/A'}
                       </TableCell>
                       <TableCell className="whitespace-nowrap px-6 min-w-[120px] text-green-600 font-medium">
-                        {record.volume_received ? `${record.volume_received}L` : 'N/A'}
+                        {record.milk_volume ? `${record.milk_volume}L` : 'N/A'}
                       </TableCell>
                       <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
                         {record.temperature ? `${record.temperature}°C` : 'N/A'}
@@ -179,12 +179,12 @@ const MilkReceptionTable = () => {
                       </TableCell>
                       <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          record.quality_grade === 'A' ? 'bg-green-100 text-green-800' :
-                          record.quality_grade === 'B' ? 'bg-yellow-100 text-yellow-800' :
-                          record.quality_grade === 'C' ? 'bg-red-100 text-red-800' :
+                          record.quality_score === 'Grade A' ? 'bg-green-100 text-green-800' :
+                          record.quality_score === 'Grade B' ? 'bg-yellow-100 text-yellow-800' :
+                          record.quality_score === 'Grade C' ? 'bg-red-100 text-red-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {record.quality_grade || 'N/A'}
+                          {record.quality_score || 'N/A'}
                         </span>
                       </TableCell>
                       <TableCell className="whitespace-nowrap px-6 min-w-[130px]">
