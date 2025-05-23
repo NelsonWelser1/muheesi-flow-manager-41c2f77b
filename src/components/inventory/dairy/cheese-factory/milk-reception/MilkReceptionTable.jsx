@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useMilkReception } from '@/hooks/useMilkReception';
 import { usePagination } from './hooks/usePagination';
 import { PaginationControls } from './components/PaginationControls';
+import CollapsibleColumnHeader from './components/CollapsibleColumnHeader';
 import { format } from 'date-fns';
 
 const MilkReceptionTable = () => {
@@ -16,6 +16,26 @@ const MilkReceptionTable = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { data: records, isLoading, error } = useMilkReception();
   const { toast } = useToast();
+
+  // Column visibility state
+  const [columnVisibility, setColumnVisibility] = useState({
+    batchId: true,
+    supplier: true,
+    storageTank: true,
+    volume: true,
+    temperature: true,
+    fat: true,
+    protein: true,
+    quality: true,
+    dateTime: true
+  });
+
+  const toggleColumn = (columnKey) => {
+    setColumnVisibility(prev => ({
+      ...prev,
+      [columnKey]: !prev[columnKey]
+    }));
+  };
 
   // Filter records based on search term
   const filteredRecords = records?.filter(record => 
@@ -147,15 +167,69 @@ const MilkReceptionTable = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  <TableHead className="whitespace-nowrap px-6 min-w-[150px] font-semibold">Batch ID</TableHead>
-                  <TableHead className="whitespace-nowrap px-6 min-w-[150px] font-semibold">Supplier</TableHead>
-                  <TableHead className="whitespace-nowrap px-6 min-w-[120px] font-semibold">Storage Tank</TableHead>
-                  <TableHead className="whitespace-nowrap px-6 min-w-[120px] font-semibold">Volume (L)</TableHead>
-                  <TableHead className="whitespace-nowrap px-6 min-w-[120px] font-semibold">Temperature (°C)</TableHead>
-                  <TableHead className="whitespace-nowrap px-6 min-w-[110px] font-semibold">Fat %</TableHead>
-                  <TableHead className="whitespace-nowrap px-6 min-w-[120px] font-semibold">Protein %</TableHead>
-                  <TableHead className="whitespace-nowrap px-6 min-w-[120px] font-semibold">Quality</TableHead>
-                  <TableHead className="whitespace-nowrap px-6 min-w-[130px] font-semibold">Date & Time</TableHead>
+                  <CollapsibleColumnHeader
+                    className="whitespace-nowrap px-6 min-w-[150px] font-semibold"
+                    isVisible={columnVisibility.batchId}
+                    onToggle={() => toggleColumn('batchId')}
+                  >
+                    Batch ID
+                  </CollapsibleColumnHeader>
+                  <CollapsibleColumnHeader
+                    className="whitespace-nowrap px-6 min-w-[150px] font-semibold"
+                    isVisible={columnVisibility.supplier}
+                    onToggle={() => toggleColumn('supplier')}
+                  >
+                    Supplier
+                  </CollapsibleColumnHeader>
+                  <CollapsibleColumnHeader
+                    className="whitespace-nowrap px-6 min-w-[120px] font-semibold"
+                    isVisible={columnVisibility.storageTank}
+                    onToggle={() => toggleColumn('storageTank')}
+                  >
+                    Storage Tank
+                  </CollapsibleColumnHeader>
+                  <CollapsibleColumnHeader
+                    className="whitespace-nowrap px-6 min-w-[120px] font-semibold"
+                    isVisible={columnVisibility.volume}
+                    onToggle={() => toggleColumn('volume')}
+                  >
+                    Volume (L)
+                  </CollapsibleColumnHeader>
+                  <CollapsibleColumnHeader
+                    className="whitespace-nowrap px-6 min-w-[120px] font-semibold"
+                    isVisible={columnVisibility.temperature}
+                    onToggle={() => toggleColumn('temperature')}
+                  >
+                    Temperature (°C)
+                  </CollapsibleColumnHeader>
+                  <CollapsibleColumnHeader
+                    className="whitespace-nowrap px-6 min-w-[110px] font-semibold"
+                    isVisible={columnVisibility.fat}
+                    onToggle={() => toggleColumn('fat')}
+                  >
+                    Fat %
+                  </CollapsibleColumnHeader>
+                  <CollapsibleColumnHeader
+                    className="whitespace-nowrap px-6 min-w-[120px] font-semibold"
+                    isVisible={columnVisibility.protein}
+                    onToggle={() => toggleColumn('protein')}
+                  >
+                    Protein %
+                  </CollapsibleColumnHeader>
+                  <CollapsibleColumnHeader
+                    className="whitespace-nowrap px-6 min-w-[120px] font-semibold"
+                    isVisible={columnVisibility.quality}
+                    onToggle={() => toggleColumn('quality')}
+                  >
+                    Quality
+                  </CollapsibleColumnHeader>
+                  <CollapsibleColumnHeader
+                    className="whitespace-nowrap px-6 min-w-[130px] font-semibold"
+                    isVisible={columnVisibility.dateTime}
+                    onToggle={() => toggleColumn('dateTime')}
+                  >
+                    Date & Time
+                  </CollapsibleColumnHeader>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -173,48 +247,66 @@ const MilkReceptionTable = () => {
                     
                     return (
                       <TableRow key={record.id} className={rowColorClass}>
-                        <TableCell className="whitespace-nowrap px-6 min-w-[150px] font-medium">
-                          {record.batch_id || 'N/A'}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap px-6 min-w-[150px]">
-                          {record.supplier_name || 'N/A'}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                          {record.tank_number || 'N/A'}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap px-6 min-w-[120px] font-medium">
-                          {isOffload ? (
-                            <span className="text-red-600">
-                              -{Math.abs(record.volume_offloaded || record.milk_volume)}L
+                        {columnVisibility.batchId && (
+                          <TableCell className="whitespace-nowrap px-6 min-w-[150px] font-medium">
+                            {record.batch_id || 'N/A'}
+                          </TableCell>
+                        )}
+                        {columnVisibility.supplier && (
+                          <TableCell className="whitespace-nowrap px-6 min-w-[150px]">
+                            {record.supplier_name || 'N/A'}
+                          </TableCell>
+                        )}
+                        {columnVisibility.storageTank && (
+                          <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
+                            {record.tank_number || 'N/A'}
+                          </TableCell>
+                        )}
+                        {columnVisibility.volume && (
+                          <TableCell className="whitespace-nowrap px-6 min-w-[120px] font-medium">
+                            {isOffload ? (
+                              <span className="text-red-600">
+                                -{Math.abs(record.volume_offloaded || record.milk_volume)}L
+                              </span>
+                            ) : (
+                              <span className="text-green-600">
+                                {record.milk_volume ? `${record.milk_volume}L` : 'N/A'}
+                              </span>
+                            )}
+                          </TableCell>
+                        )}
+                        {columnVisibility.temperature && (
+                          <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
+                            {record.temperature ? `${record.temperature}°C` : 'N/A'}
+                          </TableCell>
+                        )}
+                        {columnVisibility.fat && (
+                          <TableCell className="whitespace-nowrap px-6 min-w-[110px]">
+                            {record.fat_percentage ? `${record.fat_percentage}%` : 'N/A'}
+                          </TableCell>
+                        )}
+                        {columnVisibility.protein && (
+                          <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
+                            {record.protein_percentage ? `${record.protein_percentage}%` : 'N/A'}
+                          </TableCell>
+                        )}
+                        {columnVisibility.quality && (
+                          <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              record.quality_score === 'Grade A' ? 'bg-green-100 text-green-800' :
+                              record.quality_score === 'Grade B' ? 'bg-yellow-100 text-yellow-800' :
+                              record.quality_score === 'Grade C' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {record.quality_score || 'N/A'}
                             </span>
-                          ) : (
-                            <span className="text-green-600">
-                              {record.milk_volume ? `${record.milk_volume}L` : 'N/A'}
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                          {record.temperature ? `${record.temperature}°C` : 'N/A'}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap px-6 min-w-[110px]">
-                          {record.fat_percentage ? `${record.fat_percentage}%` : 'N/A'}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                          {record.protein_percentage ? `${record.protein_percentage}%` : 'N/A'}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            record.quality_score === 'Grade A' ? 'bg-green-100 text-green-800' :
-                            record.quality_score === 'Grade B' ? 'bg-yellow-100 text-yellow-800' :
-                            record.quality_score === 'Grade C' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {record.quality_score || 'N/A'}
-                          </span>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap px-6 min-w-[130px]">
-                          {record.created_at ? format(new Date(record.created_at), 'dd/MM/yyyy HH:mm') : 'N/A'}
-                        </TableCell>
+                          </TableCell>
+                        )}
+                        {columnVisibility.dateTime && (
+                          <TableCell className="whitespace-nowrap px-6 min-w-[130px]">
+                            {record.created_at ? format(new Date(record.created_at), 'dd/MM/yyyy HH:mm') : 'N/A'}
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })
