@@ -5,6 +5,7 @@ import { ValidationError } from './components/ValidationError';
 import { RecentOffloadRecords } from './components/RecentOffloadRecords';
 import { MilkOffloadFormContent } from './components/MilkOffloadFormContent';
 import { useMilkOffloadForm } from './hooks/useMilkOffloadForm';
+import { useMilkReception } from '@/hooks/useMilkReception';
 
 const MilkOffloadForm = () => {
   const {
@@ -16,6 +17,8 @@ const MilkOffloadForm = () => {
     handleSubmit,
     milkReceptionData
   } = useMilkOffloadForm();
+
+  const { refetch } = useMilkReception();
 
   return (
     <div className="space-y-6">
@@ -47,7 +50,10 @@ const MilkOffloadForm = () => {
           <CardTitle>Recent Offload Records</CardTitle>
         </CardHeader>
         <CardContent>
-          <RecentOffloadRecords records={milkReceptionData} />
+          <RecentOffloadRecords 
+            records={milkReceptionData} 
+            onRefresh={refetch}
+          />
         </CardContent>
       </Card>
     </div>
