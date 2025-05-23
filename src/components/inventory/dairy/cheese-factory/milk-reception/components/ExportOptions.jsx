@@ -16,7 +16,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { exportToPDF, exportToExcel, exportToCSV } from '@/components/inventory/dairy/utils/reportExportUtils';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { useToast } from "@/components/ui/use-toast";
 
 const ExportOptions = ({ records }) => {
@@ -74,7 +76,40 @@ const ExportOptions = ({ records }) => {
     return filteredData;
   };
 
-  const handleExport = (format) => {
+  // Format records for export
+  const formatRecordsForExport = (records) => {
+    return records.map(record => ({
+      'Batch ID': record.batch_id || 'N/A',
+      'Supplier': record.supplier_name || 'N/A',
+      'Tank': record.tank_number || record.storage_tank || 'N/A',
+      'Volume (L)': record.volume_offloaded ? 
+        `-${Math.abs(record.volume_offloaded)}` : 
+        record.milk_volume ? `-${Math.abs(record.milk_volume)}` : 'N/A',
+      'Temperature (°C)': record.temperature || 'N/A',
+      'Fat (%)': record.fat_percentage || 'N/A',
+      'Protein (%)': record.protein_percentage || 'N/A',
+      'Quality': record.quality_score || record.quality_check || 'N/A',
+      'Date & Time': record.created_at ? 
+        format(new Date(record.created_at), 'dd/MM/yyyy HH:mm') : 'N/A',
+      'Destination': record.destination || 'N/A',
+      'Type': 'Offload'
+    }));
+  };
+
+  // Generate filename with date range information
+  const generateFilename = () => {
+    let timeRangeText = '';
+    if (timeRange === 'custom' && startDate && endDate) {
+      timeRangeText = `_${format(startDate, 'yyyy-MM-dd')}_to_${format(endDate, 'yyyy-MM-dd')}`;
+    } else if (timeRange !== 'all') {
+      timeRangeText = `_last_${timeRange}`;
+    }
+    
+    return `milk_offload_records${timeRangeText}_${format(new Date(), 'yyyy-MM-dd')}`;
+  };
+
+  // Export to PDF
+  const exportToPDF = () => {
     try {
       const filteredRecords = getFilteredRecords();
       
@@ -87,57 +122,149 @@ const ExportOptions = ({ records }) => {
         return;
       }
       
-      // Format records for export
-      const formattedRecords = filteredRecords.map(record => ({
-        'Batch ID': record.batch_id || 'N/A',
-        'Supplier': record.supplier_name || 'N/A',
-        'Tank': record.tank_number || 'N/A',
-        'Volume (L)': record.volume_offloaded ? 
-          `-${Math.abs(record.volume_offloaded)}` : 
-          record.milk_volume || 'N/A',
-        'Temperature (°C)': record.temperature || 'N/A',
-        'Fat (%)': record.fat_percentage || 'N/A',
-        'Protein (%)': record.protein_percentage || 'N/A',
-        'Quality': record.quality_score || 'N/A',
-        'Date & Time': record.created_at ? 
-          format(new Date(record.created_at), 'dd/MM/yyyy HH:mm') : 'N/A',
-        'Type': record.volume_offloaded ? 'Offload' : 'Reception'
-      }));
+      const formattedRecords = formatRecordsForExport(filteredRecords);
+      const filename = generateFilename();
       
-      // Generate filename with date range information
-      let timeRangeText = '';
-      if (timeRange === 'custom' && startDate && endDate) {
-        timeRangeText = `_${format(startDate, 'yyyy-MM-dd')}_to_${format(endDate, 'yyyy-MM-dd')}`;
-      } else if (timeRange !== 'all') {
-        timeRangeText = `_last_${timeRange}`;
+      // Create PDF document
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(16);
+      doc.text("Milk Offload Records", 14, 15);
+      
+      // Add date range information
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${format(new Date(), 'PPP')}`, 14, 22);
+      
+      // Add time range information
+      let rangeText = 'Time Range: All Time';
+      if (timeRange === 'day') rangeText = 'Time Range: Today';
+      else if (timeRange === 'week') rangeText = 'Time Range: Last 7 Days';
+      else if (timeRange === 'month') rangeText = 'Time Range: Last 30 Days';
+      else if (timeRange === 'year') rangeText = 'Time Range: Last Year';
+      else if (timeRange === 'custom' && startDate && endDate) {
+        rangeText = `Time Range: ${format(startDate, 'PP')} - ${format(endDate, 'PP')}`;
       }
+      doc.text(rangeText, 14, 27);
       
-      const filename = `milk_reception_records${timeRangeText}`;
+      // Extract headers and data for table
+      const headers = Object.keys(formattedRecords[0]);
+      const data = formattedRecords.map(record => headers.map(header => record[header]));
       
-      // Export based on selected format
-      switch (format) {
-        case 'pdf':
-          exportToPDF(formattedRecords, filename, 'inventory');
-          break;
-        case 'excel':
-          exportToExcel(formattedRecords, filename, 'inventory');
-          break;
-        case 'csv':
-          exportToCSV(formattedRecords, filename, 'inventory');
-          break;
-        default:
-          throw new Error(`Unsupported format: ${format}`);
-      }
+      // Add table
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: 32,
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [41, 128, 185] }
+      });
+      
+      // Save PDF
+      doc.save(`${filename}.pdf`);
       
       toast({
         title: "Export successful",
-        description: `Records exported to ${format.toUpperCase()} successfully.`,
+        description: `Records exported to PDF successfully.`,
       });
+      
     } catch (error) {
-      console.error('Export error:', error);
+      console.error('PDF export error:', error);
       toast({
         title: "Export failed",
-        description: `Could not export data: ${error.message}`,
+        description: `Could not export to PDF: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Export to Excel
+  const exportToExcel = () => {
+    try {
+      const filteredRecords = getFilteredRecords();
+      
+      if (filteredRecords.length === 0) {
+        toast({
+          title: "No data to export",
+          description: "There are no records available for the selected time range.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const formattedRecords = formatRecordsForExport(filteredRecords);
+      const filename = generateFilename();
+      
+      // Create worksheet
+      const worksheet = XLSX.utils.json_to_sheet(formattedRecords);
+      
+      // Create workbook and add the worksheet
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Milk Offloads");
+      
+      // Generate Excel file
+      XLSX.writeFile(workbook, `${filename}.xlsx`);
+      
+      toast({
+        title: "Export successful",
+        description: `Records exported to Excel successfully.`,
+      });
+      
+    } catch (error) {
+      console.error('Excel export error:', error);
+      toast({
+        title: "Export failed",
+        description: `Could not export to Excel: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Export to CSV
+  const exportToCSV = () => {
+    try {
+      const filteredRecords = getFilteredRecords();
+      
+      if (filteredRecords.length === 0) {
+        toast({
+          title: "No data to export",
+          description: "There are no records available for the selected time range.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const formattedRecords = formatRecordsForExport(filteredRecords);
+      const filename = generateFilename();
+      
+      // Create worksheet
+      const worksheet = XLSX.utils.json_to_sheet(formattedRecords);
+      
+      // Convert to CSV
+      const csv = XLSX.utils.sheet_to_csv(worksheet);
+      
+      // Create blob and trigger download
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${filename}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Export successful",
+        description: `Records exported to CSV successfully.`,
+      });
+      
+    } catch (error) {
+      console.error('CSV export error:', error);
+      toast({
+        title: "Export failed",
+        description: `Could not export to CSV: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -209,7 +336,7 @@ const ExportOptions = ({ records }) => {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => handleExport('pdf')}
+          onClick={exportToPDF}
           className="flex items-center gap-2"
         >
           <FileText className="h-4 w-4" />
@@ -218,7 +345,7 @@ const ExportOptions = ({ records }) => {
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => handleExport('excel')}
+          onClick={exportToExcel}
           className="flex items-center gap-2"
         >
           <FileSpreadsheet className="h-4 w-4" />
@@ -227,7 +354,7 @@ const ExportOptions = ({ records }) => {
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => handleExport('csv')}
+          onClick={exportToCSV}
           className="flex items-center gap-2"
         >
           <Download className="h-4 w-4" />
