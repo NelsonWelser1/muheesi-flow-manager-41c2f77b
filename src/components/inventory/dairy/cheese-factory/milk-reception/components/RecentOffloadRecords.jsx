@@ -6,7 +6,7 @@ import { RefreshCw, Package, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { usePagination } from '../hooks/usePagination';
 import { OffloadRecordsTable } from './OffloadRecordsTable';
-import { ExportOptions } from './ExportOptions';
+import ExportOptions from './ExportOptions';
 import { PaginationControls } from './PaginationControls';
 
 export const RecentOffloadRecords = ({
