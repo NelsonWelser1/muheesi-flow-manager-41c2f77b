@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase';
 import { useMilkReception } from '@/hooks/useMilkReception';
@@ -10,6 +9,10 @@ export const useMilkOffloadForm = () => {
   const { data: milkReceptionData, refetch: refetchMilkReception } = useMilkReception();
   const [validationError, setValidationError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [cooldownActive, setCooldownActive] = useState(false);
+  const [cooldownTimeLeft, setCooldownTimeLeft] = useState(0);
+  const cooldownTimerRef = useRef(null);
+  
   const [formData, setFormData] = useState({
     batch_id: '',
     storage_tank: '',
@@ -24,6 +27,40 @@ export const useMilkOffloadForm = () => {
     notes: '',
     destination: ''
   });
+
+  const resetForm = () => {
+    setFormData({
+      batch_id: '',
+      storage_tank: '',
+      supplier_name: 'Offload from Tank',
+      milk_volume: '',
+      temperature: '',
+      quality_check: 'Grade A',
+      fat_percentage: '',
+      protein_percentage: '',
+      total_plate_count: '',
+      acidity: '',
+      notes: '',
+      destination: ''
+    });
+    setValidationError(null);
+  };
+
+  const startCooldown = () => {
+    setCooldownActive(true);
+    setCooldownTimeLeft(30);
+    
+    cooldownTimerRef.current = setInterval(() => {
+      setCooldownTimeLeft((prev) => {
+        if (prev <= 1) {
+          setCooldownActive(false);
+          clearInterval(cooldownTimerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const calculateTankBalance = (tankName) => {
     if (!milkReceptionData) return 0;
@@ -56,7 +93,6 @@ export const useMilkOffloadForm = () => {
   const handleTankSelection = (tankValue, batchId) => {
     console.log('Selected tank:', tankValue, 'Batch ID:', batchId);
     
-    // Get the most recent entry for the selected tank with positive milk volume
     const mostRecentEntry = milkReceptionData
       ?.filter(record => record.tank_number === tankValue && record.milk_volume > 0)
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
@@ -132,7 +168,6 @@ export const useMilkOffloadForm = () => {
           });
         }
 
-        // Still update the form value to show the invalid input
         setFormData(prev => ({
           ...prev,
           [name]: value
@@ -151,6 +186,18 @@ export const useMilkOffloadForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check if cooldown is active
+    if (cooldownActive) {
+      toast({
+        title: "Submission Blocked",
+        description: `Please wait ${cooldownTimeLeft} seconds before submitting again`,
+        variant: "destructive",
+        className: "bg-red-50 border-2 border-red-500 text-red-800 font-medium",
+        duration: 3000,
+      });
+      return;
+    }
     
     // Validate milk volume before submission
     const requestedVolume = parseFloat(formData.milk_volume);
@@ -242,21 +289,9 @@ export const useMilkOffloadForm = () => {
         ),
       });
 
-      // Reset form
-      setFormData({
-        batch_id: '',
-        storage_tank: '',
-        supplier_name: 'Offload from Tank',
-        milk_volume: '',
-        temperature: '',
-        quality_check: 'Grade A',
-        fat_percentage: '',
-        protein_percentage: '',
-        total_plate_count: '',
-        acidity: '',
-        notes: '',
-        destination: ''
-      });
+      // Clear form immediately and start cooldown
+      resetForm();
+      startCooldown();
 
       await refetchMilkReception();
 
@@ -283,6 +318,8 @@ export const useMilkOffloadForm = () => {
     formData,
     loading,
     validationError,
+    cooldownActive,
+    cooldownTimeLeft,
     handleTankSelection,
     handleInputChange,
     handleSubmit,

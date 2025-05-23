@@ -12,6 +12,8 @@ const MilkOffloadForm = () => {
     formData,
     loading,
     validationError,
+    cooldownActive,
+    cooldownTimeLeft,
     handleTankSelection,
     handleInputChange,
     handleSubmit,
@@ -35,6 +37,8 @@ const MilkOffloadForm = () => {
           <MilkOffloadFormContent 
             formData={formData}
             loading={loading}
+            cooldownActive={cooldownActive}
+            cooldownTimeLeft={cooldownTimeLeft}
             handleTankSelection={handleTankSelection}
             handleInputChange={handleInputChange}
             handleSubmit={handleSubmit}
