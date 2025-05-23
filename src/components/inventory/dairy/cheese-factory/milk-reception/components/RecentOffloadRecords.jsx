@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from 'date-fns';
@@ -10,6 +11,14 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { useToast } from "@/components/ui/use-toast";
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious 
+} from "@/components/ui/pagination";
 
 export const RecentOffloadRecords = ({
   records,
@@ -19,6 +28,8 @@ export const RecentOffloadRecords = ({
   const [showReport, setShowReport] = useState(false);
   const [reportData, setReportData] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10; // Number of records per page
   const { toast } = useToast();
 
   if (!records || records.length === 0) {
@@ -33,6 +44,15 @@ export const RecentOffloadRecords = ({
       )
     )
     .filter(record => !record.batch_id?.startsWith('LEGACY-')); // Filter out legacy batch IDs
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredRecords.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedRecords = filteredRecords.slice(startIndex, startIndex + pageSize);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   const handleRefresh = async () => {
     if (!onRefresh) return;
@@ -306,7 +326,7 @@ export const RecentOffloadRecords = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredRecords.slice(0, reportData ? filteredRecords.length : 5).map(record => (
+            {paginatedRecords.map(record => (
               <TableRow key={record.id}>
                 <TableCell className="whitespace-nowrap px-6 min-w-[150px] font-medium">
                   {record.batch_id || ''}
@@ -326,6 +346,43 @@ export const RecentOffloadRecords = ({
             ))}
           </TableBody>
         </Table>
+      </div>
+      
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)} 
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink 
+                  isActive={currentPage === i + 1}
+                  onClick={() => handlePageChange(i + 1)}
+                  className="cursor-pointer"
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)} 
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
+      
+      <div className="text-sm text-muted-foreground mt-2">
+        Showing {startIndex + 1}-{Math.min(startIndex + pageSize, filteredRecords.length)} of {filteredRecords.length} records
       </div>
     </div>
   );
