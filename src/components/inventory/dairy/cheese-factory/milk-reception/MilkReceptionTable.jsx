@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -189,7 +190,7 @@ const MilkReceptionTable = () => {
               <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isLoading}>
                 {isLoading ? 'Loading...' : 'Refresh'}
               </Button>
-              <ExportOptions data={paginatedItems} />
+              <ExportOptions records={sortedRecords} />
             </div>
           </div>
         </CardHeader>

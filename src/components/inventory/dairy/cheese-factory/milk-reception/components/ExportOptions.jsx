@@ -79,20 +79,18 @@ const ExportOptions = ({ records }) => {
   // Format records for export
   const formatRecordsForExport = (records) => {
     return records.map(record => ({
+      'Reception Date': record.created_at ? 
+        format(new Date(record.created_at), 'dd/MM/yyyy HH:mm') : 'N/A',
       'Batch ID': record.batch_id || 'N/A',
       'Supplier': record.supplier_name || 'N/A',
-      'Tank': record.tank_number || record.storage_tank || 'N/A',
-      'Volume (L)': record.volume_offloaded ? 
-        `-${Math.abs(record.volume_offloaded)}` : 
-        record.milk_volume ? `-${Math.abs(record.milk_volume)}` : 'N/A',
+      'Tank': record.tank_number || 'N/A',
+      'Volume (L)': record.milk_volume || 0,
       'Temperature (°C)': record.temperature || 'N/A',
       'Fat (%)': record.fat_percentage || 'N/A',
       'Protein (%)': record.protein_percentage || 'N/A',
-      'Quality': record.quality_score || record.quality_check || 'N/A',
-      'Date & Time': record.created_at ? 
-        format(new Date(record.created_at), 'dd/MM/yyyy HH:mm') : 'N/A',
+      'Quality': record.quality_score || 'N/A',
       'Destination': record.destination || 'N/A',
-      'Type': 'Offload'
+      'Notes': record.notes || 'N/A'
     }));
   };
 
@@ -105,7 +103,7 @@ const ExportOptions = ({ records }) => {
       timeRangeText = `_last_${timeRange}`;
     }
     
-    return `milk_offload_records${timeRangeText}_${format(new Date(), 'yyyy-MM-dd')}`;
+    return `milk_reception_records${timeRangeText}_${format(new Date(), 'yyyy-MM-dd')}`;
   };
 
   // Export to PDF
@@ -130,7 +128,7 @@ const ExportOptions = ({ records }) => {
       
       // Add title
       doc.setFontSize(16);
-      doc.text("Milk Offload Records", 14, 15);
+      doc.text("Milk Reception Records", 14, 15);
       
       // Add date range information
       doc.setFontSize(10);
@@ -201,7 +199,7 @@ const ExportOptions = ({ records }) => {
       
       // Create workbook and add the worksheet
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Milk Offloads");
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Milk Reception");
       
       // Generate Excel file
       XLSX.writeFile(workbook, `${filename}.xlsx`);
