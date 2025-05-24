@@ -1,5 +1,5 @@
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { useMilkReception } from '@/hooks/useMilkReception';
 
@@ -7,8 +7,11 @@ export const useMilkReceptionForm = () => {
   const { toast } = useToast();
   const { addMilkReception } = useMilkReception();
   const [submitting, setSubmitting] = useState(false);
+  const [cooldownActive, setCooldownActive] = useState(false);
+  const [cooldownTimeRemaining, setCooldownTimeRemaining] = useState(0);
   const lastSubmitTimeRef = useRef(0);
   const cooldownPeriod = 20000; // 20 seconds in milliseconds
+  const cooldownIntervalRef = useRef(null);
   
   const [formData, setFormData] = useState({
     tank_number: '',
@@ -22,6 +25,32 @@ export const useMilkReceptionForm = () => {
     acidity: '',
     notes: ''
   });
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownIntervalRef.current) {
+        clearInterval(cooldownIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Start cooldown timer with countdown
+  const startCooldown = () => {
+    setCooldownActive(true);
+    setCooldownTimeRemaining(Math.ceil(cooldownPeriod / 1000));
+    
+    cooldownIntervalRef.current = setInterval(() => {
+      setCooldownTimeRemaining(prev => {
+        if (prev <= 1) {
+          setCooldownActive(false);
+          clearInterval(cooldownIntervalRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   // Reset form to initial state
   const resetForm = () => {
@@ -148,8 +177,9 @@ export const useMilkReceptionForm = () => {
       console.log('Submission result:', result);
 
       if (result) {
-        // Update last submit time
+        // Update last submit time and start cooldown
         lastSubmitTimeRef.current = Date.now();
+        startCooldown();
         
         // Reset form after successful submission
         resetForm();
@@ -171,6 +201,8 @@ export const useMilkReceptionForm = () => {
   return {
     formData,
     submitting,
+    cooldownActive,
+    cooldownTimeRemaining,
     handleInputChange,
     handleQualityChange,
     handleTankSelection,
