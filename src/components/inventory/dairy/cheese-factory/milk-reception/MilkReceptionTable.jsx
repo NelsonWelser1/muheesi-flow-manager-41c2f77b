@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -200,7 +199,7 @@ const MilkReceptionTable = () => {
               <TableHeader>
                 <TableRow>
                   <CollapsibleColumnHeader 
-                    title="Date & Time" 
+                    title="Reception Date & Time" 
                     sortKey="created_at"
                     sortConfig={sortConfig}
                     onSort={handleSort}
@@ -212,33 +211,33 @@ const MilkReceptionTable = () => {
                     onSort={handleSort}
                   />
                   <CollapsibleColumnHeader 
-                    title="Supplier" 
+                    title="Supplier Name" 
                     sortKey="supplier_name"
                     sortConfig={sortConfig}
                     onSort={handleSort}
                   />
                   <CollapsibleColumnHeader 
-                    title="Tank" 
+                    title="Storage Tank" 
                     sortKey="tank_number"
                     sortConfig={sortConfig}
                     onSort={handleSort}
                   />
                   <CollapsibleColumnHeader 
-                    title="Volume (L)" 
+                    title="Milk Volume (Liters)" 
                     sortKey="milk_volume"
                     sortConfig={sortConfig}
                     onSort={handleSort}
                   />
                   <CollapsibleColumnHeader 
-                    title="Quality" 
+                    title="Quality Grade" 
                     sortKey="quality_score"
                     sortConfig={sortConfig}
                     onSort={handleSort}
                   />
-                  <TableHead>Temp (°C)</TableHead>
-                  <TableHead>Fat %</TableHead>
-                  <TableHead>Protein %</TableHead>
-                  <TableHead>Destination</TableHead>
+                  <TableHead>Temperature (°C)</TableHead>
+                  <TableHead>Fat Content (%)</TableHead>
+                  <TableHead>Protein Content (%)</TableHead>
+                  <TableHead>Final Destination</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
