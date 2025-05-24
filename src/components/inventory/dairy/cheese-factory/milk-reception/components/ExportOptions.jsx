@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar, Download, FileSpreadsheet, FileText, Filter } from "lucide-react";
@@ -124,7 +123,11 @@ const ExportOptions = ({ records }) => {
       const filename = generateFilename();
       
       // Create PDF document
-      const doc = new jsPDF();
+      const doc = new jsPDF({
+        orientation: 'landscape', // Use landscape for better table fit
+        unit: 'mm',
+        format: 'a4'
+      });
       
       // Add title
       doc.setFontSize(16);
@@ -147,16 +150,40 @@ const ExportOptions = ({ records }) => {
       
       // Extract headers and data for table
       const headers = Object.keys(formattedRecords[0]);
-      const data = formattedRecords.map(record => headers.map(header => record[header]));
+      const data = formattedRecords.map(record => headers.map(header => {
+        const value = record[header];
+        return value !== null && value !== undefined ? String(value) : '';
+      }));
       
-      // Add table
+      // Add table using autoTable
       doc.autoTable({
         head: [headers],
         body: data,
         startY: 32,
         theme: 'grid',
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [41, 128, 185] }
+        styles: { 
+          fontSize: 8,
+          cellPadding: 2,
+          overflow: 'linebreak'
+        },
+        headStyles: { 
+          fillColor: [41, 128, 185],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        columnStyles: {
+          0: { cellWidth: 25 }, // Reception Date
+          1: { cellWidth: 20 }, // Batch ID
+          2: { cellWidth: 25 }, // Supplier
+          3: { cellWidth: 15 }, // Tank
+          4: { cellWidth: 15 }, // Volume
+          5: { cellWidth: 15 }, // Temperature
+          6: { cellWidth: 12 }, // Fat
+          7: { cellWidth: 12 }, // Protein
+          8: { cellWidth: 15 }, // Quality
+          9: { cellWidth: 20 }, // Destination
+          10: { cellWidth: 'auto' } // Notes
+        }
       });
       
       // Save PDF
