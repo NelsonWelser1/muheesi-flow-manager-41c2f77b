@@ -195,7 +195,7 @@ const MilkReceptionTable = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -204,41 +204,47 @@ const MilkReceptionTable = () => {
                     sortKey="created_at"
                     sortConfig={sortConfig}
                     onSort={handleSort}
+                    className="min-w-[160px]"
                   />
                   <CollapsibleColumnHeader 
                     title="Batch ID" 
                     sortKey="batch_id"
                     sortConfig={sortConfig}
                     onSort={handleSort}
+                    className="min-w-[120px]"
                   />
                   <CollapsibleColumnHeader 
                     title="Supplier Name" 
                     sortKey="supplier_name"
                     sortConfig={sortConfig}
                     onSort={handleSort}
+                    className="min-w-[140px]"
                   />
                   <CollapsibleColumnHeader 
                     title="Storage Tank" 
                     sortKey="tank_number"
                     sortConfig={sortConfig}
                     onSort={handleSort}
+                    className="min-w-[100px]"
                   />
                   <CollapsibleColumnHeader 
                     title="Milk Volume (Liters)" 
                     sortKey="milk_volume"
                     sortConfig={sortConfig}
                     onSort={handleSort}
+                    className="min-w-[120px]"
                   />
                   <CollapsibleColumnHeader 
                     title="Quality Grade" 
                     sortKey="quality_score"
                     sortConfig={sortConfig}
                     onSort={handleSort}
+                    className="min-w-[100px]"
                   />
-                  <TableHead>Temperature (°C)</TableHead>
-                  <TableHead>Fat Content (%)</TableHead>
-                  <TableHead>Protein Content (%)</TableHead>
-                  <TableHead>Final Destination</TableHead>
+                  <TableHead className="min-w-[100px]">Temperature (°C)</TableHead>
+                  <TableHead className="min-w-[100px]">Fat Content (%)</TableHead>
+                  <TableHead className="min-w-[110px]">Protein Content (%)</TableHead>
+                  <TableHead className="min-w-[120px]">Final Destination</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -257,34 +263,35 @@ const MilkReceptionTable = () => {
                 ) : (
                   paginatedItems.map((record) => (
                     <TableRow key={record.id}>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap font-medium min-w-[160px]">
                         {new Date(record.created_at).toLocaleString()}
                       </TableCell>
-                      <TableCell className="font-mono text-sm">
+                      <TableCell className="font-mono text-sm whitespace-nowrap min-w-[120px]">
                         {record.batch_id}
                       </TableCell>
-                      <TableCell>{record.supplier_name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
+                      <TableCell className="whitespace-nowrap min-w-[140px]">{record.supplier_name}</TableCell>
+                      <TableCell className="min-w-[100px]">
+                        <Badge variant="outline" className="whitespace-nowrap">
                           {record.tank_number}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap min-w-[120px]">
                         <span className={record.milk_volume < 0 ? 'text-red-600' : 'text-green-600'}>
                           {record.milk_volume > 0 ? '+' : ''}{record.milk_volume}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="min-w-[100px]">
                         <Badge 
                           variant={record.quality_score === 'Grade A' ? 'default' : 'secondary'}
+                          className="whitespace-nowrap"
                         >
                           {record.quality_score}
                         </Badge>
                       </TableCell>
-                      <TableCell>{record.temperature}</TableCell>
-                      <TableCell>{record.fat_percentage}%</TableCell>
-                      <TableCell>{record.protein_percentage}%</TableCell>
-                      <TableCell>{record.destination}</TableCell>
+                      <TableCell className="whitespace-nowrap min-w-[100px]">{record.temperature}</TableCell>
+                      <TableCell className="whitespace-nowrap min-w-[100px]">{record.fat_percentage}%</TableCell>
+                      <TableCell className="whitespace-nowrap min-w-[110px]">{record.protein_percentage}%</TableCell>
+                      <TableCell className="whitespace-nowrap min-w-[120px]">{record.destination}</TableCell>
                     </TableRow>
                   ))
                 )}
