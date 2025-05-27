@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,14 +9,26 @@ import { usePagination } from './hooks/usePagination';
 import CollapsibleColumnHeader from './components/CollapsibleColumnHeader';
 import { PaginationControls } from './components/PaginationControls';
 import ExportOptions from './components/ExportOptions';
+import DirectProcessingAlerts from './components/DirectProcessingAlerts';
 import { useMilkReception } from '@/hooks/useMilkReception';
+import { checkDirectProcessingStatus, getDirectProcessingAlerts } from './utils/directProcessingLogic';
 
-const MilkReceptionTable = () => {
+const MilkReceptionTable = ({ onSwitchToOffloadTab }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
 
   // Fetch data using the hook
   const { data: records = [], isLoading, error, refetch } = useMilkReception();
+
+  // Check Direct-Processing status and get alerts
+  const directProcessingStatus = useMemo(() => {
+    if (!records) return { pendingRecords: [], expiredRecords: [], hasPendingRecords: false, hasExpiredRecords: false };
+    return checkDirectProcessingStatus(records);
+  }, [records]);
+
+  const directProcessingAlerts = useMemo(() => {
+    return getDirectProcessingAlerts(directProcessingStatus);
+  }, [directProcessingStatus]);
 
   // Calculate tank balances and temperatures
   const calculateTankMetrics = (tankName) => {
@@ -83,6 +94,12 @@ const MilkReceptionTable = () => {
     await refetch();
   };
 
+  const handleViewOffloadForm = () => {
+    if (onSwitchToOffloadTab) {
+      onSwitchToOffloadTab();
+    }
+  };
+
   if (error) {
     return (
       <div className="space-y-6">
@@ -102,6 +119,12 @@ const MilkReceptionTable = () => {
 
   return (
     <div className="space-y-6">
+      {/* Direct-Processing Alerts */}
+      <DirectProcessingAlerts 
+        alerts={directProcessingAlerts} 
+        onViewOffloadForm={handleViewOffloadForm}
+      />
+
       {/* Tank Volume Tiles */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-2 border-blue-200">
@@ -140,11 +163,13 @@ const MilkReceptionTable = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-purple-200">
+        <Card className={`border-2 ${directProcessingStatus.hasExpiredRecords ? 'border-red-200 bg-red-50' : directProcessingStatus.hasPendingRecords ? 'border-orange-200 bg-orange-50' : 'border-purple-200'}`}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-600">Direct-Processing</p>
+                <p className={`text-sm font-medium ${directProcessingStatus.hasExpiredRecords ? 'text-red-600' : directProcessingStatus.hasPendingRecords ? 'text-orange-600' : 'text-purple-600'}`}>
+                  Direct-Processing
+                </p>
                 <p className="text-2xl font-bold">{directProcessingMetrics.balance.toFixed(1)}L</p>
                 {directProcessingMetrics.lastTemp && (
                   <div className="flex items-center text-sm text-gray-500">
@@ -152,8 +177,18 @@ const MilkReceptionTable = () => {
                     {directProcessingMetrics.lastTemp}°C
                   </div>
                 )}
+                {(directProcessingStatus.hasPendingRecords || directProcessingStatus.hasExpiredRecords) && (
+                  <div className="text-xs mt-1">
+                    {directProcessingStatus.hasExpiredRecords && (
+                      <span className="text-red-600 font-medium">⚠ Overdue</span>
+                    )}
+                    {directProcessingStatus.hasPendingRecords && !directProcessingStatus.hasExpiredRecords && (
+                      <span className="text-orange-600 font-medium">⏰ Pending</span>
+                    )}
+                  </div>
+                )}
               </div>
-              <Droplets className="h-8 w-8 text-purple-500" />
+              <Droplets className={`h-8 w-8 ${directProcessingStatus.hasExpiredRecords ? 'text-red-500' : directProcessingStatus.hasPendingRecords ? 'text-orange-500' : 'text-purple-500'}`} />
             </div>
           </CardContent>
         </Card>

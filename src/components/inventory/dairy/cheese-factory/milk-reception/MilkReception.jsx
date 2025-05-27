@@ -1,11 +1,20 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MilkReceptionForm from './MilkReceptionForm';
 import MilkReceptionTable from './MilkReceptionTable';
 import MilkReceptionSettings from './MilkReceptionSettings';
 import MilkOffloadForm from './MilkOffloadForm';
+
 const MilkReception = () => {
-  return <Tabs defaultValue="view" className="w-full">
+  const [activeTab, setActiveTab] = useState('view');
+
+  const handleSwitchToOffloadTab = () => {
+    setActiveTab('offload');
+  };
+
+  return (
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList>
         <TabsTrigger value="view">View Records</TabsTrigger>
         <TabsTrigger value="add">Add New Record</TabsTrigger>
@@ -14,7 +23,7 @@ const MilkReception = () => {
       </TabsList>
 
       <TabsContent value="view" className="px-0 mx-0 my-[10px] py-[10px]">
-        <MilkReceptionTable />
+        <MilkReceptionTable onSwitchToOffloadTab={handleSwitchToOffloadTab} />
       </TabsContent>
 
       <TabsContent value="add">
@@ -28,6 +37,8 @@ const MilkReception = () => {
       <TabsContent value="settings">
         <MilkReceptionSettings />
       </TabsContent>
-    </Tabs>;
+    </Tabs>
+  );
 };
+
 export default MilkReception;
