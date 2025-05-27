@@ -1,477 +1,363 @@
-
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { useToast } from "@/components/ui/use-toast";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { supabase } from '@/integrations/supabase/supabase';
-import { format } from 'date-fns';
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase';
 import { useMilkReception } from '@/hooks/useMilkReception';
 
-const CHEESE_TYPES = [
-  'Mozzarella',
-  'Cheddar',
-  'Gouda',
-  'Parmesan',
-  'Swiss',
-  'Blue Cheese'
-];
-
-const COAGULANT_TYPES = [
-  'Rennet',
-  'Vegetable Rennet',
-  'Microbial Rennet',
-  'Citric Acid'
-];
-
-const STARTER_CULTURES = [
-  'Thermophilic',
-  'Mesophilic',
-  'Mixed Culture',
-  'Direct Vat Set (DVS)'
-];
-
-const ProductionLineForm = ({ productionLine }) => {
-  const { toast } = useToast();
-  const [selectedCheeseType, setSelectedCheeseType] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [batchId, setBatchId] = useState('');
-  const [availableOffloads, setAvailableOffloads] = useState([]);
-  const [selectedOffload, setSelectedOffload] = useState(null);
-  const { data: milkReceptionData } = useMilkReception();
-
-  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm({
-    defaultValues: {
-      fromager_identifier: '',
-      cheese_type: '',
-      batch_id: '',
-      milk_volume: '',
-      start_time: '',
-      estimated_duration: '',
-      starter_culture: '',
-      starter_quantity: '',
-      coagulant_type: '',
-      coagulant_quantity: '',
-      processing_temperature: '',
-      processing_time: '',
-      expected_yield: '',
-      notes: '',
-      offload_batch_id: ''
-    }
+const ProductionLineForm = () => {
+  const [formData, setFormData] = useState({
+    batch_id: '',
+    fromager_identifier: '',
+    cheese_type: '',
+    offload_batch_id: '',
+    milk_volume: '',
+    start_time: '',
+    estimated_duration: '',
+    starter_culture: '',
+    starter_quantity: '',
+    coagulant_type: '',
+    coagulant_quantity: '',
+    processing_temperature: '',
+    processing_time: '',
+    expected_yield: '',
+    status: 'pending',
+    notes: ''
   });
 
-  const fetchUsedBatchIds = async () => {
-    try {
-      // Fetch used batch IDs from both production lines
-      const [internationalRes, localRes] = await Promise.all([
-        supabase
-          .from('production_line_international')
-          .select('offload_batch_id')
-          .not('offload_batch_id', 'is', null),
-        supabase
-          .from('production_line_local')
-          .select('offload_batch_id')
-          .not('offload_batch_id', 'is', null)
-      ]);
+  const [loading, setLoading] = useState(false);
+  const [availableBatches, setAvailableBatches] = useState([]);
+  const { toast } = useToast();
+  const { data: milkReceptionData, refetch } = useMilkReception();
 
-      if (internationalRes.error) throw internationalRes.error;
-      if (localRes.error) throw localRes.error;
-
-      // Combine used batch IDs from both production lines
-      const usedBatchIds = [
-        ...(internationalRes.data || []).map(item => item.offload_batch_id),
-        ...(localRes.data || []).map(item => item.offload_batch_id)
-      ];
-
-      return usedBatchIds;
-    } catch (error) {
-      console.error('Error fetching used batch IDs:', error);
-      return [];
-    }
-  };
-
+  // Fetch available milk offload batches
   useEffect(() => {
-    const updateAvailableOffloads = async () => {
-      if (milkReceptionData) {
-        const usedBatchIds = await fetchUsedBatchIds();
-        
-        const offloads = milkReceptionData.filter(record => 
-          record.supplier_name.startsWith('Offload from') &&
-          ['Tank A', 'Tank B', 'Direct-Processing'].includes(record.tank_number) &&
-          !usedBatchIds.includes(record.batch_id)
-        );
-        
-        setAvailableOffloads(offloads);
+    const fetchOffloadBatches = () => {
+      if (!milkReceptionData || milkReceptionData.length === 0) {
+        console.log('No milk reception data available');
+        setAvailableBatches([]);
+        return;
       }
+
+      console.log('Processing milk reception data for offload batches:', milkReceptionData);
+
+      // Filter for offload records with proper batch IDs
+      const offloadBatches = milkReceptionData
+        .filter(record => {
+          // Check if this is an offload record
+          const isOffloadRecord = 
+            (record.milk_volume && Number(record.milk_volume) < 0) || // Negative volume from milk_reception
+            (record.volume_offloaded && Number(record.volume_offloaded) > 0) || // Positive volume from milk_tank_offloads
+            (record.supplier_name && record.supplier_name.includes('Offload from'));
+
+          // Must have a valid batch_id and not be a legacy record
+          const hasValidBatchId = record.batch_id && !record.batch_id.startsWith('LEGACY-');
+
+          console.log('Record filter check:', {
+            id: record.id,
+            isOffloadRecord,
+            hasValidBatchId,
+            batch_id: record.batch_id,
+            milk_volume: record.milk_volume,
+            volume_offloaded: record.volume_offloaded
+          });
+
+          return isOffloadRecord && hasValidBatchId;
+        })
+        .map(record => ({
+          batch_id: record.batch_id,
+          tank_number: record.storage_tank || record.tank_number || 'Unknown',
+          volume: Math.abs(record.volume_offloaded || record.milk_volume || 0),
+          created_at: record.created_at,
+          destination: record.destination || 'Unknown'
+        }))
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Most recent first
+
+      console.log('Available offload batches:', offloadBatches);
+      setAvailableBatches(offloadBatches);
     };
 
-    updateAvailableOffloads();
+    fetchOffloadBatches();
   }, [milkReceptionData]);
 
+  // Generate batch ID when cheese type changes
   useEffect(() => {
-    if (productionLine && typeof productionLine === 'object') {
-      Object.entries(productionLine).forEach(([key, value]) => {
-        if (value !== undefined) {
-          setValue(key, value);
-        }
-      });
-    }
-  }, [productionLine, setValue]);
-
-  const handleOffloadSelect = (selectedBatchId) => {
-    const selectedRecord = availableOffloads.find(offload => offload.batch_id === selectedBatchId);
-    if (selectedRecord) {
-      setSelectedOffload(selectedRecord);
-      setValue('milk_volume', Math.abs(selectedRecord.milk_volume).toFixed(2));
-      setValue('offload_batch_id', selectedRecord.batch_id);
-      toast({
-        title: "Milk Volume Updated",
-        description: `Volume set to ${Math.abs(selectedRecord.milk_volume).toFixed(2)}L from batch ${selectedRecord.batch_id}`,
-      });
-    }
-  };
-
-  const generateBatchId = async (cheeseType, seqNumber = null) => {
-    try {
-      console.log('Generating batch ID for cheese type:', cheeseType);
-      
-      const now = new Date();
-      const datePrefix = format(now, 'yyyyMMdd');
-      const timeComponent = format(now, 'HHmmss');
-      
-      const linePrefix = productionLine.name.toLowerCase().includes('international') ? 'INT' : 'LCL';
-      
-      let typePrefix = 'CHE';
-      if (cheeseType === 'Mozzarella') typePrefix = 'MOZ';
-      else if (cheeseType === 'Gouda') typePrefix = 'GOU';
-      else if (cheeseType === 'Parmesan') typePrefix = 'PAR';
-      else if (cheeseType === 'Swiss') typePrefix = 'SUI';
-      else if (cheeseType === 'Blue Cheese') typePrefix = 'BLU';
-      
-      const fullBatchId = `${linePrefix}${datePrefix}-${typePrefix}-${timeComponent}`;
-      console.log('Generated batch ID:', fullBatchId);
-      return fullBatchId;
-      
-    } catch (error) {
-      console.error('Failed to generate batch ID:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate batch ID. Please try again.",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
-  const handleCheeseTypeChange = async (value) => {
-    console.log('Cheese type changed to:', value);
-    setSelectedCheeseType(value);
-    setValue('cheese_type', value);
-    
-    const newBatchId = await generateBatchId(value);
-    if (newBatchId) {
-      setBatchId(newBatchId);
-      setValue('batch_id', newBatchId);
-    }
-  };
-
-  const onSubmit = async (data) => {
-    console.log('Form submitted with data:', data);
-    try {
-      setIsSubmitting(true);
-      
-      const tableName = productionLine.name.toLowerCase().includes('international') 
-        ? 'production_line_international' 
-        : 'production_line_local';
-
-      if (!data.offload_batch_id) {
-        throw new Error('Please select a milk offload batch');
-      }
-      
-      const submissionData = {
-        fromager_identifier: data.fromager_identifier,
-        cheese_type: data.cheese_type,
-        batch_id: batchId || await generateBatchId(data.cheese_type),
-        milk_volume: parseFloat(data.milk_volume),
-        start_time: new Date().toISOString(),
-        estimated_duration: parseFloat(data.estimated_duration),
-        starter_culture: data.starter_culture,
-        starter_quantity: parseFloat(data.starter_quantity),
-        coagulant_type: data.coagulant_type,
-        coagulant_quantity: parseFloat(data.coagulant_quantity),
-        processing_temperature: parseFloat(data.processing_temperature),
-        processing_time: parseFloat(data.processing_time),
-        expected_yield: parseFloat(data.expected_yield),
-        notes: data.notes,
-        offload_batch_id: data.offload_batch_id,
-        name: productionLine.name,
-        manager: productionLine.manager,
-        description: productionLine.description,
-        created_at: new Date().toISOString(),
-        status: 'pending'
+    if (formData.cheese_type) {
+      const generateBatchId = () => {
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+        const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '');
+        const cheeseCode = formData.cheese_type.substring(0, 3).toUpperCase();
+        return `INT${dateStr}-${cheeseCode}-${timeStr}`;
       };
 
-      console.log('Submitting data to table:', tableName, submissionData);
+      const batchId = generateBatchId();
+      console.log(`Generating batch ID for cheese type: ${formData.cheese_type}`);
+      console.log(`Generated batch ID: ${batchId}`);
+      
+      setFormData(prev => ({
+        ...prev,
+        batch_id: batchId
+      }));
+    }
+  }, [formData.cheese_type]);
 
-      const { data: insertedData, error } = await supabase
-        .from(tableName)
-        .insert([submissionData])
-        .select()
-        .single();
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-      if (error) {
-        console.error('Error submitting form:', error);
-        throw error;
-      }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-      console.log('Successfully inserted data:', insertedData);
+    try {
+      const { data, error } = await supabase
+        .from('cheese_production')
+        .insert([{
+          ...formData,
+          milk_volume: parseFloat(formData.milk_volume),
+          starter_quantity: parseFloat(formData.starter_quantity),
+          coagulant_quantity: parseFloat(formData.coagulant_quantity),
+          processing_temperature: parseFloat(formData.processing_temperature),
+          processing_time: parseFloat(formData.processing_time),
+          expected_yield: parseFloat(formData.expected_yield),
+          estimated_duration: parseFloat(formData.estimated_duration)
+        }]);
+
+      if (error) throw error;
 
       toast({
         title: "Success",
-        description: `Production record added successfully with batch ID: ${submissionData.batch_id}`,
+        description: "Production record created successfully",
       });
 
-      const usedBatchIds = await fetchUsedBatchIds();
-      const updatedOffloads = availableOffloads.filter(
-        offload => !usedBatchIds.includes(offload.batch_id)
-      );
-      setAvailableOffloads(updatedOffloads);
+      // Reset form
+      setFormData({
+        batch_id: '',
+        fromager_identifier: '',
+        cheese_type: '',
+        offload_batch_id: '',
+        milk_volume: '',
+        start_time: '',
+        estimated_duration: '',
+        starter_culture: '',
+        starter_quantity: '',
+        coagulant_type: '',
+        coagulant_quantity: '',
+        processing_temperature: '',
+        processing_time: '',
+        expected_yield: '',
+        status: 'pending',
+        notes: ''
+      });
 
-      reset();
-      setSelectedCheeseType('');
-      setBatchId('');
-      setSelectedOffload(null);
-      
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Error creating production record:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update production line",
+        description: "Failed to create production record",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
     <Card>
+      <CardHeader>
+        <CardTitle>New Cheese Production Entry</CardTitle>
+      </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="fromager_identifier">In-Charge/Fromager Name or ID</Label>
-            <Input
-              id="fromager_identifier"
-              {...register('fromager_identifier', { 
-                required: 'Fromager name or ID is required',
-                pattern: {
-                  value: /^[A-Za-z0-9\s-]+$/,
-                  message: 'Please enter a valid name or ID'
-                }
-              })}
-              placeholder="Enter name, ID, or both"
+            <Label htmlFor="fromager_identifier">Fromager Identifier</Label>
+            <Input 
+              type="text" 
+              id="fromager_identifier" 
+              name="fromager_identifier"
+              value={formData.fromager_identifier}
+              onChange={handleInputChange}
             />
-            {errors.fromager_identifier && (
-              <p className="text-sm text-red-500">{errors.fromager_identifier.message}</p>
+          </div>
+          <div>
+            <Label htmlFor="cheese_type">Cheese Type</Label>
+            <Input 
+              type="text" 
+              id="cheese_type" 
+              name="cheese_type"
+              value={formData.cheese_type}
+              onChange={handleInputChange}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="offload_batch_id">Select Milk Offload Batch</Label>
+            <Select 
+              value={formData.offload_batch_id} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, offload_batch_id: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select an offload batch" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableBatches.length === 0 ? (
+                  <SelectItem value="no-batches" disabled>
+                    No offload batches available
+                  </SelectItem>
+                ) : (
+                  availableBatches.map((batch) => (
+                    <SelectItem key={batch.batch_id} value={batch.batch_id}>
+                      {batch.batch_id} - {batch.tank_number} ({batch.volume}L) - {batch.destination}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            {availableBatches.length === 0 && (
+              <p className="text-sm text-muted-foreground mt-1">
+                No milk offload batches found. Create offload records first.
+              </p>
             )}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="cheese_type">Cheese Type</Label>
-              <Select
-                value={selectedCheeseType}
-                onValueChange={handleCheeseTypeChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select cheese type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CHEESE_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="batch_id">Batch ID</Label>
-              <Input
-                id="batch_id"
-                value={batchId}
-                disabled
-                className="bg-gray-100"
-              />
-            </div>
+          <div>
+            <Label htmlFor="milk_volume">Milk Volume (L)</Label>
+            <Input 
+              type="number" 
+              id="milk_volume" 
+              name="milk_volume"
+              value={formData.milk_volume}
+              onChange={handleInputChange}
+            />
           </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="offload_batch_id">Select Milk Offload</Label>
-              <Select onValueChange={handleOffloadSelect}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select offload batch" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableOffloads.map((offload) => (
-                    <SelectItem key={offload.batch_id} value={offload.batch_id}>
-                      {`${offload.tank_number} - ${offload.batch_id} (${Math.abs(offload.milk_volume)}L)`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="milk_volume">Milk Volume (L)</Label>
-              <Input
-                type="number"
-                id="milk_volume"
-                {...register('milk_volume', {
-                  required: 'Milk volume is required',
-                  min: { value: 0, message: 'Volume must be positive' }
-                })}
-                disabled={selectedOffload !== null}
-                className={selectedOffload ? 'bg-gray-100' : ''}
-              />
-              {errors.milk_volume && (
-                <p className="text-sm text-red-500">{errors.milk_volume.message}</p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="start_time">Start Time</Label>
+            <Input 
+              type="datetime-local" 
+              id="start_time" 
+              name="start_time"
+              value={formData.start_time}
+              onChange={handleInputChange}
+            />
           </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="starter_culture">Starter Culture</Label>
-              <Select onValueChange={(value) => setValue('starter_culture', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select starter culture" />
-                </SelectTrigger>
-                <SelectContent>
-                  {STARTER_CULTURES.map((culture) => (
-                    <SelectItem key={culture} value={culture}>
-                      {culture}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="starter_quantity">Starter Culture Quantity (g)</Label>
-              <Input
-                type="number"
-                id="starter_quantity"
-                {...register('starter_quantity', {
-                  required: 'Starter quantity is required',
-                  min: { value: 0, message: 'Quantity must be positive' }
-                })}
-              />
-            </div>
+          <div>
+            <Label htmlFor="estimated_duration">Estimated Duration (hrs)</Label>
+            <Input 
+              type="number" 
+              id="estimated_duration" 
+              name="estimated_duration"
+              value={formData.estimated_duration}
+              onChange={handleInputChange}
+            />
           </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="coagulant_type">Coagulant Type</Label>
-              <Select onValueChange={(value) => setValue('coagulant_type', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select coagulant type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {COAGULANT_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="coagulant_quantity">Coagulant Quantity (ml)</Label>
-              <Input
-                type="number"
-                id="coagulant_quantity"
-                {...register('coagulant_quantity', {
-                  required: 'Coagulant quantity is required',
-                  min: { value: 0, message: 'Quantity must be positive' }
-                })}
-              />
-            </div>
+          <div>
+            <Label htmlFor="starter_culture">Starter Culture</Label>
+            <Input 
+              type="text" 
+              id="starter_culture" 
+              name="starter_culture"
+              value={formData.starter_culture}
+              onChange={handleInputChange}
+            />
           </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="processing_temperature">Processing Temperature (°C)</Label>
-              <Input
-                type="number"
-                id="processing_temperature"
-                {...register('processing_temperature', {
-                  required: 'Processing temperature is required',
-                  min: { value: 0, message: 'Temperature must be positive' }
-                })}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="processing_time">Processing Time (minutes)</Label>
-              <Input
-                type="number"
-                id="processing_time"
-                {...register('processing_time', {
-                  required: 'Processing time is required',
-                  min: { value: 0, message: 'Time must be positive' }
-                })}
-              />
-            </div>
+          <div>
+            <Label htmlFor="starter_quantity">Starter Quantity (g)</Label>
+            <Input 
+              type="number" 
+              id="starter_quantity" 
+              name="starter_quantity"
+              value={formData.starter_quantity}
+              onChange={handleInputChange}
+            />
           </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="expected_yield">Expected Yield (kg)</Label>
-              <Input
-                type="number"
-                id="expected_yield"
-                {...register('expected_yield', {
-                  required: 'Expected yield is required',
-                  min: { value: 0, message: 'Yield must be positive' }
-                })}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="estimated_duration">Estimated Duration (hours)</Label>
-              <Input
-                type="number"
-                id="estimated_duration"
-                {...register('estimated_duration', {
-                  required: 'Estimated duration is required',
-                  min: { value: 0, message: 'Duration must be positive' }
-                })}
-              />
-            </div>
+          <div>
+            <Label htmlFor="coagulant_type">Coagulant Type</Label>
+            <Input 
+              type="text" 
+              id="coagulant_type" 
+              name="coagulant_type"
+              value={formData.coagulant_type}
+              onChange={handleInputChange}
+            />
           </div>
-
+          <div>
+            <Label htmlFor="coagulant_quantity">Coagulant Quantity (ml)</Label>
+            <Input 
+              type="number" 
+              id="coagulant_quantity" 
+              name="coagulant_quantity"
+              value={formData.coagulant_quantity}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="processing_temperature">Processing Temperature (°C)</Label>
+            <Input 
+              type="number" 
+              id="processing_temperature" 
+              name="processing_temperature"
+              value={formData.processing_temperature}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="processing_time">Processing Time (min)</Label>
+            <Input 
+              type="number" 
+              id="processing_time" 
+              name="processing_time"
+              value={formData.processing_time}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="expected_yield">Expected Yield (kg)</Label>
+            <Input 
+              type="number" 
+              id="expected_yield" 
+              name="expected_yield"
+              value={formData.expected_yield}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="status">Status</Label>
+            <Select 
+              value={formData.status} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="on_hold">On Hold</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <Label htmlFor="notes">Notes</Label>
-            <Input
-              id="notes"
-              {...register('notes')}
-              placeholder="Add any additional notes"
+            <Textarea 
+              id="notes" 
+              name="notes"
+              value={formData.notes}
+              onChange={handleInputChange}
             />
           </div>
 
-          <Button 
-            type="submit" 
-            disabled={isSubmitting}
-            className="w-full"
-          >
-            {isSubmitting ? 'Updating...' : 'Update Production Line'}
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? "Creating..." : "Create Production Record"}
           </Button>
         </form>
       </CardContent>
