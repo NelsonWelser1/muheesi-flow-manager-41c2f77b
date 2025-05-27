@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
-
 import {
   Form,
   FormControl,
@@ -13,52 +12,53 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker"
-import { CalendarIcon } from "@radix-ui/react-icons"
-import { cn } from "@/lib/utils"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { useToast } from "@/components/ui/use-toast"
-import { useProduction } from '@/hooks/useProduction';
-import { useMilkReception } from '@/hooks/useMilkReception';
+import { DatePicker } from "@/components/ui/date-picker";
+import { Calendar } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useToast } from "@/components/ui/use-toast";
+import { useProduction } from "@/hooks/useProduction";
+import { useMilkReception } from "@/hooks/useMilkReception";
+import { supabase } from "@/integrations/supabase";
 
 const cheeseTypes = [
-  "Cheddar",
-  "Mozzarella",
-  "Gouda",
-  "Parmesan",
-  "Brie",
-  "Feta",
-  " সুইস",
-  "Provolone",
-  "Monterey Jack",
-  "Colby",
-  "Other"
+  'Cheddar',
+  'Mozzarella', 
+  'Gouda',
+  'Parmesan',
+  'Brie',
+  'Feta',
+  'Swiss',
+  'Provolone',
+  'Monterey Jack',
+  'Colby',
+  'Other'
 ];
 
 const starterCultures = [
-  "Lactococcus lactis",
-  "Lactococcus cremoris",
-  "Lactococcus diacetylactis",
-  "Streptococcus thermophilus",
-  "Lactobacillus delbrueckii subsp. bulgaricus",
-  "Lactobacillus helveticus",
-  "Propionibacterium freudenreichii",
-  "Bifidobacterium",
-  "Other"
+  'Lactococcus lactis',
+  'Lactococcus cremoris',
+  'Lactococcus diacetylactis',
+  'Streptococcus thermophilus',
+  'Lactobacillus delbrueckii subsp. bulgaricus',
+  'Lactobacillus helveticus',
+  'Propionibacterium freudenreichii',
+  'Bifidobacterium',
+  'Other'
 ];
 
 const coagulantTypes = [
-  "Animal Rennet",
-  "Vegetable Rennet",
-  "Microbial Rennet",
-  "FPC (Fermentation Produced Chymosin)",
-  "Other"
+  'Animal Rennet',
+  'Vegetable Rennet',
+  'Microbial Rennet',
+  'FPC (Fermentation Produced Chymosin)',
+  'Other'
 ];
 
 const formSchema = z.object({
@@ -118,37 +118,37 @@ const formSchema = z.object({
   }),
   status: z.string().optional(),
   notes: z.string().optional(),
-})
+});
 
 const ProductionLineForm = () => {
   const [selectedMarket, setSelectedMarket] = useState('local');
   const [availableOffloads, setAvailableOffloads] = useState([]);
   const [isLoadingOffloads, setIsLoadingOffloads] = useState(false);
-  const { toast } = useToast()
+  const { toast } = useToast();
   const { addProduction } = useProduction();
   const { data: milkReceptions } = useMilkReception();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      batch_id: '',
-      offload_batch_id: '',
-      fromager_identifier: '',
-      cheese_type: '',
+      batch_id: "",
+      offload_batch_id: "",
+      fromager_identifier: "",
+      cheese_type: "",
       milk_volume: 0,
       start_time: new Date(),
       estimated_duration: 0,
-      starter_culture: '',
+      starter_culture: "",
       starter_quantity: 0,
-      coagulant_type: '',
+      coagulant_type: "",
       coagulant_quantity: 0,
       processing_temperature: 0,
       processing_time: 0,
       expected_yield: 0,
-      status: 'pending',
-      notes: '',
-    }
-  })
+      status: "pending",
+      notes: "",
+    },
+  });
 
   const { handleSubmit } = form;
 
@@ -173,18 +173,19 @@ const ProductionLineForm = () => {
 
       await addProduction.mutateAsync(newProductionData);
       form.reset();
+      
       toast({
         title: "Success!",
         description: "New production line record added.",
-      })
+      });
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong.",
         description: error.message,
-      })
+      });
     }
-  }
+  };
 
   const updateAvailableOffloads = useCallback(async () => {
     if (!selectedMarket) return;
@@ -207,8 +208,7 @@ const ProductionLineForm = () => {
       }
 
       console.log('Raw offload data:', offloads);
-      
-      // Transform the data to match expected structure
+
       const transformedOffloads = (offloads || []).map(record => ({
         batch_id: record.offload_batch_id,
         offload_batch_id: record.offload_batch_id,
@@ -219,7 +219,6 @@ const ProductionLineForm = () => {
 
       console.log('Transformed offloads:', transformedOffloads);
       setAvailableOffloads(transformedOffloads);
-      
     } catch (error) {
       console.error('Error in updateAvailableOffloads:', error);
       setAvailableOffloads([]);
@@ -231,7 +230,8 @@ const ProductionLineForm = () => {
   return (
     <div className="container max-w-4xl mx-auto py-10">
       <h2 className="text-2xl font-bold mb-4">Add Production Line</h2>
-
+      
+      {/* Market Selection */}
       <div className="mb-4">
         <Label htmlFor="market">Market</Label>
         <Select value={selectedMarket} onValueChange={setSelectedMarket}>
@@ -267,17 +267,25 @@ const ProductionLineForm = () => {
               name="offload_batch_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Offload Batch ID</FormLabel>
+                  <FormLabel>Select Milk Offload</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Offload Batch" />
-                    </SelectTrigger>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={isLoadingOffloads ? "Loading..." : "Select an offload batch"} />
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
-                      {availableOffloads.map((record) => (
-                        <SelectItem key={record.batch_id} value={record.offload_batch_id}>
-                          {record.offload_batch_id}
+                      {availableOffloads.length > 0 ? (
+                        availableOffloads.map((offload) => (
+                          <SelectItem key={offload.batch_id} value={offload.batch_id}>
+                            {offload.batch_id} - {offload.supplier_name} ({offload.milk_volume}L)
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-batches" disabled>
+                          {isLoadingOffloads ? "Loading batches..." : "No offload batches available"}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -290,7 +298,7 @@ const ProductionLineForm = () => {
               name="fromager_identifier"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Fromager</FormLabel>
+                  <FormLabel>Fromager Identifier</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter fromager identifier" {...field} />
                   </FormControl>
@@ -306,12 +314,16 @@ const ProductionLineForm = () => {
                 <FormItem>
                   <FormLabel>Cheese Type</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select cheese type" />
-                    </SelectTrigger>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select cheese type" />
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
                       {cheeseTypes.map((type) => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -327,7 +339,12 @@ const ProductionLineForm = () => {
                 <FormItem>
                   <FormLabel>Milk Volume (L)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Enter milk volume" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="Enter milk volume"
+                      {...field}
+                      onChange={(e) => field.onChange(+e.target.value)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -338,7 +355,7 @@ const ProductionLineForm = () => {
               control={form.control}
               name="start_time"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
+                <FormItem>
                   <FormLabel>Start Time</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -346,7 +363,7 @@ const ProductionLineForm = () => {
                         <Button
                           variant={"outline"}
                           className={cn(
-                            "w-[240px] pl-3 text-left font-normal",
+                            "w-full pl-3 text-left font-normal",
                             !field.value && "text-muted-foreground"
                           )}
                         >
@@ -355,16 +372,17 @@ const ProductionLineForm = () => {
                           ) : (
                             <span>Pick a date</span>
                           )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          <Calendar className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <DatePicker
-                        mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={false}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
                         initialFocus
                       />
                     </PopoverContent>
@@ -379,9 +397,14 @@ const ProductionLineForm = () => {
               name="estimated_duration"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Estimated Duration (hrs)</FormLabel>
+                  <FormLabel>Estimated Duration (hours)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Enter estimated duration" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="Enter estimated duration"
+                      {...field}
+                      onChange={(e) => field.onChange(+e.target.value)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -395,12 +418,16 @@ const ProductionLineForm = () => {
                 <FormItem>
                   <FormLabel>Starter Culture</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select starter culture" />
-                    </SelectTrigger>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select starter culture" />
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
                       {starterCultures.map((culture) => (
-                        <SelectItem key={culture} value={culture}>{culture}</SelectItem>
+                        <SelectItem key={culture} value={culture}>
+                          {culture}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -416,7 +443,12 @@ const ProductionLineForm = () => {
                 <FormItem>
                   <FormLabel>Starter Quantity (g)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Enter starter quantity" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="Enter starter quantity"
+                      {...field}
+                      onChange={(e) => field.onChange(+e.target.value)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -430,12 +462,16 @@ const ProductionLineForm = () => {
                 <FormItem>
                   <FormLabel>Coagulant Type</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select coagulant type" />
-                    </SelectTrigger>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select coagulant type" />
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
                       {coagulantTypes.map((type) => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -451,7 +487,12 @@ const ProductionLineForm = () => {
                 <FormItem>
                   <FormLabel>Coagulant Quantity (ml)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Enter coagulant quantity" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="Enter coagulant quantity"
+                      {...field}
+                      onChange={(e) => field.onChange(+e.target.value)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -463,9 +504,14 @@ const ProductionLineForm = () => {
               name="processing_temperature"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Processing Temp (°C)</FormLabel>
+                  <FormLabel>Processing Temperature (°C)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Enter processing temperature" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="Enter processing temperature"
+                      {...field}
+                      onChange={(e) => field.onChange(+e.target.value)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -477,9 +523,14 @@ const ProductionLineForm = () => {
               name="processing_time"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Process Time (min)</FormLabel>
+                  <FormLabel>Processing Time (minutes)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Enter processing time" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="Enter processing time"
+                      {...field}
+                      onChange={(e) => field.onChange(+e.target.value)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -493,7 +544,12 @@ const ProductionLineForm = () => {
                 <FormItem>
                   <FormLabel>Expected Yield (kg)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Enter expected yield" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="Enter expected yield"
+                      {...field}
+                      onChange={(e) => field.onChange(+e.target.value)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -509,20 +565,19 @@ const ProductionLineForm = () => {
                 <FormLabel>Notes</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Add any relevant notes here."
+                    placeholder="Enter any additional notes"
                     className="resize-none"
                     {...field}
                   />
                 </FormControl>
-                <FormDescription>
-                  Additional information or comments about this production line.
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <Button type="submit">Submit</Button>
+          <Button type="submit" className="w-full">
+            Add Production Line
+          </Button>
         </form>
       </Form>
     </div>
