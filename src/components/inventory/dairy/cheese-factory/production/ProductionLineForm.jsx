@@ -25,7 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useToast } from "@/components/ui/use-toast";
 import { useProduction } from "@/hooks/useProduction";
 import { useMilkReception } from "@/hooks/useMilkReception";
-import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase/supabase";
 
 const cheeseTypes = [
   'Cheddar',
@@ -121,7 +121,7 @@ const formSchema = z.object({
 });
 
 const ProductionLineForm = () => {
-  const [selectedMarket, setSelectedMarket] = useState('local');
+  const [selectedMarket, setSelectedMarket] = useState("local");
   const [availableOffloads, setAvailableOffloads] = useState([]);
   const [isLoadingOffloads, setIsLoadingOffloads] = useState(false);
   const { toast } = useToast();
@@ -146,20 +146,21 @@ const ProductionLineForm = () => {
       processing_time: 0,
       expected_yield: 0,
       status: "pending",
-      notes: "",
-    },
+      notes: ""
+    }
   });
 
   const { handleSubmit } = form;
 
   useEffect(() => {
     updateAvailableOffloads();
-  }, [selectedMarket, updateAvailableOffloads]);
+  }, [selectedMarket]);
 
   const onSubmit = async (values) => {
     try {
       const newProductionData = {
         ...values,
+        market: selectedMarket,
         milk_volume: Number(values.milk_volume),
         estimated_duration: Number(values.estimated_duration),
         starter_quantity: Number(values.starter_quantity),
@@ -168,34 +169,32 @@ const ProductionLineForm = () => {
         processing_time: Number(values.processing_time),
         expected_yield: Number(values.expected_yield),
         created_at: new Date(),
-        id: uuidv4(),
+        id: uuidv4()
       };
 
       await addProduction.mutateAsync(newProductionData);
       form.reset();
-      
       toast({
         title: "Success!",
-        description: "New production line record added.",
+        description: "New production line record added."
       });
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong.",
-        description: error.message,
+        description: error.message
       });
     }
   };
 
   const updateAvailableOffloads = useCallback(async () => {
     if (!selectedMarket) return;
-    
+
     try {
       setIsLoadingOffloads(true);
       console.log('Fetching offload batches for market:', selectedMarket);
       
       const tableName = selectedMarket === 'local' ? 'production_line_local' : 'production_line_international';
-      
       const { data: offloads, error } = await supabase
         .from(tableName)
         .select('offload_batch_id')
@@ -208,11 +207,11 @@ const ProductionLineForm = () => {
       }
 
       console.log('Raw offload data:', offloads);
-
+      
       const transformedOffloads = (offloads || []).map(record => ({
         batch_id: record.offload_batch_id,
         offload_batch_id: record.offload_batch_id,
-        supplier_name: 'Milk Tank', // Default supplier name since it's not in the data
+        supplier_name: "Milk Tank", // Default supplier name since it's not in the data
         milk_volume: 0, // Default volume since it's not in the data
         created_at: new Date().toISOString() // Default timestamp
       }));
