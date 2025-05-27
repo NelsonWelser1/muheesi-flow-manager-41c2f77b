@@ -8,6 +8,9 @@ const ProductionTable = ({ records }) => {
     return <div className="text-center py-4">No records found</div>;
   }
 
+  // Limit display to only 12 rows
+  const displayedRecords = records.slice(0, 12);
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -33,7 +36,7 @@ const ProductionTable = ({ records }) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {records.map((record) => (
+          {displayedRecords.map((record) => (
             <TableRow key={record.id} className="hover:bg-muted/50">
               <TableCell className="whitespace-nowrap font-medium">{record.batch_id}</TableCell>
               <TableCell className="whitespace-nowrap">{record.offload_batch_id}</TableCell>
@@ -70,6 +73,12 @@ const ProductionTable = ({ records }) => {
           ))}
         </TableBody>
       </Table>
+      
+      {records.length > 12 && (
+        <div className="text-sm text-muted-foreground mt-2 text-center">
+          Showing 12 of {records.length} records
+        </div>
+      )}
     </div>
   );
 };
