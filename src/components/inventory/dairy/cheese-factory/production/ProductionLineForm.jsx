@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,120 +17,6 @@ const ProductionLineForm = () => {
     status: '',
     notes: '',
   });
-
-  // Get milk reception data for batch selection
-  const { data: milkReceptionData, isLoading: isMilkDataLoading } = useMilkReception();
-
-  // Backend logic to fetch and process available offload batches
-  const getAvailableOffloadBatches = () => {
-    if (!milkReceptionData || !Array.isArray(milkReceptionData)) {
-      console.log('No milk reception data available for offload batch selection');
-      return [];
-    }
-
-    try {
-      // Filter for milk tank offload records (negative volumes indicate offloads)
-      const offloadRecords = milkReceptionData.filter(record => {
-        const hasValidBatchId = record.batch_id && typeof record.batch_id === 'string';
-        const isOffloadRecord = record.milk_volume < 0 || record.volume_offloaded > 0;
-        
-        return hasValidBatchId && isOffloadRecord;
-      });
-
-      // Process and transform offload records for batch selection
-      const processedBatches = offloadRecords.map(record => {
-        const batchId = record.batch_id;
-        const supplierName = record.supplier_name || 'Unknown Supplier';
-        const volume = Math.abs(record.milk_volume || record.volume_offloaded || 0);
-        const tankNumber = record.tank_number || record.storage_tank || 'Unknown Tank';
-        const createdDate = record.created_at || record.datetime;
-
-        return {
-          id: record.id,
-          batch_id: batchId,
-          supplier_name: supplierName,
-          volume: volume,
-          tank_number: tankNumber,
-          created_at: createdDate,
-          label: `${batchId} - ${supplierName} (${volume}L from ${tankNumber})`,
-          value: batchId
-        };
-      });
-
-      // Remove duplicates and sort by creation date (newest first)
-      const uniqueBatches = processedBatches.reduce((acc, current) => {
-        const existingBatch = acc.find(batch => batch.batch_id === current.batch_id);
-        if (!existingBatch) {
-          acc.push(current);
-        }
-        return acc;
-      }, []);
-
-      const sortedBatches = uniqueBatches.sort((a, b) => {
-        const dateA = new Date(a.created_at);
-        const dateB = new Date(b.created_at);
-        return dateB - dateA;
-      });
-
-      console.log('Processed offload batches for selection:', sortedBatches);
-      return sortedBatches;
-
-    } catch (error) {
-      console.error('Error processing offload batch data:', error);
-      return [];
-    }
-  };
-
-  // Backend logic to fetch available milk batches for production
-  const getAvailableMilkBatches = () => {
-    if (!milkReceptionData || !Array.isArray(milkReceptionData)) {
-      console.log('No milk reception data available for batch selection');
-      return [];
-    }
-
-    try {
-      // Filter for valid milk reception records (positive volumes)
-      const receptionRecords = milkReceptionData.filter(record => {
-        const hasValidBatchId = record.batch_id && typeof record.batch_id === 'string';
-        const isReceptionRecord = record.milk_volume > 0;
-        
-        return hasValidBatchId && isReceptionRecord;
-      });
-
-      // Process records for batch selection
-      const processedBatches = receptionRecords.map(record => {
-        return {
-          id: record.id,
-          batch_id: record.batch_id,
-          supplier_name: record.supplier_name || 'Unknown Supplier',
-          volume: record.milk_volume || 0,
-          tank_number: record.tank_number || 'Unknown Tank',
-          created_at: record.created_at,
-          label: `${record.batch_id} - ${record.supplier_name || 'Unknown Supplier'} (${record.milk_volume || 0}L)`,
-          value: record.batch_id
-        };
-      });
-
-      // Remove duplicates and sort
-      const uniqueBatches = processedBatches.reduce((acc, current) => {
-        const existingBatch = acc.find(batch => batch.batch_id === current.batch_id);
-        if (!existingBatch) {
-          acc.push(current);
-        }
-        return acc;
-      }, []);
-
-      return uniqueBatches.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-    } catch (error) {
-      console.error('Error processing milk batch data:', error);
-      return [];
-    }
-  };
-
-  // Get processed batch data
-  const availableOffloadBatches = getAvailableOffloadBatches();
-  const availableMilkBatches = getAvailableMilkBatches();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -185,53 +70,16 @@ const ProductionLineForm = () => {
           </div>
 
           <div>
-            <Label htmlFor="batchNumber">Select Milk Batch</Label>
-            <Select 
-              onValueChange={(value) => handleChange({ target: { name: 'batchNumber', value } })}
-              disabled={isMilkDataLoading}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={isMilkDataLoading ? "Loading batches..." : "Select milk batch"} />
-              </SelectTrigger>
-              <SelectContent>
-                {availableMilkBatches.length > 0 ? (
-                  availableMilkBatches.map((batch) => (
-                    <SelectItem key={batch.id} value={batch.value}>
-                      {batch.label}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="no-batches" disabled>
-                    No milk batches available
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="offloadBatch">Select Offload Batch</Label>
-            <Select 
-              onValueChange={(value) => handleChange({ target: { name: 'offloadBatch', value } })}
-              disabled={isMilkDataLoading}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={isMilkDataLoading ? "Loading offload batches..." : "Select offload batch"} />
-              </SelectTrigger>
-              <SelectContent>
-                {availableOffloadBatches.length > 0 ? (
-                  availableOffloadBatches.map((batch) => (
-                    <SelectItem key={batch.id} value={batch.value}>
-                      {batch.label}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="no-offloads" disabled>
-                    No offload batches available
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="batchNumber">Batch Number</Label>
+            <Input
+              type="text"
+              id="batchNumber"
+              name="batchNumber"
+              value={formData.batchNumber}
+              onChange={handleChange}
+              placeholder="Enter batch number"
+              required
+            />
           </div>
 
           <div>
