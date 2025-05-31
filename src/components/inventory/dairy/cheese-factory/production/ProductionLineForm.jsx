@@ -1,520 +1,352 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useMilkReception } from '@/hooks/useMilkReception';
+import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
+import { supabase } from "@/integrations/supabase/supabase";
 
-const formSchema = z.object({
-  batch_id: z.string().min(2, {
-    message: "Batch ID must be at least 2 characters.",
-  }),
-  offload_batch_id: z.string().min(2, {
-    message: "Offload Batch ID must be at least 2 characters.",
-  }),
-  fromager_identifier: z.string().min(2, {
-    message: "Fromager Identifier must be at least 2 characters.",
-  }),
-  cheese_type: z.string().min(2, {
-    message: "Cheese Type must be at least 2 characters.",
-  }),
-  milk_volume: z.number().min(1, {
-    message: "Milk Volume must be at least 1 liter.",
-  }),
-  start_time: z.date(),
-  estimated_duration: z.number().min(1, {
-    message: "Estimated Duration must be at least 1 hour.",
-  }),
-  starter_culture: z.string().min(2, {
-    message: "Starter Culture must be at least 2 characters.",
-  }),
-  starter_quantity: z.number().min(1, {
-    message: "Starter Quantity must be at least 1 unit.",
-  }),
-  coagulant_type: z.string().min(2, {
-    message: "Coagulant Type must be at least 2 characters.",
-  }),
-  coagulant_quantity: z.number().min(1, {
-    message: "Coagulant Quantity must be at least 1 unit.",
-  }),
-  processing_temperature: z.number().min(1, {
-    message: "Processing Temperature must be at least 1 degree Celsius.",
-  }),
-  processing_time: z.number().min(1, {
-    message: "Processing Time must be at least 1 minute.",
-  }),
-  expected_yield: z.number().min(1, {
-    message: "Expected Yield must be at least 1 unit.",
-  }),
-  status: z.enum(["pending", "in_progress", "completed", "failed"]),
-  notes: z.string().optional(),
-});
+// Import the hook for milk reception data
+import { useMilkReception } from '../../milk-reception/hooks/useMilkReceptionForm';
 
-const ProductionLineForm = () => {
-  const [selectedMarket, setSelectedMarket] = useState("local");
-  const [availableOffloads, setAvailableOffloads] = useState([]);
-  const [isLoadingOffloads, setIsLoadingOffloads] = useState(false);
-  const { toast } = useToast();
-  const { data: milkReceptions } = useMilkReception();
-
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      batch_id: "",
-      offload_batch_id: "",
-      fromager_identifier: "",
-      cheese_type: "",
-      milk_volume: 0,
-      start_time: new Date(),
-      estimated_duration: 0,
-      starter_culture: "",
-      starter_quantity: 0,
-      coagulant_type: "",
-      coagulant_quantity: 0,
-      processing_temperature: 0,
-      processing_time: 0,
-      expected_yield: 0,
-      status: "pending",
-      notes: ""
-    }
+const ProductionLineForm = ({ onBack }) => {
+  const [formData, setFormData] = useState({
+    batchNumber: '',
+    productType: '',
+    milkBatch: '',
+    targetQuantity: '',
+    actualQuantity: '',
+    productionDate: '',
+    expiryDate: '',
+    qualityGrade: '',
+    market: 'Local and International', // Pre-filled value
+    productionLine: '',
+    operator: '',
+    supervisor: '',
+    shiftDetails: '',
+    notes: ''
   });
 
-  const { handleSubmit } = form;
-
-  const updateAvailableOffloads = useCallback(async () => {
-    if (!selectedMarket) return;
-    
-    try {
-      setIsLoadingOffloads(true);
-      console.log('Fetching milk reception data for offloads');
-      
-      // Filter milk reception data to get available batches
-      const availableBatches = (milkReceptions || [])
-        .filter(reception => reception.batch_id && reception.tank_number)
-        .map(reception => ({
-          batch_id: reception.batch_id,
-          offload_batch_id: reception.batch_id,
-          supplier_name: reception.supplier_name || 'Unknown Supplier',
-          milk_volume: reception.milk_volume || 0,
-          tank_number: reception.tank_number,
-          created_at: reception.created_at || new Date().toISOString()
-        }));
-
-      console.log('Available milk batches:', availableBatches);
-      setAvailableOffloads(availableBatches);
-      
-    } catch (error) {
-      console.error('Error fetching milk batches:', error);
-      setAvailableOffloads([]);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch milk batches"
-      });
-    } finally {
-      setIsLoadingOffloads(false);
-    }
-  }, [selectedMarket, milkReceptions, toast]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  
+  // Use the milk reception hook to get available batches
+  const { 
+    milkReceptionData, 
+    loading: milkReceptionLoading, 
+    error: milkReceptionError,
+    fetchMilkReceptionData 
+  } = useMilkReception();
 
   useEffect(() => {
-    updateAvailableOffloads();
-  }, [updateAvailableOffloads]);
+    fetchMilkReceptionData();
+  }, []);
 
-  const onSubmit = (data) => {
-    console.log("Form values:", data);
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4 font-mono text-white">
-          <code className="break-words">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    })
+  const handleInputChange = (name, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  return (
-    <div className="container max-w-4xl mx-auto py-10">
-      <h2 className="text-2xl font-bold mb-4">Add Production Line</h2>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.batchNumber || !formData.productType || !formData.milkBatch) {
+      showErrorToast(toast, "Please fill in all required fields");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('cheese_production_batches')
+        .insert([{
+          batch_number: formData.batchNumber,
+          product_type: formData.productType,
+          milk_batch_id: formData.milkBatch,
+          target_quantity: parseFloat(formData.targetQuantity) || 0,
+          actual_quantity: parseFloat(formData.actualQuantity) || 0,
+          production_date: formData.productionDate,
+          expiry_date: formData.expiryDate,
+          quality_grade: formData.qualityGrade,
+          market: formData.market,
+          production_line: formData.productionLine,
+          operator: formData.operator,
+          supervisor: formData.supervisor,
+          shift_details: formData.shiftDetails,
+          notes: formData.notes,
+          status: 'active'
+        }]);
+
+      if (error) throw error;
+
+      showSuccessToast(toast, "Production batch created successfully!");
       
-      {/* Market Selection */}
-      <div className="mb-4">
-        <Label htmlFor="market">Market</Label>
-        <Select value={selectedMarket} onValueChange={setSelectedMarket}>
-          <SelectTrigger id="market">
-            <SelectValue placeholder="Select Market" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="local">Local</SelectItem>
-            <SelectItem value="international">International</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      // Reset form
+      setFormData({
+        batchNumber: '',
+        productType: '',
+        milkBatch: '',
+        targetQuantity: '',
+        actualQuantity: '',
+        productionDate: '',
+        expiryDate: '',
+        qualityGrade: '',
+        market: 'Local and International', // Keep pre-filled value
+        productionLine: '',
+        operator: '',
+        supervisor: '',
+        shiftDetails: '',
+        notes: ''
+      });
+      
+    } catch (error) {
+      console.error('Error creating production batch:', error);
+      showErrorToast(toast, `Error creating production batch: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-      <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            {/* Batch ID Field */}
-            <FormField
-              control={form.control}
-              name="batch_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Batch ID</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter batch ID" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+  // Transform milk reception data for the dropdown
+  const availableMilkBatches = milkReceptionData?.map(record => ({
+    id: record.id,
+    label: `Batch ${record.batch_number || record.id} - ${record.supplier_name || 'Unknown Supplier'} (${record.quantity_received || 0}L)`,
+    value: record.id.toString()
+  })) || [];
 
-            {/* Select Milk Batch - Fixed */}
-            <FormField
-              control={form.control}
-              name="offload_batch_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Select Milk Batch</FormLabel>
+  return (
+    <div className="space-y-4">
+      <Button 
+        variant="outline" 
+        onClick={onBack}
+        className="flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" /> Back to Production
+      </Button>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Production Line Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="batchNumber">Batch Number *</Label>
+                <Input
+                  id="batchNumber"
+                  value={formData.batchNumber}
+                  onChange={(e) => handleInputChange('batchNumber', e.target.value)}
+                  placeholder="Enter batch number"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="productType">Product Type *</Label>
+                <Select 
+                  value={formData.productType} 
+                  onValueChange={(value) => handleInputChange('productType', value)}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select product type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mozzarella">Mozzarella</SelectItem>
+                    <SelectItem value="cheddar">Cheddar</SelectItem>
+                    <SelectItem value="gouda">Gouda</SelectItem>
+                    <SelectItem value="swiss">Swiss</SelectItem>
+                    <SelectItem value="parmesan">Parmesan</SelectItem>
+                    <SelectItem value="blue_cheese">Blue Cheese</SelectItem>
+                    <SelectItem value="cream_cheese">Cream Cheese</SelectItem>
+                    <SelectItem value="cottage_cheese">Cottage Cheese</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="milkBatch">Select Milk Batch *</Label>
+                {milkReceptionLoading ? (
+                  <Input value="Loading batches..." disabled />
+                ) : milkReceptionError ? (
+                  <Input value="Error loading batches" disabled />
+                ) : (
                   <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value}
-                    disabled={isLoadingOffloads}
+                    value={formData.milkBatch} 
+                    onValueChange={(value) => handleInputChange('milkBatch', value)}
+                    required
                   >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={isLoadingOffloads ? "Loading batches..." : "Select milk batch"} />
-                      </SelectTrigger>
-                    </FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select milk batch" />
+                    </SelectTrigger>
                     <SelectContent>
-                      {availableOffloads.map((offload) => (
-                        <SelectItem 
-                          key={offload.batch_id} 
-                          value={offload.batch_id}
-                        >
-                          {`${offload.batch_id} - ${offload.supplier_name} (${offload.milk_volume}L)`}
+                      {availableMilkBatches.map((batch) => (
+                        <SelectItem key={batch.id} value={batch.value}>
+                          {batch.label}
                         </SelectItem>
                       ))}
-                      {availableOffloads.length === 0 && !isLoadingOffloads && (
-                        <SelectItem value="no-batches" disabled>
-                          No milk batches available
-                        </SelectItem>
-                      )}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="targetQuantity">Target Quantity (kg)</Label>
+                <Input
+                  id="targetQuantity"
+                  type="number"
+                  value={formData.targetQuantity}
+                  onChange={(e) => handleInputChange('targetQuantity', e.target.value)}
+                  placeholder="Enter target quantity"
+                />
+              </div>
+            </div>
 
-            {/* Fromager Identifier Field */}
-            <FormField
-              control={form.control}
-              name="fromager_identifier"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fromager Identifier</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter fromager identifier" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="actualQuantity">Actual Quantity (kg)</Label>
+                <Input
+                  id="actualQuantity"
+                  type="number"
+                  value={formData.actualQuantity}
+                  onChange={(e) => handleInputChange('actualQuantity', e.target.value)}
+                  placeholder="Enter actual quantity"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="productionDate">Production Date</Label>
+                <Input
+                  id="productionDate"
+                  type="date"
+                  value={formData.productionDate}
+                  onChange={(e) => handleInputChange('productionDate', e.target.value)}
+                />
+              </div>
+            </div>
 
-            {/* Cheese Type Field */}
-            <FormField
-              control={form.control}
-              name="cheese_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cheese Type</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter cheese type" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="expiryDate">Expiry Date</Label>
+                <Input
+                  id="expiryDate"
+                  type="date"
+                  value={formData.expiryDate}
+                  onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="qualityGrade">Quality Grade</Label>
+                <Select 
+                  value={formData.qualityGrade} 
+                  onValueChange={(value) => handleInputChange('qualityGrade', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select quality grade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="A">Grade A</SelectItem>
+                    <SelectItem value="B">Grade B</SelectItem>
+                    <SelectItem value="C">Grade C</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-            {/* Milk Volume Field */}
-            <FormField
-              control={form.control}
-              name="milk_volume"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Milk Volume (L)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter milk volume"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Market field - Pre-filled and uneditable */}
+            <div className="mb-4">
+              <div>
+                <Label htmlFor="market">Market</Label>
+                <Input
+                  id="market"
+                  value={formData.market}
+                  readOnly
+                  disabled
+                  className="bg-gray-100 cursor-not-allowed"
+                  placeholder="Market selection"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Market is pre-selected for Local and International distribution
+                </p>
+              </div>
+            </div>
 
-            {/* Start Time Field */}
-            <FormField
-              control={form.control}
-              name="start_time"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Start Time</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-[240px] pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="productionLine">Production Line</Label>
+                <Input
+                  id="productionLine"
+                  value={formData.productionLine}
+                  onChange={(e) => handleInputChange('productionLine', e.target.value)}
+                  placeholder="Enter production line"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="operator">Operator</Label>
+                <Input
+                  id="operator"
+                  value={formData.operator}
+                  onChange={(e) => handleInputChange('operator', e.target.value)}
+                  placeholder="Enter operator name"
+                />
+              </div>
+            </div>
 
-            {/* Estimated Duration Field */}
-            <FormField
-              control={form.control}
-              name="estimated_duration"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Estimated Duration (hours)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter estimated duration"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="supervisor">Supervisor</Label>
+                <Input
+                  id="supervisor"
+                  value={formData.supervisor}
+                  onChange={(e) => handleInputChange('supervisor', e.target.value)}
+                  placeholder="Enter supervisor name"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="shiftDetails">Shift Details</Label>
+                <Input
+                  id="shiftDetails"
+                  value={formData.shiftDetails}
+                  onChange={(e) => handleInputChange('shiftDetails', e.target.value)}
+                  placeholder="Enter shift details"
+                />
+              </div>
+            </div>
 
-            {/* Starter Culture Field */}
-            <FormField
-              control={form.control}
-              name="starter_culture"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Starter Culture</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter starter culture" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
+                placeholder="Enter any additional notes"
+                rows={3}
+              />
+            </div>
 
-            {/* Starter Quantity Field */}
-            <FormField
-              control={form.control}
-              name="starter_quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Starter Quantity</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter starter quantity"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Coagulant Type Field */}
-            <FormField
-              control={form.control}
-              name="coagulant_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Coagulant Type</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter coagulant type" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Coagulant Quantity Field */}
-            <FormField
-              control={form.control}
-              name="coagulant_quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Coagulant Quantity</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter coagulant quantity"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Processing Temperature Field */}
-            <FormField
-              control={form.control}
-              name="processing_temperature"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Processing Temperature (°C)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter processing temperature"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Processing Time Field */}
-            <FormField
-              control={form.control}
-              name="processing_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Processing Time (minutes)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter processing time"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Expected Yield Field */}
-            <FormField
-              control={form.control}
-              name="expected_yield"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Expected Yield</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter expected yield"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Status Field */}
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="failed">Failed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Notes Field */}
-          <FormField
-            control={form.control}
-            name="notes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Notes</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Enter any additional notes"
-                    className="resize-none"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Submit Button */}
-          <Button type="submit">Add Production Line</Button>
-        </form>
-      </Form>
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Creating Production Batch...' : 'Create Production Batch'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
