@@ -29,7 +29,7 @@ import {
   MoreHorizontal
 } from "lucide-react";
 import { format } from 'date-fns';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 const RecentOffloadRecords = ({ offloadRecords = [], isLoading = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
