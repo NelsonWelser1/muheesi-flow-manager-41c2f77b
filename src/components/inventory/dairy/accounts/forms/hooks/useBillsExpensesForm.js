@@ -10,12 +10,13 @@ export const useBillsExpensesForm = () => {
   const [fileSelected, setFileSelected] = useState(null);
   const [uploadedFileUrl, setUploadedFileUrl] = useState("");
   const [isSubmissionCooldown, setIsSubmissionCooldown] = useState(false);
+  const [currentBillNumber, setCurrentBillNumber] = useState("");
   const fileInputRef = useRef(null);
   
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
     defaultValues: {
       billDate: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'pending',
       paymentMethod: 'bank_transfer',
       currency: 'UGX',
@@ -33,18 +34,21 @@ export const useBillsExpensesForm = () => {
   
   const { createBillExpense, uploadReceipt, getLatestBillNumber } = useBillsExpenses();
   
+  // Load initial bill number only once
   useEffect(() => {
-    const loadBillNumber = async () => {
+    const loadInitialBillNumber = async () => {
       const billNumber = await getLatestBillNumber();
+      setCurrentBillNumber(billNumber);
       setValue("billNumber", billNumber);
     };
     
-    loadBillNumber();
+    loadInitialBillNumber();
   }, [setValue, getLatestBillNumber]);
 
   const clearFormAfterSubmission = async () => {
-    // Get a new bill number first
+    // Generate a new bill number for the next entry
     const newBillNumber = await getLatestBillNumber();
+    setCurrentBillNumber(newBillNumber);
     
     // Reset the form with default values and new bill number
     reset({
@@ -79,7 +83,7 @@ export const useBillsExpensesForm = () => {
     setIsSubmissionCooldown(true);
     setTimeout(() => {
       setIsSubmissionCooldown(false);
-    }, 5000); // 5 seconds cooldown
+    }, 5000);
   };
   
   const onSubmit = async (data) => {
@@ -94,6 +98,9 @@ export const useBillsExpensesForm = () => {
 
     try {
       console.log("Bill/Expense data:", data);
+      
+      // Use the current bill number (don't generate a new one during submission)
+      data.billNumber = currentBillNumber;
       
       // Add recurring fields if enabled
       if (isRecurring) {
@@ -136,7 +143,7 @@ export const useBillsExpensesForm = () => {
     const file = e.target.files[0];
     if (file) {
       setFileSelected(file);
-      setUploadedFileUrl(""); // Clear any previous upload URL
+      setUploadedFileUrl("");
     }
   };
   
@@ -153,8 +160,7 @@ export const useBillsExpensesForm = () => {
     setIsUploading(true);
     
     try {
-      const billNumber = watch("billNumber");
-      const result = await uploadReceipt(fileSelected, billNumber);
+      const result = await uploadReceipt(fileSelected, currentBillNumber);
       
       if (result.success) {
         setUploadedFileUrl(result.url);

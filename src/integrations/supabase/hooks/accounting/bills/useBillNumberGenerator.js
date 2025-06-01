@@ -6,13 +6,13 @@ import { supabase } from '../../../supabase';
  */
 export const useBillNumberGenerator = () => {
 
-  // Get latest bill number
+  // Get latest bill number and increment it
   const getLatestBillNumber = async () => {
     try {
       const { data, error } = await supabase
         .from('bills_expenses')
         .select('bill_number')
-        .order('bill_number', { ascending: true })
+        .order('created_at', { ascending: false })
         .limit(1);
       
       if (error) {
@@ -22,13 +22,9 @@ export const useBillNumberGenerator = () => {
       
       if (data && data.length > 0) {
         const lastBillNumber = data[0].bill_number;
-        const prefix = "BILL";
-        const lastNumber = parseInt(lastBillNumber.split('-')[1], 10);
-        const newNumber = lastNumber + 1;
-        const timestamp = new Date().getTime().toString().slice(-4);
-        return `${prefix}-${newNumber.toString().padStart(5, '0')}-${timestamp}`;
+        return incrementBillNumber(lastBillNumber);
       } else {
-        return generateBillNumber(10000); // Start from 10000 if no bills exist
+        return generateBillNumber(10001); // Start from 10001 if no bills exist
       }
     } catch (err) {
       console.error('Error in getLatestBillNumber:', err);
@@ -36,11 +32,27 @@ export const useBillNumberGenerator = () => {
     }
   };
 
-  const generateBillNumber = (startNum = 10000) => {
+  const incrementBillNumber = (lastBillNumber) => {
+    try {
+      // Extract number from format BILL-XXXXX-XXXX
+      const parts = lastBillNumber.split('-');
+      if (parts.length >= 2) {
+        const lastNumber = parseInt(parts[1], 10);
+        const newNumber = lastNumber + 1;
+        const timestamp = new Date().getTime().toString().slice(-4);
+        return `BILL-${newNumber.toString().padStart(5, '0')}-${timestamp}`;
+      }
+    } catch (error) {
+      console.error('Error incrementing bill number:', error);
+    }
+    return generateBillNumber();
+  };
+
+  const generateBillNumber = (startNum = 10001) => {
     const prefix = "BILL";
-    const randomNum = startNum + Math.floor(Math.random() * 1000);
+    const number = startNum;
     const timestamp = new Date().getTime().toString().slice(-4);
-    return `${prefix}-${randomNum.toString().padStart(5, '0')}-${timestamp}`;
+    return `${prefix}-${number.toString().padStart(5, '0')}-${timestamp}`;
   };
 
   return {
