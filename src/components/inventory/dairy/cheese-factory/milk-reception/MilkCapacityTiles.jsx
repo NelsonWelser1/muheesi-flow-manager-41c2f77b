@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
 import { Droplet, Thermometer, TrendingUp } from 'lucide-react';
+import DirectProcessingAlerts from './DirectProcessingAlerts';
 
 const MilkCapacityTiles = () => {
   const { data: milkReceptionData } = useMilkReception();
@@ -65,145 +65,150 @@ const MilkCapacityTiles = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {/* Tank A */}
-      <Card className={`${getTileColor(tankA.utilizationPercentage)}`}>
-        <CardHeader className="flex flex-row items-center justify-between py-3">
-          <CardTitle className="text-lg font-medium">Tank A</CardTitle>
-          <Droplet className="h-5 w-5 text-blue-500" />
-        </CardHeader>
-        <CardContent className="py-2">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Current:</span>
-              <span className="text-xl font-bold text-blue-600">
-                {tankA.currentVolume.toFixed(1)}L
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Capacity:</span>
-              <span className="text-sm font-medium">{tankA.capacity}L</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Utilization:</span>
-              <span className={`text-sm font-bold ${getUtilizationColor(tankA.utilizationPercentage)}`}>
-                {tankA.utilizationPercentage.toFixed(1)}%
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Temperature:</span>
-              <div className="flex items-center gap-1">
-                <Thermometer className="h-3 w-3 text-red-500" />
-                <span className="text-sm font-medium">{tankA.lastTemperature}°C</span>
+    <div className="space-y-4">
+      {/* Direct Processing Alerts */}
+      <DirectProcessingAlerts />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Tank A */}
+        <Card className={`${getTileColor(tankA.utilizationPercentage)}`}>
+          <CardHeader className="flex flex-row items-center justify-between py-3">
+            <CardTitle className="text-lg font-medium">Tank A</CardTitle>
+            <Droplet className="h-5 w-5 text-blue-500" />
+          </CardHeader>
+          <CardContent className="py-2">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Current:</span>
+                <span className="text-xl font-bold text-blue-600">
+                  {tankA.currentVolume.toFixed(1)}L
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Capacity:</span>
+                <span className="text-sm font-medium">{tankA.capacity}L</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Utilization:</span>
+                <span className={`text-sm font-bold ${getUtilizationColor(tankA.utilizationPercentage)}`}>
+                  {tankA.utilizationPercentage.toFixed(1)}%
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Temperature:</span>
+                <div className="flex items-center gap-1">
+                  <Thermometer className="h-3 w-3 text-red-500" />
+                  <span className="text-sm font-medium">{tankA.lastTemperature}°C</span>
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Tank B */}
-      <Card className={`${getTileColor(tankB.utilizationPercentage)}`}>
-        <CardHeader className="flex flex-row items-center justify-between py-3">
-          <CardTitle className="text-lg font-medium">Tank B</CardTitle>
-          <Droplet className="h-5 w-5 text-green-500" />
-        </CardHeader>
-        <CardContent className="py-2">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Current:</span>
-              <span className="text-xl font-bold text-green-600">
-                {tankB.currentVolume.toFixed(1)}L
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Capacity:</span>
-              <span className="text-sm font-medium">{tankB.capacity}L</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Utilization:</span>
-              <span className={`text-sm font-bold ${getUtilizationColor(tankB.utilizationPercentage)}`}>
-                {tankB.utilizationPercentage.toFixed(1)}%
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Temperature:</span>
-              <div className="flex items-center gap-1">
-                <Thermometer className="h-3 w-3 text-red-500" />
-                <span className="text-sm font-medium">{tankB.lastTemperature}°C</span>
+        {/* Tank B */}
+        <Card className={`${getTileColor(tankB.utilizationPercentage)}`}>
+          <CardHeader className="flex flex-row items-center justify-between py-3">
+            <CardTitle className="text-lg font-medium">Tank B</CardTitle>
+            <Droplet className="h-5 w-5 text-green-500" />
+          </CardHeader>
+          <CardContent className="py-2">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Current:</span>
+                <span className="text-xl font-bold text-green-600">
+                  {tankB.currentVolume.toFixed(1)}L
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Capacity:</span>
+                <span className="text-sm font-medium">{tankB.capacity}L</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Utilization:</span>
+                <span className={`text-sm font-bold ${getUtilizationColor(tankB.utilizationPercentage)}`}>
+                  {tankB.utilizationPercentage.toFixed(1)}%
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Temperature:</span>
+                <div className="flex items-center gap-1">
+                  <Thermometer className="h-3 w-3 text-red-500" />
+                  <span className="text-sm font-medium">{tankB.lastTemperature}°C</span>
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Direct Processing */}
-      <Card className={`${getTileColor(directProcessing.utilizationPercentage)}`}>
-        <CardHeader className="flex flex-row items-center justify-between py-3">
-          <CardTitle className="text-lg font-medium">Direct Processing</CardTitle>
-          <Droplet className="h-5 w-5 text-purple-500" />
-        </CardHeader>
-        <CardContent className="py-2">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Current:</span>
-              <span className="text-xl font-bold text-purple-600">
-                {directProcessing.currentVolume.toFixed(1)}L
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Capacity:</span>
-              <span className="text-sm font-medium">{directProcessing.capacity}L</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Utilization:</span>
-              <span className={`text-sm font-bold ${getUtilizationColor(directProcessing.utilizationPercentage)}`}>
-                {directProcessing.utilizationPercentage.toFixed(1)}%
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Temperature:</span>
-              <div className="flex items-center gap-1">
-                <Thermometer className="h-3 w-3 text-red-500" />
-                <span className="text-sm font-medium">{directProcessing.lastTemperature}°C</span>
+        {/* Direct Processing */}
+        <Card className={`${getTileColor(directProcessing.utilizationPercentage)}`}>
+          <CardHeader className="flex flex-row items-center justify-between py-3">
+            <CardTitle className="text-lg font-medium">Direct Processing</CardTitle>
+            <Droplet className="h-5 w-5 text-purple-500" />
+          </CardHeader>
+          <CardContent className="py-2">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Current:</span>
+                <span className="text-xl font-bold text-purple-600">
+                  {directProcessing.currentVolume.toFixed(1)}L
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Capacity:</span>
+                <span className="text-sm font-medium">{directProcessing.capacity}L</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Utilization:</span>
+                <span className={`text-sm font-bold ${getUtilizationColor(directProcessing.utilizationPercentage)}`}>
+                  {directProcessing.utilizationPercentage.toFixed(1)}%
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Temperature:</span>
+                <div className="flex items-center gap-1">
+                  <Thermometer className="h-3 w-3 text-red-500" />
+                  <span className="text-sm font-medium">{directProcessing.lastTemperature}°C</span>
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Total Capacity */}
-      <Card className="bg-slate-50 border-slate-200">
-        <CardHeader className="flex flex-row items-center justify-between py-3">
-          <CardTitle className="text-lg font-medium">Total Capacity</CardTitle>
-          <TrendingUp className="h-5 w-5 text-slate-600" />
-        </CardHeader>
-        <CardContent className="py-2">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Current:</span>
-              <span className="text-xl font-bold text-slate-700">
-                {totalCurrentVolume.toFixed(1)}L
-              </span>
+        {/* Total Capacity */}
+        <Card className="bg-slate-50 border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between py-3">
+            <CardTitle className="text-lg font-medium">Total Capacity</CardTitle>
+            <TrendingUp className="h-5 w-5 text-slate-600" />
+          </CardHeader>
+          <CardContent className="py-2">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Current:</span>
+                <span className="text-xl font-bold text-slate-700">
+                  {totalCurrentVolume.toFixed(1)}L
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Total Capacity:</span>
+                <span className="text-sm font-medium">{totalCapacity}L</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Overall Utilization:</span>
+                <span className={`text-sm font-bold ${getUtilizationColor(totalUtilization)}`}>
+                  {totalUtilization.toFixed(1)}%
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Available:</span>
+                <span className="text-sm font-medium text-green-600">
+                  {(totalCapacity - totalCurrentVolume).toFixed(1)}L
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Total Capacity:</span>
-              <span className="text-sm font-medium">{totalCapacity}L</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Overall Utilization:</span>
-              <span className={`text-sm font-bold ${getUtilizationColor(totalUtilization)}`}>
-                {totalUtilization.toFixed(1)}%
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Available:</span>
-              <span className="text-sm font-medium text-green-600">
-                {(totalCapacity - totalCurrentVolume).toFixed(1)}L
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
