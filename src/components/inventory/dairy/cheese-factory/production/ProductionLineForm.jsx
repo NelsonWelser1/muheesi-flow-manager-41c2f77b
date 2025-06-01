@@ -1,28 +1,61 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMilkReception } from '../milk-reception/hooks/useMilkReceptionForm';
+import { useMilkReception } from '@/hooks/useMilkReception';
 
 const ProductionLineForm = () => {
+  const { data: milkReceptionData, isLoading: milkDataLoading } = useMilkReception();
+  const [availableBatches, setAvailableBatches] = useState([]);
+  
   const [formData, setFormData] = useState({
     productionLineName: '',
     cheeseType: '',
     batchNumber: '',
+    milkBatchId: '',
     startDate: '',
     endDate: '',
     status: '',
     notes: '',
   });
 
+  // Extract unique batch numbers from milk reception data
+  useEffect(() => {
+    if (milkReceptionData && milkReceptionData.length > 0) {
+      const batches = milkReceptionData
+        .filter(record => record.tank_number || record.batch_number)
+        .map(record => ({
+          id: record.id,
+          batchNumber: record.tank_number || record.batch_number || `Batch-${record.id}`,
+          volume: record.milk_volume,
+          supplier: record.supplier_name,
+          quality: record.quality_score || record.quality_check,
+          date: record.created_at || record.datetime
+        }))
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      setAvailableBatches(batches);
+    }
+  }, [milkReceptionData]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prevState => ({
       ...prevState,
       [name]: value
+    }));
+  };
+
+  const handleMilkBatchSelection = (value) => {
+    const selectedBatch = availableBatches.find(batch => batch.id.toString() === value);
+    setFormData(prevState => ({
+      ...prevState,
+      milkBatchId: value,
+      batchNumber: selectedBatch ? selectedBatch.batchNumber : ''
     }));
   };
 
@@ -70,6 +103,22 @@ const ProductionLineForm = () => {
           </div>
 
           <div>
+            <Label htmlFor="milkBatchId">Select Milk Batch</Label>
+            <Select onValueChange={handleMilkBatchSelection} disabled={milkDataLoading}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={milkDataLoading ? "Loading batches..." : "Select milk batch"} />
+              </SelectTrigger>
+              <SelectContent>
+                {availableBatches.map((batch) => (
+                  <SelectItem key={batch.id} value={batch.id.toString()}>
+                    {batch.batchNumber} - {batch.supplier} ({batch.volume}L) - {batch.quality}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <Label htmlFor="batchNumber">Batch Number</Label>
             <Input
               type="text"
@@ -77,7 +126,7 @@ const ProductionLineForm = () => {
               name="batchNumber"
               value={formData.batchNumber}
               onChange={handleChange}
-              placeholder="Enter batch number"
+              placeholder="Auto-filled from milk batch selection"
               required
             />
           </div>
