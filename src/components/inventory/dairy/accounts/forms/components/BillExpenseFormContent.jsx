@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import FormFieldGroup from './FormFieldGroup';
 import RecurringSection from './RecurringSection';
 import NotesField from './NotesField';
@@ -17,7 +18,8 @@ const BillExpenseFormContent = ({
   fileSelected,
   handleFileUpload,
   isUploading,
-  uploadedFileUrl
+  uploadedFileUrl,
+  isSubmissionCooldown
 }) => {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -45,8 +47,19 @@ const BillExpenseFormContent = ({
       />
 
       <div className="flex gap-4">
-        <Button type="submit" className="bg-[#0000a0] hover:bg-[#00008b]">
-          Record Expense
+        <Button 
+          type="submit" 
+          className="bg-[#0000a0] hover:bg-[#00008b]"
+          disabled={isSubmissionCooldown}
+        >
+          {isSubmissionCooldown ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Please wait... ({Math.ceil(5 - (Date.now() % 5000) / 1000)}s)
+            </>
+          ) : (
+            "Record Expense"
+          )}
         </Button>
       </div>
     </form>

@@ -9,6 +9,7 @@ export const useBillsExpensesForm = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [fileSelected, setFileSelected] = useState(null);
   const [uploadedFileUrl, setUploadedFileUrl] = useState("");
+  const [isSubmissionCooldown, setIsSubmissionCooldown] = useState(false);
   const fileInputRef = useRef(null);
   
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
@@ -34,8 +35,52 @@ export const useBillsExpensesForm = () => {
     
     loadBillNumber();
   }, [setValue, getLatestBillNumber]);
+
+  const clearFormAfterSubmission = async () => {
+    // Reset the form with default values
+    reset({
+      billDate: new Date().toISOString().split('T')[0],
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'pending',
+      paymentMethod: 'bank_transfer',
+      currency: 'UGX',
+      isRecurring: false,
+      recurringFrequency: '',
+      recurringEndDate: '',
+    });
+    
+    // Get a new bill number
+    const newBillNumber = await getLatestBillNumber();
+    setValue("billNumber", newBillNumber);
+    
+    // Reset file state
+    setFileSelected(null);
+    setUploadedFileUrl("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    
+    // Reset recurring
+    setIsRecurring(false);
+  };
+
+  const startSubmissionCooldown = () => {
+    setIsSubmissionCooldown(true);
+    setTimeout(() => {
+      setIsSubmissionCooldown(false);
+    }, 5000); // 5 seconds cooldown
+  };
   
   const onSubmit = async (data) => {
+    if (isSubmissionCooldown) {
+      toast({
+        title: "Please wait",
+        description: "You can submit another record in a few seconds.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       console.log("Bill/Expense data:", data);
       
@@ -62,28 +107,9 @@ export const useBillsExpensesForm = () => {
           description: "Your bill/expense record has been saved successfully.",
         });
         
-        // Reset the form
-        reset({
-          billDate: new Date().toISOString().split('T')[0],
-          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          status: 'pending',
-          paymentMethod: 'bank_transfer',
-          currency: 'UGX',
-          isRecurring: false,
-          recurringFrequency: '',
-          recurringEndDate: '',
-        });
-        
-        // Get a new bill number
-        const newBillNumber = await getLatestBillNumber();
-        setValue("billNumber", newBillNumber);
-        
-        // Reset file state
-        setFileSelected(null);
-        setUploadedFileUrl("");
-        
-        // Reset recurring
-        setIsRecurring(false);
+        // Clear form and start cooldown
+        await clearFormAfterSubmission();
+        startSubmissionCooldown();
       }
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -167,6 +193,7 @@ export const useBillsExpensesForm = () => {
     isUploading,
     uploadedFileUrl,
     isRecurring,
+    isSubmissionCooldown,
     handleRecurringToggle,
     handleFileChange,
     handleFileUpload,

@@ -23,6 +23,7 @@ const BillsExpensesForm = ({ onBack }) => {
     isUploading,
     uploadedFileUrl,
     isRecurring,
+    isSubmissionCooldown,
     handleRecurringToggle,
     handleFileChange,
     handleFileUpload,
@@ -67,6 +68,7 @@ const BillsExpensesForm = ({ onBack }) => {
             handleFileUpload={handleFileUpload}
             isUploading={isUploading}
             uploadedFileUrl={uploadedFileUrl}
+            isSubmissionCooldown={isSubmissionCooldown}
           />
         </CardContent>
       </Card>
