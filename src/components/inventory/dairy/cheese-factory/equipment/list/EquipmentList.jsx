@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { AlertTriangle, Check, Clock, AlertOctagon, Search, Printer, Download } 
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import EquipmentEntryForm from '../form/EquipmentEntryForm';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -18,6 +18,8 @@ const EquipmentList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showForm, setShowForm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const {
     data: equipmentList,
@@ -28,7 +30,7 @@ const EquipmentList = () => {
       const {
         data,
         error
-      } = await supabase.from('equipment').select('*').order('equipment_name');
+      } = await supabase.from('equipment').select('*').order('created_at', { ascending: false });
       if (error) {
         console.error('Error fetching equipment:', error);
         throw error;
@@ -116,6 +118,21 @@ const EquipmentList = () => {
     const matchesStatus = statusFilter === 'all' || status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const totalItems = filteredEquipment?.length || 0;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedEquipment = filteredEquipment?.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
   const handlePrint = () => {
     window.print();
@@ -304,7 +321,7 @@ const EquipmentList = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredEquipment?.map(equipment => {
+                {paginatedEquipment?.map(equipment => {
                   const status = getEquipmentStatus(equipment.current_condition);
                   const healthScore = getHealthScore(equipment.current_condition);
                   const maintenanceDates = generateMaintenanceDates(equipment.purchase_date, equipment.current_condition);
@@ -350,6 +367,44 @@ const EquipmentList = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-muted-foreground">
+            Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+          </div>
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    onClick={() => handlePageChange(page)}
+                    isActive={currentPage === page}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       {!filteredEquipment?.length && <div className="text-center py-8">
           <AlertTriangle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
