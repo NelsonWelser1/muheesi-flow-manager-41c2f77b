@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,10 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase';
+import { useToast } from '@/components/ui/use-toast';
 
 const ProductionLineForm = () => {
   const { data: milkReceptionData, isLoading: milkDataLoading } = useMilkReception();
   const [availableBatches, setAvailableBatches] = useState([]);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   const [formData, setFormData] = useState({
     batchId: '',
@@ -29,6 +33,87 @@ const ProductionLineForm = () => {
     yield: '',
     status: 'pending',
     notes: '',
+  });
+
+  // Add mutation for saving production line data
+  const saveProductionLineMutation = useMutation({
+    mutationFn: async (productionData) => {
+      console.log('Saving production line data:', productionData);
+      
+      // Map form data to database schema
+      const dbData = {
+        fromager_identifier: productionData.fromager,
+        cheese_type: productionData.cheeseType,
+        batch_id: productionData.batchId,
+        milk_volume: parseFloat(productionData.milkVolume) || 0,
+        start_time: productionData.startTime,
+        estimated_duration: parseFloat(productionData.duration) || 0,
+        starter_culture: productionData.starterCulture,
+        starter_quantity: parseFloat(productionData.starterQty) || 0,
+        coagulant_type: productionData.coagulantType,
+        coagulant_quantity: parseFloat(productionData.coagulantQty) || 0,
+        processing_temperature: parseFloat(productionData.temperature) || 0,
+        processing_time: parseFloat(productionData.processTime) || 0,
+        expected_yield: parseFloat(productionData.yield) || 0,
+        status: productionData.status,
+        notes: productionData.notes,
+        offload_batch_id: productionData.milkBatchId,
+        name: 'International Certified Standards',
+        manager: 'Didier Albatini',
+        description: 'Production line dedicated to international market standards and certifications'
+      };
+
+      const { data, error } = await supabase
+        .from('production_line_international')
+        .insert([dbData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving production line data:', error);
+        throw error;
+      }
+
+      console.log('Successfully saved production line data:', data);
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Production line entry saved successfully!",
+      });
+      
+      // Reset form after successful submission
+      setFormData({
+        batchId: '',
+        fromager: '',
+        cheeseType: '',
+        milkVolume: '',
+        milkBatchId: '',
+        startTime: '',
+        duration: '',
+        starterCulture: '',
+        starterQty: '',
+        coagulantType: '',
+        coagulantQty: '',
+        temperature: '',
+        processTime: '',
+        yield: '',
+        status: 'pending',
+        notes: '',
+      });
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['productionLineData'] });
+    },
+    onError: (error) => {
+      console.error('Error saving production line data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save production line entry. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
   // Extract unique batch numbers from milk reception data
@@ -94,8 +179,9 @@ const ProductionLineForm = () => {
     };
     
     console.log('Production Line Form Data Submitted:', finalFormData);
-    // Here you would typically handle the form submission,
-    // such as sending the data to an API endpoint.
+    
+    // Submit to database
+    saveProductionLineMutation.mutate(finalFormData);
   };
 
   return (
