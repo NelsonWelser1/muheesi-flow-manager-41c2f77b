@@ -239,6 +239,9 @@ export const useMilkOffloadForm = () => {
 
       await refetchMilkReception();
 
+      // Add 5-second delay before re-enabling the form to prevent duplicate submissions
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
     } catch (error) {
       console.error('Form submission error:', error);
       toast({
