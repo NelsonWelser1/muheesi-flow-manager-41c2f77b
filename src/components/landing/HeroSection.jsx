@@ -54,7 +54,12 @@ const HeroSection = () => {
             >
               Manage Inventory
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-900 px-8 py-3 text-lg">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-white text-white hover:bg-white hover:text-blue-900 px-8 py-3 text-lg"
+              onClick={() => navigate('/manage-companies')}
+            >
               View Companies
             </Button>
           </div>
