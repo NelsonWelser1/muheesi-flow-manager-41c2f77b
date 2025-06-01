@@ -22,6 +22,7 @@ const BillsExpensesForm = ({ onBack }) => {
     fileSelected,
     isUploading,
     uploadedFileUrl,
+    filePreviewUrl,
     isRecurring,
     isSubmissionCooldown,
     handleRecurringToggle,
@@ -68,6 +69,7 @@ const BillsExpensesForm = ({ onBack }) => {
             handleFileUpload={handleFileUpload}
             isUploading={isUploading}
             uploadedFileUrl={uploadedFileUrl}
+            filePreviewUrl={filePreviewUrl}
             isSubmissionCooldown={isSubmissionCooldown}
           />
         </CardContent>

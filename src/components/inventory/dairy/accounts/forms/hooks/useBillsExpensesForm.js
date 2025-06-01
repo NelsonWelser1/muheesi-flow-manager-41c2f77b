@@ -10,12 +10,13 @@ export const useBillsExpensesForm = () => {
   const [fileSelected, setFileSelected] = useState(null);
   const [uploadedFileUrl, setUploadedFileUrl] = useState("");
   const [isSubmissionCooldown, setIsSubmissionCooldown] = useState(false);
+  const [filePreviewUrl, setFilePreviewUrl] = useState("");
   const fileInputRef = useRef(null);
   
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
     defaultValues: {
       billDate: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'pending',
       paymentMethod: 'bank_transfer',
       currency: 'UGX',
@@ -46,7 +47,7 @@ export const useBillsExpensesForm = () => {
     // Get a new bill number first
     const newBillNumber = await getLatestBillNumber();
     
-    // Reset the form with default values and new bill number
+    // Reset the form completely with default values and new bill number
     reset({
       billDate: new Date().toISOString().split('T')[0],
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -64,9 +65,10 @@ export const useBillsExpensesForm = () => {
       notes: ''
     });
     
-    // Reset file state
+    // Reset file state completely
     setFileSelected(null);
     setUploadedFileUrl("");
+    setFilePreviewUrl("");
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -79,7 +81,7 @@ export const useBillsExpensesForm = () => {
     setIsSubmissionCooldown(true);
     setTimeout(() => {
       setIsSubmissionCooldown(false);
-    }, 5000); // 5 seconds cooldown
+    }, 5000);
   };
   
   const onSubmit = async (data) => {
@@ -136,7 +138,11 @@ export const useBillsExpensesForm = () => {
     const file = e.target.files[0];
     if (file) {
       setFileSelected(file);
-      setUploadedFileUrl(""); // Clear any previous upload URL
+      setUploadedFileUrl("");
+      
+      // Create preview URL for the selected file
+      const previewUrl = URL.createObjectURL(file);
+      setFilePreviewUrl(previewUrl);
     }
   };
   
@@ -184,18 +190,14 @@ export const useBillsExpensesForm = () => {
     }
   };
 
-  // Update fileInputRef to handle file selection
+  // Clean up preview URL when component unmounts
   useEffect(() => {
-    if (fileInputRef.current) {
-      fileInputRef.current.addEventListener('change', handleFileChange);
-    }
-    
     return () => {
-      if (fileInputRef.current) {
-        fileInputRef.current.removeEventListener('change', handleFileChange);
+      if (filePreviewUrl) {
+        URL.revokeObjectURL(filePreviewUrl);
       }
     };
-  }, []);
+  }, [filePreviewUrl]);
 
   return {
     register,
@@ -208,6 +210,7 @@ export const useBillsExpensesForm = () => {
     fileSelected,
     isUploading,
     uploadedFileUrl,
+    filePreviewUrl,
     isRecurring,
     isSubmissionCooldown,
     handleRecurringToggle,
