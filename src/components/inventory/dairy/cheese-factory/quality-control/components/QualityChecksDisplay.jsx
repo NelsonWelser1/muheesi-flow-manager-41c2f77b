@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
@@ -11,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { RefreshCw, Search, FileDown } from "lucide-react";
 import { format, subDays, subWeeks, subMonths, subYears } from 'date-fns';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -26,9 +26,12 @@ import {
   Legend
 } from 'recharts';
 
+const RECORDS_PER_PAGE = 10;
+
 const QualityChecksDisplay = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [timeRange, setTimeRange] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
   const {
@@ -71,9 +74,27 @@ const QualityChecksDisplay = () => {
     refetchOnWindowFocus: false
   });
 
-  const filteredChecks = checks.filter(check =>
-    check.batch_id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Sort checks by created_at in descending order (most recent first) and filter
+  const sortedAndFilteredChecks = checks
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .filter(check =>
+      check.batch_id.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedAndFilteredChecks.length / RECORDS_PER_PAGE);
+  const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
+  const endIndex = startIndex + RECORDS_PER_PAGE;
+  const currentRecords = sortedAndFilteredChecks.slice(startIndex, endIndex);
+
+  // Reset to first page when search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   // Prepare data for quality trends chart
   const trendData = checks.reduce((acc, check) => {
@@ -109,7 +130,7 @@ const QualityChecksDisplay = () => {
 
   // Handle data export functions
   const exportToExcel = () => {
-    const worksheetData = filteredChecks.map(check => ({
+    const worksheetData = sortedAndFilteredChecks.map(check => ({
       'Batch ID': check.batch_id,
       'Date': format(new Date(check.created_at), 'MMM dd, yyyy HH:mm'),
       'Temperature (°C)': check.temperature,
@@ -139,7 +160,7 @@ const QualityChecksDisplay = () => {
     doc.text(`Generated on: ${format(new Date(), 'MMM dd, yyyy HH:mm')}`, 14, 30);
     
     const tableColumn = ["Batch ID", "Date", "Temp (°C)", "Moisture (%)", "Acidity (pH)", "Salt (%)", "Status"];
-    const tableRows = filteredChecks.map(check => [
+    const tableRows = sortedAndFilteredChecks.map(check => [
       check.batch_id,
       format(new Date(check.created_at), 'MMM dd, yyyy'),
       check.temperature,
@@ -260,50 +281,91 @@ const QualityChecksDisplay = () => {
 
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Batch ID</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Temp (°C)</TableHead>
-                    <TableHead>Moisture (%)</TableHead>
-                    <TableHead>Acidity (pH)</TableHead>
-                    <TableHead>Salt (%)</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredChecks.length > 0 ? (
-                    filteredChecks.map((check) => (
-                      <TableRow key={check.id}>
-                        <TableCell className="font-medium">{check.batch_id}</TableCell>
-                        <TableCell>
-                          {format(new Date(check.created_at), 'MMM dd, yyyy')}
-                          <br />
-                          <span className="text-xs text-muted-foreground">
-                            {format(new Date(check.created_at), 'HH:mm')}
-                          </span>
-                        </TableCell>
-                        <TableCell>{check.temperature}°C</TableCell>
-                        <TableCell>{check.moisture}%</TableCell>
-                        <TableCell>{check.acidity}</TableCell>
-                        <TableCell>{check.salt}%</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusStyle(check.status)}>
-                            {check.status || 'Unknown'}
-                          </Badge>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="whitespace-nowrap">Batch ID</TableHead>
+                      <TableHead className="whitespace-nowrap">Date</TableHead>
+                      <TableHead className="whitespace-nowrap">Temp (°C)</TableHead>
+                      <TableHead className="whitespace-nowrap">Moisture (%)</TableHead>
+                      <TableHead className="whitespace-nowrap">Acidity (pH)</TableHead>
+                      <TableHead className="whitespace-nowrap">Salt (%)</TableHead>
+                      <TableHead className="whitespace-nowrap">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentRecords.length > 0 ? (
+                      currentRecords.map((check) => (
+                        <TableRow key={check.id}>
+                          <TableCell className="font-medium whitespace-nowrap">{check.batch_id}</TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {format(new Date(check.created_at), 'MMM dd, yyyy')}
+                            <br />
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(check.created_at), 'HH:mm')}
+                            </span>
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">{check.temperature}°C</TableCell>
+                          <TableCell className="whitespace-nowrap">{check.moisture}%</TableCell>
+                          <TableCell className="whitespace-nowrap">{check.acidity}</TableCell>
+                          <TableCell className="whitespace-nowrap">{check.salt}%</TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            <Badge className={getStatusStyle(check.status)}>
+                              {check.status || 'Unknown'}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                          {searchQuery ? 'No matching records found' : 'No quality check records available'}
                         </TableCell>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center">
-                        {searchQuery ? 'No matching records found' : 'No quality check records available'}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-between p-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1} to {Math.min(endIndex, sortedAndFilteredChecks.length)} of {sortedAndFilteredChecks.length} records
+                </div>
+                
+                {totalPages > 1 && (
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                        <PaginationItem key={page}>
+                          <PaginationLink 
+                            onClick={() => handlePageChange(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                )}
+              </div>
             </CardContent>
           </Card>
         </>
