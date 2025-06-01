@@ -3,6 +3,8 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { FileText, Image, Download, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 
 const PaginatedRecordsTable = ({ 
@@ -47,6 +49,29 @@ const PaginatedRecordsTable = ({
     }
   };
 
+  const getFileIcon = (fileName) => {
+    if (!fileName) return <FileText className="h-4 w-4 text-gray-400" />;
+    
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension)) {
+      return <Image className="h-4 w-4 text-blue-500" />;
+    }
+    return <FileText className="h-4 w-4 text-green-500" />;
+  };
+
+  const handleFilePreview = (fileUrl) => {
+    if (!fileUrl) return;
+    
+    // For images, open in new window for preview
+    const extension = fileUrl.split('.').pop()?.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension)) {
+      window.open(fileUrl, '_blank');
+    } else {
+      // For other files, trigger download
+      window.open(fileUrl, '_blank');
+    }
+  };
+
   const renderSkeletonRows = () => {
     return Array(5).fill(0).map((_, i) => (
       <TableRow key={`skeleton-${i}`}>
@@ -57,6 +82,7 @@ const PaginatedRecordsTable = ({
         <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
         <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
         <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
       </TableRow>
     ));
   };
@@ -74,6 +100,7 @@ const PaginatedRecordsTable = ({
               <TableHead className="whitespace-nowrap">Type</TableHead>
               <TableHead className="whitespace-nowrap">Amount</TableHead>
               <TableHead className="whitespace-nowrap">Status</TableHead>
+              <TableHead className="whitespace-nowrap">Attachment</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -93,11 +120,40 @@ const PaginatedRecordsTable = ({
                       {record.status}
                     </span>
                   </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {record.receipt_url ? (
+                      <div className="flex items-center gap-2">
+                        {getFileIcon(record.receipt_url)}
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 text-xs"
+                            onClick={() => handleFilePreview(record.receipt_url)}
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            Preview
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 text-xs"
+                            onClick={() => window.open(record.receipt_url, '_blank')}
+                          >
+                            <Download className="h-3 w-3 mr-1" />
+                            Download
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">No file</span>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-4">
+                <TableCell colSpan={8} className="text-center py-4">
                   No records found
                 </TableCell>
               </TableRow>
