@@ -3,9 +3,7 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
-import { Eye, FileText, Image, Download } from 'lucide-react';
 
 const PaginatedRecordsTable = ({ 
   paginatedData, 
@@ -49,38 +47,6 @@ const PaginatedRecordsTable = ({
     }
   };
 
-  const getFileIcon = (fileUrl) => {
-    if (!fileUrl) return null;
-    
-    const extension = fileUrl.split('.').pop()?.toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension)) {
-      return <Image className="h-4 w-4 text-blue-500" />;
-    }
-    return <FileText className="h-4 w-4 text-green-500" />;
-  };
-
-  const handleFilePreview = (fileUrl) => {
-    if (!fileUrl) return;
-    
-    const extension = fileUrl.split('.').pop()?.toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension)) {
-      // Open image in a new window for preview
-      const previewWindow = window.open('', '_blank');
-      previewWindow.document.write(`
-        <html>
-          <head><title>File Preview</title></head>
-          <body style="margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f0f0;">
-            <img src="${fileUrl}" style="max-width: 90%; max-height: 90%; object-fit: contain;" />
-          </body>
-        </html>
-      `);
-      previewWindow.document.close();
-    } else {
-      // For other file types, open directly
-      window.open(fileUrl, '_blank');
-    }
-  };
-
   const renderSkeletonRows = () => {
     return Array(5).fill(0).map((_, i) => (
       <TableRow key={`skeleton-${i}`}>
@@ -91,7 +57,6 @@ const PaginatedRecordsTable = ({
         <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
         <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
         <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
-        <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
       </TableRow>
     ));
   };
@@ -109,7 +74,6 @@ const PaginatedRecordsTable = ({
               <TableHead className="whitespace-nowrap">Type</TableHead>
               <TableHead className="whitespace-nowrap">Amount</TableHead>
               <TableHead className="whitespace-nowrap">Status</TableHead>
-              <TableHead className="whitespace-nowrap">Attachment</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -129,40 +93,11 @@ const PaginatedRecordsTable = ({
                       {record.status}
                     </span>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {record.receipt_url ? (
-                      <div className="flex items-center gap-2">
-                        {getFileIcon(record.receipt_url)}
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleFilePreview(record.receipt_url)}
-                            className="h-6 px-2 text-xs"
-                          >
-                            <Eye className="h-3 w-3 mr-1" />
-                            Preview
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => window.open(record.receipt_url, '_blank')}
-                            className="h-6 px-2 text-xs"
-                          >
-                            <Download className="h-3 w-3 mr-1" />
-                            Download
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 text-xs">No file</span>
-                    )}
-                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-4">
+                <TableCell colSpan={7} className="text-center py-4">
                   No records found
                 </TableCell>
               </TableRow>
