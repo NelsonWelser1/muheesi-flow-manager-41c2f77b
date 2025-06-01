@@ -22,6 +22,12 @@ export const useBillsExpensesForm = () => {
       isRecurring: false,
       recurringFrequency: '',
       recurringEndDate: '',
+      billNumber: '',
+      vendorName: '',
+      expenseType: '',
+      amount: '',
+      description: '',
+      notes: ''
     }
   });
   
@@ -37,7 +43,10 @@ export const useBillsExpensesForm = () => {
   }, [setValue, getLatestBillNumber]);
 
   const clearFormAfterSubmission = async () => {
-    // Reset the form with default values
+    // Get a new bill number first
+    const newBillNumber = await getLatestBillNumber();
+    
+    // Reset the form with default values and new bill number
     reset({
       billDate: new Date().toISOString().split('T')[0],
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -47,11 +56,13 @@ export const useBillsExpensesForm = () => {
       isRecurring: false,
       recurringFrequency: '',
       recurringEndDate: '',
+      billNumber: newBillNumber,
+      vendorName: '',
+      expenseType: '',
+      amount: '',
+      description: '',
+      notes: ''
     });
-    
-    // Get a new bill number
-    const newBillNumber = await getLatestBillNumber();
-    setValue("billNumber", newBillNumber);
     
     // Reset file state
     setFileSelected(null);
@@ -60,7 +71,7 @@ export const useBillsExpensesForm = () => {
       fileInputRef.current.value = '';
     }
     
-    // Reset recurring
+    // Reset recurring state
     setIsRecurring(false);
   };
 
@@ -125,6 +136,7 @@ export const useBillsExpensesForm = () => {
     const file = e.target.files[0];
     if (file) {
       setFileSelected(file);
+      setUploadedFileUrl(""); // Clear any previous upload URL
     }
   };
   
@@ -166,6 +178,10 @@ export const useBillsExpensesForm = () => {
   const handleRecurringToggle = (checked) => {
     setIsRecurring(checked);
     setValue("isRecurring", checked);
+    if (!checked) {
+      setValue("recurringFrequency", "");
+      setValue("recurringEndDate", "");
+    }
   };
 
   // Update fileInputRef to handle file selection
@@ -179,7 +195,7 @@ export const useBillsExpensesForm = () => {
         fileInputRef.current.removeEventListener('change', handleFileChange);
       }
     };
-  }, [fileInputRef]);
+  }, []);
 
   return {
     register,

@@ -71,7 +71,7 @@ const FileUploadSection = ({
           <Button 
             type="button"
             variant="outline" 
-            className="flex items-center gap-2 w-full sm:w-auto"
+            className="flex items-center gap-2 w-full sm:w-auto hover:bg-blue-50 hover:border-blue-300 transition-colors"
             onClick={handleFileUpload}
             disabled={!fileSelected || isUploading}
           >
@@ -84,7 +84,7 @@ const FileUploadSection = ({
           </Button>
           
           {uploadedFileUrl && (
-            <div className="flex-1 p-3 bg-green-50 text-green-700 rounded-md">
+            <div className="flex-1 p-3 bg-green-50 text-green-700 rounded-md border border-green-200">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 flex-shrink-0" />
@@ -106,7 +106,7 @@ const FileUploadSection = ({
         {/* Upload progress or error states */}
         {isUploading && (
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className="bg-blue-500 h-2 rounded-full animate-pulse w-3/4"></div>
+            <div className="bg-blue-500 h-2 rounded-full animate-pulse w-3/4 transition-all duration-300"></div>
           </div>
         )}
       </div>
