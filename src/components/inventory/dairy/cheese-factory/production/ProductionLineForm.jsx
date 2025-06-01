@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
@@ -41,8 +42,9 @@ const ProductionLineForm = ({ productionLine }) => {
   }, [productionLine]);
 
   // Mutation to handle form submission
-  const mutation = useMutation(
-    async (data) => {
+  const mutation = useMutation({
+    mutationFn: async (data) => {
+      console.log('Submitting data to Supabase:', data);
       const { data: insertData, error } = await supabase
         .from('production_line_international')
         .insert([data]);
@@ -53,24 +55,23 @@ const ProductionLineForm = ({ productionLine }) => {
       }
       return insertData;
     },
-    {
-      onSuccess: () => {
-        toast({
-          title: "Success",
-          description: "Production line record added successfully",
-        });
-        queryClient.invalidateQueries(['production-line-data']); // Invalidate cache
-        resetForm();
-      },
-      onError: (error) => {
-        toast({
-          title: "Error",
-          description: error.message || "Failed to add production line record",
-          variant: "destructive",
-        });
-      },
-    }
-  );
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Production line record added successfully",
+      });
+      queryClient.invalidateQueries(['production-line-data']); // Invalidate cache
+      resetForm();
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add production line record",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -81,30 +82,37 @@ const ProductionLineForm = ({ productionLine }) => {
   };
 
   const generateBatchId = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    
-    // Format: INT{YYYYMMDD}-{XXX}-{HHMMSS} to match constraint ^INT\d{8}-[A-Z]{3}-\d{6}$
-    const dateStr = `${year}${month}${day}`; // 8 digits
-    const timeStr = `${hours}${minutes}${seconds}`; // 6 digits
-    
-    // Get cheese type prefix
-    const cheeseTypeMap = {
-      'Mozzarella': 'MOZ',
-      'Cheddar': 'CHE',
-      'Gouda': 'GOU',
-      'Swiss': 'SWI',
-      'Parmesan': 'PAR'
-    };
-    
-    const typePrefix = cheeseTypeMap[formData.cheeseType] || 'GEN';
-    
-    return `INT${dateStr}-${typePrefix}-${timeStr}`;
+    try {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      
+      // Format: INT{YYYYMMDD}-{XXX}-{HHMMSS} to match constraint ^INT\d{8}-[A-Z]{3}-\d{6}$
+      const dateStr = `${year}${month}${day}`; // 8 digits
+      const timeStr = `${hours}${minutes}${seconds}`; // 6 digits
+      
+      // Get cheese type prefix
+      const cheeseTypeMap = {
+        'Mozzarella': 'MOZ',
+        'Cheddar': 'CHE',
+        'Gouda': 'GOU',
+        'Swiss': 'SWI',
+        'Parmesan': 'PAR'
+      };
+      
+      const typePrefix = cheeseTypeMap[formData.cheeseType] || 'GEN';
+      
+      const batchId = `INT${dateStr}-${typePrefix}-${timeStr}`;
+      console.log('Generated batch ID:', batchId);
+      return batchId;
+    } catch (error) {
+      console.error('Error generating batch ID:', error);
+      return `INT${new Date().getFullYear()}0101-GEN-000000`; // Fallback
+    }
   };
 
   const resetForm = () => {
@@ -129,22 +137,35 @@ const ProductionLineForm = ({ productionLine }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Always generate a new batch ID for international production line with correct format
-    const finalFormData = {
-      ...formData,
-      batchId: generateBatchId(), // Generate batch ID matching database constraint
-      milkVolume: parseFloat(formData.milkVolume) || 0,
-      estimatedDuration: parseInt(formData.estimatedDuration) || 0,
-      starterQuantity: parseFloat(formData.starterQty) || 0,
-      coagulantQuantity: parseFloat(formData.coagulantQty) || 0,
-      processingTemperature: parseFloat(formData.temperature) || 0,
-      processingTime: parseInt(formData.processTime) || 0,
-      expectedYield: parseFloat(formData.yield) || 0,
-      startTime: new Date(formData.startTime).toISOString(),
-    };
+    try {
+      // Always generate a new batch ID for international production line with correct format
+      const finalFormData = {
+        fromager_identifier: formData.fromagerIdentifier,
+        cheese_type: formData.cheeseType,
+        batch_id: generateBatchId(), // Generate batch ID matching database constraint
+        milk_volume: parseFloat(formData.milkVolume) || 0,
+        start_time: new Date(formData.startTime).toISOString(),
+        estimated_duration: parseInt(formData.estimatedDuration) || 0,
+        starter_culture: formData.starterCulture,
+        starter_quantity: parseFloat(formData.starterQty) || 0,
+        coagulant_type: formData.coagulantType,
+        coagulant_quantity: parseFloat(formData.coagulantQty) || 0,
+        processing_temperature: parseFloat(formData.temperature) || 0,
+        processing_time: parseInt(formData.processTime) || 0,
+        expected_yield: parseFloat(formData.yield) || 0,
+        notes: formData.notes,
+      };
 
-    console.log('Production Line Form Data Submitted:', finalFormData);
-    mutation.mutate(finalFormData);
+      console.log('Production Line Form Data Submitted:', finalFormData);
+      mutation.mutate(finalFormData);
+    } catch (error) {
+      console.error('Error in handleSubmit:', error);
+      toast({
+        title: "Error",
+        description: "Failed to prepare form data for submission",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -337,8 +358,8 @@ const ProductionLineForm = ({ productionLine }) => {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={mutation.isLoading}>
-            {mutation.isLoading ? 'Submitting...' : 'Submit Record'}
+          <Button type="submit" className="w-full" disabled={mutation.isPending}>
+            {mutation.isPending ? 'Submitting...' : 'Submit Record'}
           </Button>
         </form>
       </CardContent>
