@@ -19,7 +19,6 @@ const BillExpenseFormContent = ({
   handleFileUpload,
   isUploading,
   uploadedFileUrl,
-  filePreviewUrl,
   isSubmissionCooldown
 }) => {
   return (
@@ -45,7 +44,6 @@ const BillExpenseFormContent = ({
         handleFileUpload={handleFileUpload}
         isUploading={isUploading}
         uploadedFileUrl={uploadedFileUrl}
-        filePreviewUrl={filePreviewUrl}
       />
 
       <div className="flex gap-4">

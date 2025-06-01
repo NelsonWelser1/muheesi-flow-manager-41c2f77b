@@ -2,15 +2,14 @@
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, Upload, Check, FileText, Image, Eye, X } from "lucide-react";
+import { Loader2, Upload, Check, FileText, Image } from "lucide-react";
 
 const FileUploadSection = ({ 
   fileInputRef, 
   fileSelected, 
   handleFileUpload, 
   isUploading, 
-  uploadedFileUrl,
-  filePreviewUrl 
+  uploadedFileUrl 
 }) => {
   const getFileIcon = (fileName) => {
     if (!fileName) return <Upload className="h-8 w-8 text-gray-400" />;
@@ -28,12 +27,6 @@ const FileUploadSection = ({
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const isImageFile = (fileName) => {
-    if (!fileName) return false;
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension);
   };
 
   return (
@@ -73,46 +66,6 @@ const FileUploadSection = ({
           </div>
         </div>
         
-        {/* File preview section */}
-        {fileSelected && filePreviewUrl && (
-          <div className="border rounded-lg p-4 bg-white">
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-sm font-medium">File Preview</Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = '';
-                  }
-                }}
-                className="h-6 w-6 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {isImageFile(fileSelected.name) ? (
-              <div className="w-full max-w-xs mx-auto">
-                <img 
-                  src={filePreviewUrl} 
-                  alt="Preview" 
-                  className="w-full h-auto max-h-48 object-contain rounded border"
-                />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center p-4 bg-gray-50 rounded border">
-                <div className="text-center">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">{fileSelected.name}</p>
-                  <p className="text-xs text-gray-500">Preview not available for this file type</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        
         {/* Upload button and status */}
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           <Button 
@@ -141,9 +94,8 @@ const FileUploadSection = ({
                   href={uploadedFileUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-sm underline hover:no-underline whitespace-nowrap flex items-center gap-1"
+                  className="text-sm underline hover:no-underline whitespace-nowrap"
                 >
-                  <Eye className="h-3 w-3" />
                   View File
                 </a>
               </div>
@@ -151,7 +103,7 @@ const FileUploadSection = ({
           )}
         </div>
         
-        {/* Upload progress */}
+        {/* Upload progress or error states */}
         {isUploading && (
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div className="bg-blue-500 h-2 rounded-full animate-pulse w-3/4 transition-all duration-300"></div>
