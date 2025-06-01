@@ -10,6 +10,8 @@ import { format } from 'date-fns';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { useToast } from "@/components/ui/use-toast";
 import { exportToPDF, exportToExcel, exportToCSV } from '@/components/inventory/dairy/utils/reportExportUtils';
+import MilkCapacityTiles from './MilkCapacityTiles';
+
 const RECORDS_PER_PAGE = 10;
 const MilkReceptionTable = () => {
   const {
@@ -166,37 +168,42 @@ const MilkReceptionTable = () => {
         </CardContent>
       </Card>;
   }
-  return <Card>
-      <CardHeader>
-        <CardTitle>Milk Reception Records</CardTitle>
-        <div className="flex items-center justify-between space-x-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search by supplier, tank, quality, or batch ID..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8" />
+  return (
+    <div className="space-y-6">
+      {/* Milk Capacity Tiles */}
+      <MilkCapacityTiles />
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Milk Reception Records</CardTitle>
+          <div className="flex items-center justify-between space-x-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search by supplier, tank, quality, or batch ID..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="flex items-center gap-1">
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button variant="outline" size="sm" onClick={handlePrint} className="flex items-center gap-1">
+                <Printer className="h-4 w-4" />
+                Print
+              </Button>
+              
+              <Button variant="outline" size="sm" onClick={handleExportExcel} className="flex items-center gap-1">
+                <FileSpreadsheet className="h-4 w-4" />
+                Excel
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportCSV} className="flex items-center gap-1">
+                <Download className="h-4 w-4" />
+                CSV
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="flex items-center gap-1">
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-            <Button variant="outline" size="sm" onClick={handlePrint} className="flex items-center gap-1">
-              <Printer className="h-4 w-4" />
-              Print
-            </Button>
-            
-            <Button variant="outline" size="sm" onClick={handleExportExcel} className="flex items-center gap-1">
-              <FileSpreadsheet className="h-4 w-4" />
-              Excel
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExportCSV} className="flex items-center gap-1">
-              <Download className="h-4 w-4" />
-              CSV
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {filteredRecords.length === 0 ? <div className="text-center py-6 text-muted-foreground">
+        </CardHeader>
+        <CardContent>
+          {filteredRecords.length === 0 ? <div className="text-center py-6 text-muted-foreground">
             {searchTerm ? 'No records found matching your search.' : 'No milk reception records found.'}
           </div> : <>
             <div className="overflow-x-auto" id="milk-reception-table">
@@ -275,7 +282,10 @@ const MilkReceptionTable = () => {
                 </Pagination>}
             </div>
           </>}
-      </CardContent>
-    </Card>;
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
+
 export default MilkReceptionTable;
