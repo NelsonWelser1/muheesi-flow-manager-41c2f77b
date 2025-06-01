@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
@@ -11,7 +12,7 @@ const MilkCapacityTiles = () => {
   const TANK_CAPACITIES = {
     'Tank A': 5000,
     'Tank B': 3000,
-    'Direct-Processing': 2000
+    'Direct-Processing': null // Unlimited capacity
   };
 
   const calculateTankData = (tankName) => {
@@ -19,7 +20,7 @@ const MilkCapacityTiles = () => {
       return { 
         currentVolume: 0, 
         lastTemperature: 0, 
-        capacity: TANK_CAPACITIES[tankName] || 0,
+        capacity: TANK_CAPACITIES[tankName] || null,
         utilizationPercentage: 0
       };
     }
@@ -33,8 +34,10 @@ const MilkCapacityTiles = () => {
     }, 0);
 
     const lastTemperature = tankRecords.length > 0 ? tankRecords[0].temperature : 0;
-    const capacity = TANK_CAPACITIES[tankName] || 0;
-    const utilizationPercentage = capacity > 0 ? Math.min((currentVolume / capacity) * 100, 100) : 0;
+    const capacity = TANK_CAPACITIES[tankName];
+    
+    // For unlimited capacity (Direct Processing), utilization is always 0
+    const utilizationPercentage = capacity && capacity > 0 ? Math.min((currentVolume / capacity) * 100, 100) : 0;
 
     return {
       currentVolume: Math.max(0, currentVolume),
@@ -49,7 +52,7 @@ const MilkCapacityTiles = () => {
   const directProcessing = calculateTankData('Direct-Processing');
 
   const totalCurrentVolume = tankA.currentVolume + tankB.currentVolume + directProcessing.currentVolume;
-  const totalCapacity = tankA.capacity + tankB.capacity + directProcessing.capacity;
+  const totalCapacity = tankA.capacity + tankB.capacity; // Don't include unlimited capacity in total
   const totalUtilization = totalCapacity > 0 ? (totalCurrentVolume / totalCapacity) * 100 : 0;
 
   const getTileColor = (percentage) => {
@@ -141,7 +144,7 @@ const MilkCapacityTiles = () => {
         </Card>
 
         {/* Direct Processing */}
-        <Card className={`${getTileColor(directProcessing.utilizationPercentage)}`}>
+        <Card className="bg-green-50 border-green-200">
           <CardHeader className="flex flex-row items-center justify-between py-3">
             <CardTitle className="text-lg font-medium">Direct Processing</CardTitle>
             <Droplet className="h-5 w-5 text-purple-500" />
@@ -156,13 +159,11 @@ const MilkCapacityTiles = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Capacity:</span>
-                <span className="text-sm font-medium">{directProcessing.capacity}L</span>
+                <span className="text-sm font-medium text-blue-600">Unlimited</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Utilization:</span>
-                <span className={`text-sm font-bold ${getUtilizationColor(directProcessing.utilizationPercentage)}`}>
-                  {directProcessing.utilizationPercentage.toFixed(1)}%
-                </span>
+                <span className="text-sm font-bold text-green-600">N/A</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Temperature:</span>
@@ -191,18 +192,18 @@ const MilkCapacityTiles = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Total Capacity:</span>
-                <span className="text-sm font-medium">{totalCapacity}L</span>
+                <span className="text-sm font-medium">{totalCapacity}L + Unlimited</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Overall Utilization:</span>
+                <span className="text-sm text-gray-600">Tank Utilization:</span>
                 <span className={`text-sm font-bold ${getUtilizationColor(totalUtilization)}`}>
                   {totalUtilization.toFixed(1)}%
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Available:</span>
+                <span className="text-sm text-gray-600">Tank Available:</span>
                 <span className="text-sm font-medium text-green-600">
-                  {(totalCapacity - totalCurrentVolume).toFixed(1)}L
+                  {(totalCapacity - (tankA.currentVolume + tankB.currentVolume)).toFixed(1)}L
                 </span>
               </div>
             </div>
