@@ -1,10 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { useColdRoomInventory } from './hooks/useColdRoomInventory';
+import { useInventoryPagination } from './hooks/useInventoryPagination';
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { format } from 'date-fns';
 import SearchToolbar from './components/SearchToolbar';
 
@@ -86,6 +88,17 @@ const MovementTracking = () => {
     return filtered;
   }, [filteredItems, searchTerm, sortConfig, dateRange]);
 
+  // Use pagination hook
+  const {
+    paginatedData,
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = useInventoryPagination(filteredAndSortedData, 10);
+
   const renderSkeletonRows = () => {
     return Array(5).fill(0).map((_, i) => (
       <TableRow key={`skeleton-${i}`}>
@@ -148,7 +161,7 @@ const MovementTracking = () => {
                   {columns.map(column => (
                     <TableHead
                       key={column.accessorKey}
-                      className="cursor-pointer hover:bg-gray-50"
+                      className="cursor-pointer hover:bg-gray-50 whitespace-nowrap"
                       onClick={() => handleSort(column.accessorKey)}
                     >
                       {column.header}
@@ -170,11 +183,11 @@ const MovementTracking = () => {
                       Error loading movements: {error}
                     </TableCell>
                   </TableRow>
-                ) : filteredAndSortedData.length > 0 ? (
-                  filteredAndSortedData.map((item, index) => (
+                ) : paginatedData.length > 0 ? (
+                  paginatedData.map((item, index) => (
                     <TableRow key={item.id || index}>
-                      <TableCell>{format(new Date(item.storage_date_time), 'PPp')}</TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">{format(new Date(item.storage_date_time), 'PPp')}</TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <Badge 
                           className={
                             item.movement_action.toLowerCase() === 'in' 
@@ -185,13 +198,13 @@ const MovementTracking = () => {
                           {item.movement_action.toLowerCase() === 'in' ? 'Goods Receipt' : 'Goods Issue'}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         {item.product_type}
                         <span className="block text-xs text-muted-foreground capitalize">
                           {item.product_category}
                         </span>
                       </TableCell>
-                      <TableCell className="font-mono text-xs">
+                      <TableCell className="font-mono text-xs whitespace-nowrap">
                         {item.batch_id}
                         {item.production_batch_id && (
                           <span className="block text-xs text-muted-foreground">
@@ -199,11 +212,11 @@ const MovementTracking = () => {
                           </span>
                         )}
                       </TableCell>
-                      <TableCell>{item.cold_room_id}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="whitespace-nowrap">{item.cold_room_id}</TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
                         {item.unit_quantity} × {item.unit_weight}g
                       </TableCell>
-                      <TableCell>{item.operator_id}</TableCell>
+                      <TableCell className="whitespace-nowrap">{item.operator_id}</TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -216,6 +229,45 @@ const MovementTracking = () => {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} items
+              </div>
+              
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <PaginationItem key={page}>
+                      <PaginationLink 
+                        onClick={() => handlePageChange(page)}
+                        isActive={currentPage === page}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
 
