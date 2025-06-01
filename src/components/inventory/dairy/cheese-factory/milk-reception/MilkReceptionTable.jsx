@@ -1,400 +1,204 @@
+
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { useQueryClient } from '@tanstack/react-query';
+import { Badge } from "@/components/ui/badge";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useMilkReception } from '@/hooks/useMilkReception';
-import { format, parseISO } from 'date-fns';
-import { Download, FileText, Search, RefreshCw, Columns } from 'lucide-react';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import html2canvas from 'html2canvas';
-import MilkBalanceTracker from './MilkBalanceTracker';
+import { format } from 'date-fns';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const RECORDS_PER_PAGE = 10;
 
 const MilkReceptionTable = () => {
-  const queryClient = useQueryClient();
+  const { data: records, isLoading, error } = useMilkReception();
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Column visibility state
-  const [columnVisibility, setColumnVisibility] = useState({
-    entryType: true,
-    storageTank: true,
-    qualityScore: true,
-    supplier: true,
-    volume: true,
-    temperature: true,
-    fat: true,
-    protein: true,
-    tpc: true,
-    acidity: true,
-    destination: true,
-    dateTime: true,
-    notes: true
-  });
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const {
-    data: milkReception,
-    isLoading,
-    error
-  } = useMilkReception();
+  // Filter records based on search term
+  const filteredRecords = records.filter(record => 
+    record.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.tank_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.quality_score?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.batch_id?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['milkReceptions'] });
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredRecords.length / RECORDS_PER_PAGE);
+  const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
+  const endIndex = startIndex + RECORDS_PER_PAGE;
+  const currentRecords = filteredRecords.slice(startIndex, endIndex);
+
+  // Reset to first page when search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
-  const toggleColumnVisibility = (column) => {
-    setColumnVisibility(prev => ({
-      ...prev,
-      [column]: !prev[column]
-    }));
-  };
-
-  const filteredRecords = React.useMemo(() => {
-    if (!milkReception) return [];
-    return milkReception.filter(record => 
-      Object.values(record).some(value => 
-        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-  }, [milkReception, searchTerm]);
-
-  const generateMonthlyReport = () => {
-    if (!milkReception) return [];
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return milkReception.filter(record => {
-      const recordDate = new Date(record.datetime || record.created_at);
-      return recordDate >= monthStart && recordDate <= monthEnd;
-    });
-  };
-
-  const generateAnnualReport = () => {
-    if (!milkReception) return [];
-    const now = new Date();
-    const yearStart = new Date(now.getFullYear(), 0, 1);
-    return milkReception.filter(record => {
-      const recordDate = new Date(record.datetime || record.created_at);
-      return recordDate >= yearStart;
-    });
-  };
-
-  const formatDate = dateString => {
-    try {
-      if (!dateString) return 'N/A';
-      const date = parseISO(dateString);
-      return format(date, 'PPp');
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Invalid date';
-    }
-  };
-
-  const downloadPDF = (data, title) => {
-    const doc = new jsPDF();
-    const tableData = data.map(record => [record.supplier_name, record.milk_volume.toFixed(2), record.temperature.toFixed(1), record.quality_score || 'N/A', record.fat_percentage.toFixed(1), record.protein_percentage.toFixed(1), record.total_plate_count.toLocaleString(), record.acidity.toFixed(1), formatDate(record.datetime || record.created_at)]);
-    doc.text(title, 14, 15);
-    doc.autoTable({
-      head: [['Supplier', 'Volume (L)', 'Temp (°C)', 'Quality', 'Fat %', 'Protein %', 'TPC', 'Acidity', 'Date & Time']],
-      body: tableData,
-      startY: 20
-    });
-    doc.save(`milk-reception-${title.toLowerCase()}.pdf`);
-  };
-
-  const downloadCSV = (data, title) => {
-    const headers = ['Supplier', 'Volume (L)', 'Temperature (°C)', 'Quality Score', 'Fat %', 'Protein %', 'TPC', 'Acidity', 'Date & Time'];
-    const csvData = data.map(record => [record.supplier_name, record.milk_volume, record.temperature, record.quality_score || 'N/A', record.fat_percentage, record.protein_percentage, record.total_plate_count, record.acidity, formatDate(record.datetime || record.created_at)].join(','));
-    const csvContent = [headers.join(','), ...csvData].join('\n');
-    const blob = new Blob([csvContent], {
-      type: 'text/csv;charset=utf-8;'
-    });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `milk-reception-${title.toLowerCase()}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const downloadJPG = async (data, title) => {
-    const table = document.querySelector('.milk-reception-table');
-    if (table) {
-      const canvas = await html2canvas(table);
-      const link = document.createElement('a');
-      link.download = `milk-reception-${title.toLowerCase()}.jpg`;
-      link.href = canvas.toDataURL('image/jpeg');
-      link.click();
+  const getQualityBadgeColor = (quality) => {
+    switch (quality) {
+      case 'Grade A':
+        return 'bg-green-100 text-green-800';
+      case 'Grade B':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Grade C':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   if (isLoading) {
-    return <div>Loading milk reception data...</div>;
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">Loading milk reception records...</div>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (error) {
-    return <div>Error loading milk reception data: {error.message}</div>;
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center text-red-600">
+            Error loading records: {error.message}
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
-  return <>
-      <MilkBalanceTracker />
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between py-[13px] px-[22px] my-0 mx-0">
-          <CardTitle>Milk Reception Records</CardTitle>
-          <div className="flex space-x-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <Columns className="h-4 w-4 mr-2" />
-                  Columns
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.entryType}
-                  onCheckedChange={() => toggleColumnVisibility('entryType')}
-                >
-                  Entry Type
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.storageTank}
-                  onCheckedChange={() => toggleColumnVisibility('storageTank')}
-                >
-                  Storage Tank
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.qualityScore}
-                  onCheckedChange={() => toggleColumnVisibility('qualityScore')}
-                >
-                  Quality Score
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.supplier}
-                  onCheckedChange={() => toggleColumnVisibility('supplier')}
-                >
-                  Supplier
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.volume}
-                  onCheckedChange={() => toggleColumnVisibility('volume')}
-                >
-                  Volume (L)
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.temperature}
-                  onCheckedChange={() => toggleColumnVisibility('temperature')}
-                >
-                  Temperature (°C)
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.fat}
-                  onCheckedChange={() => toggleColumnVisibility('fat')}
-                >
-                  Fat %
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.protein}
-                  onCheckedChange={() => toggleColumnVisibility('protein')}
-                >
-                  Protein %
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.tpc}
-                  onCheckedChange={() => toggleColumnVisibility('tpc')}
-                >
-                  TPC
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.acidity}
-                  onCheckedChange={() => toggleColumnVisibility('acidity')}
-                >
-                  Acidity
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.destination}
-                  onCheckedChange={() => toggleColumnVisibility('destination')}
-                >
-                  Destination
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.dateTime}
-                  onCheckedChange={() => toggleColumnVisibility('dateTime')}
-                >
-                  Date & Time
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.notes}
-                  onCheckedChange={() => toggleColumnVisibility('notes')}
-                >
-                  Notes
-                </DropdownMenuCheckboxItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Reports
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => {
-                const monthlyData = generateMonthlyReport();
-                downloadPDF(monthlyData, 'Monthly-Report');
-              }}>
-                  Monthly Report
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                const annualData = generateAnnualReport();
-                downloadPDF(annualData, 'Annual-Report');
-              }}>
-                  Annual Report
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => downloadPDF(filteredRecords, 'All-Records')}>
-                  Download PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadCSV(filteredRecords, 'All-Records')}>
-                  Download CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadJPG(filteredRecords, 'All-Records')}>
-                  Download JPG
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button variant="outline" onClick={handleRefresh}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Milk Reception Records</CardTitle>
+        <div className="flex items-center space-x-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by supplier, tank, quality, or batch ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
+            />
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Search records..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
-            </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {filteredRecords.length === 0 ? (
+          <div className="text-center py-6 text-muted-foreground">
+            {searchTerm ? 'No records found matching your search.' : 'No milk reception records found.'}
           </div>
-          <div className="overflow-x-auto">
-            <div className="w-full overflow-auto">
-              <Table className="milk-reception-table relative w-full">
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <Table>
                 <TableHeader>
                   <TableRow>
-                    {columnVisibility.entryType && (
-                      <TableHead className="min-w-[120px] whitespace-nowrap">Entry Type</TableHead>
-                    )}
-                    {columnVisibility.storageTank && (
-                      <TableHead className="min-w-[120px] whitespace-nowrap">Storage Tank</TableHead>
-                    )}
-                    {columnVisibility.qualityScore && (
-                      <TableHead className="min-w-[100px] whitespace-nowrap">Quality Score</TableHead>
-                    )}
-                    {columnVisibility.supplier && (
-                      <TableHead className="min-w-[150px] whitespace-nowrap">Supplier</TableHead>
-                    )}
-                    {columnVisibility.volume && (
-                      <TableHead className="min-w-[100px] whitespace-nowrap">Volume (L)</TableHead>
-                    )}
-                    {columnVisibility.temperature && (
-                      <TableHead className="min-w-[120px] whitespace-nowrap">Temperature (°C)</TableHead>
-                    )}
-                    {columnVisibility.fat && (
-                      <TableHead className="min-w-[80px] whitespace-nowrap">Fat %</TableHead>
-                    )}
-                    {columnVisibility.protein && (
-                      <TableHead className="min-w-[100px] whitespace-nowrap">Protein %</TableHead>
-                    )}
-                    {columnVisibility.tpc && (
-                      <TableHead className="min-w-[100px] whitespace-nowrap">TPC</TableHead>
-                    )}
-                    {columnVisibility.acidity && (
-                      <TableHead className="min-w-[100px] whitespace-nowrap">Acidity</TableHead>
-                    )}
-                    {columnVisibility.destination && (
-                      <TableHead className="min-w-[120px] whitespace-nowrap">Destination</TableHead>
-                    )}
-                    {columnVisibility.dateTime && (
-                      <TableHead className="min-w-[180px] whitespace-nowrap">Date & Time</TableHead>
-                    )}
-                    {columnVisibility.notes && (
-                      <TableHead className="min-w-[200px] whitespace-nowrap">Notes</TableHead>
-                    )}
+                    <TableHead>Date</TableHead>
+                    <TableHead>Supplier</TableHead>
+                    <TableHead>Volume (L)</TableHead>
+                    <TableHead>Tank</TableHead>
+                    <TableHead>Temperature (°C)</TableHead>
+                    <TableHead>Fat %</TableHead>
+                    <TableHead>Protein %</TableHead>
+                    <TableHead>Quality</TableHead>
+                    <TableHead>Batch ID</TableHead>
+                    <TableHead>Destination</TableHead>
+                    <TableHead>Notes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredRecords.map(record => (
-                    <TableRow key={record.id} className={record.supplier_name.startsWith('Offload from') ? 'bg-red-50' : ''}>
-                      {columnVisibility.entryType && (
-                        <TableCell className="whitespace-nowrap">
-                          {record.supplier_name.startsWith('Offload from') ? 'Tank Offload' : 'Reception'}
-                        </TableCell>
-                      )}
-                      {columnVisibility.storageTank && (
-                        <TableCell className="whitespace-nowrap">{record.tank_number || 'N/A'}</TableCell>
-                      )}
-                      {columnVisibility.qualityScore && (
-                        <TableCell className="whitespace-nowrap">{record.quality_score || 'N/A'}</TableCell>
-                      )}
-                      {columnVisibility.supplier && (
-                        <TableCell className="whitespace-nowrap">{record.supplier_name}</TableCell>
-                      )}
-                      {columnVisibility.volume && (
-                        <TableCell className={`whitespace-nowrap ${record.milk_volume < 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}`}>
-                          {record.milk_volume.toFixed(2)}
-                        </TableCell>
-                      )}
-                      {columnVisibility.temperature && (
-                        <TableCell className="whitespace-nowrap">{record.temperature?.toFixed(1) || 'N/A'}</TableCell>
-                      )}
-                      {columnVisibility.fat && (
-                        <TableCell className="whitespace-nowrap">{record.fat_percentage?.toFixed(1) || 'N/A'}</TableCell>
-                      )}
-                      {columnVisibility.protein && (
-                        <TableCell className="whitespace-nowrap">{record.protein_percentage?.toFixed(1) || 'N/A'}</TableCell>
-                      )}
-                      {columnVisibility.tpc && (
-                        <TableCell className="whitespace-nowrap">{record.total_plate_count?.toLocaleString() || 'N/A'}</TableCell>
-                      )}
-                      {columnVisibility.acidity && (
-                        <TableCell className="whitespace-nowrap">{record.acidity?.toFixed(1) || 'N/A'}</TableCell>
-                      )}
-                      {columnVisibility.destination && (
-                        <TableCell className="whitespace-nowrap">{record.destination || 'N/A'}</TableCell>
-                      )}
-                      {columnVisibility.dateTime && (
-                        <TableCell className="whitespace-nowrap">{formatDate(record.datetime || record.created_at)}</TableCell>
-                      )}
-                      {columnVisibility.notes && (
-                        <TableCell className="max-w-xs truncate">{record.notes || 'N/A'}</TableCell>
-                      )}
+                  {currentRecords.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell className="whitespace-nowrap">
+                        {format(new Date(record.created_at), 'MMM dd, yyyy HH:mm')}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {record.supplier_name}
+                      </TableCell>
+                      <TableCell className={record.milk_volume < 0 ? 'text-red-600' : 'text-green-600'}>
+                        {record.milk_volume}
+                      </TableCell>
+                      <TableCell>{record.tank_number}</TableCell>
+                      <TableCell>{record.temperature}</TableCell>
+                      <TableCell>{record.fat_percentage}%</TableCell>
+                      <TableCell>{record.protein_percentage}%</TableCell>
+                      <TableCell>
+                        <Badge className={getQualityBadgeColor(record.quality_score)}>
+                          {record.quality_score}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm font-mono">
+                        {record.batch_id || '-'}
+                      </TableCell>
+                      <TableCell>{record.destination || '-'}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {record.notes}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </>;
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredRecords.length)} of {filteredRecords.length} records
+              </div>
+              
+              {totalPages > 1 && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(page)}
+                          isActive={currentPage === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
 };
 
 export default MilkReceptionTable;
