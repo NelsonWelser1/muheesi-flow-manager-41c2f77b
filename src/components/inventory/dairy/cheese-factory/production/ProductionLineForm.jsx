@@ -7,10 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase';
+import { useToast } from "@/hooks/use-toast";
 
 const ProductionLineForm = () => {
   const { data: milkReceptionData, isLoading: milkDataLoading } = useMilkReception();
   const [availableBatches, setAvailableBatches] = useState([]);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   const [formData, setFormData] = useState({
     batchId: '',
@@ -29,6 +34,61 @@ const ProductionLineForm = () => {
     yield: '',
     status: 'pending',
     notes: '',
+  });
+
+  // Mutation to save production line data
+  const saveProductionLineMutation = useMutation({
+    mutationFn: async (productionData) => {
+      console.log('Saving production line data:', productionData);
+      const { data, error } = await supabase
+        .from('cheese_production_line')
+        .insert([productionData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving production line data:', error);
+        throw error;
+      }
+
+      console.log('Successfully saved production line data:', data);
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Production line entry saved successfully!",
+      });
+      // Reset form
+      setFormData({
+        batchId: '',
+        fromager: '',
+        cheeseType: '',
+        milkVolume: '',
+        milkBatchId: '',
+        startTime: '',
+        duration: '',
+        starterCulture: '',
+        starterQty: '',
+        coagulantType: '',
+        coagulantQty: '',
+        temperature: '',
+        processTime: '',
+        yield: '',
+        status: 'pending',
+        notes: '',
+      });
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['productionLineData'] });
+    },
+    onError: (error) => {
+      console.error('Error saving production line data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save production line entry. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 
   // Extract unique batch numbers from milk reception data
@@ -90,12 +150,20 @@ const ProductionLineForm = () => {
     // Generate batch ID if not provided
     const finalFormData = {
       ...formData,
-      batchId: formData.batchId || generateBatchId()
+      batchId: formData.batchId || generateBatchId(),
+      milkVolume: parseFloat(formData.milkVolume) || 0,
+      duration: parseFloat(formData.duration) || 0,
+      starterQty: parseFloat(formData.starterQty) || 0,
+      coagulantQty: parseFloat(formData.coagulantQty) || 0,
+      temperature: parseFloat(formData.temperature) || 0,
+      processTime: parseFloat(formData.processTime) || 0,
+      yield: parseFloat(formData.yield) || 0,
     };
     
     console.log('Production Line Form Data Submitted:', finalFormData);
-    // Here you would typically handle the form submission,
-    // such as sending the data to an API endpoint.
+    
+    // Save to database
+    saveProductionLineMutation.mutate(finalFormData);
   };
 
   return (
@@ -335,7 +403,13 @@ const ProductionLineForm = () => {
             />
           </div>
 
-          <Button type="submit" className="w-full">Submit Production Line Entry</Button>
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={saveProductionLineMutation.isPending}
+          >
+            {saveProductionLineMutation.isPending ? 'Submitting...' : 'Submit Production Line Entry'}
+          </Button>
         </form>
       </CardContent>
     </Card>
