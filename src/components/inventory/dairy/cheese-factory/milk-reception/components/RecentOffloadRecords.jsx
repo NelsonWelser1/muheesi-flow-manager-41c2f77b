@@ -1,14 +1,83 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Printer, Eye, EyeOff, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import { Printer, Eye, EyeOff, FileText, ChevronLeft, ChevronRight, Search, Download, FileSpreadsheet } from "lucide-react";
 import { useBillsExpensesPagination } from "../../../accounts/records/hooks/useBillsExpensesPagination";
+import * as XLSX from 'xlsx';
 
 const RecentOffloadRecords = ({ records = [] }) => {
   const [showDetails, setShowDetails] = useState(false);
-  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("date-desc");
+  const [timeFilter, setTimeFilter] = useState("all");
+
+  // Filter and sort records
+  const filteredAndSortedRecords = useMemo(() => {
+    let filtered = records.filter(record => {
+      if (!searchTerm) return true;
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        record.supplier_name?.toLowerCase().includes(searchLower) ||
+        record.tank_number?.toLowerCase().includes(searchLower) ||
+        record.quality_check?.toLowerCase().includes(searchLower) ||
+        record.notes?.toLowerCase().includes(searchLower)
+      );
+    });
+
+    // Time filter
+    if (timeFilter !== "all") {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      switch (timeFilter) {
+        case "today":
+          filterDate.setHours(0, 0, 0, 0);
+          filtered = filtered.filter(record => new Date(record.created_at) >= filterDate);
+          break;
+        case "week":
+          filterDate.setDate(filterDate.getDate() - 7);
+          filtered = filtered.filter(record => new Date(record.created_at) >= filterDate);
+          break;
+        case "month":
+          filterDate.setMonth(filterDate.getMonth() - 1);
+          filtered = filtered.filter(record => new Date(record.created_at) >= filterDate);
+          break;
+        case "year":
+          filterDate.setFullYear(filterDate.getFullYear() - 1);
+          filtered = filtered.filter(record => new Date(record.created_at) >= filterDate);
+          break;
+      }
+    }
+
+    // Sort records
+    return filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at);
+      const dateB = new Date(b.created_at);
+      
+      switch (sortBy) {
+        case "date-asc":
+          return dateA - dateB;
+        case "date-desc":
+          return dateB - dateA;
+        case "supplier-asc":
+          return (a.supplier_name || "").localeCompare(b.supplier_name || "");
+        case "supplier-desc":
+          return (b.supplier_name || "").localeCompare(a.supplier_name || "");
+        case "volume-asc":
+          return (a.milk_volume || 0) - (b.milk_volume || 0);
+        case "volume-desc":
+          return (b.milk_volume || 0) - (a.milk_volume || 0);
+        default:
+          return dateB - dateA;
+      }
+    });
+  }, [records, searchTerm, sortBy, timeFilter]);
+
   const {
     paginatedData,
     currentPage,
@@ -17,7 +86,7 @@ const RecentOffloadRecords = ({ records = [] }) => {
     endIndex,
     totalItems,
     handlePageChange
-  } = useBillsExpensesPagination(records, 15);
+  } = useBillsExpensesPagination(filteredAndSortedRecords, 15);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -67,6 +136,52 @@ const RecentOffloadRecords = ({ records = [] }) => {
     }
   };
 
+  const exportToCSV = () => {
+    const csvData = filteredAndSortedRecords.map(record => ({
+      'Date': formatDate(record.created_at),
+      'Supplier': record.supplier_name || 'N/A',
+      'Tank': record.tank_number || 'N/A',
+      'Volume (L)': record.milk_volume ? Number(record.milk_volume).toFixed(1) : 'N/A',
+      'Temperature (°C)': record.temperature ? Number(record.temperature).toFixed(1) : 'N/A',
+      'Quality': record.quality_check || 'N/A',
+      'Fat %': record.fat_content ? Number(record.fat_content).toFixed(1) : 'N/A',
+      'Protein %': record.protein_content ? Number(record.protein_content).toFixed(1) : 'N/A',
+      'pH': record.ph_level ? Number(record.ph_level).toFixed(1) : 'N/A',
+      'Notes': record.notes || 'N/A'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(csvData);
+    const csv = XLSX.utils.sheet_to_csv(worksheet);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `milk_reception_records_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToExcel = () => {
+    const excelData = filteredAndSortedRecords.map(record => ({
+      'Date': formatDate(record.created_at),
+      'Supplier': record.supplier_name || 'N/A',
+      'Tank': record.tank_number || 'N/A',
+      'Volume (L)': record.milk_volume ? Number(record.milk_volume).toFixed(1) : 'N/A',
+      'Temperature (°C)': record.temperature ? Number(record.temperature).toFixed(1) : 'N/A',
+      'Quality': record.quality_check || 'N/A',
+      'Fat %': record.fat_content ? Number(record.fat_content).toFixed(1) : 'N/A',
+      'Protein %': record.protein_content ? Number(record.protein_content).toFixed(1) : 'N/A',
+      'pH': record.ph_level ? Number(record.ph_level).toFixed(1) : 'N/A',
+      'Notes': record.notes || 'N/A'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Milk Reception Records');
+    XLSX.writeFile(workbook, `milk_reception_records_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   const handlePrint = () => {
     const tableHtml = `
       <html>
@@ -97,7 +212,7 @@ const RecentOffloadRecords = ({ records = [] }) => {
             </tr>
           </thead>
           <tbody>
-            ${records.map(record => `
+            ${filteredAndSortedRecords.map(record => `
               <tr>
                 <td>${formatDate(record.created_at)}</td>
                 <td>${record.supplier_name || 'N/A'}</td>
@@ -159,13 +274,73 @@ const RecentOffloadRecords = ({ records = [] }) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handlePrint()}
+            onClick={exportToCSV}
+            className="flex items-center gap-1 text-xs px-2 py-1"
+          >
+            <Download className="h-3 w-3" />
+            CSV
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportToExcel}
+            className="flex items-center gap-1 text-xs px-2 py-1"
+          >
+            <FileSpreadsheet className="h-3 w-3" />
+            Excel
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrint}
             className="flex items-center gap-1 text-xs px-2 py-1"
           >
             <Printer className="h-3 w-3" />
             Print
           </Button>
         </div>
+      </div>
+
+      {/* Search and Filter Controls */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Search records..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8 h-8 text-sm"
+          />
+        </div>
+        
+        <Select value={timeFilter} onValueChange={setTimeFilter}>
+          <SelectTrigger className="h-8 text-sm">
+            <SelectValue placeholder="Filter by time" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Time</SelectItem>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="week">Last Week</SelectItem>
+            <SelectItem value="month">Last Month</SelectItem>
+            <SelectItem value="year">Last Year</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="h-8 text-sm">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="date-desc">Date (Newest)</SelectItem>
+            <SelectItem value="date-asc">Date (Oldest)</SelectItem>
+            <SelectItem value="supplier-asc">Supplier (A-Z)</SelectItem>
+            <SelectItem value="supplier-desc">Supplier (Z-A)</SelectItem>
+            <SelectItem value="volume-desc">Volume (Highest)</SelectItem>
+            <SelectItem value="volume-asc">Volume (Lowest)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Pagination info and controls */}
