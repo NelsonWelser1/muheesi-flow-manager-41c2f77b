@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -101,18 +100,60 @@ const DirectProcessingAlerts = () => {
     return `${hours}h ${minutes}m`;
   };
 
-  const getSuggestedTank = (volume) => {
+  const getSuggestedTankStrategy = (volume) => {
     const tankACapacity = calculateTankCapacity('Tank A');
     const tankBCapacity = calculateTankCapacity('Tank B');
+    const totalAvailableCapacity = tankACapacity + tankBCapacity;
     
+    // If volume fits in either single tank, suggest the better option
     if (volume <= tankACapacity && volume <= tankBCapacity) {
-      return tankACapacity >= tankBCapacity ? 'Tank A' : 'Tank B';
-    } else if (volume <= tankACapacity) {
-      return 'Tank A';
-    } else if (volume <= tankBCapacity) {
-      return 'Tank B';
+      const suggestedTank = tankACapacity >= tankBCapacity ? 'Tank A' : 'Tank B';
+      return {
+        strategy: 'single',
+        tank: suggestedTank,
+        capacity: suggestedTank === 'Tank A' ? tankACapacity : tankBCapacity,
+        remaining: 0
+      };
+    } 
+    // If volume fits in only one tank
+    else if (volume <= tankACapacity) {
+      return {
+        strategy: 'single',
+        tank: 'Tank A',
+        capacity: tankACapacity,
+        remaining: 0
+      };
     }
-    return null;
+    else if (volume <= tankBCapacity) {
+      return {
+        strategy: 'single',
+        tank: 'Tank B',
+        capacity: tankBCapacity,
+        remaining: 0
+      };
+    }
+    // If volume requires both tanks
+    else if (volume <= totalAvailableCapacity) {
+      return {
+        strategy: 'dual',
+        tankA: Math.min(volume, tankACapacity),
+        tankB: Math.min(volume - Math.min(volume, tankACapacity), tankBCapacity),
+        tankACapacity,
+        tankBCapacity,
+        remaining: 0
+      };
+    }
+    // If volume exceeds total available capacity
+    else {
+      return {
+        strategy: 'overflow',
+        tankA: tankACapacity,
+        tankB: tankBCapacity,
+        tankACapacity,
+        tankBCapacity,
+        remaining: volume - totalAvailableCapacity
+      };
+    }
   };
 
   return (
@@ -125,7 +166,7 @@ const DirectProcessingAlerts = () => {
       </CardHeader>
       <CardContent className="space-y-3">
         {activeAlerts.map((alert) => {
-          const suggestedTank = getSuggestedTank(alert.milk_volume);
+          const strategy = getSuggestedTankStrategy(alert.milk_volume);
           const isUrgent = alert.timeRemaining < (1 * 60 * 60 * 1000); // Less than 1 hour
           
           return (
@@ -150,15 +191,38 @@ const DirectProcessingAlerts = () => {
                   </div>
                   
                   <div className="text-sm">
-                    {suggestedTank ? (
+                    {strategy.strategy === 'single' && (
                       <span className="text-green-700">
-                        💡 Suggested: Transfer to {suggestedTank} 
-                        (Available: {calculateTankCapacity(suggestedTank).toFixed(1)}L)
+                        💡 Suggested: Transfer to {strategy.tank} 
+                        (Available: {strategy.capacity.toFixed(1)}L)
                       </span>
-                    ) : (
-                      <span className="text-red-700">
-                        ⚠️ No available tank capacity - Process immediately!
-                      </span>
+                    )}
+                    
+                    {strategy.strategy === 'dual' && (
+                      <div className="text-green-700">
+                        <div>💡 Suggested: Split transfer between tanks:</div>
+                        <div className="ml-4 mt-1">
+                          • Tank A: {strategy.tankA.toFixed(1)}L (Available: {strategy.tankACapacity.toFixed(1)}L)
+                        </div>
+                        <div className="ml-4">
+                          • Tank B: {strategy.tankB.toFixed(1)}L (Available: {strategy.tankBCapacity.toFixed(1)}L)
+                        </div>
+                      </div>
+                    )}
+                    
+                    {strategy.strategy === 'overflow' && (
+                      <div className="text-red-700">
+                        <div>⚠️ Insufficient tank capacity! Suggested action:</div>
+                        <div className="ml-4 mt-1">
+                          • Tank A: {strategy.tankA.toFixed(1)}L (Available: {strategy.tankACapacity.toFixed(1)}L)
+                        </div>
+                        <div className="ml-4">
+                          • Tank B: {strategy.tankB.toFixed(1)}L (Available: {strategy.tankBCapacity.toFixed(1)}L)
+                        </div>
+                        <div className="ml-4 font-medium text-red-800">
+                          • Remaining: {strategy.remaining.toFixed(1)}L - Process immediately or find alternative storage!
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
