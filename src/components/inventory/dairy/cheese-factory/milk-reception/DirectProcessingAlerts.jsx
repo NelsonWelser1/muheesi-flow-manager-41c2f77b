@@ -82,12 +82,12 @@ const DirectProcessingAlerts = () => {
       'Tank B': 3000
     };
 
-    const tankRecords = milkReceptionData
+    const currentVolume = milkReceptionData
       .filter(record => record.tank_number === tankName)
       .reduce((total, record) => total + (record.milk_volume || 0), 0);
 
     const capacity = TANK_CAPACITIES[tankName] || 0;
-    return Math.max(0, capacity - tankRecords);
+    return Math.max(0, capacity - currentVolume);
   };
 
   // Don't render if no active alerts
