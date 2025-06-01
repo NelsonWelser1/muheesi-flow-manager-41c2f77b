@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { format } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Printer, Search } from 'lucide-react';
+import { Download, Printer, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -13,6 +13,7 @@ export const RecentOffloadRecords = ({
   records
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAllRecords, setShowAllRecords] = useState(false);
 
   if (!records || records.length === 0) {
     return <p className="text-center text-gray-500">No offload records found</p>;
@@ -241,6 +242,8 @@ export const RecentOffloadRecords = ({
     XLSX.writeFile(wb, 'milk-offload-records.xlsx');
   };
 
+  const displayedRecords = showAllRecords ? filteredRecords : filteredRecords.slice(0, 5);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
@@ -269,46 +272,157 @@ export const RecentOffloadRecords = ({
         </div>
       </div>
 
+      {/* Summary Information */}
+      <Card className="p-4 bg-blue-50 border-blue-200">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <span className="font-medium text-blue-800">Total Records:</span>
+            <div className="text-lg font-bold text-blue-600">{filteredRecords.length}</div>
+          </div>
+          <div>
+            <span className="font-medium text-blue-800">Total Volume Offloaded:</span>
+            <div className="text-lg font-bold text-blue-600">
+              {filteredRecords.reduce((sum, record) => sum + Math.abs(record.milk_volume || 0), 0).toFixed(1)}L
+            </div>
+          </div>
+          <div>
+            <span className="font-medium text-blue-800">Date Range:</span>
+            <div className="text-sm text-blue-600">
+              {filteredRecords.length > 0 ? 
+                `${format(new Date(Math.min(...filteredRecords.map(r => new Date(r.created_at)))), 'MMM dd')} - ${format(new Date(Math.max(...filteredRecords.map(r => new Date(r.created_at)))), 'MMM dd, yyyy')}` 
+                : 'N/A'}
+            </div>
+          </div>
+          <div>
+            <span className="font-medium text-blue-800">Average Volume:</span>
+            <div className="text-lg font-bold text-blue-600">
+              {filteredRecords.length > 0 ? (filteredRecords.reduce((sum, record) => sum + Math.abs(record.milk_volume || 0), 0) / filteredRecords.length).toFixed(1) : '0'}L
+            </div>
+          </div>
+        </div>
+      </Card>
+
       <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="whitespace-nowrap px-6">Batch ID</TableHead>
-              <TableHead className="whitespace-nowrap px-6">Tank</TableHead>
-              <TableHead className="whitespace-nowrap px-6">Date</TableHead>
-              <TableHead className="whitespace-nowrap px-6">Volume (L)</TableHead>
-              <TableHead className="whitespace-nowrap px-6">Temp (°C)</TableHead>
-              <TableHead className="whitespace-nowrap px-6">Quality</TableHead>
-              <TableHead className="whitespace-nowrap px-6">Fat %</TableHead>
-              <TableHead className="whitespace-nowrap px-6">Protein %</TableHead>
-              <TableHead className="whitespace-nowrap px-6">Plate Count</TableHead>
-              <TableHead className="whitespace-nowrap px-6">Acidity</TableHead>
-              <TableHead className="whitespace-nowrap px-6">Destination</TableHead>
-              <TableHead className="whitespace-nowrap px-6">Notes</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Batch ID</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Source Tank</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Date & Time</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Volume (L)</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Temperature (°C)</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Quality Grade</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Fat %</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Protein %</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Plate Count</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Acidity</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Destination</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Notes</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Record ID</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Created</TableHead>
+              <TableHead className="whitespace-nowrap px-6 font-bold">Updated</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredRecords.slice(0, 5).map(record => (
+            {displayedRecords.map(record => (
               <TableRow key={record.id}>
-                <TableCell className="whitespace-nowrap px-6 min-w-[150px] font-medium">
-                  {record.batch_id || ''}
+                <TableCell className="whitespace-nowrap px-6 min-w-[150px] font-mono text-xs bg-gray-50">
+                  {record.batch_id || 'N/A'}
                 </TableCell>
-                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{record.storage_tank || record.tank_number}</TableCell>
-                <TableCell className="whitespace-nowrap px-6 min-w-[180px]">{format(new Date(record.created_at), 'PPp')}</TableCell>
-                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{Math.abs(record.milk_volume)}</TableCell>
-                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{record.temperature}</TableCell>
-                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{record.quality_score || record.quality_check}</TableCell>
-                <TableCell className="whitespace-nowrap px-6 min-w-[80px]">{record.fat_percentage}</TableCell>
-                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{record.protein_percentage}</TableCell>
-                <TableCell className="whitespace-nowrap px-6 min-w-[120px]">{record.total_plate_count}</TableCell>
-                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">{record.acidity}</TableCell>
-                <TableCell className="whitespace-nowrap px-6 min-w-[120px]">{record.destination}</TableCell>
-                <TableCell className="whitespace-nowrap px-6 min-w-[200px]">{record.notes}</TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px] font-medium">
+                  {record.storage_tank || record.tank_number || 'N/A'}
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[180px]">
+                  {format(new Date(record.created_at), 'MMM dd, yyyy HH:mm:ss')}
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px] font-bold">
+                  <span className={record.milk_volume < 0 ? 'text-red-600' : 'text-green-600'}>
+                    {Math.abs(record.milk_volume || 0).toFixed(1)}
+                  </span>
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">
+                  {record.temperature || 'N/A'}°C
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    record.quality_score === 'Grade A' ? 'bg-green-100 text-green-800' :
+                    record.quality_score === 'Grade B' ? 'bg-yellow-100 text-yellow-800' :
+                    record.quality_score === 'Grade C' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {record.quality_score || record.quality_check || 'N/A'}
+                  </span>
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[80px]">
+                  {record.fat_percentage ? `${record.fat_percentage}%` : 'N/A'}
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">
+                  {record.protein_percentage ? `${record.protein_percentage}%` : 'N/A'}
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[120px]">
+                  {record.total_plate_count || 'N/A'}
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px]">
+                  {record.acidity || 'N/A'}
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[120px] font-medium">
+                  {record.destination || 'N/A'}
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[200px]">
+                  <div className="max-w-[200px] overflow-hidden text-ellipsis" title={record.notes}>
+                    {record.notes || 'No notes'}
+                  </div>
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[100px] font-mono text-xs text-gray-500">
+                  {record.id ? record.id.substring(0, 8) + '...' : 'N/A'}
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[120px] text-xs text-gray-500">
+                  {format(new Date(record.created_at), 'MMM dd HH:mm')}
+                </TableCell>
+                <TableCell className="whitespace-nowrap px-6 min-w-[120px] text-xs text-gray-500">
+                  {record.updated_at ? format(new Date(record.updated_at), 'MMM dd HH:mm') : 'N/A'}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      {/* Show More/Less Button */}
+      {filteredRecords.length > 5 && (
+        <div className="flex justify-center">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowAllRecords(!showAllRecords)}
+            className="flex items-center gap-2"
+          >
+            {showAllRecords ? (
+              <>
+                <ChevronUp className="h-4 w-4" />
+                Show Less ({filteredRecords.length - 5} hidden)
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4" />
+                Show All ({filteredRecords.length - 5} more)
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Additional Information Panel */}
+      <Card className="p-4 bg-gray-50">
+        <h4 className="font-medium text-gray-800 mb-2">Available Data Fields</h4>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-sm">
+          {filteredRecords.length > 0 && Object.keys(filteredRecords[0]).map(key => (
+            <div key={key} className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              <span className="text-gray-600">{key.replace(/_/g, ' ')}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 };
