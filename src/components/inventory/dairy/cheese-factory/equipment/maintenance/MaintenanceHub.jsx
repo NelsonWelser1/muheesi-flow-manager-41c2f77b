@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -7,11 +8,14 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import MaintenanceEntryForm from '../../MaintenanceEntryForm';
 
 const MaintenanceHub = () => {
   const [selectedDate, setSelectedDate] = React.useState(new Date());
   const [view, setView] = useState('calendar'); // 'calendar' or 'list'
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const { data: maintenanceData, isLoading } = useQuery({
     queryKey: ['maintenanceSchedule'],
@@ -19,7 +23,7 @@ const MaintenanceHub = () => {
       const { data, error } = await supabase
         .from('equipment_maintenance')
         .select('*')
-        .order('next_maintenance', { ascending: true });
+        .order('created_at', { ascending: false }); // Sort by most recent first
       
       if (error) {
         console.error('Error fetching maintenance data:', error);
@@ -72,6 +76,34 @@ const MaintenanceHub = () => {
     const defaultConfig = { color: 'bg-gray-100 text-gray-800', icon: <Clock className="h-4 w-4" /> };
     return config[status] || defaultConfig;
   };
+
+  // Pagination logic for scheduled maintenance
+  const filteredMaintenanceData = maintenanceData?.filter(task => {
+    if (view === 'calendar') {
+      const taskDate = new Date(task.next_maintenance);
+      return (
+        taskDate.getDate() === selectedDate.getDate() &&
+        taskDate.getMonth() === selectedDate.getMonth() &&
+        taskDate.getFullYear() === selectedDate.getFullYear()
+      );
+    }
+    return true;
+  }) || [];
+
+  const totalItems = filteredMaintenanceData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedMaintenanceData = filteredMaintenanceData.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  // Reset to first page when view or date changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [view, selectedDate]);
 
   if (isLoading) {
     return (
@@ -185,49 +217,75 @@ const MaintenanceHub = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {maintenanceData
-                ?.filter(task => {
-                  if (view === 'calendar') {
-                    const taskDate = new Date(task.next_maintenance);
-                    return (
-                      taskDate.getDate() === selectedDate.getDate() &&
-                      taskDate.getMonth() === selectedDate.getMonth() &&
-                      taskDate.getFullYear() === selectedDate.getFullYear()
-                    );
-                  }
-                  return true;
-                })
-                .map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
-                  >
-                    <div>
-                      <h4 className="font-medium">{task.equipment_name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(task.next_maintenance).toLocaleDateString()}
+              {paginatedMaintenanceData.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow whitespace-nowrap overflow-hidden"
+                >
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium truncate">{task.equipment_name}</h4>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {new Date(task.next_maintenance).toLocaleDateString()}
+                    </p>
+                    {task.notes && (
+                      <p className="text-sm text-muted-foreground mt-1 truncate">
+                        {task.notes}
                       </p>
-                      {task.notes && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {task.notes}
-                        </p>
-                      )}
-                    </div>
-                    <Badge className={getStatusBadge(task.status).color}>
-                      <span className="flex items-center gap-1">
-                        {getStatusBadge(task.status).icon}
-                        {task.status}
-                      </span>
-                    </Badge>
+                    )}
                   </div>
-                ))}
+                  <Badge className={getStatusBadge(task.status).color}>
+                    <span className="flex items-center gap-1 whitespace-nowrap">
+                      {getStatusBadge(task.status).icon}
+                      {task.status}
+                    </span>
+                  </Badge>
+                </div>
+              ))}
 
-              {maintenanceData?.length === 0 && (
+              {filteredMaintenanceData.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">No maintenance tasks scheduled</p>
                 </div>
               )}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex justify-between items-center">
+                <div className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                </div>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(page)}
+                          isActive={currentPage === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
