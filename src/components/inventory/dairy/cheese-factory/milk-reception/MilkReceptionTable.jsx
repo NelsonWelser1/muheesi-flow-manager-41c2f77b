@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, RefreshCw, FileText, FileSpreadsheet, Download, Printer } from "lucide-react";
 import { useMilkReception } from '@/hooks/useMilkReception';
 import { format } from 'date-fns';
 import {
@@ -16,13 +15,17 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useToast } from "@/hooks/use-toast";
+import { exportToPDF, exportToExcel, exportToCSV } from '@/components/inventory/dairy/utils/reportExportUtils';
 
 const RECORDS_PER_PAGE = 10;
 
 const MilkReceptionTable = () => {
-  const { data: records, isLoading, error } = useMilkReception();
+  const { data: records, isLoading, error, refetch } = useMilkReception();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { toast } = useToast();
 
   // Filter records based on search term
   const filteredRecords = records.filter(record => 
@@ -60,6 +63,109 @@ const MilkReceptionTable = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+      toast({
+        title: "Data Refreshed",
+        description: "Milk reception records have been updated successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Refresh Failed",
+        description: "Failed to refresh data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handlePrint = () => {
+    const printContent = document.getElementById('milk-reception-table');
+    if (printContent) {
+      const originalContent = document.body.innerHTML;
+      const printableContent = `
+        <html>
+          <head>
+            <title>Milk Reception Records</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              th { background-color: #f2f2f2; font-weight: bold; }
+              h1 { color: #333; margin-bottom: 20px; }
+              .header { margin-bottom: 20px; }
+              @media print { body { margin: 0; } }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>Milk Reception Records</h1>
+              <p>Generated on: ${format(new Date(), 'PPP')}</p>
+              <p>Total Records: ${filteredRecords.length}</p>
+            </div>
+            ${printContent.innerHTML}
+          </body>
+        </html>
+      `;
+      
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(printableContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  const handleExportPDF = () => {
+    try {
+      exportToPDF(filteredRecords, 'Milk Reception Records', 'milk_reception');
+      toast({
+        title: "Export Successful",
+        description: "PDF file has been downloaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportExcel = () => {
+    try {
+      exportToExcel(filteredRecords, 'Milk Reception Records', 'milk_reception');
+      toast({
+        title: "Export Successful",
+        description: "Excel file has been downloaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export Excel. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportCSV = () => {
+    try {
+      exportToCSV(filteredRecords, 'Milk Reception Records', 'milk_reception');
+      toast({
+        title: "Export Successful",
+        description: "CSV file has been downloaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export CSV. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -86,7 +192,7 @@ const MilkReceptionTable = () => {
     <Card>
       <CardHeader>
         <CardTitle>Milk Reception Records</CardTitle>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between space-x-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -95,6 +201,54 @@ const MilkReceptionTable = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8"
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrint}
+              className="flex items-center gap-1"
+            >
+              <Printer className="h-4 w-4" />
+              Print
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+              className="flex items-center gap-1"
+            >
+              <FileText className="h-4 w-4" />
+              PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportExcel}
+              className="flex items-center gap-1"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Excel
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              className="flex items-center gap-1"
+            >
+              <Download className="h-4 w-4" />
+              CSV
+            </Button>
           </div>
         </div>
       </CardHeader>
@@ -105,7 +259,7 @@ const MilkReceptionTable = () => {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" id="milk-reception-table">
               <Table>
                 <TableHeader>
                   <TableRow>
