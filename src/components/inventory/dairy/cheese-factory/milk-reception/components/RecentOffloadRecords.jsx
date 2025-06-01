@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { format } from 'date-fns';
@@ -29,7 +28,167 @@ export const RecentOffloadRecords = ({
     .filter(record => !record.batch_id?.startsWith('LEGACY-')); // Filter out legacy batch IDs
 
   const handlePrint = () => {
-    window.print();
+    if (filteredRecords.length === 0) {
+      alert('No offload records available to print');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups to print the report');
+      return;
+    }
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Milk Offload Records Report</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 20px; 
+              color: #333;
+              font-size: 12px;
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 30px; 
+              border-bottom: 2px solid #333;
+              padding-bottom: 15px;
+            }
+            .header h1 { 
+              color: #333; 
+              margin: 0 0 10px 0;
+              font-size: 24px;
+              font-weight: bold;
+            }
+            .header .subtitle {
+              color: #666;
+              font-size: 14px;
+              margin: 5px 0;
+            }
+            .summary {
+              margin: 20px 0;
+              padding: 15px;
+              background-color: #f5f5f5;
+              border-radius: 5px;
+            }
+            .summary h3 {
+              margin: 0 0 10px 0;
+              color: #333;
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin-top: 20px;
+              font-size: 11px;
+            }
+            th, td { 
+              border: 1px solid #ddd; 
+              padding: 8px; 
+              text-align: left;
+              vertical-align: top;
+            }
+            th { 
+              background-color: #4a5568; 
+              color: white;
+              font-weight: bold;
+              font-size: 11px;
+            }
+            tr:nth-child(even) { 
+              background-color: #f9f9f9; 
+            }
+            tr:hover { 
+              background-color: #f0f0f0; 
+            }
+            .footer {
+              margin-top: 30px;
+              text-align: center;
+              font-size: 10px;
+              color: #666;
+              border-top: 1px solid #ddd;
+              padding-top: 15px;
+            }
+            .volume-negative {
+              color: #dc2626;
+              font-weight: bold;
+            }
+            .volume-positive {
+              color: #16a34a;
+              font-weight: bold;
+            }
+            @media print { 
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Milk Tank Offload Records Report</h1>
+            <div class="subtitle">Generated on: ${format(new Date(), 'PPPP')}</div>
+            <div class="subtitle">Report Time: ${format(new Date(), 'HH:mm:ss')}</div>
+          </div>
+          
+          <div class="summary">
+            <h3>Report Summary</h3>
+            <p><strong>Total Offload Records:</strong> ${filteredRecords.length}</p>
+            <p><strong>Total Volume Offloaded:</strong> ${filteredRecords.reduce((sum, record) => sum + Math.abs(record.milk_volume || 0), 0).toFixed(1)} L</p>
+            <p><strong>Date Range:</strong> ${filteredRecords.length > 0 ? 
+              `${format(new Date(Math.min(...filteredRecords.map(r => new Date(r.created_at)))), 'MMM dd, yyyy')} - ${format(new Date(Math.max(...filteredRecords.map(r => new Date(r.created_at)))), 'MMM dd, yyyy')}` 
+              : 'N/A'}</p>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 12%;">Batch ID</th>
+                <th style="width: 10%;">Source Tank</th>
+                <th style="width: 15%;">Date & Time</th>
+                <th style="width: 8%;">Volume (L)</th>
+                <th style="width: 8%;">Temperature (°C)</th>
+                <th style="width: 8%;">Quality Grade</th>
+                <th style="width: 6%;">Fat %</th>
+                <th style="width: 7%;">Protein %</th>
+                <th style="width: 8%;">Plate Count</th>
+                <th style="width: 6%;">Acidity</th>
+                <th style="width: 12%;">Destination</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredRecords.map(record => `
+                <tr>
+                  <td style="font-family: monospace; font-weight: bold;">${record.batch_id || 'N/A'}</td>
+                  <td>${record.storage_tank || record.tank_number || 'N/A'}</td>
+                  <td>${format(new Date(record.created_at), 'MMM dd, yyyy HH:mm')}</td>
+                  <td class="${record.milk_volume < 0 ? 'volume-negative' : 'volume-positive'}">${Math.abs(record.milk_volume || 0)}</td>
+                  <td>${record.temperature || 'N/A'}</td>
+                  <td>${record.quality_score || record.quality_check || 'N/A'}</td>
+                  <td>${record.fat_percentage || 'N/A'}</td>
+                  <td>${record.protein_percentage || 'N/A'}</td>
+                  <td>${record.total_plate_count || 'N/A'}</td>
+                  <td>${record.acidity || 'N/A'}</td>
+                  <td>${record.destination || 'N/A'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div class="footer">
+            <p>This report contains ${filteredRecords.length} milk tank offload records</p>
+            <p>Printed from Milk Reception Management System</p>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
   };
 
   const downloadPDF = () => {
