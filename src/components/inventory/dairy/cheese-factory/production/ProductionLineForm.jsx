@@ -40,11 +40,23 @@ const ProductionLineForm = () => {
     mutationFn: async (productionData) => {
       console.log('Saving production line data:', productionData);
       
+      // Generate proper batch ID format for international production line
+      const generateValidBatchId = () => {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const cheeseCode = productionData.cheeseType ? productionData.cheeseType.substring(0, 3).toUpperCase() : 'CHE';
+        return `INT-${year}${month}${day}-${hours}${minutes}-${cheeseCode}`;
+      };
+
       // Map form data to database schema
       const dbData = {
         fromager_identifier: productionData.fromager,
         cheese_type: productionData.cheeseType,
-        batch_id: productionData.batchId,
+        batch_id: productionData.batchId || generateValidBatchId(),
         milk_volume: parseFloat(productionData.milkVolume) || 0,
         start_time: productionData.startTime,
         estimated_duration: parseFloat(productionData.duration) || 0,
@@ -156,7 +168,7 @@ const ProductionLineForm = () => {
       ...prevState,
       milkBatchId: value,
       milkVolume: selectedBatch ? selectedBatch.volume : '',
-      batchId: selectedBatch ? selectedBatch.batchNumber : ''
+      // Don't auto-set batchId here to avoid constraint issues
     }));
   };
 
@@ -165,17 +177,25 @@ const ProductionLineForm = () => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    const random = Math.floor(Math.random() * 10000);
-    return `INT${year}${month}${day}-${formData.cheeseType.substring(0, 3).toUpperCase()}-${random}`;
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const cheeseCode = formData.cheeseType ? formData.cheeseType.substring(0, 3).toUpperCase() : 'CHE';
+    return `INT-${year}${month}${day}-${hours}${minutes}-${cheeseCode}`;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Generate batch ID if not provided
     const finalFormData = {
       ...formData,
-      batchId: formData.batchId || generateBatchId()
+      batchId: formData.batchId || generateBatchId(),
+      milkVolume: parseFloat(formData.milkVolume) || 0,
+      duration: parseFloat(formData.duration) || 0,
+      starterQty: parseFloat(formData.starterQty) || 0,
+      coagulantQty: parseFloat(formData.coagulantQty) || 0,
+      temperature: parseFloat(formData.temperature) || 0,
+      processTime: parseFloat(formData.processTime) || 0,
+      yield: parseFloat(formData.yield) || 0,
     };
     
     console.log('Production Line Form Data Submitted:', finalFormData);
