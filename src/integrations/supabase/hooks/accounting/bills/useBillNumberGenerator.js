@@ -6,8 +6,8 @@ import { supabase } from '../../../supabase';
  */
 export const useBillNumberGenerator = () => {
 
-  // Get latest bill number and increment it
-  const getLatestBillNumber = async () => {
+  // Get the next bill number that should be used
+  const getNextBillNumber = async () => {
     try {
       const { data, error } = await supabase
         .from('bills_expenses')
@@ -17,7 +17,7 @@ export const useBillNumberGenerator = () => {
       
       if (error) {
         console.error('Error getting latest bill number:', error);
-        return generateBillNumber();
+        return generateBillNumber(10001);
       }
       
       if (data && data.length > 0) {
@@ -27,8 +27,8 @@ export const useBillNumberGenerator = () => {
         return generateBillNumber(10001); // Start from 10001 if no bills exist
       }
     } catch (err) {
-      console.error('Error in getLatestBillNumber:', err);
-      return generateBillNumber();
+      console.error('Error in getNextBillNumber:', err);
+      return generateBillNumber(10001);
     }
   };
 
@@ -45,7 +45,7 @@ export const useBillNumberGenerator = () => {
     } catch (error) {
       console.error('Error incrementing bill number:', error);
     }
-    return generateBillNumber();
+    return generateBillNumber(10001);
   };
 
   const generateBillNumber = (startNum = 10001) => {
@@ -56,7 +56,7 @@ export const useBillNumberGenerator = () => {
   };
 
   return {
-    getLatestBillNumber,
+    getNextBillNumber,
     generateBillNumber
   };
 };

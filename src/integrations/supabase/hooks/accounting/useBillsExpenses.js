@@ -15,7 +15,7 @@ export const useBillsExpenses = () => {
   const { billsExpenses, loading: fetchLoading, fetchBillsExpenses } = useFetchBillsExpenses();
   const { createBillExpense, loading: createLoading } = useCreateBillExpense(fetchBillsExpenses);
   const { uploadReceipt, loading: uploadLoading } = useReceiptUpload();
-  const { getLatestBillNumber } = useBillNumberGenerator();
+  const { getNextBillNumber } = useBillNumberGenerator();
   
   // Combine loading states
   const loading = fetchLoading || createLoading || uploadLoading;
@@ -27,6 +27,6 @@ export const useBillsExpenses = () => {
     fetchBillsExpenses,
     createBillExpense,
     uploadReceipt,
-    getLatestBillNumber
+    getNextBillNumber
   };
 };

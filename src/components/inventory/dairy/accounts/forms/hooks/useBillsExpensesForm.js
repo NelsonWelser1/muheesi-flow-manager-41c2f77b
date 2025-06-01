@@ -32,23 +32,31 @@ export const useBillsExpensesForm = () => {
     }
   });
   
-  const { createBillExpense, uploadReceipt, getLatestBillNumber } = useBillsExpenses();
+  const { createBillExpense, uploadReceipt, getNextBillNumber } = useBillsExpenses();
   
-  // Load initial bill number only once
+  // Load initial bill number only once when component mounts
   useEffect(() => {
     const loadInitialBillNumber = async () => {
-      const billNumber = await getLatestBillNumber();
-      setCurrentBillNumber(billNumber);
-      setValue("billNumber", billNumber);
+      if (!currentBillNumber) { // Only load if we don't already have one
+        const billNumber = await getNextBillNumber();
+        setCurrentBillNumber(billNumber);
+        setValue("billNumber", billNumber);
+      }
     };
     
     loadInitialBillNumber();
-  }, [setValue, getLatestBillNumber]);
+  }, []); // Empty dependency array - only run once on mount
+
+  const generateNewBillNumber = async () => {
+    const newBillNumber = await getNextBillNumber();
+    setCurrentBillNumber(newBillNumber);
+    setValue("billNumber", newBillNumber);
+    return newBillNumber;
+  };
 
   const clearFormAfterSubmission = async () => {
     // Generate a new bill number for the next entry
-    const newBillNumber = await getLatestBillNumber();
-    setCurrentBillNumber(newBillNumber);
+    await generateNewBillNumber();
     
     // Reset the form with default values and new bill number
     reset({
@@ -60,7 +68,7 @@ export const useBillsExpensesForm = () => {
       isRecurring: false,
       recurringFrequency: '',
       recurringEndDate: '',
-      billNumber: newBillNumber,
+      billNumber: currentBillNumber,
       vendorName: '',
       expenseType: '',
       amount: '',
