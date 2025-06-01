@@ -29,7 +29,10 @@ const QualityChecksDisplay = () => {
       console.log('Fetching quality control data');
       const { data, error } = await supabase
         .from('quality_checks')
-        .select('*')
+        .select(`
+          *,
+          checked_by_user:checked_by(*)
+        `)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -46,10 +49,15 @@ const QualityChecksDisplay = () => {
     check.batch_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     check.temperature_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     check.ph_level_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    check.ph_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     check.moisture_content_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    check.moisture_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     check.fat_content_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    check.fat_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     check.protein_content_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    check.protein_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     check.salt_content_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    check.salt_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     check.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 

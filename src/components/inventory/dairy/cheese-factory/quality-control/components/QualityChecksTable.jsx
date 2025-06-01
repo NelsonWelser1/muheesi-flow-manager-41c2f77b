@@ -39,10 +39,10 @@ const QualityChecksTable = ({ checks }) => {
             const overallStatus = [
               check.temperature_status,
               check.ph_level_status,
-              check.moisture_content_status,
-              check.fat_content_status,
-              check.protein_content_status,
-              check.salt_content_status
+              check.moisture_content_status || check.moisture_status,
+              check.fat_content_status || check.fat_status,
+              check.protein_content_status || check.protein_status,
+              check.salt_content_status || check.salt_status
             ].includes('failed') ? 'failed' : 'passed';
 
             return (
@@ -55,7 +55,7 @@ const QualityChecksTable = ({ checks }) => {
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    <span>{check.temperature_value}</span>
+                    <span>{check.temperature_value || check.temperature_actual}</span>
                     <Badge className={getStatusBadgeColor(check.temperature_status)}>
                       {check.temperature_status}
                     </Badge>
@@ -63,41 +63,41 @@ const QualityChecksTable = ({ checks }) => {
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    <span>{check.ph_level_value}</span>
-                    <Badge className={getStatusBadgeColor(check.ph_level_status)}>
-                      {check.ph_level_status}
+                    <span>{check.ph_level_value || check.ph_actual}</span>
+                    <Badge className={getStatusBadgeColor(check.ph_level_status || check.ph_status)}>
+                      {check.ph_level_status || check.ph_status}
                     </Badge>
                   </div>
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    <span>{check.moisture_content_value}</span>
-                    <Badge className={getStatusBadgeColor(check.moisture_content_status)}>
-                      {check.moisture_content_status}
+                    <span>{check.moisture_content_value || check.moisture_actual}</span>
+                    <Badge className={getStatusBadgeColor(check.moisture_content_status || check.moisture_status)}>
+                      {check.moisture_content_status || check.moisture_status}
                     </Badge>
                   </div>
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    <span>{check.fat_content_value}</span>
-                    <Badge className={getStatusBadgeColor(check.fat_content_status)}>
-                      {check.fat_content_status}
+                    <span>{check.fat_content_value || check.fat_actual}</span>
+                    <Badge className={getStatusBadgeColor(check.fat_content_status || check.fat_status)}>
+                      {check.fat_content_status || check.fat_status}
                     </Badge>
                   </div>
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    <span>{check.protein_content_value}</span>
-                    <Badge className={getStatusBadgeColor(check.protein_content_status)}>
-                      {check.protein_content_status}
+                    <span>{check.protein_content_value || check.protein_actual}</span>
+                    <Badge className={getStatusBadgeColor(check.protein_content_status || check.protein_status)}>
+                      {check.protein_content_status || check.protein_status}
                     </Badge>
                   </div>
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    <span>{check.salt_content_value}</span>
-                    <Badge className={getStatusBadgeColor(check.salt_content_status)}>
-                      {check.salt_content_status}
+                    <span>{check.salt_content_value || check.salt_actual}</span>
+                    <Badge className={getStatusBadgeColor(check.salt_content_status || check.salt_status)}>
+                      {check.salt_content_status || check.salt_status}
                     </Badge>
                   </div>
                 </TableCell>
