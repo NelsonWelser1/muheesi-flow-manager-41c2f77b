@@ -109,17 +109,17 @@ const MilkReceptionTable = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Supplier</TableHead>
-                    <TableHead>Volume (L)</TableHead>
-                    <TableHead>Tank</TableHead>
-                    <TableHead>Temperature (°C)</TableHead>
-                    <TableHead>Fat %</TableHead>
-                    <TableHead>Protein %</TableHead>
-                    <TableHead>Quality</TableHead>
-                    <TableHead>Batch ID</TableHead>
-                    <TableHead>Destination</TableHead>
-                    <TableHead>Notes</TableHead>
+                    <TableHead className="whitespace-nowrap">Date</TableHead>
+                    <TableHead className="whitespace-nowrap">Supplier</TableHead>
+                    <TableHead className="whitespace-nowrap">Volume (L)</TableHead>
+                    <TableHead className="whitespace-nowrap">Tank</TableHead>
+                    <TableHead className="whitespace-nowrap">Temperature (°C)</TableHead>
+                    <TableHead className="whitespace-nowrap">Fat %</TableHead>
+                    <TableHead className="whitespace-nowrap">Protein %</TableHead>
+                    <TableHead className="whitespace-nowrap">Quality</TableHead>
+                    <TableHead className="whitespace-nowrap">Batch ID</TableHead>
+                    <TableHead className="whitespace-nowrap">Destination</TableHead>
+                    <TableHead className="whitespace-nowrap">Notes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -128,26 +128,26 @@ const MilkReceptionTable = () => {
                       <TableCell className="whitespace-nowrap">
                         {format(new Date(record.created_at), 'MMM dd, yyyy HH:mm')}
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium whitespace-nowrap">
                         {record.supplier_name}
                       </TableCell>
-                      <TableCell className={record.milk_volume < 0 ? 'text-red-600' : 'text-green-600'}>
+                      <TableCell className={`whitespace-nowrap ${record.milk_volume < 0 ? 'text-red-600' : 'text-green-600'}`}>
                         {record.milk_volume}
                       </TableCell>
-                      <TableCell>{record.tank_number}</TableCell>
-                      <TableCell>{record.temperature}</TableCell>
-                      <TableCell>{record.fat_percentage}%</TableCell>
-                      <TableCell>{record.protein_percentage}%</TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">{record.tank_number}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.temperature}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.fat_percentage}%</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.protein_percentage}%</TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <Badge className={getQualityBadgeColor(record.quality_score)}>
                           {record.quality_score}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm font-mono">
+                      <TableCell className="text-sm font-mono whitespace-nowrap">
                         {record.batch_id || '-'}
                       </TableCell>
-                      <TableCell>{record.destination || '-'}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">
+                      <TableCell className="whitespace-nowrap">{record.destination || '-'}</TableCell>
+                      <TableCell className="whitespace-nowrap max-w-[200px] overflow-hidden text-ellipsis">
                         {record.notes}
                       </TableCell>
                     </TableRow>
