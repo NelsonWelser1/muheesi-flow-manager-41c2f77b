@@ -3,11 +3,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useQueryClient } from '@tanstack/react-query';
 import { useMilkReception } from '@/hooks/useMilkReception';
 import { format, parseISO } from 'date-fns';
-import { Download, FileText, Search, RefreshCw } from 'lucide-react';
+import { Download, FileText, Search, RefreshCw, Columns } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
@@ -16,6 +16,24 @@ import MilkBalanceTracker from './MilkBalanceTracker';
 const MilkReceptionTable = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Column visibility state
+  const [columnVisibility, setColumnVisibility] = useState({
+    entryType: true,
+    storageTank: true,
+    qualityScore: true,
+    supplier: true,
+    volume: true,
+    temperature: true,
+    fat: true,
+    protein: true,
+    tpc: true,
+    acidity: true,
+    destination: true,
+    dateTime: true,
+    notes: true
+  });
+
   const {
     data: milkReception,
     isLoading,
@@ -24,6 +42,13 @@ const MilkReceptionTable = () => {
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['milkReceptions'] });
+  };
+
+  const toggleColumnVisibility = (column) => {
+    setColumnVisibility(prev => ({
+      ...prev,
+      [column]: !prev[column]
+    }));
   };
 
   const filteredRecords = React.useMemo(() => {
@@ -122,6 +147,95 @@ const MilkReceptionTable = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
+                  <Columns className="h-4 w-4 mr-2" />
+                  Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.entryType}
+                  onCheckedChange={() => toggleColumnVisibility('entryType')}
+                >
+                  Entry Type
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.storageTank}
+                  onCheckedChange={() => toggleColumnVisibility('storageTank')}
+                >
+                  Storage Tank
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.qualityScore}
+                  onCheckedChange={() => toggleColumnVisibility('qualityScore')}
+                >
+                  Quality Score
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.supplier}
+                  onCheckedChange={() => toggleColumnVisibility('supplier')}
+                >
+                  Supplier
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.volume}
+                  onCheckedChange={() => toggleColumnVisibility('volume')}
+                >
+                  Volume (L)
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.temperature}
+                  onCheckedChange={() => toggleColumnVisibility('temperature')}
+                >
+                  Temperature (°C)
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.fat}
+                  onCheckedChange={() => toggleColumnVisibility('fat')}
+                >
+                  Fat %
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.protein}
+                  onCheckedChange={() => toggleColumnVisibility('protein')}
+                >
+                  Protein %
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.tpc}
+                  onCheckedChange={() => toggleColumnVisibility('tpc')}
+                >
+                  TPC
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.acidity}
+                  onCheckedChange={() => toggleColumnVisibility('acidity')}
+                >
+                  Acidity
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.destination}
+                  onCheckedChange={() => toggleColumnVisibility('destination')}
+                >
+                  Destination
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.dateTime}
+                  onCheckedChange={() => toggleColumnVisibility('dateTime')}
+                >
+                  Date & Time
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.notes}
+                  onCheckedChange={() => toggleColumnVisibility('notes')}
+                >
+                  Notes
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
                   <FileText className="h-4 w-4 mr-2" />
                   Reports
                 </Button>
@@ -185,41 +299,93 @@ const MilkReceptionTable = () => {
               <Table className="milk-reception-table relative w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[120px] whitespace-nowrap">Entry Type</TableHead>
-                    <TableHead className="min-w-[120px] whitespace-nowrap">Storage Tank</TableHead>
-                    <TableHead className="min-w-[100px] whitespace-nowrap">Quality Score</TableHead>
-                    <TableHead className="min-w-[150px] whitespace-nowrap">Supplier</TableHead>
-                    <TableHead className="min-w-[100px] whitespace-nowrap">Volume (L)</TableHead>
-                    <TableHead className="min-w-[120px] whitespace-nowrap">Temperature (°C)</TableHead>
-                    <TableHead className="min-w-[80px] whitespace-nowrap">Fat %</TableHead>
-                    <TableHead className="min-w-[100px] whitespace-nowrap">Protein %</TableHead>
-                    <TableHead className="min-w-[100px] whitespace-nowrap">TPC</TableHead>
-                    <TableHead className="min-w-[100px] whitespace-nowrap">Acidity</TableHead>
-                    <TableHead className="min-w-[120px] whitespace-nowrap">Destination</TableHead>
-                    <TableHead className="min-w-[180px] whitespace-nowrap">Date & Time</TableHead>
-                    <TableHead className="min-w-[200px] whitespace-nowrap">Notes</TableHead>
+                    {columnVisibility.entryType && (
+                      <TableHead className="min-w-[120px] whitespace-nowrap">Entry Type</TableHead>
+                    )}
+                    {columnVisibility.storageTank && (
+                      <TableHead className="min-w-[120px] whitespace-nowrap">Storage Tank</TableHead>
+                    )}
+                    {columnVisibility.qualityScore && (
+                      <TableHead className="min-w-[100px] whitespace-nowrap">Quality Score</TableHead>
+                    )}
+                    {columnVisibility.supplier && (
+                      <TableHead className="min-w-[150px] whitespace-nowrap">Supplier</TableHead>
+                    )}
+                    {columnVisibility.volume && (
+                      <TableHead className="min-w-[100px] whitespace-nowrap">Volume (L)</TableHead>
+                    )}
+                    {columnVisibility.temperature && (
+                      <TableHead className="min-w-[120px] whitespace-nowrap">Temperature (°C)</TableHead>
+                    )}
+                    {columnVisibility.fat && (
+                      <TableHead className="min-w-[80px] whitespace-nowrap">Fat %</TableHead>
+                    )}
+                    {columnVisibility.protein && (
+                      <TableHead className="min-w-[100px] whitespace-nowrap">Protein %</TableHead>
+                    )}
+                    {columnVisibility.tpc && (
+                      <TableHead className="min-w-[100px] whitespace-nowrap">TPC</TableHead>
+                    )}
+                    {columnVisibility.acidity && (
+                      <TableHead className="min-w-[100px] whitespace-nowrap">Acidity</TableHead>
+                    )}
+                    {columnVisibility.destination && (
+                      <TableHead className="min-w-[120px] whitespace-nowrap">Destination</TableHead>
+                    )}
+                    {columnVisibility.dateTime && (
+                      <TableHead className="min-w-[180px] whitespace-nowrap">Date & Time</TableHead>
+                    )}
+                    {columnVisibility.notes && (
+                      <TableHead className="min-w-[200px] whitespace-nowrap">Notes</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredRecords.map(record => (
                     <TableRow key={record.id} className={record.supplier_name.startsWith('Offload from') ? 'bg-red-50' : ''}>
-                      <TableCell className="whitespace-nowrap">
-                        {record.supplier_name.startsWith('Offload from') ? 'Tank Offload' : 'Reception'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">{record.tank_number || 'N/A'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{record.quality_score || 'N/A'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{record.supplier_name}</TableCell>
-                      <TableCell className={`whitespace-nowrap ${record.milk_volume < 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}`}>
-                        {record.milk_volume.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">{record.temperature?.toFixed(1) || 'N/A'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{record.fat_percentage?.toFixed(1) || 'N/A'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{record.protein_percentage?.toFixed(1) || 'N/A'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{record.total_plate_count?.toLocaleString() || 'N/A'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{record.acidity?.toFixed(1) || 'N/A'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{record.destination || 'N/A'}</TableCell>
-                      <TableCell className="whitespace-nowrap">{formatDate(record.datetime || record.created_at)}</TableCell>
-                      <TableCell className="max-w-xs truncate">{record.notes || 'N/A'}</TableCell>
+                      {columnVisibility.entryType && (
+                        <TableCell className="whitespace-nowrap">
+                          {record.supplier_name.startsWith('Offload from') ? 'Tank Offload' : 'Reception'}
+                        </TableCell>
+                      )}
+                      {columnVisibility.storageTank && (
+                        <TableCell className="whitespace-nowrap">{record.tank_number || 'N/A'}</TableCell>
+                      )}
+                      {columnVisibility.qualityScore && (
+                        <TableCell className="whitespace-nowrap">{record.quality_score || 'N/A'}</TableCell>
+                      )}
+                      {columnVisibility.supplier && (
+                        <TableCell className="whitespace-nowrap">{record.supplier_name}</TableCell>
+                      )}
+                      {columnVisibility.volume && (
+                        <TableCell className={`whitespace-nowrap ${record.milk_volume < 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}`}>
+                          {record.milk_volume.toFixed(2)}
+                        </TableCell>
+                      )}
+                      {columnVisibility.temperature && (
+                        <TableCell className="whitespace-nowrap">{record.temperature?.toFixed(1) || 'N/A'}</TableCell>
+                      )}
+                      {columnVisibility.fat && (
+                        <TableCell className="whitespace-nowrap">{record.fat_percentage?.toFixed(1) || 'N/A'}</TableCell>
+                      )}
+                      {columnVisibility.protein && (
+                        <TableCell className="whitespace-nowrap">{record.protein_percentage?.toFixed(1) || 'N/A'}</TableCell>
+                      )}
+                      {columnVisibility.tpc && (
+                        <TableCell className="whitespace-nowrap">{record.total_plate_count?.toLocaleString() || 'N/A'}</TableCell>
+                      )}
+                      {columnVisibility.acidity && (
+                        <TableCell className="whitespace-nowrap">{record.acidity?.toFixed(1) || 'N/A'}</TableCell>
+                      )}
+                      {columnVisibility.destination && (
+                        <TableCell className="whitespace-nowrap">{record.destination || 'N/A'}</TableCell>
+                      )}
+                      {columnVisibility.dateTime && (
+                        <TableCell className="whitespace-nowrap">{formatDate(record.datetime || record.created_at)}</TableCell>
+                      )}
+                      {columnVisibility.notes && (
+                        <TableCell className="max-w-xs truncate">{record.notes || 'N/A'}</TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
