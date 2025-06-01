@@ -100,6 +100,8 @@ export const useMilkReception = () => {
     data: query.data || [],
     isLoading: query.isLoading,
     error: query.error,
+    refetch: query.refetch,
+    refetchMilkReception: query.refetch, // Add this alias for compatibility
     addMilkReception,
     addMilkTankOffload
   };
