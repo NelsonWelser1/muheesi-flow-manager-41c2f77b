@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ValidationError } from './components/ValidationError';
-import { RecentOffloadRecords } from './components/RecentOffloadRecords';
+import RecentOffloadRecords from './components/RecentOffloadRecords';
 import { MilkOffloadFormContent } from './components/MilkOffloadFormContent';
 import { useMilkOffloadForm } from './hooks/useMilkOffloadForm';
 
