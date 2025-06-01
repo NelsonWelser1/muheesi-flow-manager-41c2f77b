@@ -1,393 +1,178 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Search, 
-  Download, 
-  FileText, 
-  FileSpreadsheet, 
-  Printer,
-  ChevronDown,
-  ChevronUp,
-  MoreHorizontal
-} from "lucide-react";
-import { format } from 'date-fns';
-import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { ChevronDown, ChevronUp, Download, FileSpreadsheet, Search, Eye, EyeOff } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
-const RecentOffloadRecords = ({ offloadRecords = [], isLoading = false }) => {
+const RecentOffloadRecords = ({ records = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [timeFilter, setTimeFilter] = useState('all');
-  const [sortConfig, setSortConfig] = useState({ key: 'offloadTime', direction: 'desc' });
-  const [expandedRows, setExpandedRows] = useState(new Set());
-  const { toast } = useToast();
-  const printRef = useRef();
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [filterBy, setFilterBy] = useState('all');
+  const [showDetails, setShowDetails] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  const filteredAndSortedRecords = React.useMemo(() => {
-    let filtered = offloadRecords.filter(record => {
-      const matchesSearch = searchTerm === '' || 
-        Object.values(record).some(value => 
-          value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-        );
+  // Enhanced filtering and sorting
+  const filteredRecords = useMemo(() => {
+    let filtered = records.filter(record => {
+      const matchesSearch = 
+        record.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.destination?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.batch_id?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      if (!matchesSearch) return false;
+      const matchesFilter = filterBy === 'all' || 
+        (filterBy === 'today' && new Date(record.created_at).toDateString() === new Date().toDateString()) ||
+        (filterBy === 'week' && new Date(record.created_at) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) ||
+        (filterBy === 'month' && new Date(record.created_at) >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
 
-      if (timeFilter === 'all') return true;
-
-      const recordTime = new Date(record.offloadTime);
-      const now = new Date();
-      
-      switch (timeFilter) {
-        case 'today':
-          return recordTime.toDateString() === now.toDateString();
-        case 'week':
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          return recordTime >= weekAgo;
-        case 'month':
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          return recordTime >= monthAgo;
-        default:
-          return true;
-      }
+      return matchesSearch && matchesFilter;
     });
 
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        let aValue = a[sortConfig.key];
-        let bValue = b[sortConfig.key];
-        
-        if (sortConfig.key === 'offloadTime') {
-          aValue = new Date(aValue);
-          bValue = new Date(bValue);
-        }
-        
-        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
+    // Enhanced sorting
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case 'date':
+          aValue = new Date(a.created_at);
+          bValue = new Date(b.created_at);
+          break;
+        case 'supplier':
+          aValue = a.supplier_name || '';
+          bValue = b.supplier_name || '';
+          break;
+        case 'volume':
+          aValue = Math.abs(parseFloat(a.milk_volume) || 0);
+          bValue = Math.abs(parseFloat(b.milk_volume) || 0);
+          break;
+        case 'quality':
+          aValue = a.quality_score || '';
+          bValue = b.quality_score || '';
+          break;
+        case 'fat':
+          aValue = parseFloat(a.fat_percentage) || 0;
+          bValue = parseFloat(b.fat_percentage) || 0;
+          break;
+        case 'protein':
+          aValue = parseFloat(a.protein_percentage) || 0;
+          bValue = parseFloat(b.protein_percentage) || 0;
+          break;
+        default:
+          aValue = a.created_at;
+          bValue = b.created_at;
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
 
     return filtered;
-  }, [offloadRecords, searchTerm, timeFilter, sortConfig]);
+  }, [records, searchTerm, sortBy, sortOrder, filterBy]);
 
-  const generateBatchId = (record, index) => {
-    if (record.batchId && record.batchId !== 'N/A' && record.batchId.trim() !== '') {
-      return record.batchId;
-    }
-    
-    const date = new Date(record.offloadTime);
-    const dateStr = format(date, 'yyyyMMdd');
-    const timeStr = format(date, 'HHmm');
-    return `B${dateStr}-${timeStr}-${String(index + 1).padStart(3, '0')}`;
+  // Pagination
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+  const currentRecords = filteredRecords.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const toggleDetails = (id) => {
+    setShowDetails(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const getQualityBadge = (record) => {
-    const fat = parseFloat(record.qualityParameters?.fat || record.fat || 0);
-    const protein = parseFloat(record.qualityParameters?.protein || record.protein || 0);
-    const ph = parseFloat(record.qualityParameters?.ph || record.ph || 7);
-    
-    if (fat >= 3.5 && protein >= 3.0 && ph >= 6.6 && ph <= 6.8) {
-      return <Badge className="bg-green-100 text-green-800 border-green-200">Excellent</Badge>;
-    } else if (fat >= 3.0 && protein >= 2.5 && ph >= 6.5 && ph <= 6.9) {
-      return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Good</Badge>;
-    } else if (fat >= 2.5 && protein >= 2.0 && ph >= 6.4 && ph <= 7.0) {
-      return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Fair</Badge>;
-    } else {
-      return <Badge className="bg-red-100 text-red-800 border-red-200">Poor</Badge>;
-    }
-  };
-
-  const handleSort = (key) => {
-    setSortConfig(prevConfig => ({
-      key,
-      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
-    }));
-  };
-
-  const getSortIcon = (columnKey) => {
-    if (sortConfig.key !== columnKey) return null;
-    return sortConfig.direction === 'asc' ? 
-      <ChevronUp className="h-4 w-4 inline ml-1" /> : 
-      <ChevronDown className="h-4 w-4 inline ml-1" />;
-  };
-
-  const toggleRowExpansion = (recordId) => {
-    setExpandedRows(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(recordId)) {
-        newSet.delete(recordId);
-      } else {
-        newSet.add(recordId);
-      }
-      return newSet;
-    });
-  };
-
+  // Enhanced export functions with quality data
   const exportToCSV = () => {
-    const headers = [
-      'Batch ID', 'Farmer Name', 'Offload Time', 'Quantity (L)', 
-      'Quality Grade', 'Fat %', 'Protein %', 'pH', 'Tank Number'
-    ];
-    
-    const csvContent = [
-      headers.join(','),
-      ...filteredAndSortedRecords.map((record, index) => [
-        generateBatchId(record, index),
-        record.farmerName || 'Unknown',
-        format(new Date(record.offloadTime), 'yyyy-MM-dd HH:mm:ss'),
-        record.quantity || 0,
-        record.qualityGrade || 'Not Graded',
-        record.qualityParameters?.fat || record.fat || 'N/A',
-        record.qualityParameters?.protein || record.protein || 'N/A',
-        record.qualityParameters?.ph || record.ph || 'N/A',
-        record.tankNumber || 'N/A'
-      ].join(','))
+    const csvData = filteredRecords.map(record => ({
+      'Batch ID': record.batch_id || 'N/A',
+      'Date': new Date(record.created_at).toLocaleString(),
+      'Supplier': record.supplier_name || 'N/A',
+      'Volume (L)': Math.abs(parseFloat(record.milk_volume) || 0),
+      'Tank': record.tank_number || 'N/A',
+      'Destination': record.destination || 'N/A',
+      'Temperature (°C)': record.temperature || 'N/A',
+      'Quality Grade': record.quality_score || 'N/A',
+      'Fat (%)': record.fat_percentage || 'N/A',
+      'Protein (%)': record.protein_percentage || 'N/A',
+      'Total Plate Count': record.total_plate_count || 'N/A',
+      'Acidity (pH)': record.acidity || 'N/A',
+      'Notes': record.notes || 'N/A'
+    }));
+
+    const csv = [
+      Object.keys(csvData[0]).join(','),
+      ...csvData.map(row => Object.values(row).join(','))
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `milk-offload-records-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `milk_offload_records_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
-
-    toast({
-      title: "Export Successful",
-      description: "Records exported to CSV successfully"
-    });
+    document.body.removeChild(a);
   };
 
   const exportToExcel = () => {
-    import('xlsx').then((XLSX) => {
-      const worksheet = XLSX.utils.json_to_sheet(
-        filteredAndSortedRecords.map((record, index) => ({
-          'Batch ID': generateBatchId(record, index),
-          'Farmer Name': record.farmerName || 'Unknown',
-          'Offload Time': format(new Date(record.offloadTime), 'yyyy-MM-dd HH:mm:ss'),
-          'Quantity (L)': record.quantity || 0,
-          'Quality Grade': record.qualityGrade || 'Not Graded',
-          'Fat %': record.qualityParameters?.fat || record.fat || 'N/A',
-          'Protein %': record.qualityParameters?.protein || record.protein || 'N/A',
-          'pH': record.qualityParameters?.ph || record.ph || 'N/A',
-          'Tank Number': record.tankNumber || 'N/A'
-        }))
-      );
+    const excelData = filteredRecords.map(record => ({
+      'Batch ID': record.batch_id || 'N/A',
+      'Date': new Date(record.created_at).toLocaleString(),
+      'Supplier': record.supplier_name || 'N/A',
+      'Volume (L)': Math.abs(parseFloat(record.milk_volume) || 0),
+      'Tank': record.tank_number || 'N/A',
+      'Destination': record.destination || 'N/A',
+      'Temperature (°C)': record.temperature || 'N/A',
+      'Quality Grade': record.quality_score || 'N/A',
+      'Fat (%)': record.fat_percentage || 'N/A',
+      'Protein (%)': record.protein_percentage || 'N/A',
+      'Total Plate Count': record.total_plate_count || 'N/A',
+      'Acidity (pH)': record.acidity || 'N/A',
+      'Notes': record.notes || 'N/A'
+    }));
 
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Milk Offload Records');
-      XLSX.writeFile(workbook, `milk-offload-records-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
-
-      toast({
-        title: "Export Successful",
-        description: "Records exported to Excel successfully"
-      });
-    });
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Milk Offload Records');
+    XLSX.writeFile(wb, `milk_offload_records_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  const exportToPDF = () => {
-    import('jspdf').then(({ default: jsPDF }) => {
-      import('jspdf-autotable').then(() => {
-        const doc = new jsPDF();
-        
-        doc.setFontSize(18);
-        doc.text('Milk Offload Records', 14, 22);
-        doc.setFontSize(12);
-        doc.text(`Generated: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`, 14, 32);
-
-        const tableData = filteredAndSortedRecords.map((record, index) => [
-          generateBatchId(record, index),
-          record.farmerName || 'Unknown',
-          format(new Date(record.offloadTime), 'yyyy-MM-dd HH:mm'),
-          `${record.quantity || 0}L`,
-          record.qualityGrade || 'Not Graded',
-          `${record.qualityParameters?.fat || record.fat || 'N/A'}%`,
-          `${record.qualityParameters?.protein || record.protein || 'N/A'}%`,
-          record.qualityParameters?.ph || record.ph || 'N/A',
-          record.tankNumber || 'N/A'
-        ]);
-
-        doc.autoTable({
-          startY: 40,
-          head: [['Batch ID', 'Farmer', 'Time', 'Quantity', 'Grade', 'Fat%', 'Protein%', 'pH', 'Tank']],
-          body: tableData,
-          theme: 'striped',
-          styles: { fontSize: 8 },
-          headStyles: { fillColor: [41, 128, 185] }
-        });
-
-        doc.save(`milk-offload-records-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-
-        toast({
-          title: "Export Successful",
-          description: "Records exported to PDF successfully"
-        });
-      });
-    });
+  const getQualityBadgeColor = (quality) => {
+    switch (quality) {
+      case 'Grade A': return 'bg-green-100 text-green-800';
+      case 'Grade B': return 'bg-yellow-100 text-yellow-800';
+      case 'Grade C': return 'bg-orange-100 text-orange-800';
+      case 'Rejected': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
-
-  const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Milk Offload Records</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            h1 { color: #2563eb; margin-bottom: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; white-space: nowrap; }
-            th { background-color: #f2f2f2; font-weight: bold; }
-            tr:nth-child(even) { background-color: #f9f9f9; }
-            .print-date { color: #666; font-size: 12px; margin-bottom: 10px; }
-          </style>
-        </head>
-        <body>
-          <h1>Milk Offload Records</h1>
-          <div class="print-date">Generated: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}</div>
-          <table>
-            <thead>
-              <tr>
-                <th>Batch ID</th>
-                <th>Farmer Name</th>
-                <th>Offload Time</th>
-                <th>Quantity (L)</th>
-                <th>Quality Grade</th>
-                <th>Fat %</th>
-                <th>Protein %</th>
-                <th>pH</th>
-                <th>Tank Number</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredAndSortedRecords.map((record, index) => `
-                <tr>
-                  <td>${generateBatchId(record, index)}</td>
-                  <td>${record.farmerName || 'Unknown'}</td>
-                  <td>${format(new Date(record.offloadTime), 'yyyy-MM-dd HH:mm:ss')}</td>
-                  <td>${record.quantity || 0}</td>
-                  <td>${record.qualityGrade || 'Not Graded'}</td>
-                  <td>${record.qualityParameters?.fat || record.fat || 'N/A'}</td>
-                  <td>${record.qualityParameters?.protein || record.protein || 'N/A'}</td>
-                  <td>${record.qualityParameters?.ph || record.ph || 'N/A'}</td>
-                  <td>${record.tankNumber || 'N/A'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
-
-    toast({
-      title: "Print Successful",
-      description: "Records sent to printer successfully"
-    });
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Offload Records</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-muted-foreground">Loading records...</div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!offloadRecords.length) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Offload Records</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-muted-foreground">No offload records found</div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          Recent Offload Records
-          <div className="flex items-center space-x-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                  <ChevronDown className="h-4 w-4 ml-2" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={exportToCSV}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Export CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={exportToExcel}>
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Export Excel
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={exportToPDF}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Export PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handlePrint}>
-                  <Printer className="h-4 w-4 mr-2" />
-                  Print
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center space-x-4 mb-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search records..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-          <Select value={timeFilter} onValueChange={setTimeFilter}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Time filter" />
+    <div className="space-y-4">
+      {/* Enhanced Search and Filter Bar */}
+      <div className="flex flex-wrap gap-2 items-center justify-between bg-gray-50 p-3 rounded-lg">
+        <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+          <Search className="h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Search records..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="h-8"
+          />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Select value={filterBy} onValueChange={setFilterBy}>
+            <SelectTrigger className="w-32 h-8">
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Time</SelectItem>
@@ -396,123 +181,204 @@ const RecentOffloadRecords = ({ offloadRecords = [], isLoading = false }) => {
               <SelectItem value="month">This Month</SelectItem>
             </SelectContent>
           </Select>
-        </div>
 
-        <div className="border rounded-md overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="cursor-pointer whitespace-nowrap min-w-[120px]" onClick={() => handleSort('batchId')}>
-                    Batch ID {getSortIcon('batchId')}
-                  </TableHead>
-                  <TableHead className="cursor-pointer whitespace-nowrap min-w-[150px]" onClick={() => handleSort('farmerName')}>
-                    Farmer Name {getSortIcon('farmerName')}
-                  </TableHead>
-                  <TableHead className="cursor-pointer whitespace-nowrap min-w-[160px]" onClick={() => handleSort('offloadTime')}>
-                    Offload Time {getSortIcon('offloadTime')}
-                  </TableHead>
-                  <TableHead className="cursor-pointer whitespace-nowrap min-w-[100px]" onClick={() => handleSort('quantity')}>
-                    Quantity (L) {getSortIcon('quantity')}
-                  </TableHead>
-                  <TableHead className="whitespace-nowrap min-w-[120px]">Quality Grade</TableHead>
-                  <TableHead className="cursor-pointer whitespace-nowrap min-w-[80px]" onClick={() => handleSort('fat')}>
-                    Fat % {getSortIcon('fat')}
-                  </TableHead>
-                  <TableHead className="cursor-pointer whitespace-nowrap min-w-[90px]" onClick={() => handleSort('protein')}>
-                    Protein % {getSortIcon('protein')}
-                  </TableHead>
-                  <TableHead className="cursor-pointer whitespace-nowrap min-w-[60px]" onClick={() => handleSort('ph')}>
-                    pH {getSortIcon('ph')}
-                  </TableHead>
-                  <TableHead className="whitespace-nowrap min-w-[100px]">Tank Number</TableHead>
-                  <TableHead className="whitespace-nowrap min-w-[60px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAndSortedRecords.map((record, index) => (
-                  <React.Fragment key={record.id || index}>
-                    <TableRow className="hover:bg-muted/50">
-                      <TableCell className="font-medium whitespace-nowrap">
-                        {generateBatchId(record, index)}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {record.farmerName || 'Unknown'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {format(new Date(record.offloadTime), 'MMM dd, yyyy HH:mm')}
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        {record.quantity || 0}L
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {getQualityBadge(record)}
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        {record.qualityParameters?.fat || record.fat || 'N/A'}%
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        {record.qualityParameters?.protein || record.protein || 'N/A'}%
-                      </TableCell>
-                      <TableCell className="text-center whitespace-nowrap">
-                        {record.qualityParameters?.ph || record.ph || 'N/A'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {record.tankNumber || 'N/A'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleRowExpansion(record.id || index)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    {expandedRows.has(record.id || index) && (
-                      <TableRow className="bg-muted/25">
-                        <TableCell colSpan={10} className="p-4">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <span className="font-medium">Temperature:</span>
-                              <br />
-                              {record.qualityParameters?.temperature || record.temperature || 'N/A'}°C
-                            </div>
-                            <div>
-                              <span className="font-medium">Density:</span>
-                              <br />
-                              {record.qualityParameters?.density || record.density || 'N/A'}
-                            </div>
-                            <div>
-                              <span className="font-medium">SCC:</span>
-                              <br />
-                              {record.qualityParameters?.somaticCellCount || record.somaticCellCount || 'N/A'}
-                            </div>
-                            <div>
-                              <span className="font-medium">Notes:</span>
-                              <br />
-                              {record.notes || 'No notes'}
-                            </div>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-32 h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date">Date</SelectItem>
+              <SelectItem value="supplier">Supplier</SelectItem>
+              <SelectItem value="volume">Volume</SelectItem>
+              <SelectItem value="quality">Quality</SelectItem>
+              <SelectItem value="fat">Fat %</SelectItem>
+              <SelectItem value="protein">Protein %</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            className="h-8"
+          >
+            {sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+
+          <Button variant="outline" size="sm" onClick={exportToCSV} className="h-8">
+            <Download className="h-4 w-4 mr-1" />
+            CSV
+          </Button>
+
+          <Button variant="outline" size="sm" onClick={exportToExcel} className="h-8">
+            <FileSpreadsheet className="h-4 w-4 mr-1" />
+            Excel
+          </Button>
+        </div>
+      </div>
+
+      {/* Enhanced Records Table */}
+      <div className="border rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="text-left p-2 font-medium">Batch ID</th>
+                <th className="text-left p-2 font-medium">Date & Time</th>
+                <th className="text-left p-2 font-medium">Supplier</th>
+                <th className="text-left p-2 font-medium">Volume (L)</th>
+                <th className="text-left p-2 font-medium">Quality</th>
+                <th className="text-left p-2 font-medium">Fat %</th>
+                <th className="text-left p-2 font-medium">Protein %</th>
+                <th className="text-left p-2 font-medium">pH</th>
+                <th className="text-left p-2 font-medium">Temp °C</th>
+                <th className="text-left p-2 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentRecords.map((record) => (
+                <React.Fragment key={record.id}>
+                  <tr className="border-b hover:bg-gray-50">
+                    <td className="p-2">
+                      <div className="font-mono text-xs">
+                        {record.batch_id || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <div className="text-xs">
+                        {new Date(record.created_at).toLocaleDateString()}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(record.created_at).toLocaleTimeString()}
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <div className="font-medium truncate max-w-[120px]">
+                        {record.supplier_name || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <div className="font-medium text-blue-600">
+                        {Math.abs(parseFloat(record.milk_volume) || 0).toFixed(1)}
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <Badge className={`text-xs ${getQualityBadgeColor(record.quality_score)}`}>
+                        {record.quality_score || 'N/A'}
+                      </Badge>
+                    </td>
+                    <td className="p-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-green-600">
+                          {record.fat_percentage ? `${parseFloat(record.fat_percentage).toFixed(1)}%` : 'N/A'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-purple-600">
+                          {record.protein_percentage ? `${parseFloat(record.protein_percentage).toFixed(1)}%` : 'N/A'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-orange-600">
+                          {record.acidity ? parseFloat(record.acidity).toFixed(1) : 'N/A'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <span className="text-gray-600">
+                        {record.temperature ? `${parseFloat(record.temperature).toFixed(1)}°C` : 'N/A'}
+                      </span>
+                    </td>
+                    <td className="p-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleDetails(record.id)}
+                        className="h-6 w-6 p-0"
+                      >
+                        {showDetails[record.id] ? 
+                          <EyeOff className="h-3 w-3" /> : 
+                          <Eye className="h-3 w-3" />
+                        }
+                      </Button>
+                    </td>
+                  </tr>
+                  
+                  {/* Enhanced Details Row */}
+                  {showDetails[record.id] && (
+                    <tr className="bg-blue-50 border-b">
+                      <td colSpan="10" className="p-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                          <div className="space-y-2">
+                            <h4 className="font-semibold text-gray-700">Storage & Destination</h4>
+                            <div><span className="font-medium">Tank:</span> {record.tank_number || 'N/A'}</div>
+                            <div><span className="font-medium">Destination:</span> {record.destination || 'N/A'}</div>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </React.Fragment>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                          
+                          <div className="space-y-2">
+                            <h4 className="font-semibold text-gray-700">Quality Parameters</h4>
+                            <div><span className="font-medium">Total Plate Count:</span> {record.total_plate_count || 'N/A'}</div>
+                            <div><span className="font-medium">Fat Content:</span> {record.fat_percentage ? `${record.fat_percentage}%` : 'N/A'}</div>
+                            <div><span className="font-medium">Protein Content:</span> {record.protein_percentage ? `${record.protein_percentage}%` : 'N/A'}</div>
+                            <div><span className="font-medium">Acidity (pH):</span> {record.acidity || 'N/A'}</div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <h4 className="font-semibold text-gray-700">Additional Information</h4>
+                            <div><span className="font-medium">Temperature:</span> {record.temperature ? `${record.temperature}°C` : 'N/A'}</div>
+                            <div><span className="font-medium">Notes:</span> {record.notes || 'No notes'}</div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {filteredAndSortedRecords.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            No records match your search criteria
+        {currentRecords.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No records found matching your criteria.
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Enhanced Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredRecords.length)} of {filteredRecords.length} records
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <span className="text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
