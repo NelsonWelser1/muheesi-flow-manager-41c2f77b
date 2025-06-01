@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/supabase';
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Check, Clock, AlertOctagon, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import EquipmentEntryForm from '../form/EquipmentEntryForm';
 
 const EquipmentList = () => {
@@ -59,9 +60,56 @@ const EquipmentList = () => {
     }
   };
 
+  const getHealthScore = (condition) => {
+    switch (condition) {
+      case 'excellent':
+        return 95;
+      case 'good':
+        return 80;
+      case 'fair':
+        return 60;
+      case 'poor':
+        return 40;
+      case 'critical':
+        return 20;
+      default:
+        return 70;
+    }
+  };
+
+  const getEquipmentStatus = (condition) => {
+    switch (condition) {
+      case 'excellent':
+      case 'good':
+        return 'operational';
+      case 'fair':
+        return 'maintenance';
+      case 'poor':
+      case 'critical':
+        return 'critical';
+      default:
+        return 'operational';
+    }
+  };
+
+  const generateMaintenanceDates = (purchaseDate, condition) => {
+    const purchase = new Date(purchaseDate);
+    const lastMaintenance = new Date(purchase);
+    lastMaintenance.setDate(lastMaintenance.getDate() + 30);
+    
+    const nextMaintenance = new Date(lastMaintenance);
+    nextMaintenance.setDate(nextMaintenance.getDate() + (condition === 'critical' ? 7 : 30));
+    
+    return {
+      last: lastMaintenance,
+      next: nextMaintenance
+    };
+  };
+
   const filteredEquipment = equipmentList?.filter(equipment => {
+    const status = getEquipmentStatus(equipment.current_condition);
     const matchesSearch = equipment.equipment_name.toLowerCase().includes(searchTerm.toLowerCase()) || equipment.type?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || equipment.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -129,53 +177,67 @@ const EquipmentList = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredEquipment?.map(equipment => <Card key={equipment.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-medium">
-                {equipment.equipment_name}
-              </CardTitle>
-              {getStatusIcon(equipment.status)}
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Status</span>
-                  <Badge className={getStatusColor(equipment.status)}>
-                    {equipment.status}
-                  </Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Type</span>
-                  <span className="font-medium">{equipment.type}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Health Score</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-gray-200 rounded-full">
-                      <div className={`h-full rounded-full ${equipment.health_score >= 70 ? 'bg-green-500' : equipment.health_score >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{
-                    width: `${equipment.health_score}%`
-                  }} />
-                    </div>
-                    <span className="font-medium">{equipment.health_score}%</span>
-                  </div>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Last Maintenance</span>
-                  <span className="text-sm">
-                    {new Date(equipment.last_maintenance).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Next Due</span>
-                  <span className="text-sm">
-                    {new Date(equipment.next_maintenance).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>)}
-      </div>
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="whitespace-nowrap">Machine</TableHead>
+                  <TableHead className="whitespace-nowrap">Status</TableHead>
+                  <TableHead className="whitespace-nowrap">Type</TableHead>
+                  <TableHead className="whitespace-nowrap">Health Score</TableHead>
+                  <TableHead className="whitespace-nowrap">Last Maintenance</TableHead>
+                  <TableHead className="whitespace-nowrap">Next Due</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredEquipment?.map(equipment => {
+                  const status = getEquipmentStatus(equipment.current_condition);
+                  const healthScore = getHealthScore(equipment.current_condition);
+                  const maintenanceDates = generateMaintenanceDates(equipment.purchase_date, equipment.current_condition);
+                  
+                  return (
+                    <TableRow key={equipment.id}>
+                      <TableCell className="font-medium whitespace-nowrap">
+                        {equipment.equipment_name}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(status)}
+                          <Badge className={getStatusColor(status)}>
+                            {status}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {equipment.type || '-'}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-2 bg-gray-200 rounded-full">
+                            <div 
+                              className={`h-full rounded-full ${healthScore >= 70 ? 'bg-green-500' : healthScore >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`} 
+                              style={{ width: `${healthScore}%` }} 
+                            />
+                          </div>
+                          <span className="font-medium">{healthScore}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {maintenanceDates.last.toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {maintenanceDates.next.toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
       {!filteredEquipment?.length && <div className="text-center py-8">
           <AlertTriangle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
