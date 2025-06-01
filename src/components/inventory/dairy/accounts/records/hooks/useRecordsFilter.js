@@ -6,6 +6,7 @@ export const useRecordsFilter = (billsExpenses) => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [timeRange, setTimeRange] = useState("all");
   const [sortBy, setSortBy] = useState("date-desc");
+  const [dateFilter, setDateFilter] = useState("all");
 
   const getTimeRangeDate = () => {
     const now = new Date();
@@ -25,6 +26,28 @@ export const useRecordsFilter = (billsExpenses) => {
     }
   };
 
+  const getDateFilterRange = () => {
+    const now = new Date();
+    switch (dateFilter) {
+      case "daily":
+        const startOfDay = new Date(now);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(now);
+        endOfDay.setHours(23, 59, 59, 999);
+        return { start: startOfDay, end: endOfDay };
+      case "monthly":
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        return { start: startOfMonth, end: endOfMonth };
+      case "annually":
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+        const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+        return { start: startOfYear, end: endOfYear };
+      default:
+        return null;
+    }
+  };
+
   const filteredRecords = useMemo(() => {
     return billsExpenses
       .filter(record => {
@@ -38,6 +61,15 @@ export const useRecordsFilter = (billsExpenses) => {
           const timeRangeDate = getTimeRangeDate();
           const recordDate = new Date(record.created_at);
           if (recordDate < timeRangeDate) {
+            return false;
+          }
+        }
+
+        // Date filter (daily, monthly, annually)
+        if (dateFilter !== "all") {
+          const dateRange = getDateFilterRange();
+          const recordDate = new Date(record.created_at);
+          if (recordDate < dateRange.start || recordDate > dateRange.end) {
             return false;
           }
         }
@@ -74,7 +106,7 @@ export const useRecordsFilter = (billsExpenses) => {
             return new Date(b.created_at) - new Date(a.created_at);
         }
       });
-  }, [billsExpenses, statusFilter, timeRange, searchTerm, sortBy]);
+  }, [billsExpenses, statusFilter, timeRange, searchTerm, sortBy, dateFilter]);
 
   return {
     searchTerm,
@@ -85,6 +117,8 @@ export const useRecordsFilter = (billsExpenses) => {
     setTimeRange,
     sortBy,
     setSortBy,
+    dateFilter,
+    setDateFilter,
     filteredRecords
   };
 };

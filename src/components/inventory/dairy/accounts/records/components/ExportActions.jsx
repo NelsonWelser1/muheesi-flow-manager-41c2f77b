@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, FileText, Download } from "lucide-react";
+import { FileSpreadsheet, FileText, Download, Printer } from "lucide-react";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -89,9 +89,71 @@ const ExportActions = ({ filteredRecords }) => {
     
     doc.save('bills-expenses.pdf');
   };
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Bills & Expenses Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            h1 { color: #333; }
+            .print-date { color: #666; font-size: 12px; margin-bottom: 20px; }
+          </style>
+        </head>
+        <body>
+          <h1>Bills & Expenses Report</h1>
+          <div class="print-date">Generated on: ${new Date().toLocaleString()}</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Bill Number</th>
+                <th>Supplier</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredRecords.map(record => `
+                <tr>
+                  <td>${record.bill_number}</td>
+                  <td>${record.supplier_name}</td>
+                  <td>${record.bill_date ? format(new Date(record.bill_date), 'yyyy-MM-dd') : ''}</td>
+                  <td>${record.currency} ${record.amount}</td>
+                  <td>${record.status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
   
   return (
     <div className="flex items-center gap-1">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handlePrint}
+        className="flex items-center gap-1"
+        title="Print Report"
+      >
+        <Printer className="h-4 w-4" />
+        Print
+      </Button>
       <Button
         variant="outline"
         size="sm"

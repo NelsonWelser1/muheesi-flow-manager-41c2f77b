@@ -9,7 +9,9 @@ import { useBillsExpenses } from "@/integrations/supabase/hooks/accounting/useBi
 import ExportActions from './components/ExportActions';
 import SearchFilters from './components/SearchFilters';
 import StatusTabs from './components/StatusTabs';
+import PaginatedRecordsTable from './components/PaginatedRecordsTable';
 import { useRecordsFilter } from './hooks/useRecordsFilter';
+import { useBillsExpensesPagination } from './hooks/useBillsExpensesPagination';
 
 const BillsExpensesRecords = ({ onBack }) => {
   const { billsExpenses, loading, fetchBillsExpenses } = useBillsExpenses();
@@ -22,8 +24,21 @@ const BillsExpensesRecords = ({ onBack }) => {
     setTimeRange,
     sortBy,
     setSortBy,
+    dateFilter,
+    setDateFilter,
     filteredRecords
   } = useRecordsFilter(billsExpenses);
+
+  // Use pagination hook
+  const {
+    paginatedData,
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = useBillsExpensesPagination(filteredRecords, 10);
 
   useEffect(() => {
     fetchBillsExpenses();
@@ -67,6 +82,8 @@ const BillsExpensesRecords = ({ onBack }) => {
             setTimeRange={setTimeRange}
             sortBy={sortBy}
             setSortBy={setSortBy}
+            dateFilter={dateFilter}
+            setDateFilter={setDateFilter}
           />
         </CardHeader>
         <CardContent>
@@ -75,6 +92,18 @@ const BillsExpensesRecords = ({ onBack }) => {
             setStatusFilter={setStatusFilter}
             filteredRecords={filteredRecords}
             loading={loading}
+            recordsTable={
+              <PaginatedRecordsTable
+                paginatedData={paginatedData}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                startIndex={startIndex}
+                endIndex={endIndex}
+                totalItems={totalItems}
+                handlePageChange={handlePageChange}
+                loading={loading}
+              />
+            }
           />
         </CardContent>
       </Card>

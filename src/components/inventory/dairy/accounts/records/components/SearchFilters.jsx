@@ -10,14 +10,16 @@ const SearchFilters = ({
   timeRange, 
   setTimeRange, 
   sortBy, 
-  setSortBy 
+  setSortBy,
+  dateFilter,
+  setDateFilter
 }) => {
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
       <div className="relative">
         <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
         <Input
@@ -27,6 +29,17 @@ const SearchFilters = ({
           className="pl-8"
         />
       </div>
+      <Select value={dateFilter} onValueChange={setDateFilter}>
+        <SelectTrigger>
+          <SelectValue placeholder="Date view" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Records</SelectItem>
+          <SelectItem value="daily">Daily View</SelectItem>
+          <SelectItem value="monthly">Monthly View</SelectItem>
+          <SelectItem value="annually">Annual View</SelectItem>
+        </SelectContent>
+      </Select>
       <Select value={timeRange} onValueChange={setTimeRange}>
         <SelectTrigger>
           <SelectValue placeholder="Filter by time" />
