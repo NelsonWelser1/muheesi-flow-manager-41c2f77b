@@ -60,7 +60,7 @@ const HeroSection = () => {
               className="border-white text-white hover:bg-white hover:text-blue-900 px-8 py-3 text-lg"
               onClick={() => navigate('/manage-companies')}
             >
-              View Companies
+              Manage Companies
             </Button>
           </div>
         </div>
