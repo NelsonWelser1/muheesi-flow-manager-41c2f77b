@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SystemAdminDashboard from './SystemAdminDashboard';
+import CEODashboard from './CEODashboard';
 
 const RoleDashboard = ({ role }) => {
   const renderRoleContent = () => {
@@ -10,16 +11,7 @@ const RoleDashboard = ({ role }) => {
         return <SystemAdminDashboard />;
       
       case 'Chief Executive Officer (CEO)':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>CEO Dashboard</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>CEO-specific dashboard content will be implemented here.</p>
-            </CardContent>
-          </Card>
-        );
+        return <CEODashboard />;
       
       default:
         return (
