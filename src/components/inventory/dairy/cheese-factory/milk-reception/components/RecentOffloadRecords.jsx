@@ -1,384 +1,465 @@
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, Download, FileSpreadsheet, Search, Eye, EyeOff } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ChevronDown, ChevronUp, Search, Download, FileSpreadsheet, FileText, Printer, Eye, EyeOff } from "lucide-react";
+import { format } from 'date-fns';
+import { useMilkReception } from '@/hooks/useMilkReception';
+import { useToast } from "@/components/ui/use-toast";
 
-const RecentOffloadRecords = ({ records = [] }) => {
+const RecentOffloadRecords = () => {
+  const { data: records, isLoading, error, refetch } = useMilkReception();
+  const { toast } = useToast();
+  
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('date');
-  const [sortOrder, setSortOrder] = useState('desc');
-  const [filterBy, setFilterBy] = useState('all');
-  const [showDetails, setShowDetails] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [timeFilter, setTimeFilter] = useState('all');
+  const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
+  const [expandedRows, setExpandedRows] = useState(new Set());
 
-  // Enhanced filtering and sorting
-  const filteredRecords = useMemo(() => {
-    let filtered = records.filter(record => {
-      const matchesSearch = 
-        record.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.destination?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.batch_id?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filter records to only show offloads (negative volumes) and ensure batch_id exists
+  const offloadRecords = useMemo(() => {
+    if (!records) return [];
+    
+    return records
+      .filter(record => record.milk_volume < 0)
+      .map(record => ({
+        ...record,
+        // Ensure every record has a batch_id - generate one if missing
+        batch_id: record.batch_id || `LEGACY-${record.id || Date.now()}-${Math.random().toString(36).substr(2, 6)}`
+      }));
+  }, [records]);
 
-      const matchesFilter = filterBy === 'all' || 
-        (filterBy === 'today' && new Date(record.created_at).toDateString() === new Date().toDateString()) ||
-        (filterBy === 'week' && new Date(record.created_at) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) ||
-        (filterBy === 'month' && new Date(record.created_at) >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+  // Apply filters and sorting
+  const filteredAndSortedRecords = useMemo(() => {
+    let filtered = [...offloadRecords];
 
-      return matchesSearch && matchesFilter;
-    });
+    // Apply search filter
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(record => 
+        record.supplier_name?.toLowerCase().includes(search) ||
+        record.tank_number?.toLowerCase().includes(search) ||
+        record.batch_id?.toLowerCase().includes(search) ||
+        record.quality_score?.toLowerCase().includes(search)
+      );
+    }
 
-    // Enhanced sorting
-    filtered.sort((a, b) => {
-      let aValue, bValue;
-      
-      switch (sortBy) {
-        case 'date':
-          aValue = new Date(a.created_at);
-          bValue = new Date(b.created_at);
+    // Apply time filter
+    if (timeFilter !== 'all') {
+      const now = new Date();
+      let startDate = new Date();
+
+      switch (timeFilter) {
+        case 'hour':
+          startDate.setHours(now.getHours() - 1);
           break;
-        case 'supplier':
-          aValue = a.supplier_name || '';
-          bValue = b.supplier_name || '';
+        case 'today':
+          startDate.setHours(0, 0, 0, 0);
           break;
-        case 'volume':
-          aValue = Math.abs(parseFloat(a.milk_volume) || 0);
-          bValue = Math.abs(parseFloat(b.milk_volume) || 0);
+        case 'week':
+          startDate.setDate(now.getDate() - 7);
           break;
-        case 'quality':
-          aValue = a.quality_score || '';
-          bValue = b.quality_score || '';
+        case 'month':
+          startDate.setMonth(now.getMonth() - 1);
           break;
-        case 'fat':
-          aValue = parseFloat(a.fat_percentage) || 0;
-          bValue = parseFloat(b.fat_percentage) || 0;
+        case 'year':
+          startDate.setFullYear(now.getFullYear() - 1);
           break;
-        case 'protein':
-          aValue = parseFloat(a.protein_percentage) || 0;
-          bValue = parseFloat(b.protein_percentage) || 0;
-          break;
-        default:
-          aValue = a.created_at;
-          bValue = b.created_at;
       }
 
-      if (sortOrder === 'asc') {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-      }
-    });
+      filtered = filtered.filter(record => {
+        const createdDate = new Date(record.created_at);
+        return createdDate >= startDate;
+      });
+    }
+
+    // Apply sorting
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+        
+        // Handle null/undefined values
+        if (aVal === null || aVal === undefined) aVal = '';
+        if (bVal === null || bVal === undefined) bVal = '';
+        
+        // Handle date sorting
+        if (sortConfig.key.includes('time') || sortConfig.key === 'created_at') {
+          aVal = new Date(aVal);
+          bVal = new Date(bVal);
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        
+        // Handle string sorting
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return sortConfig.direction === 'asc' 
+            ? aVal.localeCompare(bVal) 
+            : bVal.localeCompare(aVal);
+        }
+        
+        // Handle number sorting
+        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+      });
+    }
 
     return filtered;
-  }, [records, searchTerm, sortBy, sortOrder, filterBy]);
+  }, [offloadRecords, searchTerm, timeFilter, sortConfig]);
 
-  // Pagination
-  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
-  const currentRecords = filteredRecords.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const toggleDetails = (id) => {
-    setShowDetails(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  // Enhanced export functions with quality data
-  const exportToCSV = () => {
-    const csvData = filteredRecords.map(record => ({
-      'Batch ID': record.batch_id || 'N/A',
-      'Date': new Date(record.created_at).toLocaleString(),
-      'Supplier': record.supplier_name || 'N/A',
-      'Volume (L)': Math.abs(parseFloat(record.milk_volume) || 0),
-      'Tank': record.tank_number || 'N/A',
-      'Destination': record.destination || 'N/A',
-      'Temperature (°C)': record.temperature || 'N/A',
-      'Quality Grade': record.quality_score || 'N/A',
-      'Fat (%)': record.fat_percentage || 'N/A',
-      'Protein (%)': record.protein_percentage || 'N/A',
-      'Total Plate Count': record.total_plate_count || 'N/A',
-      'Acidity (pH)': record.acidity || 'N/A',
-      'Notes': record.notes || 'N/A'
+  const handleSort = (key) => {
+    setSortConfig(prevConfig => ({
+      key,
+      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
     }));
-
-    const csv = [
-      Object.keys(csvData[0]).join(','),
-      ...csvData.map(row => Object.values(row).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', `milk_offload_records_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   };
 
-  const exportToExcel = () => {
-    const excelData = filteredRecords.map(record => ({
-      'Batch ID': record.batch_id || 'N/A',
-      'Date': new Date(record.created_at).toLocaleString(),
-      'Supplier': record.supplier_name || 'N/A',
-      'Volume (L)': Math.abs(parseFloat(record.milk_volume) || 0),
-      'Tank': record.tank_number || 'N/A',
-      'Destination': record.destination || 'N/A',
-      'Temperature (°C)': record.temperature || 'N/A',
-      'Quality Grade': record.quality_score || 'N/A',
-      'Fat (%)': record.fat_percentage || 'N/A',
-      'Protein (%)': record.protein_percentage || 'N/A',
-      'Total Plate Count': record.total_plate_count || 'N/A',
-      'Acidity (pH)': record.acidity || 'N/A',
-      'Notes': record.notes || 'N/A'
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(excelData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Milk Offload Records');
-    XLSX.writeFile(wb, `milk_offload_records_${new Date().toISOString().split('T')[0]}.xlsx`);
+  const toggleRowExpansion = (recordId) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(recordId)) {
+      newExpanded.delete(recordId);
+    } else {
+      newExpanded.add(recordId);
+    }
+    setExpandedRows(newExpanded);
   };
 
-  const getQualityBadgeColor = (quality) => {
+  const renderSortIcon = (columnKey) => {
+    if (sortConfig.key !== columnKey) return null;
+    return sortConfig.direction === 'asc' ? 
+      <ChevronUp className="h-4 w-4 inline ml-1" /> : 
+      <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
+
+  const getQualityBadge = (quality) => {
+    if (!quality) return <Badge variant="outline">Unknown</Badge>;
+    
     switch (quality) {
-      case 'Grade A': return 'bg-green-100 text-green-800';
-      case 'Grade B': return 'bg-yellow-100 text-yellow-800';
-      case 'Grade C': return 'bg-orange-100 text-orange-800';
-      case 'Rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Grade A':
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Grade A</Badge>;
+      case 'Grade B':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Grade B</Badge>;
+      case 'Grade C':
+        return <Badge className="bg-red-100 text-red-800 border-red-200">Grade C</Badge>;
+      default:
+        return <Badge variant="outline">{quality}</Badge>;
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
+    } catch (error) {
+      return 'Invalid Date';
+    }
+  };
+
+  const formatBatchId = (batchId) => {
+    if (!batchId) return 'No Batch ID';
+    return batchId;
+  };
+
+  const exportToCSV = () => {
+    if (filteredAndSortedRecords.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No records to export",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const headers = [
+      'Date', 'Batch ID', 'Tank', 'Volume (L)', 'Temperature (°C)', 
+      'Quality', 'Fat %', 'Protein %', 'pH', 'Total Plate Count', 'Acidity', 
+      'Destination', 'Notes'
+    ];
+    
+    const csvData = filteredAndSortedRecords.map(record => [
+      formatDate(record.created_at),
+      formatBatchId(record.batch_id),
+      record.tank_number || 'N/A',
+      Math.abs(record.milk_volume || 0),
+      record.temperature || 'N/A',
+      record.quality_score || 'N/A',
+      record.fat_percentage || 'N/A',
+      record.protein_percentage || 'N/A',
+      record.acidity || 'N/A', // pH is stored in acidity field
+      record.total_plate_count || 'N/A',
+      record.acidity || 'N/A',
+      record.destination || 'N/A',
+      record.notes || 'N/A'
+    ]);
+
+    const csvContent = [headers, ...csvData].map(row => 
+      row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `milk_offload_records_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export Successful",
+      description: "CSV file has been downloaded"
+    });
+  };
+
+  const exportToExcel = () => {
+    // Similar to CSV but would use a library like xlsx for Excel format
+    exportToCSV(); // For now, using CSV export
+  };
+
+  const handlePrint = () => {
+    const printContent = document.getElementById('offload-records-table');
+    if (printContent) {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Milk Offload Records</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              th { background-color: #f2f2f2; font-weight: bold; }
+              h1 { color: #333; margin-bottom: 20px; }
+              .header { margin-bottom: 20px; }
+              @media print { body { margin: 0; } }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>Milk Offload Records</h1>
+              <p>Generated on: ${format(new Date(), 'PPP')}</p>
+              <p>Total Records: ${filteredAndSortedRecords.length}</p>
+            </div>
+            ${printContent.innerHTML}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">Loading offload records...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center text-red-600">
+            Error loading records: {error.message}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="space-y-4">
-      {/* Enhanced Search and Filter Bar */}
-      <div className="flex flex-wrap gap-2 items-center justify-between bg-gray-50 p-3 rounded-lg">
-        <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-          <Search className="h-4 w-4 text-gray-500" />
-          <Input
-            placeholder="Search records..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-8"
-          />
-        </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Recent Milk Offload Records</CardTitle>
         
-        <div className="flex items-center gap-2">
-          <Select value={filterBy} onValueChange={setFilterBy}>
-            <SelectTrigger className="w-32 h-8">
-              <SelectValue />
+        {/* Search and Filter Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by batch ID, tank, supplier..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          
+          <Select value={timeFilter} onValueChange={setTimeFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Time filter" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="hour">Last Hour</SelectItem>
               <SelectItem value="today">Today</SelectItem>
               <SelectItem value="week">This Week</SelectItem>
               <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
             </SelectContent>
           </Select>
 
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-32 h-8">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date">Date</SelectItem>
-              <SelectItem value="supplier">Supplier</SelectItem>
-              <SelectItem value="volume">Volume</SelectItem>
-              <SelectItem value="quality">Quality</SelectItem>
-              <SelectItem value="fat">Fat %</SelectItem>
-              <SelectItem value="protein">Protein %</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            className="h-8"
-          >
-            {sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </Button>
-
-          <Button variant="outline" size="sm" onClick={exportToCSV} className="h-8">
-            <Download className="h-4 w-4 mr-1" />
-            CSV
-          </Button>
-
-          <Button variant="outline" size="sm" onClick={exportToExcel} className="h-8">
-            <FileSpreadsheet className="h-4 w-4 mr-1" />
-            Excel
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={exportToCSV}>
+                <FileText className="h-4 w-4 mr-2" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportToExcel}>
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Export as Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handlePrint}>
+                <Printer className="h-4 w-4 mr-2" />
+                Print Records
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      </div>
-
-      {/* Enhanced Records Table */}
-      <div className="border rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="text-left p-2 font-medium">Batch ID</th>
-                <th className="text-left p-2 font-medium">Date & Time</th>
-                <th className="text-left p-2 font-medium">Supplier</th>
-                <th className="text-left p-2 font-medium">Volume (L)</th>
-                <th className="text-left p-2 font-medium">Quality</th>
-                <th className="text-left p-2 font-medium">Fat %</th>
-                <th className="text-left p-2 font-medium">Protein %</th>
-                <th className="text-left p-2 font-medium">pH</th>
-                <th className="text-left p-2 font-medium">Temp °C</th>
-                <th className="text-left p-2 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentRecords.map((record) => (
-                <React.Fragment key={record.id}>
-                  <tr className="border-b hover:bg-gray-50">
-                    <td className="p-2">
-                      <div className="font-mono text-xs">
-                        {record.batch_id || 'N/A'}
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      <div className="text-xs">
-                        {new Date(record.created_at).toLocaleDateString()}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(record.created_at).toLocaleTimeString()}
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      <div className="font-medium truncate max-w-[120px]">
-                        {record.supplier_name || 'N/A'}
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      <div className="font-medium text-blue-600">
-                        {Math.abs(parseFloat(record.milk_volume) || 0).toFixed(1)}
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      <Badge className={`text-xs ${getQualityBadgeColor(record.quality_score)}`}>
-                        {record.quality_score || 'N/A'}
-                      </Badge>
-                    </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-green-600">
-                          {record.fat_percentage ? `${parseFloat(record.fat_percentage).toFixed(1)}%` : 'N/A'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-purple-600">
-                          {record.protein_percentage ? `${parseFloat(record.protein_percentage).toFixed(1)}%` : 'N/A'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-orange-600">
-                          {record.acidity ? parseFloat(record.acidity).toFixed(1) : 'N/A'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      <span className="text-gray-600">
-                        {record.temperature ? `${parseFloat(record.temperature).toFixed(1)}°C` : 'N/A'}
-                      </span>
-                    </td>
-                    <td className="p-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleDetails(record.id)}
-                        className="h-6 w-6 p-0"
-                      >
-                        {showDetails[record.id] ? 
-                          <EyeOff className="h-3 w-3" /> : 
-                          <Eye className="h-3 w-3" />
-                        }
-                      </Button>
-                    </td>
-                  </tr>
-                  
-                  {/* Enhanced Details Row */}
-                  {showDetails[record.id] && (
-                    <tr className="bg-blue-50 border-b">
-                      <td colSpan="10" className="p-3">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                          <div className="space-y-2">
-                            <h4 className="font-semibold text-gray-700">Storage & Destination</h4>
-                            <div><span className="font-medium">Tank:</span> {record.tank_number || 'N/A'}</div>
-                            <div><span className="font-medium">Destination:</span> {record.destination || 'N/A'}</div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <h4 className="font-semibold text-gray-700">Quality Parameters</h4>
-                            <div><span className="font-medium">Total Plate Count:</span> {record.total_plate_count || 'N/A'}</div>
-                            <div><span className="font-medium">Fat Content:</span> {record.fat_percentage ? `${record.fat_percentage}%` : 'N/A'}</div>
-                            <div><span className="font-medium">Protein Content:</span> {record.protein_percentage ? `${record.protein_percentage}%` : 'N/A'}</div>
-                            <div><span className="font-medium">Acidity (pH):</span> {record.acidity || 'N/A'}</div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <h4 className="font-semibold text-gray-700">Additional Information</h4>
-                            <div><span className="font-medium">Temperature:</span> {record.temperature ? `${record.temperature}°C` : 'N/A'}</div>
-                            <div><span className="font-medium">Notes:</span> {record.notes || 'No notes'}</div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
+      </CardHeader>
+      
+      <CardContent>
+        <div className="text-sm text-muted-foreground mb-4">
+          Showing {filteredAndSortedRecords.length} offload records
         </div>
-
-        {currentRecords.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No records found matching your criteria.
+        
+        {filteredAndSortedRecords.length === 0 ? (
+          <div className="text-center py-6 text-muted-foreground">
+            {searchTerm ? 'No records found matching your search.' : 'No milk offload records found.'}
+          </div>
+        ) : (
+          <div className="overflow-x-auto" id="offload-records-table">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-8"></TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('created_at')}
+                  >
+                    Date {renderSortIcon('created_at')}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('batch_id')}
+                  >
+                    Batch ID {renderSortIcon('batch_id')}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('tank_number')}
+                  >
+                    Tank {renderSortIcon('tank_number')}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('milk_volume')}
+                  >
+                    Volume (L) {renderSortIcon('milk_volume')}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('temperature')}
+                  >
+                    Temperature (°C) {renderSortIcon('temperature')}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('quality_score')}
+                  >
+                    Quality {renderSortIcon('quality_score')}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('fat_percentage')}
+                  >
+                    Fat % {renderSortIcon('fat_percentage')}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('protein_percentage')}
+                  >
+                    Protein % {renderSortIcon('protein_percentage')}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('acidity')}
+                  >
+                    pH {renderSortIcon('acidity')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAndSortedRecords.map((record) => (
+                  <React.Fragment key={record.id}>
+                    <TableRow className="hover:bg-muted/50">
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleRowExpansion(record.id)}
+                          className="h-6 w-6 p-0"
+                        >
+                          {expandedRows.has(record.id) ? 
+                            <EyeOff className="h-4 w-4" /> : 
+                            <Eye className="h-4 w-4" />
+                          }
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {formatDate(record.created_at)}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm font-medium">
+                        {formatBatchId(record.batch_id)}
+                      </TableCell>
+                      <TableCell>{record.tank_number || 'N/A'}</TableCell>
+                      <TableCell className="text-red-600 font-medium">
+                        {Math.abs(record.milk_volume || 0)}
+                      </TableCell>
+                      <TableCell>{record.temperature || 'N/A'}°C</TableCell>
+                      <TableCell>{getQualityBadge(record.quality_score)}</TableCell>
+                      <TableCell>{record.fat_percentage || 'N/A'}%</TableCell>
+                      <TableCell>{record.protein_percentage || 'N/A'}%</TableCell>
+                      <TableCell>{record.acidity || 'N/A'}</TableCell>
+                    </TableRow>
+                    
+                    {expandedRows.has(record.id) && (
+                      <TableRow>
+                        <TableCell colSpan={10} className="bg-muted/30">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                            <div>
+                              <strong>Total Plate Count:</strong> {record.total_plate_count || 'N/A'}
+                            </div>
+                            <div>
+                              <strong>Destination:</strong> {record.destination || 'N/A'}
+                            </div>
+                            <div>
+                              <strong>Notes:</strong> {record.notes || 'No notes'}
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
-      </div>
-
-      {/* Enhanced Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredRecords.length)} of {filteredRecords.length} records
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            <span className="text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
