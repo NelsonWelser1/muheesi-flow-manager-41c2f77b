@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
 import AddItemForm from './components/AddItemForm';
 import InventoryTable from './components/InventoryTable';
 import SearchBar from './components/SearchBar';
@@ -29,9 +31,16 @@ const itemStatuses = {
   'need': 'More Needed'
 };
 
+const timePeriods = {
+  'daily': 'Daily',
+  'monthly': 'Monthly',
+  'annually': 'Annually'
+};
+
 const ItemManagementPanel = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [timePeriod, setTimePeriod] = useState('daily');
   const { items, isLoading, addItem, updateItemStatus } = useInventoryItems();
   const [newItem, setNewItem] = useState({
     item_name: '',
@@ -121,10 +130,38 @@ const ItemManagementPanel = () => {
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  const filteredItems = items?.filter(item =>
-    item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.section.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filterItemsByTimePeriod = (items, period) => {
+    if (!items) return [];
+    
+    const now = new Date();
+    const filteredItems = items.filter(item => {
+      if (!item.created_at) return true; // Include items without date
+      
+      const itemDate = new Date(item.created_at);
+      
+      switch (period) {
+        case 'daily':
+          return itemDate.toDateString() === now.toDateString();
+        case 'monthly':
+          return itemDate.getMonth() === now.getMonth() && 
+                 itemDate.getFullYear() === now.getFullYear();
+        case 'annually':
+          return itemDate.getFullYear() === now.getFullYear();
+        default:
+          return true;
+      }
+    });
+    
+    return filteredItems;
+  };
+
+  const filteredItems = filterItemsByTimePeriod(
+    items?.filter(item =>
+      item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.section.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [], 
+    timePeriod
+  );
 
   return (
     <div className="space-y-6">
@@ -137,12 +174,31 @@ const ItemManagementPanel = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Inventory Items</CardTitle>
-          <SearchBar 
-            searchTerm={searchTerm} 
-            setSearchTerm={setSearchTerm} 
-            items={filteredItems}
-          />
+          <div className="flex flex-col space-y-4">
+            <CardTitle>Inventory Items</CardTitle>
+            
+            {/* Time Period Filter */}
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm font-medium text-gray-700 self-center">View by:</span>
+              {Object.entries(timePeriods).map(([key, label]) => (
+                <Button
+                  key={key}
+                  variant={timePeriod === key ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTimePeriod(key)}
+                  className="text-xs"
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+            
+            <SearchBar 
+              searchTerm={searchTerm} 
+              setSearchTerm={setSearchTerm} 
+              items={filteredItems}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <InventoryTable
