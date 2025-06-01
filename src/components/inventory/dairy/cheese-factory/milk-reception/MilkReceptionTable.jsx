@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,33 +7,26 @@ import { Badge } from "@/components/ui/badge";
 import { Search, ChevronLeft, ChevronRight, RefreshCw, FileText, FileSpreadsheet, Download, Printer } from "lucide-react";
 import { useMilkReception } from '@/hooks/useMilkReception';
 import { format } from 'date-fns';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { useToast } from "@/components/ui/use-toast";
 import { exportToPDF, exportToExcel, exportToCSV } from '@/components/inventory/dairy/utils/reportExportUtils';
-
 const RECORDS_PER_PAGE = 10;
-
 const MilkReceptionTable = () => {
-  const { data: records, isLoading, error, refetch } = useMilkReception();
+  const {
+    data: records,
+    isLoading,
+    error,
+    refetch
+  } = useMilkReception();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
 
   // Filter records based on search term
-  const filteredRecords = records.filter(record => 
-    record.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.tank_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.quality_score?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.batch_id?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRecords = records.filter(record => record.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) || record.tank_number?.toLowerCase().includes(searchTerm.toLowerCase()) || record.quality_score?.toLowerCase().includes(searchTerm.toLowerCase()) || record.batch_id?.toLowerCase().includes(searchTerm.toLowerCase()));
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredRecords.length / RECORDS_PER_PAGE);
@@ -46,12 +38,10 @@ const MilkReceptionTable = () => {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
-
-  const handlePageChange = (page) => {
+  const handlePageChange = page => {
     setCurrentPage(page);
   };
-
-  const getQualityBadgeColor = (quality) => {
+  const getQualityBadgeColor = quality => {
     switch (quality) {
       case 'Grade A':
         return 'bg-green-100 text-green-800';
@@ -63,26 +53,24 @@ const MilkReceptionTable = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
-
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
       await refetch();
       toast({
         title: "Data Refreshed",
-        description: "Milk reception records have been updated successfully.",
+        description: "Milk reception records have been updated successfully."
       });
     } catch (error) {
       toast({
         title: "Refresh Failed",
         description: "Failed to refresh data. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsRefreshing(false);
     }
   };
-
   const handlePrint = () => {
     const printContent = document.getElementById('milk-reception-table');
     if (printContent) {
@@ -111,142 +99,96 @@ const MilkReceptionTable = () => {
           </body>
         </html>
       `;
-      
       const printWindow = window.open('', '_blank');
       printWindow.document.write(printableContent);
       printWindow.document.close();
       printWindow.print();
     }
   };
-
   const handleExportPDF = () => {
     try {
       exportToPDF(filteredRecords, 'Milk Reception Records', 'milk_reception');
       toast({
         title: "Export Successful",
-        description: "PDF file has been downloaded successfully.",
+        description: "PDF file has been downloaded successfully."
       });
     } catch (error) {
       toast({
         title: "Export Failed",
         description: "Failed to export PDF. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handleExportExcel = () => {
     try {
       exportToExcel(filteredRecords, 'Milk Reception Records', 'milk_reception');
       toast({
         title: "Export Successful",
-        description: "Excel file has been downloaded successfully.",
+        description: "Excel file has been downloaded successfully."
       });
     } catch (error) {
       toast({
         title: "Export Failed",
         description: "Failed to export Excel. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handleExportCSV = () => {
     try {
       exportToCSV(filteredRecords, 'Milk Reception Records', 'milk_reception');
       toast({
         title: "Export Successful",
-        description: "CSV file has been downloaded successfully.",
+        description: "CSV file has been downloaded successfully."
       });
     } catch (error) {
       toast({
         title: "Export Failed",
         description: "Failed to export CSV. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   if (isLoading) {
-    return (
-      <Card>
+    return <Card>
         <CardContent className="p-6">
           <div className="text-center">Loading milk reception records...</div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
   if (error) {
-    return (
-      <Card>
+    return <Card>
         <CardContent className="p-6">
           <div className="text-center text-red-600">
             Error loading records: {error.message}
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle>Milk Reception Records</CardTitle>
         <div className="flex items-center justify-between space-x-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by supplier, tank, quality, or batch ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
-            />
+            <Input placeholder="Search by supplier, tank, quality, or batch ID..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8" />
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="flex items-center gap-1"
-            >
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="flex items-center gap-1">
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrint}
-              className="flex items-center gap-1"
-            >
+            <Button variant="outline" size="sm" onClick={handlePrint} className="flex items-center gap-1">
               <Printer className="h-4 w-4" />
               Print
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportPDF}
-              className="flex items-center gap-1"
-            >
-              <FileText className="h-4 w-4" />
-              PDF
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportExcel}
-              className="flex items-center gap-1"
-            >
+            
+            <Button variant="outline" size="sm" onClick={handleExportExcel} className="flex items-center gap-1">
               <FileSpreadsheet className="h-4 w-4" />
               Excel
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportCSV}
-              className="flex items-center gap-1"
-            >
+            <Button variant="outline" size="sm" onClick={handleExportCSV} className="flex items-center gap-1">
               <Download className="h-4 w-4" />
               CSV
             </Button>
@@ -254,12 +196,9 @@ const MilkReceptionTable = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {filteredRecords.length === 0 ? (
-          <div className="text-center py-6 text-muted-foreground">
+        {filteredRecords.length === 0 ? <div className="text-center py-6 text-muted-foreground">
             {searchTerm ? 'No records found matching your search.' : 'No milk reception records found.'}
-          </div>
-        ) : (
-          <>
+          </div> : <>
             <div className="overflow-x-auto" id="milk-reception-table">
               <Table>
                 <TableHeader>
@@ -278,8 +217,7 @@ const MilkReceptionTable = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {currentRecords.map((record) => (
-                    <TableRow key={record.id}>
+                  {currentRecords.map(record => <TableRow key={record.id}>
                       <TableCell className="whitespace-nowrap">
                         {format(new Date(record.created_at), 'MMM dd, yyyy HH:mm')}
                       </TableCell>
@@ -305,8 +243,7 @@ const MilkReceptionTable = () => {
                       <TableCell className="whitespace-nowrap max-w-[200px] overflow-hidden text-ellipsis">
                         {record.notes}
                       </TableCell>
-                    </TableRow>
-                  ))}
+                    </TableRow>)}
                 </TableBody>
               </Table>
             </div>
@@ -317,43 +254,28 @@ const MilkReceptionTable = () => {
                 Showing {startIndex + 1} to {Math.min(endIndex, filteredRecords.length)} of {filteredRecords.length} records
               </div>
               
-              {totalPages > 1 && (
-                <Pagination>
+              {totalPages > 1 && <Pagination>
                   <PaginationContent>
                     <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                      />
+                      <PaginationPrevious onClick={() => handlePageChange(Math.max(1, currentPage - 1))} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
                     </PaginationItem>
                     
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          onClick={() => handlePageChange(page)}
-                          isActive={currentPage === page}
-                          className="cursor-pointer"
-                        >
+                    {Array.from({
+                length: totalPages
+              }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
+                        <PaginationLink onClick={() => handlePageChange(page)} isActive={currentPage === page} className="cursor-pointer">
                           {page}
                         </PaginationLink>
-                      </PaginationItem>
-                    ))}
+                      </PaginationItem>)}
                     
                     <PaginationItem>
-                      <PaginationNext 
-                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                      />
+                      <PaginationNext onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
                     </PaginationItem>
                   </PaginationContent>
-                </Pagination>
-              )}
+                </Pagination>}
             </div>
-          </>
-        )}
+          </>}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default MilkReceptionTable;
