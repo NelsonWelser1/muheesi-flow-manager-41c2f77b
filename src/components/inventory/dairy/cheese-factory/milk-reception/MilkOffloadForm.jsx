@@ -5,22 +5,17 @@ import { ValidationError } from './components/ValidationError';
 import { RecentOffloadRecords } from './components/RecentOffloadRecords';
 import { MilkOffloadFormContent } from './components/MilkOffloadFormContent';
 import { useMilkOffloadForm } from './hooks/useMilkOffloadForm';
-import { useMilkReception } from '@/hooks/useMilkReception';
 
 const MilkOffloadForm = () => {
   const {
     formData,
     loading,
     validationError,
-    cooldownActive,
-    cooldownTimeLeft,
     handleTankSelection,
     handleInputChange,
     handleSubmit,
     milkReceptionData
   } = useMilkOffloadForm();
-
-  const { refetch } = useMilkReception();
 
   return (
     <div className="space-y-6">
@@ -37,8 +32,6 @@ const MilkOffloadForm = () => {
           <MilkOffloadFormContent 
             formData={formData}
             loading={loading}
-            cooldownActive={cooldownActive}
-            cooldownTimeLeft={cooldownTimeLeft}
             handleTankSelection={handleTankSelection}
             handleInputChange={handleInputChange}
             handleSubmit={handleSubmit}
@@ -54,10 +47,7 @@ const MilkOffloadForm = () => {
           <CardTitle>Recent Offload Records</CardTitle>
         </CardHeader>
         <CardContent>
-          <RecentOffloadRecords 
-            records={milkReceptionData} 
-            onRefresh={refetch}
-          />
+          <RecentOffloadRecords records={milkReceptionData} />
         </CardContent>
       </Card>
     </div>

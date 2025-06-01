@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Bell, DollarSign, Receipt, FileText, Calculator, CreditCard, Users } from "lucide-react";
@@ -9,44 +10,14 @@ import CustomerInvoiceForm from '../sales/forms/CustomerInvoiceForm';
 import BillsExpensesForm from '../accounts/forms/BillsExpensesForm';
 import PaymentsReceiptsForm from '../accounts/forms/PaymentsReceiptsForm';
 import PayrollPayslipsForm from '../accounts/forms/PayrollPayslipsForm';
-import NotificationManager from '../notifications/NotificationManager';
-import { useDairyNotifications } from '@/hooks/useDairyNotifications';
 
 const DairySectionView = ({ section, onBack }) => {
   const [activeForm, setActiveForm] = React.useState(null);
   const [activeCategory, setActiveCategory] = React.useState(null);
-  const [showNotifications, setShowNotifications] = React.useState(false);
-  
-  const {
-    notifications,
-    addNotification,
-    clearNotifications,
-    markAsRead,
-    getNotificationCount
-  } = useDairyNotifications();
 
   console.log('Rendering DairySectionView for:', section.title);
 
-  const currentNotifications = getNotificationCount(section.id);
-
-  const handleNotificationClick = () => {
-    setShowNotifications(!showNotifications);
-    setActiveForm(null);
-    setActiveCategory(null);
-  };
-
   const renderContent = () => {
-    if (showNotifications) {
-      return (
-        <NotificationManager
-          sectionId={section.id}
-          notifications={currentNotifications}
-          onMarkAsRead={markAsRead}
-          onClearAll={clearNotifications}
-          onAddNotification={addNotification}
-        />
-      );
-    }
     if (activeForm === 'sales') {
       return <SalesOrderForm onBack={() => setActiveForm(null)} />;
     } else if (activeForm === 'invoice') {
@@ -193,31 +164,16 @@ const DairySectionView = ({ section, onBack }) => {
           <Badge className={`bg-${section.status === 'operational' ? 'green' : section.status === 'maintenance' ? 'yellow' : 'red'}-500`}>
             {section.status.charAt(0).toUpperCase() + section.status.slice(1)}
           </Badge>
-          {currentNotifications > 0 && (
-            <Badge 
-              variant="secondary" 
-              className="cursor-pointer hover:bg-red-600 bg-red-500 text-white"
-              onClick={handleNotificationClick}
-            >
+          {section.notifications > 0 && (
+            <Badge variant="secondary">
               <Bell className="h-4 w-4 mr-1" />
-              {currentNotifications} notifications
+              {section.notifications} notifications
             </Badge>
           )}
         </div>
       </div>
 
-      {showNotifications && (
-        <div className="mb-6">
-          <button 
-            onClick={() => setShowNotifications(false)}
-            className="mb-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-          >
-            ← Back to Section
-          </button>
-        </div>
-      )}
-
-      {section.title === "Sales & Accounts" && !activeForm && !activeCategory && !showNotifications && (
+      {section.title === "Sales & Accounts" && !activeForm && !activeCategory && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveCategory('sales')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -257,7 +213,7 @@ const DairySectionView = ({ section, onBack }) => {
         </div>
       )}
 
-      {section.title === "Sales & Accounts" && !activeForm && activeCategory === 'sales' && !showNotifications && (
+      {section.title === "Sales & Accounts" && !activeForm && activeCategory === 'sales' && (
         <>
           <button 
             onClick={() => setActiveCategory(null)}
@@ -270,7 +226,7 @@ const DairySectionView = ({ section, onBack }) => {
         </>
       )}
 
-      {section.title === "Sales & Accounts" && !activeForm && activeCategory === 'accounts' && !showNotifications && (
+      {section.title === "Sales & Accounts" && !activeForm && activeCategory === 'accounts' && (
         <>
           <button 
             onClick={() => setActiveCategory(null)}

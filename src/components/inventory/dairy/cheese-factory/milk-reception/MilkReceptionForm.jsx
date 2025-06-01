@@ -1,94 +1,151 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMilkReceptionForm } from "./hooks/useMilkReceptionForm";
-import MilkReceptionFormFields from "./components/MilkReceptionFormFields";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Check, AlertCircle, Clock } from "lucide-react";
+import { useMilkReception } from '@/hooks/useMilkReception';
 
 const MilkReceptionForm = () => {
   const { toast } = useToast();
-  const {
-    formData,
-    submitting,
-    cooldownActive,
-    cooldownTimeRemaining,
-    handleInputChange,
-    handleQualityChange,
-    handleTankSelection,
-    handleSubmit: submitForm
-  } = useMilkReceptionForm();
+  const { addMilkReception } = useMilkReception();
+  const [formData, setFormData] = useState({
+    tank_number: '',
+    quality_score: 'Grade A',
+    supplier_name: '',
+    milk_volume: '',
+    temperature: '',
+    fat_percentage: '',
+    protein_percentage: '',
+    total_plate_count: '',
+    acidity: '',
+    notes: ''
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    console.log(`Input changed - ${name}:`, value);
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleQualityChange = (value) => {
+    console.log('Setting quality score to:', value);
+    setFormData(prev => ({
+      ...prev,
+      quality_score: value
+    }));
+  };
+
+  const handleTankSelection = (value) => {
+    console.log('Selected tank:', value);
+    setFormData(prev => ({
+      ...prev,
+      tank_number: value
+    }));
+  };
+
+  const validateForm = () => {
+    const requiredFields = [
+      'supplier_name',
+      'milk_volume',
+      'temperature',
+      'fat_percentage',
+      'protein_percentage',
+      'total_plate_count',
+      'acidity',
+      'quality_score',
+      'tank_number'  // Added tank_number validation
+    ];
+
+    const errors = [];
+    requiredFields.forEach(field => {
+      if (!formData[field]) {
+        errors.push(`${field.replace('_', ' ')} is required`);
+      }
+    });
+
+    const numericFields = [
+      'milk_volume',
+      'temperature',
+      'fat_percentage',
+      'protein_percentage',
+      'total_plate_count',
+      'acidity'
+    ];
+
+    numericFields.forEach(field => {
+      if (isNaN(parseFloat(formData[field]))) {
+        errors.push(`${field.replace('_', ' ')} must be a valid number`);
+      }
+    });
+
+    return errors;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitting milk reception form...');
-    
-    if (cooldownActive) {
+    console.log('Form data before submission:', formData);
+
+    const errors = validateForm();
+    if (errors.length > 0) {
       toast({
-        title: "Submission Cooldown Active",
-        description: `Please wait ${cooldownTimeRemaining} seconds before submitting another record`,
-        variant: "default",
-        duration: 3000,
-        className: "bg-orange-50 border-2 border-orange-500 text-orange-800 font-medium",
-        action: (
-          <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-            <Clock className="h-4 w-4 text-white" />
-          </div>
-        ),
+        title: "Validation Error",
+        description: errors.join(', '),
+        variant: "destructive",
       });
       return;
     }
-    
+
     try {
-      const result = await submitForm(e);
-      
-      if (result && result.success) {
-        // Show success toast
+      const dataToSubmit = {
+        ...formData,
+        milk_volume: parseFloat(formData.milk_volume),
+        temperature: parseFloat(formData.temperature),
+        fat_percentage: parseFloat(formData.fat_percentage),
+        protein_percentage: parseFloat(formData.protein_percentage),
+        total_plate_count: parseInt(formData.total_plate_count),
+        acidity: parseFloat(formData.acidity),
+        quality_score: formData.quality_score,
+        tank_number: formData.tank_number
+      };
+
+      console.log('Submitting data:', dataToSubmit);
+      const result = await addMilkReception.mutateAsync(dataToSubmit);
+      console.log('Submission result:', result);
+
+      if (result) {
         toast({
-          title: "Success!",
+          title: "Success",
           description: "Milk reception record added successfully",
-          duration: 6000,
-          className: "bg-green-50 border-2 border-green-500 text-green-800 font-medium",
-          action: (
-            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-              <Check className="h-4 w-4 text-white" />
-            </div>
-          ),
         });
-        console.log('Success toast triggered');
+
+        // Reset form after successful submission
+        setFormData({
+          supplier_name: '',
+          milk_volume: '',
+          temperature: '',
+          fat_percentage: '',
+          protein_percentage: '',
+          total_plate_count: '',
+          acidity: '',
+          quality_score: 'Grade A',
+          tank_number: '',
+          notes: ''
+        });
       } else {
-        // Show error toast
-        const errorMessage = result?.error?.message || "Failed to submit milk reception record. Please try again.";
-        
-        toast({
-          title: "Submission Failed",
-          description: errorMessage,
-          variant: "destructive",
-          duration: 6000,
-          className: "bg-red-50 border-2 border-red-500 text-red-800 font-medium",
-          action: (
-            <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-              <AlertCircle className="h-4 w-4 text-white" />
-            </div>
-          ),
-        });
-        console.log('Error toast triggered');
+        throw new Error('Failed to add record');
       }
     } catch (error) {
       console.error('Error in form submission:', error);
-      
-      // Show exception toast
       toast({
-        title: "System Error",
-        description: "An unexpected error occurred. Please try again or contact support.",
+        title: "Submission Failed",
+        description: "Please check your data and try again. " + (error.message || ''),
         variant: "destructive",
-        duration: 6000,
-        className: "bg-red-50 border-2 border-red-500 text-red-800 font-medium",
-        action: (
-          <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-            <AlertCircle className="h-4 w-4 text-white" />
-          </div>
-        ),
       });
     }
   };
@@ -100,30 +157,149 @@ const MilkReceptionForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <MilkReceptionFormFields 
-            formData={formData}
-            handleInputChange={handleInputChange}
-            handleQualityChange={handleQualityChange}
-            handleTankSelection={handleTankSelection}
-          />
-          
-          {cooldownActive && (
-            <div className="bg-orange-50 border-2 border-orange-200 rounded-md p-3 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-orange-600" />
-              <div className="text-orange-800">
-                <p className="font-medium">Submission Cooldown Active</p>
-                <p className="text-sm">Please wait {cooldownTimeRemaining} seconds before submitting another record</p>
-              </div>
+          {/* Storage Tank and Quality Score at the top */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="tank_number">Storage Tank</Label>
+              <Select 
+                value={formData.tank_number} 
+                onValueChange={handleTankSelection}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select tank" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Tank A">Tank A</SelectItem>
+                  <SelectItem value="Tank B">Tank B</SelectItem>
+                  <SelectItem value="Direct-Processing">Direct Processing</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          )}
-          
-          <button 
-            type="submit" 
-            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed" 
-            disabled={submitting || cooldownActive}
-          >
-            {submitting ? "Submitting..." : cooldownActive ? `Wait ${cooldownTimeRemaining}s` : "Submit"}
-          </button>
+
+            <div className="space-y-2">
+              <Label htmlFor="quality_score">Quality Score</Label>
+              <Select 
+                value={formData.quality_score} 
+                onValueChange={handleQualityChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select quality score" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Grade A">Grade A</SelectItem>
+                  <SelectItem value="Grade B">Grade B</SelectItem>
+                  <SelectItem value="Grade C">Grade C</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Rest of the form fields */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="supplier_name">Supplier Name</Label>
+              <Input
+                id="supplier_name"
+                name="supplier_name"
+                value={formData.supplier_name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="milk_volume">Milk Volume (L)</Label>
+              <Input
+                id="milk_volume"
+                name="milk_volume"
+                type="number"
+                step="0.01"
+                value={formData.milk_volume}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="temperature">Temperature (°C)</Label>
+              <Input
+                id="temperature"
+                name="temperature"
+                type="number"
+                step="0.1"
+                value={formData.temperature}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fat_percentage">Fat Percentage (%)</Label>
+              <Input
+                id="fat_percentage"
+                name="fat_percentage"
+                type="number"
+                step="0.1"
+                value={formData.fat_percentage}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="protein_percentage">Protein Percentage (%)</Label>
+              <Input
+                id="protein_percentage"
+                name="protein_percentage"
+                type="number"
+                step="0.1"
+                value={formData.protein_percentage}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="total_plate_count">Total Plate Count</Label>
+              <Input
+                id="total_plate_count"
+                name="total_plate_count"
+                type="number"
+                value={formData.total_plate_count}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="acidity">Acidity (pH)</Label>
+              <Input
+                id="acidity"
+                name="acidity"
+                type="number"
+                step="0.1"
+                value={formData.acidity}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              name="notes"
+              value={formData.notes}
+              onChange={handleInputChange}
+              className="min-h-[100px]"
+            />
+          </div>
+
+          <Button type="submit" className="w-full">
+            Submit
+          </Button>
         </form>
       </CardContent>
     </Card>

@@ -5,43 +5,22 @@ import { supabase } from '@/integrations/supabase';
 export const useMilkReception = () => {
   const queryClient = useQueryClient();
 
-  // Fetch all milk reception records including offload records
+  // Fetch all milk reception records
   const fetchMilkReceptions = async () => {
     console.log('Fetching milk reception data');
     try {
-      // Fetch from milk_reception table
-      const { data: receptionData, error: receptionError } = await supabase
+      const { data, error, status } = await supabase
         .from('milk_reception')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (receptionError && receptionError.code !== 'PGRST116') {
-        console.error('Error fetching milk reception data:', receptionError);
-        throw receptionError;
+      if (error && status !== 406) {
+        console.error('Error fetching milk reception data:', error);
+        throw error;
       }
 
-      // Fetch from milk_tank_offloads table  
-      const { data: offloadData, error: offloadError } = await supabase
-        .from('milk_tank_offloads')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (offloadError && offloadError.code !== 'PGRST116') {
-        console.error('Error fetching offload data:', offloadError);
-        // Don't throw error if table doesn't exist, continue with reception data only
-      }
-
-      // Combine both datasets
-      const combinedData = [
-        ...(receptionData || []),
-        ...(offloadData || [])
-      ].sort((a, b) => new Date(b.created_at || b.datetime) - new Date(a.created_at || a.datetime));
-
-      console.log('Fetched reception data:', receptionData?.length || 0, 'records');
-      console.log('Fetched offload data:', offloadData?.length || 0, 'records');
-      console.log('Combined data:', combinedData.length, 'records');
-      
-      return combinedData;
+      console.log('Fetched milk reception data:', data);
+      return data || [];
     } catch (error) {
       console.error('Error in fetchMilkReceptions:', error);
       throw error;
@@ -122,7 +101,6 @@ export const useMilkReception = () => {
     isLoading: query.isLoading,
     error: query.error,
     addMilkReception,
-    addMilkTankOffload,
-    refetch: query.refetch
+    addMilkTankOffload
   };
 };

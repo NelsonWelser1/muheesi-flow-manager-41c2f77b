@@ -1,11 +1,14 @@
-
 import React from 'react';
-import EmployeeDashboard from '../components/dashboard/EmployeeDashboard';
+import CompanyShowcase from '../components/CompanyShowcase';
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
-      <EmployeeDashboard />
+    <div className="container mx-auto p-4">
+      <div className="text-center mb-6">
+        <h1 className="text-4xl font-bold mb-4">Welcome to Muheesi GKK Int.System</h1>
+        <p className="text-xl">A comprehensive Supply Chain, Factory and Warehouse Management System</p>
+      </div>
+      <CompanyShowcase />
     </div>
   );
 };

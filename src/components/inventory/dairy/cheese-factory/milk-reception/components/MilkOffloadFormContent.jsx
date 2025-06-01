@@ -6,13 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { TankSelector } from './TankSelector';
 import { QualityGradeSelector } from './QualityGradeSelector';
-import { Clock } from "lucide-react";
 
 export const MilkOffloadFormContent = ({
   formData,
   loading,
-  cooldownActive,
-  cooldownTimeLeft,
   handleTankSelection,
   handleInputChange,
   handleSubmit,
@@ -20,18 +17,6 @@ export const MilkOffloadFormContent = ({
 }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {cooldownActive && (
-        <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 flex items-center gap-3">
-          <Clock className="h-5 w-5 text-orange-600" />
-          <div>
-            <p className="text-orange-800 font-medium">Submission Cooldown Active</p>
-            <p className="text-orange-700 text-sm">
-              Please wait {cooldownTimeLeft} seconds before submitting another record
-            </p>
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-2 gap-4">
         <TankSelector 
           value={formData.storage_tank} 
@@ -151,20 +136,11 @@ export const MilkOffloadFormContent = ({
         />
       </div>
 
-      <Button 
-        type="submit" 
-        className="w-full" 
-        disabled={loading || cooldownActive}
-      >
+      <Button type="submit" className="w-full" disabled={loading}>
         {loading ? (
           <div className="flex items-center gap-2">
             <span className="animate-spin">◌</span>
             Recording Offload...
-          </div>
-        ) : cooldownActive ? (
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Wait {cooldownTimeLeft}s to submit again
           </div>
         ) : (
           "Submit Offload Record"

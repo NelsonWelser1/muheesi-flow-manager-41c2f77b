@@ -1,20 +1,15 @@
-import { useState, useRef } from 'react';
+
+import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase';
 import { useMilkReception } from '@/hooks/useMilkReception';
-import { Check, AlertCircle } from "lucide-react";
 
 export const useMilkOffloadForm = () => {
   const { toast } = useToast();
   const { data: milkReceptionData, refetch: refetchMilkReception } = useMilkReception();
   const [validationError, setValidationError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [cooldownActive, setCooldownActive] = useState(false);
-  const [cooldownTimeLeft, setCooldownTimeLeft] = useState(0);
-  const cooldownTimerRef = useRef(null);
-  
-  // Initial form state
-  const initialFormState = {
+  const [formData, setFormData] = useState({
     batch_id: '',
     storage_tank: '',
     supplier_name: 'Offload from Tank',
@@ -27,32 +22,7 @@ export const useMilkOffloadForm = () => {
     acidity: '',
     notes: '',
     destination: ''
-  };
-
-  const [formData, setFormData] = useState(initialFormState);
-
-  // Clear form function - resets all fields to initial state
-  const clearForm = () => {
-    setFormData(initialFormState);
-    setValidationError(null);
-    console.log('Form cleared - all fields reset to initial state');
-  };
-
-  const startCooldown = () => {
-    setCooldownActive(true);
-    setCooldownTimeLeft(30);
-    
-    cooldownTimerRef.current = setInterval(() => {
-      setCooldownTimeLeft((prev) => {
-        if (prev <= 1) {
-          setCooldownActive(false);
-          clearInterval(cooldownTimerRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
+  });
 
   const calculateTankBalance = (tankName) => {
     if (!milkReceptionData) return 0;
@@ -85,6 +55,7 @@ export const useMilkOffloadForm = () => {
   const handleTankSelection = (tankValue, batchId) => {
     console.log('Selected tank:', tankValue, 'Batch ID:', batchId);
     
+    // Get the most recent entry for the selected tank with positive milk volume
     const mostRecentEntry = milkReceptionData
       ?.filter(record => record.tank_number === tankValue && record.milk_volume > 0)
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
@@ -110,8 +81,6 @@ export const useMilkOffloadForm = () => {
       toast({
         title: `${tankValue} Status`,
         description: `Available milk volume: ${availableMilk.toFixed(2)}L`,
-        className: "bg-blue-50 border-2 border-blue-400 text-blue-800 font-medium",
-        duration: 6000,
       });
     } else {
       setFormData(prev => ({
@@ -125,9 +94,7 @@ export const useMilkOffloadForm = () => {
       toast({
         title: `${tankValue} Status`,
         description: "No previous records found for this tank.",
-        variant: "warning",
-        className: "bg-amber-50 border-2 border-amber-400 text-amber-800 font-medium",
-        duration: 6000,
+        variant: "warning"
       });
     }
     
@@ -155,11 +122,10 @@ export const useMilkOffloadForm = () => {
           toast({
             title: "Alternative Tank Available",
             description: `${alternativeTank.name} has ${alternativeTank.available.toFixed(2)}L available`,
-            className: "bg-blue-50 border-2 border-blue-400 text-blue-800 font-medium",
-            duration: 6000,
           });
         }
 
+        // Still update the form value to show the invalid input
         setFormData(prev => ({
           ...prev,
           [name]: value
@@ -179,18 +145,6 @@ export const useMilkOffloadForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Check if cooldown is active
-    if (cooldownActive) {
-      toast({
-        title: "Submission Blocked",
-        description: `Please wait ${cooldownTimeLeft} seconds before submitting again`,
-        variant: "destructive",
-        className: "bg-red-50 border-2 border-red-500 text-red-800 font-medium",
-        duration: 3000,
-      });
-      return;
-    }
-    
     // Validate milk volume before submission
     const requestedVolume = parseFloat(formData.milk_volume);
     const availableMilk = calculateTankBalance(formData.storage_tank);
@@ -207,13 +161,6 @@ export const useMilkOffloadForm = () => {
         title: "Submission Failed",
         description: "Requested volume exceeds available milk",
         variant: "destructive",
-        className: "bg-red-50 border-2 border-red-500 text-red-800 font-medium",
-        duration: 6000,
-        action: (
-          <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-            <AlertCircle className="h-4 w-4 text-white" />
-          </div>
-        ),
       });
       
       return;
@@ -270,37 +217,34 @@ export const useMilkOffloadForm = () => {
       console.log('Successfully recorded milk offload:', { receptionData, offloadData });
 
       toast({
-        title: "Success!",
+        title: "Success",
         description: `Milk offload recorded successfully with Batch ID: ${formData.batch_id}`,
-        className: "bg-green-50 border-2 border-green-500 text-green-800 font-medium",
-        duration: 6000,
-        action: (
-          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-            <Check className="h-4 w-4 text-white" />
-          </div>
-        ),
       });
 
-      // Clear form immediately after successful submission
-      clearForm();
-      startCooldown();
+      // Reset form
+      setFormData({
+        batch_id: '',
+        storage_tank: '',
+        supplier_name: 'Offload from Tank',
+        milk_volume: '',
+        temperature: '',
+        quality_check: 'Grade A',
+        fat_percentage: '',
+        protein_percentage: '',
+        total_plate_count: '',
+        acidity: '',
+        notes: '',
+        destination: ''
+      });
 
       await refetchMilkReception();
 
     } catch (error) {
       console.error('Form submission error:', error);
-      // Don't clear form on error - keep user data for retry
       toast({
         title: "Submission Failed",
         description: error.message || "An error occurred while submitting the form",
         variant: "destructive",
-        className: "bg-red-50 border-2 border-red-500 text-red-800 font-medium",
-        duration: 6000,
-        action: (
-          <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-            <AlertCircle className="h-4 w-4 text-white" />
-          </div>
-        ),
       });
     } finally {
       setLoading(false);
@@ -311,12 +255,9 @@ export const useMilkOffloadForm = () => {
     formData,
     loading,
     validationError,
-    cooldownActive,
-    cooldownTimeLeft,
     handleTankSelection,
     handleInputChange,
     handleSubmit,
-    clearForm,
     milkReceptionData
   };
 };

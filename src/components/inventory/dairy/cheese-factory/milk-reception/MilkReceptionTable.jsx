@@ -1,351 +1,234 @@
-import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Thermometer, Droplets } from "lucide-react";
+import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { usePagination } from './hooks/usePagination';
-import CollapsibleColumnHeader from './components/CollapsibleColumnHeader';
-import { PaginationControls } from './components/PaginationControls';
-import ExportOptions from './components/ExportOptions';
-import DirectProcessingAlerts from './components/DirectProcessingAlerts';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useQueryClient } from '@tanstack/react-query';
 import { useMilkReception } from '@/hooks/useMilkReception';
-import { checkDirectProcessingStatus, getDirectProcessingAlerts } from './utils/directProcessingLogic';
+import { format, parseISO } from 'date-fns';
+import { Download, FileText, Search, RefreshCw } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import html2canvas from 'html2canvas';
+import MilkBalanceTracker from './MilkBalanceTracker';
 
-const MilkReceptionTable = ({ onSwitchToOffloadTab }) => {
+const MilkReceptionTable = () => {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
-
-  // Fetch data using the hook
-  const { data: records = [], isLoading, error, refetch } = useMilkReception();
-
-  // Check Direct-Processing status and get alerts
-  const directProcessingStatus = useMemo(() => {
-    if (!records) return { pendingRecords: [], expiredRecords: [], hasPendingRecords: false, hasExpiredRecords: false };
-    return checkDirectProcessingStatus(records);
-  }, [records]);
-
-  const directProcessingAlerts = useMemo(() => {
-    return getDirectProcessingAlerts(directProcessingStatus);
-  }, [directProcessingStatus]);
-
-  // Calculate tank balances and temperatures
-  const calculateTankMetrics = (tankName) => {
-    if (!records) return { balance: 0, lastTemp: null };
-    
-    const tankRecords = records.filter(record => record.tank_number === tankName);
-    const balance = tankRecords.reduce((total, record) => total + (record.milk_volume || 0), 0);
-    const lastRecord = tankRecords
-      .filter(record => record.temperature !== null)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
-    
-    return { 
-      balance: Math.max(0, balance), 
-      lastTemp: lastRecord?.temperature || null 
-    };
-  };
-
-  const tankAMetrics = calculateTankMetrics('Tank A');
-  const tankBMetrics = calculateTankMetrics('Tank B');
-  const directProcessingMetrics = calculateTankMetrics('Direct-Processing');
-  const totalVolume = tankAMetrics.balance + tankBMetrics.balance + directProcessingMetrics.balance;
-
-  // Filtering, sorting, and pagination logic
-  const filteredRecords = useMemo(() => {
-    if (!records) return [];
-    return records.filter(record => 
-      record.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.tank_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.destination?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.batch_id?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [records, searchTerm]);
-
-  const sortedRecords = useMemo(() => {
-    return [...filteredRecords].sort((a, b) => {
-      let aValue = a[sortConfig.key];
-      let bValue = b[sortConfig.key];
-      
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [filteredRecords, sortConfig]);
-
   const {
-    currentPage,
-    totalPages,
-    paginatedItems,
-    startIndex,
-    pageSize,
-    totalItems,
-    handlePageChange
-  } = usePagination(sortedRecords, 10);
+    data: milkReception,
+    isLoading,
+    error
+  } = useMilkReception();
 
-  const handleSort = (key) => {
-    setSortConfig(prev => ({
-      key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['milkReceptions'] });
   };
 
-  const handleRefresh = async () => {
-    await refetch();
+  const filteredRecords = React.useMemo(() => {
+    if (!milkReception) return [];
+    return milkReception.filter(record => 
+      Object.values(record).some(value => 
+        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+  }, [milkReception, searchTerm]);
+
+  const generateMonthlyReport = () => {
+    if (!milkReception) return [];
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return milkReception.filter(record => {
+      const recordDate = new Date(record.datetime || record.created_at);
+      return recordDate >= monthStart && recordDate <= monthEnd;
+    });
   };
 
-  const handleViewOffloadForm = () => {
-    if (onSwitchToOffloadTab) {
-      onSwitchToOffloadTab();
+  const generateAnnualReport = () => {
+    if (!milkReception) return [];
+    const now = new Date();
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    return milkReception.filter(record => {
+      const recordDate = new Date(record.datetime || record.created_at);
+      return recordDate >= yearStart;
+    });
+  };
+
+  const formatDate = dateString => {
+    try {
+      if (!dateString) return 'N/A';
+      const date = parseISO(dateString);
+      return format(date, 'PPp');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
     }
   };
 
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center text-red-600">
-              Error loading data: {error.message}
-              <Button onClick={handleRefresh} className="ml-4" variant="outline">
-                Retry
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  const downloadPDF = (data, title) => {
+    const doc = new jsPDF();
+    const tableData = data.map(record => [record.supplier_name, record.milk_volume.toFixed(2), record.temperature.toFixed(1), record.quality_score || 'N/A', record.fat_percentage.toFixed(1), record.protein_percentage.toFixed(1), record.total_plate_count.toLocaleString(), record.acidity.toFixed(1), formatDate(record.datetime || record.created_at)]);
+    doc.text(title, 14, 15);
+    doc.autoTable({
+      head: [['Supplier', 'Volume (L)', 'Temp (°C)', 'Quality', 'Fat %', 'Protein %', 'TPC', 'Acidity', 'Date & Time']],
+      body: tableData,
+      startY: 20
+    });
+    doc.save(`milk-reception-${title.toLowerCase()}.pdf`);
+  };
+
+  const downloadCSV = (data, title) => {
+    const headers = ['Supplier', 'Volume (L)', 'Temperature (°C)', 'Quality Score', 'Fat %', 'Protein %', 'TPC', 'Acidity', 'Date & Time'];
+    const csvData = data.map(record => [record.supplier_name, record.milk_volume, record.temperature, record.quality_score || 'N/A', record.fat_percentage, record.protein_percentage, record.total_plate_count, record.acidity, formatDate(record.datetime || record.created_at)].join(','));
+    const csvContent = [headers.join(','), ...csvData].join('\n');
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;'
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `milk-reception-${title.toLowerCase()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadJPG = async (data, title) => {
+    const table = document.querySelector('.milk-reception-table');
+    if (table) {
+      const canvas = await html2canvas(table);
+      const link = document.createElement('a');
+      link.download = `milk-reception-${title.toLowerCase()}.jpg`;
+      link.href = canvas.toDataURL('image/jpeg');
+      link.click();
+    }
+  };
+
+  if (isLoading) {
+    return <div>Loading milk reception data...</div>;
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Direct-Processing Alerts */}
-      <DirectProcessingAlerts 
-        alerts={directProcessingAlerts} 
-        onViewOffloadForm={handleViewOffloadForm}
-      />
+  if (error) {
+    return <div>Error loading milk reception data: {error.message}</div>;
+  }
 
-      {/* Tank Volume Tiles */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-2 border-blue-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-600">Tank A</p>
-                <p className="text-2xl font-bold">{tankAMetrics.balance.toFixed(1)}L</p>
-                {tankAMetrics.lastTemp && (
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Thermometer className="h-3 w-3 mr-1" />
-                    {tankAMetrics.lastTemp}°C
-                  </div>
-                )}
-              </div>
-              <Droplets className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-green-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-600">Tank B</p>
-                <p className="text-2xl font-bold">{tankBMetrics.balance.toFixed(1)}L</p>
-                {tankBMetrics.lastTemp && (
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Thermometer className="h-3 w-3 mr-1" />
-                    {tankBMetrics.lastTemp}°C
-                  </div>
-                )}
-              </div>
-              <Droplets className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={`border-2 ${directProcessingStatus.hasExpiredRecords ? 'border-red-200 bg-red-50' : directProcessingStatus.hasPendingRecords ? 'border-orange-200 bg-orange-50' : 'border-purple-200'}`}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${directProcessingStatus.hasExpiredRecords ? 'text-red-600' : directProcessingStatus.hasPendingRecords ? 'text-orange-600' : 'text-purple-600'}`}>
-                  Direct-Processing
-                </p>
-                <p className="text-2xl font-bold">{directProcessingMetrics.balance.toFixed(1)}L</p>
-                {directProcessingMetrics.lastTemp && (
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Thermometer className="h-3 w-3 mr-1" />
-                    {directProcessingMetrics.lastTemp}°C
-                  </div>
-                )}
-                {(directProcessingStatus.hasPendingRecords || directProcessingStatus.hasExpiredRecords) && (
-                  <div className="text-xs mt-1">
-                    {directProcessingStatus.hasExpiredRecords && (
-                      <span className="text-red-600 font-medium">⚠ Overdue</span>
-                    )}
-                    {directProcessingStatus.hasPendingRecords && !directProcessingStatus.hasExpiredRecords && (
-                      <span className="text-orange-600 font-medium">⏰ Pending</span>
-                    )}
-                  </div>
-                )}
-              </div>
-              <Droplets className={`h-8 w-8 ${directProcessingStatus.hasExpiredRecords ? 'text-red-500' : directProcessingStatus.hasPendingRecords ? 'text-orange-500' : 'text-purple-500'}`} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-orange-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-orange-600">Total Volume</p>
-                <p className="text-2xl font-bold">{totalVolume.toFixed(1)}L</p>
-                <p className="text-sm text-gray-500">Combined</p>
-              </div>
-              <Droplets className="h-8 w-8 text-orange-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search and Export Controls */}
+  return <>
+      <MilkBalanceTracker />
       <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle>Milk Reception Records</CardTitle>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-initial">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search records..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 min-w-[250px]"
-                />
-              </div>
-              <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isLoading}>
-                {isLoading ? 'Loading...' : 'Refresh'}
-              </Button>
-              <ExportOptions records={sortedRecords} />
-            </div>
+        <CardHeader className="flex flex-row items-center justify-between py-[13px] px-[22px] my-0 mx-0">
+          <CardTitle>Milk Reception Records</CardTitle>
+          <div className="flex space-x-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Reports
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => {
+                const monthlyData = generateMonthlyReport();
+                downloadPDF(monthlyData, 'Monthly-Report');
+              }}>
+                  Monthly Report
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                const annualData = generateAnnualReport();
+                downloadPDF(annualData, 'Annual-Report');
+              }}>
+                  Annual Report
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => downloadPDF(filteredRecords, 'All-Records')}>
+                  Download PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => downloadCSV(filteredRecords, 'All-Records')}>
+                  Download CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => downloadJPG(filteredRecords, 'All-Records')}>
+                  Download JPG
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button variant="outline" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <CollapsibleColumnHeader 
-                    title="Reception Date & Time" 
-                    sortKey="created_at"
-                    sortConfig={sortConfig}
-                    onSort={handleSort}
-                    className="min-w-[160px]"
-                  />
-                  <CollapsibleColumnHeader 
-                    title="Batch ID" 
-                    sortKey="batch_id"
-                    sortConfig={sortConfig}
-                    onSort={handleSort}
-                    className="min-w-[120px]"
-                  />
-                  <CollapsibleColumnHeader 
-                    title="Supplier Name" 
-                    sortKey="supplier_name"
-                    sortConfig={sortConfig}
-                    onSort={handleSort}
-                    className="min-w-[140px]"
-                  />
-                  <CollapsibleColumnHeader 
-                    title="Storage Tank" 
-                    sortKey="tank_number"
-                    sortConfig={sortConfig}
-                    onSort={handleSort}
-                    className="min-w-[100px]"
-                  />
-                  <CollapsibleColumnHeader 
-                    title="Milk Volume (Liters)" 
-                    sortKey="milk_volume"
-                    sortConfig={sortConfig}
-                    onSort={handleSort}
-                    className="min-w-[120px]"
-                  />
-                  <CollapsibleColumnHeader 
-                    title="Quality Grade" 
-                    sortKey="quality_score"
-                    sortConfig={sortConfig}
-                    onSort={handleSort}
-                    className="min-w-[100px]"
-                  />
-                  <TableHead className="min-w-[100px]">Temperature (°C)</TableHead>
-                  <TableHead className="min-w-[100px]">Fat Content (%)</TableHead>
-                  <TableHead className="min-w-[110px]">Protein Content (%)</TableHead>
-                  <TableHead className="min-w-[120px]">Final Destination</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8">
-                      Loading records...
-                    </TableCell>
-                  </TableRow>
-                ) : paginatedItems.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8">
-                      No records found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedItems.map((record) => (
-                    <TableRow key={record.id}>
-                      <TableCell className="whitespace-nowrap font-medium min-w-[160px]">
-                        {new Date(record.created_at).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="font-mono text-sm whitespace-nowrap min-w-[120px]">
-                        {record.batch_id}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap min-w-[140px]">{record.supplier_name}</TableCell>
-                      <TableCell className="min-w-[100px]">
-                        <Badge variant="outline" className="whitespace-nowrap">
-                          {record.tank_number}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap min-w-[120px]">
-                        <span className={record.milk_volume < 0 ? 'text-red-600' : 'text-green-600'}>
-                          {record.milk_volume > 0 ? '+' : ''}{record.milk_volume}
-                        </span>
-                      </TableCell>
-                      <TableCell className="min-w-[100px]">
-                        <Badge 
-                          variant={record.quality_score === 'Grade A' ? 'default' : 'secondary'}
-                          className="whitespace-nowrap"
-                        >
-                          {record.quality_score}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap min-w-[100px]">{record.temperature}</TableCell>
-                      <TableCell className="whitespace-nowrap min-w-[100px]">{record.fat_percentage}%</TableCell>
-                      <TableCell className="whitespace-nowrap min-w-[110px]">{record.protein_percentage}%</TableCell>
-                      <TableCell className="whitespace-nowrap min-w-[120px]">{record.destination}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+          <div className="flex gap-4 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search records..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
           </div>
-
-          <PaginationControls
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            startIndex={startIndex}
-            pageSize={pageSize}
-            totalItems={totalItems}
-          />
+          <div className="overflow-x-auto">
+            <div className="w-full overflow-auto">
+              <Table className="milk-reception-table relative w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[120px] whitespace-nowrap">Entry Type</TableHead>
+                    <TableHead className="min-w-[120px] whitespace-nowrap">Storage Tank</TableHead>
+                    <TableHead className="min-w-[100px] whitespace-nowrap">Quality Score</TableHead>
+                    <TableHead className="min-w-[150px] whitespace-nowrap">Supplier</TableHead>
+                    <TableHead className="min-w-[100px] whitespace-nowrap">Volume (L)</TableHead>
+                    <TableHead className="min-w-[120px] whitespace-nowrap">Temperature (°C)</TableHead>
+                    <TableHead className="min-w-[80px] whitespace-nowrap">Fat %</TableHead>
+                    <TableHead className="min-w-[100px] whitespace-nowrap">Protein %</TableHead>
+                    <TableHead className="min-w-[100px] whitespace-nowrap">TPC</TableHead>
+                    <TableHead className="min-w-[100px] whitespace-nowrap">Acidity</TableHead>
+                    <TableHead className="min-w-[120px] whitespace-nowrap">Destination</TableHead>
+                    <TableHead className="min-w-[180px] whitespace-nowrap">Date & Time</TableHead>
+                    <TableHead className="min-w-[200px] whitespace-nowrap">Notes</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredRecords.map(record => (
+                    <TableRow key={record.id} className={record.supplier_name.startsWith('Offload from') ? 'bg-red-50' : ''}>
+                      <TableCell className="whitespace-nowrap">
+                        {record.supplier_name.startsWith('Offload from') ? 'Tank Offload' : 'Reception'}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">{record.tank_number || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.quality_score || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.supplier_name}</TableCell>
+                      <TableCell className={`whitespace-nowrap ${record.milk_volume < 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}`}>
+                        {record.milk_volume.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">{record.temperature?.toFixed(1) || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.fat_percentage?.toFixed(1) || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.protein_percentage?.toFixed(1) || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.total_plate_count?.toLocaleString() || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.acidity?.toFixed(1) || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{record.destination || 'N/A'}</TableCell>
+                      <TableCell className="whitespace-nowrap">{formatDate(record.datetime || record.created_at)}</TableCell>
+                      <TableCell className="max-w-xs truncate">{record.notes || 'N/A'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </>;
 };
 
 export default MilkReceptionTable;
