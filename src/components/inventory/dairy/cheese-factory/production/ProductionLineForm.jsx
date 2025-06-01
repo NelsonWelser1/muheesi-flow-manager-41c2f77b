@@ -168,7 +168,7 @@ const ProductionLineForm = () => {
       ...prevState,
       milkBatchId: value,
       milkVolume: selectedBatch ? selectedBatch.volume : '',
-      // Don't auto-set batchId here to avoid constraint issues
+      // Don't set batchId here - let it be generated with proper format
     }));
   };
 
@@ -186,9 +186,10 @@ const ProductionLineForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
+    // Always generate a new batch ID for international production line
     const finalFormData = {
       ...formData,
-      batchId: formData.batchId || generateBatchId(),
+      batchId: generateBatchId(), // Always generate new batch ID
       milkVolume: parseFloat(formData.milkVolume) || 0,
       duration: parseFloat(formData.duration) || 0,
       starterQty: parseFloat(formData.starterQty) || 0,
