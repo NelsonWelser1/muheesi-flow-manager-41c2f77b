@@ -4,20 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Printer, Eye, EyeOff, FileText } from 'lucide-react';
-import { useBillsExpensesPagination } from '../../accounts/records/hooks/useBillsExpensesPagination';
+import { useBillsExpensesPagination } from "../../../accounts/records/hooks/useBillsExpensesPagination";
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
   PaginationLink,
   PaginationNext,
-  PaginationPrevious,
+  PaginationPrevious
 } from "@/components/ui/pagination";
 
 const RecentOffloadRecords = ({ records = [] }) => {
   const [showDetails, setShowDetails] = useState(false);
   
-  // Use pagination hook with 15 items per page
   const {
     paginatedData,
     currentPage,
@@ -51,30 +50,39 @@ const RecentOffloadRecords = ({ records = [] }) => {
 
   const getQualityBadgeColor = (quality) => {
     switch (quality?.toLowerCase()) {
-      case 'excellent': return 'bg-green-100 text-green-800 border-green-200';
-      case 'good': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'average': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'poor': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'excellent':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'good':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'average':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'poor':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getTankBadgeColor = (tank) => {
     switch (tank) {
-      case 'Tank A': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Tank B': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Direct-Processing': return 'bg-purple-100 text-purple-800 border-purple-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'Tank A':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Tank B':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'Direct-Processing':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  // Calculate summary statistics for all records (not just paginated)
+  // Summary calculations
   const totalRecords = records.length;
   const totalVolume = records.reduce((sum, record) => sum + (Number(record.milk_volume) || 0), 0);
   const avgTemperature = records.length > 0 
     ? records.reduce((sum, record) => sum + (Number(record.temperature) || 0), 0) / records.length 
     : 0;
-  
+
   const tankSummary = records.reduce((acc, record) => {
     const tank = record.tank_number || 'Unknown';
     acc[tank] = (acc[tank] || 0) + (Number(record.milk_volume) || 0);
@@ -174,7 +182,7 @@ const RecentOffloadRecords = ({ records = [] }) => {
               </tr>
             </thead>
             <tbody>
-              ${paginatedData.map(record => `
+              ${paginatedData.map((record) => `
                 <tr class="quality-${(record.quality_check || '').toLowerCase()} tank-${(record.tank_number || '').toLowerCase().replace(/[^a-z]/g, '')}">
                   <td>${formatDate(record.created_at)}</td>
                   <td>${record.supplier_name || 'N/A'}</td>
@@ -216,7 +224,7 @@ const RecentOffloadRecords = ({ records = [] }) => {
 
   return (
     <div className="space-y-4">
-      {/* Header with actions */}
+      {/* Header with controls */}
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Recent Offload Records</h3>
         <div className="flex gap-2">
@@ -236,71 +244,61 @@ const RecentOffloadRecords = ({ records = [] }) => {
             className="flex items-center gap-2"
           >
             <Printer className="h-4 w-4" />
-            Print Report
+            Print
           </Button>
         </div>
       </div>
 
       {/* Summary Statistics */}
-      {showDetails && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Summary Statistics (All {totalRecords} Records)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <div className="text-sm text-blue-600 font-medium">Total Volume</div>
-                <div className="text-2xl font-bold text-blue-800">{formatVolume(totalVolume)}</div>
-              </div>
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                <div className="text-sm text-green-600 font-medium">Average Temperature</div>
-                <div className="text-2xl font-bold text-green-800">{formatTemperature(avgTemperature)}</div>
-              </div>
-              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                <div className="text-sm text-purple-600 font-medium">Total Records</div>
-                <div className="text-2xl font-bold text-purple-800">{totalRecords}</div>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Summary Statistics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{totalRecords}</div>
+              <div className="text-sm text-gray-600">Total Records</div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-medium mb-2">Volume by Tank</h4>
-                <div className="space-y-2">
-                  {Object.entries(tankSummary).map(([tank, volume]) => (
-                    <div key={tank} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                      <Badge className={getTankBadgeColor(tank)}>{tank}</Badge>
-                      <span className="font-medium">{formatVolume(volume)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium mb-2">Quality Distribution</h4>
-                <div className="space-y-2">
-                  {Object.entries(qualitySummary).map(([quality, count]) => (
-                    <div key={quality} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                      <Badge className={getQualityBadgeColor(quality)}>{quality}</Badge>
-                      <span className="font-medium">{count} records</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{formatVolume(totalVolume)}</div>
+              <div className="text-sm text-gray-600">Total Volume</div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">{formatTemperature(avgTemperature)}</div>
+              <div className="text-sm text-gray-600">Avg Temperature</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">{Object.keys(tankSummary).length}</div>
+              <div className="text-sm text-gray-600">Active Tanks</div>
+            </div>
+          </div>
 
-      {/* Pagination Info */}
-      <div className="flex justify-between items-center text-sm text-gray-600">
-        <span>
-          Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} records
-        </span>
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
-      </div>
+          {/* Tank Distribution */}
+          <div className="mb-4">
+            <h4 className="font-medium mb-2">Volume by Tank</h4>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(tankSummary).map(([tank, volume]) => (
+                <Badge key={tank} className={getTankBadgeColor(tank)}>
+                  {tank}: {formatVolume(volume)}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Quality Distribution */}
+          <div>
+            <h4 className="font-medium mb-2">Quality Distribution</h4>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(qualitySummary).map(([quality, count]) => (
+                <Badge key={quality} className={getQualityBadgeColor(quality)}>
+                  {quality}: {count} records
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Records Table */}
       <Card>
@@ -312,13 +310,13 @@ const RecentOffloadRecords = ({ records = [] }) => {
                   <TableHead>Date & Time</TableHead>
                   <TableHead>Supplier</TableHead>
                   <TableHead>Tank</TableHead>
-                  <TableHead>Volume</TableHead>
+                  <TableHead>Volume (L)</TableHead>
                   <TableHead>Temperature</TableHead>
                   <TableHead>Quality</TableHead>
                   {showDetails && (
                     <>
-                      <TableHead>Fat Content</TableHead>
-                      <TableHead>Protein</TableHead>
+                      <TableHead>Fat Content (%)</TableHead>
+                      <TableHead>Protein (%)</TableHead>
                       <TableHead>pH Level</TableHead>
                       <TableHead>Notes</TableHead>
                     </>
@@ -326,8 +324,8 @@ const RecentOffloadRecords = ({ records = [] }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedData.map((record, index) => (
-                  <TableRow key={record.id || `record-${index}`}>
+                {paginatedData.map((record) => (
+                  <TableRow key={record.id}>
                     <TableCell className="font-medium">
                       {formatDate(record.created_at)}
                     </TableCell>
@@ -337,7 +335,7 @@ const RecentOffloadRecords = ({ records = [] }) => {
                         {record.tank_number || 'N/A'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-medium text-blue-600">
+                    <TableCell className="font-medium">
                       {formatVolume(record.milk_volume)}
                     </TableCell>
                     <TableCell>{formatTemperature(record.temperature)}</TableCell>
@@ -349,10 +347,10 @@ const RecentOffloadRecords = ({ records = [] }) => {
                     {showDetails && (
                       <>
                         <TableCell>
-                          {record.fat_content ? `${Number(record.fat_content).toFixed(1)}%` : 'N/A'}
+                          {record.fat_content ? Number(record.fat_content).toFixed(1) : 'N/A'}
                         </TableCell>
                         <TableCell>
-                          {record.protein_content ? `${Number(record.protein_content).toFixed(1)}%` : 'N/A'}
+                          {record.protein_content ? Number(record.protein_content).toFixed(1) : 'N/A'}
                         </TableCell>
                         <TableCell>
                           {record.ph_level ? Number(record.ph_level).toFixed(1) : 'N/A'}
@@ -370,60 +368,36 @@ const RecentOffloadRecords = ({ records = [] }) => {
         </CardContent>
       </Card>
 
-      {/* Pagination Controls */}
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center">
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-500">
+            Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} records
+          </div>
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious 
-                  onClick={() => handlePageChange(currentPage - 1)}
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                   className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                 />
               </PaginationItem>
               
-              {/* Page numbers */}
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                // Show first page, current page with neighbors, and last page
-                const showPage = page === 1 || 
-                               page === totalPages || 
-                               (page >= currentPage - 1 && page <= currentPage + 1);
-                
-                if (!showPage) {
-                  // Show ellipsis
-                  if (page === 2 && currentPage > 4) {
-                    return (
-                      <PaginationItem key={page}>
-                        <span className="px-3 py-2">...</span>
-                      </PaginationItem>
-                    );
-                  }
-                  if (page === totalPages - 1 && currentPage < totalPages - 3) {
-                    return (
-                      <PaginationItem key={page}>
-                        <span className="px-3 py-2">...</span>
-                      </PaginationItem>
-                    );
-                  }
-                  return null;
-                }
-                
-                return (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      onClick={() => handlePageChange(page)}
-                      isActive={page === currentPage}
-                      className="cursor-pointer"
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                );
-              })}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    onClick={() => handlePageChange(page)}
+                    isActive={currentPage === page}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
               
               <PaginationItem>
                 <PaginationNext 
-                  onClick={() => handlePageChange(currentPage + 1)}
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                   className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                 />
               </PaginationItem>
