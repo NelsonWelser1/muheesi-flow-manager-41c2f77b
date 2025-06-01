@@ -5,10 +5,14 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Check, Clock, AlertOctagon, Search } from "lucide-react";
+import { AlertTriangle, Check, Clock, AlertOctagon, Search, Printer, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import EquipmentEntryForm from '../form/EquipmentEntryForm';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 const EquipmentList = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -113,6 +117,94 @@ const EquipmentList = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const downloadPDF = () => {
+    if (!filteredEquipment || filteredEquipment.length === 0) {
+      console.error('No equipment data to export');
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(16);
+      doc.text('Equipment List Report', 14, 15);
+      
+      // Add date
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 25);
+      
+      const tableData = filteredEquipment.map(equipment => {
+        const status = getEquipmentStatus(equipment.current_condition);
+        const healthScore = getHealthScore(equipment.current_condition);
+        const maintenanceDates = generateMaintenanceDates(equipment.purchase_date, equipment.current_condition);
+        
+        return [
+          equipment.equipment_name || '',
+          status || '',
+          equipment.type || '',
+          `${healthScore}%`,
+          maintenanceDates.last.toLocaleDateString(),
+          maintenanceDates.next.toLocaleDateString()
+        ];
+      });
+
+      doc.autoTable({
+        head: [['Machine', 'Status', 'Type', 'Health Score', 'Last Maintenance', 'Next Due']],
+        body: tableData,
+        startY: 30,
+        styles: { fontSize: 8 },
+        columnStyles: {
+          0: { cellWidth: 30 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 25 },
+          3: { cellWidth: 20 },
+          4: { cellWidth: 30 },
+          5: { cellWidth: 30 }
+        }
+      });
+
+      doc.save('equipment-list.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
+  };
+
+  const downloadExcel = () => {
+    if (!filteredEquipment || filteredEquipment.length === 0) {
+      console.error('No equipment data to export');
+      return;
+    }
+
+    try {
+      const excelData = filteredEquipment.map(equipment => {
+        const status = getEquipmentStatus(equipment.current_condition);
+        const healthScore = getHealthScore(equipment.current_condition);
+        const maintenanceDates = generateMaintenanceDates(equipment.purchase_date, equipment.current_condition);
+        
+        return {
+          'Machine': equipment.equipment_name || '',
+          'Status': status || '',
+          'Type': equipment.type || '',
+          'Health Score': `${healthScore}%`,
+          'Last Maintenance': maintenanceDates.last.toLocaleDateString(),
+          'Next Due': maintenanceDates.next.toLocaleDateString()
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Equipment List');
+      XLSX.writeFile(workbook, 'equipment-list.xlsx');
+    } catch (error) {
+      console.error('Error generating Excel file:', error);
+    }
+  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-48">
         <div className="animate-pulse space-y-4">
@@ -129,9 +221,29 @@ const EquipmentList = () => {
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Equipment List</h2>
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Hide Form' : 'Add Equipment'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setShowForm(!showForm)}>
+            {showForm ? 'Hide Form' : 'Add Equipment'}
+          </Button>
+          <Button variant="outline" size="icon" onClick={handlePrint}>
+            <Printer className="h-4 w-4" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Download className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={downloadPDF}>
+                Download PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={downloadExcel}>
+                Download Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {showForm && <EquipmentEntryForm />}
