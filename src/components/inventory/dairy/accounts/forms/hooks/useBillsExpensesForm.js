@@ -1,38 +1,64 @@
 
-import { useState, useEffect, useRef } from 'react';
-import { useForm } from "react-hook-form";
+import { useEffect } from 'react';
 import { useBillsExpenses } from "@/integrations/supabase/hooks/accounting/useBillsExpenses";
-import { toast } from "@/components/ui/use-toast";
+import { useFormState } from './useFormState';
+import { useFileUploadState } from './useFileUploadState';
+import { useFormReset } from './useFormReset';
+import { useFileUploadHandler } from './useFileUploadHandler';
+import { useFormSubmission } from './useFormSubmission';
 
 export const useBillsExpensesForm = () => {
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [fileSelected, setFileSelected] = useState(null);
-  const [uploadedFileUrl, setUploadedFileUrl] = useState("");
-  const [isSubmissionCooldown, setIsSubmissionCooldown] = useState(false);
-  const [filePreviewUrl, setFilePreviewUrl] = useState("");
-  const fileInputRef = useRef(null);
-  
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
-    defaultValues: {
-      billDate: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      status: 'pending',
-      paymentMethod: 'bank_transfer',
-      currency: 'UGX',
-      isRecurring: false,
-      recurringFrequency: '',
-      recurringEndDate: '',
-      billNumber: '',
-      vendorName: '',
-      expenseType: '',
-      amount: '',
-      description: '',
-      notes: ''
-    }
-  });
-  
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    errors,
+    isRecurring,
+    isSubmissionCooldown,
+    handleRecurringToggle,
+    startSubmissionCooldown
+  } = useFormState();
+
+  const {
+    isUploading,
+    setIsUploading,
+    fileSelected,
+    uploadedFileUrl,
+    setUploadedFileUrl,
+    filePreviewUrl,
+    fileInputRef,
+    handleFileChange,
+    resetFileState
+  } = useFileUploadState();
+
   const { createBillExpense, uploadReceipt, getLatestBillNumber } = useBillsExpenses();
+
+  const { clearFormAfterSubmission } = useFormReset(
+    reset, 
+    setValue, 
+    getLatestBillNumber, 
+    resetFileState,
+    handleRecurringToggle
+  );
+
+  const { handleFileUpload } = useFileUploadHandler(
+    fileSelected,
+    setIsUploading,
+    setUploadedFileUrl,
+    uploadReceipt,
+    watch
+  );
+
+  const { onSubmit } = useFormSubmission(
+    createBillExpense,
+    uploadedFileUrl,
+    isRecurring,
+    clearFormAfterSubmission,
+    startSubmissionCooldown,
+    isSubmissionCooldown
+  );
   
   useEffect(() => {
     const loadBillNumber = async () => {
@@ -42,170 +68,6 @@ export const useBillsExpensesForm = () => {
     
     loadBillNumber();
   }, [setValue, getLatestBillNumber]);
-
-  const clearFormAfterSubmission = async () => {
-    // Get a new bill number first
-    const newBillNumber = await getLatestBillNumber();
-    
-    // Reset the form completely with default values and new bill number
-    const defaultValues = {
-      billDate: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      status: 'pending',
-      paymentMethod: 'bank_transfer',
-      currency: 'UGX',
-      isRecurring: false,
-      recurringFrequency: '',
-      recurringEndDate: '',
-      billNumber: newBillNumber,
-      vendorName: '',
-      expenseType: '',
-      amount: '',
-      description: '',
-      notes: ''
-    };
-    
-    // Reset form with new default values
-    reset(defaultValues);
-    
-    // Manually set each field to ensure they are cleared
-    Object.keys(defaultValues).forEach(key => {
-      setValue(key, defaultValues[key]);
-    });
-    
-    // Reset file state completely
-    setFileSelected(null);
-    setUploadedFileUrl("");
-    setFilePreviewUrl("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    
-    // Reset recurring state
-    setIsRecurring(false);
-  };
-
-  const startSubmissionCooldown = () => {
-    setIsSubmissionCooldown(true);
-    setTimeout(() => {
-      setIsSubmissionCooldown(false);
-    }, 5000);
-  };
-  
-  const onSubmit = async (data) => {
-    if (isSubmissionCooldown) {
-      toast({
-        title: "Please wait",
-        description: "You can submit another record in a few seconds.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      console.log("Bill/Expense data:", data);
-      
-      // Add recurring fields if enabled
-      if (isRecurring) {
-        data.isRecurring = true;
-      } else {
-        data.isRecurring = false;
-        data.recurringFrequency = null;
-        data.recurringEndDate = null;
-      }
-      
-      // If file was uploaded, add the URL
-      if (uploadedFileUrl) {
-        data.receiptUrl = uploadedFileUrl;
-      }
-      
-      // Submit to Supabase
-      const result = await createBillExpense(data);
-      
-      if (result.success) {
-        toast({
-          title: "Bill/Expense saved",
-          description: "Your bill/expense record has been saved successfully.",
-        });
-        
-        // Clear form and start cooldown
-        await clearFormAfterSubmission();
-        startSubmissionCooldown();
-      }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast({
-        title: "Error",
-        description: "There was an error saving your bill/expense record.",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFileSelected(file);
-      setUploadedFileUrl("");
-      
-      // Create preview URL for the selected file
-      const previewUrl = URL.createObjectURL(file);
-      setFilePreviewUrl(previewUrl);
-    }
-  };
-  
-  const handleFileUpload = async () => {
-    if (!fileSelected) {
-      toast({
-        title: "No file selected",
-        description: "Please select a file to upload first.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsUploading(true);
-    
-    try {
-      const billNumber = watch("billNumber");
-      const result = await uploadReceipt(fileSelected, billNumber);
-      
-      if (result.success) {
-        setUploadedFileUrl(result.url);
-        toast({
-          title: "File uploaded",
-          description: "Your receipt has been uploaded successfully.",
-        });
-      }
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      toast({
-        title: "Upload failed",
-        description: "There was an error uploading your receipt.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-  
-  const handleRecurringToggle = (checked) => {
-    setIsRecurring(checked);
-    setValue("isRecurring", checked);
-    if (!checked) {
-      setValue("recurringFrequency", "");
-      setValue("recurringEndDate", "");
-    }
-  };
-
-  // Clean up preview URL when component unmounts
-  useEffect(() => {
-    return () => {
-      if (filePreviewUrl) {
-        URL.revokeObjectURL(filePreviewUrl);
-      }
-    };
-  }, [filePreviewUrl]);
 
   return {
     register,
