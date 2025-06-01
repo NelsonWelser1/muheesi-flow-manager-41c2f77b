@@ -13,13 +13,21 @@ const ProductionLineForm = () => {
   const [availableBatches, setAvailableBatches] = useState([]);
   
   const [formData, setFormData] = useState({
-    productionLineName: '',
+    batchId: '',
+    fromager: '',
     cheeseType: '',
-    batchNumber: '',
+    milkVolume: '',
     milkBatchId: '',
-    startDate: '',
-    endDate: '',
-    status: '',
+    startTime: '',
+    duration: '',
+    starterCulture: '',
+    starterQty: '',
+    coagulantType: '',
+    coagulantQty: '',
+    temperature: '',
+    processTime: '',
+    yield: '',
+    status: 'pending',
     notes: '',
   });
 
@@ -50,18 +58,42 @@ const ProductionLineForm = () => {
     }));
   };
 
+  const handleSelectChange = (name, value) => {
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
   const handleMilkBatchSelection = (value) => {
     const selectedBatch = availableBatches.find(batch => batch.id.toString() === value);
     setFormData(prevState => ({
       ...prevState,
       milkBatchId: value,
-      batchNumber: selectedBatch ? selectedBatch.batchNumber : ''
+      milkVolume: selectedBatch ? selectedBatch.volume : '',
+      batchId: selectedBatch ? selectedBatch.batchNumber : ''
     }));
+  };
+
+  const generateBatchId = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 10000);
+    return `INT${year}${month}${day}-${formData.cheeseType.substring(0, 3).toUpperCase()}-${random}`;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form Data Submitted:', formData);
+    
+    // Generate batch ID if not provided
+    const finalFormData = {
+      ...formData,
+      batchId: formData.batchId || generateBatchId()
+    };
+    
+    console.log('Production Line Form Data Submitted:', finalFormData);
     // Here you would typically handle the form submission,
     // such as sending the data to an API endpoint.
   };
@@ -69,99 +101,222 @@ const ProductionLineForm = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Production Line Details</CardTitle>
+        <CardTitle>Cheese Production Line Entry</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="productionLineName">Production Line Name</Label>
-            <Input
-              type="text"
-              id="productionLineName"
-              name="productionLineName"
-              value={formData.productionLineName}
-              onChange={handleChange}
-              placeholder="Enter production line name"
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="batchId">Batch ID</Label>
+              <Input
+                type="text"
+                id="batchId"
+                name="batchId"
+                value={formData.batchId}
+                onChange={handleChange}
+                placeholder="Auto-generated if empty"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="fromager">Fromager</Label>
+              <Input
+                type="text"
+                id="fromager"
+                name="fromager"
+                value={formData.fromager}
+                onChange={handleChange}
+                placeholder="Enter fromager name"
+                required
+              />
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="cheeseType">Cheese Type</Label>
-            <Select onValueChange={(value) => handleChange({ target: { name: 'cheeseType', value } })}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select cheese type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cheddar">Cheddar</SelectItem>
-                <SelectItem value="mozzarella">Mozzarella</SelectItem>
-                <SelectItem value="gouda">Gouda</SelectItem>
-                <SelectItem value="feta">Feta</SelectItem>
-                <SelectItem value="brie">Brie</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="cheeseType">Cheese Type</Label>
+              <Select onValueChange={(value) => handleSelectChange('cheeseType', value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select cheese type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Mozzarella">Mozzarella</SelectItem>
+                  <SelectItem value="Blue Cheese">Blue Cheese</SelectItem>
+                  <SelectItem value="Parmesan">Parmesan</SelectItem>
+                  <SelectItem value="Cheddar">Cheddar</SelectItem>
+                  <SelectItem value="Gouda">Gouda</SelectItem>
+                  <SelectItem value="Feta">Feta</SelectItem>
+                  <SelectItem value="Brie">Brie</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="milkBatchId">Select Milk Batch</Label>
+              <Select onValueChange={handleMilkBatchSelection} disabled={milkDataLoading}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={milkDataLoading ? "Loading batches..." : "Select milk batch"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableBatches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id.toString()}>
+                      {batch.batchNumber} - {batch.supplier} ({batch.volume}L)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="milkBatchId">Select Milk Batch</Label>
-            <Select onValueChange={handleMilkBatchSelection} disabled={milkDataLoading}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={milkDataLoading ? "Loading batches..." : "Select milk batch"} />
-              </SelectTrigger>
-              <SelectContent>
-                {availableBatches.map((batch) => (
-                  <SelectItem key={batch.id} value={batch.id.toString()}>
-                    {batch.batchNumber} - {batch.supplier} ({batch.volume}L) - {batch.quality}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="milkVolume">Milk Volume (L)</Label>
+              <Input
+                type="number"
+                id="milkVolume"
+                name="milkVolume"
+                value={formData.milkVolume}
+                onChange={handleChange}
+                placeholder="Enter milk volume"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="startTime">Start Time</Label>
+              <Input
+                type="datetime-local"
+                id="startTime"
+                name="startTime"
+                value={formData.startTime}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="batchNumber">Batch Number</Label>
-            <Input
-              type="text"
-              id="batchNumber"
-              name="batchNumber"
-              value={formData.batchNumber}
-              onChange={handleChange}
-              placeholder="Auto-filled from milk batch selection"
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="duration">Duration (hrs)</Label>
+              <Input
+                type="number"
+                id="duration"
+                name="duration"
+                value={formData.duration}
+                onChange={handleChange}
+                placeholder="Enter duration in hours"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="starterCulture">Starter Culture</Label>
+              <Select onValueChange={(value) => handleSelectChange('starterCulture', value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select starter culture" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Mesophilic">Mesophilic</SelectItem>
+                  <SelectItem value="Thermophilic">Thermophilic</SelectItem>
+                  <SelectItem value="Mixed Culture">Mixed Culture</SelectItem>
+                  <SelectItem value="Direct Vat Set (DVS)">Direct Vat Set (DVS)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="startDate">Start Date</Label>
-            <Input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={formData.startDate}
-              onChange={handleChange}
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="starterQty">Starter Qty (g)</Label>
+              <Input
+                type="number"
+                id="starterQty"
+                name="starterQty"
+                value={formData.starterQty}
+                onChange={handleChange}
+                placeholder="Enter starter quantity"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="coagulantType">Coagulant Type</Label>
+              <Select onValueChange={(value) => handleSelectChange('coagulantType', value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select coagulant type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Microbial Rennet">Microbial Rennet</SelectItem>
+                  <SelectItem value="Rennet">Rennet</SelectItem>
+                  <SelectItem value="Vegetable Rennet">Vegetable Rennet</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="endDate">End Date</Label>
-            <Input
-              type="date"
-              id="endDate"
-              name="endDate"
-              value={formData.endDate}
-              onChange={handleChange}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="coagulantQty">Coagulant Qty (ml)</Label>
+              <Input
+                type="number"
+                id="coagulantQty"
+                name="coagulantQty"
+                value={formData.coagulantQty}
+                onChange={handleChange}
+                placeholder="Enter coagulant quantity"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="temperature">Temperature (°C)</Label>
+              <Input
+                type="number"
+                id="temperature"
+                name="temperature"
+                value={formData.temperature}
+                onChange={handleChange}
+                placeholder="Enter temperature"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="processTime">Process Time (min)</Label>
+              <Input
+                type="number"
+                id="processTime"
+                name="processTime"
+                value={formData.processTime}
+                onChange={handleChange}
+                placeholder="Enter process time"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="yield">Yield (kg)</Label>
+              <Input
+                type="number"
+                id="yield"
+                name="yield"
+                value={formData.yield}
+                onChange={handleChange}
+                placeholder="Enter yield"
+              />
+            </div>
           </div>
 
           <div>
             <Label htmlFor="status">Status</Label>
-            <Select onValueChange={(value) => handleChange({ target: { name: 'status', value } })}>
+            <Select onValueChange={(value) => handleSelectChange('status', value)} defaultValue="pending">
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="planning">Planning</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="in-progress">In Progress</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="on-hold">On Hold</SelectItem>
@@ -180,7 +335,7 @@ const ProductionLineForm = () => {
             />
           </div>
 
-          <Button type="submit">Submit</Button>
+          <Button type="submit" className="w-full">Submit Production Line Entry</Button>
         </form>
       </CardContent>
     </Card>
