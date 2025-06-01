@@ -3,11 +3,90 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Clock, AlertTriangle, Droplet } from 'lucide-react';
-import { useDirectProcessingMonitor } from './hooks/useDirectProcessingMonitor';
+import { useMilkReception } from '@/hooks/useMilkReception';
 
 const DirectProcessingAlerts = () => {
-  const { activeAlerts, calculateTankCapacity } = useDirectProcessingMonitor();
+  const { data: milkReceptionData } = useMilkReception();
 
+  // Calculate current milk volume in Direct Processing
+  const getCurrentDirectProcessingVolume = () => {
+    if (!milkReceptionData) return [];
+
+    // Group records by supplier and calculate net volume for each
+    const supplierVolumes = {};
+    
+    milkReceptionData
+      .filter(record => record.tank_number === 'Direct-Processing')
+      .forEach(record => {
+        const supplierId = record.supplier_name || 'Unknown';
+        const recordId = record.id;
+        
+        if (!supplierVolumes[supplierId]) {
+          supplierVolumes[supplierId] = [];
+        }
+        
+        supplierVolumes[supplierId].push({
+          id: recordId,
+          volume: record.milk_volume || 0,
+          supplier_name: record.supplier_name,
+          created_at: record.created_at
+        });
+      });
+
+    // Calculate net volume for each supplier and create active alerts
+    const activeAlerts = [];
+    
+    Object.entries(supplierVolumes).forEach(([supplier, records]) => {
+      const netVolume = records.reduce((total, record) => total + record.volume, 0);
+      
+      // Only show alert if there's positive milk volume
+      if (netVolume > 0) {
+        // Find the most recent positive entry for timing calculations
+        const positiveRecords = records.filter(r => r.volume > 0);
+        if (positiveRecords.length > 0) {
+          const mostRecent = positiveRecords.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+          const submissionTime = new Date(mostRecent.created_at);
+          const expiryTime = new Date(submissionTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours
+          const timeRemaining = expiryTime - new Date();
+          
+          // Only show if not expired
+          if (timeRemaining > 0) {
+            activeAlerts.push({
+              id: mostRecent.id,
+              supplier_name: supplier,
+              milk_volume: netVolume,
+              submissionTime,
+              expiryTime,
+              timeRemaining
+            });
+          }
+        }
+      }
+    });
+
+    return activeAlerts;
+  };
+
+  const activeAlerts = getCurrentDirectProcessingVolume();
+
+  // Calculate available capacity in tanks
+  const calculateTankCapacity = (tankName) => {
+    if (!milkReceptionData) return 0;
+    
+    const TANK_CAPACITIES = {
+      'Tank A': 5000,
+      'Tank B': 3000
+    };
+
+    const tankRecords = milkReceptionData
+      .filter(record => record.tank_number === tankName)
+      .reduce((total, record) => total + (record.milk_volume || 0), 0);
+
+    const capacity = TANK_CAPACITIES[tankName] || 0;
+    return Math.max(0, capacity - tankRecords);
+  };
+
+  // Don't render if no active alerts
   if (activeAlerts.length === 0) {
     return null;
   }
@@ -56,7 +135,7 @@ const DirectProcessingAlerts = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Droplet className="h-4 w-4 text-blue-500" />
-                      <span className="font-medium">{alert.milk_volume}L</span>
+                      <span className="font-medium">{alert.milk_volume.toFixed(1)}L</span>
                       <span className="text-sm text-gray-600">
                         from {alert.supplier_name}
                       </span>
