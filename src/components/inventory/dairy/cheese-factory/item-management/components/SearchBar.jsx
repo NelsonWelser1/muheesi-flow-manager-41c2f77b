@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Input } from "@/components/ui/input";
-import { Search, Download } from 'lucide-react';
+import { Search, Download, Printer } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { jsPDF } from 'jspdf';
@@ -10,6 +9,10 @@ import html2canvas from 'html2canvas';
 
 const SearchBar = ({ searchTerm, setSearchTerm, items }) => {
   console.log('Rendering SearchBar with items:', items);
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   const downloadPDF = () => {
     if (!items || items.length === 0) {
@@ -123,24 +126,29 @@ const SearchBar = ({ searchTerm, setSearchTerm, items }) => {
           className="max-w-sm"
         />
       </div>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon">
-            <Download className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={downloadPDF}>
-            Download PDF
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={downloadCSV}>
-            Download CSV
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={downloadJPG}>
-            Download JPG
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-center space-x-2">
+        <Button variant="outline" size="icon" onClick={handlePrint}>
+          <Printer className="h-4 w-4" />
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon">
+              <Download className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={downloadPDF}>
+              Download PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={downloadCSV}>
+              Download CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={downloadJPG}>
+              Download JPG
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 };
