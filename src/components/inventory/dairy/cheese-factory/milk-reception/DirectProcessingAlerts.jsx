@@ -12,59 +12,75 @@ const DirectProcessingAlerts = () => {
   const getCurrentDirectProcessingVolume = () => {
     if (!milkReceptionData) return [];
 
-    // Group records by supplier and calculate net volume for each
-    const supplierVolumes = {};
-    
-    milkReceptionData
+    // Get all Direct Processing records
+    const directProcessingRecords = milkReceptionData
       .filter(record => record.tank_number === 'Direct-Processing')
-      .forEach(record => {
-        const supplierId = record.supplier_name || 'Unknown';
-        const recordId = record.id;
-        
-        if (!supplierVolumes[supplierId]) {
-          supplierVolumes[supplierId] = [];
-        }
-        
-        supplierVolumes[supplierId].push({
-          id: recordId,
-          volume: record.milk_volume || 0,
-          supplier_name: record.supplier_name,
-          created_at: record.created_at
-        });
-      });
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at)); // Sort by time ascending
 
-    // Calculate net volume for each supplier and create active alerts
-    const activeAlerts = [];
+    if (directProcessingRecords.length === 0) return [];
+
+    // Calculate total net volume (positive additions minus negative utilizations)
+    const totalNetVolume = directProcessingRecords.reduce((total, record) => {
+      return total + (record.milk_volume || 0);
+    }, 0);
+
+    // If no milk remaining, return empty array (no alerts)
+    if (totalNetVolume <= 0) return [];
+
+    // Find the most recent positive entry for timing calculations
+    const positiveRecords = directProcessingRecords.filter(r => r.milk_volume > 0);
     
-    Object.entries(supplierVolumes).forEach(([supplier, records]) => {
-      const netVolume = records.reduce((total, record) => total + record.volume, 0);
-      
-      // Only show alert if there's positive milk volume
-      if (netVolume > 0) {
-        // Find the most recent positive entry for timing calculations
-        const positiveRecords = records.filter(r => r.volume > 0);
-        if (positiveRecords.length > 0) {
-          const mostRecent = positiveRecords.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
-          const submissionTime = new Date(mostRecent.created_at);
-          const expiryTime = new Date(submissionTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours
-          const timeRemaining = expiryTime - new Date();
+    if (positiveRecords.length === 0) return [];
+
+    // Get the earliest positive record that hasn't been fully utilized
+    let remainingVolume = totalNetVolume;
+    const activeEntries = [];
+
+    // Process records chronologically to find which entries still have remaining volume
+    for (const record of positiveRecords) {
+      if (remainingVolume > 0) {
+        const submissionTime = new Date(record.created_at);
+        const expiryTime = new Date(submissionTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours
+        const timeRemaining = expiryTime - new Date();
+        
+        // Only include if not expired
+        if (timeRemaining > 0) {
+          const volumeFromThisEntry = Math.min(remainingVolume, record.milk_volume);
           
-          // Only show if not expired
-          if (timeRemaining > 0) {
-            activeAlerts.push({
-              id: mostRecent.id,
-              supplier_name: supplier,
-              milk_volume: netVolume,
-              submissionTime,
-              expiryTime,
-              timeRemaining
-            });
-          }
+          activeEntries.push({
+            id: record.id,
+            supplier_name: record.supplier_name || 'Unknown',
+            milk_volume: volumeFromThisEntry,
+            submissionTime,
+            expiryTime,
+            timeRemaining
+          });
+          
+          remainingVolume -= volumeFromThisEntry;
         }
       }
-    });
+    }
 
-    return activeAlerts;
+    // If we have remaining volume but no valid entries, create a summary alert
+    if (activeEntries.length === 0 && totalNetVolume > 0) {
+      const mostRecentPositive = positiveRecords[positiveRecords.length - 1];
+      const submissionTime = new Date(mostRecentPositive.created_at);
+      const expiryTime = new Date(submissionTime.getTime() + 3 * 60 * 60 * 1000);
+      const timeRemaining = expiryTime - new Date();
+      
+      if (timeRemaining > 0) {
+        activeEntries.push({
+          id: mostRecentPositive.id,
+          supplier_name: 'Mixed Sources',
+          milk_volume: totalNetVolume,
+          submissionTime,
+          expiryTime,
+          timeRemaining
+        });
+      }
+    }
+
+    return activeEntries;
   };
 
   const activeAlerts = getCurrentDirectProcessingVolume();
