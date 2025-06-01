@@ -11,6 +11,7 @@ import { useMilkReception } from '@/hooks/useMilkReception';
 const MilkReceptionForm = () => {
   const { toast } = useToast();
   const { addMilkReception } = useMilkReception();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     tank_number: '',
     quality_score: 'Grade A',
@@ -101,6 +102,8 @@ const MilkReceptionForm = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       const dataToSubmit = {
         ...formData,
@@ -121,7 +124,7 @@ const MilkReceptionForm = () => {
       if (result) {
         toast({
           title: "Success",
-          description: "Milk reception record added successfully",
+          description: "Milk reception record added successfully. Please wait 5 seconds before submitting again.",
         });
 
         // Reset form after successful submission
@@ -137,11 +140,17 @@ const MilkReceptionForm = () => {
           tank_number: '',
           notes: ''
         });
+
+        // Add 5-second delay to prevent duplicate submissions
+        setTimeout(() => {
+          setIsSubmitting(false);
+        }, 5000);
       } else {
         throw new Error('Failed to add record');
       }
     } catch (error) {
       console.error('Error in form submission:', error);
+      setIsSubmitting(false);
       toast({
         title: "Submission Failed",
         description: "Please check your data and try again. " + (error.message || ''),
@@ -297,8 +306,8 @@ const MilkReceptionForm = () => {
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Submit
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Submitting... Please wait 5 seconds' : 'Submit'}
           </Button>
         </form>
       </CardContent>
