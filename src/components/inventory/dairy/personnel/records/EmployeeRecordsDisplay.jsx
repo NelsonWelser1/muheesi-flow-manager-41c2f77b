@@ -102,35 +102,39 @@ const EmployeeRecordsDisplay = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 p-4">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-bold">Employee Records</CardTitle>
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh}>
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Refresh
-            </Button>
-            <Button onClick={handlePrint} variant="outline" size="sm">
-              <Printer className="h-4 w-4 mr-2" />
-              Print Records
-            </Button>
-            <EmployeeExportActions records={records} fileName="employee_records" />
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <CardTitle className="text-lg font-bold">Employee Records</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleRefresh}>
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Refresh
+              </Button>
+              <Button onClick={handlePrint} variant="outline" size="sm">
+                <Printer className="h-4 w-4 mr-2" />
+                Print Records
+              </Button>
+              <EmployeeExportActions records={records} fileName="employee_records" />
+            </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Input
-                  placeholder="Search by name, ID, job title, or department..."
-                  value={searchTerm}
-                  onChange={handleSearch}
-                  className="w-full"
-                />
-              </div>
+        
+        <CardContent className="space-y-6">
+          {/* Search and Filter Controls */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Search by name, ID, job title, or department..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="w-full"
+              />
+            </div>
+            <div className="w-full sm:w-[180px]">
               <Select value={timeRange} onValueChange={handleTimeRangeChange}>
-                <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select time range" />
                 </SelectTrigger>
                 <SelectContent>
@@ -142,21 +146,24 @@ const EmployeeRecordsDisplay = () => {
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            <Tabs value={activeStatus} onValueChange={setActiveStatus}>
-              <TabsList className="w-full grid grid-cols-3 lg:grid-cols-7">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="Active">Active</TabsTrigger>
-                <TabsTrigger value="On Leave">On Leave</TabsTrigger>
-                <TabsTrigger value="Training">Training</TabsTrigger>
-                <TabsTrigger value="Probation">Probation</TabsTrigger>
-                <TabsTrigger value="Suspended">Suspended</TabsTrigger>
-                <TabsTrigger value="Terminated">Terminated</TabsTrigger>
+          {/* Status Tabs */}
+          <div className="w-full">
+            <Tabs value={activeStatus} onValueChange={setActiveStatus} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 mb-6">
+                <TabsTrigger value="all" className="text-xs sm:text-sm">All</TabsTrigger>
+                <TabsTrigger value="Active" className="text-xs sm:text-sm">Active</TabsTrigger>
+                <TabsTrigger value="On Leave" className="text-xs sm:text-sm">On Leave</TabsTrigger>
+                <TabsTrigger value="Training" className="text-xs sm:text-sm">Training</TabsTrigger>
+                <TabsTrigger value="Probation" className="text-xs sm:text-sm">Probation</TabsTrigger>
+                <TabsTrigger value="Suspended" className="text-xs sm:text-sm">Suspended</TabsTrigger>
+                <TabsTrigger value="Terminated" className="text-xs sm:text-sm">Terminated</TabsTrigger>
               </TabsList>
 
               {STATUS_OPTIONS.map((status) => (
-                <TabsContent key={status.value} value={status.value}>
-                  <div id="employee-records-table">
+                <TabsContent key={status.value} value={status.value} className="mt-0">
+                  <div id="employee-records-table" className="w-full">
                     <EmployeeRecordsTable
                       records={paginatedData}
                       isLoading={isLoading}
@@ -166,14 +173,16 @@ const EmployeeRecordsDisplay = () => {
                 </TabsContent>
               ))}
             </Tabs>
+          </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-muted-foreground">
-                  Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} items
-                </div>
-                
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t">
+              <div className="text-sm text-muted-foreground order-2 sm:order-1">
+                Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} items
+              </div>
+              
+              <div className="order-1 sm:order-2">
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
@@ -204,8 +213,8 @@ const EmployeeRecordsDisplay = () => {
                   </PaginationContent>
                 </Pagination>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
