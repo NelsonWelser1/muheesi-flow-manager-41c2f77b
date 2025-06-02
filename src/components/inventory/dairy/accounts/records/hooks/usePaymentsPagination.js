@@ -12,10 +12,10 @@ export const usePaymentsPagination = (data, itemsPerPage = 10) => {
   const sortedData = useMemo(() => {
     if (!data || data.length === 0) return [];
     
-    // Sort by payment_date and created_at in descending order (most recent first)
+    // Sort by payment_date, created_at, or updated_at in descending order (most recent first)
     return [...data].sort((a, b) => {
-      const dateA = new Date(a.paymentDate || a.created_at);
-      const dateB = new Date(b.paymentDate || b.created_at);
+      const dateA = new Date(a.payment_date || a.paymentDate || a.created_at || a.updated_at);
+      const dateB = new Date(b.payment_date || b.paymentDate || b.created_at || b.updated_at);
       return dateB - dateA;
     });
   }, [data]);

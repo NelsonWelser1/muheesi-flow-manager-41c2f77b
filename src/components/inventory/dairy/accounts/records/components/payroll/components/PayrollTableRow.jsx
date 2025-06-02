@@ -1,35 +1,33 @@
 
 import React from 'react';
-import { TableRow, TableCell } from "@/components/ui/table";
-import { format } from 'date-fns';
+import { TableCell, TableRow } from "@/components/ui/table";
 import PayslipStatusBadge from './PayslipStatusBadge';
-import PayslipActionButtons from './payslip-actions';
+import PayslipActionButtons from './payslip-actions/PayslipActionButtons';
 
 const PayrollTableRow = ({ record, formatCurrency }) => {
-  // Calculate total deductions
-  const totalDeductions = 
-    parseFloat(record.tax_amount || 0) + 
-    parseFloat(record.nssf_amount || 0) + 
-    parseFloat(record.loan_deduction || 0) + 
-    parseFloat(record.other_deductions || 0);
-  
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      return dateString;
+    }
+  };
+
   return (
-    <TableRow key={record.id}>
-      <TableCell className="font-medium">{record.payslip_number}</TableCell>
-      <TableCell>
-        <div className="font-medium">{record.employee_name}</div>
-        <div className="text-xs text-gray-500">ID: {record.employee_id}</div>
-      </TableCell>
-      <TableCell>{format(new Date(record.payment_date), 'dd MMM yyyy')}</TableCell>
-      <TableCell>{record.department || 'N/A'}</TableCell>
-      <TableCell>{formatCurrency(record.basic_salary, record.currency)}</TableCell>
-      <TableCell>{formatCurrency(totalDeductions, record.currency)}</TableCell>
-      <TableCell className="font-medium">{formatCurrency(record.net_salary, record.currency)}</TableCell>
-      <TableCell>
+    <TableRow>
+      <TableCell className="whitespace-nowrap font-medium">{record.payslip_number}</TableCell>
+      <TableCell className="whitespace-nowrap">{record.employee_name}</TableCell>
+      <TableCell className="whitespace-nowrap">{record.employee_id}</TableCell>
+      <TableCell className="whitespace-nowrap">{record.department}</TableCell>
+      <TableCell className="whitespace-nowrap">{formatDate(record.payment_date)}</TableCell>
+      <TableCell className="whitespace-nowrap">{formatCurrency(record.basic_salary, record.currency)}</TableCell>
+      <TableCell className="whitespace-nowrap">{formatCurrency(record.net_salary, record.currency)}</TableCell>
+      <TableCell className="whitespace-nowrap">
         <PayslipStatusBadge status={record.payment_status} />
       </TableCell>
-      <TableCell>
-        <PayslipActionButtons record={record} formatCurrency={formatCurrency} />
+      <TableCell className="whitespace-nowrap">
+        <PayslipActionButtons record={record} />
       </TableCell>
     </TableRow>
   );
