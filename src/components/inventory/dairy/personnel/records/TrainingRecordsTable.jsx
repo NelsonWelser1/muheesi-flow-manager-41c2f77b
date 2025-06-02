@@ -40,31 +40,31 @@ const TrainingRecordsTable = ({ records, isLoading, error }) => {
   };
 
   return (
-    <div className="border rounded-md">
+    <div id="training-records-table" className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Employee</TableHead>
-            <TableHead>Training Module</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Rating</TableHead>
-            <TableHead>Feedback</TableHead>
+            <TableHead className="whitespace-nowrap">Employee</TableHead>
+            <TableHead className="whitespace-nowrap">Training Module</TableHead>
+            <TableHead className="whitespace-nowrap">Date</TableHead>
+            <TableHead className="whitespace-nowrap">Rating</TableHead>
+            <TableHead className="whitespace-nowrap">Feedback</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {records.map((record) => (
             <TableRow key={record.id}>
-              <TableCell className="font-medium">{record.employee_id}</TableCell>
-              <TableCell>{record.training_module}</TableCell>
-              <TableCell>
+              <TableCell className="font-medium whitespace-nowrap">{record.employee_id}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.training_module}</TableCell>
+              <TableCell className="whitespace-nowrap">
                 {record.training_date ? format(new Date(record.training_date), 'PPP') : 'N/A'}
               </TableCell>
-              <TableCell>
+              <TableCell className="whitespace-nowrap">
                 <Badge variant={getRatingBadgeColor(record.performance_rating)}>
                   {record.performance_rating}/5
                 </Badge>
               </TableCell>
-              <TableCell className="max-w-xs truncate">{record.feedback || 'No feedback'}</TableCell>
+              <TableCell className="whitespace-nowrap max-w-xs truncate">{record.feedback || 'No feedback'}</TableCell>
             </TableRow>
           ))}
         </TableBody>

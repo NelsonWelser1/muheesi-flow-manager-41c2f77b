@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTrainingRecords } from '../hooks/useTrainingRecords';
+import { usePaymentsPagination } from '../../accounts/records/hooks/usePaymentsPagination';
 import TrainingRecordsTable from './TrainingRecordsTable';
 import RecordsToolbar from './RecordsToolbar';
-import RecordsExportActions from './RecordsExportActions';
+import TrainingRecordsHeader from './components/TrainingRecordsHeader';
+import TrainingRecordsPagination from './components/TrainingRecordsPagination';
 
 const TrainingRecordsDisplay = () => {
   const [timeRange, setTimeRange] = useState('week');
@@ -19,6 +21,26 @@ const TrainingRecordsDisplay = () => {
     refreshData 
   } = useTrainingRecords({ timeRange, searchTerm, status });
 
+  // Sort records by most recent first (created_at or training_date)
+  const sortedRecords = React.useMemo(() => {
+    if (!records) return [];
+    return [...records].sort((a, b) => {
+      const dateA = new Date(a.training_date || a.created_at || 0);
+      const dateB = new Date(b.training_date || b.created_at || 0);
+      return dateB - dateA; // Descending order (most recent first)
+    });
+  }, [records]);
+
+  const {
+    paginatedData,
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = usePaymentsPagination(sortedRecords, 10);
+
   const handleTimeRangeChange = (range) => {
     setTimeRange(range);
   };
@@ -31,13 +53,43 @@ const TrainingRecordsDisplay = () => {
     setStatus(newStatus);
   };
 
+  const handlePrint = () => {
+    const printContent = document.getElementById('training-records-table');
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Training & Performance Records</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; white-space: nowrap; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .print-date { text-align: right; font-size: 12px; margin-bottom: 10px; }
+          </style>
+        </head>
+        <body>
+          <div class="print-date">Printed on: ${new Date().toLocaleString()}</div>
+          <div class="header">
+            <h2>Training & Performance Records Report</h2>
+            <p>Total Records: ${totalItems}</p>
+          </div>
+          ${printContent.outerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Training & Performance Records</CardTitle>
-        <RecordsExportActions 
-          records={records} 
-          fileName="training_performance_records" 
+        <TrainingRecordsHeader 
+          onRefresh={refreshData}
+          onPrint={handlePrint}
+          records={sortedRecords}
         />
       </CardHeader>
       <CardContent>
@@ -60,20 +112,29 @@ const TrainingRecordsDisplay = () => {
           </div>
 
           <TabsContent value="all" className="mt-0">
-            <TrainingRecordsTable records={records} isLoading={isLoading} error={error} />
+            <TrainingRecordsTable records={paginatedData} isLoading={isLoading} error={error} />
           </TabsContent>
           <TabsContent value="completed" className="mt-0">
-            <TrainingRecordsTable records={records} isLoading={isLoading} error={error} />
+            <TrainingRecordsTable records={paginatedData} isLoading={isLoading} error={error} />
           </TabsContent>
           <TabsContent value="pending" className="mt-0">
-            <TrainingRecordsTable records={records} isLoading={isLoading} error={error} />
+            <TrainingRecordsTable records={paginatedData} isLoading={isLoading} error={error} />
           </TabsContent>
           <TabsContent value="low" className="mt-0">
-            <TrainingRecordsTable records={records} isLoading={isLoading} error={error} />
+            <TrainingRecordsTable records={paginatedData} isLoading={isLoading} error={error} />
           </TabsContent>
           <TabsContent value="high" className="mt-0">
-            <TrainingRecordsTable records={records} isLoading={isLoading} error={error} />
+            <TrainingRecordsTable records={paginatedData} isLoading={isLoading} error={error} />
           </TabsContent>
+
+          <TrainingRecordsPagination 
+            totalPages={totalPages}
+            currentPage={currentPage}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            totalItems={totalItems}
+            onPageChange={handlePageChange}
+          />
         </Tabs>
       </CardContent>
     </Card>
