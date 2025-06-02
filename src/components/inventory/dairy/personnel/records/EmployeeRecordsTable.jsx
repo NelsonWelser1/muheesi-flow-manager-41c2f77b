@@ -44,31 +44,31 @@ const EmployeeRecordsTable = ({ records, isLoading, error }) => {
   };
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Employee ID</TableHead>
-            <TableHead>Job Title</TableHead>
-            <TableHead>Department</TableHead>
-            <TableHead>Shift Start</TableHead>
-            <TableHead>Shift End</TableHead>
-            <TableHead>Performance</TableHead>
-            <TableHead>Review Date</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead className="whitespace-nowrap">Employee ID</TableHead>
+            <TableHead className="whitespace-nowrap">Job Title</TableHead>
+            <TableHead className="whitespace-nowrap">Department</TableHead>
+            <TableHead className="whitespace-nowrap">Shift Start</TableHead>
+            <TableHead className="whitespace-nowrap">Shift End</TableHead>
+            <TableHead className="whitespace-nowrap">Performance</TableHead>
+            <TableHead className="whitespace-nowrap">Review Date</TableHead>
+            <TableHead className="whitespace-nowrap">Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {records.map((record) => (
             <TableRow key={record.id}>
-              <TableCell>{record.employee_id}</TableCell>
-              <TableCell>{record.job_title}</TableCell>
-              <TableCell>{record.department || '-'}</TableCell>
-              <TableCell>{formatDate(record.shift_start)}</TableCell>
-              <TableCell>{formatDate(record.shift_end)}</TableCell>
-              <TableCell>{record.performance_rating}/5</TableCell>
-              <TableCell>{formatDate(record.review_date_time)}</TableCell>
-              <TableCell>{getStatusBadge(record.status)}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.employee_id}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.job_title}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.department || '-'}</TableCell>
+              <TableCell className="whitespace-nowrap">{formatDate(record.shift_start)}</TableCell>
+              <TableCell className="whitespace-nowrap">{formatDate(record.shift_end)}</TableCell>
+              <TableCell className="whitespace-nowrap">{record.performance_rating}/5</TableCell>
+              <TableCell className="whitespace-nowrap">{formatDate(record.review_date_time)}</TableCell>
+              <TableCell className="whitespace-nowrap">{getStatusBadge(record.status)}</TableCell>
             </TableRow>
           ))}
         </TableBody>
