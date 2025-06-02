@@ -2,8 +2,9 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import PaymentsTable from './PaymentsTable';
 
-const StatusTabs = ({ statusFilter, setStatusFilter, filteredRecords, loading, paymentTable }) => {
+const StatusTabs = ({ statusFilter, setStatusFilter, filteredRecords, loading }) => {
   // Count records by status
   const getCounts = () => {
     const counts = {
@@ -24,6 +25,12 @@ const StatusTabs = ({ statusFilter, setStatusFilter, filteredRecords, loading, p
 
   const counts = getCounts();
 
+  // Filter records based on status for each tab
+  const getFilteredRecordsByStatus = (status) => {
+    if (status === 'all') return filteredRecords;
+    return filteredRecords.filter(record => record.status === status);
+  };
+
   return (
     <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
       <TabsList className="w-full flex mb-4">
@@ -42,16 +49,16 @@ const StatusTabs = ({ statusFilter, setStatusFilter, filteredRecords, loading, p
       </TabsList>
       
       <TabsContent value="all" className="mt-0">
-        {paymentTable}
+        <PaymentsTable records={getFilteredRecordsByStatus('all')} loading={loading} />
       </TabsContent>
       <TabsContent value="completed" className="mt-0">
-        {paymentTable}
+        <PaymentsTable records={getFilteredRecordsByStatus('completed')} loading={loading} />
       </TabsContent>
       <TabsContent value="pending" className="mt-0">
-        {paymentTable}
+        <PaymentsTable records={getFilteredRecordsByStatus('pending')} loading={loading} />
       </TabsContent>
       <TabsContent value="failed" className="mt-0">
-        {paymentTable}
+        <PaymentsTable records={getFilteredRecordsByStatus('failed')} loading={loading} />
       </TabsContent>
     </Tabs>
   );

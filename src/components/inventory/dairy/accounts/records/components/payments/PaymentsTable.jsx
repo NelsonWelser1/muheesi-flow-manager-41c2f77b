@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Table, 
@@ -8,9 +9,28 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious 
+} from "@/components/ui/pagination";
 import { format, parseISO } from 'date-fns';
+import { usePaymentsPagination } from '../../hooks/usePaymentsPagination';
 
 const PaymentsTable = ({ records, loading }) => {
+  const {
+    paginatedData,
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    totalItems,
+    handlePageChange
+  } = usePaymentsPagination(records, 10);
+
   if (loading) {
     return <div className="w-full text-center py-8">Loading records...</div>;
   }
@@ -43,52 +63,90 @@ const PaymentsTable = ({ records, loading }) => {
 
   const formatDateSafely = (dateString) => {
     try {
-      // Handle both date string and Date object formats
       if (!dateString) return '-';
       
-      // If it's already a Date object or string in ISO format
       if (typeof dateString === 'string' && dateString.includes('T')) {
         return format(new Date(dateString), 'dd/MM/yyyy');
       }
       
-      // Otherwise (simple date string like '2023-04-01')
       return format(new Date(dateString), 'dd/MM/yyyy');
     } catch (error) {
       console.error('Date formatting error:', error, dateString);
-      return dateString || '-'; // Return original string or placeholder if formatting fails
+      return dateString || '-';
     }
   };
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Number</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Method</TableHead>
-            <TableHead>Reference</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {records.map((record) => (
-            <TableRow key={record.id}>
-              <TableCell>{record.paymentNumber}</TableCell>
-              <TableCell className="capitalize">{record.paymentType}</TableCell>
-              <TableCell>{record.partyName}</TableCell>
-              <TableCell>{formatDateSafely(record.paymentDate)}</TableCell>
-              <TableCell>{formatAmount(record.amount, record.currency)}</TableCell>
-              <TableCell className="capitalize">{record.paymentMethod.replace('_', ' ')}</TableCell>
-              <TableCell>{record.referenceNumber || '-'}</TableCell>
-              <TableCell>{getStatusBadge(record.status)}</TableCell>
+    <div className="space-y-4">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="whitespace-nowrap">Number</TableHead>
+              <TableHead className="whitespace-nowrap">Type</TableHead>
+              <TableHead className="whitespace-nowrap">Name</TableHead>
+              <TableHead className="whitespace-nowrap">Date</TableHead>
+              <TableHead className="whitespace-nowrap">Amount</TableHead>
+              <TableHead className="whitespace-nowrap">Method</TableHead>
+              <TableHead className="whitespace-nowrap">Reference</TableHead>
+              <TableHead className="whitespace-nowrap">Status</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {paginatedData.map((record) => (
+              <TableRow key={record.id}>
+                <TableCell className="whitespace-nowrap">{record.paymentNumber}</TableCell>
+                <TableCell className="capitalize whitespace-nowrap">{record.paymentType}</TableCell>
+                <TableCell className="whitespace-nowrap">{record.partyName}</TableCell>
+                <TableCell className="whitespace-nowrap">{formatDateSafely(record.paymentDate)}</TableCell>
+                <TableCell className="whitespace-nowrap">{formatAmount(record.amount, record.currency)}</TableCell>
+                <TableCell className="capitalize whitespace-nowrap">{record.paymentMethod.replace('_', ' ')}</TableCell>
+                <TableCell className="whitespace-nowrap">{record.referenceNumber || '-'}</TableCell>
+                <TableCell className="whitespace-nowrap">{getStatusBadge(record.status)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} items
+          </div>
+          
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <PaginationItem key={page}>
+                  <PaginationLink 
+                    onClick={() => handlePageChange(page)}
+                    isActive={currentPage === page}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 };

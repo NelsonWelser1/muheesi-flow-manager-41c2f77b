@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePaymentsReceipts } from '@/integrations/supabase/hooks/accounting/payments/usePaymentsReceipts';
 import SearchFilters from './components/payments/SearchFilters';
 import StatusTabs from './components/payments/StatusTabs';
-import PaymentsTable from './components/payments/PaymentsTable';
 import ExportActions from './components/payments/ExportActions';
 
 const PaymentsReceiptsRecords = ({ onBack }) => {
@@ -38,11 +37,6 @@ const PaymentsReceiptsRecords = ({ onBack }) => {
           payment.partyName?.toLowerCase().includes(searchLower) ||
           payment.referenceNumber?.toLowerCase().includes(searchLower)
       );
-    }
-
-    // Filter by status
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(payment => payment.status === statusFilter);
     }
 
     // Filter by payment type
@@ -157,7 +151,6 @@ const PaymentsReceiptsRecords = ({ onBack }) => {
             setStatusFilter={setStatusFilter}
             filteredRecords={filteredPayments}
             loading={loading}
-            paymentTable={<PaymentsTable records={filteredPayments} loading={loading} />}
           />
         </CardContent>
       </Card>
