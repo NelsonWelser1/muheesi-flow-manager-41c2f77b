@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,7 +28,7 @@ import {
 import { Search, Filter, Printer } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/supabase";
-import { usePaymentsPagination } from '../../../accounts/records/hooks/usePaymentsPagination';
+import { usePaymentsPagination } from '../../accounts/records/hooks/usePaymentsPagination';
 
 const PerformanceRecords = () => {
   const [searchTerm, setSearchTerm] = useState('');

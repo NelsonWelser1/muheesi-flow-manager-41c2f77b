@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,7 +27,7 @@ import {
 } from "@/components/ui/pagination";
 import { Search, Filter, Printer } from "lucide-react";
 import { useDeliveryRecords } from './hooks/useDeliveryRecords';
-import { usePaymentsPagination } from '../../../accounts/records/hooks/usePaymentsPagination';
+import { usePaymentsPagination } from '../../accounts/records/hooks/usePaymentsPagination';
 
 const DeliveriesRecords = () => {
   const [searchTerm, setSearchTerm] = useState('');
