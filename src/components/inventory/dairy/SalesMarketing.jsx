@@ -2,62 +2,97 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Package, TrendingUp, AlertCircle } from 'lucide-react';
-import useSalesDashboardData from './dashboard/hooks/useSalesDashboardData';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useState, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/supabase";
 
 const SalesMarketing = () => {
-  const { salesData, campaignData, isLoading, error } = useSalesDashboardData();
+  const [salesOrdersData, setSalesOrdersData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Calculate total daily revenue
+  // Fetch paid sales orders from the database
+  useEffect(() => {
+    const fetchPaidSalesOrders = async () => {
+      try {
+        setIsLoading(true);
+        console.log('Fetching paid sales orders from Supabase...');
+        
+        const { data, error } = await supabase
+          .from('sales_orders')
+          .select('*')
+          .eq('payment_status', 'paid')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching paid sales orders:', error);
+          setError(error);
+          return;
+        }
+
+        console.log('Fetched paid sales orders:', data);
+        setSalesOrdersData(data || []);
+      } catch (err) {
+        console.error('Unexpected error fetching paid sales orders:', err);
+        setError(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPaidSalesOrders();
+  }, []);
+
+  // Calculate total daily revenue from paid sales orders
   const calculateDailyRevenue = () => {
-    if (!salesData || salesData.length === 0) return 0;
+    if (!salesOrdersData || salesOrdersData.length === 0) return 0;
     
     const today = new Date().setHours(0, 0, 0, 0);
-    const todaySales = salesData.filter(sale => {
-      const saleDate = new Date(sale.date_time || sale.created_at).setHours(0, 0, 0, 0);
+    const todaySales = salesOrdersData.filter(sale => {
+      const saleDate = new Date(sale.order_date || sale.created_at).setHours(0, 0, 0, 0);
       return saleDate === today;
     });
     
     return todaySales.reduce((total, sale) => 
-      total + (sale.quantity * (sale.price_per_unit || sale.unit_price)), 0);
+      total + (sale.total_amount || (sale.quantity * sale.unit_price)), 0);
   };
   
-  // Calculate total products sold today
+  // Calculate total products sold today from paid sales orders
   const calculateTodayProducts = () => {
-    if (!salesData || salesData.length === 0) return 0;
+    if (!salesOrdersData || salesOrdersData.length === 0) return 0;
     
     const today = new Date().setHours(0, 0, 0, 0);
-    const todaySales = salesData.filter(sale => {
-      const saleDate = new Date(sale.date_time || sale.created_at).setHours(0, 0, 0, 0);
+    const todaySales = salesOrdersData.filter(sale => {
+      const saleDate = new Date(sale.order_date || sale.created_at).setHours(0, 0, 0, 0);
       return saleDate === today;
     });
     
     return todaySales.reduce((total, sale) => total + sale.quantity, 0);
   };
   
-  // Calculate growth rate (comparing today with yesterday)
+  // Calculate growth rate (comparing today with yesterday) from paid sales orders
   const calculateGrowthRate = () => {
-    if (!salesData || salesData.length < 2) return 0;
+    if (!salesOrdersData || salesOrdersData.length < 2) return 0;
     
     const today = new Date().setHours(0, 0, 0, 0);
     const yesterday = new Date(today - 86400000).setHours(0, 0, 0, 0);
     
-    const todaySales = salesData.filter(sale => {
-      const saleDate = new Date(sale.date_time || sale.created_at).setHours(0, 0, 0, 0);
+    const todaySales = salesOrdersData.filter(sale => {
+      const saleDate = new Date(sale.order_date || sale.created_at).setHours(0, 0, 0, 0);
       return saleDate === today;
     });
     
-    const yesterdaySales = salesData.filter(sale => {
-      const saleDate = new Date(sale.date_time || sale.created_at).setHours(0, 0, 0, 0);
+    const yesterdaySales = salesOrdersData.filter(sale => {
+      const saleDate = new Date(sale.order_date || sale.created_at).setHours(0, 0, 0, 0);
       return saleDate === yesterday;
     });
     
     const todayRevenue = todaySales.reduce((total, sale) => 
-      total + (sale.quantity * (sale.price_per_unit || sale.unit_price)), 0);
+      total + (sale.total_amount || (sale.quantity * sale.unit_price)), 0);
     
     const yesterdayRevenue = yesterdaySales.reduce((total, sale) => 
-      total + (sale.quantity * (sale.price_per_unit || sale.unit_price)), 0);
+      total + (sale.total_amount || (sale.quantity * sale.unit_price)), 0);
     
     if (yesterdayRevenue === 0) return todayRevenue > 0 ? 100 : 0;
     
@@ -86,7 +121,7 @@ const SalesMarketing = () => {
             {isLoading ? (
               <Skeleton className="h-8 w-[100px]" />
             ) : (
-              <div className="text-2xl font-bold">${calculateDailyRevenue().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <div className="text-2xl font-bold">UGX {calculateDailyRevenue().toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
             )}
           </CardContent>
         </Card>
@@ -124,21 +159,21 @@ const SalesMarketing = () => {
       
       {isLoading ? (
         <div className="text-center py-8">
-          <p>Loading sales data...</p>
+          <p>Loading paid sales data...</p>
         </div>
-      ) : salesData.length === 0 ? (
+      ) : salesOrdersData.length === 0 ? (
         <div className="text-center py-8">
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>No Data Available</AlertTitle>
             <AlertDescription>
-              No sales data available. Please add sales records to see them reflected here.
+              No paid sales orders available. Please add and process sales orders to see them reflected here.
             </AlertDescription>
           </Alert>
         </div>
       ) : (
         <div className="text-center py-8">
-          <p>Showing data from {salesData.length} sales records.</p>
+          <p>Showing data from {salesOrdersData.length} paid sales orders.</p>
           <p>Select an option from the menu above to view detailed reports.</p>
         </div>
       )}
