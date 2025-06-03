@@ -32,15 +32,6 @@ const PerformanceMetrics = () => {
         efficiency: { actual: 85, target: 82, achievement: 103.7 },
         quality: { actual: 92, target: 90, achievement: 102.2 }
       }
-    },
-    {
-      company: "Fresheco Farming Limited",
-      kpis: {
-        revenue: { actual: 0.65, target: 0.6, achievement: 108.3 },
-        profit: { actual: 0.1, target: 0.09, achievement: 111.1 },
-        efficiency: { actual: 81, target: 78, achievement: 103.8 },
-        quality: { actual: 88, target: 85, achievement: 103.5 }
-      }
     }
   ];
 

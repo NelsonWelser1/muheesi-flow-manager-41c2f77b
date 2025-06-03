@@ -29,7 +29,7 @@ const BoardOfDirectorsDashboard = () => {
   const boardMetrics = [
     {
       title: "Total Portfolio Value",
-      value: "$15.2M",
+      value: "$14.5M",
       change: "+8.5%",
       trend: "up",
       icon: DollarSign,
@@ -37,7 +37,7 @@ const BoardOfDirectorsDashboard = () => {
     },
     {
       title: "Active Companies",
-      value: "4",
+      value: "3",
       change: "Stable",
       trend: "stable",
       icon: Building2,
@@ -45,7 +45,7 @@ const BoardOfDirectorsDashboard = () => {
     },
     {
       title: "Total Employees",
-      value: "847",
+      value: "737",
       change: "+12",
       trend: "up",
       icon: Users,
@@ -53,7 +53,7 @@ const BoardOfDirectorsDashboard = () => {
     },
     {
       title: "Risk Alerts",
-      value: "2",
+      value: "1",
       change: "-1",
       trend: "down",
       icon: AlertTriangle,

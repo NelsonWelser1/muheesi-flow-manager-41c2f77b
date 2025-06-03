@@ -7,24 +7,22 @@ const FinancialSummary = () => {
   const revenueData = [
     { company: 'Grand Berna', revenue: 8.5, profit: 2.1, margin: 24.7 },
     { company: 'KAJON Coffee', revenue: 3.2, profit: 0.8, margin: 25.0 },
-    { company: 'Kyalima Farmers', revenue: 2.8, profit: 0.6, margin: 21.4 },
-    { company: 'Fresheco', revenue: 0.65, profit: 0.1, margin: 15.4 }
+    { company: 'Kyalima Farmers', revenue: 2.8, profit: 0.6, margin: 21.4 }
   ];
 
   const portfolioData = [
-    { name: 'Grand Berna Dairies', value: 56.3, color: '#8884d8' },
-    { name: 'KAJON Coffee', value: 21.2, color: '#82ca9d' },
-    { name: 'Kyalima Farmers', value: 18.5, color: '#ffc658' },
-    { name: 'Fresheco Farming', value: 4.0, color: '#ff7300' }
+    { name: 'Grand Berna Dairies', value: 59.4, color: '#8884d8' },
+    { name: 'KAJON Coffee', value: 22.4, color: '#82ca9d' },
+    { name: 'Kyalima Farmers', value: 18.2, color: '#ffc658' }
   ];
 
   const monthlyTrends = [
-    { month: 'Jan', total: 12.5, growth: 5.2 },
-    { month: 'Feb', total: 13.1, growth: 4.8 },
-    { month: 'Mar', total: 13.8, growth: 5.3 },
-    { month: 'Apr', total: 14.2, growth: 2.9 },
-    { month: 'May', total: 14.9, growth: 4.9 },
-    { month: 'Jun', total: 15.2, growth: 2.0 }
+    { month: 'Jan', total: 12.0, growth: 5.2 },
+    { month: 'Feb', total: 12.6, growth: 4.8 },
+    { month: 'Mar', total: 13.2, growth: 5.3 },
+    { month: 'Apr', total: 13.6, growth: 2.9 },
+    { month: 'May', total: 14.2, growth: 4.9 },
+    { month: 'Jun', total: 14.5, growth: 2.0 }
   ];
 
   return (
@@ -36,7 +34,7 @@ const FinancialSummary = () => {
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">$15.15M</p>
+            <p className="text-2xl font-bold">$14.5M</p>
             <p className="text-xs text-green-600">+8.5% YoY</p>
           </CardContent>
         </Card>
@@ -46,7 +44,7 @@ const FinancialSummary = () => {
             <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">$3.6M</p>
+            <p className="text-2xl font-bold">$3.5M</p>
             <p className="text-xs text-green-600">+12.1% YoY</p>
           </CardContent>
         </Card>
@@ -56,7 +54,7 @@ const FinancialSummary = () => {
             <CardTitle className="text-sm font-medium">Profit Margin</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">23.8%</p>
+            <p className="text-2xl font-bold">24.1%</p>
             <p className="text-xs text-green-600">+2.3% YoY</p>
           </CardContent>
         </Card>
@@ -66,7 +64,7 @@ const FinancialSummary = () => {
             <CardTitle className="text-sm font-medium">ROI</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">18.5%</p>
+            <p className="text-2xl font-bold">19.2%</p>
             <p className="text-xs text-green-600">+1.8% YoY</p>
           </CardContent>
         </Card>

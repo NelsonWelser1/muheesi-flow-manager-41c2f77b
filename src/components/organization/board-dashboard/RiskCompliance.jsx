@@ -32,15 +32,6 @@ const RiskCompliance = () => {
       nextAudit: "2024-11-01",
       openIssues: 3,
       criticalIssues: 0
-    },
-    {
-      company: "Fresheco Farming Limited",
-      overallRisk: "Medium",
-      compliance: 89,
-      lastAudit: "2024-03-15",
-      nextAudit: "2024-09-15",
-      openIssues: 7,
-      criticalIssues: 1
     }
   ];
 
