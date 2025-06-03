@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Bell, DollarSign, Receipt, FileText, Calculator, CreditCard, Users } from "lucide-react";
@@ -10,12 +9,28 @@ import CustomerInvoiceForm from '../sales/forms/CustomerInvoiceForm';
 import BillsExpensesForm from '../accounts/forms/BillsExpensesForm';
 import PaymentsReceiptsForm from '../accounts/forms/PaymentsReceiptsForm';
 import PayrollPayslipsForm from '../accounts/forms/PayrollPayslipsForm';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useOperationalAlerts } from '@/hooks/useOperationalAlerts';
 
 const DairySectionView = ({ section, onBack }) => {
   const [activeForm, setActiveForm] = React.useState(null);
   const [activeCategory, setActiveCategory] = React.useState(null);
+  const { addNotification } = useNotifications();
+  const { operationalAlerts } = useOperationalAlerts();
 
   console.log('Rendering DairySectionView for:', section.title);
+
+  // Add sample notification when section loads
+  React.useEffect(() => {
+    if (section.title) {
+      addNotification({
+        title: `${section.title} Accessed`,
+        message: `You have accessed the ${section.title} section`,
+        type: 'info'
+      });
+    }
+  }, [section.title, addNotification]);
 
   const renderContent = () => {
     if (activeForm === 'sales') {
@@ -160,16 +175,27 @@ const DairySectionView = ({ section, onBack }) => {
       </button>
       <div className="flex items-center justify-between mb-6 border-b pb-4">
         <h1 className="text-2xl font-bold">{section.title}</h1>
-        <div className="flex items-center gap-2">
-          <Badge className={`bg-${section.status === 'operational' ? 'green' : section.status === 'maintenance' ? 'yellow' : 'red'}-500`}>
-            {section.status.charAt(0).toUpperCase() + section.status.slice(1)}
-          </Badge>
-          {section.notifications > 0 && (
-            <Badge variant="secondary">
-              <Bell className="h-4 w-4 mr-1" />
-              {section.notifications} notifications
+        <div className="flex items-center gap-4">
+          {/* Notification Center */}
+          <NotificationCenter />
+          
+          {/* Section Status and Notifications */}
+          <div className="flex items-center gap-2">
+            <Badge className={`bg-${section.status === 'operational' ? 'green' : section.status === 'maintenance' ? 'yellow' : 'red'}-500`}>
+              {section.status.charAt(0).toUpperCase() + section.status.slice(1)}
             </Badge>
-          )}
+            {section.notifications > 0 && (
+              <Badge variant="secondary">
+                <Bell className="h-4 w-4 mr-1" />
+                {section.notifications} notifications
+              </Badge>
+            )}
+            {operationalAlerts.length > 0 && (
+              <Badge variant="destructive">
+                {operationalAlerts.length} operational alerts
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 
