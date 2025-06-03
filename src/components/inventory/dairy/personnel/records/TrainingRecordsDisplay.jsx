@@ -39,7 +39,7 @@ const TrainingRecordsDisplay = () => {
     endIndex,
     totalItems,
     handlePageChange
-  } = usePaymentsPagination(sortedRecords, 10);
+  } = usePaymentsPagination(sortedRecords, 10); // Set to exactly 10 records per page
 
   const handleTimeRangeChange = (range) => {
     setTimeRange(range);
