@@ -17,18 +17,18 @@ const RecordTableRow = ({ record, onViewRecord }) => {
   };
 
   return (
-    <TableRow key={record.id}>
-      <TableCell className="font-medium">{record.candidate_name}</TableCell>
-      <TableCell>{record.job_title}</TableCell>
-      <TableCell>{formatDate(record.interview_date_time)}</TableCell>
-      <TableCell>{record.hiring_manager_id}</TableCell>
-      <TableCell>
+    <TableRow key={record.id} className="whitespace-nowrap">
+      <TableCell className="font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-32">{record.candidate_name}</TableCell>
+      <TableCell className="whitespace-nowrap overflow-hidden text-ellipsis max-w-32">{record.job_title}</TableCell>
+      <TableCell className="whitespace-nowrap overflow-hidden text-ellipsis max-w-40">{formatDate(record.interview_date_time)}</TableCell>
+      <TableCell className="whitespace-nowrap overflow-hidden text-ellipsis max-w-32">{record.hiring_manager_id}</TableCell>
+      <TableCell className="whitespace-nowrap">
         <Badge className={getStatusColor(record.status)}>
           {record.status}
         </Badge>
       </TableCell>
-      <TableCell>{formatDate(record.created_at)}</TableCell>
-      <TableCell>
+      <TableCell className="whitespace-nowrap overflow-hidden text-ellipsis max-w-40">{formatDate(record.created_at)}</TableCell>
+      <TableCell className="whitespace-nowrap">
         <RecordActionButtons 
           record={record}
           onViewRecord={onViewRecord}

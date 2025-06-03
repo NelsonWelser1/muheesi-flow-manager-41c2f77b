@@ -35,8 +35,8 @@ const RecruitmentRecordsTable = ({ records, isLoading, error }) => {
 
   return (
     <>
-      <div className="border rounded-md overflow-hidden">
-        <Table>
+      <div className="border rounded-md overflow-x-auto">
+        <Table className="min-w-full">
           <SortableTableHeader 
             onSort={handleSort} 
             sortColumn={sortColumn} 
