@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RefreshCw, Search } from "lucide-react";
+
 const RecordsToolbar = ({
   onTimeRangeChange,
   onSearch,
@@ -10,26 +12,34 @@ const RecordsToolbar = ({
   timeRange,
   searchTerm
 }) => {
-  return <div className="flex items-center space-x-2 px-0 py-0 mx-0">
-      <div className="relative w-64">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search records..." className="pl-8" value={searchTerm} onChange={e => onSearch(e.target.value)} />
+  return (
+    <div className="flex items-center gap-2 px-0 py-0 mx-0">
+      <div className="relative w-48">
+        <Search className="absolute left-2 top-2 h-3 w-3 text-muted-foreground" />
+        <Input 
+          placeholder="Search records..." 
+          className="pl-7 h-8 text-xs" 
+          value={searchTerm} 
+          onChange={e => onSearch(e.target.value)} 
+        />
       </div>
       <Select value={timeRange} onValueChange={onTimeRangeChange}>
-        <SelectTrigger className="w-36">
-          <SelectValue placeholder="Select Range" />
+        <SelectTrigger className="w-28 h-8 text-xs">
+          <SelectValue placeholder="Range" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="hour">Past Hour</SelectItem>
-          <SelectItem value="day">Past Day</SelectItem>
-          <SelectItem value="week">Past Week</SelectItem>
-          <SelectItem value="month">Past Month</SelectItem>
-          <SelectItem value="year">Past Year</SelectItem>
+          <SelectItem value="hour">Hour</SelectItem>
+          <SelectItem value="day">Day</SelectItem>
+          <SelectItem value="week">Week</SelectItem>
+          <SelectItem value="month">Month</SelectItem>
+          <SelectItem value="year">Year</SelectItem>
         </SelectContent>
       </Select>
-      <Button size="icon" variant="outline" onClick={onRefresh}>
-        <RefreshCw className="h-4 w-4" />
+      <Button size="sm" variant="outline" onClick={onRefresh} className="h-8 w-8 p-0">
+        <RefreshCw className="h-3 w-3" />
       </Button>
-    </div>;
+    </div>
+  );
 };
+
 export default RecordsToolbar;
