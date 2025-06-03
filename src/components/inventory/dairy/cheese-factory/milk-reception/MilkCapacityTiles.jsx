@@ -1,16 +1,18 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
 import { Droplet, Thermometer, TrendingUp } from 'lucide-react';
 import DirectProcessingAlerts from './DirectProcessingAlerts';
 import { useDirectProcessingAlerts } from './hooks/useDirectProcessingAlerts';
-
 const MilkCapacityTiles = () => {
-  const { data: milkReceptionData } = useMilkReception();
-  
+  const {
+    data: milkReceptionData
+  } = useMilkReception();
+
   // Use the new alert system
-  const { activeAlerts } = useDirectProcessingAlerts();
+  const {
+    activeAlerts
+  } = useDirectProcessingAlerts();
 
   // Tank capacity limits (in liters)
   const TANK_CAPACITIES = {
@@ -18,31 +20,24 @@ const MilkCapacityTiles = () => {
     'Tank B': 3000,
     'Direct-Processing': null // Unlimited capacity
   };
-
-  const calculateTankData = (tankName) => {
+  const calculateTankData = tankName => {
     if (!milkReceptionData || milkReceptionData.length === 0) {
-      return { 
-        currentVolume: 0, 
-        lastTemperature: 0, 
+      return {
+        currentVolume: 0,
+        lastTemperature: 0,
         capacity: TANK_CAPACITIES[tankName] || null,
         utilizationPercentage: 0
       };
     }
-
-    const tankRecords = milkReceptionData
-      .filter(record => record.tank_number === tankName)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
+    const tankRecords = milkReceptionData.filter(record => record.tank_number === tankName).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const currentVolume = tankRecords.reduce((total, record) => {
       return total + (record.milk_volume || 0);
     }, 0);
-
     const lastTemperature = tankRecords.length > 0 ? tankRecords[0].temperature : 0;
     const capacity = TANK_CAPACITIES[tankName];
-    
-    // For unlimited capacity (Direct Processing), utilization is always 0
-    const utilizationPercentage = capacity && capacity > 0 ? Math.min((currentVolume / capacity) * 100, 100) : 0;
 
+    // For unlimited capacity (Direct Processing), utilization is always 0
+    const utilizationPercentage = capacity && capacity > 0 ? Math.min(currentVolume / capacity * 100, 100) : 0;
     return {
       currentVolume: Math.max(0, currentVolume),
       lastTemperature,
@@ -50,29 +45,23 @@ const MilkCapacityTiles = () => {
       utilizationPercentage
     };
   };
-
   const tankA = calculateTankData('Tank A');
   const tankB = calculateTankData('Tank B');
   const directProcessing = calculateTankData('Direct-Processing');
-
   const totalCurrentVolume = tankA.currentVolume + tankB.currentVolume + directProcessing.currentVolume;
   const totalCapacity = tankA.capacity + tankB.capacity; // Don't include unlimited capacity in total
-  const totalUtilization = totalCapacity > 0 ? (totalCurrentVolume / totalCapacity) * 100 : 0;
-
-  const getTileColor = (percentage) => {
+  const totalUtilization = totalCapacity > 0 ? totalCurrentVolume / totalCapacity * 100 : 0;
+  const getTileColor = percentage => {
     if (percentage >= 90) return 'bg-red-50 border-red-200';
     if (percentage >= 70) return 'bg-yellow-50 border-yellow-200';
     return 'bg-green-50 border-green-200';
   };
-
-  const getUtilizationColor = (percentage) => {
+  const getUtilizationColor = percentage => {
     if (percentage >= 90) return 'text-red-600';
     if (percentage >= 70) return 'text-yellow-600';
     return 'text-green-600';
   };
-
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       {/* Direct Processing Alerts */}
       <DirectProcessingAlerts />
       
@@ -216,18 +205,7 @@ const MilkCapacityTiles = () => {
       </div>
       
       {/* Alert Status Indicator */}
-      {activeAlerts.length > 0 && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center gap-2 text-red-800">
-            <span className="animate-pulse">🚨</span>
-            <span className="font-medium">
-              Milk in Direct Processing needs immediate attention - transfer to storage tanks now!
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+      {activeAlerts.length > 0}
+    </div>;
 };
-
 export default MilkCapacityTiles;
