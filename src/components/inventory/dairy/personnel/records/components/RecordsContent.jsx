@@ -4,19 +4,33 @@ import { TabsContent } from "@/components/ui/tabs";
 import RecruitmentRecordsTable from '../RecruitmentRecordsTable';
 
 const RecordsContent = ({ records, isLoading, error }) => {
-  const statuses = ['all', 'Pending', 'In Progress', 'Scheduled', 'Completed', 'Rejected'];
-  
   return (
     <>
-      {statuses.map(status => (
-        <TabsContent key={status} value={status} className="mt-0">
-          <RecruitmentRecordsTable 
-            records={records} 
-            isLoading={isLoading} 
-            error={error} 
-          />
-        </TabsContent>
-      ))}
+      <TabsContent value="all" className="mt-0">
+        <div id="recruitment-records-table">
+          <RecruitmentRecordsTable records={records} isLoading={isLoading} error={error} />
+        </div>
+      </TabsContent>
+      <TabsContent value="pending" className="mt-0">
+        <div id="recruitment-records-table">
+          <RecruitmentRecordsTable records={records} isLoading={isLoading} error={error} />
+        </div>
+      </TabsContent>
+      <TabsContent value="interviewed" className="mt-0">
+        <div id="recruitment-records-table">
+          <RecruitmentRecordsTable records={records} isLoading={isLoading} error={error} />
+        </div>
+      </TabsContent>
+      <TabsContent value="hired" className="mt-0">
+        <div id="recruitment-records-table">
+          <RecruitmentRecordsTable records={records} isLoading={isLoading} error={error} />
+        </div>
+      </TabsContent>
+      <TabsContent value="rejected" className="mt-0">
+        <div id="recruitment-records-table">
+          <RecruitmentRecordsTable records={records} isLoading={isLoading} error={error} />
+        </div>
+      </TabsContent>
     </>
   );
 };
