@@ -43,16 +43,6 @@ const OperationalStatus = () => {
       activeProjects: 4,
       criticalAlerts: 0,
       status: "Good"
-    },
-    {
-      company: "Fresheco Farming Limited",
-      facilities: 3,
-      capacity: 78,
-      efficiency: 81,
-      uptime: 92.1,
-      activeProjects: 2,
-      criticalAlerts: 1,
-      status: "Monitor"
     }
   ];
 
