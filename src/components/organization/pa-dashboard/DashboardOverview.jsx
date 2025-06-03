@@ -1,224 +1,243 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, CheckSquare, Briefcase, TrendingUp, BellRing, Clock } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Building2, 
+  Users, 
+  TrendingUp, 
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  Target,
+  Calendar,
+  FileText
+} from 'lucide-react';
 
 const DashboardOverview = ({ selectedEntity }) => {
+  const companyOverview = [
+    {
+      name: "Grand Berna Dairies",
+      status: "Excellent",
+      revenue: "8.5M UGX",
+      employees: 285,
+      activeProjects: 8,
+      pendingTasks: 3,
+      urgentItems: 0,
+      efficiency: 94
+    },
+    {
+      name: "KAJON Coffee Limited", 
+      status: "Good",
+      revenue: "3.2M UGX",
+      employees: 167,
+      activeProjects: 5,
+      pendingTasks: 7,
+      urgentItems: 1,
+      efficiency: 89
+    },
+    {
+      name: "Kyalima Farmers Limited",
+      status: "Good", 
+      revenue: "2.8M UGX",
+      employees: 285,
+      activeProjects: 6,
+      pendingTasks: 4,
+      urgentItems: 0,
+      efficiency: 85
+    }
+  ];
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Excellent': return 'bg-green-500';
+      case 'Good': return 'bg-blue-500';
+      case 'Monitor': return 'bg-yellow-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const totalRevenue = companyOverview.reduce((sum, company) => {
+    return sum + parseFloat(company.revenue.replace('M UGX', ''));
+  }, 0);
+
+  const totalEmployees = companyOverview.reduce((sum, company) => sum + company.employees, 0);
+  const totalProjects = companyOverview.reduce((sum, company) => sum + company.activeProjects, 0);
+  const totalUrgent = companyOverview.reduce((sum, company) => sum + company.urgentItems, 0);
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Executive Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              Today's Tasks
+              <DollarSign className="h-4 w-4" />
+              Total Portfolio Revenue
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
-            <p className="text-xs text-muted-foreground">3 completed</p>
+            <p className="text-2xl font-bold">{totalRevenue.toFixed(1)}M UGX</p>
+            <p className="text-xs text-green-600">+8.5% YoY Growth</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <CheckSquare className="h-4 w-4 text-muted-foreground" />
-              Pending Approvals
+              <Users className="h-4 w-4" />
+              Total Workforce
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5</div>
-            <p className="text-xs text-muted-foreground">2 urgent</p>
+            <p className="text-2xl font-bold">{totalEmployees}</p>
+            <p className="text-xs text-blue-600">Across all entities</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Briefcase className="h-4 w-4 text-muted-foreground" />
+              <Target className="h-4 w-4" />
               Active Projects
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">4 due this week</p>
+            <p className="text-2xl font-bold">{totalProjects}</p>
+            <p className="text-xs text-muted-foreground">Strategic initiatives</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              Weekly Progress
+              <AlertCircle className="h-4 w-4" />
+              Urgent Items
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">85%</div>
-            <p className="text-xs text-muted-foreground">+12% from last week</p>
+            <p className="text-2xl font-bold text-red-600">{totalUrgent}</p>
+            <p className="text-xs text-muted-foreground">Require CEO attention</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckSquare className="h-5 w-5 text-primary" />
-              Upcoming Tasks
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 mt-1">
-                    <div className={`w-3 h-3 rounded-full ${i === 1 ? 'bg-red-500' : i === 2 ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">
-                      {i === 1 ? 'Review Coffee Purchasing Contract' : 
-                       i === 2 ? 'Prepare Quarterly Report' : 
-                       i === 3 ? 'Meet with UCDA Officials' : 
-                       'Follow up on Milk Delivery Schedules'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Due {i === 1 ? 'Today, 5:00 PM' : 
-                           i === 2 ? 'Tomorrow, 10:00 AM' : 
-                           i === 3 ? 'Apr 20, 2025' : 
-                           'Apr 22, 2025'}
-                    </p>
+      {/* Company Status Overview */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Company Performance Overview</h3>
+        {companyOverview.map((company, index) => (
+          <Card key={index}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  {company.name}
+                </CardTitle>
+                <Badge className={getStatusColor(company.status)}>
+                  {company.status}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Revenue</p>
+                  <p className="text-xl font-bold">{company.revenue}</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground">Employees</p>
+                  <p className="text-xl font-bold">{company.employees}</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Efficiency</p>
+                  <div className="space-y-1">
+                    <Progress value={company.efficiency} className="h-2" />
+                    <p className="text-sm font-medium">{company.efficiency}%</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BellRing className="h-5 w-5 text-primary" />
-              Recent Notifications
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      i === 1 ? 'bg-blue-100 text-blue-600' : 
-                      i === 2 ? 'bg-green-100 text-green-600' : 
-                      i === 3 ? 'bg-yellow-100 text-yellow-600' : 
-                      'bg-purple-100 text-purple-600'
-                    }`}>
-                      {i === 1 ? <Calendar className="h-4 w-4" /> : 
-                       i === 2 ? <CheckSquare className="h-4 w-4" /> : 
-                       i === 3 ? <Briefcase className="h-4 w-4" /> : 
-                       <Clock className="h-4 w-4" />}
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">
-                      {i === 1 ? 'Meeting scheduled with UCDA' : 
-                       i === 2 ? 'Invoice approved by Finance' : 
-                       i === 3 ? 'New order from Cafe Javas' : 
-                       'Milk production report due'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {i === 1 ? '30 minutes ago' : 
-                       i === 2 ? '2 hours ago' : 
-                       i === 3 ? 'Yesterday, 4:30 PM' : 
-                       'Yesterday, 9:15 AM'}
-                    </p>
-                  </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Projects</p>
+                  <p className="text-xl font-bold flex items-center gap-1">
+                    {company.activeProjects}
+                    <Target className="h-4 w-4 text-blue-500" />
+                  </p>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              Today's Schedule
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { time: '09:00 AM', event: 'Executive Team Meeting', location: 'Conference Room A' },
-                { time: '11:30 AM', event: 'Vendor Negotiation', location: 'Office' },
-                { time: '01:00 PM', event: 'Lunch with Ministry Officials', location: 'Serena Hotel' },
-                { time: '03:30 PM', event: 'Review Export Documentation', location: 'Office' }
-              ].map((item, i) => (
-                <div key={i} className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 text-xs font-medium text-muted-foreground w-16">
-                    {item.time}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{item.event}</p>
-                    <p className="text-xs text-muted-foreground">{item.location}</p>
-                  </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground">Pending Tasks</p>
+                  <p className="text-xl font-bold flex items-center gap-1">
+                    {company.pendingTasks}
+                    <Clock className="h-4 w-4 text-yellow-500" />
+                  </p>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground">Urgent Items</p>
+                  <p className="text-xl font-bold flex items-center gap-1">
+                    {company.urgentItems}
+                    {company.urgentItems === 0 ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                    )}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming Events</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Calendar className="h-6 w-6 text-primary" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">Event {i}</p>
-                    <p className="text-xs text-muted-foreground">Apr {15 + i}, 2025 • 10:00 AM</p>
-                  </div>
+      {/* Quick Actions for PA */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Today's Priority Actions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <div>
+                  <p className="font-medium">Review KAJON Coffee export documentation</p>
+                  <p className="text-sm text-muted-foreground">Deadline: Today 3:00 PM</p>
                 </div>
-              ))}
+              </div>
+              <Badge variant="destructive">Urgent</Badge>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="p-4 hover:bg-accent cursor-pointer">
-                <CheckSquare className="h-6 w-6 mb-2 text-primary" />
-                <p className="text-sm font-medium">New Task</p>
-              </Card>
-              <Card className="p-4 hover:bg-accent cursor-pointer">
-                <Calendar className="h-6 w-6 mb-2 text-primary" />
-                <p className="text-sm font-medium">Schedule</p>
-              </Card>
-              <Card className="p-4 hover:bg-accent cursor-pointer">
-                <Briefcase className="h-6 w-6 mb-2 text-primary" />
-                <p className="text-sm font-medium">Projects</p>
-              </Card>
-              <Card className="p-4 hover:bg-accent cursor-pointer">
-                <TrendingUp className="h-6 w-6 mb-2 text-primary" />
-                <p className="text-sm font-medium">Reports</p>
-              </Card>
+            
+            <div className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <div>
+                  <p className="font-medium">Prepare weekly performance summary for CEO</p>
+                  <p className="text-sm text-muted-foreground">Due: Tomorrow</p>
+                </div>
+              </div>
+              <Badge variant="secondary">Important</Badge>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            
+            <div className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div>
+                  <p className="font-medium">Schedule board meeting for next quarter review</p>
+                  <p className="text-sm text-muted-foreground">This week</p>
+                </div>
+              </div>
+              <Badge variant="outline">Scheduled</Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

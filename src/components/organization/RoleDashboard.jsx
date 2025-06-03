@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SystemAdminDashboard from './SystemAdminDashboard';
 import CEODashboard from './CEODashboard';
 import BoardOfDirectorsDashboard from './BoardOfDirectorsDashboard';
+import PADashboard from './pa-dashboard/PADashboard';
 
 const RoleDashboard = ({ role }) => {
   const renderRoleContent = () => {
@@ -16,6 +17,9 @@ const RoleDashboard = ({ role }) => {
       
       case 'Board of Directors':
         return <BoardOfDirectorsDashboard />;
+      
+      case "CEO's Personal Assistant":
+        return <PADashboard />;
       
       default:
         return (
