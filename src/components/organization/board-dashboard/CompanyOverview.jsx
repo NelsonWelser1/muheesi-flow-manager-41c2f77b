@@ -58,21 +58,6 @@ const CompanyOverview = () => {
         efficiency: "85%",
         quality: "92%"
       }
-    },
-    {
-      name: "Fresheco Farming Limited",
-      sector: "Sustainable Agriculture",
-      revenue: "$650K",
-      employees: 78,
-      performance: 75,
-      status: "Developing",
-      statusColor: "bg-yellow-500",
-      growth: "+15.1%",
-      keyMetrics: {
-        production: "450 tons",
-        efficiency: "81%",
-        quality: "88%"
-      }
     }
   ];
 
