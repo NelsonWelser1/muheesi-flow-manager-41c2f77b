@@ -1,6 +1,6 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import GoodsReceiptForm from '../GoodsReceiptForm';
 import GoodsIssueForm from '../GoodsIssueForm';
 import MovementTracking from '../MovementTracking';
@@ -31,11 +31,33 @@ const ColdRoomTabs = ({ userId, username }) => {
 
       <TabsContent value="goods-issue">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Cold Room Goods Issue</CardTitle>
+            <Button variant="outline" size="sm">
+              Access
+            </Button>
           </CardHeader>
           <CardContent>
-            <GoodsIssueForm userId={userId} username={username} />
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-semibold text-sm text-gray-600 mb-2">Recent Issues</h3>
+                  <p className="text-2xl font-bold">0</p>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-semibold text-sm text-gray-600 mb-2">Pending Issues</h3>
+                  <p className="text-2xl font-bold">0</p>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-semibold text-sm text-gray-600 mb-2">Total Quantity Issued</h3>
+                  <p className="text-2xl font-bold">0 kg</p>
+                </div>
+              </div>
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold mb-3">Goods Issue Preview</h3>
+                <p className="text-gray-500 text-center py-8">No goods issues recorded yet</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
