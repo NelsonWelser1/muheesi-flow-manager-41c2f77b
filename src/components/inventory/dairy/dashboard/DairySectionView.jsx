@@ -160,10 +160,7 @@ const DairySectionView = ({
             <Badge className={`bg-${section.status === 'operational' ? 'green' : section.status === 'maintenance' ? 'yellow' : 'red'}-500`}>
               {section.status.charAt(0).toUpperCase() + section.status.slice(1)}
             </Badge>
-            {section.notifications > 0 && <Badge variant="secondary">
-                <Bell className="h-4 w-4 mr-1" />
-                {section.notifications} notifications
-              </Badge>}
+            {section.notifications > 0}
             {operationalAlerts.length > 0 && <Popover>
                 <PopoverTrigger asChild>
                   
