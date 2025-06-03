@@ -3,31 +3,88 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Download, FileText, FileSpreadsheet, File } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { exportToPDF, exportToExcel, exportToCSV } from '../utils/exportUtils';
 
 const DossierExportActions = ({ dossiers, fileName = 'employee_dossiers' }) => {
+  const { toast } = useToast();
+
   const handleExportPDF = () => {
     if (!dossiers || dossiers.length === 0) {
-      console.warn('No dossiers to export');
+      toast({
+        title: "No data to export",
+        description: "There are no dossiers to export.",
+        variant: "destructive"
+      });
       return;
     }
-    exportToPDF(dossiers, fileName);
+
+    try {
+      exportToPDF(dossiers, fileName);
+      toast({
+        title: "Export Successful",
+        description: "PDF file has been generated and downloaded successfully.",
+      });
+    } catch (error) {
+      console.error('PDF export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export PDF. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleExportExcel = () => {
     if (!dossiers || dossiers.length === 0) {
-      console.warn('No dossiers to export');
+      toast({
+        title: "No data to export",
+        description: "There are no dossiers to export.",
+        variant: "destructive"
+      });
       return;
     }
-    exportToExcel(dossiers, fileName);
+
+    try {
+      exportToExcel(dossiers, fileName);
+      toast({
+        title: "Export Successful",
+        description: "Excel file has been generated and downloaded successfully.",
+      });
+    } catch (error) {
+      console.error('Excel export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export Excel. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleExportCSV = () => {
     if (!dossiers || dossiers.length === 0) {
-      console.warn('No dossiers to export');
+      toast({
+        title: "No data to export",
+        description: "There are no dossiers to export.",
+        variant: "destructive"
+      });
       return;
     }
-    exportToCSV(dossiers, fileName);
+
+    try {
+      exportToCSV(dossiers, fileName);
+      toast({
+        title: "Export Successful",
+        description: "CSV file has been generated and downloaded successfully.",
+      });
+    } catch (error) {
+      console.error('CSV export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export CSV. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

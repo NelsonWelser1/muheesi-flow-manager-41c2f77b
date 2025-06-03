@@ -17,7 +17,7 @@ const DossierHeader = ({ dossiers }) => {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Employee Dossiers</title>
+          <title>Employee Dossiers Report</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -25,6 +25,10 @@ const DossierHeader = ({ dossiers }) => {
             th { background-color: #f2f2f2; font-weight: bold; }
             .header { text-align: center; margin-bottom: 20px; }
             .print-date { text-align: right; font-size: 12px; margin-bottom: 10px; }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
           </style>
         </head>
         <body>
@@ -39,6 +43,7 @@ const DossierHeader = ({ dossiers }) => {
     `);
     printWindow.document.close();
     printWindow.print();
+    printWindow.close();
   };
 
   return (
