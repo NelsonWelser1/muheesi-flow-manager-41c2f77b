@@ -8,15 +8,15 @@ import { FileText, Receipt, BarChart3, Percent } from "lucide-react";
 import QuotationForm from './QuotationForm';
 import QuotationsList from './QuotationsList';
 import ProformaInvoiceManager from './ProformaInvoiceManager';
-import { useQuotations, useCreateQuotation, useDeleteQuotation } from '@/integrations/supabase/hooks/useQuotations';
+import { useQuotes, useCreateQuote, useDeleteQuote } from '@/integrations/supabase/hooks/useQuotes';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
 const QuoteManagement = ({ viewOnly = false }) => {
   const { toast } = useToast();
-  const { data: quotes, isLoading } = useQuotations();
-  const createQuote = useCreateQuotation();
-  const deleteQuote = useDeleteQuotation();
+  const { data: quotes, isLoading } = useQuotes();
+  const createQuote = useCreateQuote();
+  const deleteQuote = useDeleteQuote();
   const [view, setView] = useState('list');
   const [activeTab, setActiveTab] = useState('quotes');
 
