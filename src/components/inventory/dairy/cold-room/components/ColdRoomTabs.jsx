@@ -15,7 +15,7 @@ const ColdRoomTabs = ({ userId, username }) => {
         <TabsTrigger value="goods-issue">Goods Issue</TabsTrigger>
         <TabsTrigger value="movement">Movement Tracking</TabsTrigger>
         <TabsTrigger value="monitoring">Real-Time Monitoring</TabsTrigger>
-        <TabsTrigger value="inventory">Inventory Summary</TabsTrigger>
+        <TabsTrigger value="inventory">All Inventory Records</TabsTrigger>
       </TabsList>
 
       <TabsContent value="goods-receipt">
@@ -65,7 +65,7 @@ const ColdRoomTabs = ({ userId, username }) => {
       <TabsContent value="inventory">
         <Card>
           <CardHeader>
-            <CardTitle>Inventory Summary</CardTitle>
+            <CardTitle>All Inventory Records</CardTitle>
           </CardHeader>
           <CardContent>
             <InventorySummary />
