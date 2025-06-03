@@ -1,8 +1,13 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { Bell, DollarSign, Receipt, FileText, Calculator, CreditCard, Users } from "lucide-react";
+import { Bell, DollarSign, Receipt, FileText, Calculator, CreditCard, Users, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import SalesOrderForm from '../sales/forms/SalesOrderForm';
 import DeliveryNotesForm from '../sales/forms/DeliveryNotesForm';
 import CustomerInvoiceForm from '../sales/forms/CustomerInvoiceForm';
@@ -191,9 +196,40 @@ const DairySectionView = ({ section, onBack }) => {
               </Badge>
             )}
             {operationalAlerts.length > 0 && (
-              <Badge variant="destructive">
-                {operationalAlerts.length} operational alerts
-              </Badge>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Badge variant="destructive" className="cursor-pointer hover:bg-red-700">
+                    <AlertTriangle className="h-4 w-4 mr-1" />
+                    {operationalAlerts.length} operational alerts
+                  </Badge>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 max-h-[400px] overflow-auto" align="end">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Operational Alerts</h4>
+                    {operationalAlerts.map((alert) => (
+                      <div
+                        key={alert.id}
+                        className="p-3 rounded-lg border bg-red-50 border-red-200"
+                      >
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <h5 className="text-sm font-medium text-red-900">
+                              {alert.title}
+                            </h5>
+                            <p className="text-xs text-red-700 mt-1">
+                              {alert.message}
+                            </p>
+                            <p className="text-xs text-red-600 mt-1">
+                              {new Date(alert.timestamp).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
         </div>
