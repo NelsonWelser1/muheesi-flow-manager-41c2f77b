@@ -157,7 +157,7 @@ const DirectProcessingAlerts = () => {
   };
 
   return (
-    <Card className="border-orange-200 bg-orange-50">
+    <Card className="border-orange-200 bg-orange-50 w-80 max-w-sm">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-orange-800">
           <AlertTriangle className="h-5 w-5" />
