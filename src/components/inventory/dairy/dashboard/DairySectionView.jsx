@@ -10,10 +10,15 @@ import CustomerInvoiceForm from '../sales/forms/CustomerInvoiceForm';
 import BillsExpensesForm from '../accounts/forms/BillsExpensesForm';
 import PaymentsReceiptsForm from '../accounts/forms/PaymentsReceiptsForm';
 import PayrollPayslipsForm from '../accounts/forms/PayrollPayslipsForm';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
+import { useOperationalAlerts } from '@/hooks/useOperationalAlerts';
 
 const DairySectionView = ({ section, onBack }) => {
   const [activeForm, setActiveForm] = React.useState(null);
   const [activeCategory, setActiveCategory] = React.useState(null);
+
+  // Enable operational alerts
+  useOperationalAlerts();
 
   console.log('Rendering DairySectionView for:', section.title);
 
@@ -160,16 +165,19 @@ const DairySectionView = ({ section, onBack }) => {
       </button>
       <div className="flex items-center justify-between mb-6 border-b pb-4">
         <h1 className="text-2xl font-bold">{section.title}</h1>
-        <div className="flex items-center gap-2">
-          <Badge className={`bg-${section.status === 'operational' ? 'green' : section.status === 'maintenance' ? 'yellow' : 'red'}-500`}>
-            {section.status.charAt(0).toUpperCase() + section.status.slice(1)}
-          </Badge>
-          {section.notifications > 0 && (
-            <Badge variant="secondary">
-              <Bell className="h-4 w-4 mr-1" />
-              {section.notifications} notifications
+        <div className="flex items-center gap-4">
+          <NotificationCenter />
+          <div className="flex items-center gap-2">
+            <Badge className={`bg-${section.status === 'operational' ? 'green' : section.status === 'maintenance' ? 'yellow' : 'red'}-500`}>
+              {section.status.charAt(0).toUpperCase() + section.status.slice(1)}
             </Badge>
-          )}
+            {section.notifications > 0 && (
+              <Badge variant="secondary">
+                <Bell className="h-4 w-4 mr-1" />
+                {section.notifications} notifications
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 
