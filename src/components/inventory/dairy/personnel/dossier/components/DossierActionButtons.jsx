@@ -16,7 +16,6 @@ const DossierActionButtons = ({
       title: "Export Started",
       description: "Your report is being generated and will download shortly.",
     });
-    // Implement export functionality here
   };
 
   return (
@@ -29,9 +28,6 @@ const DossierActionButtons = ({
       </Button>
       <Button variant="outline" onClick={onScheduleTask} className="flex items-center gap-2">
         <Calendar className="h-4 w-4" /> Schedule Task
-      </Button>
-      <Button variant="outline" onClick={handleExport} className="flex items-center gap-2">
-        <FileText className="h-4 w-4" /> Export
       </Button>
     </div>
   );
