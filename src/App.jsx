@@ -9,7 +9,6 @@ import Navigation from "./components/Navigation";
 import LandingPage from "./pages/LandingPage";
 import ManageInventory from "./pages/ManageInventory";
 import ManageCompanies from "./pages/ManageCompanies";
-import ExportManagementDashboard from "./components/inventory/kajon/export-business/ExportManagementDashboard";
 import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-business/CoffeeExportManagerDashboard";
 import KashariFarmDashboard from "./components/inventory/kashari/KashariFarmDashboard";
 import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDairyDashboard";
@@ -29,7 +28,6 @@ const App = () => (
               <Route path="/home" element={<Navigate to="/" replace />} />
               <Route path="/manage-inventory" element={<ManageInventory />} />
               <Route path="/manage-companies" element={<ManageCompanies />} />
-              <Route path="/manage-inventory/kajon-export" element={<ExportManagementDashboard />} />
               <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
               <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
               <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
