@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FileText, Trash, Edit, Eye, Download, MoreHorizontal } from 'lucide-react';
-import { useQuotations, useDeleteQuotation } from '@/integrations/supabase/hooks/useQuotations';
+import { useQuotes, useDeleteQuote } from '@/integrations/supabase/hooks/useQuotes';
 import { useToast } from "@/components/ui/use-toast";
 import { format } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -14,16 +14,9 @@ const QuotationsList = ({ viewOnly = false }) => {
   const [endDate, setEndDate] = useState('');
   const { toast } = useToast();
   
-  const { data: quotations, isLoading } = useQuotations(
-    startDate && endDate ? {
-      dateRange: {
-        start: startDate,
-        end: endDate
-      }
-    } : {}
-  );
+  const { data: quotations, isLoading } = useQuotes();
 
-  const deleteQuotation = useDeleteQuotation();
+  const deleteQuotation = useDeleteQuote();
 
   const handleDelete = async (id) => {
     if (viewOnly) {
