@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Bell, DollarSign, Receipt, FileText, Calculator, CreditCard, Users } from "lucide-react";
