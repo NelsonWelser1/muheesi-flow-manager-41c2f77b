@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Download, FileText, FileSpreadsheet, File } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { exportToPDF, exportToExcel, exportToCSV } from '../utils/exportUtils';
 
 const DossierExportActions = ({ dossiers, fileName = 'employee_dossiers' }) => {
