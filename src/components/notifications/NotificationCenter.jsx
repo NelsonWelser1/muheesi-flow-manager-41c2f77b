@@ -17,8 +17,10 @@ const NotificationCenter = () => {
   const { operationalAlerts } = useOperationalAlerts();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Combine all notifications
-  const allNotifications = [...notifications, ...operationalAlerts];
+  // Combine all notifications and sort by timestamp (newest first)
+  const allNotifications = [...notifications, ...operationalAlerts]
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
   const unreadCount = allNotifications.filter(notif => !notif.read).length;
 
   const getNotificationIcon = (type) => {
@@ -36,25 +38,41 @@ const NotificationCenter = () => {
     }
   };
 
-  const getNotificationBgColor = (type) => {
-    switch (type) {
-      case 'success':
-        return 'bg-green-50 border-green-200';
-      case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
-      case 'error':
-        return 'bg-red-50 border-red-200';
-      case 'operational':
-        return 'bg-orange-50 border-orange-200';
-      default:
-        return 'bg-blue-50 border-blue-200';
-    }
+  const getNotificationColors = (type, priority = 'medium') => {
+    // Base colors by type
+    const typeColors = {
+      'success': 'bg-green-50 border-green-200 hover:bg-green-100',
+      'warning': 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100',
+      'error': 'bg-red-50 border-red-200 hover:bg-red-100',
+      'operational': 'bg-orange-50 border-orange-200 hover:bg-orange-100',
+      'info': 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+    };
+
+    // Intensity based on priority
+    const priorityIntensity = {
+      'high': 'ring-2 ring-red-300 shadow-md',
+      'medium': 'ring-1 ring-gray-200',
+      'low': ''
+    };
+
+    return `${typeColors[type] || typeColors.info} ${priorityIntensity[priority] || priorityIntensity.medium}`;
+  };
+
+  const getTimeColor = (type, priority = 'medium') => {
+    if (priority === 'high') return 'text-red-600 font-medium';
+    if (type === 'error' || type === 'operational') return 'text-orange-600';
+    return 'text-gray-500';
   };
 
   const handleNotificationClick = (notification) => {
     if (!notification.read) {
       markAsRead(notification.id);
     }
+  };
+
+  const handleClearNotification = (e, notificationId) => {
+    e.stopPropagation();
+    clearNotification(notificationId);
   };
 
   return (
@@ -95,42 +113,43 @@ const NotificationCenter = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             {allNotifications.length > 0 ? (
-              allNotifications
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                .map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm ${
-                      getNotificationBgColor(notification.type)
-                    } ${!notification.read ? 'ring-1 ring-blue-200' : 'opacity-75'}`}
-                    onClick={() => handleNotificationClick(notification)}
-                  >
-                    <div className="flex items-start gap-3">
-                      {getNotificationIcon(notification.type)}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className={`text-sm font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-600'}`}>
-                            {notification.title}
-                          </h4>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-5 w-5 p-0 hover:bg-red-100"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              clearNotification(notification.id);
-                            }}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {notification.message}
-                        </p>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-xs text-gray-500">
-                            {new Date(notification.timestamp).toLocaleString()}
-                          </span>
+              allNotifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                    getNotificationColors(notification.type, notification.priority)
+                  } ${!notification.read ? 'shadow-sm' : 'opacity-75'}`}
+                  onClick={() => handleNotificationClick(notification)}
+                >
+                  <div className="flex items-start gap-3">
+                    {getNotificationIcon(notification.type)}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className={`text-sm font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-600'}`}>
+                          {notification.title}
+                        </h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 w-5 p-0 hover:bg-red-100 flex-shrink-0"
+                          onClick={(e) => handleClearNotification(e, notification.id)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {notification.message}
+                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className={`text-xs ${getTimeColor(notification.type, notification.priority)}`}>
+                          {new Date(notification.timestamp).toLocaleString()}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {notification.priority === 'high' && (
+                            <Badge variant="destructive" className="text-xs px-1.5 py-0.5">
+                              URGENT
+                            </Badge>
+                          )}
                           {!notification.read && (
                             <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
                           )}
@@ -138,7 +157,8 @@ const NotificationCenter = () => {
                       </div>
                     </div>
                   </div>
-                ))
+                </div>
+              ))
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
