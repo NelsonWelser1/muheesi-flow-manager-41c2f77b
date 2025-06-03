@@ -4,11 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Receipt, Calculator, BarChart3, Percent } from "lucide-react";
+import { FileText, Receipt, BarChart3, Percent } from "lucide-react";
 import QuotationForm from './QuotationForm';
 import QuotationsList from './QuotationsList';
 import ProformaInvoiceManager from './ProformaInvoiceManager';
-import CoffeePriceCalculator from './calculator/CoffeePriceCalculator';
 import { useQuotations, useCreateQuotation, useDeleteQuotation } from '@/integrations/supabase/hooks/useQuotations';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -97,10 +96,6 @@ const QuoteManagement = ({ viewOnly = false }) => {
             <Receipt className="h-4 w-4" />
             <span>Proforma</span>
           </TabsTrigger>
-          <TabsTrigger value="calculator" className="flex items-center gap-2">
-            <Calculator className="h-4 w-4" />
-            <span>Price Calculator</span>
-          </TabsTrigger>
           <TabsTrigger value="pricing" className="flex items-center gap-2">
             <Percent className="h-4 w-4" />
             <span>Pricing Strategy</span>
@@ -144,14 +139,6 @@ const QuoteManagement = ({ viewOnly = false }) => {
 
         <TabsContent value="proforma" className="mt-6">
           <ProformaInvoiceManager viewOnly={viewOnly} />
-        </TabsContent>
-
-        <TabsContent value="calculator" className="mt-6">
-          <Card>
-            <CardContent className="p-6">
-              <CoffeePriceCalculator viewOnly={viewOnly} />
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="pricing" className="mt-6">
