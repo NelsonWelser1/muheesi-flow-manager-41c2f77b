@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
@@ -220,7 +221,7 @@ const MilkCapacityTiles = () => {
           <div className="flex items-center gap-2 text-red-800">
             <span className="animate-pulse">🚨</span>
             <span className="font-medium">
-              {activeAlerts.length} Direct Processing alert{activeAlerts.length > 1 ? 's' : ''} active - Audio alerts enabled
+              Milk in Direct Processing needs immediate attention - transfer to storage tanks now!
             </span>
           </div>
         </div>
