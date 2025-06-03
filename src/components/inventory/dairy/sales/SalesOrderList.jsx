@@ -11,16 +11,16 @@ import {
   Edit, 
   Trash2, 
   Plus,
-  Printer
+  Printer,
+  Calendar
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useSalesOrders } from '@/integrations/supabase/hooks/useSalesOrders';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { CalendarIcon } from "@radix-ui/react-icons";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
@@ -167,12 +167,12 @@ const SalesOrderList = () => {
                 !dateFilter && "text-muted-foreground"
               )}
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
+              <Calendar className="mr-2 h-4 w-4" />
               {dateFilter ? format(dateFilter, "PPP") : "Filter by date"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
+            <CalendarComponent
               mode="single"
               selected={dateFilter}
               onSelect={setDateFilter}
