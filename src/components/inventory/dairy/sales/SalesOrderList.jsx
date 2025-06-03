@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Search, Filter, Eye, Printer } from "lucide-react";
+import { Search, Filter, Eye, Printer, X } from "lucide-react";
 import { useSalesOrders } from '@/integrations/supabase/hooks/useSalesOrders';
 import { format } from 'date-fns';
 
@@ -28,6 +27,7 @@ const SalesOrderList = ({ onViewOrder, searchTerm, onSearchChange }) => {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date-desc');
+  const [showOrdersList, setShowOrdersList] = useState(false);
 
   useEffect(() => {
     fetchSalesOrders();
@@ -220,20 +220,46 @@ const SalesOrderList = ({ onViewOrder, searchTerm, onSearchChange }) => {
     );
   }
 
+  // If orders list is not shown, display only the button
+  if (!showOrdersList) {
+    return (
+      <div className="flex justify-center p-6">
+        <Button 
+          onClick={() => setShowOrdersList(true)}
+          className="flex items-center gap-2"
+        >
+          <Eye className="h-4 w-4" />
+          View Sales Orders
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Sales Orders</CardTitle>
-          <Button 
-            onClick={handlePrintOrders} 
-            variant="outline" 
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <Printer className="h-4 w-4" />
-            Print Orders
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={handlePrintOrders} 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Printer className="h-4 w-4" />
+              Print Orders
+            </Button>
+            <Button 
+              onClick={() => setShowOrdersList(false)}
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              Hide
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
