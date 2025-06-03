@@ -1,33 +1,91 @@
 
 import React from 'react';
-import { Plus, Upload, Calendar, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { Eye, Upload, Calendar, Trash2 } from "lucide-react";
 
 const DossierActionButtons = ({ 
-  onCreateDossier, 
-  onUploadDocuments, 
-  onScheduleTask 
+  dossier, 
+  onView, 
+  onUpload, 
+  onSchedule, 
+  onDelete, 
+  isDeleting,
+  compact = false 
 }) => {
-  const { toast } = useToast();
-  
-  const handleExport = () => {
-    toast({
-      title: "Export Started",
-      description: "Your report is being generated and will download shortly.",
-    });
+  const handleDelete = () => {
+    if (window.confirm(`Are you sure you want to delete the dossier for ${dossier.employee_id}?`)) {
+      onDelete(dossier.id, dossier.employee_id);
+    }
   };
 
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onUpload(dossier)}
+          title="Upload documents"
+        >
+          <Upload className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onSchedule(dossier)}
+          title="Schedule task"
+        >
+          <Calendar className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleDelete}
+          title="Delete dossier"
+          disabled={isDeleting}
+          className="text-red-500 hover:text-red-600"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button onClick={onCreateDossier} className="flex items-center gap-2">
-        <Plus className="h-4 w-4" /> New Dossier
+    <div className="flex items-center justify-center gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onView(dossier)}
+        title="View details"
+      >
+        <Eye className="h-4 w-4" />
       </Button>
-      <Button variant="outline" onClick={onUploadDocuments} className="flex items-center gap-2">
-        <Upload className="h-4 w-4" /> Upload Documents
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onUpload(dossier)}
+        title="Upload documents"
+      >
+        <Upload className="h-4 w-4" />
       </Button>
-      <Button variant="outline" onClick={onScheduleTask} className="flex items-center gap-2">
-        <Calendar className="h-4 w-4" /> Schedule Task
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onSchedule(dossier)}
+        title="Schedule task"
+      >
+        <Calendar className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleDelete}
+        title="Delete dossier"
+        disabled={isDeleting}
+        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+      >
+        <Trash2 className="h-4 w-4" />
       </Button>
     </div>
   );
