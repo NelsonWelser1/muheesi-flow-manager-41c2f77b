@@ -20,7 +20,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Search, Filter, Eye, Printer } from "lucide-react";
-import { useSalesOrders } from './hooks/useSalesOrders';
+import { useSalesOrders } from '@/integrations/supabase/hooks/useSalesOrders';
 import { format } from 'date-fns';
 
 const SalesOrderList = ({ onViewOrder, searchTerm, onSearchChange }) => {
