@@ -3,11 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Bell, DollarSign, Receipt, FileText, Calculator, CreditCard, Users, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import SalesOrderForm from '../sales/forms/SalesOrderForm';
 import DeliveryNotesForm from '../sales/forms/DeliveryNotesForm';
 import CustomerInvoiceForm from '../sales/forms/CustomerInvoiceForm';
@@ -17,13 +13,18 @@ import PayrollPayslipsForm from '../accounts/forms/PayrollPayslipsForm';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useOperationalAlerts } from '@/hooks/useOperationalAlerts';
-
-const DairySectionView = ({ section, onBack }) => {
+const DairySectionView = ({
+  section,
+  onBack
+}) => {
   const [activeForm, setActiveForm] = React.useState(null);
   const [activeCategory, setActiveCategory] = React.useState(null);
-  const { addNotification } = useNotifications();
-  const { operationalAlerts } = useOperationalAlerts();
-
+  const {
+    addNotification
+  } = useNotifications();
+  const {
+    operationalAlerts
+  } = useOperationalAlerts();
   console.log('Rendering DairySectionView for:', section.title);
 
   // Add sample notification when section loads
@@ -36,7 +37,6 @@ const DairySectionView = ({ section, onBack }) => {
       });
     }
   }, [section.title, addNotification]);
-
   const renderContent = () => {
     if (activeForm === 'sales') {
       return <SalesOrderForm onBack={() => setActiveForm(null)} />;
@@ -53,9 +53,7 @@ const DairySectionView = ({ section, onBack }) => {
     }
     return section.component && <section.component />;
   };
-
-  const renderSalesTiles = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+  const renderSalesTiles = () => <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveForm('sales')}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xl font-medium">Sales Orders</CardTitle>
@@ -65,10 +63,7 @@ const DairySectionView = ({ section, onBack }) => {
           <p className="text-sm text-muted-foreground">
             Create and manage sales orders for customers.
           </p>
-          <Button 
-            className="mt-4 w-full bg-blue-600 hover:bg-blue-700"
-            onClick={() => setActiveForm('sales')}
-          >
+          <Button className="mt-4 w-full bg-blue-600 hover:bg-blue-700" onClick={() => setActiveForm('sales')}>
             Create Sales Order
           </Button>
         </CardContent>
@@ -83,10 +78,7 @@ const DairySectionView = ({ section, onBack }) => {
           <p className="text-sm text-muted-foreground">
             Generate delivery notes for product shipments.
           </p>
-          <Button 
-            className="mt-4 w-full bg-green-600 hover:bg-green-700"
-            onClick={() => setActiveForm('delivery')}
-          >
+          <Button className="mt-4 w-full bg-green-600 hover:bg-green-700" onClick={() => setActiveForm('delivery')}>
             Create Delivery Note
           </Button>
         </CardContent>
@@ -101,19 +93,13 @@ const DairySectionView = ({ section, onBack }) => {
           <p className="text-sm text-muted-foreground">
             Generate and manage customer invoices.
           </p>
-          <Button 
-            className="mt-4 w-full bg-purple-600 hover:bg-purple-700"
-            onClick={() => setActiveForm('invoice')}
-          >
+          <Button className="mt-4 w-full bg-purple-600 hover:bg-purple-700" onClick={() => setActiveForm('invoice')}>
             Create Invoice
           </Button>
         </CardContent>
       </Card>
-    </div>
-  );
-
-  const renderAccountsTiles = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    </div>;
+  const renderAccountsTiles = () => <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveForm('bills')}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xl font-medium">Bills & Expenses</CardTitle>
@@ -123,10 +109,7 @@ const DairySectionView = ({ section, onBack }) => {
           <p className="text-sm text-muted-foreground">
             Track and manage company expenses and bills.
           </p>
-          <Button 
-            className="mt-4 w-full bg-red-600 hover:bg-red-700"
-            onClick={() => setActiveForm('bills')}
-          >
+          <Button className="mt-4 w-full bg-red-600 hover:bg-red-700" onClick={() => setActiveForm('bills')}>
             Record Bills & Expenses
           </Button>
         </CardContent>
@@ -141,10 +124,7 @@ const DairySectionView = ({ section, onBack }) => {
           <p className="text-sm text-muted-foreground">
             Track incoming and outgoing payments.
           </p>
-          <Button 
-            className="mt-4 w-full bg-amber-600 hover:bg-amber-700"
-            onClick={() => setActiveForm('payments')}
-          >
+          <Button className="mt-4 w-full bg-amber-600 hover:bg-amber-700" onClick={() => setActiveForm('payments')}>
             Manage Payments
           </Button>
         </CardContent>
@@ -159,23 +139,14 @@ const DairySectionView = ({ section, onBack }) => {
           <p className="text-sm text-muted-foreground">
             Manage employee payroll and generate payslips.
           </p>
-          <Button 
-            className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700"
-            onClick={() => setActiveForm('payroll')}
-          >
+          <Button className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700" onClick={() => setActiveForm('payroll')}>
             Manage Payroll
           </Button>
         </CardContent>
       </Card>
-    </div>
-  );
-
-  return (
-    <div className="max-w-[1200px] mx-auto p-4">
-      <button 
-        onClick={onBack}
-        className="mb-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-      >
+    </div>;
+  return <div className="max-w-[1200px] mx-auto p-4">
+      <button onClick={onBack} className="mb-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
         ← Back to Dashboard
       </button>
       <div className="flex items-center justify-between mb-6 border-b pb-4">
@@ -189,28 +160,18 @@ const DairySectionView = ({ section, onBack }) => {
             <Badge className={`bg-${section.status === 'operational' ? 'green' : section.status === 'maintenance' ? 'yellow' : 'red'}-500`}>
               {section.status.charAt(0).toUpperCase() + section.status.slice(1)}
             </Badge>
-            {section.notifications > 0 && (
-              <Badge variant="secondary">
+            {section.notifications > 0 && <Badge variant="secondary">
                 <Bell className="h-4 w-4 mr-1" />
                 {section.notifications} notifications
-              </Badge>
-            )}
-            {operationalAlerts.length > 0 && (
-              <Popover>
+              </Badge>}
+            {operationalAlerts.length > 0 && <Popover>
                 <PopoverTrigger asChild>
-                  <Badge variant="destructive" className="cursor-pointer hover:bg-red-700">
-                    <AlertTriangle className="h-4 w-4 mr-1" />
-                    {operationalAlerts.length} operational alerts
-                  </Badge>
+                  
                 </PopoverTrigger>
                 <PopoverContent className="w-80 max-h-[400px] overflow-auto" align="end">
                   <div className="space-y-3">
                     <h4 className="font-medium text-sm">Operational Alerts</h4>
-                    {operationalAlerts.map((alert) => (
-                      <div
-                        key={alert.id}
-                        className="p-3 rounded-lg border bg-red-50 border-red-200"
-                      >
+                    {operationalAlerts.map(alert => <div key={alert.id} className="p-3 rounded-lg border bg-red-50 border-red-200">
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5" />
                           <div className="flex-1 min-w-0">
@@ -225,18 +186,15 @@ const DairySectionView = ({ section, onBack }) => {
                             </p>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </PopoverContent>
-              </Popover>
-            )}
+              </Popover>}
           </div>
         </div>
       </div>
 
-      {section.title === "Sales & Accounts" && !activeForm && !activeCategory && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      {section.title === "Sales & Accounts" && !activeForm && !activeCategory && <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveCategory('sales')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-2xl font-bold">Sales</CardTitle>
@@ -246,10 +204,7 @@ const DairySectionView = ({ section, onBack }) => {
               <p className="text-md text-muted-foreground">
                 Manage sales orders, deliveries, and customer invoices.
               </p>
-              <Button 
-                className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-lg py-6"
-                onClick={() => setActiveCategory('sales')}
-              >
+              <Button className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-lg py-6" onClick={() => setActiveCategory('sales')}>
                 Access Sales Management
               </Button>
             </CardContent>
@@ -264,46 +219,30 @@ const DairySectionView = ({ section, onBack }) => {
               <p className="text-md text-muted-foreground">
                 Manage bills, payments, and payroll functions.
               </p>
-              <Button 
-                className="mt-4 w-full bg-red-600 hover:bg-red-700 text-lg py-6"
-                onClick={() => setActiveCategory('accounts')}
-              >
+              <Button className="mt-4 w-full bg-red-600 hover:bg-red-700 text-lg py-6" onClick={() => setActiveCategory('accounts')}>
                 Access Accounts Management
               </Button>
             </CardContent>
           </Card>
-        </div>
-      )}
+        </div>}
 
-      {section.title === "Sales & Accounts" && !activeForm && activeCategory === 'sales' && (
-        <>
-          <button 
-            onClick={() => setActiveCategory(null)}
-            className="mb-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-          >
+      {section.title === "Sales & Accounts" && !activeForm && activeCategory === 'sales' && <>
+          <button onClick={() => setActiveCategory(null)} className="mb-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
             ← Back to Categories
           </button>
           <h2 className="text-2xl font-bold mb-4">Sales Management</h2>
           {renderSalesTiles()}
-        </>
-      )}
+        </>}
 
-      {section.title === "Sales & Accounts" && !activeForm && activeCategory === 'accounts' && (
-        <>
-          <button 
-            onClick={() => setActiveCategory(null)}
-            className="mb-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-          >
+      {section.title === "Sales & Accounts" && !activeForm && activeCategory === 'accounts' && <>
+          <button onClick={() => setActiveCategory(null)} className="mb-4 flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
             ← Back to Categories
           </button>
           <h2 className="text-2xl font-bold mb-4">Accounts Management</h2>
           {renderAccountsTiles()}
-        </>
-      )}
+        </>}
 
       {renderContent()}
-    </div>
-  );
+    </div>;
 };
-
 export default DairySectionView;
