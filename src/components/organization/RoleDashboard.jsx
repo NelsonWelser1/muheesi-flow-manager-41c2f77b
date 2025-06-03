@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SystemAdminDashboard from './SystemAdminDashboard';
 import CEODashboard from './CEODashboard';
 import BoardOfDirectorsDashboard from './BoardOfDirectorsDashboard';
 import PADashboard from './pa-dashboard/PADashboard';
+import ComplianceQualityDashboard from './compliance-dashboard/ComplianceQualityDashboard';
 
 const RoleDashboard = ({ role }) => {
   const renderRoleContent = () => {
@@ -20,6 +20,9 @@ const RoleDashboard = ({ role }) => {
       
       case "CEO's Personal Assistant":
         return <PADashboard />;
+
+      case 'Compliance & Quality Control Officer':
+        return <ComplianceQualityDashboard />;
       
       default:
         return (
