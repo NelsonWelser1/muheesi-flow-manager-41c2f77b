@@ -1,12 +1,15 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMilkReception } from '@/hooks/useMilkReception';
 import { Droplet, Thermometer, TrendingUp } from 'lucide-react';
 import DirectProcessingAlerts from './DirectProcessingAlerts';
+import { useDirectProcessingAlerts } from './hooks/useDirectProcessingAlerts';
 
 const MilkCapacityTiles = () => {
   const { data: milkReceptionData } = useMilkReception();
+  
+  // Use the new alert system
+  const { activeAlerts } = useDirectProcessingAlerts();
 
   // Tank capacity limits (in liters)
   const TANK_CAPACITIES = {
@@ -210,6 +213,18 @@ const MilkCapacityTiles = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Alert Status Indicator */}
+      {activeAlerts.length > 0 && (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center gap-2 text-red-800">
+            <span className="animate-pulse">🚨</span>
+            <span className="font-medium">
+              {activeAlerts.length} Direct Processing alert{activeAlerts.length > 1 ? 's' : ''} active - Audio alerts enabled
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
