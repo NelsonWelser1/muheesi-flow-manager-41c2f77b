@@ -13,18 +13,18 @@ const RecordsToolbar = ({
   searchTerm
 }) => {
   return (
-    <div className="flex items-center gap-2 px-0 py-0 mx-0">
-      <div className="relative w-48">
+    <div className="flex items-center gap-1 px-0 py-0 mx-0">
+      <div className="relative w-32">
         <Search className="absolute left-2 top-2 h-3 w-3 text-muted-foreground" />
         <Input 
-          placeholder="Search records..." 
-          className="pl-7 h-8 text-xs" 
+          placeholder="Search..." 
+          className="pl-7 h-7 text-xs" 
           value={searchTerm} 
           onChange={e => onSearch(e.target.value)} 
         />
       </div>
       <Select value={timeRange} onValueChange={onTimeRangeChange}>
-        <SelectTrigger className="w-28 h-8 text-xs">
+        <SelectTrigger className="w-20 h-7 text-xs">
           <SelectValue placeholder="Range" />
         </SelectTrigger>
         <SelectContent>
@@ -35,7 +35,7 @@ const RecordsToolbar = ({
           <SelectItem value="year">Year</SelectItem>
         </SelectContent>
       </Select>
-      <Button size="sm" variant="outline" onClick={onRefresh} className="h-8 w-8 p-0">
+      <Button size="sm" variant="outline" onClick={onRefresh} className="h-7 w-7 p-0">
         <RefreshCw className="h-3 w-3" />
       </Button>
     </div>
