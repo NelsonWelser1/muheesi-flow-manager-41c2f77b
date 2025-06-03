@@ -468,10 +468,7 @@ Muheesi GKK Integrated System`;
                     <FileSpreadsheet className="h-4 w-4 mr-2" />
                     Excel
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => exportToPDF()}>
-                    <File className="h-4 w-4 mr-2" />
-                    PDF
-                  </DropdownMenuItem>
+                  
                 </DropdownMenuContent>
               </DropdownMenu>
               
