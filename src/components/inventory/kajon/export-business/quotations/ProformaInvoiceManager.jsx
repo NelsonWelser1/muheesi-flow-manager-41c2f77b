@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Receipt, FileText, Eye } from 'lucide-react';
-import { useQuotations } from '@/integrations/supabase/hooks/useQuotations';
+import { useQuotes } from '@/integrations/supabase/hooks/useQuotes';
 import { useCreateProformaInvoice } from '@/integrations/supabase/hooks/useProformaInvoices';
 import ProformaInvoiceList from './ProformaInvoiceList';
 import ProformaInvoiceTemplate from './ProformaInvoiceTemplate';
@@ -15,7 +14,7 @@ const ProformaInvoiceManager = ({ viewOnly = false }) => {
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const { toast } = useToast();
-  const { data: quotations, isLoading } = useQuotations();
+  const { data: quotations, isLoading } = useQuotes();
   const createProformaInvoice = useCreateProformaInvoice();
 
   const handleQuoteSelection = (quote) => {
