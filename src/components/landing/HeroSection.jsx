@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,19 +35,29 @@ const HeroSection = () => {
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-r from-blue-900 via-blue-800 to-purple-900">
+      {/* Fixed positioned logo background watermark */}
+      <div 
+        className="fixed inset-0 opacity-3 bg-no-repeat bg-center bg-contain pointer-events-none z-0" 
+        style={{
+          backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`,
+          backgroundSize: '60%',
+          backgroundPosition: 'center'
+        }} 
+      />
+      
       <div className="absolute inset-0 bg-black/20">
-        {/* Single optimized logo background */}
+        {/* Additional subtle logo overlay for better integration */}
         <div 
-          className="absolute inset-0 opacity-5 bg-no-repeat bg-center bg-contain pointer-events-none" 
+          className="absolute inset-0 opacity-2 bg-no-repeat bg-center bg-contain pointer-events-none" 
           style={{
             backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`,
-            backgroundSize: '50%',
-            backgroundPosition: 'center 40%'
+            backgroundSize: '40%',
+            backgroundPosition: 'center 30%'
           }} 
         />
       </div>
       
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 z-10">
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-900 hover:bg-blue-200">
             Internal Employee Portal
