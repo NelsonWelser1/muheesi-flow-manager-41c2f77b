@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,19 +35,20 @@ const HeroSection = () => {
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-r from-blue-900 via-blue-800 to-purple-900">
+      {/* Fixed positioned logo background */}
+      <div 
+        className="fixed inset-0 opacity-5 bg-no-repeat bg-center bg-contain pointer-events-none z-0" 
+        style={{
+          backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`,
+          backgroundSize: '60%',
+          backgroundPosition: 'center center'
+        }} 
+      />
+      
       <div className="absolute inset-0 bg-black/20">
-        {/* Single optimized logo background */}
-        <div 
-          className="absolute inset-0 opacity-5 bg-no-repeat bg-center bg-contain pointer-events-none" 
-          style={{
-            backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`,
-            backgroundSize: '50%',
-            backgroundPosition: 'center 40%'
-          }} 
-        />
       </div>
       
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 z-10">
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-900 hover:bg-blue-200">
             Internal Employee Portal
@@ -65,7 +65,6 @@ const HeroSection = () => {
           </p>
         </div>
 
-        {/* Simplified Feature Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {mainFeatures.map((feature, index) => (
             <div 
@@ -86,7 +85,6 @@ const HeroSection = () => {
           ))}
         </div>
         
-        {/* System Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
             <Building className="h-8 w-8 text-blue-300 mx-auto mb-2" />
@@ -106,7 +104,6 @@ const HeroSection = () => {
           </div>
         </div>
         
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button 
             size="lg" 
