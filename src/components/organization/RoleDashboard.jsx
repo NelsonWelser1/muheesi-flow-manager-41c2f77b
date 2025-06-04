@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SystemAdminDashboard from './SystemAdminDashboard';
@@ -18,6 +17,9 @@ import InventoryManagerDashboard from './operations-dashboard/InventoryManagerDa
 import MarketingManagerDashboard from './operations-dashboard/MarketingManagerDashboard';
 import ITManagerDashboard from './operations-dashboard/ITManagerDashboard';
 import ProductDevelopmentManagerDashboard from './operations-dashboard/ProductDevelopmentManagerDashboard';
+import WarehouseSupervisorDashboard from './operations-dashboard/WarehouseSupervisorDashboard';
+import AssociationManagerDashboard from './operations-dashboard/AssociationManagerDashboard';
+import FarmManagerDashboard from './operations-dashboard/FarmManagerDashboard';
 
 const RoleDashboard = ({ role }) => {
   const renderRoleContent = () => {
@@ -72,6 +74,15 @@ const RoleDashboard = ({ role }) => {
         
       case 'Product Development Manager':
         return <ProductDevelopmentManagerDashboard />;
+      
+      case 'Warehouse Supervisor':
+        return <WarehouseSupervisorDashboard />;
+        
+      case 'Association Manager':
+        return <AssociationManagerDashboard />;
+        
+      case 'Farm Manager':
+        return <FarmManagerDashboard />;
       
       default:
         return (
