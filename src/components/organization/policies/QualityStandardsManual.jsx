@@ -3,99 +3,71 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Download, Edit, Eye, Calendar, CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Shield, Download, Edit, Eye, Calendar, CheckCircle, AlertTriangle } from 'lucide-react';
 
 const QualityStandardsManual = ({ searchTerm }) => {
-  const [selectedStandard, setSelectedStandard] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const qualityStandards = [
     {
       id: 1,
-      title: "ISO 9001:2015 Quality Management",
+      title: "ISO 9001:2015 Quality Management Standards",
       category: "ISO Standards",
       status: "Active",
       lastUpdated: "2024-01-15",
-      version: "v3.2",
-      compliance: "100%",
+      version: "v3.1",
       priority: "Critical",
-      description: "International standard for quality management systems and continuous improvement."
+      description: "Comprehensive quality management system standards for consistent product quality."
     },
     {
       id: 2,
-      title: "HACCP Food Safety Protocol",
+      title: "HACCP Food Safety Standards",
       category: "Food Safety",
       status: "Active",
       lastUpdated: "2024-01-20",
       version: "v2.8",
-      compliance: "98%",
       priority: "Critical",
-      description: "Hazard Analysis Critical Control Points system for food safety management."
+      description: "Hazard Analysis and Critical Control Points for food safety management."
     },
     {
       id: 3,
-      title: "GMP Manufacturing Practices",
-      category: "Manufacturing",
+      title: "Product Quality Control Procedures",
+      category: "Quality Control",
       status: "Active",
       lastUpdated: "2024-01-18",
-      version: "v4.1",
-      compliance: "96%",
+      version: "v4.2",
       priority: "High",
-      description: "Good Manufacturing Practices for dairy production and processing."
+      description: "Standard operating procedures for product quality testing and validation."
     },
     {
       id: 4,
-      title: "Environmental Management System",
-      category: "Environmental",
+      title: "Raw Material Inspection Standards",
+      category: "Inspection",
       status: "Under Review",
       lastUpdated: "2024-01-12",
-      version: "v1.9",
-      compliance: "94%",
+      version: "v2.5",
       priority: "High",
-      description: "Environmental standards for sustainable operations and waste management."
+      description: "Quality standards for incoming raw materials and ingredient inspection."
     },
     {
       id: 5,
-      title: "Occupational Health & Safety",
-      category: "Safety",
+      title: "Environmental Compliance Standards",
+      category: "Environment",
       status: "Active",
-      lastUpdated: "2024-01-22",
-      version: "v2.5",
-      compliance: "99%",
-      priority: "Critical",
-      description: "Comprehensive workplace safety standards and injury prevention protocols."
+      lastUpdated: "2024-01-10",
+      version: "v1.9",
+      priority: "Medium",
+      description: "Environmental quality standards and sustainability compliance requirements."
     },
     {
       id: 6,
-      title: "Product Quality Control Standards",
-      category: "Quality Control",
+      title: "Customer Satisfaction Metrics",
+      category: "Customer Quality",
       status: "Active",
-      lastUpdated: "2024-01-10",
-      version: "v3.7",
-      compliance: "97%",
-      priority: "High",
-      description: "Quality control procedures for all dairy products and testing protocols."
-    },
-    {
-      id: 7,
-      title: "Supplier Quality Requirements",
-      category: "Procurement",
-      status: "Draft",
-      lastUpdated: "2024-01-25",
-      version: "v1.0",
-      compliance: "85%",
+      lastUpdated: "2024-01-22",
+      version: "v2.1",
       priority: "Medium",
-      description: "Quality standards and requirements for all suppliers and vendors."
-    },
-    {
-      id: 8,
-      title: "Traceability and Documentation",
-      category: "Documentation",
-      status: "Active",
-      lastUpdated: "2024-01-14",
-      version: "v2.3",
-      compliance: "95%",
-      priority: "High",
-      description: "Product traceability systems and documentation requirements."
+      description: "Standards for measuring and maintaining customer satisfaction levels."
     }
   ];
 
@@ -103,15 +75,15 @@ const QualityStandardsManual = ({ searchTerm }) => {
     { id: 'all', label: 'All Standards', count: qualityStandards.length },
     { id: 'ISO Standards', label: 'ISO Standards', count: qualityStandards.filter(s => s.category === 'ISO Standards').length },
     { id: 'Food Safety', label: 'Food Safety', count: qualityStandards.filter(s => s.category === 'Food Safety').length },
-    { id: 'Manufacturing', label: 'Manufacturing', count: qualityStandards.filter(s => s.category === 'Manufacturing').length },
-    { id: 'Safety', label: 'Safety', count: qualityStandards.filter(s => s.category === 'Safety').length },
-    { id: 'Quality Control', label: 'Quality Control', count: qualityStandards.filter(s => s.category === 'Quality Control').length }
+    { id: 'Quality Control', label: 'Quality Control', count: qualityStandards.filter(s => s.category === 'Quality Control').length },
+    { id: 'Inspection', label: 'Inspection', count: qualityStandards.filter(s => s.category === 'Inspection').length },
+    { id: 'Environment', label: 'Environment', count: qualityStandards.filter(s => s.category === 'Environment').length }
   ];
 
   const filteredStandards = qualityStandards.filter(standard => {
     const matchesSearch = standard.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          standard.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedStandard === 'all' || standard.category === selectedStandard;
+    const matchesCategory = selectedCategory === 'all' || standard.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -133,13 +105,6 @@ const QualityStandardsManual = ({ searchTerm }) => {
     }
   };
 
-  const getComplianceColor = (compliance) => {
-    const percentage = parseInt(compliance);
-    if (percentage >= 98) return 'text-green-600';
-    if (percentage >= 95) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -154,35 +119,35 @@ const QualityStandardsManual = ({ searchTerm }) => {
           </Button>
           <Button className="w-full sm:w-auto">
             <Edit className="h-4 w-4 mr-2" />
-            Update Standards
+            Edit Standards
           </Button>
         </div>
       </div>
 
-      {/* Quick Stats */}
+      {/* Quality Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-green-600">8</div>
+            <div className="text-2xl font-bold text-green-600">98.5%</div>
+            <p className="text-sm text-gray-600">Compliance Rate</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-blue-600">6</div>
             <p className="text-sm text-gray-600">Active Standards</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold text-blue-600">96.8%</div>
-            <p className="text-sm text-gray-600">Avg Compliance</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-purple-600">5</div>
-            <p className="text-sm text-gray-600">Critical Standards</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
             <div className="text-2xl font-bold text-orange-600">1</div>
-            <p className="text-sm text-gray-600">Pending Review</p>
+            <p className="text-sm text-gray-600">Under Review</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-purple-600">45</div>
+            <p className="text-sm text-gray-600">Quality Checks</p>
           </CardContent>
         </Card>
       </div>
@@ -192,9 +157,9 @@ const QualityStandardsManual = ({ searchTerm }) => {
         {categories.map((category) => (
           <Button
             key={category.id}
-            variant={selectedStandard === category.id ? "default" : "outline"}
+            variant={selectedCategory === category.id ? "default" : "outline"}
             size="sm"
-            onClick={() => setSelectedStandard(category.id)}
+            onClick={() => setSelectedCategory(category.id)}
             className="text-xs"
           >
             {category.label} ({category.count})
@@ -203,7 +168,7 @@ const QualityStandardsManual = ({ searchTerm }) => {
       </div>
 
       {/* Quality Standards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {filteredStandards.map((standard) => (
           <Card key={standard.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
@@ -229,22 +194,6 @@ const QualityStandardsManual = ({ searchTerm }) => {
                 Last updated: {standard.lastUpdated}
               </div>
 
-              {/* Compliance Score */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Compliance Score</span>
-                  <span className={`text-sm font-bold ${getComplianceColor(standard.compliance)}`}>
-                    {standard.compliance}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-green-600 h-2 rounded-full transition-all" 
-                    style={{ width: standard.compliance }}
-                  ></div>
-                </div>
-              </div>
-
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" className="flex-1 text-xs">
                   <Eye className="h-3 w-3 mr-1" />
@@ -257,6 +206,20 @@ const QualityStandardsManual = ({ searchTerm }) => {
                 <Button size="sm" variant="outline" className="text-xs">
                   <Download className="h-3 w-3" />
                 </Button>
+              </div>
+
+              {/* Compliance Status */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span>Compliance Status</span>
+                  <span className="flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3 text-green-600" />
+                    Compliant
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-green-600 h-2 rounded-full" style={{ width: '98%' }}></div>
+                </div>
               </div>
             </CardContent>
           </Card>
