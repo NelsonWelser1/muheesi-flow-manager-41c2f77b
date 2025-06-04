@@ -11,6 +11,8 @@ import OperationsManagerDashboard from './operations-dashboard/OperationsManager
 import ProcurementManagerDashboard from './operations-dashboard/ProcurementManagerDashboard';
 import FactoryManagerDashboard from './operations-dashboard/FactoryManagerDashboard';
 import RiskManagerDashboard from './operations-dashboard/RiskManagerDashboard';
+import FinanceManagerDashboard from './finance-dashboard/FinanceManagerDashboard';
+import SalesExportManagerDashboard from './sales-export-dashboard/SalesExportManagerDashboard';
 
 const RoleDashboard = ({ role }) => {
   const renderRoleContent = () => {
@@ -44,6 +46,12 @@ const RoleDashboard = ({ role }) => {
 
       case 'Risk Manager':
         return <RiskManagerDashboard />;
+
+      case 'Finance Manager':
+        return <FinanceManagerDashboard />;
+
+      case 'Sales & Export Manager':
+        return <SalesExportManagerDashboard />;
       
       default:
         return (
