@@ -12,9 +12,4 @@ export const navItems = [
     to: "/organizations",
     icon: <Building2 className="h-4 w-4" />,
   },
-  {
-    title: "Company Policies",
-    to: "/company-policies",
-    icon: <FileText className="h-4 w-4" />,
-  },
 ];
