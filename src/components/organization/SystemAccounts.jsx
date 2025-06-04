@@ -52,6 +52,11 @@ const SystemAccounts = () => {
         title: "Compliance & Quality Control Officer",
         description: "Ensures adherence to regulatory requirements and maintains quality standards.",
         icon: <Shield className="h-6 w-6 text-blue-600" />
+      },
+      {
+        title: "Risk Manager",
+        description: "Manages organizational risks, compliance monitoring, and business continuity planning.",
+        icon: <AlertOctagon className="h-6 w-6 text-blue-600" />
       }
     ],
     tactical: [
