@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -53,11 +52,6 @@ const SystemAccounts = () => {
         title: "Compliance & Quality Control Officer",
         description: "Ensures adherence to regulatory requirements and maintains quality standards.",
         icon: <Shield className="h-6 w-6 text-blue-600" />
-      },
-      {
-        title: "Risk Manager",
-        description: "Identifies and mitigates business risks, develops contingency plans.",
-        icon: <AlertOctagon className="h-6 w-6 text-blue-600" />
       }
     ],
     tactical: [
