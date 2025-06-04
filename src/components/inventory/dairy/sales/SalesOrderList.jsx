@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Download, FileText, FileSpreadsheet, Printer, X } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, Download, FileText, FileSpreadsheet, Printer, X, Calendar, Clock } from 'lucide-react';
 import { useSalesOrders } from '@/integrations/supabase/hooks/useSalesOrders';
 import { useToast } from "@/components/ui/use-toast";
 import * as XLSX from 'xlsx';
@@ -27,6 +33,9 @@ import 'jspdf-autotable';
 
 const SalesOrderList = ({ isOpen, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [timeFilter, setTimeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('date-desc');
   const { salesOrders, isLoading, error, fetchSalesOrders } = useSalesOrders();
   const { toast } = useToast();
 
@@ -36,12 +45,90 @@ const SalesOrderList = ({ isOpen, onClose }) => {
     }
   }, [isOpen, fetchSalesOrders]);
 
-  // Filter orders based on search term
-  const filteredOrders = salesOrders.filter(order =>
-    order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.product?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.sales_rep?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter and sort orders based on search term, date, time, and sort criteria
+  const getFilteredAndSortedOrders = () => {
+    let filtered = salesOrders.filter(order =>
+      order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.product?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.sales_rep?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Apply date filters
+    const now = new Date();
+    if (dateFilter !== 'all') {
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.order_date);
+        switch (dateFilter) {
+          case 'today':
+            return orderDate.toDateString() === now.toDateString();
+          case 'yesterday':
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            return orderDate.toDateString() === yesterday.toDateString();
+          case 'week':
+            const weekAgo = new Date(now);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return orderDate >= weekAgo;
+          case 'month':
+            const monthAgo = new Date(now);
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            return orderDate >= monthAgo;
+          case 'year':
+            const yearAgo = new Date(now);
+            yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+            return orderDate >= yearAgo;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply time filters
+    if (timeFilter !== 'all') {
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.created_at || order.order_date);
+        const orderHour = orderDate.getHours();
+        const currentHour = now.getHours();
+        
+        switch (timeFilter) {
+          case 'hour':
+            return Math.abs(orderDate - now) <= 60 * 60 * 1000; // Last hour
+          case 'morning':
+            return orderHour >= 6 && orderHour < 12;
+          case 'afternoon':
+            return orderHour >= 12 && orderHour < 18;
+          case 'evening':
+            return orderHour >= 18 && orderHour < 24;
+          case 'night':
+            return orderHour >= 0 && orderHour < 6;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply sorting
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'date-desc':
+          return new Date(b.order_date) - new Date(a.order_date);
+        case 'date-asc':
+          return new Date(a.order_date) - new Date(b.order_date);
+        case 'amount-desc':
+          return (b.quantity * b.unit_price) - (a.quantity * a.unit_price);
+        case 'amount-asc':
+          return (a.quantity * a.unit_price) - (b.quantity * b.unit_price);
+        case 'customer-asc':
+          return (a.customer_name || '').localeCompare(b.customer_name || '');
+        case 'customer-desc':
+          return (b.customer_name || '').localeCompare(a.customer_name || '');
+        default:
+          return 0;
+      }
+    });
+  };
+
+  const filteredOrders = getFilteredAndSortedOrders();
 
   const getPaymentStatusBadge = (status) => {
     const statusConfig = {
@@ -201,6 +288,50 @@ const SalesOrderList = ({ isOpen, onClose }) => {
                   className="pl-10 w-64"
                 />
               </div>
+              
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger className="w-32">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Date" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Dates</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="yesterday">Yesterday</SelectItem>
+                  <SelectItem value="week">This Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                  <SelectItem value="year">This Year</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={timeFilter} onValueChange={setTimeFilter}>
+                <SelectTrigger className="w-32">
+                  <Clock className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Times</SelectItem>
+                  <SelectItem value="hour">Last Hour</SelectItem>
+                  <SelectItem value="morning">Morning</SelectItem>
+                  <SelectItem value="afternoon">Afternoon</SelectItem>
+                  <SelectItem value="evening">Evening</SelectItem>
+                  <SelectItem value="night">Night</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date-desc">Date (Newest)</SelectItem>
+                  <SelectItem value="date-asc">Date (Oldest)</SelectItem>
+                  <SelectItem value="amount-desc">Amount (High)</SelectItem>
+                  <SelectItem value="amount-asc">Amount (Low)</SelectItem>
+                  <SelectItem value="customer-asc">Customer (A-Z)</SelectItem>
+                  <SelectItem value="customer-desc">Customer (Z-A)</SelectItem>
+                </SelectContent>
+              </Select>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
