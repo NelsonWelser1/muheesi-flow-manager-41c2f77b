@@ -1,10 +1,13 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Building, Users, Truck, BarChart3, Package, Factory, Coffee, Milk } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
 const HeroSection = () => {
   const navigate = useNavigate();
+  
   const mainFeatures = [{
     title: "Manage Inventory",
     description: "Access all company inventories",
@@ -30,21 +33,19 @@ const HeroSection = () => {
     color: "bg-orange-500",
     onClick: () => navigate('/manage-inventory/bukomero-dairy')
   }];
-  return <div className="relative overflow-hidden bg-gradient-to-r from-blue-900 via-blue-800 to-purple-900">
+
+  return (
+    <div className="relative overflow-hidden bg-gradient-to-r from-blue-900 via-blue-800 to-purple-900">
       <div className="absolute inset-0 bg-black/20">
-        {/* Logo Background Pattern - Fixed position to move with scroll */}
-        <div className="fixed inset-0 opacity-5 bg-no-repeat bg-center bg-contain pointer-events-none" style={{
-        backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`,
-        backgroundSize: '60%',
-        backgroundPosition: 'center 40%'
-      }} />
-        
-        {/* Additional logo instances for pattern effect */}
-        <div className="absolute top-10 right-10 opacity-3 w-32 h-32 bg-no-repeat bg-contain" style={{
-        backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`
-      }} />
-        
-        
+        {/* Single optimized logo background */}
+        <div 
+          className="absolute inset-0 opacity-5 bg-no-repeat bg-center bg-contain pointer-events-none" 
+          style={{
+            backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`,
+            backgroundSize: '50%',
+            backgroundPosition: 'center 40%'
+          }} 
+        />
       </div>
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
@@ -52,7 +53,7 @@ const HeroSection = () => {
           <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-900 hover:bg-blue-200">
             Internal Employee Portal
           </Badge>
-          <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 animate-fade-in">
+          <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6">
             GKK Integrated
             <span className="block text-blue-300">Management System</span>
           </h1>
@@ -64,27 +65,25 @@ const HeroSection = () => {
           </p>
         </div>
 
-        {/* Main Feature Cards */}
+        {/* Simplified Feature Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {mainFeatures.map((feature, index) => <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer group relative overflow-hidden shadow-lg hover:shadow-xl" onClick={feature.onClick}>
-              {/* Twice-faded logo watermark in feature cards */}
-              <div className="absolute inset-0 opacity-4 bg-no-repeat bg-center bg-contain" style={{
-            backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`,
-            backgroundSize: '80%'
-          }} />
-              
-              <div className="relative z-10">
-                <div className={`${feature.color} p-3 rounded-lg mb-4 w-fit`}>
-                  <feature.icon className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-white font-semibold text-lg mb-2 group-hover:text-blue-200 transition-colors">
-                  {feature.title}
-                </h3>
-                <p className="text-blue-100 text-sm">
-                  {feature.description}
-                </p>
+          {mainFeatures.map((feature, index) => (
+            <div 
+              key={index} 
+              className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer group shadow-lg hover:shadow-xl" 
+              onClick={feature.onClick}
+            >
+              <div className={`${feature.color} p-3 rounded-lg mb-4 w-fit`}>
+                <feature.icon className="h-8 w-8 text-white" />
               </div>
-            </div>)}
+              <h3 className="text-white font-semibold text-lg mb-2 group-hover:text-blue-200 transition-colors">
+                {feature.title}
+              </h3>
+              <p className="text-blue-100 text-sm">
+                {feature.description}
+              </p>
+            </div>
+          ))}
         </div>
         
         {/* System Stats Grid */}
@@ -109,14 +108,25 @@ const HeroSection = () => {
         
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg" onClick={() => navigate('/manage-inventory')}>
+          <Button 
+            size="lg" 
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg" 
+            onClick={() => navigate('/manage-inventory')}
+          >
             Manage Inventory
           </Button>
-          <Button size="lg" variant="outline" onClick={() => navigate('/manage-companies')} className="border-white hover:bg-white px-8 py-3 text-lg text-slate-950">
+          <Button 
+            size="lg" 
+            variant="outline" 
+            onClick={() => navigate('/manage-companies')} 
+            className="border-white hover:bg-white px-8 py-3 text-lg text-slate-950"
+          >
             Manage Companies
           </Button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default HeroSection;
