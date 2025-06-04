@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Building, Users, Truck, BarChart3, Package, Factory, Coffee, Milk } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
 const HeroSection = () => {
   const navigate = useNavigate();
   const mainFeatures = [{
@@ -30,8 +31,35 @@ const HeroSection = () => {
     color: "bg-orange-500",
     onClick: () => navigate('/manage-inventory/bukomero-dairy')
   }];
-  return <div className="relative overflow-hidden bg-gradient-to-r from-blue-900 via-blue-800 to-purple-900">
-      <div className="absolute inset-0 bg-black/20"></div>
+  return (
+    <div className="relative overflow-hidden bg-gradient-to-r from-blue-900 via-blue-800 to-purple-900">
+      <div className="absolute inset-0 bg-black/20">
+        {/* Logo Background Pattern */}
+        <div 
+          className="absolute inset-0 opacity-5 bg-no-repeat bg-center bg-contain"
+          style={{
+            backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`,
+            backgroundSize: '60%',
+            backgroundPosition: 'center 40%'
+          }}
+        />
+        
+        {/* Additional logo instances for pattern effect */}
+        <div 
+          className="absolute top-10 right-10 opacity-3 w-32 h-32 bg-no-repeat bg-contain"
+          style={{
+            backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`
+          }}
+        />
+        
+        <div 
+          className="absolute bottom-10 left-10 opacity-3 w-28 h-28 bg-no-repeat bg-contain"
+          style={{
+            backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`
+          }}
+        />
+      </div>
+      
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4 bg-blue-100 text-blue-900 hover:bg-blue-200">
@@ -51,17 +79,34 @@ const HeroSection = () => {
 
         {/* Main Feature Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {mainFeatures.map((feature, index) => <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer group" onClick={feature.onClick}>
-              <div className={`${feature.color} p-3 rounded-lg mb-4 w-fit`}>
-                <feature.icon className="h-8 w-8 text-white" />
+          {mainFeatures.map((feature, index) => (
+            <div 
+              key={index} 
+              className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer group relative overflow-hidden" 
+              onClick={feature.onClick}
+            >
+              {/* Subtle logo watermark in feature cards */}
+              <div 
+                className="absolute inset-0 opacity-2 bg-no-repeat bg-center bg-contain"
+                style={{
+                  backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`,
+                  backgroundSize: '80%'
+                }}
+              />
+              
+              <div className="relative z-10">
+                <div className={`${feature.color} p-3 rounded-lg mb-4 w-fit`}>
+                  <feature.icon className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-white font-semibold text-lg mb-2 group-hover:text-blue-200 transition-colors">
+                  {feature.title}
+                </h3>
+                <p className="text-blue-100 text-sm">
+                  {feature.description}
+                </p>
               </div>
-              <h3 className="text-white font-semibold text-lg mb-2 group-hover:text-blue-200 transition-colors">
-                {feature.title}
-              </h3>
-              <p className="text-blue-100 text-sm">
-                {feature.description}
-              </p>
-            </div>)}
+            </div>
+          ))}
         </div>
         
         {/* System Stats Grid */}
@@ -94,6 +139,8 @@ const HeroSection = () => {
           </Button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default HeroSection;
