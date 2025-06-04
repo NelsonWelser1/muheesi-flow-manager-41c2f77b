@@ -7,9 +7,4 @@ export const navItems = [
     to: "/",
     icon: <HomeIcon className="h-4 w-4" />,
   },
-  {
-    title: "Organizations",
-    to: "/organizations",
-    icon: <Building2 className="h-4 w-4" />,
-  },
 ];
