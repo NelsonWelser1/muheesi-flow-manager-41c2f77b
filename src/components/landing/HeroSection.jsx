@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -82,12 +83,12 @@ const HeroSection = () => {
           {mainFeatures.map((feature, index) => (
             <div 
               key={index} 
-              className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer group relative overflow-hidden" 
+              className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-1 cursor-pointer group relative overflow-hidden shadow-lg hover:shadow-xl" 
               onClick={feature.onClick}
             >
-              {/* Less faded logo watermark in feature cards */}
+              {/* Twice-faded logo watermark in feature cards */}
               <div 
-                className="absolute inset-0 opacity-8 bg-no-repeat bg-center bg-contain"
+                className="absolute inset-0 opacity-4 bg-no-repeat bg-center bg-contain"
                 style={{
                   backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`,
                   backgroundSize: '80%'
