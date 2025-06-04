@@ -7,6 +7,7 @@ import BoardOfDirectorsDashboard from './BoardOfDirectorsDashboard';
 import PADashboard from './pa-dashboard/PADashboard';
 import ComplianceQualityDashboard from './compliance-dashboard/ComplianceQualityDashboard';
 import HRDashboard from './hr-dashboard/HRDashboard';
+import OperationsManagerDashboard from './operations-dashboard/OperationsManagerDashboard';
 
 const RoleDashboard = ({ role }) => {
   const renderRoleContent = () => {
@@ -28,6 +29,9 @@ const RoleDashboard = ({ role }) => {
 
       case 'Human Resource Manager':
         return <HRDashboard />;
+
+      case 'Operations Manager':
+        return <OperationsManagerDashboard />;
       
       default:
         return (
