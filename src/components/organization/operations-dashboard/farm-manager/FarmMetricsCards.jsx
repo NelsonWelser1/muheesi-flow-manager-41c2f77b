@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sprout, Cow, Droplets, Thermometer, TrendingUp, Calendar } from 'lucide-react';
+import { Sprout, Calendar, Droplets, Thermometer, TrendingUp, CalendarCheck } from 'lucide-react';
 
 const FarmMetricsCards = () => {
   const metrics = [
@@ -16,7 +16,7 @@ const FarmMetricsCards = () => {
       title: "Livestock Count",
       value: "247",
       change: "15 new calves this month",
-      icon: Cow,
+      icon: Calendar,
       color: "text-brown-600"
     },
     {
@@ -44,7 +44,7 @@ const FarmMetricsCards = () => {
       title: "Next Harvest",
       value: "21 days",
       change: "Coffee cherries ready",
-      icon: Calendar,
+      icon: CalendarCheck,
       color: "text-purple-600"
     }
   ];
