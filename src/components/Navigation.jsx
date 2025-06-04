@@ -18,6 +18,10 @@ const Navigation = () => {
     {
       to: "/manage-companies",
       label: "Manage Companies"
+    },
+    {
+      to: "/company-policies",
+      label: "Company Policies"
     }
   ];
 
