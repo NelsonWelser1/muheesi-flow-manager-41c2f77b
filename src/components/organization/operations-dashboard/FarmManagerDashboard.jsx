@@ -8,7 +8,7 @@ import LivestockManagement from './farm-manager/LivestockManagement';
 import ResourcePlanning from './farm-manager/ResourcePlanning';
 import ProductionTracking from './farm-manager/ProductionTracking';
 import WeatherMonitoring from './farm-manager/WeatherMonitoring';
-import { Sprout, Cow, Calendar, BarChart3, Cloud, Tractor } from 'lucide-react';
+import { Sprout, Calendar, BarChart3, Cloud, Tractor } from 'lucide-react';
 
 const FarmManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState('crops');
@@ -23,7 +23,7 @@ const FarmManagerDashboard = () => {
     {
       id: 'livestock',
       label: 'Livestock Management',
-      icon: Cow,
+      icon: Calendar,
       component: <LivestockManagement />
     },
     {
