@@ -1,375 +1,623 @@
 import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Search, Filter, Eye, Printer, X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
 import { useSalesOrders } from '@/integrations/supabase/hooks/useSalesOrders';
-import { format } from 'date-fns';
+import { 
+  Search, 
+  Filter, 
+  Download,
+  Eye,
+  Edit,
+  Trash2,
+  Plus,
+  Calendar,
+  DollarSign,
+  Package,
+  User,
+  FileText,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  X
+} from 'lucide-react';
 
-const SalesOrderList = ({ onViewOrder, searchTerm, onSearchChange }) => {
-  const { salesOrders, loading, error, fetchSalesOrders } = useSalesOrders();
-  const [filteredOrders, setFilteredOrders] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('date-desc');
-  const [showOrdersList, setShowOrdersList] = useState(false);
+const SalesOrderList = ({ isOpen, onClose }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const { salesOrders, isLoading, deleteSalesOrder } = useSalesOrders();
+  const { toast } = useToast();
 
-  useEffect(() => {
-    fetchSalesOrders();
-  }, []);
-
-  useEffect(() => {
-    let filtered = [...salesOrders];
-
-    // Apply search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(order =>
-        order.customer_name?.toLowerCase().includes(searchLower) ||
-        order.product?.toLowerCase().includes(searchLower) ||
-        order.product_type?.toLowerCase().includes(searchLower)
-      );
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'completed': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'pending': return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'cancelled': return <AlertCircle className="h-4 w-4 text-red-500" />;
+      default: return <Clock className="h-4 w-4 text-gray-500" />;
     }
+  };
 
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(order => order.order_status === statusFilter);
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
+  };
 
-    // Apply sorting
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.date_time || a.created_at);
-      const dateB = new Date(b.date_time || b.created_at);
-      
-      switch (sortBy) {
-        case 'date-asc':
-          return dateA - dateB;
-        case 'date-desc':
-          return dateB - dateA;
-        case 'customer-asc':
-          return (a.customer_name || '').localeCompare(b.customer_name || '');
-        case 'customer-desc':
-          return (b.customer_name || '').localeCompare(a.customer_name || '');
-        default:
-          return dateB - dateA;
+  const handleDeleteOrder = async (orderId) => {
+    try {
+      const { success, error } = await deleteSalesOrder(orderId);
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Sales order deleted successfully",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to delete sales order",
+          variant: "destructive"
+        });
       }
-    });
-
-    setFilteredOrders(filtered);
-  }, [salesOrders, searchTerm, statusFilter, sortBy]);
-
-  const getStatusBadge = (status) => {
-    const statusStyles = {
-      'pending': 'bg-yellow-100 text-yellow-800',
-      'confirmed': 'bg-blue-100 text-blue-800',
-      'processing': 'bg-orange-100 text-orange-800',
-      'completed': 'bg-green-100 text-green-800',
-      'cancelled': 'bg-red-100 text-red-800'
-    };
-
-    return (
-      <Badge className={statusStyles[status] || 'bg-gray-100 text-gray-800'}>
-        {status || 'pending'}
-      </Badge>
-    );
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handlePrintOrders = () => {
-    const printContent = `
-      <html>
-        <head>
-          <title>Sales Orders Report</title>
-          <style>
-            body { 
-              font-family: Arial, sans-serif; 
-              margin: 20px; 
-              color: #333;
-            }
-            .header { 
-              text-align: center; 
-              margin-bottom: 30px; 
-              border-bottom: 2px solid #333;
-              padding-bottom: 20px;
-            }
-            .print-date { 
-              text-align: right; 
-              font-size: 12px; 
-              margin-bottom: 10px; 
-              color: #666;
-            }
-            table { 
-              width: 100%; 
-              border-collapse: collapse; 
-              margin-top: 20px; 
-            }
-            th, td { 
-              border: 1px solid #ddd; 
-              padding: 8px; 
-              text-align: left; 
-              font-size: 12px;
-            }
-            th { 
-              background-color: #f2f2f2; 
-              font-weight: bold; 
-            }
-            .status-badge {
-              padding: 2px 8px;
-              border-radius: 12px;
-              font-size: 10px;
-              font-weight: bold;
-            }
-            .status-pending { background-color: #fef3c7; color: #92400e; }
-            .status-confirmed { background-color: #dbeafe; color: #1e40af; }
-            .status-processing { background-color: #fed7aa; color: #c2410c; }
-            .status-completed { background-color: #dcfce7; color: #166534; }
-            .status-cancelled { background-color: #fecaca; color: #dc2626; }
-            .summary {
-              margin-top: 20px;
-              padding: 15px;
-              background-color: #f8f9fa;
-              border-radius: 5px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="print-date">Printed on: ${new Date().toLocaleString()}</div>
-          <div class="header">
-            <h2>Sales Orders Report</h2>
-            <p>Total Orders: ${filteredOrders.length}</p>
-          </div>
-          
-          <table>
-            <thead>
-              <tr>
-                <th>Order Date</th>
-                <th>Customer</th>
-                <th>Product</th>
-                <th>Product Type</th>
-                <th>Quantity</th>
-                <th>Unit Price</th>
-                <th>Total Amount</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredOrders.map(order => `
-                <tr>
-                  <td>${order.date_time ? format(new Date(order.date_time), 'PPp') : 'N/A'}</td>
-                  <td>${order.customer_name || 'N/A'}</td>
-                  <td>${order.product || 'N/A'}</td>
-                  <td>${order.product_type || 'N/A'}</td>
-                  <td>${order.quantity || 'N/A'}</td>
-                  <td>UGX ${order.price_per_unit ? order.price_per_unit.toLocaleString() : 'N/A'}</td>
-                  <td>UGX ${order.quantity && order.price_per_unit ? (order.quantity * order.price_per_unit).toLocaleString() : 'N/A'}</td>
-                  <td><span class="status-badge status-${order.order_status || 'pending'}">${order.order_status || 'pending'}</span></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          
-          <div class="summary">
-            <h3>Summary</h3>
-            <p><strong>Total Orders:</strong> ${filteredOrders.length}</p>
-            <p><strong>Total Value:</strong> UGX ${filteredOrders.reduce((sum, order) => sum + ((order.quantity || 0) * (order.price_per_unit || 0)), 0).toLocaleString()}</p>
-            <p><strong>Report Generated:</strong> ${new Date().toLocaleString()}</p>
-          </div>
-        </body>
-      </html>
-    `;
+  const filteredOrders = salesOrders?.filter(order => {
+    const matchesSearch = order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.product?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || order.payment_status === filterStatus;
+    return matchesSearch && matchesStatus;
+  }) || [];
 
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.print();
+  const totalRevenue = filteredOrders.reduce((sum, order) => 
+    sum + (order.quantity * order.unit_price - (order.discount || 0)), 0
+  );
+
+  const OrderDetailsModal = ({ order, isOpen, onClose }) => {
+    if (!order) return null;
+
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Sales Order Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-semibold mb-2">Customer Information</h4>
+                <p><strong>Name:</strong> {order.customer_name}</p>
+                <p><strong>Order Date:</strong> {order.order_date}</p>
+                <p><strong>Sales Rep:</strong> {order.sales_rep || 'N/A'}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Order Details</h4>
+                <p><strong>Product:</strong> {order.product}</p>
+                <p><strong>Type:</strong> {order.product_type}</p>
+                <p><strong>Quantity:</strong> {order.quantity}</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-semibold mb-2">Pricing</h4>
+                <p><strong>Unit Price:</strong> ${order.unit_price}</p>
+                <p><strong>Discount:</strong> ${order.discount || 0}</p>
+                <p><strong>Total:</strong> ${(order.quantity * order.unit_price - (order.discount || 0)).toFixed(2)}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Status</h4>
+                <Badge className={getStatusColor(order.payment_status)}>
+                  {order.payment_status}
+                </Badge>
+                <p className="mt-2"><strong>Delivery:</strong> {order.delivery_required}</p>
+              </div>
+            </div>
+
+            {order.notes && (
+              <div>
+                <h4 className="font-semibold mb-2">Notes</h4>
+                <p className="text-sm bg-gray-50 p-3 rounded">{order.notes}</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   };
-
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex justify-center items-center h-32">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-red-500">Error loading sales orders: {error.message}</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // If orders list is not shown, display only the button
-  if (!showOrdersList) {
-    return (
-      <div className="flex justify-center p-6">
-        <Button 
-          onClick={() => setShowOrdersList(true)}
-          className="flex items-center gap-2"
-        >
-          <Eye className="h-4 w-4" />
-          View Sales Orders
-        </Button>
-      </div>
-    );
-  }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle>Sales Orders</CardTitle>
-          <div className="flex items-center gap-2">
-            <Button 
-              onClick={handlePrintOrders} 
-              variant="outline" 
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Printer className="h-4 w-4" />
-              Print Orders
-            </Button>
-            <Button 
-              onClick={() => setShowOrdersList(false)}
-              variant="outline" 
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <X className="h-4 w-4" />
-              Hide
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {/* Search and Filter Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search orders..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="confirmed">Confirmed</SelectItem>
-              <SelectItem value="processing">Processing</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Sales Orders Management
+          </DialogTitle>
+        </DialogHeader>
 
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date-desc">Latest First</SelectItem>
-              <SelectItem value="date-asc">Oldest First</SelectItem>
-              <SelectItem value="customer-asc">Customer A-Z</SelectItem>
-              <SelectItem value="customer-desc">Customer Z-A</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="space-y-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center">
+                  <Package className="h-8 w-8 text-blue-500" />
+                  <div className="ml-4">
+                    <p className="text-2xl font-bold">{filteredOrders.length}</p>
+                    <p className="text-xs text-muted-foreground">Total Orders</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Orders Table */}
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="whitespace-nowrap">Order Date</TableHead>
-                <TableHead className="whitespace-nowrap">Customer</TableHead>
-                <TableHead className="whitespace-nowrap">Product</TableHead>
-                <TableHead className="whitespace-nowrap">Quantity</TableHead>
-                <TableHead className="whitespace-nowrap">Status</TableHead>
-                <TableHead className="whitespace-nowrap">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-4">
-                    No sales orders found
-                  </TableCell>
-                </TableRow>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center">
+                  <DollarSign className="h-8 w-8 text-green-500" />
+                  <div className="ml-4">
+                    <p className="text-2xl font-bold">${totalRevenue.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">Total Revenue</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center">
+                  <CheckCircle className="h-8 w-8 text-green-500" />
+                  <div className="ml-4">
+                    <p className="text-2xl font-bold">
+                      {filteredOrders.filter(o => o.payment_status === 'completed').length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Completed</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center">
+                  <Clock className="h-8 w-8 text-yellow-500" />
+                  <div className="ml-4">
+                    <p className="text-2xl font-bold">
+                      {filteredOrders.filter(o => o.payment_status === 'pending').length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Pending</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filters and Search */}
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="flex gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-64">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search orders..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <Button variant="outline" size="sm">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </Button>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </div>
+          </div>
+
+          {/* Status Filter Tabs */}
+          <Tabs defaultValue="all" onValueChange={setFilterStatus}>
+            <TabsList>
+              <TabsTrigger value="all">All Orders</TabsTrigger>
+              <TabsTrigger value="pending">Pending</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+              <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="mt-4">
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <p>Loading sales orders...</p>
+                </div>
+              ) : filteredOrders.length === 0 ? (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No sales orders found</p>
+                </div>
               ) : (
-                filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="whitespace-nowrap">
-                      {order.date_time ? format(new Date(order.date_time), 'PPp') : 'N/A'}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {order.customer_name || 'N/A'}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <div>
-                        <div className="font-medium">{order.product || 'N/A'}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {order.product_type || 'N/A'}
+                <div className="space-y-3">
+                  {filteredOrders.map((order) => (
+                    <Card key={order.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="pt-4">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-semibold">{order.customer_name}</span>
+                              <Badge className={getStatusColor(order.payment_status)}>
+                                {getStatusIcon(order.payment_status)}
+                                <span className="ml-1">{order.payment_status}</span>
+                              </Badge>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-muted-foreground">Product</p>
+                                <p className="font-medium">{order.product} - {order.product_type}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Quantity</p>
+                                <p className="font-medium">{order.quantity}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Unit Price</p>
+                                <p className="font-medium">${order.unit_price}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Total</p>
+                                <p className="font-medium text-green-600">
+                                  ${(order.quantity * order.unit_price - (order.discount || 0)).toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                {order.order_date}
+                              </div>
+                              {order.sales_rep && (
+                                <div className="flex items-center gap-1">
+                                  <User className="h-4 w-4" />
+                                  {order.sales_rep}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1">
+                                <Package className="h-4 w-4" />
+                                Delivery: {order.delivery_required}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 ml-4">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setSelectedOrder(order)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDeleteOrder(order.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {order.quantity || 'N/A'}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {getStatusBadge(order.order_status)}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onViewOrder && onViewOrder(order)}
-                        className="flex items-center gap-1"
-                      >
-                        <Eye className="h-4 w-4" />
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               )}
-            </TableBody>
-          </Table>
+            </TabsContent>
+
+            <TabsContent value="pending">
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <p>Loading sales orders...</p>
+                </div>
+              ) : filteredOrders.filter(o => o.payment_status === 'pending').length === 0 ? (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No pending sales orders found</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredOrders.filter(o => o.payment_status === 'pending').map((order) => (
+                    <Card key={order.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="pt-4">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-semibold">{order.customer_name}</span>
+                              <Badge className={getStatusColor(order.payment_status)}>
+                                {getStatusIcon(order.payment_status)}
+                                <span className="ml-1">{order.payment_status}</span>
+                              </Badge>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-muted-foreground">Product</p>
+                                <p className="font-medium">{order.product} - {order.product_type}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Quantity</p>
+                                <p className="font-medium">{order.quantity}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Unit Price</p>
+                                <p className="font-medium">${order.unit_price}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Total</p>
+                                <p className="font-medium text-green-600">
+                                  ${(order.quantity * order.unit_price - (order.discount || 0)).toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                {order.order_date}
+                              </div>
+                              {order.sales_rep && (
+                                <div className="flex items-center gap-1">
+                                  <User className="h-4 w-4" />
+                                  {order.sales_rep}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1">
+                                <Package className="h-4 w-4" />
+                                Delivery: {order.delivery_required}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 ml-4">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setSelectedOrder(order)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDeleteOrder(order.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="completed">
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <p>Loading sales orders...</p>
+                </div>
+              ) : filteredOrders.filter(o => o.payment_status === 'completed').length === 0 ? (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No completed sales orders found</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredOrders.filter(o => o.payment_status === 'completed').map((order) => (
+                    <Card key={order.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="pt-4">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-semibold">{order.customer_name}</span>
+                              <Badge className={getStatusColor(order.payment_status)}>
+                                {getStatusIcon(order.payment_status)}
+                                <span className="ml-1">{order.payment_status}</span>
+                              </Badge>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-muted-foreground">Product</p>
+                                <p className="font-medium">{order.product} - {order.product_type}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Quantity</p>
+                                <p className="font-medium">{order.quantity}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Unit Price</p>
+                                <p className="font-medium">${order.unit_price}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Total</p>
+                                <p className="font-medium text-green-600">
+                                  ${(order.quantity * order.unit_price - (order.discount || 0)).toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                {order.order_date}
+                              </div>
+                              {order.sales_rep && (
+                                <div className="flex items-center gap-1">
+                                  <User className="h-4 w-4" />
+                                  {order.sales_rep}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1">
+                                <Package className="h-4 w-4" />
+                                Delivery: {order.delivery_required}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 ml-4">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setSelectedOrder(order)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDeleteOrder(order.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="cancelled">
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <p>Loading sales orders...</p>
+                </div>
+              ) : filteredOrders.filter(o => o.payment_status === 'cancelled').length === 0 ? (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No cancelled sales orders found</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredOrders.filter(o => o.payment_status === 'cancelled').map((order) => (
+                    <Card key={order.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="pt-4">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-semibold">{order.customer_name}</span>
+                              <Badge className={getStatusColor(order.payment_status)}>
+                                {getStatusIcon(order.payment_status)}
+                                <span className="ml-1">{order.payment_status}</span>
+                              </Badge>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-muted-foreground">Product</p>
+                                <p className="font-medium">{order.product} - {order.product_type}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Quantity</p>
+                                <p className="font-medium">{order.quantity}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Unit Price</p>
+                                <p className="font-medium">${order.unit_price}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Total</p>
+                                <p className="font-medium text-green-600">
+                                  ${(order.quantity * order.unit_price - (order.discount || 0)).toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                {order.order_date}
+                              </div>
+                              {order.sales_rep && (
+                                <div className="flex items-center gap-1">
+                                  <User className="h-4 w-4" />
+                                  {order.sales_rep}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1">
+                                <Package className="h-4 w-4" />
+                                Delivery: {order.delivery_required}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 ml-4">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setSelectedOrder(order)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDeleteOrder(order.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
 
-        {/* Summary Stats */}
-        <div className="mt-4 text-sm text-muted-foreground">
-          Showing {filteredOrders.length} of {salesOrders.length} orders
-        </div>
-      </CardContent>
-    </Card>
+        {/* Order Details Modal */}
+        <OrderDetailsModal 
+          order={selectedOrder} 
+          isOpen={!!selectedOrder} 
+          onClose={() => setSelectedOrder(null)} 
+        />
+      </DialogContent>
+    </Dialog>
   );
 };
 
