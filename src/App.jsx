@@ -13,30 +13,43 @@ import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-bu
 import KashariFarmDashboard from "./components/inventory/kashari/KashariFarmDashboard";
 import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDairyDashboard";
 
-const queryClient = new QueryClient();
+// Create QueryClient with proper configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AutoFillProvider>
-      <SupabaseAuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
-            <Navigation />
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/home" element={<Navigate to="/" replace />} />
-              <Route path="/manage-inventory" element={<ManageInventory />} />
-              <Route path="/manage-companies" element={<ManageCompanies />} />
-              <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
-              <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
-              <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </SupabaseAuthProvider>
-    </AutoFillProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log('App component rendering with QueryClient:', queryClient);
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AutoFillProvider>
+        <SupabaseAuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <BrowserRouter>
+              <Navigation />
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/home" element={<Navigate to="/" replace />} />
+                <Route path="/manage-inventory" element={<ManageInventory />} />
+                <Route path="/manage-companies" element={<ManageCompanies />} />
+                <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
+                <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
+                <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </SupabaseAuthProvider>
+      </AutoFillProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

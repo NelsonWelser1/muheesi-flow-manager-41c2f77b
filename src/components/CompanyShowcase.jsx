@@ -1,10 +1,13 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { useQueryClient } from '@tanstack/react-query';
 import { useCompanyStocks } from '@/hooks/useCompanyStocks';
 import KAJONCoffeeDetails from './KAJONCoffeeDetails';
 import KyalimaFarmersDetails from './KyalimaFarmersDetails';
 import CompanyCard from './companies/CompanyCard';
 import GrandBernaDetails from './companies/GrandBernaDetails';
+
 const companies = [{
   name: 'Grand Berna Dairies',
   description: 'Dairy Products',
@@ -33,18 +36,36 @@ const companies = [{
   email: 'kyalimafarmersdirectors@gmail.com',
   phones: ['+256 776 670680', '+256 757 757517']
 }];
+
 const CompanyShowcase = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
+  
+  // Check if QueryClient is available
+  const queryClient = useQueryClient();
+  console.log('CompanyShowcase QueryClient:', queryClient);
+  
+  if (!queryClient) {
+    console.error('QueryClient not available in CompanyShowcase');
+    return (
+      <div className="py-4 sm:py-8 bg-green-50">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+          <p>Loading system...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Individual queries for each company
+  // Individual queries for each company - with fallback for when QueryClient isn't ready
   const {
     data: grandBernaStocks,
     isLoading: isLoadingGrandBerna
   } = useCompanyStocks('Grand Berna Dairies');
+  
   const {
     data: kajonStocks,
     isLoading: isLoadingKajon
   } = useCompanyStocks('KAJON Coffee Limited');
+  
   const {
     data: kyalimaStocks,
     isLoading: isLoadingKyalima
@@ -110,16 +131,28 @@ const CompanyShowcase = () => {
 
   // Determine if any data is still loading
   const isLoading = isLoadingGrandBerna || isLoadingKajon || isLoadingKyalima;
-  return <div data-select-id="company-showcase-container" className="py-4 sm:py-8 bg-green-50">
+  
+  return (
+    <div data-select-id="company-showcase-container" className="py-4 sm:py-8 bg-green-50">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-select-id="companies-grid">
-          {companies.map(company => <CompanyCard key={company.name} company={company} stockData={getStocksForCompany(company.name)} isLoading={isLoading} onViewDetailsClick={setSelectedCompany} />)}
+          {companies.map(company => 
+            <CompanyCard 
+              key={company.name} 
+              company={company} 
+              stockData={getStocksForCompany(company.name)} 
+              isLoading={isLoading} 
+              onViewDetailsClick={setSelectedCompany} 
+            />
+          )}
         </div>
       </div>
       
       {selectedCompany === 'KAJON Coffee Limited' && <KAJONCoffeeDetails onClose={() => setSelectedCompany(null)} />}
       {selectedCompany === 'Grand Berna Dairies' && <GrandBernaDetails onClose={() => setSelectedCompany(null)} />}
       {selectedCompany === 'Kyalima Farmers Limited' && <KyalimaFarmersDetails onClose={() => setSelectedCompany(null)} />}
-    </div>;
+    </div>
+  );
 };
+
 export default CompanyShowcase;
