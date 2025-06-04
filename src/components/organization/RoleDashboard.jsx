@@ -8,6 +8,7 @@ import PADashboard from './pa-dashboard/PADashboard';
 import ComplianceQualityDashboard from './compliance-dashboard/ComplianceQualityDashboard';
 import HRDashboard from './hr-dashboard/HRDashboard';
 import OperationsManagerDashboard from './operations-dashboard/OperationsManagerDashboard';
+import ProcurementManagerDashboard from './operations-dashboard/ProcurementManagerDashboard';
 
 const RoleDashboard = ({ role }) => {
   const renderRoleContent = () => {
@@ -32,6 +33,9 @@ const RoleDashboard = ({ role }) => {
 
       case 'Operations Manager':
         return <OperationsManagerDashboard />;
+
+      case 'Procurement Manager':
+        return <ProcurementManagerDashboard />;
       
       default:
         return (

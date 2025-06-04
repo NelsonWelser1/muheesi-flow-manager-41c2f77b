@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Factory, Package, TrendingUp, AlertTriangle, Users, DollarSign } from 'lucide-react';
+import { Factory, Package, TrendingUp, AlertTriangle, Settings, DollarSign } from 'lucide-react';
 
 const OperationsMetricsCards = () => {
   const metrics = [
