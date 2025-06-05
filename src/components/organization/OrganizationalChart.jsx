@@ -1,473 +1,272 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor, UserPlus, UserCog, ChevronRight, BarChart3, Building, UserRound } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, Building2, Briefcase, FileText, Shield, Settings, HeadphonesIcon, UserCheck } from "lucide-react";
-import OperationalProceduresDocuments from './operational-procedures/OperationalProceduresDocuments';
 
 const OrganizationalChart = () => {
-  const [selectedProcedures, setSelectedProcedures] = useState(false);
-  const [selectedRole, setSelectedRole] = useState(null);
-
-  const dispatchRoleSelection = (role) => {
-    setSelectedRole(role);
-    const event = new CustomEvent('roleSelected', { detail: role });
-    window.dispatchEvent(event);
-  };
-
-  if (selectedProcedures) {
-    return (
-      <div>
-        <Button 
-          variant="ghost" 
-          onClick={() => setSelectedProcedures(false)}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Organizational Chart
-        </Button>
-        <OperationalProceduresDocuments />
-      </div>
-    );
-  }
+  const [expanded, setExpanded] = useState("executive");
+  
+  // Define organizational structure with hierarchy visualization
+  const orgLevels = [
+    {
+      id: "executive",
+      title: "Strategic/Executive Management",
+      description: "Top-level decision makers responsible for company vision and strategy",
+      color: "blue",
+      icon: <UserPlus className="h-5 w-5" />,
+      roles: [
+        {
+          title: "Board of Directors",
+          icon: <UserPlus className="h-5 w-5" />,
+          description: "Governance and oversight of company activities",
+          staff: "5 members",
+          responsibilities: ["Strategic Planning", "Corporate Governance", "Risk Oversight"]
+        },
+        {
+          title: "CEO - H.E Maj. Gen. Geoffrey Muheesi",
+          icon: <User className="h-5 w-5" />,
+          description: "Chief executive responsible for overall company direction",
+          staff: "1",
+          responsibilities: ["Strategic Leadership", "Executive Decision Making", "Corporate Vision"]
+        },
+        {
+          title: "CEO's Personal Assistant - PA. Nelson Namanya",
+          icon: <UserCog className="h-5 w-5" />,
+          description: "Supports CEO with administrative and operational tasks",
+          staff: "1",
+          responsibilities: ["Schedule Management", "Communication", "Administrative Support"]
+        },
+        {
+          title: "System Administrator",
+          icon: <Settings className="h-5 w-5" />,
+          description: "Manages IT infrastructure and system security",
+          staff: "2",
+          responsibilities: ["IT Infrastructure", "Security Protocols", "User Access Management"]
+        },
+        {
+          title: "Compliance & Quality Control Officer",
+          icon: <Shield className="h-5 w-5" />,
+          description: "Ensures adherence to regulations and quality standards",
+          staff: "3",
+          responsibilities: ["Regulatory Compliance", "Quality Standards", "Audit Management"]
+        },
+        {
+          title: "Risk Manager",
+          icon: <AlertOctagon className="h-5 w-5" />,
+          description: "Identifies and mitigates business risks",
+          staff: "2",
+          responsibilities: ["Risk Assessment", "Mitigation Strategies", "Contingency Planning"]
+        }
+      ]
+    },
+    {
+      id: "departmental",
+      title: "Tactical/Departmental Management",
+      description: "Mid-level managers overseeing specific business functions",
+      color: "green",
+      icon: <Users className="h-5 w-5" />,
+      roles: [
+        {
+          title: "Human Resource Manager",
+          icon: <Users className="h-5 w-5" />,
+          description: "Manages recruitment and employee relations",
+          staff: "5",
+          responsibilities: ["Recruitment", "Employee Development", "Policy Implementation"]
+        },
+        {
+          title: "Operations Manager",
+          icon: <BarChart3 className="h-5 w-5" />,
+          description: "Oversees day-to-day business operations",
+          staff: "7",
+          responsibilities: ["Process Optimization", "Operational Efficiency", "Resource Allocation"]
+        },
+        {
+          title: "Procurement Manager",
+          icon: <Building className="h-5 w-5" />,
+          description: "Manages supplier relationships and purchasing",
+          staff: "4",
+          responsibilities: ["Vendor Management", "Supply Chain", "Cost Optimization"]
+        },
+        {
+          title: "Factory Manager",
+          icon: <Warehouse className="h-5 w-5" />,
+          description: "Directs manufacturing operations",
+          staff: "12",
+          responsibilities: ["Production Planning", "Quality Control", "Process Improvement"]
+        },
+        {
+          title: "Finance Manager",
+          icon: <UserRound className="h-5 w-5" />,
+          description: "Manages financial planning and accounting",
+          staff: "6",
+          responsibilities: ["Financial Reporting", "Budget Management", "Cash Flow"]
+        }
+      ]
+    },
+    {
+      id: "operational",
+      title: "Operational/Field Management",
+      description: "Front-line managers handling direct production and service delivery",
+      color: "purple",
+      icon: <Tractor className="h-5 w-5" />,
+      roles: [
+        {
+          title: "Warehouse Supervisor",
+          icon: <Warehouse className="h-5 w-5" />,
+          description: "Manages inventory storage and warehouse operations",
+          staff: "8",
+          responsibilities: ["Inventory Management", "Logistics", "Warehouse Safety"]
+        },
+        {
+          title: "Association Manager",
+          icon: <Users className="h-5 w-5" />,
+          description: "Maintains relationships with partners and associations",
+          staff: "3",
+          responsibilities: ["Partner Relations", "Community Outreach", "Association Coordination"]
+        },
+        {
+          title: "Farm Manager",
+          icon: <Tractor className="h-5 w-5" />,
+          description: "Oversees agricultural operations and farm workers",
+          staff: "15",
+          responsibilities: ["Crop Management", "Livestock Oversight", "Yield Optimization"]
+        }
+      ]
+    }
+  ];
 
   return (
-    <div className="w-full p-6 space-y-6">
-      {/* Company Header */}
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          GKK Group Organizational Structure
-        </h2>
-        <p className="text-gray-600">
-          Integrated management across Dairy, Coffee, and Agricultural operations
-        </p>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Organizational Structure</h2>
+        <Badge variant="outline" className="bg-slate-100">Total Staff: 74</Badge>
       </div>
-
-      {/* Board of Directors */}
-      <div className="mb-8">
-        <h3 className="text-2xl font-bold text-center text-gray-900 mb-4">
-          Board of Directors
-        </h3>
-        <div className="flex justify-center">
-          <Card className="w-80 shadow-lg border-2 border-green-200 bg-gradient-to-br from-green-50 to-green-100">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-2 p-3 bg-green-600 rounded-full w-fit">
-                <Users className="h-8 w-8 text-white" />
+      
+      {/* Visual Org Chart Hierarchy */}
+      <div className="relative">
+        <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-slate-200"></div>
+        <div className="space-y-5 pl-12">
+          {orgLevels.map((level) => (
+            <Card key={level.id} className={`border-l-4 border-${level.color}-500 shadow-sm hover:shadow transition-shadow`}>
+              <div 
+                className={`p-4 cursor-pointer flex justify-between items-center bg-${level.color}-50`}
+                onClick={() => setExpanded(expanded === level.id ? null : level.id)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-full bg-${level.color}-100 text-${level.color}-600`}>
+                    {level.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-lg">{level.title}</h3>
+                    <p className="text-sm text-gray-500">{level.description}</p>
+                  </div>
+                </div>
+                <ChevronRight 
+                  className={`h-5 w-5 text-${level.color}-500 transform transition-transform ${expanded === level.id ? 'rotate-90' : ''}`} 
+                />
               </div>
-              <CardTitle className="text-xl text-green-800">Board of Directors</CardTitle>
-              <Badge className="mx-auto bg-green-600 text-white">Governance</Badge>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-sm text-green-700 mb-4">
-                Overseeing strategic direction and governance
-              </p>
-              <div className="space-y-2">
-                <button 
-                  className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                  onClick={() => dispatchRoleSelection('board-member')}
-                >
-                  • Strategic Oversight
-                </button>
-                <button 
-                  className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                  onClick={() => dispatchRoleSelection('board-member')}
-                >
-                  • Financial Governance
-                </button>
-                <button 
-                  className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                  onClick={() => dispatchRoleSelection('board-member')}
-                >
-                  • Risk Management
-                </button>
-              </div>
-            </CardContent>
-          </Card>
+              
+              {expanded === level.id && (
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {level.roles.map((role) => (
+                      <TooltipProvider key={role.title}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className={`bg-${level.color}-50 border border-${level.color}-100 rounded-lg p-4 hover:shadow-md transition-shadow`}>
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className={`p-2 rounded-full bg-${level.color}-100 text-${level.color}-600`}>
+                                  {role.icon}
+                                </div>
+                                <div>
+                                  <h4 className="font-medium text-sm">{role.title}</h4>
+                                  <div className="flex items-center mt-1">
+                                    <Badge variant="outline" className="text-xs">Staff: {role.staff}</Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-600 mb-2">{role.description}</p>
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {role.responsibilities.map((resp, i) => (
+                                  <Badge key={i} variant="secondary" className="text-xs bg-white">{resp}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <div className="text-sm">
+                              <strong>Key Responsibilities:</strong>
+                              <ul className="list-disc pl-4 mt-1">
+                                {role.responsibilities.map((resp, i) => (
+                                  <li key={i}>{resp}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          ))}
         </div>
       </div>
-
-      {/* Executive Level */}
-      <div className="flex justify-center mb-8">
-        <Card className="w-80 shadow-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-2 p-3 bg-blue-600 rounded-full w-fit">
-              <UserCheck className="h-8 w-8 text-white" />
-            </div>
-            <CardTitle className="text-xl text-blue-800">Chief Executive Officer</CardTitle>
-            <Badge className="mx-auto bg-blue-600 text-white">Executive Leadership</Badge>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-blue-700 mb-4">
-              Overall strategic direction and company leadership
-            </p>
-            <div className="space-y-2">
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('ceo')}
-              >
-                • Strategic Planning & Vision
-              </button>
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('ceo')}
-              >
-                • Board Relations
-              </button>
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('ceo')}
-              >
-                • Executive Leadership
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Management Level - Department Heads */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Dairy Division */}
-        <Card className="shadow-md border-blue-100">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-2 p-3 bg-blue-500 rounded-full w-fit">
-              <Building2 className="h-6 w-6 text-white" />
-            </div>
-            <CardTitle className="text-lg text-blue-700">Dairy Division Head</CardTitle>
-            <Badge className="mx-auto bg-blue-500 text-white">Management</Badge>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-gray-600 mb-4">
-              Overseeing all dairy production and operations
-            </p>
-            <div className="space-y-2">
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('dairy-head')}
-              >
-                • Production Management
-              </button>
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('dairy-head')}
-              >
-                • Quality Control
-              </button>
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('dairy-head')}
-              >
-                • Supply Chain
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Coffee Division */}
-        <Card className="shadow-md border-orange-100">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-2 p-3 bg-orange-500 rounded-full w-fit">
-              <Briefcase className="h-6 w-6 text-white" />
-            </div>
-            <CardTitle className="text-lg text-orange-700">Coffee Division Head</CardTitle>
-            <Badge className="mx-auto bg-orange-500 text-white">Management</Badge>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-gray-600 mb-4">
-              Managing coffee production, processing, and export
-            </p>
-            <div className="space-y-2">
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('coffee-head')}
-              >
-                • Export Management
-              </button>
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('coffee-head')}
-              >
-                • Farm Relations
-              </button>
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('coffee-head')}
-              >
-                • Quality Assurance
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Finance Department */}
-        <Card className="shadow-md border-purple-100">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-2 p-3 bg-purple-500 rounded-full w-fit">
-              <Settings className="h-6 w-6 text-white" />
-            </div>
-            <CardTitle className="text-lg text-purple-700">Finance Director</CardTitle>
-            <Badge className="mx-auto bg-purple-500 text-white">Management</Badge>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-gray-600 mb-4">
-              Overseeing financial planning, reporting, and compliance
-            </p>
-            <div className="space-y-2">
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('finance-director')}
-              >
-                • Budget Management
-              </button>
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('finance-director')}
-              >
-                • Financial Reporting
-              </button>
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('finance-director')}
-              >
-                • Compliance
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Customer Support */}
-        <Card className="shadow-md border-yellow-100">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-2 p-3 bg-yellow-500 rounded-full w-fit">
-              <HeadphonesIcon className="h-6 w-6 text-white" />
-            </div>
-            <CardTitle className="text-lg text-yellow-700">Customer Support Manager</CardTitle>
-            <Badge className="mx-auto bg-yellow-500 text-white">Management</Badge>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-gray-600 mb-4">
-              Managing customer relations and support services
-            </p>
-            <div className="space-y-2">
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('support-manager')}
-              >
-                • Customer Relations
-              </button>
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('support-manager')}
-              >
-                • Service Delivery
-              </button>
-              <button 
-                className="w-full text-left text-blue-700 hover:underline text-sm cursor-pointer"
-                onClick={() => dispatchRoleSelection('support-manager')}
-              >
-                • Feedback Analysis
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Company Policies Section */}
-      <div className="mt-12">
-        <h3 className="text-2xl font-bold text-center text-gray-900 mb-8">
-          Company Policies & Procedures
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="hover:shadow-lg transition-shadow border-green-200">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-2 p-3 bg-green-600 rounded-full w-fit">
-                <FileText className="h-6 w-6 text-white" />
-              </div>
-              <CardTitle className="text-lg text-green-800">Operational Procedures</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-3">
-              <p className="text-sm text-gray-600 mb-4">
-                Standard operating procedures for all production areas
-              </p>
-              <ul className="space-y-2 text-sm">
-                <li 
-                  className="flex items-center text-blue-700 hover:underline cursor-pointer"
-                  onClick={() => setSelectedProcedures(true)}
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Production Area Procedures
+      
+      {/* Business Management Information */}
+      <Card className="mt-8">
+        <CardContent className="p-6">
+          <h3 className="text-lg font-medium mb-4">Business Management Resources</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="border rounded-md p-4 bg-blue-50">
+              <h4 className="font-medium mb-2">Company Policies</h4>
+              <ul className="text-sm space-y-1">
+                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Operational Procedures
                 </li>
-                <li 
-                  className="flex items-center text-blue-700 hover:underline cursor-pointer"
-                  onClick={() => setSelectedProcedures(true)}
-                >
-                  <Shield className="h-4 w-4 mr-2" />
-                  Safety Guidelines & Do's/Don'ts
+                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Staff Handbook
                 </li>
-                <li 
-                  className="flex items-center text-blue-700 hover:underline cursor-pointer"
-                  onClick={() => setSelectedProcedures(true)}
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Document Upload Templates
+                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Quality Standards Manual
                 </li>
               </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow border-red-200">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-2 p-3 bg-red-600 rounded-full w-fit">
-                <Shield className="h-6 w-6 text-white" />
-              </div>
-              <CardTitle className="text-lg text-red-800">Safety & Compliance</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-3">
-              <p className="text-sm text-gray-600 mb-4">
-                Guidelines for maintaining a safe and compliant workplace
-              </p>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <Shield className="h-4 w-4 mr-2" />
-                  Emergency Response Protocols
+            </div>
+            <div className="border rounded-md p-4 bg-green-50">
+              <h4 className="font-medium mb-2">Planning Resources</h4>
+              <ul className="text-sm space-y-1">
+                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Strategic Plan 2024-2025
                 </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Regulatory Compliance Documents
+                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Budget Templates
                 </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Safety Training Schedules
+                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Risk Assessment Tools
                 </li>
               </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow border-blue-200">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-2 p-3 bg-blue-600 rounded-full w-fit">
-                <Settings className="h-6 w-6 text-white" />
-              </div>
-              <CardTitle className="text-lg text-blue-800">HR & Administration</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-3">
-              <p className="text-sm text-gray-600 mb-4">
-                Policies related to human resources and administration
-              </p>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <Users className="h-4 w-4 mr-2" />
-                  Employee Handbook
+            </div>
+            <div className="border rounded-md p-4 bg-purple-50">
+              <h4 className="font-medium mb-2">Communication Tools</h4>
+              <ul className="text-sm space-y-1">
+                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Company Directory
                 </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Leave and Attendance Policies
+                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Reporting Templates
                 </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Performance Review Procedures
+                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Meeting Scheduler
                 </li>
               </ul>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Operational Structure */}
-      <div className="mt-12">
-        <h3 className="text-2xl font-bold text-center text-gray-900 mb-8">
-          Operational Structure by Company
-        </h3>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Grand Berna Dairies */}
-          <Card className="border-blue-100">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-2 p-3 bg-blue-500 rounded-full w-fit">
-                <Building2 className="h-6 w-6 text-white" />
-              </div>
-              <CardTitle className="text-lg text-blue-700">Grand Berna Dairies</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-3">
-              <p className="text-sm text-gray-600">
-                Dairy production and distribution
-              </p>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <Users className="h-4 w-4 mr-2" />
-                  Production Team
-                </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Quality Control Department
-                </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Distribution Network
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* KAJON Coffee */}
-          <Card className="border-orange-100">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-2 p-3 bg-orange-500 rounded-full w-fit">
-                <Briefcase className="h-6 w-6 text-white" />
-              </div>
-              <CardTitle className="text-lg text-orange-700">KAJON Coffee</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-3">
-              <p className="text-sm text-gray-600">
-                Coffee processing and export operations
-              </p>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <Users className="h-4 w-4 mr-2" />
-                  Farm Management
-                </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Processing Facilities
-                </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Export Division
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Kyalima Farmers */}
-          <Card className="border-green-100">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-2 p-3 bg-green-500 rounded-full w-fit">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <CardTitle className="text-lg text-green-700">Kyalima Farmers</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-3">
-              <p className="text-sm text-gray-600">
-                Agricultural production and supply chain
-              </p>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <Users className="h-4 w-4 mr-2" />
-                  Farmers Network
-                </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Supply Chain Logistics
-                </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Agricultural Extension Services
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
