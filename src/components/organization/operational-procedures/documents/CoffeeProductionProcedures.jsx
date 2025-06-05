@@ -188,8 +188,8 @@ const CoffeeProductionProcedures = () => {
               <h4 className="font-semibold text-green-800 mb-2">Environmental Controls:</h4>
               <ul className="text-sm text-green-700 space-y-1">
                 <li>• Fermentation: 22-25°C, 70-80% RH</li>
-                <li>• Drying: Ambient temp, <60% RH</li>
-                <li>• Storage: 15-20°C, <60% RH</li>
+                <li>• Drying: Ambient temp, &lt;60% RH</li>
+                <li>• Storage: 15-20°C, &lt;60% RH</li>
                 <li>• Processing area: Clean, ventilated</li>
               </ul>
             </div>
