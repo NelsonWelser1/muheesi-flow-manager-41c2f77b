@@ -1,269 +1,247 @@
-
 import React, { useState } from 'react';
-import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor, UserPlus, UserCog, ChevronRight, BarChart3, Building, UserRound } from 'lucide-react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { 
+  Users, 
+  Building2, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Calendar,
+  FileText,
+  Shield,
+  User,
+  BookOpen
+} from 'lucide-react';
+import StaffHandbook from './staff-handbook/StaffHandbook';
+
+const companies = [
+  {
+    id: 'grand-berna',
+    name: 'Grand Berna Dairies',
+    type: 'Dairy Processing & Manufacturing',
+    location: 'Mbarara, Uganda',
+    employees: 120,
+    departments: [
+      { name: 'Production', employees: 45 },
+      { name: 'Quality Control', employees: 15 },
+      { name: 'Sales & Marketing', employees: 25 },
+      { name: 'Administration', employees: 10 },
+      { name: 'Logistics', employees: 20 },
+      { name: 'Research & Development', employees: 5 }
+    ],
+    contact: {
+      phone: '+256 700 123 456',
+      email: 'info@grandberna.com',
+      address: 'Mbarara Industrial Area, Plot 45-48'
+    }
+  },
+  {
+    id: 'kajon-coffee',
+    name: 'Kajon Coffee Exports',
+    type: 'Coffee Export & Trading',
+    location: 'Kampala, Uganda',
+    employees: 85,
+    departments: [
+      { name: 'Sourcing & Processing', employees: 30 },
+      { name: 'Quality Assessment', employees: 12 },
+      { name: 'Export Operations', employees: 18 },
+      { name: 'Administration', employees: 8 },
+      { name: 'Sales & Marketing', employees: 15 },
+      { name: 'Finance', employees: 2 }
+    ],
+    contact: {
+      phone: '+256 700 789 012',
+      email: 'info@kajoncoffee.com',
+      address: 'Kampala Business District, Coffee House Building'
+    }
+  },
+  {
+    id: 'fresheco-exports',
+    name: 'Fresheco Exports',
+    type: 'Fresh Produce Export',
+    location: 'Entebbe, Uganda',
+    employees: 65,
+    departments: [
+      { name: 'Produce Sourcing', employees: 20 },
+      { name: 'Quality Control', employees: 10 },
+      { name: 'Packaging & Processing', employees: 15 },
+      { name: 'Export Operations', employees: 12 },
+      { name: 'Administration', employees: 5 },
+      { name: 'Sales', employees: 3 }
+    ],
+    contact: {
+      phone: '+256 700 345 678',
+      email: 'info@fresheco.com',
+      address: 'Entebbe Export Zone, Block C'
+    }
+  }
+];
 
 const OrganizationalChart = () => {
-  const [expanded, setExpanded] = useState("executive");
-  
-  // Define organizational structure with hierarchy visualization
-  const orgLevels = [
-    {
-      id: "executive",
-      title: "Strategic/Executive Management",
-      description: "Top-level decision makers responsible for company vision and strategy",
-      color: "blue",
-      icon: <UserPlus className="h-5 w-5" />,
-      roles: [
-        {
-          title: "Board of Directors",
-          icon: <UserPlus className="h-5 w-5" />,
-          description: "Governance and oversight of company activities",
-          staff: "5 members",
-          responsibilities: ["Strategic Planning", "Corporate Governance", "Risk Oversight"]
-        },
-        {
-          title: "CEO - H.E Maj. Gen. Geoffrey Muheesi",
-          icon: <User className="h-5 w-5" />,
-          description: "Chief executive responsible for overall company direction",
-          staff: "1",
-          responsibilities: ["Strategic Leadership", "Executive Decision Making", "Corporate Vision"]
-        },
-        {
-          title: "CEO's Personal Assistant - PA. Nelson Namanya",
-          icon: <UserCog className="h-5 w-5" />,
-          description: "Supports CEO with administrative and operational tasks",
-          staff: "1",
-          responsibilities: ["Schedule Management", "Communication", "Administrative Support"]
-        },
-        {
-          title: "System Administrator",
-          icon: <Settings className="h-5 w-5" />,
-          description: "Manages IT infrastructure and system security",
-          staff: "2",
-          responsibilities: ["IT Infrastructure", "Security Protocols", "User Access Management"]
-        },
-        {
-          title: "Compliance & Quality Control Officer",
-          icon: <Shield className="h-5 w-5" />,
-          description: "Ensures adherence to regulations and quality standards",
-          staff: "3",
-          responsibilities: ["Regulatory Compliance", "Quality Standards", "Audit Management"]
-        },
-        {
-          title: "Risk Manager",
-          icon: <AlertOctagon className="h-5 w-5" />,
-          description: "Identifies and mitigates business risks",
-          staff: "2",
-          responsibilities: ["Risk Assessment", "Mitigation Strategies", "Contingency Planning"]
-        }
-      ]
-    },
-    {
-      id: "departmental",
-      title: "Tactical/Departmental Management",
-      description: "Mid-level managers overseeing specific business functions",
-      color: "green",
-      icon: <Users className="h-5 w-5" />,
-      roles: [
-        {
-          title: "Human Resource Manager",
-          icon: <Users className="h-5 w-5" />,
-          description: "Manages recruitment and employee relations",
-          staff: "5",
-          responsibilities: ["Recruitment", "Employee Development", "Policy Implementation"]
-        },
-        {
-          title: "Operations Manager",
-          icon: <BarChart3 className="h-5 w-5" />,
-          description: "Oversees day-to-day business operations",
-          staff: "7",
-          responsibilities: ["Process Optimization", "Operational Efficiency", "Resource Allocation"]
-        },
-        {
-          title: "Procurement Manager",
-          icon: <Building className="h-5 w-5" />,
-          description: "Manages supplier relationships and purchasing",
-          staff: "4",
-          responsibilities: ["Vendor Management", "Supply Chain", "Cost Optimization"]
-        },
-        {
-          title: "Factory Manager",
-          icon: <Warehouse className="h-5 w-5" />,
-          description: "Directs manufacturing operations",
-          staff: "12",
-          responsibilities: ["Production Planning", "Quality Control", "Process Improvement"]
-        },
-        {
-          title: "Finance Manager",
-          icon: <UserRound className="h-5 w-5" />,
-          description: "Manages financial planning and accounting",
-          staff: "6",
-          responsibilities: ["Financial Reporting", "Budget Management", "Cash Flow"]
-        }
-      ]
-    },
-    {
-      id: "operational",
-      title: "Operational/Field Management",
-      description: "Front-line managers handling direct production and service delivery",
-      color: "purple",
-      icon: <Tractor className="h-5 w-5" />,
-      roles: [
-        {
-          title: "Warehouse Supervisor",
-          icon: <Warehouse className="h-5 w-5" />,
-          description: "Manages inventory storage and warehouse operations",
-          staff: "8",
-          responsibilities: ["Inventory Management", "Logistics", "Warehouse Safety"]
-        },
-        {
-          title: "Association Manager",
-          icon: <Users className="h-5 w-5" />,
-          description: "Maintains relationships with partners and associations",
-          staff: "3",
-          responsibilities: ["Partner Relations", "Community Outreach", "Association Coordination"]
-        },
-        {
-          title: "Farm Manager",
-          icon: <Tractor className="h-5 w-5" />,
-          description: "Oversees agricultural operations and farm workers",
-          staff: "15",
-          responsibilities: ["Crop Management", "Livestock Oversight", "Yield Optimization"]
-        }
-      ]
-    }
-  ];
+  const [showStaffHandbook, setShowStaffHandbook] = useState(false);
+
+  if (showStaffHandbook) {
+    return <StaffHandbook onBack={() => setShowStaffHandbook(false)} />;
+  }
 
   return (
     <div className="space-y-6">
+      {/* Header Section */}
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Organizational Structure</h2>
-        <Badge variant="outline" className="bg-slate-100">Total Staff: 74</Badge>
-      </div>
-      
-      {/* Visual Org Chart Hierarchy */}
-      <div className="relative">
-        <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-slate-200"></div>
-        <div className="space-y-5 pl-12">
-          {orgLevels.map((level) => (
-            <Card key={level.id} className={`border-l-4 border-${level.color}-500 shadow-sm hover:shadow transition-shadow`}>
-              <div 
-                className={`p-4 cursor-pointer flex justify-between items-center bg-${level.color}-50`}
-                onClick={() => setExpanded(expanded === level.id ? null : level.id)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full bg-${level.color}-100 text-${level.color}-600`}>
-                    {level.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-lg">{level.title}</h3>
-                    <p className="text-sm text-gray-500">{level.description}</p>
-                  </div>
-                </div>
-                <ChevronRight 
-                  className={`h-5 w-5 text-${level.color}-500 transform transition-transform ${expanded === level.id ? 'rotate-90' : ''}`} 
-                />
-              </div>
-              
-              {expanded === level.id && (
-                <CardContent className="pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {level.roles.map((role) => (
-                      <TooltipProvider key={role.title}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className={`bg-${level.color}-50 border border-${level.color}-100 rounded-lg p-4 hover:shadow-md transition-shadow`}>
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className={`p-2 rounded-full bg-${level.color}-100 text-${level.color}-600`}>
-                                  {role.icon}
-                                </div>
-                                <div>
-                                  <h4 className="font-medium text-sm">{role.title}</h4>
-                                  <div className="flex items-center mt-1">
-                                    <Badge variant="outline" className="text-xs">Staff: {role.staff}</Badge>
-                                  </div>
-                                </div>
-                              </div>
-                              <p className="text-xs text-gray-600 mb-2">{role.description}</p>
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {role.responsibilities.map((resp, i) => (
-                                  <Badge key={i} variant="secondary" className="text-xs bg-white">{resp}</Badge>
-                                ))}
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom">
-                            <div className="text-sm">
-                              <strong>Key Responsibilities:</strong>
-                              <ul className="list-disc pl-4 mt-1">
-                                {role.responsibilities.map((resp, i) => (
-                                  <li key={i}>{resp}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ))}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          ))}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Organizational Structure</h2>
+          <p className="text-gray-600">Company overview and team structure</p>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={() => setShowStaffHandbook(true)}
+          >
+            <BookOpen className="h-4 w-4" />
+            Staff Handbook
+          </Button>
         </div>
       </div>
-      
-      {/* Business Management Information */}
-      <Card className="mt-8">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-medium mb-4">Business Management Resources</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="border rounded-md p-4 bg-blue-50">
-              <h4 className="font-medium mb-2">Company Policies</h4>
-              <ul className="text-sm space-y-1">
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Operational Procedures
-                </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Staff Handbook
-                </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Quality Standards Manual
-                </li>
-              </ul>
+
+      {/* Companies Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {companies.map((company) => (
+          <Card key={company.id} className="overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div className="flex items-start gap-3">
+                <div className="p-3 bg-white rounded-lg shadow-sm">
+                  <Building2 className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold text-gray-900">
+                    {company.name}
+                  </CardTitle>
+                  <p className="text-sm text-blue-600 font-medium mt-1">
+                    {company.type}
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {/* Location and Employees */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    <span>{company.location}</span>
+                  </div>
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    <span>{company.employees} Employees</span>
+                  </Badge>
+                </div>
+
+                {/* Departments */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Departments</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {company.departments.map((dept) => (
+                      <div key={dept.name} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md">
+                        <span className="text-xs font-medium text-gray-700">{dept.name}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {dept.employees}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="pt-3 border-t border-gray-100">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Contact Information</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-3 w-3 text-gray-400" />
+                      <span className="text-gray-600">{company.contact.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3 w-3 text-gray-400" />
+                      <span className="text-gray-600">{company.contact.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-3 w-3 text-gray-400" />
+                      <span className="text-gray-600">{company.contact.address}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Organization-wide Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Organization-wide Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <Calendar className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Fiscal Year</h3>
+                <p className="text-sm text-gray-600">January - December</p>
+              </div>
             </div>
-            <div className="border rounded-md p-4 bg-green-50">
-              <h4 className="font-medium mb-2">Planning Resources</h4>
-              <ul className="text-sm space-y-1">
-                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Strategic Plan 2024-2025
-                </li>
-                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Budget Templates
-                </li>
-                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Risk Assessment Tools
-                </li>
-              </ul>
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-green-50 rounded-lg">
+                <FileText className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Reporting Structure</h3>
+                <p className="text-sm text-gray-600">Centralized management</p>
+              </div>
             </div>
-            <div className="border rounded-md p-4 bg-purple-50">
-              <h4 className="font-medium mb-2">Communication Tools</h4>
-              <ul className="text-sm space-y-1">
-                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Company Directory
-                </li>
-                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Reporting Templates
-                </li>
-                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Meeting Scheduler
-                </li>
-              </ul>
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-purple-50 rounded-lg">
+                <Shield className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Compliance</h3>
+                <p className="text-sm text-gray-600">ISO 9001, HACCP Certified</p>
+              </div>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Key Personnel */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Key Personnel</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { name: "John Mukasa", role: "Chief Executive Officer", company: "Group" },
+              { name: "Sarah Nambi", role: "Chief Operations Officer", company: "Group" },
+              { name: "David Okello", role: "Managing Director", company: "Grand Berna Dairies" },
+              { name: "Patricia Zawedde", role: "Managing Director", company: "Kajon Coffee Exports" },
+              { name: "Michael Ochen", role: "Managing Director", company: "Fresheco Exports" },
+              { name: "Elizabeth Nantume", role: "Chief Financial Officer", company: "Group" }
+            ].map((person, index) => (
+              <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+                <div className="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
+                  <User className="h-5 w-5 text-gray-500" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">{person.name}</h4>
+                  <p className="text-xs text-gray-600">{person.role}</p>
+                  <Badge variant="outline" className="mt-1 text-xs">{person.company}</Badge>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
