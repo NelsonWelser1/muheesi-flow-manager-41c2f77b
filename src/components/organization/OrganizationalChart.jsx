@@ -1,272 +1,289 @@
-
 import React, { useState } from 'react';
-import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor, UserPlus, UserCog, ChevronRight, BarChart3, Building, UserRound } from 'lucide-react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Users, 
+  Building2, 
+  ChevronDown, 
+  ChevronUp, 
+  UserCheck, 
+  Award,
+  ArrowLeft,
+  FileText
+} from 'lucide-react';
+import OperationalProcedures from './operational-procedures/OperationalProcedures';
 
 const OrganizationalChart = () => {
-  const [expanded, setExpanded] = useState("executive");
-  
-  // Define organizational structure with hierarchy visualization
-  const orgLevels = [
-    {
-      id: "executive",
-      title: "Strategic/Executive Management",
-      description: "Top-level decision makers responsible for company vision and strategy",
-      color: "blue",
-      icon: <UserPlus className="h-5 w-5" />,
-      roles: [
-        {
-          title: "Board of Directors",
-          icon: <UserPlus className="h-5 w-5" />,
-          description: "Governance and oversight of company activities",
-          staff: "5 members",
-          responsibilities: ["Strategic Planning", "Corporate Governance", "Risk Oversight"]
+  const [expandedNodes, setExpandedNodes] = useState({});
+  const [showOperationalProcedures, setShowOperationalProcedures] = useState(false);
+
+  const toggleNode = (nodeId) => {
+    setExpandedNodes(prev => ({
+      ...prev,
+      [nodeId]: !prev[nodeId]
+    }));
+  };
+
+  // If showing operational procedures, render that component
+  if (showOperationalProcedures) {
+    return (
+      <div>
+        <div className="mb-4">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowOperationalProcedures(false)}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Organizational Chart
+          </Button>
+        </div>
+        <OperationalProcedures />
+      </div>
+    );
+  }
+
+  const organizationalData = {
+    ceo: {
+      name: "Chief Executive Officer",
+      position: "CEO",
+      holder: "Grace Muheesi",
+      departments: {
+        finance: {
+          name: "Finance Department",
+          head: "Finance Manager",
+          teams: ["Accounting", "Budget Planning", "Financial Analysis"]
         },
-        {
-          title: "CEO - H.E Maj. Gen. Geoffrey Muheesi",
-          icon: <User className="h-5 w-5" />,
-          description: "Chief executive responsible for overall company direction",
-          staff: "1",
-          responsibilities: ["Strategic Leadership", "Executive Decision Making", "Corporate Vision"]
+        operations: {
+          name: "Operations Department", 
+          head: "Operations Manager",
+          teams: ["Production", "Quality Control", "Logistics"]
         },
-        {
-          title: "CEO's Personal Assistant - PA. Nelson Namanya",
-          icon: <UserCog className="h-5 w-5" />,
-          description: "Supports CEO with administrative and operational tasks",
-          staff: "1",
-          responsibilities: ["Schedule Management", "Communication", "Administrative Support"]
+        hr: {
+          name: "Human Resources",
+          head: "HR Manager", 
+          teams: ["Recruitment", "Training", "Employee Relations"]
         },
-        {
-          title: "System Administrator",
-          icon: <Settings className="h-5 w-5" />,
-          description: "Manages IT infrastructure and system security",
-          staff: "2",
-          responsibilities: ["IT Infrastructure", "Security Protocols", "User Access Management"]
-        },
-        {
-          title: "Compliance & Quality Control Officer",
-          icon: <Shield className="h-5 w-5" />,
-          description: "Ensures adherence to regulations and quality standards",
-          staff: "3",
-          responsibilities: ["Regulatory Compliance", "Quality Standards", "Audit Management"]
-        },
-        {
-          title: "Risk Manager",
-          icon: <AlertOctagon className="h-5 w-5" />,
-          description: "Identifies and mitigates business risks",
-          staff: "2",
-          responsibilities: ["Risk Assessment", "Mitigation Strategies", "Contingency Planning"]
+        it: {
+          name: "Information Technology",
+          head: "IT Manager",
+          teams: ["System Administration", "Software Development", "Technical Support"]
         }
-      ]
+      }
     },
-    {
-      id: "departmental",
-      title: "Tactical/Departmental Management",
-      description: "Mid-level managers overseeing specific business functions",
-      color: "green",
-      icon: <Users className="h-5 w-5" />,
-      roles: [
-        {
-          title: "Human Resource Manager",
-          icon: <Users className="h-5 w-5" />,
-          description: "Manages recruitment and employee relations",
-          staff: "5",
-          responsibilities: ["Recruitment", "Employee Development", "Policy Implementation"]
-        },
-        {
-          title: "Operations Manager",
-          icon: <BarChart3 className="h-5 w-5" />,
-          description: "Oversees day-to-day business operations",
-          staff: "7",
-          responsibilities: ["Process Optimization", "Operational Efficiency", "Resource Allocation"]
-        },
-        {
-          title: "Procurement Manager",
-          icon: <Building className="h-5 w-5" />,
-          description: "Manages supplier relationships and purchasing",
-          staff: "4",
-          responsibilities: ["Vendor Management", "Supply Chain", "Cost Optimization"]
-        },
-        {
-          title: "Factory Manager",
-          icon: <Warehouse className="h-5 w-5" />,
-          description: "Directs manufacturing operations",
-          staff: "12",
-          responsibilities: ["Production Planning", "Quality Control", "Process Improvement"]
-        },
-        {
-          title: "Finance Manager",
-          icon: <UserRound className="h-5 w-5" />,
-          description: "Manages financial planning and accounting",
-          staff: "6",
-          responsibilities: ["Financial Reporting", "Budget Management", "Cash Flow"]
-        }
-      ]
+    companies: {
+      grandBerna: {
+        name: "Grand Berna Dairies",
+        manager: "Dairy Operations Manager",
+        departments: ["Production", "Quality Control", "Distribution", "Sales"]
+      },
+      kajon: {
+        name: "KAJON Coffee Limited", 
+        manager: "Coffee Operations Manager",
+        departments: ["Sourcing", "Processing", "Export", "Marketing"]
+      },
+      kyalima: {
+        name: "Kyalima Farmers Limited",
+        manager: "Farm Operations Manager", 
+        departments: ["Crop Production", "Livestock", "Equipment", "Market Relations"]
+      }
+    }
+  };
+
+  const quickActions = [
+    { 
+      name: "View All Accounts", 
+      icon: Users, 
+      description: "See all system user accounts",
+      onClick: () => console.log("View accounts")
     },
-    {
-      id: "operational",
-      title: "Operational/Field Management",
-      description: "Front-line managers handling direct production and service delivery",
-      color: "purple",
-      icon: <Tractor className="h-5 w-5" />,
-      roles: [
-        {
-          title: "Warehouse Supervisor",
-          icon: <Warehouse className="h-5 w-5" />,
-          description: "Manages inventory storage and warehouse operations",
-          staff: "8",
-          responsibilities: ["Inventory Management", "Logistics", "Warehouse Safety"]
-        },
-        {
-          title: "Association Manager",
-          icon: <Users className="h-5 w-5" />,
-          description: "Maintains relationships with partners and associations",
-          staff: "3",
-          responsibilities: ["Partner Relations", "Community Outreach", "Association Coordination"]
-        },
-        {
-          title: "Farm Manager",
-          icon: <Tractor className="h-5 w-5" />,
-          description: "Oversees agricultural operations and farm workers",
-          staff: "15",
-          responsibilities: ["Crop Management", "Livestock Oversight", "Yield Optimization"]
-        }
-      ]
+    { 
+      name: "Role Permissions", 
+      icon: UserCheck, 
+      description: "Manage role-based permissions",
+      onClick: () => console.log("Manage permissions")
+    },
+    { 
+      name: "Performance Reviews", 
+      icon: Award, 
+      description: "Access performance evaluation system",
+      onClick: () => console.log("Performance reviews")
+    },
+    { 
+      name: "Operational Procedures", 
+      icon: FileText, 
+      description: "Manage operational procedures and protocols",
+      onClick: () => setShowOperationalProcedures(true)
     }
   ];
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Organizational Structure</h2>
-        <Badge variant="outline" className="bg-slate-100">Total Staff: 74</Badge>
+  const DepartmentNode = ({ department, isExpanded, onToggle, level = 0 }) => (
+    <div className={`ml-${level * 4} mb-2`}>
+      <div 
+        className="flex items-center justify-between p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+        onClick={onToggle}
+      >
+        <div className="flex items-center space-x-2">
+          <Building2 className="h-4 w-4 text-blue-600" />
+          <span className="font-medium text-blue-900">{department.name}</span>
+          <Badge variant="outline" className="text-xs">{department.head}</Badge>
+        </div>
+        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </div>
       
-      {/* Visual Org Chart Hierarchy */}
-      <div className="relative">
-        <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-slate-200"></div>
-        <div className="space-y-5 pl-12">
-          {orgLevels.map((level) => (
-            <Card key={level.id} className={`border-l-4 border-${level.color}-500 shadow-sm hover:shadow transition-shadow`}>
-              <div 
-                className={`p-4 cursor-pointer flex justify-between items-center bg-${level.color}-50`}
-                onClick={() => setExpanded(expanded === level.id ? null : level.id)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full bg-${level.color}-100 text-${level.color}-600`}>
-                    {level.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-lg">{level.title}</h3>
-                    <p className="text-sm text-gray-500">{level.description}</p>
-                  </div>
-                </div>
-                <ChevronRight 
-                  className={`h-5 w-5 text-${level.color}-500 transform transition-transform ${expanded === level.id ? 'rotate-90' : ''}`} 
-                />
-              </div>
-              
-              {expanded === level.id && (
-                <CardContent className="pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {level.roles.map((role) => (
-                      <TooltipProvider key={role.title}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className={`bg-${level.color}-50 border border-${level.color}-100 rounded-lg p-4 hover:shadow-md transition-shadow`}>
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className={`p-2 rounded-full bg-${level.color}-100 text-${level.color}-600`}>
-                                  {role.icon}
-                                </div>
-                                <div>
-                                  <h4 className="font-medium text-sm">{role.title}</h4>
-                                  <div className="flex items-center mt-1">
-                                    <Badge variant="outline" className="text-xs">Staff: {role.staff}</Badge>
-                                  </div>
-                                </div>
-                              </div>
-                              <p className="text-xs text-gray-600 mb-2">{role.description}</p>
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {role.responsibilities.map((resp, i) => (
-                                  <Badge key={i} variant="secondary" className="text-xs bg-white">{resp}</Badge>
-                                ))}
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom">
-                            <div className="text-sm">
-                              <strong>Key Responsibilities:</strong>
-                              <ul className="list-disc pl-4 mt-1">
-                                {role.responsibilities.map((resp, i) => (
-                                  <li key={i}>{resp}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ))}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
+      {isExpanded && department.teams && (
+        <div className="ml-6 mt-2 space-y-1">
+          {department.teams.map((team, index) => (
+            <div key={index} className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
+              <Users className="h-3 w-3 text-gray-600" />
+              <span className="text-sm text-gray-700">{team}</span>
+            </div>
           ))}
         </div>
+      )}
+    </div>
+  );
+
+  const CompanyNode = ({ company, companyKey }) => (
+    <Card className="mb-4">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center space-x-2">
+          <Building2 className="h-5 w-5 text-green-600" />
+          <span>{company.name}</span>
+          <Badge className="bg-green-100 text-green-800">{company.manager}</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-2">
+          {company.departments.map((dept, index) => (
+            <div key={index} className="flex items-center space-x-2 p-2 bg-green-50 rounded">
+              <Users className="h-3 w-3 text-green-600" />
+              <span className="text-sm text-green-700">{dept}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold mb-2">GKK Group Organizational Structure</h2>
+        <p className="text-gray-600">Comprehensive overview of our organizational hierarchy and operational structure</p>
       </div>
-      
-      {/* Business Management Information */}
-      <Card className="mt-8">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-medium mb-4">Business Management Resources</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="border rounded-md p-4 bg-blue-50">
-              <h4 className="font-medium mb-2">Company Policies</h4>
-              <ul className="text-sm space-y-1">
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Operational Procedures
-                </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Staff Handbook
-                </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Quality Standards Manual
-                </li>
-              </ul>
+
+      {/* CEO Level */}
+      <Card className="border-2 border-purple-200">
+        <CardHeader className="bg-purple-50">
+          <CardTitle className="flex items-center justify-center space-x-2">
+            <Award className="h-6 w-6 text-purple-600" />
+            <div className="text-center">
+              <div className="text-lg font-bold text-purple-900">{organizationalData.ceo.holder}</div>
+              <div className="text-sm text-purple-700">{organizationalData.ceo.name}</div>
             </div>
-            <div className="border rounded-md p-4 bg-green-50">
-              <h4 className="font-medium mb-2">Planning Resources</h4>
-              <ul className="text-sm space-y-1">
-                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Strategic Plan 2024-2025
-                </li>
-                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Budget Templates
-                </li>
-                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Risk Assessment Tools
-                </li>
-              </ul>
-            </div>
-            <div className="border rounded-md p-4 bg-purple-50">
-              <h4 className="font-medium mb-2">Communication Tools</h4>
-              <ul className="text-sm space-y-1">
-                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Company Directory
-                </li>
-                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Reporting Templates
-                </li>
-                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
-                  <ChevronRight className="h-4 w-4 mr-1" /> Meeting Scheduler
-                </li>
-              </ul>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          {/* Corporate Departments */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3 text-center">Corporate Departments</h3>
+            <div className="space-y-2">
+              {Object.entries(organizationalData.ceo.departments).map(([key, department]) => (
+                <DepartmentNode
+                  key={key}
+                  department={department}
+                  isExpanded={expandedNodes[key]}
+                  onToggle={() => toggleNode(key)}
+                />
+              ))}
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Companies Level */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4 text-center">Operating Companies</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {Object.entries(organizationalData.companies).map(([key, company]) => (
+            <CompanyNode key={key} company={company} companyKey={key} />
+          ))}
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {quickActions.map((action, index) => (
+              <div key={index} className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer" onClick={action.onClick}>
+                <div className="flex items-center space-x-3">
+                  <action.icon className="h-6 w-6 text-blue-600" />
+                  <div>
+                    <h4 className="font-medium">{action.name}</h4>
+                    <p className="text-sm text-gray-600">{action.description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Additional Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Communication Channels</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                <span>Internal Messaging System</span>
+              </li>
+              <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                <span>Company-wide Announcements</span>
+              </li>
+              <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                <span>Department Meetings Schedule</span>
+              </li>
+              <li 
+                className="flex items-center text-blue-700 hover:underline cursor-pointer"
+                onClick={() => setShowOperationalProcedures(true)}
+              >
+                <span>Operational Procedures</span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">System Resources</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                <span>Employee Handbook</span>
+              </li>
+              <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                <span>Policy Documents</span>
+              </li>
+              <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                <span>Training Materials</span>
+              </li>
+              <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                <span>Emergency Contacts</span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
