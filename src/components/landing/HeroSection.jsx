@@ -35,16 +35,6 @@ const HeroSection = () => {
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-r from-blue-900 via-blue-800 to-purple-900">
-      {/* Fixed positioned logo background */}
-      <div 
-        className="fixed inset-0 opacity-5 bg-no-repeat bg-center bg-contain pointer-events-none z-0" 
-        style={{
-          backgroundImage: `url('/__ MUHEESI KKG-Tri-company logoes - png.png')`,
-          backgroundSize: '60%',
-          backgroundPosition: 'center center'
-        }} 
-      />
-      
       <div className="absolute inset-0 bg-black/20">
       </div>
       

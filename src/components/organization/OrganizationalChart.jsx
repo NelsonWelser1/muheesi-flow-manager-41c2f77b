@@ -1,461 +1,272 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor, UserPlus, UserCog, ChevronRight, BarChart3, Building, UserRound } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Building, 
-  Users, 
-  Shield, 
-  Settings, 
-  FileText, 
-  BarChart, 
-  CheckSquare,
-  AlertTriangle,
-  Clock,
-  Target
-} from 'lucide-react';
-import RoleDescriptions from './RoleDescriptions';
-import OperationalProceduresManager from './operational-procedures/OperationalProceduresManager';
 
 const OrganizationalChart = () => {
-  const [showOperationalProcedures, setShowOperationalProcedures] = useState(false);
-
+  const [expanded, setExpanded] = useState("executive");
+  
   // Define organizational structure with hierarchy visualization
-  const organizationalStructure = {
-    strategic: [
-      {
-        title: "Chief Executive Officer (CEO)",
-        name: "H.E Maj. Gen. Geoffrey Muheesi",
-        responsibilities: [
-          "Overall company management and strategic decision-making",
-          "Review and approve high-level reports and financial statements",
-          "Set company goals and objectives",
-          "Represent the company in major business dealings and partnerships"
-        ],
-        icon: Building,
-        color: "bg-blue-500"
-      },
-      {
-        title: "Board of Directors",
-        responsibilities: [
-          "Governance and strategic oversight",
-          "Policy development and approval",
-          "Risk management oversight",
-          "Executive performance evaluation"
-        ],
-        icon: Shield,
-        color: "bg-purple-500"
-      },
-      {
-        title: "CEO's Personal Assistant",
-        responsibilities: [
-          "Executive support and coordination",
-          "Meeting and schedule management",
-          "Communication liaison",
-          "Project coordination support"
-        ],
-        icon: Users,
-        color: "bg-indigo-500"
-      },
-      {
-        title: "System Administrator (SysAdmin)",
-        responsibilities: [
-          "Overall system management and oversight",
-          "Configure system settings and user permissions",
-          "Ensure data backups and security protocols",
-          "Maintain system infrastructure and updates"
-        ],
-        icon: Settings,
-        color: "bg-gray-500"
-      }
-    ],
-    tactical: [
-      {
-        title: "Compliance & Quality Control Officer",
-        responsibilities: [
-          "Ensure regulatory compliance",
-          "Quality assurance oversight",
-          "Audit coordination",
-          "Standards implementation"
-        ],
-        icon: CheckSquare,
-        color: "bg-green-500"
-      },
-      {
-        title: "Risk Manager",
-        responsibilities: [
-          "Risk assessment and mitigation",
-          "Business continuity planning",
-          "Insurance coordination",
-          "Crisis management"
-        ],
-        icon: AlertTriangle,
-        color: "bg-red-500"
-      },
-      {
-        title: "Human Resource Manager",
-        responsibilities: [
-          "Recruitment and staffing",
-          "Training and development",
-          "Employee relations",
-          "Performance management"
-        ],
-        icon: Users,
-        color: "bg-pink-500"
-      },
-      {
-        title: "Operations Manager",
-        responsibilities: [
-          "Daily operations coordination",
-          "Process optimization",
-          "Resource allocation",
-          "Performance monitoring"
-        ],
-        icon: Settings,
-        color: "bg-blue-600"
-      },
-      {
-        title: "Procurement Manager",
-        responsibilities: [
-          "Supplier relationship management",
-          "Contract negotiation",
-          "Purchase order processing",
-          "Vendor evaluation"
-        ],
-        icon: FileText,
-        color: "bg-orange-500"
-      },
-      {
-        title: "Factory Manager",
-        responsibilities: [
-          "Production oversight",
-          "Manufacturing operations",
-          "Equipment maintenance",
-          "Safety compliance"
-        ],
-        icon: Building,
-        color: "bg-yellow-600"
-      },
-      {
-        title: "Finance Manager",
-        responsibilities: [
-          "Financial planning and analysis",
-          "Budget management",
-          "Accounting oversight",
-          "Financial reporting"
-        ],
-        icon: BarChart,
-        color: "bg-green-600"
-      },
-      {
-        title: "Sales & Export Manager",
-        responsibilities: [
-          "Sales strategy development",
-          "Client relationship management",
-          "Export operations",
-          "Market development"
-        ],
-        icon: Target,
-        color: "bg-blue-700"
-      },
-      {
-        title: "Logistics Manager",
-        responsibilities: [
-          "Supply chain coordination",
-          "Transportation management",
-          "Distribution oversight",
-          "Inventory optimization"
-        ],
-        icon: Settings,
-        color: "bg-indigo-600"
-      },
-      {
-        title: "Inventory Manager",
-        responsibilities: [
-          "Stock level management",
-          "Warehouse operations",
-          "Inventory tracking",
-          "Order fulfillment"
-        ],
-        icon: FileText,
-        color: "bg-purple-600"
-      },
-      {
-        title: "Marketing Manager",
-        responsibilities: [
-          "Brand management",
-          "Marketing campaigns",
-          "Market research",
-          "Customer engagement"
-        ],
-        icon: Target,
-        color: "bg-pink-600"
-      },
-      {
-        title: "IT Manager",
-        responsibilities: [
-          "Technology infrastructure",
-          "System administration",
-          "Technical support",
-          "Digital transformation"
-        ],
-        icon: Settings,
-        color: "bg-gray-600"
-      },
-      {
-        title: "Product Development Manager",
-        responsibilities: [
-          "Product innovation",
-          "Development lifecycle",
-          "Quality testing",
-          "Market alignment"
-        ],
-        icon: Target,
-        color: "bg-teal-600"
-      }
-    ],
-    operational: [
-      {
-        title: "Warehouse Supervisor",
-        responsibilities: [
-          "Daily warehouse operations",
-          "Inventory management",
-          "Staff supervision",
-          "Safety protocols"
-        ],
-        icon: Building,
-        color: "bg-yellow-500"
-      },
-      {
-        title: "Association Manager",
-        responsibilities: [
-          "Partner relationships",
-          "Association coordination",
-          "Community engagement",
-          "Collaborative projects"
-        ],
-        icon: Users,
-        color: "bg-green-500"
-      },
-      {
-        title: "Farm Manager",
-        responsibilities: [
-          "Agricultural operations",
-          "Crop management",
-          "Farm workers supervision",
-          "Production optimization"
-        ],
-        icon: Building,
-        color: "bg-green-700"
-      }
-    ]
-  };
-
-  const handleRoleClick = (role) => {
-    const event = new CustomEvent('roleSelected', { detail: role });
-    window.dispatchEvent(event);
-  };
-
-  const organizationalFeatures = [
+  const orgLevels = [
     {
-      title: "Role Definitions",
-      description: "Clear role descriptions and responsibilities",
-      icon: Users,
-      color: "text-blue-500"
+      id: "executive",
+      title: "Strategic/Executive Management",
+      description: "Top-level decision makers responsible for company vision and strategy",
+      color: "blue",
+      icon: <UserPlus className="h-5 w-5" />,
+      roles: [
+        {
+          title: "Board of Directors",
+          icon: <UserPlus className="h-5 w-5" />,
+          description: "Governance and oversight of company activities",
+          staff: "5 members",
+          responsibilities: ["Strategic Planning", "Corporate Governance", "Risk Oversight"]
+        },
+        {
+          title: "CEO - H.E Maj. Gen. Geoffrey Muheesi",
+          icon: <User className="h-5 w-5" />,
+          description: "Chief executive responsible for overall company direction",
+          staff: "1",
+          responsibilities: ["Strategic Leadership", "Executive Decision Making", "Corporate Vision"]
+        },
+        {
+          title: "CEO's Personal Assistant - PA. Nelson Namanya",
+          icon: <UserCog className="h-5 w-5" />,
+          description: "Supports CEO with administrative and operational tasks",
+          staff: "1",
+          responsibilities: ["Schedule Management", "Communication", "Administrative Support"]
+        },
+        {
+          title: "System Administrator",
+          icon: <Settings className="h-5 w-5" />,
+          description: "Manages IT infrastructure and system security",
+          staff: "2",
+          responsibilities: ["IT Infrastructure", "Security Protocols", "User Access Management"]
+        },
+        {
+          title: "Compliance & Quality Control Officer",
+          icon: <Shield className="h-5 w-5" />,
+          description: "Ensures adherence to regulations and quality standards",
+          staff: "3",
+          responsibilities: ["Regulatory Compliance", "Quality Standards", "Audit Management"]
+        },
+        {
+          title: "Risk Manager",
+          icon: <AlertOctagon className="h-5 w-5" />,
+          description: "Identifies and mitigates business risks",
+          staff: "2",
+          responsibilities: ["Risk Assessment", "Mitigation Strategies", "Contingency Planning"]
+        }
+      ]
     },
     {
-      title: "Reporting Structure",
-      description: "Hierarchical reporting relationships",
-      icon: BarChart,
-      color: "text-green-500"
+      id: "departmental",
+      title: "Tactical/Departmental Management",
+      description: "Mid-level managers overseeing specific business functions",
+      color: "green",
+      icon: <Users className="h-5 w-5" />,
+      roles: [
+        {
+          title: "Human Resource Manager",
+          icon: <Users className="h-5 w-5" />,
+          description: "Manages recruitment and employee relations",
+          staff: "5",
+          responsibilities: ["Recruitment", "Employee Development", "Policy Implementation"]
+        },
+        {
+          title: "Operations Manager",
+          icon: <BarChart3 className="h-5 w-5" />,
+          description: "Oversees day-to-day business operations",
+          staff: "7",
+          responsibilities: ["Process Optimization", "Operational Efficiency", "Resource Allocation"]
+        },
+        {
+          title: "Procurement Manager",
+          icon: <Building className="h-5 w-5" />,
+          description: "Manages supplier relationships and purchasing",
+          staff: "4",
+          responsibilities: ["Vendor Management", "Supply Chain", "Cost Optimization"]
+        },
+        {
+          title: "Factory Manager",
+          icon: <Warehouse className="h-5 w-5" />,
+          description: "Directs manufacturing operations",
+          staff: "12",
+          responsibilities: ["Production Planning", "Quality Control", "Process Improvement"]
+        },
+        {
+          title: "Finance Manager",
+          icon: <UserRound className="h-5 w-5" />,
+          description: "Manages financial planning and accounting",
+          staff: "6",
+          responsibilities: ["Financial Reporting", "Budget Management", "Cash Flow"]
+        }
+      ]
     },
     {
-      title: "Operational Procedures",
-      description: "Standardized operational procedures and workflows",
-      icon: FileText,
-      color: "text-purple-500",
-      onClick: () => setShowOperationalProcedures(true)
-    },
-    {
-      title: "Governance Framework",
-      description: "Corporate governance and compliance structure",
-      icon: Shield,
-      color: "text-red-500"
+      id: "operational",
+      title: "Operational/Field Management",
+      description: "Front-line managers handling direct production and service delivery",
+      color: "purple",
+      icon: <Tractor className="h-5 w-5" />,
+      roles: [
+        {
+          title: "Warehouse Supervisor",
+          icon: <Warehouse className="h-5 w-5" />,
+          description: "Manages inventory storage and warehouse operations",
+          staff: "8",
+          responsibilities: ["Inventory Management", "Logistics", "Warehouse Safety"]
+        },
+        {
+          title: "Association Manager",
+          icon: <Users className="h-5 w-5" />,
+          description: "Maintains relationships with partners and associations",
+          staff: "3",
+          responsibilities: ["Partner Relations", "Community Outreach", "Association Coordination"]
+        },
+        {
+          title: "Farm Manager",
+          icon: <Tractor className="h-5 w-5" />,
+          description: "Oversees agricultural operations and farm workers",
+          staff: "15",
+          responsibilities: ["Crop Management", "Livestock Oversight", "Yield Optimization"]
+        }
+      ]
     }
   ];
 
-  if (showOperationalProcedures) {
-    return (
-      <OperationalProceduresManager 
-        onBack={() => setShowOperationalProcedures(false)}
-      />
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          GKK Integrated Management System
-        </h2>
-        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-          Comprehensive organizational structure covering strategic, tactical, and operational management 
-          across Grand Berna Dairies, KAJON Coffee, and Kyalima Farmers Limited.
-        </p>
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Organizational Structure</h2>
+        <Badge variant="outline" className="bg-slate-100">Total Staff: 74</Badge>
       </div>
-
-      {/* Organizational Features Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {organizationalFeatures.map((feature, index) => (
-          <Card 
-            key={index} 
-            className={`cursor-pointer hover:shadow-lg transition-shadow ${feature.onClick ? 'hover:bg-gray-50' : ''}`}
-            onClick={feature.onClick}
-          >
-            <CardContent className="p-4 text-center">
-              <feature.icon className={`h-8 w-8 mx-auto mb-2 ${feature.color}`} />
-              <h3 className="font-semibold text-sm mb-1">{feature.title}</h3>
-              <p className="text-xs text-gray-600">{feature.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Organizational Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building className="h-5 w-5" />
-              Organizational Hierarchy
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="strategic">
-                <AccordionTrigger className="text-lg font-semibold">
-                  Strategic/Executive Management
-                  <Badge variant="secondary" className="ml-2">
-                    {organizationalStructure.strategic.length}
-                  </Badge>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-3">
-                    {organizationalStructure.strategic.map((role, index) => (
-                      <div key={index} className="border-l-4 border-blue-500 pl-4">
-                        <button
-                          onClick={() => handleRoleClick(role.title)}
-                          className="text-left w-full hover:bg-gray-50 p-2 rounded transition-colors"
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <role.icon className={`h-4 w-4 text-white p-1 rounded ${role.color}`} />
-                            <span className="font-medium text-blue-700">{role.title}</span>
-                          </div>
-                          {role.name && (
-                            <p className="text-sm font-semibold text-gray-800 ml-6">{role.name}</p>
-                          )}
-                        </button>
-                      </div>
+      
+      {/* Visual Org Chart Hierarchy */}
+      <div className="relative">
+        <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-slate-200"></div>
+        <div className="space-y-5 pl-12">
+          {orgLevels.map((level) => (
+            <Card key={level.id} className={`border-l-4 border-${level.color}-500 shadow-sm hover:shadow transition-shadow`}>
+              <div 
+                className={`p-4 cursor-pointer flex justify-between items-center bg-${level.color}-50`}
+                onClick={() => setExpanded(expanded === level.id ? null : level.id)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-full bg-${level.color}-100 text-${level.color}-600`}>
+                    {level.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-lg">{level.title}</h3>
+                    <p className="text-sm text-gray-500">{level.description}</p>
+                  </div>
+                </div>
+                <ChevronRight 
+                  className={`h-5 w-5 text-${level.color}-500 transform transition-transform ${expanded === level.id ? 'rotate-90' : ''}`} 
+                />
+              </div>
+              
+              {expanded === level.id && (
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {level.roles.map((role) => (
+                      <TooltipProvider key={role.title}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className={`bg-${level.color}-50 border border-${level.color}-100 rounded-lg p-4 hover:shadow-md transition-shadow`}>
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className={`p-2 rounded-full bg-${level.color}-100 text-${level.color}-600`}>
+                                  {role.icon}
+                                </div>
+                                <div>
+                                  <h4 className="font-medium text-sm">{role.title}</h4>
+                                  <div className="flex items-center mt-1">
+                                    <Badge variant="outline" className="text-xs">Staff: {role.staff}</Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-600 mb-2">{role.description}</p>
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {role.responsibilities.map((resp, i) => (
+                                  <Badge key={i} variant="secondary" className="text-xs bg-white">{resp}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <div className="text-sm">
+                              <strong>Key Responsibilities:</strong>
+                              <ul className="list-disc pl-4 mt-1">
+                                {role.responsibilities.map((resp, i) => (
+                                  <li key={i}>{resp}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     ))}
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="tactical">
-                <AccordionTrigger className="text-lg font-semibold">
-                  Tactical/Departmental Management
-                  <Badge variant="secondary" className="ml-2">
-                    {organizationalStructure.tactical.length}
-                  </Badge>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid grid-cols-1 gap-2">
-                    {organizationalStructure.tactical.map((role, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleRoleClick(role.title)}
-                        className="flex items-center text-green-700 hover:underline cursor-pointer text-left p-2 hover:bg-gray-50 rounded transition-colors"
-                      >
-                        <role.icon className={`h-4 w-4 text-white p-1 rounded mr-2 ${role.color}`} />
-                        {role.title}
-                      </button>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="operational">
-                <AccordionTrigger className="text-lg font-semibold">
-                  Operational/Field Management
-                  <Badge variant="secondary" className="ml-2">
-                    {organizationalStructure.operational.length}
-                  </Badge>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2">
-                    {organizationalStructure.operational.map((role, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleRoleClick(role.title)}
-                        className="flex items-center text-purple-700 hover:underline cursor-pointer text-left p-2 hover:bg-gray-50 rounded transition-colors w-full"
-                      >
-                        <role.icon className={`h-4 w-4 text-white p-1 rounded mr-2 ${role.color}`} />
-                        {role.title}
-                      </button>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="procedures">
-                <AccordionTrigger className="text-lg font-semibold">
-                  Operational Procedures
-                  <Badge variant="secondary" className="ml-2">
-                    12
-                  </Badge>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2">
-                    <button 
-                      onClick={() => setShowOperationalProcedures(true)}
-                      className="flex items-center text-blue-700 hover:underline cursor-pointer text-left p-2 hover:bg-gray-50 rounded transition-colors w-full"
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Operational Procedures
-                    </button>
-                    <li className="flex items-center text-green-700 hover:underline cursor-pointer">
-                      <CheckSquare className="h-4 w-4 mr-2" />
-                      Quality Control Standards
-                    </li>
-                    <li className="flex items-center text-yellow-700 hover:underline cursor-pointer">
-                      <Clock className="h-4 w-4 mr-2" />
-                      Safety Protocols
-                    </li>
-                    <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
-                      <Target className="h-4 w-4 mr-2" />
-                      Performance Metrics
-                    </li>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-        </Card>
-
-        {/* Role Descriptions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Role Descriptions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RoleDescriptions />
-          </CardContent>
-        </Card>
+                </CardContent>
+              )}
+            </Card>
+          ))}
+        </div>
       </div>
+      
+      {/* Business Management Information */}
+      <Card className="mt-8">
+        <CardContent className="p-6">
+          <h3 className="text-lg font-medium mb-4">Business Management Resources</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="border rounded-md p-4 bg-blue-50">
+              <h4 className="font-medium mb-2">Company Policies</h4>
+              <ul className="text-sm space-y-1">
+                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Operational Procedures
+                </li>
+                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Staff Handbook
+                </li>
+                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Quality Standards Manual
+                </li>
+              </ul>
+            </div>
+            <div className="border rounded-md p-4 bg-green-50">
+              <h4 className="font-medium mb-2">Planning Resources</h4>
+              <ul className="text-sm space-y-1">
+                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Strategic Plan 2024-2025
+                </li>
+                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Budget Templates
+                </li>
+                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Risk Assessment Tools
+                </li>
+              </ul>
+            </div>
+            <div className="border rounded-md p-4 bg-purple-50">
+              <h4 className="font-medium mb-2">Communication Tools</h4>
+              <ul className="text-sm space-y-1">
+                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Company Directory
+                </li>
+                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Reporting Templates
+                </li>
+                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
+                  <ChevronRight className="h-4 w-4 mr-1" /> Meeting Scheduler
+                </li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
