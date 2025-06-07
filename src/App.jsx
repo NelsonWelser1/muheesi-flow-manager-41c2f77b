@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AutoFillProvider } from "./contexts/AutoFillContext";
 import { SupabaseAuthProvider } from "./integrations/supabase/auth";
 import Navigation from "./components/Navigation";
+import LogoBackground from "./components/layout/LogoBackground";
 import LandingPage from "./pages/LandingPage";
 import ManageInventory from "./pages/ManageInventory";
 import ManageCompanies from "./pages/ManageCompanies";
@@ -33,6 +34,7 @@ const App = () => {
         <SupabaseAuthProvider>
           <TooltipProvider>
             <Toaster />
+            <LogoBackground />
             <BrowserRouter>
               <Navigation />
               <Routes>
