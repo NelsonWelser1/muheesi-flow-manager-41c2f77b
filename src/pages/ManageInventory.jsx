@@ -91,7 +91,7 @@ const ManageInventory = () => {
               <Home className="h-4 w-4 mr-2" />
               Home
             </Button>
-            <Button variant="outline" onClick={() => navigate('/logout')}>
+            <Button variant="outline" onClick={() => navigate('/')}>
               <LogOut className="h-4 w-4 mr-2" />
               Log Out
             </Button>
