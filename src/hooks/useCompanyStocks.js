@@ -1,12 +1,8 @@
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 
 export const useCompanyStocks = (company) => {
-  // Add debugging
-  const queryClient = useQueryClient();
-  console.log('useCompanyStocks called for company:', company, 'QueryClient:', queryClient);
-  
   return useQuery({
     queryKey: ['companyStocks', company],
     queryFn: async () => {
@@ -88,7 +84,7 @@ export const useCompanyStocks = (company) => {
         return [];
       }
     },
-    enabled: !!company && !!queryClient,
+    enabled: !!company,
     staleTime: 300000, // 5 minutes
     refetchOnWindowFocus: false
   });
