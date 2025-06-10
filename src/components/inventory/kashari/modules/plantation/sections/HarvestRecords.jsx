@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useHarvestRecords } from "@/hooks/useHarvestRecords";
 import AddHarvestForm from './harvest-records/AddHarvestForm';
 import HarvestTable from './harvest-records/HarvestTable';
