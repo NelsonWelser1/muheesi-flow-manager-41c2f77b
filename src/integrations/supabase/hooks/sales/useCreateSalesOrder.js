@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '../../supabase';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * Hook for creating sales orders
