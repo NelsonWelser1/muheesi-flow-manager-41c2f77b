@@ -1,6 +1,6 @@
 
 import { useState, useRef } from 'react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useDeliveryNotes } from '@/integrations/supabase/hooks/sales/useDeliveryNotes';
 import { showSuccessToast, showErrorToast } from "@/components/ui/notifications";
 
