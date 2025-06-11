@@ -1,8 +1,7 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useForm } from "react-hook-form";
 import { useBillsExpenses } from "@/integrations/supabase/hooks/accounting/useBillsExpenses";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 export const useBillsExpensesForm = () => {
   const [isRecurring, setIsRecurring] = useState(false);
