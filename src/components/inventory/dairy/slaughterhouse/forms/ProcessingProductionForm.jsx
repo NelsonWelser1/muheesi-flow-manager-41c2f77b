@@ -349,5 +349,3 @@ const ProcessingProductionForm = ({ onBack }) => {
 };
 
 export default ProcessingProductionForm;
-
-}
