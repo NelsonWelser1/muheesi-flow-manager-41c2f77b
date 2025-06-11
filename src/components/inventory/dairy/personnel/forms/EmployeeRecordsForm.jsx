@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useEmployeeForm } from "../hooks/useEmployeeForm";
 import EmployeeBasicInfoFields from "./employee-records/EmployeeBasicInfoFields";
 import SchedulePerformanceFields from "./employee-records/SchedulePerformanceFields";
