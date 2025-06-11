@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
 
 export const useLoanData = () => {
