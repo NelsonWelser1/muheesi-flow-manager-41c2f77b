@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from 'date-fns';
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Calendar as CalendarIcon, Search, Download, ArrowLeft, ArrowRight, Printer, FileText } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from '@/integrations/supabase/supabase';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Calendar as CalendarIcon, Search, Download, ArrowLeft, ArrowRight, Printer, FileText } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/supabase";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+
 const MaintenanceEntryForm = () => {
   const [formData, setFormData] = useState({
     equipment_name: '',
@@ -249,7 +252,7 @@ const MaintenanceEntryForm = () => {
 
             <div className="space-y-2">
               <Label htmlFor="notes">Notes</Label>
-              <Input id="notes" value={formData.notes} onChange={e => handleInputChange('notes', e.target.value)} placeholder="Add any additional notes" />
+              <Textarea id="notes" value={formData.notes} onChange={e => handleInputChange('notes', e.target.value)} placeholder="Add any additional notes" />
             </div>
 
             <div className="flex justify-end">
