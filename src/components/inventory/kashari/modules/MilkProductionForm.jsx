@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { format } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Save, RefreshCw, Droplet } from "lucide-react";
 import { useMilkProduction } from '@/hooks/useMilkProduction';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 const MilkProductionForm = () => {
   const { toast } = useToast();

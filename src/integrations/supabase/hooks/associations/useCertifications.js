@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { showSuccessToast, showErrorToast } from '@/components/ui/notifications';
 
 export const useCertifications = () => {

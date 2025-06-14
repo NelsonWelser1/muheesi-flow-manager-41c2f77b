@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/components/ui/use-toast";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/supabase';
 import { subDays, subWeeks, subMonths, subYears } from 'date-fns';
@@ -127,3 +128,4 @@ const ProductionLineDataDisplay = ({ productionLine }) => {
 };
 
 export default ProductionLineDataDisplay;
+

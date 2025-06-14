@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import DairyDashboard from './dairy/DairyDashboard';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 const DairyManagement = () => {
   const { toast } = useToast();

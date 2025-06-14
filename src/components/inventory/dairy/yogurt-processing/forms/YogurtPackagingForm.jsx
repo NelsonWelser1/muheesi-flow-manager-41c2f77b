@@ -1,8 +1,7 @@
 
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -112,4 +111,3 @@ const YogurtPackagingForm = () => {
 };
 
 export default YogurtPackagingForm;
-

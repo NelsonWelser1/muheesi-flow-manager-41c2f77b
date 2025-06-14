@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import DairyMetricsCard from './dairy/dashboard/DairyMetricsCard';
 import DairySectionView from './dairy/dashboard/DairySectionView';
 import { dairySections } from './dairy/dashboard/DairySections';

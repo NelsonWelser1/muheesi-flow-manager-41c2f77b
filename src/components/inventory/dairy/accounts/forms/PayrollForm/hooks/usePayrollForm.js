@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { usePayrollPayslips } from '../../hooks/usePayrollPayslips';
 
 export const usePayrollForm = () => {

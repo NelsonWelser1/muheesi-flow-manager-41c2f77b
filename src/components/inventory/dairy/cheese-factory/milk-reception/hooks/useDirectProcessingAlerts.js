@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useMilkReception } from '@/hooks/useMilkReception';
 
 export const useDirectProcessingAlerts = () => {

@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, PlusCircle, Search, Loader } from "lucide-react";
+import { CalendarIcon, PlusCircle, Search, Loader } from 'lucide-react';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/supabase";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/supabase';
 import { showSuccessToast, showErrorToast, showInfoToast } from "@/components/ui/notifications";
 
 const PlantingRecords = () => {

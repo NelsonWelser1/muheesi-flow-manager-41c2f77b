@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocalPurchaseAgreements } from './useLocalPurchaseAgreements';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 
 export const useLocalPurchaseAgreementForm = (existingAgreement = null) => {

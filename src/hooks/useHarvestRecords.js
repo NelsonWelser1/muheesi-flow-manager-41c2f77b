@@ -1,93 +1,112 @@
 
 import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/supabase';
+import { format } from 'date-fns';
+import { useToast } from "@/components/ui/use-toast";
+import { showSuccessToast, showErrorToast, showInfoToast } from "@/components/ui/notifications";
 
 export const useHarvestRecords = () => {
   const [records, setRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const { toast } = useToast();
 
   const fetchHarvestRecords = async () => {
     try {
       setIsFetching(true);
-      console.log("Fetching harvest records from Supabase...");
-      
+      console.log("Fetching harvest records...");
       const { data, error } = await supabase
         .from('harvest_records')
         .select('*')
         .order('created_at', { ascending: false });
-
+      
       if (error) {
         console.error('Error fetching harvest records:', error);
-        toast({
-          title: "Error",
-          description: `Failed to fetch records: ${error.message}`,
-          variant: "destructive",
-        });
-        return;
+        showErrorToast(toast, `Failed to fetch records: ${error.message}`);
+        return [];
       }
-
-      const formattedRecords = (data || []).map(record => ({
+      
+      console.log("Fetched harvest records:", data);
+      
+      // Format dates for display
+      const formattedRecords = data.map(record => ({
         ...record,
         date: new Date(record.date)
       }));
-
+      
       setRecords(formattedRecords);
-      console.log("Successfully fetched harvest records:", formattedRecords);
+      return formattedRecords;
     } catch (error) {
       console.error('Unexpected error fetching records:', error);
-      toast({
-        title: "Error",
-        description: `Failed to fetch records: ${error.message}`,
-        variant: "destructive",
-      });
+      showErrorToast(toast, `Failed to fetch records: ${error.message}`);
+      return [];
     } finally {
       setIsFetching(false);
     }
   };
 
-  const saveHarvestRecord = async (newRecord) => {
+  const saveHarvestRecord = async (recordData) => {
     try {
       setIsLoading(true);
-      console.log("Saving harvest record to Supabase:", newRecord);
+      console.log("Saving harvest record:", recordData);
+      
+      // Validate required fields
+      if (!recordData.date || !recordData.cropType || !recordData.variety || !recordData.plotId || !recordData.quantity) {
+        showErrorToast(toast, "Please fill in all required fields.");
+        return { success: false };
+      }
 
+      // Validate quantity is a number
+      const quantityNumber = parseFloat(recordData.quantity);
+      if (isNaN(quantityNumber) || quantityNumber <= 0) {
+        showErrorToast(toast, "Quantity must be a positive number.");
+        return { success: false };
+      }
+      
+      // Prepare data for insertion
+      const newRecord = {
+        date: format(recordData.date, 'yyyy-MM-dd'),
+        crop_type: recordData.cropType,
+        variety: recordData.variety,
+        plot_id: recordData.plotId,
+        quantity: quantityNumber,
+        unit: recordData.unit,
+        quality: recordData.quality,
+        workers: recordData.workers || null,
+        notes: recordData.notes || null
+      };
+      
+      console.log("Prepared record for insertion:", newRecord);
+      
+      // Insert into Supabase
       const { data, error } = await supabase
         .from('harvest_records')
         .insert([newRecord])
         .select();
-
+      
       if (error) {
         console.error('Error inserting harvest record:', error);
-        toast({
-          title: "Error",
-          description: `Failed to save record: ${error.message}`,
-          variant: "destructive",
-        });
-        return;
+        showErrorToast(toast, `Failed to save record: ${error.message}`);
+        return { success: false, error };
       }
-
+      
+      console.log("Record inserted successfully:", data);
+      
+      // Format the returned record
       const insertedRecord = {
         ...data[0],
         date: new Date(data[0].date)
       };
-
+      
+      // Update local records state
       setRecords(prevRecords => [insertedRecord, ...prevRecords]);
       
-      toast({
-        title: "Success",
-        description: "Harvest record saved successfully.",
-      });
-
-      console.log("Successfully saved harvest record:", insertedRecord);
+      showSuccessToast(toast, "Harvest record saved successfully!");
+      return { success: true, record: insertedRecord };
     } catch (error) {
       console.error('Unexpected error saving record:', error);
-      toast({
-        title: "Error",
-        description: `Failed to save record: ${error.message}`,
-        variant: "destructive",
-      });
+      showErrorToast(toast, `Failed to save record: ${error.message}`);
+      return { success: false, error };
     } finally {
       setIsLoading(false);
     }
@@ -98,6 +117,7 @@ export const useHarvestRecords = () => {
     isLoading,
     isFetching,
     fetchHarvestRecords,
-    saveHarvestRecord
+    saveHarvestRecord,
+    setRecords
   };
 };

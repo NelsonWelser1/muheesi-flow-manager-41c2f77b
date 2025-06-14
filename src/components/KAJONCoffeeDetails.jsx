@@ -1,344 +1,331 @@
 
-import React, { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
+import React, { useRef, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { X, Coffee, Package, Mail, Phone, MapPin, Globe, Star, Truck, Shield, Award } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import { useToast } from "@/components/ui/use-toast";
+import { Share2, Coffee, TrendingUp, AlertCircle, Calendar, DollarSign, RefreshCw } from 'lucide-react';
+import { formatDate } from '@/utils/dateUtils';
+
+// Updated data for 2025
+const priceData = [
+  { name: 'Jan 2024', price: 4200 },
+  { name: 'Mar 2024', price: 4600 },
+  { name: 'Jun 2024', price: 5100 },
+  { name: 'Sep 2024', price: 5500 },
+  { name: 'Dec 2024', price: 5750 },
+  { name: 'Feb 2025', price: 5950 },
+  { name: 'Apr 2025', price: 6250 },
+];
+
+const factorData = [
+  { name: 'Climate Impact', value: 85 },
+  { name: 'Global Demand', value: 78 },
+  { name: 'Supply Chain', value: 65 },
+  { name: 'Market Trends', value: 72 },
+];
 
 const KAJONCoffeeDetails = ({ onClose }) => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('overview');
-
-  const coffeeProducts = [
-    {
-      category: 'Robusta Coffee',
-      products: [
-        { name: 'FAQ (Fair Average Quality)', grade: 'Premium', stock: '2000kg', price: '$2.20/kg' },
-        { name: 'Screen 18', grade: 'High', stock: '1500kg', price: '$2.30/kg' },
-        { name: 'Screen 15', grade: 'Standard', stock: '1200kg', price: '$2.10/kg' },
-        { name: 'Screen 12', grade: 'Standard', stock: '1000kg', price: '$2.00/kg' },
-        { name: 'Organic Robusta', grade: 'Certified', stock: '800kg', price: '$2.80/kg' }
-      ]
-    },
-    {
-      category: 'Arabica Coffee',
-      products: [
-        { name: 'Bugisu AA', grade: 'Premium', stock: '1500kg', price: '$4.50/kg' },
-        { name: 'Bugisu A', grade: 'High', stock: '1300kg', price: '$4.20/kg' },
-        { name: 'Bugisu PB (Peaberry)', grade: 'Specialty', stock: '1100kg', price: '$5.00/kg' },
-        { name: 'Bugisu B', grade: 'Standard', stock: '900kg', price: '$3.80/kg' },
-        { name: 'DRUGAR', grade: 'Specialty', stock: '700kg', price: '$4.80/kg' },
-        { name: 'Parchment Arabica', grade: 'Processing', stock: '600kg', price: '$3.50/kg' }
-      ]
+  const contentRef = useRef(null);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [nextUpdateDate, setNextUpdateDate] = useState(new Date());
+  const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
+  
+  useEffect(() => {
+    // Set the next update date to 3 months from last update
+    const next = new Date(lastUpdated);
+    next.setMonth(next.getMonth() + 3);
+    setNextUpdateDate(next);
+    
+    // Check if an update is available (for demo purposes)
+    // In a real system, this would check against an API
+    const currentDate = new Date();
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    
+    // If the last update was more than 3 months ago, show update available
+    if (lastUpdated < threeMonthsAgo) {
+      setIsUpdateAvailable(true);
     }
-  ];
+  }, [lastUpdated]);
+  
+  const captureContent = () => {
+    return html2canvas(contentRef.current);
+  };
 
-  const certifications = [
-    { name: 'Fair Trade Certified', icon: <Award className="h-5 w-5" /> },
-    { name: 'Organic Certification', icon: <Shield className="h-5 w-5" /> },
-    { name: 'UTZ Certified', icon: <Star className="h-5 w-5" /> },
-    { name: 'Rainforest Alliance', icon: <Globe className="h-5 w-5" /> }
-  ];
-
-  const handleInquiry = (product) => {
+  const printAsPDF = async () => {
+    const canvas = await captureContent();
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save("KAJON_Coffee_Analysis.pdf");
     toast({
-      title: "Inquiry Sent",
-      description: `Your inquiry for ${product} has been forwarded to our sales team.`,
+      title: "PDF Generated",
+      description: "The analysis has been saved as a PDF.",
     });
   };
 
-  const handleBulkOrder = () => {
+  const saveAsJPEG = async () => {
+    const canvas = await captureContent();
+    const link = document.createElement('a');
+    link.download = 'KAJON_Coffee_Analysis.jpg';
+    link.href = canvas.toDataURL('image/jpeg');
+    link.click();
     toast({
-      title: "Bulk Order Request",
-      description: "Our team will contact you within 24 hours for bulk pricing.",
+      title: "JPEG Saved",
+      description: "The analysis has been saved as a JPEG image.",
     });
+  };
+
+  const handleUpdateData = () => {
+    // In a real application, this would fetch new data from an API
+    setLastUpdated(new Date());
+    setIsUpdateAvailable(false);
+    
+    toast({
+      title: "Market Data Updated",
+      description: "Coffee market analysis has been refreshed with the latest data.",
+    });
+  };
+
+  const shareContent = async () => {
+    const canvas = await captureContent();
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+    const file = new File([blob], 'KAJON_Coffee_Analysis.jpg', { type: 'image/jpeg' });
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'KAJON Coffee Market Analysis',
+          text: 'Check out this coffee market analysis from KAJON Coffee Limited!',
+          files: [file],
+        });
+        toast({
+          title: "Shared Successfully",
+          description: "The analysis has been shared.",
+        });
+      } catch (error) {
+        console.error('Error sharing', error);
+        fallbackShare();
+      }
+    } else {
+      fallbackShare();
+    }
+  };
+
+  const fallbackShare = () => {
+    const shareUrl = encodeURIComponent(window.location.href);
+    const shareText = encodeURIComponent('Check out this coffee market analysis from KAJON Coffee Limited!');
+    const shareOptions = [
+      { name: 'WhatsApp', url: `https://wa.me/?text=${shareText}%20${shareUrl}` },
+      { name: 'Facebook', url: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}` },
+      { name: 'Twitter', url: `https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}` },
+      { name: 'LinkedIn', url: `https://www.linkedin.com/shareArticle?mini=true&url=${shareUrl}&title=${shareText}` },
+      { name: 'Email', url: `mailto:?subject=KAJON Coffee Market Analysis&body=${shareText}%20${shareUrl}` },
+    ];
+    
+    const shareLinks = shareOptions.map(option => 
+      `<a href="${option.url}" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">${option.name}</a>`
+    ).join('');
+
+    const shareMenu = document.createElement('div');
+    shareMenu.innerHTML = `
+      <div class="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+          ${shareLinks}
+        </div>
+      </div>
+    `;
+    shareMenu.style.position = 'fixed';
+    shareMenu.style.top = '50%';
+    shareMenu.style.left = '50%';
+    shareMenu.style.transform = 'translate(-50%, -50%)';
+    shareMenu.style.zIndex = '1000';
+
+    document.body.appendChild(shareMenu);
+
+    const closeMenu = (e) => {
+      if (!shareMenu.contains(e.target)) {
+        document.body.removeChild(shareMenu);
+        document.removeEventListener('click', closeMenu);
+      }
+    };
+
+    setTimeout(() => document.addEventListener('click', closeMenu), 0);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <Coffee className="h-8 w-8 text-amber-600" />
+    <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto" ref={contentRef}>
+        <CardHeader className="relative bg-gradient-to-r from-amber-800/90 to-amber-950/95 text-white">
+          <div className="absolute inset-0 bg-[url('/combined-logo.png')] bg-center bg-no-repeat bg-contain opacity-10"></div>
+          <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">KAJON Coffee Limited</h2>
-              <p className="text-gray-600">Premium Coffee Exporter</p>
+              <CardTitle className="text-2xl md:text-3xl font-bold">KAJON Coffee Limited Market Analysis</CardTitle>
+              <p className="text-amber-200 mt-2">Premium Coffee Market Insights - {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
             </div>
-          </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-
-        <div className="p-6">
-          {/* Tabs */}
-          <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
-            {[
-              { id: 'overview', label: 'Overview' },
-              { id: 'products', label: 'Products' },
-              { id: 'certifications', label: 'Certifications' },
-              { id: 'contact', label: 'Contact' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-white text-amber-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
+            <div className="flex items-center gap-2">
+              {isUpdateAvailable && (
+                <div className="bg-amber-600/70 text-white text-xs rounded-md px-2 py-1 animate-pulse">
+                  Update Available
+                </div>
+              )}
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="bg-white/10 hover:bg-white/20 text-white flex items-center gap-1"
+                onClick={handleUpdateData}
               >
-                {tab.label}
-              </button>
-            ))}
+                <RefreshCw className="h-3 w-3" /> Update
+              </Button>
+            </div>
+          </div>
+          <div className="flex justify-between items-center mt-2">
+            <p className="text-xs text-amber-200/80">Last updated: {formatDate(lastUpdated)}</p>
+            <p className="text-xs text-amber-200/80">Next update: {formatDate(nextUpdateDate)}</p>
+          </div>
+          <Button onClick={onClose} variant="outline" className="absolute top-2 right-2 bg-white/10 hover:bg-white/20">
+            Close
+          </Button>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-100 flex flex-col items-center">
+              <div className="rounded-full bg-amber-100 p-3 mb-2">
+                <DollarSign className="h-8 w-8 text-amber-600" />
+              </div>
+              <h3 className="text-2xl font-bold mb-1">$6,250.00</h3>
+              <p className="text-green-600 font-medium">+$300.00 (+5.04%)</p>
+              <p className="text-xs text-gray-500 mt-1">Current Price (Apr 2025)</p>
+            </div>
+            
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-100 flex flex-col items-center">
+              <div className="rounded-full bg-amber-100 p-3 mb-2">
+                <TrendingUp className="h-8 w-8 text-amber-600" />
+              </div>
+              <h3 className="text-2xl font-bold mb-1">48.8%</h3>
+              <p className="text-gray-700">Year-Over-Year Growth</p>
+              <p className="text-xs text-gray-500 mt-1">From Apr 2024 to Apr 2025</p>
+            </div>
+            
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-100 flex flex-col items-center">
+              <div className="rounded-full bg-amber-100 p-3 mb-2">
+                <Calendar className="h-8 w-8 text-amber-600" />
+              </div>
+              <h3 className="text-2xl font-bold mb-1">$6,750</h3>
+              <p className="text-gray-700">Projected Jul 2025</p>
+              <p className="text-xs text-gray-500 mt-1">Estimated Future Price</p>
+            </div>
           </div>
 
-          {/* Overview Tab */}
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center">
-                      <Package className="h-5 w-5 mr-2 text-amber-600" />
-                      Total Products
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-gray-900">11</div>
-                    <p className="text-gray-600 text-sm">Coffee varieties available</p>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center">
-                      <Truck className="h-5 w-5 mr-2 text-green-600" />
-                      Export Markets
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-gray-900">25+</div>
-                    <p className="text-gray-600 text-sm">Countries worldwide</p>
-                  </CardContent>
-                </Card>
+          <div className="bg-white p-5 rounded-lg shadow-sm border mb-6">
+            <h3 className="text-lg font-semibold mb-4 text-amber-800 flex items-center">
+              <Coffee className="h-5 w-5 mr-2" /> Price Trend (2024-2025)
+            </h3>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={priceData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#666" 
+                    tick={{ fill: '#666' }} 
+                    tickLine={{ stroke: '#666' }}
+                  />
+                  <YAxis 
+                    stroke="#666" 
+                    tick={{ fill: '#666' }} 
+                    tickLine={{ stroke: '#666' }}
+                    tickFormatter={(value) => `$${value}`}
+                    domain={['dataMin - 500', 'dataMax + 500']}
+                  />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '4px' }}
+                    labelStyle={{ color: '#333', fontWeight: 'bold' }}
+                    formatter={(value) => [`$${value}`, 'Price']}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="price" 
+                    stroke="#d97706" 
+                    strokeWidth={3} 
+                    dot={{ fill: '#d97706', stroke: '#d97706', strokeWidth: 2, r: 5 }} 
+                    activeDot={{ r: 8, fill: '#92400e' }} 
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
 
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center">
-                      <Award className="h-5 w-5 mr-2 text-blue-600" />
-                      Certifications
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-gray-900">4</div>
-                    <p className="text-gray-600 text-sm">International standards</p>
-                  </CardContent>
-                </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2" /> Market Analysis
+                </h3>
+                <div className="text-xs text-amber-600/80">Auto-updates every 3 months</div>
+              </div>
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                <p className="mb-2"><strong>Strong Upward Trend (2025):</strong> Coffee prices have demonstrated robust growth in early 2025, with premium Arabica and specialty coffees showing particularly strong performance.</p>
+                <p><strong>Current Price Level:</strong> At $6,250 per metric ton, prices have reached a 4-year high driven by increased global demand and supply constraints in key producing regions.</p>
               </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Company Overview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700 leading-relaxed">
-                    KAJON Coffee Limited is a premier coffee exporter specializing in high-quality Robusta and Arabica coffee beans. 
-                    With operations centered in Uganda's coffee-rich regions, we pride ourselves on delivering exceptional coffee that meets 
-                    international standards. Our commitment to quality, sustainability, and fair trade practices has established us as a 
-                    trusted partner for coffee importers worldwide.
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Badge variant="secondary">Premium Quality</Badge>
-                    <Badge variant="secondary">Direct Trade</Badge>
-                    <Badge variant="secondary">Sustainable Sourcing</Badge>
-                    <Badge variant="secondary">Global Shipping</Badge>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+                  <Calendar className="h-5 w-5 mr-2" /> Price Projections
+                </h3>
+                <div className="text-xs text-amber-600/80">Auto-updates every 3 months</div>
+              </div>
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                <p className="mb-2"><strong>May-June 2025:</strong> Expecting continued growth reaching approximately $6,500 as summer demand increases and supply remains constrained.</p>
+                <p><strong>July-August 2025:</strong> Prices projected to stabilize around $6,750 with potential for higher peaks if weather disruptions affect major growing regions.</p>
+              </div>
             </div>
-          )}
 
-          {/* Products Tab */}
-          {activeTab === 'products' && (
-            <div className="space-y-6">
-              {coffeeProducts.map((category, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <CardTitle className="text-xl">{category.category}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {category.products.map((product, idx) => (
-                        <div key={idx} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-semibold text-gray-900">{product.name}</h4>
-                            <Badge variant={product.grade === 'Premium' ? 'default' : 'secondary'}>
-                              {product.grade}
-                            </Badge>
-                          </div>
-                          <div className="space-y-1 text-sm text-gray-600">
-                            <p>Stock: <span className="font-medium">{product.stock}</span></p>
-                            <p>Price: <span className="font-medium text-green-600">{product.price}</span></p>
-                          </div>
-                          <Button 
-                            size="sm" 
-                            className="w-full mt-3"
-                            onClick={() => handleInquiry(product.name)}
-                          >
-                            Request Quote
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+                  <AlertCircle className="h-5 w-5 mr-2" /> Market Factors
+                </h3>
+                <div className="text-xs text-amber-600/80">Auto-updates every 3 months</div>
+              </div>
               
-              <div className="text-center">
-                <Button size="lg" onClick={handleBulkOrder}>
-                  Request Bulk Pricing
-                </Button>
+              <div className="h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={factorData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" />
+                    <YAxis domain={[0, 100]} tickFormatter={(tick) => `${tick}%`} />
+                    <Tooltip formatter={(value) => `${value}%`} />
+                    <Bar dataKey="value" fill="#d97706" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                <ul className="list-disc pl-5 space-y-1">
+                  <li><strong>Climate Patterns:</strong> Extreme weather in Brazil and Vietnam affecting production yields.</li>
+                  <li><strong>Rising Consumption:</strong> Post-pandemic surge in premium coffee consumption in Asian markets.</li>
+                  <li><strong>Supply Chain:</strong> Ongoing logistics challenges and increasing shipping costs.</li>
+                </ul>
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Certifications Tab */}
-          {activeTab === 'certifications' && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Our Certifications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {certifications.map((cert, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-4 border rounded-lg">
-                        <div className="text-green-600">
-                          {cert.icon}
-                        </div>
-                        <div>
-                          <h4 className="font-semibold">{cert.name}</h4>
-                          <p className="text-sm text-gray-600">Verified and active</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quality Assurance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose max-w-none">
-                    <p className="text-gray-700">
-                      Our coffee undergoes rigorous quality control processes to ensure consistency and excellence. 
-                      We maintain strict standards for:
-                    </p>
-                    <ul className="list-disc list-inside space-y-1 text-gray-700 mt-3">
-                      <li>Bean grading and sorting</li>
-                      <li>Moisture content control</li>
-                      <li>Defect analysis</li>
-                      <li>Cupping scores evaluation</li>
-                      <li>Packaging and storage standards</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Contact Tab */}
-          {activeTab === 'contact' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Contact Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <Mail className="h-5 w-5 text-gray-500" />
-                      <div>
-                        <p className="font-medium">Email</p>
-                        <p className="text-gray-600">kajoncoffeelimited@gmail.com</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      <Phone className="h-5 w-5 text-gray-500" />
-                      <div>
-                        <p className="font-medium">Phone Numbers</p>
-                        <div className="text-gray-600">
-                          <p>+256 776 670680</p>
-                          <p>+256 757 757517</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                      <MapPin className="h-5 w-5 text-gray-500" />
-                      <div>
-                        <p className="font-medium">Location</p>
-                        <p className="text-gray-600">Uganda, East Africa</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Business Hours</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Monday - Friday</span>
-                      <span className="font-medium">8:00 AM - 6:00 PM</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Saturday</span>
-                      <span className="font-medium">9:00 AM - 4:00 PM</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Sunday</span>
-                      <span className="font-medium">Closed</span>
-                    </div>
-                    <div className="pt-3 border-t">
-                      <p className="text-sm text-gray-600">
-                        Emergency orders and urgent inquiries can be handled outside business hours.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Get in Touch</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700 mb-4">
-                    Ready to place an order or have questions about our coffee? Contact us today for personalized service and competitive pricing.
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    <Button onClick={() => window.location.href = 'mailto:kajoncoffeelimited@gmail.com'}>
-                      <Mail className="h-4 w-4 mr-2" />
-                      Send Email
-                    </Button>
-                    <Button variant="outline" onClick={() => window.location.href = 'tel:+256776670680'}>
-                      <Phone className="h-4 w-4 mr-2" />
-                      Call Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
-      </div>
+          <div className="mt-6 flex justify-end space-x-4">
+            <Button onClick={printAsPDF} className="bg-amber-700 hover:bg-amber-800">Print as PDF</Button>
+            <Button onClick={saveAsJPEG} className="bg-amber-700 hover:bg-amber-800">Save as JPEG</Button>
+            <Button onClick={shareContent} className="bg-amber-700 hover:bg-amber-800"><Share2 className="mr-2" />Share</Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

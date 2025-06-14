@@ -1,6 +1,7 @@
+
 import { useState } from 'react';
 import { supabase } from '../../../supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 /**
  * Hook for fetching customer invoices data

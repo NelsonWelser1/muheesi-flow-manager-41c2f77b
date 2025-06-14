@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/supabase';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { showErrorToast } from "@/components/ui/notifications";
 
 export const useDairyReportData = () => {
@@ -46,6 +46,7 @@ export const useDairyReportData = () => {
           productionResults = dairyProduction;
         } else {
           // If still no data, try other fallback tables
+          // ... keep existing code (for fallback logic to other tables)
           console.log('No data in dairy_production or error occurred, trying production_line_local...', productionError);
         
           const { data: localProduction, error: localError } = await supabase

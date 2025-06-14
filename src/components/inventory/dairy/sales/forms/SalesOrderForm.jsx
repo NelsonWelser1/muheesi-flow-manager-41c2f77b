@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Eye } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useSalesOrders } from '@/integrations/supabase/hooks/useSalesOrders';
 import { PRODUCT_TYPES } from './utils/productTypes';
 import CustomerInfoSection from './components/CustomerInfoSection';
