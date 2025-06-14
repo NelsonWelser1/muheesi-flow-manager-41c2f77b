@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { useQueryClient } from '@tanstack/react-query';
 import { useCompanyStocks } from '@/hooks/useCompanyStocks';
 import KAJONCoffeeDetails from './KAJONCoffeeDetails';
 import KyalimaFarmersDetails from './KyalimaFarmersDetails';
@@ -38,8 +39,23 @@ const companies = [{
 
 const CompanyShowcase = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
+  
+  // Check if QueryClient is available
+  const queryClient = useQueryClient();
+  console.log('CompanyShowcase QueryClient:', queryClient);
+  
+  if (!queryClient) {
+    console.error('QueryClient not available in CompanyShowcase');
+    return (
+      <div className="py-4 sm:py-8 bg-green-50">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+          <p>Loading system...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Individual queries for each company
+  // Individual queries for each company - with fallback for when QueryClient isn't ready
   const {
     data: grandBernaStocks,
     isLoading: isLoadingGrandBerna
