@@ -1,7 +1,7 @@
+
 import React, { useState } from 'react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { User, Settings, Shield, AlertOctagon, Users, Warehouse, Tractor, UserPlus, UserCog } from 'lucide-react';
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
 import { useNavigate } from 'react-router-dom';
@@ -150,40 +150,28 @@ const SystemAccounts = () => {
   );
 
   return (
-    <Accordion type="single" collapsible className="w-full">
-      <AccordionItem value="strategic">
-        <AccordionTrigger className="text-lg font-semibold">
-          Strategic/Executive Management
-        </AccordionTrigger>
-        <AccordionContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {roles.strategic.map((role) => renderRoleCard(role))}
-          </div>
-        </AccordionContent>
-      </AccordionItem>
+    <div className="w-full space-y-8">
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Strategic/Executive Management</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {roles.strategic.map((role) => renderRoleCard(role))}
+        </div>
+      </div>
 
-      <AccordionItem value="tactical">
-        <AccordionTrigger className="text-lg font-semibold">
-          Tactical/Departmental Management
-        </AccordionTrigger>
-        <AccordionContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {roles.tactical.map((role) => renderRoleCard(role))}
-          </div>
-        </AccordionContent>
-      </AccordionItem>
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Tactical/Departmental Management</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {roles.tactical.map((role) => renderRoleCard(role))}
+        </div>
+      </div>
 
-      <AccordionItem value="operational">
-        <AccordionTrigger className="text-lg font-semibold">
-          Operational/Field Management
-        </AccordionTrigger>
-        <AccordionContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {roles.operational.map((role) => renderRoleCard(role))}
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Operational/Field Management</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {roles.operational.map((role) => renderRoleCard(role))}
+        </div>
+      </div>
+    </div>
   );
 };
 
