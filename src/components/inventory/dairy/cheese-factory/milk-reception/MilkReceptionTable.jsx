@@ -1,289 +1,458 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, ChevronLeft, ChevronRight, RefreshCw, FileText, FileSpreadsheet, Download, Printer } from "lucide-react";
-import { useMilkReception } from '@/hooks/useMilkReception';
-import { format } from 'date-fns';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { 
+  Search, 
+  Download, 
+  FileSpreadsheet, 
+  FileText, 
+  Filter,
+  CalendarIcon 
+} from 'lucide-react';
+import { format, subDays, subWeeks, subMonths, subYears, subHours } from 'date-fns';
+import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
-import { exportToPDF, exportToExcel, exportToCSV } from '@/components/inventory/dairy/utils/reportExportUtils';
-import MilkCapacityTiles from './MilkCapacityTiles';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
-const RECORDS_PER_PAGE = 10;
-const MilkReceptionTable = () => {
-  const {
-    data: records,
-    isLoading,
-    error,
-    refetch
-  } = useMilkReception();
+const MilkReceptionTable = ({ records = [], isLoading = false, onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [showExportOptions, setShowExportOptions] = useState(false);
+  const [exportDateRange, setExportDateRange] = useState('all');
+  const [customStartDate, setCustomStartDate] = useState();
+  const [customEndDate, setCustomEndDate] = useState();
+  const { toast } = useToast();
 
-  // Filter records based on search term
-  const filteredRecords = records.filter(record => record.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) || record.tank_number?.toLowerCase().includes(searchTerm.toLowerCase()) || record.quality_score?.toLowerCase().includes(searchTerm.toLowerCase()) || record.batch_id?.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredRecords = records
+    ? [...records]
+        .filter(record => {
+          const term = searchTerm.toLowerCase();
+          return (
+            record.supplier_name?.toLowerCase().includes(term) ||
+            record.batch_number?.toLowerCase().includes(term) ||
+            record.tank_number?.toLowerCase().includes(term)
+          );
+        })
+        .filter(record => filterStatus === 'all' || record.status === filterStatus)
+        .sort((a, b) => {
+          const dateA = new Date(a.reception_date || a.created_at);
+          const dateB = new Date(b.reception_date || b.created_at);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredRecords.length / RECORDS_PER_PAGE);
-  const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
-  const endIndex = startIndex + RECORDS_PER_PAGE;
-  const currentRecords = filteredRecords.slice(startIndex, endIndex);
+          if (sortBy === 'supplier') {
+            const supplierA = a.supplier_name || '';
+            const supplierB = b.supplier_name || '';
+            return sortOrder === 'asc' ? supplierA.localeCompare(supplierB) : supplierB.localeCompare(supplierA);
+          } else {
+            return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+          }
+        })
+    : [];
 
-  // Reset to first page when search changes
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-  const handlePageChange = page => {
-    setCurrentPage(page);
-  };
-  const getQualityBadgeColor = quality => {
-    switch (quality) {
-      case 'Grade A':
-        return 'bg-green-100 text-green-800';
-      case 'Grade B':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Grade C':
-        return 'bg-red-100 text-red-800';
+  const getDateRangeFilter = () => {
+    const now = new Date();
+    
+    switch (exportDateRange) {
+      case 'hour':
+        return { start: subHours(now, 1), end: now };
+      case 'day':
+        return { start: subDays(now, 1), end: now };
+      case 'week':
+        return { start: subWeeks(now, 1), end: now };
+      case 'month':
+        return { start: subMonths(now, 1), end: now };
+      case 'year':
+        return { start: subYears(now, 1), end: now };
+      case 'custom':
+        return { start: customStartDate, end: customEndDate };
       default:
-        return 'bg-gray-100 text-gray-800';
+        return null;
     }
   };
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await refetch();
-      toast({
-        title: "Data Refreshed",
-        description: "Milk reception records have been updated successfully."
+
+  const getFilteredRecordsForExport = () => {
+    let filtered = [...records];
+    
+    // Apply date range filter
+    const dateRange = getDateRangeFilter();
+    if (dateRange && dateRange.start && dateRange.end) {
+      filtered = filtered.filter(record => {
+        const recordDate = new Date(record.reception_date || record.created_at);
+        return recordDate >= dateRange.start && recordDate <= dateRange.end;
       });
-    } catch (error) {
+    }
+    
+    // Apply search and status filters
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(record => 
+        record.supplier_name?.toLowerCase().includes(term) ||
+        record.batch_number?.toLowerCase().includes(term) ||
+        record.tank_number?.toLowerCase().includes(term)
+      );
+    }
+    
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(record => record.status === filterStatus);
+    }
+    
+    return filtered;
+  };
+
+  const exportToCSV = () => {
+    const filteredData = getFilteredRecordsForExport();
+    
+    if (filteredData.length === 0) {
       toast({
-        title: "Refresh Failed",
-        description: "Failed to refresh data. Please try again.",
+        title: "No data to export",
+        description: "No records found for the selected date range",
         variant: "destructive"
       });
-    } finally {
-      setIsRefreshing(false);
+      return;
     }
-  };
-  const handlePrint = () => {
-    const printContent = document.getElementById('milk-reception-table');
-    if (printContent) {
-      const originalContent = document.body.innerHTML;
-      const printableContent = `
-        <html>
-          <head>
-            <title>Milk Reception Records</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-              th { background-color: #f2f2f2; font-weight: bold; }
-              h1 { color: #333; margin-bottom: 20px; }
-              .header { margin-bottom: 20px; }
-              @media print { body { margin: 0; } }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h1>Milk Reception Records</h1>
-              <p>Generated on: ${format(new Date(), 'PPP')}</p>
-              <p>Total Records: ${filteredRecords.length}</p>
-            </div>
-            ${printContent.innerHTML}
-          </body>
-        </html>
-      `;
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(printableContent);
-      printWindow.document.close();
-      printWindow.print();
-    }
-  };
-  const handleExportPDF = () => {
+
     try {
-      exportToPDF(filteredRecords, 'Milk Reception Records', 'milk_reception');
-      toast({
-        title: "Export Successful",
-        description: "PDF file has been downloaded successfully."
-      });
-    } catch (error) {
-      toast({
-        title: "Export Failed",
-        description: "Failed to export PDF. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-  const handleExportExcel = () => {
-    try {
-      exportToExcel(filteredRecords, 'Milk Reception Records', 'milk_reception');
-      toast({
-        title: "Export Successful",
-        description: "Excel file has been downloaded successfully."
-      });
-    } catch (error) {
-      toast({
-        title: "Export Failed",
-        description: "Failed to export Excel. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-  const handleExportCSV = () => {
-    try {
-      exportToCSV(filteredRecords, 'Milk Reception Records', 'milk_reception');
-      toast({
-        title: "Export Successful",
-        description: "CSV file has been downloaded successfully."
-      });
-    } catch (error) {
-      toast({
-        title: "Export Failed",
-        description: "Failed to export CSV. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-  if (isLoading) {
-    return <Card>
-        <CardContent className="p-6">
-          <div className="text-center">Loading milk reception records...</div>
-        </CardContent>
-      </Card>;
-  }
-  if (error) {
-    return <Card>
-        <CardContent className="p-6">
-          <div className="text-center text-red-600">
-            Error loading records: {error.message}
-          </div>
-        </CardContent>
-      </Card>;
-  }
-  return (
-    <div className="space-y-6">
-      {/* Milk Capacity Tiles */}
-      <MilkCapacityTiles />
+      const headers = ['Date', 'Supplier', 'Batch Number', 'Tank Number', 'Quantity (L)', 'Fat %', 'Protein %', 'Temperature', 'pH Level', 'Status'];
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Milk Reception Records</CardTitle>
-          <div className="flex items-center justify-between space-x-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search by supplier, tank, quality, or batch ID..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8" />
+      const csvContent = [
+        headers.join(','),
+        ...filteredData.map(record => [
+          format(new Date(record.reception_date || record.created_at), 'yyyy-MM-dd HH:mm'),
+          record.supplier_name || '',
+          record.batch_number || '',
+          record.tank_number || '',
+          record.quantity || 0,
+          record.fat_percentage || 0,
+          record.protein_percentage || 0,
+          record.temperature || 0,
+          record.ph_level || 0,
+          record.status || ''
+        ].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `milk-reception-${exportDateRange}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Export Successful",
+        description: `${filteredData.length} records exported to CSV`
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Could not export data to CSV",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const exportToExcel = () => {
+    const filteredData = getFilteredRecordsForExport();
+    
+    if (filteredData.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "No records found for the selected date range",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const processedData = filteredData.map(record => ({
+        'Date': format(new Date(record.reception_date || record.created_at), 'yyyy-MM-dd HH:mm'),
+        'Supplier': record.supplier_name || '',
+        'Batch Number': record.batch_number || '',
+        'Tank Number': record.tank_number || '',
+        'Quantity (L)': record.quantity || 0,
+        'Fat %': record.fat_percentage || 0,
+        'Protein %': record.protein_percentage || 0,
+        'Temperature': record.temperature || 0,
+        'pH Level': record.ph_level || 0,
+        'Status': record.status || ''
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(processedData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Milk Reception');
+      
+      XLSX.writeFile(workbook, `milk-reception-${exportDateRange}-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+
+      toast({
+        title: "Export Successful",
+        description: `${filteredData.length} records exported to Excel`
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Could not export data to Excel",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const exportToPDF = () => {
+    const filteredData = getFilteredRecordsForExport();
+    
+    if (filteredData.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "No records found for the selected date range",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+      
+      doc.setFontSize(18);
+      doc.text('Milk Reception Records', 14, 22);
+      
+      doc.setFontSize(11);
+      doc.text(`Generated on: ${format(new Date(), 'PPP')}`, 14, 30);
+      doc.text(`Date Range: ${exportDateRange}`, 14, 38);
+      doc.text(`Total Records: ${filteredData.length}`, 14, 46);
+
+      const tableData = filteredData.map(record => [
+        format(new Date(record.reception_date || record.created_at), 'MM/dd/yyyy'),
+        record.supplier_name || '',
+        record.batch_number || '',
+        record.quantity || 0,
+        record.fat_percentage || 0,
+        record.status || ''
+      ]);
+
+      doc.autoTable({
+        head: [['Date', 'Supplier', 'Batch', 'Quantity (L)', 'Fat %', 'Status']],
+        body: tableData,
+        startY: 55,
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [71, 85, 119] }
+      });
+
+      doc.save(`milk-reception-${exportDateRange}-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+
+      toast({
+        title: "Export Successful",
+        description: `${filteredData.length} records exported to PDF`
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Could not export data to PDF",
+        variant: "destructive"
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Search and Filter Controls */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by supplier, batch, or tank number..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="accepted">Accepted</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button 
+          variant="outline" 
+          onClick={() => setShowExportOptions(!showExportOptions)}
+          className="flex items-center gap-2"
+        >
+          <Download className="h-4 w-4" />
+          Export
+        </Button>
+      </div>
+
+      {/* Export Options Panel */}
+      {showExportOptions && (
+        <div className="border rounded-lg p-4 bg-gray-50 space-y-4">
+          <h3 className="font-medium">Export Options</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Date Range</label>
+              <Select value={exportDateRange} onValueChange={setExportDateRange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select date range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="hour">Last Hour</SelectItem>
+                  <SelectItem value="day">Last 24 Hours</SelectItem>
+                  <SelectItem value="week">Last Week</SelectItem>
+                  <SelectItem value="month">Last Month</SelectItem>
+                  <SelectItem value="year">Last Year</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="flex items-center gap-1">
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-              <Button variant="outline" size="sm" onClick={handlePrint} className="flex items-center gap-1">
-                <Printer className="h-4 w-4" />
-                Print
-              </Button>
-              
-              <Button variant="outline" size="sm" onClick={handleExportExcel} className="flex items-center gap-1">
-                <FileSpreadsheet className="h-4 w-4" />
-                Excel
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleExportCSV} className="flex items-center gap-1">
-                <Download className="h-4 w-4" />
+
+            {exportDateRange === 'custom' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium block">Custom Date Range</label>
+                <div className="flex gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !customStartDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {customStartDate ? format(customStartDate, "PPP") : "Start date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={customStartDate}
+                        onSelect={setCustomStartDate}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !customEndDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {customEndDate ? format(customEndDate, "PPP") : "End date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={customEndDate}
+                        onSelect={setCustomEndDate}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between space-x-2">
+            <div className="text-sm text-muted-foreground">
+              {getFilteredRecordsForExport().length} records will be exported
+            </div>
+            
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={exportToCSV}>
+                <FileText className="h-4 w-4 mr-1" />
                 CSV
               </Button>
+              <Button variant="outline" size="sm" onClick={exportToExcel}>
+                <FileSpreadsheet className="h-4 w-4 mr-1" />
+                Excel
+              </Button>
+              <Button variant="outline" size="sm" onClick={exportToPDF}>
+                <FileText className="h-4 w-4 mr-1" />
+                PDF
+              </Button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          {filteredRecords.length === 0 ? <div className="text-center py-6 text-muted-foreground">
-            {searchTerm ? 'No records found matching your search.' : 'No milk reception records found.'}
-          </div> : <>
-            <div className="overflow-x-auto" id="milk-reception-table">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="whitespace-nowrap">Date</TableHead>
-                    <TableHead className="whitespace-nowrap">Supplier</TableHead>
-                    <TableHead className="whitespace-nowrap">Volume (L)</TableHead>
-                    <TableHead className="whitespace-nowrap">Tank</TableHead>
-                    <TableHead className="whitespace-nowrap">Temperature (°C)</TableHead>
-                    <TableHead className="whitespace-nowrap">Fat %</TableHead>
-                    <TableHead className="whitespace-nowrap">Protein %</TableHead>
-                    <TableHead className="whitespace-nowrap">Quality</TableHead>
-                    <TableHead className="whitespace-nowrap">Batch ID</TableHead>
-                    <TableHead className="whitespace-nowrap">Destination</TableHead>
-                    <TableHead className="whitespace-nowrap">Notes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentRecords.map(record => <TableRow key={record.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {format(new Date(record.created_at), 'MMM dd, yyyy HH:mm')}
-                      </TableCell>
-                      <TableCell className="font-medium whitespace-nowrap">
-                        {record.supplier_name}
-                      </TableCell>
-                      <TableCell className={`whitespace-nowrap ${record.milk_volume < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {record.milk_volume}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">{record.tank_number}</TableCell>
-                      <TableCell className="whitespace-nowrap">{record.temperature}</TableCell>
-                      <TableCell className="whitespace-nowrap">{record.fat_percentage}%</TableCell>
-                      <TableCell className="whitespace-nowrap">{record.protein_percentage}%</TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <Badge className={getQualityBadgeColor(record.quality_score)}>
-                          {record.quality_score}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm font-mono whitespace-nowrap">
-                        {record.batch_id || '-'}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">{record.destination || '-'}</TableCell>
-                      <TableCell className="whitespace-nowrap max-w-[200px] overflow-hidden text-ellipsis">
-                        {record.notes}
-                      </TableCell>
-                    </TableRow>)}
-                </TableBody>
-              </Table>
-            </div>
+        </div>
+      )}
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredRecords.length)} of {filteredRecords.length} records
-              </div>
-              
-              {totalPages > 1 && <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious onClick={() => handlePageChange(Math.max(1, currentPage - 1))} className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} />
-                    </PaginationItem>
-                    
-                    {Array.from({
-                length: totalPages
-              }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
-                        <PaginationLink onClick={() => handlePageChange(page)} isActive={currentPage === page} className="cursor-pointer">
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>)}
-                    
-                    <PaginationItem>
-                      <PaginationNext onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>}
-            </div>
-          </>}
-        </CardContent>
-      </Card>
+      {/* Table */}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Supplier</TableHead>
+              <TableHead>Batch Number</TableHead>
+              <TableHead>Tank Number</TableHead>
+              <TableHead>Quantity (L)</TableHead>
+              <TableHead>Fat %</TableHead>
+              <TableHead>Protein %</TableHead>
+              <TableHead>Temperature</TableHead>
+              <TableHead>pH Level</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={10} className="text-center py-4">
+                  Loading data...
+                </TableCell>
+              </TableRow>
+            ) : filteredRecords.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={10} className="text-center py-4">
+                  No records found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredRecords.map((record) => (
+                <TableRow key={record.id}>
+                  <TableCell>{format(new Date(record.reception_date || record.created_at), 'yyyy-MM-dd HH:mm')}</TableCell>
+                  <TableCell>{record.supplier_name}</TableCell>
+                  <TableCell>{record.batch_number}</TableCell>
+                  <TableCell>{record.tank_number}</TableCell>
+                  <TableCell>{record.quantity}</TableCell>
+                  <TableCell>{record.fat_percentage}</TableCell>
+                  <TableCell>{record.protein_percentage}</TableCell>
+                  <TableCell>{record.temperature}</TableCell>
+                  <TableCell>{record.ph_level}</TableCell>
+                  <TableCell>
+                    <Badge variant={record.status === 'accepted' ? 'success' : record.status === 'rejected' ? 'destructive' : 'secondary'}>
+                      {record.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
