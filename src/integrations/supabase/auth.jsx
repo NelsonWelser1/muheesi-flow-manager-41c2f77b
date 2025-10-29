@@ -1,9 +1,6 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
-import { supabase } from './supabase.js';
+import { supabase } from './client';
 import { useQueryClient } from '@tanstack/react-query';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
 
 const SupabaseAuthContext = createContext();
 
@@ -30,7 +27,7 @@ export const SupabaseAuthProviderInner = ({ children }) => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
-      queryClient.invalidateQueries('user');
+      queryClient.invalidateQueries(['user', 'userRole', 'userProfile']);
     });
 
     getSession();
@@ -44,7 +41,7 @@ export const SupabaseAuthProviderInner = ({ children }) => {
   const logout = async () => {
     await supabase.auth.signOut();
     setSession(null);
-    queryClient.invalidateQueries('user');
+    queryClient.invalidateQueries(['user', 'userRole', 'userProfile']);
     setLoading(false);
   };
 
@@ -62,13 +59,4 @@ export const useSupabaseAuth = () => {
   }
   return context;
 };
-
-export const SupabaseAuthUI = () => (
-  <Auth
-    supabaseClient={supabase}
-    appearance={{ theme: ThemeSupa }}
-    theme="default"
-    providers={[]}
-  />
-);
 

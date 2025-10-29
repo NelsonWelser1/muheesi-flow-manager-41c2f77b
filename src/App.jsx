@@ -7,6 +7,8 @@ import { AutoFillProvider } from "./contexts/AutoFillContext";
 import { SupabaseAuthProvider } from "./integrations/supabase/auth";
 import Navigation from "./components/Navigation";
 import LogoBackground from "./components/layout/LogoBackground";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AuthPage from "./pages/AuthPage";
 import LandingPage from "./pages/LandingPage";
 import ManageInventory from "./pages/ManageInventory";
 import ManageCompanies from "./pages/ManageCompanies";
@@ -38,13 +40,14 @@ const App = () => {
             <BrowserRouter>
               <Navigation />
               <Routes>
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/" element={<ProtectedRoute><LandingPage /></ProtectedRoute>} />
                 <Route path="/home" element={<Navigate to="/" replace />} />
-                <Route path="/manage-inventory" element={<ManageInventory />} />
-                <Route path="/manage-companies" element={<ManageCompanies />} />
-                <Route path="/manage-inventory/kajon-export/export-manager" element={<CoffeeExportManagerDashboard />} />
-                <Route path="/manage-inventory/kashari-farm" element={<KashariFarmDashboard />} />
-                <Route path="/manage-inventory/bukomero-dairy" element={<BukomeroDairyDashboard />} />
+                <Route path="/manage-inventory" element={<ProtectedRoute><ManageInventory /></ProtectedRoute>} />
+                <Route path="/manage-companies" element={<ProtectedRoute><ManageCompanies /></ProtectedRoute>} />
+                <Route path="/manage-inventory/kajon-export/export-manager" element={<ProtectedRoute><CoffeeExportManagerDashboard /></ProtectedRoute>} />
+                <Route path="/manage-inventory/kashari-farm" element={<ProtectedRoute><KashariFarmDashboard /></ProtectedRoute>} />
+                <Route path="/manage-inventory/bukomero-dairy" element={<ProtectedRoute><BukomeroDairyDashboard /></ProtectedRoute>} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
