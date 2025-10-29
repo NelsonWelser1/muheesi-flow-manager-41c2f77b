@@ -6,12 +6,11 @@ import { Menu, LogOut, User } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { navItems } from '../nav-items';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [user, setUser] = useState(null);
   
   useEffect(() => {
@@ -33,10 +32,7 @@ const Navigation = () => {
   
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    toast({
-      title: "Logged out",
-      description: "You've been successfully logged out.",
-    });
+    toast.success("Logged out successfully");
     navigate('/auth');
   };
   

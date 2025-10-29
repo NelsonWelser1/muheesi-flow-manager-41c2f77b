@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 const AuthPage = () => {
@@ -17,7 +17,6 @@ const AuthPage = () => {
     fullName: '',
   });
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     // Check if user is already logged in
@@ -44,19 +43,12 @@ const AuthPage = () => {
 
         if (error) throw error;
 
-        toast({
-          title: "Welcome back!",
-          description: "You've successfully logged in.",
-        });
+        toast.success("Welcome back!");
         navigate('/');
       } else {
         // Signup
         if (!formData.fullName.trim()) {
-          toast({
-            title: "Error",
-            description: "Please enter your full name.",
-            variant: "destructive",
-          });
+          toast.error("Please enter your full name.");
           setLoading(false);
           return;
         }
@@ -76,21 +68,14 @@ const AuthPage = () => {
 
         if (error) throw error;
 
-        toast({
-          title: "Account created!",
-          description: "Welcome to the system. You can now log in.",
-        });
+        toast.success("Account created! Welcome to the system.");
         
         // Auto-login after signup (since email confirmation is disabled)
         navigate('/');
       }
     } catch (error) {
       console.error('Auth error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred during authentication.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "An error occurred during authentication.");
     } finally {
       setLoading(false);
     }
