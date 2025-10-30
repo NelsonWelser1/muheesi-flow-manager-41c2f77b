@@ -1,6 +1,6 @@
 
 import { supabase } from './supabase';
-import { SupabaseAuthProvider, useSupabaseAuth, SupabaseAuthUI } from './auth';
+import { SupabaseAuthProvider, useSupabaseAuth } from './auth';
 
 // Import all hooks
 import {
@@ -75,7 +75,6 @@ export {
     supabase,
     SupabaseAuthProvider,
     useSupabaseAuth,
-    SupabaseAuthUI,
     // Grand Berna Dairies
     useGrandBernaDairy,
     useFactoryOperations,

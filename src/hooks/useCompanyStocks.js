@@ -19,7 +19,8 @@ export const useCompanyStocks = (company) => {
           .select('*')
           .eq('company', company);
 
-        if (error) {
+        // If table doesn't exist (PGRST205), use company-specific tables
+        if (error && error.code !== 'PGRST205') {
           console.error('Error fetching company stocks:', error);
           throw error;
         }
