@@ -4,6 +4,31 @@ import { Badge } from "@/components/ui/badge";
 import { useUserRole, useUserProfile } from '@/integrations/supabase/hooks/useAuth';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import RoleDashboard from '@/components/organization/RoleDashboard';
+
+// Map enum values to full role titles
+const roleMapping = {
+  'sysadmin': 'System Administrator (SysAdmin)',
+  'ceo': 'Chief Executive Officer (CEO)',
+  'board_member': 'Board of Directors',
+  'pa': "CEO's Personal Assistant",
+  'compliance_officer': 'Compliance & Quality Control Officer',
+  'hr_manager': 'Human Resource Manager',
+  'operations_manager': 'Operations Manager',
+  'procurement_manager': 'Procurement Manager',
+  'factory_manager': 'Factory Manager',
+  'risk_manager': 'Risk Manager',
+  'finance_manager': 'Finance Manager',
+  'sales_export_manager': 'Sales & Export Manager',
+  'logistics_manager': 'Logistics Manager',
+  'inventory_manager': 'Inventory Manager',
+  'marketing_manager': 'Marketing Manager',
+  'it_manager': 'IT Manager',
+  'product_development_manager': 'Product Development Manager',
+  'warehouse_supervisor': 'Warehouse Supervisor',
+  'association_manager': 'Association Manager',
+  'farm_manager': 'Farm Manager',
+};
 
 const UserDashboard = () => {
   const { data: role, isLoading: roleLoading } = useUserRole();
@@ -61,9 +86,13 @@ const UserDashboard = () => {
           <CheckCircle2 className="h-4 w-4" />
           <AlertTitle>Role Active</AlertTitle>
           <AlertDescription>
-            Your role grants you access to specific dashboards and features. Navigate using the menu above to access your workspace.
+            Your role grants you access to specific dashboards and features. Your personalized dashboard is displayed below.
           </AlertDescription>
         </Alert>
+      )}
+
+      {role && roleMapping[role.role] && (
+        <RoleDashboard role={roleMapping[role.role]} />
       )}
     </div>
   );
