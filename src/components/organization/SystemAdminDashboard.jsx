@@ -34,7 +34,7 @@ const SystemAdminDashboard = () => {
   
   const systemMetrics = {
     totalUsers: 247,
-    activeCompanies: 4,
+    activeCompanies: 3,
     systemUptime: '99.8%',
     dataStorage: '2.3 TB',
     dailyTransactions: 1847,
@@ -65,14 +65,6 @@ const SystemAdminDashboard = () => {
       lastActivity: "1 hour ago", 
       systems: ["Rice Imports", "Bull Fattening", "Farm Operations"],
       alerts: 0
-    },
-    {
-      name: "Fresheco Farming",
-      status: "Active",
-      employees: 46,
-      lastActivity: "30 mins ago",
-      systems: ["Inventory", "Exports", "Quality Control"],
-      alerts: 1
     }
   ];
 

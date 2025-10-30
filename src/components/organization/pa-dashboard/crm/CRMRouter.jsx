@@ -42,18 +42,6 @@ const CRMRouter = ({ view = 'contacts' }) => {
       notes: 'Supplies dairy products for office events.'
     },
     {
-      id: 3,
-      firstName: 'David',
-      lastName: 'Brown',
-      type: 'Partner',
-      company: 'FreshEco Farms',
-      email: 'david.brown@example.com',
-      phone: '+256 234-567-8901',
-      city: 'Jinja',
-      country: 'Uganda',
-      avatarUrl: null
-    },
-    {
       id: 4,
       firstName: 'Sarah',
       lastName: 'Johnson',
@@ -88,17 +76,6 @@ const CRMRouter = ({ view = 'contacts' }) => {
       date: '2025-04-17',
       time: '02:15 PM',
       notes: 'Inquired about invoice payment',
-      avatarUrl: null
-    },
-    {
-      id: 3,
-      contactName: 'David Brown',
-      company: 'FreshEco Farms',
-      type: 'missed',
-      duration: '0:00',
-      date: '2025-04-15',
-      time: '11:45 AM',
-      notes: '',
       avatarUrl: null
     }
   ]);

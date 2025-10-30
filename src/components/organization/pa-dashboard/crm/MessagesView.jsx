@@ -44,22 +44,6 @@ const MessagesView = () => {
         sender: 'contact'
       },
       unread: 2
-    },
-    {
-      id: 3,
-      contact: {
-        id: 3,
-        name: 'David Brown',
-        company: 'FreshEco Farms',
-        avatarUrl: null
-      },
-      lastMessage: {
-        content: "I've attached the signed contract for your review",
-        timestamp: 'Monday',
-        isRead: true,
-        sender: 'user'
-      },
-      unread: 0
     }
   ]);
 

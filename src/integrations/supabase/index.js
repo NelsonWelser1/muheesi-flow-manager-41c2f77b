@@ -10,13 +10,6 @@ import {
     useDairySalesRecords,
 } from './hooks/useGrandBernaDairies';
 
-import {
-    useFreshecoFarming,
-    useFreshecoFarmings,
-    useAddFreshecoFarming,
-    useUpdateFreshecoFarming,
-    useDeleteFreshecoFarming,
-} from './hooks/useFreshecoFarming';
 
 import {
     useKAJONCoffee,
@@ -88,12 +81,6 @@ export {
     useFactoryOperations,
     useColdRoomManagement,
     useDairySalesRecords,
-    // Fresheco Farming
-    useFreshecoFarming,
-    useFreshecoFarmings,
-    useAddFreshecoFarming,
-    useUpdateFreshecoFarming,
-    useDeleteFreshecoFarming,
     // KAJON Coffee
     useKAJONCoffee,
     useKAJONCoffees,

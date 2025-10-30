@@ -78,19 +78,3 @@ export const useAddFarmInventory = () => {
     }
   });
 };
-
-// Hooks for Fresheco Farming
-export const useFreshecoInventory = () => useQuery({
-  queryKey: ['freshecoInventory'],
-  queryFn: () => fetchFromSupabase('fresheco_inventory')
-});
-
-export const useAddFreshecoInventory = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data) => insertToSupabase('fresheco_inventory', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['freshecoInventory']);
-    }
-  });
-};
