@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import ManageAccounts from './ManageAccounts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from 'react-router-dom';
 
 const SystemAdministrator = () => {
+  const navigate = useNavigate();
   const [systemHealth, setSystemHealth] = useState({});
   const [backupSchedule, setBackupSchedule] = useState({});
   const [securityAlerts, setSecurityAlerts] = useState([]);
@@ -107,7 +108,14 @@ const SystemAdministrator = () => {
         <AccordionItem value="manage-accounts">
           <AccordionTrigger>Manage Accounts</AccordionTrigger>
           <AccordionContent>
-            <ManageAccounts />
+            <div className="p-4">
+              <p className="text-muted-foreground mb-4">
+                Access the comprehensive user management system to manage accounts, roles, and permissions.
+              </p>
+              <Button onClick={() => navigate('/manage-accounts')}>
+                Open User Management
+              </Button>
+            </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
