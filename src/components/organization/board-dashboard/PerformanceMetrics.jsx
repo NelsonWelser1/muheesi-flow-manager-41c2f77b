@@ -36,9 +36,9 @@ const PerformanceMetrics = () => {
   ];
 
   const getAchievementColor = (achievement) => {
-    if (achievement >= 100) return 'text-green-600';
-    if (achievement >= 95) return 'text-yellow-600';
-    return 'text-red-600';
+    if (achievement >= 100) return 'text-success';
+    if (achievement >= 95) return 'text-warning';
+    return 'text-destructive';
   };
 
   return (

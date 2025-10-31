@@ -35,7 +35,7 @@ const FinancialSummary = () => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">$14.5M</p>
-            <p className="text-xs text-green-600">+8.5% YoY</p>
+            <p className="text-xs text-success">+8.5% YoY</p>
           </CardContent>
         </Card>
         
@@ -45,7 +45,7 @@ const FinancialSummary = () => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">$3.5M</p>
-            <p className="text-xs text-green-600">+12.1% YoY</p>
+            <p className="text-xs text-success">+12.1% YoY</p>
           </CardContent>
         </Card>
         
@@ -55,7 +55,7 @@ const FinancialSummary = () => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">24.1%</p>
-            <p className="text-xs text-green-600">+2.3% YoY</p>
+            <p className="text-xs text-success">+2.3% YoY</p>
           </CardContent>
         </Card>
         
@@ -65,7 +65,7 @@ const FinancialSummary = () => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">19.2%</p>
-            <p className="text-xs text-green-600">+1.8% YoY</p>
+            <p className="text-xs text-success">+1.8% YoY</p>
           </CardContent>
         </Card>
       </div>

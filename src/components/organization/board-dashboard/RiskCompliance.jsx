@@ -37,10 +37,10 @@ const RiskCompliance = () => {
 
   const getRiskColor = (risk) => {
     switch (risk) {
-      case 'Low': return 'bg-green-500';
-      case 'Medium': return 'bg-yellow-500';
-      case 'High': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'Low': return 'bg-success';
+      case 'Medium': return 'bg-warning';
+      case 'High': return 'bg-destructive';
+      default: return 'bg-muted';
     }
   };
 
@@ -55,7 +55,7 @@ const RiskCompliance = () => {
             <p className="text-2xl font-bold">
               {(riskAssessments.reduce((sum, r) => sum + r.compliance, 0) / riskAssessments.length).toFixed(1)}%
             </p>
-            <p className="text-xs text-green-600">Above industry standard</p>
+            <p className="text-xs text-success">Above industry standard</p>
           </CardContent>
         </Card>
         
@@ -76,7 +76,7 @@ const RiskCompliance = () => {
             <CardTitle className="text-sm font-medium">Critical Issues</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-red-600">
+            <p className="text-2xl font-bold text-destructive">
               {riskAssessments.reduce((sum, r) => sum + r.criticalIssues, 0)}
             </p>
             <p className="text-xs text-muted-foreground">Immediate attention</p>
@@ -88,7 +88,7 @@ const RiskCompliance = () => {
             <CardTitle className="text-sm font-medium">Companies at Low Risk</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600">
+            <p className="text-2xl font-bold text-success">
               {riskAssessments.filter(r => r.overallRisk === 'Low').length}
             </p>
             <p className="text-xs text-muted-foreground">Out of {riskAssessments.length} total</p>
@@ -139,7 +139,7 @@ const RiskCompliance = () => {
                   <p className="text-sm text-muted-foreground">Open Issues</p>
                   <p className="text-xl font-bold flex items-center gap-1">
                     {assessment.openIssues}
-                    <Clock className="h-4 w-4 text-yellow-500" />
+                    <Clock className="h-4 w-4 text-warning" />
                   </p>
                 </div>
                 
@@ -148,13 +148,13 @@ const RiskCompliance = () => {
                   <div className="flex items-center gap-1">
                     {assessment.criticalIssues === 0 ? (
                       <>
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-sm text-green-600">Compliant</span>
+                        <CheckCircle className="h-4 w-4 text-success" />
+                        <span className="text-sm text-success">Compliant</span>
                       </>
                     ) : (
                       <>
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                        <span className="text-sm text-red-600">Action Required</span>
+                        <AlertTriangle className="h-4 w-4 text-destructive" />
+                        <span className="text-sm text-destructive">Action Required</span>
                       </>
                     )}
                   </div>

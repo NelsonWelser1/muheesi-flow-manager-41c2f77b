@@ -48,10 +48,10 @@ const OperationalStatus = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Optimal': return 'bg-green-500';
-      case 'Good': return 'bg-blue-500';
-      case 'Monitor': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
+      case 'Optimal': return 'bg-success';
+      case 'Good': return 'bg-primary';
+      case 'Monitor': return 'bg-warning';
+      default: return 'bg-muted';
     }
   };
 
@@ -83,7 +83,7 @@ const OperationalStatus = () => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{avgCapacity.toFixed(1)}%</p>
-            <p className="text-xs text-green-600">Within optimal range</p>
+            <p className="text-xs text-success">Within optimal range</p>
           </CardContent>
         </Card>
         
@@ -93,7 +93,7 @@ const OperationalStatus = () => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{avgEfficiency.toFixed(1)}%</p>
-            <p className="text-xs text-green-600">Above target</p>
+            <p className="text-xs text-success">Above target</p>
           </CardContent>
         </Card>
         
@@ -158,7 +158,7 @@ const OperationalStatus = () => {
                   <p className="text-sm text-muted-foreground">Active Projects</p>
                   <p className="text-xl font-bold flex items-center gap-1">
                     {company.activeProjects}
-                    <Clock className="h-4 w-4 text-blue-500" />
+                    <Clock className="h-4 w-4 text-primary" />
                   </p>
                 </div>
                 
@@ -167,9 +167,9 @@ const OperationalStatus = () => {
                   <p className="text-xl font-bold flex items-center gap-1">
                     {company.criticalAlerts}
                     {company.criticalAlerts === 0 ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <CheckCircle className="h-4 w-4 text-success" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 text-red-500" />
+                      <AlertCircle className="h-4 w-4 text-destructive" />
                     )}
                   </p>
                 </div>

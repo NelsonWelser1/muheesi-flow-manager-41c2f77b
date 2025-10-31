@@ -64,22 +64,22 @@ const StrategicReports = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Final': return 'bg-green-500';
-      case 'Draft': return 'bg-yellow-500';
-      case 'Under Review': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case 'Final': return 'bg-success';
+      case 'Draft': return 'bg-warning';
+      case 'Under Review': return 'bg-primary';
+      default: return 'bg-muted';
     }
   };
 
   const getTypeColor = (type) => {
     switch (type) {
-      case 'Quarterly Report': return 'border-purple-200 bg-purple-50';
-      case 'Risk Report': return 'border-red-200 bg-red-50';
-      case 'Compliance Report': return 'border-green-200 bg-green-50';
-      case 'Strategic Report': return 'border-blue-200 bg-blue-50';
-      case 'Operations Report': return 'border-orange-200 bg-orange-50';
-      case 'Investment Report': return 'border-indigo-200 bg-indigo-50';
-      default: return 'border-gray-200 bg-gray-50';
+      case 'Quarterly Report': return 'border-accent/30 bg-accent/10';
+      case 'Risk Report': return 'border-destructive/30 bg-destructive/10';
+      case 'Compliance Report': return 'border-success/30 bg-success/10';
+      case 'Strategic Report': return 'border-primary/30 bg-primary/10';
+      case 'Operations Report': return 'border-warning/30 bg-warning/10';
+      case 'Investment Report': return 'border-secondary/30 bg-secondary/10';
+      default: return 'border-muted/30 bg-muted/10';
     }
   };
 
@@ -139,7 +139,7 @@ const StrategicReports = () => {
                   </div>
                 </div>
                 <button 
-                  className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                  className="p-2 hover:bg-muted rounded-md transition-colors"
                   onClick={() => window.open(report.downloadUrl, '_blank')}
                 >
                   <Download className="h-4 w-4" />

@@ -21,7 +21,7 @@ const CompanyOverview = () => {
       employees: 347,
       performance: 87,
       status: "Excellent",
-      statusColor: "bg-green-500",
+      statusColor: "bg-success",
       growth: "+12.3%",
       keyMetrics: {
         production: "2,450 tons",
@@ -36,7 +36,7 @@ const CompanyOverview = () => {
       employees: 156,
       performance: 82,
       status: "Good",
-      statusColor: "bg-blue-500",
+      statusColor: "bg-primary",
       growth: "+8.7%",
       keyMetrics: {
         production: "1,850 tons",
@@ -51,7 +51,7 @@ const CompanyOverview = () => {
       employees: 234,
       performance: 79,
       status: "Good",
-      statusColor: "bg-blue-500",
+      statusColor: "bg-primary",
       growth: "+5.2%",
       keyMetrics: {
         production: "3,200 tons",
@@ -135,7 +135,7 @@ const CompanyOverview = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Annual Revenue</p>
                   <p className="text-xl font-bold">{company.revenue}</p>
-                  <p className="text-sm text-green-600 flex items-center">
+                  <p className="text-sm text-success flex items-center">
                     <TrendingUp className="h-3 w-3 mr-1" />
                     {company.growth}
                   </p>
