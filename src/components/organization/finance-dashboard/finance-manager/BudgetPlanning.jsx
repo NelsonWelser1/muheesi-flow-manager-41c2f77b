@@ -52,17 +52,17 @@ const BudgetPlanning = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'on-track': return 'bg-green-500 text-white';
-      case 'over-budget': return 'bg-red-500 text-white';
-      case 'under-budget': return 'bg-blue-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'on-track': return 'bg-success text-primary-foreground';
+      case 'over-budget': return 'bg-destructive text-destructive-foreground';
+      case 'under-budget': return 'bg-primary text-primary-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
   const getProgressColor = (percentUsed) => {
-    if (percentUsed <= 85) return 'bg-blue-500';
-    if (percentUsed <= 100) return 'bg-green-500';
-    return 'bg-red-500';
+    if (percentUsed <= 85) return 'bg-primary';
+    if (percentUsed <= 100) return 'bg-success';
+    return 'bg-destructive';
   };
 
   return (
@@ -115,12 +115,12 @@ const BudgetPlanning = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 border rounded-lg">
                 <h4 className="font-semibold text-lg">Total Budget</h4>
-                <p className="text-2xl font-bold text-blue-600">$1.77M</p>
+                <p className="text-2xl font-bold text-primary">$1.77M</p>
                 <p className="text-sm text-muted-foreground">Current fiscal year</p>
               </div>
               <div className="p-4 border rounded-lg">
                 <h4 className="font-semibold text-lg">Total Spent</h4>
-                <p className="text-2xl font-bold text-green-600">$1.75M</p>
+                <p className="text-2xl font-bold text-success">$1.75M</p>
                 <p className="text-sm text-muted-foreground">98.9% utilized</p>
               </div>
             </div>
@@ -132,11 +132,11 @@ const BudgetPlanning = () => {
               </div>
               <div className="flex justify-between">
                 <span>Over Budget</span>
-                <span className="font-semibold text-red-600">2/5</span>
+                <span className="font-semibold text-destructive">2/5</span>
               </div>
               <div className="flex justify-between">
                 <span>Under Budget</span>
-                <span className="font-semibold text-blue-600">1/5</span>
+                <span className="font-semibold text-primary">1/5</span>
               </div>
             </div>
           </CardContent>

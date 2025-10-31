@@ -68,17 +68,17 @@ const TaxCompliance = () => {
     switch (status) {
       case 'completed':
       case 'compliant':
-        return 'bg-green-500 text-white';
+        return 'bg-success text-primary-foreground';
       case 'in-progress':
-        return 'bg-blue-500 text-white';
+        return 'bg-primary text-primary-foreground';
       case 'pending':
       case 'review-needed':
-        return 'bg-yellow-500 text-white';
+        return 'bg-warning text-primary-foreground';
       case 'overdue':
       case 'action-required':
-        return 'bg-red-500 text-white';
+        return 'bg-destructive text-destructive-foreground';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -121,7 +121,7 @@ const TaxCompliance = () => {
                   </span>
                 </div>
                 {tax.status === 'overdue' && (
-                  <div className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                  <div className="mt-2 text-sm text-destructive flex items-center gap-1">
                     <AlertTriangle className="h-4 w-4" />
                     Immediate attention required
                   </div>

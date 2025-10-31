@@ -24,19 +24,19 @@ const AccountsPayableReceivable = () => {
 
   const getARStatusColor = (status) => {
     switch (status) {
-      case 'current': return 'bg-green-500 text-white';
-      case 'overdue': return 'bg-yellow-500 text-white';
-      case 'critical': return 'bg-red-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'current': return 'bg-success text-primary-foreground';
+      case 'overdue': return 'bg-warning text-primary-foreground';
+      case 'critical': return 'bg-destructive text-destructive-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
   const getAPStatusColor = (status) => {
     switch (status) {
-      case 'current': return 'bg-green-500 text-white';
-      case 'due-soon': return 'bg-yellow-500 text-white';
-      case 'overdue': return 'bg-red-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'current': return 'bg-success text-primary-foreground';
+      case 'due-soon': return 'bg-warning text-primary-foreground';
+      case 'overdue': return 'bg-destructive text-destructive-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -61,15 +61,15 @@ const AccountsPayableReceivable = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">$340K</p>
+                <p className="text-2xl font-bold text-success">$340K</p>
                 <p className="text-sm text-muted-foreground">Total Outstanding</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-600">$70K</p>
+                <p className="text-2xl font-bold text-warning">$70K</p>
                 <p className="text-sm text-muted-foreground">Overdue</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-red-600">$25K</p>
+                <p className="text-2xl font-bold text-destructive">$25K</p>
                 <p className="text-sm text-muted-foreground">Critical</p>
               </div>
             </div>
@@ -105,15 +105,15 @@ const AccountsPayableReceivable = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">$168K</p>
+                <p className="text-2xl font-bold text-primary">$168K</p>
                 <p className="text-sm text-muted-foreground">Total Payable</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-600">$35K</p>
+                <p className="text-2xl font-bold text-warning">$35K</p>
                 <p className="text-sm text-muted-foreground">Due Soon</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-red-600">$30K</p>
+                <p className="text-2xl font-bold text-destructive">$30K</p>
                 <p className="text-sm text-muted-foreground">Overdue</p>
               </div>
             </div>

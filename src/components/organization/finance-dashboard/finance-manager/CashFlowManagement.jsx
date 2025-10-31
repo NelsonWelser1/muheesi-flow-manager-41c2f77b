@@ -63,7 +63,7 @@ const CashFlowManagement = () => {
                 <div className="flex justify-between items-center mb-3">
                   <h4 className="font-semibold">{category.category}</h4>
                   <div className="flex items-center gap-2">
-                    <span className={`font-bold ${category.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className={`font-bold ${category.amount >= 0 ? 'text-success' : 'text-destructive'}`}>
                       ${Math.abs(category.amount).toLocaleString()}
                     </span>
                     <Badge variant={category.amount >= 0 ? "default" : "destructive"}>
@@ -75,7 +75,7 @@ const CashFlowManagement = () => {
                   {category.items.map((item, idx) => (
                     <div key={idx} className="flex justify-between text-sm">
                       <span>{item.name}</span>
-                      <span className={item.status === 'positive' ? 'text-green-600' : 'text-red-600'}>
+                      <span className={item.status === 'positive' ? 'text-success' : 'text-destructive'}>
                         ${Math.abs(item.amount).toLocaleString()}
                       </span>
                     </div>
@@ -97,19 +97,19 @@ const CashFlowManagement = () => {
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">Inflow</p>
-                    <p className="font-semibold text-green-600">
+                    <p className="font-semibold text-success">
                       +${period.inflow.toLocaleString()}
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Outflow</p>
-                    <p className="font-semibold text-red-600">
+                    <p className="font-semibold text-destructive">
                       -${period.outflow.toLocaleString()}
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Net</p>
-                    <p className={`font-semibold ${period.net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`font-semibold ${period.net >= 0 ? 'text-success' : 'text-destructive'}`}>
                       ${period.net.toLocaleString()}
                     </p>
                   </div>

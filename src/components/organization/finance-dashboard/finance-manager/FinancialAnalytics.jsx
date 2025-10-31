@@ -50,7 +50,7 @@ const FinancialAnalytics = () => {
                 <h4 className="font-semibold text-sm mb-2">{kpi.name}</h4>
                 <p className="text-2xl font-bold mb-1">{kpi.value}</p>
                 <p className={`text-xs flex items-center justify-center gap-1 ${
-                  kpi.status === 'up' ? 'text-green-600' : 'text-red-600'
+                  kpi.status === 'up' ? 'text-success' : 'text-destructive'
                 }`}>
                   <TrendingUp className={`h-3 w-3 ${kpi.status === 'down' ? 'rotate-180' : ''}`} />
                   {kpi.trend}
@@ -76,9 +76,9 @@ const FinancialAnalytics = () => {
                   <span className="font-medium">{item.category}</span>
                   <span className="font-semibold">${item.amount.toLocaleString()}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-2">
                   <div 
-                    className="bg-blue-600 h-2 rounded-full" 
+                    className="bg-primary h-2 rounded-full" 
                     style={{ width: `${item.percentage}%` }}
                   ></div>
                 </div>
@@ -104,9 +104,9 @@ const FinancialAnalytics = () => {
                   <span className="font-medium">{item.category}</span>
                   <span className="font-semibold">${item.amount.toLocaleString()}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-2">
                   <div 
-                    className="bg-red-500 h-2 rounded-full" 
+                    className="bg-destructive h-2 rounded-full" 
                     style={{ width: `${item.percentage}%` }}
                   ></div>
                 </div>

@@ -99,7 +99,7 @@ const FinancialReporting = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-1 rounded text-xs ${
-                    report.status === 'Ready' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    report.status === 'Ready' ? 'bg-success/10 text-success border border-success' : 'bg-muted text-muted-foreground'
                   }`}>
                     {report.status}
                   </span>

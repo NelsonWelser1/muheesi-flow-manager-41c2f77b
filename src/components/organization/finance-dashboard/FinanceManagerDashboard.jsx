@@ -62,7 +62,7 @@ const FinanceManagerDashboard = () => {
             Manage financial operations, budgets, and compliance across all business units
           </p>
         </div>
-        <DollarSign className="h-8 w-8 text-green-600" />
+        <DollarSign className="h-8 w-8 text-success" />
       </div>
 
       <FinanceMetricsCards />
