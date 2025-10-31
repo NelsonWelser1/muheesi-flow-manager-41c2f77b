@@ -33,7 +33,7 @@ const BoardOfDirectorsDashboard = () => {
       change: "+8.5%",
       trend: "up",
       icon: DollarSign,
-      color: "text-green-600"
+      color: "text-success"
     },
     {
       title: "Active Companies",
@@ -41,7 +41,7 @@ const BoardOfDirectorsDashboard = () => {
       change: "Stable",
       trend: "stable",
       icon: Building2,
-      color: "text-blue-600"
+      color: "text-primary"
     },
     {
       title: "Total Employees",
@@ -49,7 +49,7 @@ const BoardOfDirectorsDashboard = () => {
       change: "+12",
       trend: "up",
       icon: Users,
-      color: "text-purple-600"
+      color: "text-accent"
     },
     {
       title: "Risk Alerts",
@@ -57,7 +57,7 @@ const BoardOfDirectorsDashboard = () => {
       change: "-1",
       trend: "down",
       icon: AlertTriangle,
-      color: "text-red-600"
+      color: "text-destructive"
     }
   ];
 
@@ -71,7 +71,7 @@ const BoardOfDirectorsDashboard = () => {
           </p>
         </div>
         <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+          <Badge variant="outline" className="bg-primary/10 text-primary border-primary">
             <Eye className="h-3 w-3 mr-1" />
             View Only
           </Badge>

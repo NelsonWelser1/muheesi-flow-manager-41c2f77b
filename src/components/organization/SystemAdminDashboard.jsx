@@ -73,7 +73,7 @@ const SystemAdminDashboard = () => {
       title: "User Management",
       description: "Manage all user accounts, roles, and permissions across companies",
       icon: UserCog,
-      color: "bg-blue-500",
+      color: "bg-primary",
       action: () => navigate('/manage-accounts'),
       category: "users"
     },
@@ -81,7 +81,7 @@ const SystemAdminDashboard = () => {
       title: "Company Systems",
       description: "Access and manage company-specific systems and operations",
       icon: Building2,
-      color: "bg-green-500", 
+      color: "bg-secondary", 
       action: () => navigate('/manage-companies'),
       category: "companies"
     },
@@ -89,7 +89,7 @@ const SystemAdminDashboard = () => {
       title: "Inventory Management",
       description: "Centralized inventory control across all companies",
       icon: Package,
-      color: "bg-purple-500",
+      color: "bg-accent",
       action: () => navigate('/manage-inventory'),
       category: "operations"
     },
@@ -97,7 +97,7 @@ const SystemAdminDashboard = () => {
       title: "System Health Monitor",
       description: "Monitor system performance, uptime, and infrastructure",
       icon: Activity,
-      color: "bg-red-500",
+      color: "bg-destructive",
       action: () => navigate('/system-health'),
       category: "system"
     },
@@ -105,7 +105,7 @@ const SystemAdminDashboard = () => {
       title: "Database Management",
       description: "Manage databases, backups, and data integrity",
       icon: Database,
-      color: "bg-indigo-500",
+      color: "bg-primary",
       action: () => navigate('/database-management'),
       category: "system"
     },
@@ -113,7 +113,7 @@ const SystemAdminDashboard = () => {
       title: "Security Center",
       description: "Security policies, access control, and threat monitoring",
       icon: Shield,
-      color: "bg-orange-500",
+      color: "bg-warning",
       action: () => navigate('/security-center'),
       category: "security"
     },
@@ -121,7 +121,7 @@ const SystemAdminDashboard = () => {
       title: "Analytics & Reports",
       description: "System-wide analytics, performance metrics, and reporting",
       icon: BarChart3,
-      color: "bg-cyan-500",
+      color: "bg-accent",
       action: () => navigate('/analytics'),
       category: "analytics"
     },
@@ -129,7 +129,7 @@ const SystemAdminDashboard = () => {
       title: "Company Management",
       description: "Manage companies, view company details, and assign users",
       icon: Building2,
-      color: "bg-teal-500",
+      color: "bg-secondary",
       action: () => navigate('/companies'),
       category: "companies"
     },
@@ -137,7 +137,7 @@ const SystemAdminDashboard = () => {
       title: "User Directory",
       description: "View all users, manage roles and permissions across the system",
       icon: Users,
-      color: "bg-pink-500",
+      color: "bg-accent",
       action: () => navigate('/users'),
       category: "users"
     },
@@ -145,7 +145,7 @@ const SystemAdminDashboard = () => {
       title: "Notifications Center",
       description: "Manage system notifications and alert configurations",
       icon: Bell,
-      color: "bg-yellow-500",
+      color: "bg-warning",
       action: () => navigate('/notifications'),
       category: "system"
     },
@@ -153,7 +153,7 @@ const SystemAdminDashboard = () => {
       title: "System Configuration",
       description: "Global system settings and configuration management",
       icon: Settings,
-      color: "bg-gray-500",
+      color: "bg-muted",
       action: () => navigate('/system-config'),
       category: "system"
     }
@@ -168,7 +168,7 @@ const SystemAdminDashboard = () => {
               <p className="text-sm text-muted-foreground">Total Users</p>
               <p className="text-2xl font-bold">{systemMetrics.totalUsers}</p>
             </div>
-            <Users className="h-8 w-8 text-blue-500" />
+            <Users className="h-8 w-8 text-primary" />
           </div>
         </CardContent>
       </Card>
@@ -180,7 +180,7 @@ const SystemAdminDashboard = () => {
               <p className="text-sm text-muted-foreground">Companies</p>
               <p className="text-2xl font-bold">{systemMetrics.activeCompanies}</p>
             </div>
-            <Building2 className="h-8 w-8 text-green-500" />
+            <Building2 className="h-8 w-8 text-secondary" />
           </div>
         </CardContent>
       </Card>
@@ -192,7 +192,7 @@ const SystemAdminDashboard = () => {
               <p className="text-sm text-muted-foreground">Uptime</p>
               <p className="text-2xl font-bold">{systemMetrics.systemUptime}</p>
             </div>
-            <Activity className="h-8 w-8 text-emerald-500" />
+            <Activity className="h-8 w-8 text-success" />
           </div>
         </CardContent>
       </Card>
@@ -204,7 +204,7 @@ const SystemAdminDashboard = () => {
               <p className="text-sm text-muted-foreground">Storage</p>
               <p className="text-2xl font-bold">{systemMetrics.dataStorage}</p>
             </div>
-            <Database className="h-8 w-8 text-purple-500" />
+            <Database className="h-8 w-8 text-accent" />
           </div>
         </CardContent>
       </Card>
@@ -216,7 +216,7 @@ const SystemAdminDashboard = () => {
               <p className="text-sm text-muted-foreground">Transactions</p>
               <p className="text-2xl font-bold">{systemMetrics.dailyTransactions}</p>
             </div>
-            <TrendingUp className="h-8 w-8 text-cyan-500" />
+            <TrendingUp className="h-8 w-8 text-primary" />
           </div>
         </CardContent>
       </Card>
@@ -226,9 +226,9 @@ const SystemAdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Alerts</p>
-              <p className="text-2xl font-bold text-orange-500">{systemMetrics.securityAlerts}</p>
+              <p className="text-2xl font-bold text-warning">{systemMetrics.securityAlerts}</p>
             </div>
-            <AlertCircle className="h-8 w-8 text-orange-500" />
+            <AlertCircle className="h-8 w-8 text-warning" />
           </div>
         </CardContent>
       </Card>
@@ -258,7 +258,7 @@ const SystemAdminDashboard = () => {
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
-                <Activity className="h-4 w-4 text-green-500" />
+                <Activity className="h-4 w-4 text-success" />
                 <span>Last activity: {company.lastActivity}</span>
               </div>
               <div>
@@ -298,16 +298,16 @@ const SystemAdminDashboard = () => {
                 <div className={`${action.color} p-3 rounded-lg`}>
                   <action.icon className="h-6 w-6 text-white" />
                 </div>
-                <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
+                <CardTitle className="text-lg group-hover:text-primary transition-colors">
                   {action.title}
                 </CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-4">{action.description}</p>
+              <p className="text-muted-foreground mb-4">{action.description}</p>
               <Button 
                 onClick={action.action}
-                className="w-full group-hover:bg-blue-600 transition-colors"
+                className="w-full group-hover:bg-primary transition-colors"
                 variant="outline"
               >
                 Access Now
@@ -322,8 +322,8 @@ const SystemAdminDashboard = () => {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h3 className="text-3xl font-bold text-gray-900 mb-2">System Administrator Dashboard</h3>
-        <p className="text-lg text-gray-600">
+        <h3 className="text-3xl font-bold mb-2">System Administrator Dashboard</h3>
+        <p className="text-lg text-muted-foreground">
           Centralized management and oversight of all system operations across companies
         </p>
       </div>
@@ -376,19 +376,19 @@ const SystemAdminDashboard = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span>System Health</span>
-                    <Badge className="bg-green-100 text-green-800">Excellent</Badge>
+                    <Badge className="bg-success/10 text-success border-success">Excellent</Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Database Status</span>
-                    <Badge className="bg-green-100 text-green-800">Online</Badge>
+                    <Badge className="bg-success/10 text-success border-success">Online</Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Backup Status</span>
-                    <Badge className="bg-green-100 text-green-800">Up to date</Badge>
+                    <Badge className="bg-success/10 text-success border-success">Up to date</Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Security Level</span>
-                    <Badge className="bg-yellow-100 text-yellow-800">Medium</Badge>
+                    <Badge className="bg-warning/10 text-warning border-warning">Medium</Badge>
                   </div>
                 </div>
               </CardContent>
@@ -430,9 +430,9 @@ const SystemAdminDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-warning/10 border border-warning/20 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <AlertCircle className="h-5 w-5 text-yellow-600" />
+                      <AlertCircle className="h-5 w-5 text-warning" />
                       <div>
                         <p className="font-medium">Failed login attempts detected</p>
                         <p className="text-sm text-muted-foreground">Multiple failed attempts from IP 192.168.1.100</p>
@@ -441,9 +441,9 @@ const SystemAdminDashboard = () => {
                     <Badge variant="secondary">2 mins ago</Badge>
                   </div>
                   
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-success/10 border border-success/20 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <Shield className="h-5 w-5 text-green-600" />
+                      <Shield className="h-5 w-5 text-success" />
                       <div>
                         <p className="font-medium">Security patch applied successfully</p>
                         <p className="text-sm text-muted-foreground">System updated to latest security version</p>

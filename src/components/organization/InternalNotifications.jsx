@@ -60,9 +60,9 @@ const InternalNotifications = () => {
   
   const getIconForType = (type) => {
     switch (type) {
-      case 'alert': return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'message': return <MessageSquare className="h-4 w-4 text-blue-500" />;
-      case 'event': return <Calendar className="h-4 w-4 text-green-500" />;
+      case 'alert': return <AlertCircle className="h-4 w-4 text-destructive" />;
+      case 'message': return <MessageSquare className="h-4 w-4 text-primary" />;
+      case 'event': return <Calendar className="h-4 w-4 text-success" />;
       default: return null;
     }
   };
@@ -70,7 +70,7 @@ const InternalNotifications = () => {
   const renderNotification = (notification) => (
     <div 
       key={notification.id} 
-      className={`mb-2 p-3 rounded-lg border ${notification.read ? 'bg-gray-50' : 'bg-blue-50 border-blue-100'}`}
+      className={`mb-2 p-3 rounded-lg border ${notification.read ? 'bg-muted/50' : 'bg-primary/10 border-primary/20'}`}
       onClick={() => markAsRead(notification.id)}
     >
       <div className="flex items-start gap-2">
@@ -78,13 +78,13 @@ const InternalNotifications = () => {
         <div className="flex-1">
           <div className="flex justify-between items-start">
             <h4 className="text-sm font-medium">{notification.title}</h4>
-            {!notification.read && <div className="h-2 w-2 rounded-full bg-blue-500"></div>}
+            {!notification.read && <div className="h-2 w-2 rounded-full bg-primary"></div>}
           </div>
           {notification.sender && (
-            <p className="text-xs text-gray-600">From: {notification.sender}</p>
+            <p className="text-xs text-muted-foreground">From: {notification.sender}</p>
           )}
-          <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
-          <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+          <p className="text-xs text-muted-foreground mt-1">{notification.message}</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">{notification.time}</p>
         </div>
       </div>
     </div>

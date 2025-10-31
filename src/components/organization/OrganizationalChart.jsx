@@ -222,44 +222,44 @@ const OrganizationalChart = () => {
         <CardContent className="p-6">
           <h3 className="text-lg font-medium mb-4">Business Management Resources</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="border rounded-md p-4 bg-blue-50">
+            <div className="border rounded-md p-4 bg-primary/10">
               <h4 className="font-medium mb-2">Company Policies</h4>
               <ul className="text-sm space-y-1">
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                <li className="flex items-center text-primary hover:underline cursor-pointer">
                   <ChevronRight className="h-4 w-4 mr-1" /> Operational Procedures
                 </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                <li className="flex items-center text-primary hover:underline cursor-pointer">
                   <ChevronRight className="h-4 w-4 mr-1" /> Staff Handbook
                 </li>
-                <li className="flex items-center text-blue-700 hover:underline cursor-pointer">
+                <li className="flex items-center text-primary hover:underline cursor-pointer">
                   <ChevronRight className="h-4 w-4 mr-1" /> Quality Standards Manual
                 </li>
               </ul>
             </div>
-            <div className="border rounded-md p-4 bg-green-50">
+            <div className="border rounded-md p-4 bg-secondary/10">
               <h4 className="font-medium mb-2">Planning Resources</h4>
               <ul className="text-sm space-y-1">
-                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
+                <li className="flex items-center text-secondary hover:underline cursor-pointer">
                   <ChevronRight className="h-4 w-4 mr-1" /> Strategic Plan 2024-2025
                 </li>
-                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
+                <li className="flex items-center text-secondary hover:underline cursor-pointer">
                   <ChevronRight className="h-4 w-4 mr-1" /> Budget Templates
                 </li>
-                <li className="flex items-center text-green-700 hover:underline cursor-pointer">
+                <li className="flex items-center text-secondary hover:underline cursor-pointer">
                   <ChevronRight className="h-4 w-4 mr-1" /> Risk Assessment Tools
                 </li>
               </ul>
             </div>
-            <div className="border rounded-md p-4 bg-purple-50">
+            <div className="border rounded-md p-4 bg-accent/10">
               <h4 className="font-medium mb-2">Communication Tools</h4>
               <ul className="text-sm space-y-1">
-                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
+                <li className="flex items-center text-accent hover:underline cursor-pointer">
                   <ChevronRight className="h-4 w-4 mr-1" /> Company Directory
                 </li>
-                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
+                <li className="flex items-center text-accent hover:underline cursor-pointer">
                   <ChevronRight className="h-4 w-4 mr-1" /> Reporting Templates
                 </li>
-                <li className="flex items-center text-purple-700 hover:underline cursor-pointer">
+                <li className="flex items-center text-accent hover:underline cursor-pointer">
                   <ChevronRight className="h-4 w-4 mr-1" /> Meeting Scheduler
                 </li>
               </ul>

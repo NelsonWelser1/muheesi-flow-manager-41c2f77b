@@ -92,9 +92,9 @@ const RoleDescriptions = () => {
         <AccordionContent>
           <div className="space-y-4">
             {roles.strategic.map((role, index) => (
-              <div key={index} className="p-4 bg-blue-50 rounded-lg">
-                <h3 className="font-semibold text-blue-800">{role.title}</h3>
-                <p className="text-gray-600 mt-2">{role.description}</p>
+              <div key={index} className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                <h3 className="font-semibold text-primary">{role.title}</h3>
+                <p className="text-muted-foreground mt-2">{role.description}</p>
               </div>
             ))}
           </div>
@@ -108,9 +108,9 @@ const RoleDescriptions = () => {
         <AccordionContent>
           <div className="space-y-4">
             {roles.tactical.map((role, index) => (
-              <div key={index} className="p-4 bg-green-50 rounded-lg">
-                <h3 className="font-semibold text-green-800">{role.title}</h3>
-                <p className="text-gray-600 mt-2">{role.description}</p>
+              <div key={index} className="p-4 bg-secondary/10 border border-secondary/20 rounded-lg">
+                <h3 className="font-semibold text-secondary">{role.title}</h3>
+                <p className="text-muted-foreground mt-2">{role.description}</p>
               </div>
             ))}
           </div>
@@ -124,9 +124,9 @@ const RoleDescriptions = () => {
         <AccordionContent>
           <div className="space-y-4">
             {roles.operational.map((role, index) => (
-              <div key={index} className="p-4 bg-purple-50 rounded-lg">
-                <h3 className="font-semibold text-purple-800">{role.title}</h3>
-                <p className="text-gray-600 mt-2">{role.description}</p>
+              <div key={index} className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
+                <h3 className="font-semibold text-accent">{role.title}</h3>
+                <p className="text-muted-foreground mt-2">{role.description}</p>
               </div>
             ))}
           </div>

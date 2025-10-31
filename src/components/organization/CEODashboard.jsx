@@ -42,7 +42,7 @@ const CEODashboard = () => {
       change: "+12.5%",
       trend: "up",
       icon: DollarSign,
-      color: "text-green-600"
+      color: "text-success"
     },
     {
       title: "Active Employees",
@@ -50,7 +50,7 @@ const CEODashboard = () => {
       change: "+8",
       trend: "up",
       icon: Users,
-      color: "text-blue-600"
+      color: "text-primary"
     },
     {
       title: "Production Efficiency",
@@ -58,7 +58,7 @@ const CEODashboard = () => {
       change: "+3.2%",
       trend: "up",
       icon: TrendingUp,
-      color: "text-purple-600"
+      color: "text-accent"
     },
     {
       title: "Critical Alerts",
@@ -66,7 +66,7 @@ const CEODashboard = () => {
       change: "-2",
       trend: "down",
       icon: AlertTriangle,
-      color: "text-red-600"
+      color: "text-destructive"
     }
   ];
 

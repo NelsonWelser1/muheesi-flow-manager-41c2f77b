@@ -31,106 +31,106 @@ const SystemAccounts = () => {
       {
         title: "Board of Directors",
         description: "Oversees corporate governance and strategic direction of the organization.",
-        icon: <UserPlus className="h-6 w-6 text-blue-600" />
+        icon: <UserPlus className="h-6 w-6 text-primary" />
       },
       {
         title: "Chief Executive Officer (CEO)",
         description: "H.E Maj. Gen. Geoffrey Muheesi leads the organization, setting strategic direction and overseeing all operations.",
-        icon: <User className="h-6 w-6 text-blue-600" />
+        icon: <User className="h-6 w-6 text-primary" />
       },
       {
         title: "CEO's Personal Assistant",
         description: "PA. Nelson Namanya - Manages CEO's schedule, communications, and administrative tasks.",
-        icon: <UserCog className="h-6 w-6 text-blue-600" />
+        icon: <UserCog className="h-6 w-6 text-primary" />
       },
       {
         title: "System Administrator (SysAdmin)",
         description: "Manages and maintains IT infrastructure, system security, and user access.",
-        icon: <Settings className="h-6 w-6 text-blue-600" />
+        icon: <Settings className="h-6 w-6 text-primary" />
       },
       {
         title: "Compliance & Quality Control Officer",
         description: "Ensures adherence to regulatory requirements and maintains quality standards.",
-        icon: <Shield className="h-6 w-6 text-blue-600" />
+        icon: <Shield className="h-6 w-6 text-primary" />
       },
       {
         title: "Risk Manager",
         description: "Manages organizational risks, compliance monitoring, and business continuity planning.",
-        icon: <AlertOctagon className="h-6 w-6 text-blue-600" />
+        icon: <AlertOctagon className="h-6 w-6 text-primary" />
       }
     ],
     tactical: [
       {
         title: "Human Resource Manager",
         description: "Oversees recruitment, training, and employee relations.",
-        icon: <Users className="h-6 w-6 text-green-600" />
+        icon: <Users className="h-6 w-6 text-secondary" />
       },
       {
         title: "Operations Manager",
         description: "Coordinates daily operations and implements strategic initiatives.",
-        icon: <Users className="h-6 w-6 text-green-600" />
+        icon: <Users className="h-6 w-6 text-secondary" />
       },
       {
         title: "Procurement Manager",
         description: "Manages supplier relationships, negotiates contracts, and oversees purchasing processes.",
-        icon: <Users className="h-6 w-6 text-green-600" />
+        icon: <Users className="h-6 w-6 text-secondary" />
       },
       {
         title: "Factory Manager",
         description: "Directs manufacturing operations, maintains production standards, and optimizes processes.",
-        icon: <Users className="h-6 w-6 text-green-600" />
+        icon: <Users className="h-6 w-6 text-secondary" />
       },
       {
         title: "Finance Manager",
         description: "Manages financial planning, budgeting, and accounting operations.",
-        icon: <Users className="h-6 w-6 text-green-600" />
+        icon: <Users className="h-6 w-6 text-secondary" />
       },
       {
         title: "Sales & Export Manager",
         description: "Develops sales strategies, manages client relationships, and oversees export operations.",
-        icon: <Users className="h-6 w-6 text-green-600" />
+        icon: <Users className="h-6 w-6 text-secondary" />
       },
       {
         title: "Logistics Manager",
         description: "Coordinates supply chain operations, transportation, and distribution networks.",
-        icon: <Users className="h-6 w-6 text-green-600" />
+        icon: <Users className="h-6 w-6 text-secondary" />
       },
       {
         title: "Inventory Manager",
         description: "Maintains optimal stock levels, manages warehouse operations, and tracks inventory.",
-        icon: <Users className="h-6 w-6 text-green-600" />
+        icon: <Users className="h-6 w-6 text-secondary" />
       },
       {
         title: "Marketing Manager",
         description: "Develops marketing strategies, manages brand identity, and oversees promotional activities.",
-        icon: <Users className="h-6 w-6 text-green-600" />
+        icon: <Users className="h-6 w-6 text-secondary" />
       },
       {
         title: "IT Manager",
         description: "Manages technology infrastructure, provides technical support, and implements IT solutions.",
-        icon: <Users className="h-6 w-6 text-green-600" />
+        icon: <Users className="h-6 w-6 text-secondary" />
       },
       {
         title: "Product Development Manager",
         description: "Leads product innovation, manages development cycles, and ensures market alignment.",
-        icon: <Users className="h-6 w-6 text-green-600" />
+        icon: <Users className="h-6 w-6 text-secondary" />
       }
     ],
     operational: [
       {
         title: "Warehouse Supervisor",
         description: "Manages daily warehouse operations and inventory storage.",
-        icon: <Warehouse className="h-6 w-6 text-purple-600" />
+        icon: <Warehouse className="h-6 w-6 text-accent" />
       },
       {
         title: "Association Manager",
         description: "Maintains relationships with partners and associations.",
-        icon: <Users className="h-6 w-6 text-purple-600" />
+        icon: <Users className="h-6 w-6 text-accent" />
       },
       {
         title: "Farm Manager",
         description: "Oversees agricultural operations and farm workers.",
-        icon: <Tractor className="h-6 w-6 text-purple-600" />
+        icon: <Tractor className="h-6 w-6 text-accent" />
       }
     ]
   };
@@ -138,14 +138,14 @@ const SystemAccounts = () => {
   const renderRoleCard = (role) => (
     <div 
       key={role.title}
-      className="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+      className="p-4 bg-card rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border"
       onClick={() => handleRoleSelect(role.title)}
     >
       <div className="flex items-center gap-3 mb-2">
         {role.icon}
         <h3 className="font-semibold">{role.title}</h3>
       </div>
-      <p className="text-gray-600 text-sm">{role.description}</p>
+      <p className="text-muted-foreground text-sm">{role.description}</p>
     </div>
   );
 
