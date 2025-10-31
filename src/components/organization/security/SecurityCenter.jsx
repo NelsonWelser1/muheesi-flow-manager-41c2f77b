@@ -85,11 +85,11 @@ const SecurityCenter = () => {
   const getEventIcon = (type) => {
     switch(type) {
       case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
+        return <AlertTriangle className="h-5 w-5 text-warning" />;
       case 'success':
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
+        return <CheckCircle className="h-5 w-5 text-success" />;
       case 'info':
-        return <Activity className="h-5 w-5 text-blue-600" />;
+        return <Activity className="h-5 w-5 text-primary" />;
       default:
         return <Activity className="h-5 w-5" />;
     }
@@ -98,13 +98,13 @@ const SecurityCenter = () => {
   const getEventBadgeColor = (type) => {
     switch(type) {
       case 'warning':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'border-warning text-warning';
       case 'success':
-        return 'bg-green-100 text-green-800';
+        return 'border-success text-success';
       case 'info':
-        return 'bg-blue-100 text-blue-800';
+        return 'border-primary text-primary';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'border-muted text-muted-foreground';
     }
   };
 
@@ -129,7 +129,7 @@ const SecurityCenter = () => {
                 <p className="text-sm text-muted-foreground">Total Users</p>
                 <p className="text-2xl font-bold">{metrics?.totalUsers || 0}</p>
               </div>
-              <UserCheck className="h-8 w-8 text-blue-500" />
+              <UserCheck className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -140,7 +140,7 @@ const SecurityCenter = () => {
                 <p className="text-sm text-muted-foreground">Admin Users</p>
                 <p className="text-2xl font-bold">{metrics?.adminUsers || 0}</p>
               </div>
-              <Key className="h-8 w-8 text-purple-500" />
+              <Key className="h-8 w-8 text-accent" />
             </div>
           </CardContent>
         </Card>
@@ -149,9 +149,9 @@ const SecurityCenter = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Failed Logins</p>
-                <p className="text-2xl font-bold text-orange-500">{metrics?.failedLogins || 0}</p>
+                <p className="text-2xl font-bold text-warning">{metrics?.failedLogins || 0}</p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-orange-500" />
+              <AlertTriangle className="h-8 w-8 text-warning" />
             </div>
           </CardContent>
         </Card>
@@ -162,7 +162,7 @@ const SecurityCenter = () => {
                 <p className="text-sm text-muted-foreground">Active Sessions</p>
                 <p className="text-2xl font-bold">{metrics?.activeSessions || 0}</p>
               </div>
-              <Activity className="h-8 w-8 text-green-500" />
+              <Activity className="h-8 w-8 text-success" />
             </div>
           </CardContent>
         </Card>
@@ -171,9 +171,9 @@ const SecurityCenter = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Security Alerts</p>
-                <p className="text-2xl font-bold text-red-500">{metrics?.securityAlerts || 0}</p>
+                <p className="text-2xl font-bold text-destructive">{metrics?.securityAlerts || 0}</p>
               </div>
-              <Shield className="h-8 w-8 text-red-500" />
+              <Shield className="h-8 w-8 text-destructive" />
             </div>
           </CardContent>
         </Card>
@@ -198,7 +198,7 @@ const SecurityCenter = () => {
                     </p>
                   </div>
                 </div>
-                <Badge variant="secondary" className={getEventBadgeColor(event.type)}>
+                <Badge variant="outline" className={getEventBadgeColor(event.type)}>
                   {event.time}
                 </Badge>
               </div>
@@ -257,21 +257,21 @@ const SecurityCenter = () => {
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-4 border rounded-lg">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+              <CheckCircle className="h-5 w-5 text-success mt-0.5" />
               <div>
                 <p className="font-medium">Row Level Security Enabled</p>
                 <p className="text-sm text-muted-foreground">All tables have RLS policies in place</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-4 border rounded-lg">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+              <CheckCircle className="h-5 w-5 text-success mt-0.5" />
               <div>
                 <p className="font-medium">Password Protection Active</p>
                 <p className="text-sm text-muted-foreground">Email confirmation and password policies are configured</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-4 border rounded-lg bg-yellow-50">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+            <div className="flex items-start gap-3 p-4 border rounded-lg bg-warning/10">
+              <AlertTriangle className="h-5 w-5 text-warning mt-0.5" />
               <div>
                 <p className="font-medium">Consider Two-Factor Authentication</p>
                 <p className="text-sm text-muted-foreground">Add an extra layer of security for admin accounts</p>

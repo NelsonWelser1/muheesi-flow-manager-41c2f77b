@@ -73,13 +73,13 @@ const NotificationsCenter = () => {
   const getNotificationIcon = (type) => {
     switch(type) {
       case 'success':
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
+        return <CheckCircle className="h-5 w-5 text-success" />;
       case 'warning':
-        return <AlertCircle className="h-5 w-5 text-yellow-600" />;
+        return <AlertCircle className="h-5 w-5 text-warning" />;
       case 'error':
-        return <AlertCircle className="h-5 w-5 text-red-600" />;
+        return <AlertCircle className="h-5 w-5 text-destructive" />;
       case 'info':
-        return <Info className="h-5 w-5 text-blue-600" />;
+        return <Info className="h-5 w-5 text-primary" />;
       default:
         return <Bell className="h-5 w-5" />;
     }
@@ -88,15 +88,15 @@ const NotificationsCenter = () => {
   const getNotificationBgColor = (type) => {
     switch(type) {
       case 'success':
-        return 'bg-green-50';
+        return 'bg-success/10';
       case 'warning':
-        return 'bg-yellow-50';
+        return 'bg-warning/10';
       case 'error':
-        return 'bg-red-50';
+        return 'bg-destructive/10';
       case 'info':
-        return 'bg-blue-50';
+        return 'bg-primary/10';
       default:
-        return 'bg-gray-50';
+        return 'bg-muted/50';
     }
   };
 
@@ -210,7 +210,7 @@ const NotificationsCenter = () => {
                 ))
               ) : (
                 <div className="text-center py-12">
-                  <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                  <CheckCircle className="h-12 w-12 mx-auto text-success mb-3" />
                   <p className="text-lg font-medium">All caught up!</p>
                   <p className="text-sm text-muted-foreground">No unread notifications</p>
                 </div>

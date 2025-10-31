@@ -110,12 +110,12 @@ const AnalyticsDashboard = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Total Users</p>
                 <p className="text-2xl font-bold">{analytics?.totalUsers || 0}</p>
-                <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                <p className="text-xs text-success flex items-center gap-1 mt-1">
                   <TrendingUp className="h-3 w-3" />
                   +12% from last period
                 </p>
               </div>
-              <Users className="h-8 w-8 text-blue-500" />
+              <Users className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -125,12 +125,12 @@ const AnalyticsDashboard = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Users with Roles</p>
                 <p className="text-2xl font-bold">{analytics?.usersWithRoles || 0}</p>
-                <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                <p className="text-xs text-success flex items-center gap-1 mt-1">
                   <TrendingUp className="h-3 w-3" />
                   +8% from last period
                 </p>
               </div>
-              <Activity className="h-8 w-8 text-purple-500" />
+              <Activity className="h-8 w-8 text-accent" />
             </div>
           </CardContent>
         </Card>
@@ -144,7 +144,7 @@ const AnalyticsDashboard = () => {
                   All operational
                 </p>
               </div>
-              <Building2 className="h-8 w-8 text-green-500" />
+              <Building2 className="h-8 w-8 text-success" />
             </div>
           </CardContent>
         </Card>
@@ -154,12 +154,12 @@ const AnalyticsDashboard = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Daily Logins</p>
                 <p className="text-2xl font-bold">{analytics?.dailyLogins || 0}</p>
-                <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                <p className="text-xs text-success flex items-center gap-1 mt-1">
                   <TrendingUp className="h-3 w-3" />
                   +15% from yesterday
                 </p>
               </div>
-              <Activity className="h-8 w-8 text-orange-500" />
+              <Activity className="h-8 w-8 text-secondary" />
             </div>
           </CardContent>
         </Card>
@@ -182,11 +182,11 @@ const AnalyticsDashboard = () => {
                 </div>
                 <div className="flex gap-2">
                   <div 
-                    className="h-6 bg-blue-500 rounded"
+                    className="h-6 bg-primary rounded"
                     style={{ width: `${(day.users / 20) * 100}%` }}
                   />
                   <div 
-                    className="h-6 bg-purple-500 rounded"
+                    className="h-6 bg-accent rounded"
                     style={{ width: `${(day.logins / 50) * 100}%` }}
                   />
                 </div>
@@ -195,11 +195,11 @@ const AnalyticsDashboard = () => {
           </div>
           <div className="flex items-center gap-4 mt-6 pt-4 border-t">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-500 rounded" />
+              <div className="w-4 h-4 bg-primary rounded" />
               <span className="text-sm text-muted-foreground">Active Users</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-purple-500 rounded" />
+              <div className="w-4 h-4 bg-accent rounded" />
               <span className="text-sm text-muted-foreground">Login Events</span>
             </div>
           </div>
@@ -239,7 +239,7 @@ const AnalyticsDashboard = () => {
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">
                     <div 
-                      className="bg-green-500 h-2 rounded-full"
+                      className="bg-success h-2 rounded-full"
                       style={{ width: `${(company.transactions / 250) * 100}%` }}
                     />
                   </div>
@@ -258,22 +258,22 @@ const AnalyticsDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
+            <div className="p-4 bg-primary/10 rounded-lg">
               <p className="text-sm text-muted-foreground mb-1">Peak Activity Day</p>
               <p className="text-xl font-bold">Wednesday</p>
               <p className="text-sm text-muted-foreground">42 logins recorded</p>
             </div>
-            <div className="p-4 bg-green-50 rounded-lg">
+            <div className="p-4 bg-success/10 rounded-lg">
               <p className="text-sm text-muted-foreground mb-1">Most Active Company</p>
               <p className="text-xl font-bold">Grand Berna Dairies</p>
               <p className="text-sm text-muted-foreground">245 transactions</p>
             </div>
-            <div className="p-4 bg-purple-50 rounded-lg">
+            <div className="p-4 bg-accent/10 rounded-lg">
               <p className="text-sm text-muted-foreground mb-1">Average Session Duration</p>
               <p className="text-xl font-bold">28 minutes</p>
               <p className="text-sm text-muted-foreground">+5 min from last period</p>
             </div>
-            <div className="p-4 bg-orange-50 rounded-lg">
+            <div className="p-4 bg-secondary/10 rounded-lg">
               <p className="text-sm text-muted-foreground mb-1">User Engagement Rate</p>
               <p className="text-xl font-bold">84%</p>
               <p className="text-sm text-muted-foreground">Above target of 75%</p>

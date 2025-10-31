@@ -51,8 +51,8 @@ const SystemHealthMonitor = () => {
   });
 
   const healthStatus = metrics?.status === 'healthy' 
-    ? { label: 'Healthy', color: 'bg-green-500', icon: CheckCircle } 
-    : { label: 'Warning', color: 'bg-yellow-500', icon: AlertCircle };
+    ? { label: 'Healthy', color: 'bg-primary', icon: CheckCircle } 
+    : { label: 'Warning', color: 'bg-warning', icon: AlertCircle };
 
   const StatusIcon = healthStatus.icon;
 
@@ -61,28 +61,28 @@ const SystemHealthMonitor = () => {
       title: 'CPU Usage',
       value: `${metrics?.cpuUsage || 0}%`,
       icon: Cpu,
-      color: 'text-blue-500',
+      color: 'text-primary',
       progress: metrics?.cpuUsage || 0
     },
     {
       title: 'Memory Usage',
       value: `${metrics?.memoryUsage || 0}%`,
       icon: HardDrive,
-      color: 'text-purple-500',
+      color: 'text-accent',
       progress: metrics?.memoryUsage || 0
     },
     {
       title: 'Disk Usage',
       value: `${metrics?.diskUsage || 0}%`,
       icon: Database,
-      color: 'text-orange-500',
+      color: 'text-secondary',
       progress: metrics?.diskUsage || 0
     },
     {
       title: 'Network Latency',
       value: `${metrics?.networkLatency || 0}ms`,
       icon: Wifi,
-      color: 'text-green-500',
+      color: 'text-success',
       progress: (metrics?.networkLatency || 0) / 2
     }
   ];
@@ -170,7 +170,7 @@ const SystemHealthMonitor = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Connection Status</span>
-              <Badge className="bg-green-100 text-green-800">
+              <Badge variant="outline" className="border-success text-success">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Connected
               </Badge>
@@ -187,7 +187,7 @@ const SystemHealthMonitor = () => {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">API Response Time</span>
-                <span className="font-bold text-green-600">{metrics?.responseTime || 0}ms</span>
+                <span className="font-bold text-success">{metrics?.responseTime || 0}ms</span>
               </div>
               <Progress value={(metrics?.responseTime || 0) / 5} className="h-2" />
             </div>
@@ -223,7 +223,7 @@ const SystemHealthMonitor = () => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Backend Status</p>
-              <Badge className="bg-green-100 text-green-800">Online</Badge>
+              <Badge variant="outline" className="border-success text-success">Online</Badge>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Last Backup</p>

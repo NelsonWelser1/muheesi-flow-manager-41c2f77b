@@ -83,7 +83,7 @@ const DatabaseManagement = () => {
                 <p className="text-sm text-muted-foreground">Total Tables</p>
                 <p className="text-2xl font-bold">{tables?.length || 0}</p>
               </div>
-              <TableIcon className="h-8 w-8 text-blue-500" />
+              <TableIcon className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -96,7 +96,7 @@ const DatabaseManagement = () => {
                   {tables?.reduce((acc, t) => acc + t.rows, 0) || 0}
                 </p>
               </div>
-              <HardDrive className="h-8 w-8 text-purple-500" />
+              <HardDrive className="h-8 w-8 text-accent" />
             </div>
           </CardContent>
         </Card>
@@ -107,7 +107,7 @@ const DatabaseManagement = () => {
                 <p className="text-sm text-muted-foreground">RLS Policies</p>
                 <p className="text-2xl font-bold">{rlsPolicies.length}</p>
               </div>
-              <Shield className="h-8 w-8 text-green-500" />
+              <Shield className="h-8 w-8 text-success" />
             </div>
           </CardContent>
         </Card>
@@ -118,7 +118,7 @@ const DatabaseManagement = () => {
                 <p className="text-sm text-muted-foreground">DB Size</p>
                 <p className="text-2xl font-bold">3.4 MB</p>
               </div>
-              <Database className="h-8 w-8 text-orange-500" />
+              <Database className="h-8 w-8 text-secondary" />
             </div>
           </CardContent>
         </Card>
@@ -158,7 +158,7 @@ const DatabaseManagement = () => {
                     <TableCell>{table.size}</TableCell>
                     <TableCell>
                       {table.rls ? (
-                        <Badge className="bg-green-100 text-green-800">
+                        <Badge variant="outline" className="border-success text-success">
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Enabled
                         </Badge>
@@ -208,7 +208,7 @@ const DatabaseManagement = () => {
                     <Badge variant="outline">{policy.type}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge className="bg-green-100 text-green-800">
+                    <Badge variant="outline" className="border-success text-success">
                       {policy.status}
                     </Badge>
                   </TableCell>
@@ -229,7 +229,7 @@ const DatabaseManagement = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-success" />
                 <div>
                   <p className="font-medium">Last Backup Successful</p>
                   <p className="text-sm text-muted-foreground">Completed 2 hours ago</p>
