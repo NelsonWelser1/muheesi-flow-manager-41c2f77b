@@ -103,10 +103,16 @@ const UserManagement = () => {
             </p>
           </div>
         </div>
-        <Button onClick={() => navigate('/users/new')}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Add User
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => navigate('/users/new')}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add User
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/users/bulk-operations')}>
+            <Users className="h-4 w-4 mr-2" />
+            Bulk Operations
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

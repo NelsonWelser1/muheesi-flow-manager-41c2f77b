@@ -25,6 +25,8 @@ import CompanyManagement from "./components/organization/company/CompanyManageme
 import CompanyDetails from "./components/organization/company/CompanyDetails";
 import UserManagement from "./components/organization/users/UserManagement";
 import UserDetails from "./components/organization/users/UserDetails";
+import AssignRole from "./components/organization/users/AssignRole";
+import BulkUserOperations from "./components/organization/users/BulkUserOperations";
 
 // Create QueryClient with proper configuration
 const queryClient = new QueryClient({
@@ -65,7 +67,9 @@ const App = () => {
                 <Route path="/companies" element={<ProtectedRoute><CompanyManagement /></ProtectedRoute>} />
                 <Route path="/company/:companyName" element={<ProtectedRoute><CompanyDetails /></ProtectedRoute>} />
                 <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+                <Route path="/users/bulk-operations" element={<ProtectedRoute><BulkUserOperations /></ProtectedRoute>} />
                 <Route path="/users/:userId" element={<ProtectedRoute><UserDetails /></ProtectedRoute>} />
+                <Route path="/users/:userId/assign-role" element={<ProtectedRoute><AssignRole /></ProtectedRoute>} />
                 <Route path="/manage-inventory/kajon-export/export-manager" element={<ProtectedRoute><CoffeeExportManagerDashboard /></ProtectedRoute>} />
                 <Route path="/manage-inventory/kashari-farm" element={<ProtectedRoute><KashariFarmDashboard /></ProtectedRoute>} />
                 <Route path="/manage-inventory/bukomero-dairy" element={<ProtectedRoute><BukomeroDairyDashboard /></ProtectedRoute>} />

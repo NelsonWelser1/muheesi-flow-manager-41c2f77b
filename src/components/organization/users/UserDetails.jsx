@@ -236,10 +236,14 @@ const UserDetails = () => {
                         </div>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Change Role
-                    </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate(`/users/${user.id}/assign-role`)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Change Role
+                  </Button>
                   </div>
                 </>
               ) : (
@@ -249,7 +253,7 @@ const UserDetails = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     Assign a role to grant permissions
                   </p>
-                  <Button>
+                  <Button onClick={() => navigate(`/users/${user.id}/assign-role`)}>
                     <Shield className="h-4 w-4 mr-2" />
                     Assign Role
                   </Button>
