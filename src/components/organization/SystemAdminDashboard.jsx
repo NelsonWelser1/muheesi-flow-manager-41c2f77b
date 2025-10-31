@@ -134,6 +134,14 @@ const SystemAdminDashboard = () => {
       category: "companies"
     },
     {
+      title: "User Directory",
+      description: "View all users, manage roles and permissions across the system",
+      icon: Users,
+      color: "bg-pink-500",
+      action: () => navigate('/users'),
+      category: "users"
+    },
+    {
       title: "Notifications Center",
       description: "Manage system notifications and alert configurations",
       icon: Bell,

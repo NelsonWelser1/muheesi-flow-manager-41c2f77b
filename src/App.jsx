@@ -15,7 +15,6 @@ import ManageCompanies from "./pages/ManageCompanies";
 import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-business/CoffeeExportManagerDashboard";
 import KashariFarmDashboard from "./components/inventory/kashari/KashariFarmDashboard";
 import BukomeroDairyDashboard from "./components/inventory/bukomero/BukomeroDairyDashboard";
-import UserManagement from "./pages/UserManagement";
 import SystemHealthMonitor from "./components/organization/monitoring/SystemHealthMonitor";
 import DatabaseManagement from "./components/organization/database/DatabaseManagement";
 import SecurityCenter from "./components/organization/security/SecurityCenter";
@@ -24,6 +23,8 @@ import NotificationsCenter from "./components/organization/notifications/Notific
 import SystemConfiguration from "./components/organization/settings/SystemConfiguration";
 import CompanyManagement from "./components/organization/company/CompanyManagement";
 import CompanyDetails from "./components/organization/company/CompanyDetails";
+import UserManagement from "./components/organization/users/UserManagement";
+import UserDetails from "./components/organization/users/UserDetails";
 
 // Create QueryClient with proper configuration
 const queryClient = new QueryClient({
@@ -63,6 +64,8 @@ const App = () => {
                 <Route path="/system-config" element={<ProtectedRoute><SystemConfiguration /></ProtectedRoute>} />
                 <Route path="/companies" element={<ProtectedRoute><CompanyManagement /></ProtectedRoute>} />
                 <Route path="/company/:companyName" element={<ProtectedRoute><CompanyDetails /></ProtectedRoute>} />
+                <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
+                <Route path="/users/:userId" element={<ProtectedRoute><UserDetails /></ProtectedRoute>} />
                 <Route path="/manage-inventory/kajon-export/export-manager" element={<ProtectedRoute><CoffeeExportManagerDashboard /></ProtectedRoute>} />
                 <Route path="/manage-inventory/kashari-farm" element={<ProtectedRoute><KashariFarmDashboard /></ProtectedRoute>} />
                 <Route path="/manage-inventory/bukomero-dairy" element={<ProtectedRoute><BukomeroDairyDashboard /></ProtectedRoute>} />
