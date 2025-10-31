@@ -343,6 +343,57 @@ const UserManagement = () => {
     </Dialog>
   );
 
+  const renderInviteDialog = () => (
+    <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Invite New User</DialogTitle>
+          <DialogDescription>
+            Share the signup link with new users to create their accounts
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="p-4 bg-muted rounded-lg space-y-3">
+            <div>
+              <Label className="text-sm font-medium">Signup URL</Label>
+              <div className="flex items-center gap-2 mt-2">
+                <Input 
+                  readOnly 
+                  value={`${window.location.origin}/auth`}
+                  className="flex-1"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/auth`);
+                    toast.success("Link copied to clipboard");
+                  }}
+                >
+                  Copy
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              <strong>Instructions:</strong>
+            </p>
+            <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1">
+              <li>Share the signup link with the new user</li>
+              <li>They will create their account with email and password</li>
+              <li>Once registered, you can assign them a role and company from this page</li>
+            </ol>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => setIsCreateDialogOpen(false)}>
+            Done
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -355,6 +406,10 @@ const UserManagement = () => {
             Manage user accounts, roles, and permissions across all companies
           </p>
         </div>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <UserPlus className="h-4 w-4 mr-2" />
+          Invite User
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -457,8 +512,18 @@ const UserManagement = () => {
 
           {isLoading ? (
             <div className="text-center py-8">Loading users...</div>
-          ) : (
+          ) : filteredUsers && filteredUsers.length > 0 ? (
             renderUserTable()
+          ) : (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+              <p className="text-lg font-medium">No users found</p>
+              <p className="text-sm text-muted-foreground">
+                {searchTerm || filterRole !== 'all' || filterCompany !== 'all' 
+                  ? 'Try adjusting your filters' 
+                  : 'Invite users to get started'}
+              </p>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -466,6 +531,7 @@ const UserManagement = () => {
       {/* Dialogs */}
       {renderEditDialog()}
       {renderRoleDialog()}
+      {renderInviteDialog()}
     </div>
   );
 };
