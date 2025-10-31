@@ -45,7 +45,7 @@ const UserManagement = () => {
         .from('profiles')
         .select(`
           *,
-          user_roles (
+          user_roles!user_roles_user_id_fkey (
             role,
             company,
             assigned_at
@@ -54,7 +54,12 @@ const UserManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Transform the data to have user_roles as a single object instead of array
+      return data?.map(user => ({
+        ...user,
+        user_roles: user.user_roles?.[0] || null
+      }));
     },
   });
 
