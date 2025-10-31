@@ -85,25 +85,25 @@ const FinancialOverview = ({ selectedCompany }) => {
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-success">
                 {financialData.profitability.grossMargin}%
               </div>
               <div className="text-sm text-muted-foreground">Gross Margin</div>
             </div>
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-primary">
                 {financialData.profitability.netMargin}%
               </div>
               <div className="text-sm text-muted-foreground">Net Margin</div>
             </div>
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="text-2xl font-bold text-accent">
                 {financialData.profitability.ebitda}%
               </div>
               <div className="text-sm text-muted-foreground">EBITDA Margin</div>
             </div>
             <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-2xl font-bold text-secondary">
                 {financialData.profitability.roi}%
               </div>
               <div className="text-sm text-muted-foreground">ROI</div>
@@ -121,26 +121,26 @@ const FinancialOverview = ({ selectedCompany }) => {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span>Operating Cash Flow</span>
-              <span className="font-semibold text-green-600">
+              <span className="font-semibold text-success">
                 {formatCurrency(financialData.cashFlow.operating)}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span>Investing Cash Flow</span>
-              <span className="font-semibold text-red-600">
+              <span className="font-semibold text-destructive">
                 {formatCurrency(financialData.cashFlow.investing)}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span>Financing Cash Flow</span>
-              <span className="font-semibold text-red-600">
+              <span className="font-semibold text-destructive">
                 {formatCurrency(financialData.cashFlow.financing)}
               </span>
             </div>
             <hr />
             <div className="flex justify-between items-center font-bold">
               <span>Net Cash Flow</span>
-              <span className="text-blue-600">
+              <span className="text-primary">
                 {formatCurrency(financialData.cashFlow.net)}
               </span>
             </div>

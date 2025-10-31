@@ -118,22 +118,22 @@ const RiskManagement = ({ selectedCompany }) => {
 
   const getSeverityColor = (severity) => {
     switch (severity.toLowerCase()) {
-      case 'high': return 'bg-red-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-white';
-      case 'low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'high': return 'bg-destructive text-destructive-foreground';
+      case 'medium': return 'bg-warning text-primary-foreground';
+      case 'low': return 'bg-success text-primary-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
-      case 'compliant': return 'bg-green-500 text-white';
-      case 'minor issues': return 'bg-yellow-500 text-white';
-      case 'non-compliant': return 'bg-red-500 text-white';
-      case 'active': return 'bg-red-100 text-red-800';
-      case 'monitored': return 'bg-yellow-100 text-yellow-800';
-      case 'mitigated': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'compliant': return 'bg-success text-primary-foreground';
+      case 'minor issues': return 'bg-warning text-primary-foreground';
+      case 'non-compliant': return 'bg-destructive text-destructive-foreground';
+      case 'active': return 'bg-destructive/10 text-destructive border-destructive';
+      case 'monitored': return 'bg-warning/10 text-warning border-warning';
+      case 'mitigated': return 'bg-success/10 text-success border-success';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -158,7 +158,7 @@ const RiskManagement = ({ selectedCompany }) => {
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">
+              <div className="text-3xl font-bold text-primary mb-2">
                 {riskData.riskTrends.overall}%
               </div>
               <div className="text-sm text-muted-foreground">Overall Risk Health</div>

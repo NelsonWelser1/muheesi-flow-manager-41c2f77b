@@ -44,18 +44,18 @@ const ExecutiveSummary = ({ selectedCompany }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'completed': return 'bg-green-500';
-      case 'on-track': return 'bg-blue-500';
-      case 'at-risk': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
+      case 'completed': return 'bg-success';
+      case 'on-track': return 'bg-primary';
+      case 'at-risk': return 'bg-warning';
+      default: return 'bg-muted';
     }
   };
 
   const getInsightIcon = (type) => {
     switch (type) {
-      case 'positive': return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'warning': return <AlertCircle className="h-5 w-5 text-yellow-500" />;
-      default: return <TrendingUp className="h-5 w-5 text-blue-500" />;
+      case 'positive': return <CheckCircle className="h-5 w-5 text-success" />;
+      case 'warning': return <AlertCircle className="h-5 w-5 text-warning" />;
+      default: return <TrendingUp className="h-5 w-5 text-primary" />;
     }
   };
 
@@ -74,9 +74,9 @@ const ExecutiveSummary = ({ selectedCompany }) => {
                 <div className="flex items-center space-x-2">
                   <span className="font-bold">{kpi.value}</span>
                   {kpi.trend === 'up' ? (
-                    <TrendingUp className="h-4 w-4 text-green-500" />
+                    <TrendingUp className="h-4 w-4 text-success" />
                   ) : (
-                    <TrendingDown className="h-4 w-4 text-red-500" />
+                    <TrendingDown className="h-4 w-4 text-destructive" />
                   )}
                 </div>
               </div>

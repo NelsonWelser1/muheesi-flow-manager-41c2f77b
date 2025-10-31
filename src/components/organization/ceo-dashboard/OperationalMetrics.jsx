@@ -75,16 +75,16 @@ const OperationalMetrics = ({ selectedCompany }) => {
 
   const getStatusColor = (value, type) => {
     if (type === 'efficiency' || type === 'quality') {
-      if (value >= 90) return 'text-green-600';
-      if (value >= 80) return 'text-yellow-600';
-      return 'text-red-600';
+      if (value >= 90) return 'text-success';
+      if (value >= 80) return 'text-warning';
+      return 'text-destructive';
     }
     if (type === 'downtime') {
-      if (value <= 2) return 'text-green-600';
-      if (value <= 5) return 'text-yellow-600';
-      return 'text-red-600';
+      if (value <= 2) return 'text-success';
+      if (value <= 5) return 'text-warning';
+      return 'text-destructive';
     }
-    return 'text-blue-600';
+    return 'text-primary';
   };
 
   const getPriorityBadge = (priority) => {
@@ -98,9 +98,9 @@ const OperationalMetrics = ({ selectedCompany }) => {
 
   const getAlertIcon = (type) => {
     switch (type) {
-      case 'critical': return <AlertTriangle className="h-5 w-5 text-red-500" />;
-      case 'warning': return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
-      default: return <CheckCircle className="h-5 w-5 text-blue-500" />;
+      case 'critical': return <AlertTriangle className="h-5 w-5 text-destructive" />;
+      case 'warning': return <AlertTriangle className="h-5 w-5 text-warning" />;
+      default: return <CheckCircle className="h-5 w-5 text-primary" />;
     }
   };
 
@@ -177,15 +177,15 @@ const OperationalMetrics = ({ selectedCompany }) => {
                 <div className="text-sm text-muted-foreground">Total Employees</div>
               </div>
               <div className="text-center p-3 border rounded-lg">
-                <div className="text-xl font-bold text-green-600">{operationalData.workforce.productivity}%</div>
+                <div className="text-xl font-bold text-success">{operationalData.workforce.productivity}%</div>
                 <div className="text-sm text-muted-foreground">Productivity</div>
               </div>
               <div className="text-center p-3 border rounded-lg">
-                <div className="text-xl font-bold text-blue-600">{operationalData.workforce.satisfaction}/5</div>
+                <div className="text-xl font-bold text-primary">{operationalData.workforce.satisfaction}/5</div>
                 <div className="text-sm text-muted-foreground">Satisfaction</div>
               </div>
               <div className="text-center p-3 border rounded-lg">
-                <div className="text-xl font-bold text-yellow-600">{operationalData.workforce.turnover}%</div>
+                <div className="text-xl font-bold text-warning">{operationalData.workforce.turnover}%</div>
                 <div className="text-sm text-muted-foreground">Turnover</div>
               </div>
             </div>
@@ -207,15 +207,15 @@ const OperationalMetrics = ({ selectedCompany }) => {
               </div>
               <div className="flex justify-between">
                 <span>On-Time Delivery</span>
-                <span className="font-semibold text-green-600">{operationalData.supply_chain.onTimeDelivery}%</span>
+                <span className="font-semibold text-success">{operationalData.supply_chain.onTimeDelivery}%</span>
               </div>
               <div className="flex justify-between">
                 <span>Quality Rating</span>
-                <span className="font-semibold text-blue-600">{operationalData.supply_chain.qualityRating}%</span>
+                <span className="font-semibold text-primary">{operationalData.supply_chain.qualityRating}%</span>
               </div>
               <div className="flex justify-between">
                 <span>Cost Variance</span>
-                <span className="font-semibold text-green-600">{operationalData.supply_chain.costVariance}%</span>
+                <span className="font-semibold text-success">{operationalData.supply_chain.costVariance}%</span>
               </div>
               <div className="flex justify-between">
                 <span>Inventory Turnover</span>

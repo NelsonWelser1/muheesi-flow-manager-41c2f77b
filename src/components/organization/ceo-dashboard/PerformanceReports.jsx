@@ -124,10 +124,10 @@ const PerformanceReports = ({ selectedCompany }) => {
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
-      case 'ready': return 'bg-green-500 text-white';
-      case 'processing': return 'bg-yellow-500 text-white';
-      case 'failed': return 'bg-red-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'ready': return 'bg-success text-primary-foreground';
+      case 'processing': return 'bg-warning text-primary-foreground';
+      case 'failed': return 'bg-destructive text-destructive-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -151,7 +151,7 @@ const PerformanceReports = ({ selectedCompany }) => {
 
   const getChangeColor = (change, reverse = false) => {
     const positive = reverse ? change < 0 : change > 0;
-    return positive ? 'text-green-600' : 'text-red-600';
+    return positive ? 'text-success' : 'text-destructive';
   };
 
   return (

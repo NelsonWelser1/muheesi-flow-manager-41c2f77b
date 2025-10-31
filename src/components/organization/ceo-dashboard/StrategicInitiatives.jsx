@@ -116,13 +116,13 @@ const StrategicInitiatives = ({ selectedCompany }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'completed': return 'bg-green-500 text-white';
-      case 'on-track': return 'bg-blue-500 text-white';
-      case 'in-progress': return 'bg-yellow-500 text-white';
-      case 'at-risk': return 'bg-orange-500 text-white';
-      case 'planning': return 'bg-gray-500 text-white';
-      case 'behind': return 'bg-red-500 text-white';
-      default: return 'bg-gray-200 text-gray-800';
+      case 'completed': return 'bg-success text-primary-foreground';
+      case 'on-track': return 'bg-primary text-primary-foreground';
+      case 'in-progress': return 'bg-warning text-primary-foreground';
+      case 'at-risk': return 'bg-secondary text-secondary-foreground';
+      case 'planning': return 'bg-muted text-muted-foreground';
+      case 'behind': return 'bg-destructive text-destructive-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
