@@ -126,6 +126,14 @@ const SystemAdminDashboard = () => {
       category: "analytics"
     },
     {
+      title: "Company Management",
+      description: "Manage companies, view company details, and assign users",
+      icon: Building2,
+      color: "bg-teal-500",
+      action: () => navigate('/companies'),
+      category: "companies"
+    },
+    {
       title: "Notifications Center",
       description: "Manage system notifications and alert configurations",
       icon: Bell,

@@ -22,6 +22,8 @@ import SecurityCenter from "./components/organization/security/SecurityCenter";
 import AnalyticsDashboard from "./components/organization/analytics/AnalyticsDashboard";
 import NotificationsCenter from "./components/organization/notifications/NotificationsCenter";
 import SystemConfiguration from "./components/organization/settings/SystemConfiguration";
+import CompanyManagement from "./components/organization/company/CompanyManagement";
+import CompanyDetails from "./components/organization/company/CompanyDetails";
 
 // Create QueryClient with proper configuration
 const queryClient = new QueryClient({
@@ -59,6 +61,8 @@ const App = () => {
                 <Route path="/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><NotificationsCenter /></ProtectedRoute>} />
                 <Route path="/system-config" element={<ProtectedRoute><SystemConfiguration /></ProtectedRoute>} />
+                <Route path="/companies" element={<ProtectedRoute><CompanyManagement /></ProtectedRoute>} />
+                <Route path="/company/:companyName" element={<ProtectedRoute><CompanyDetails /></ProtectedRoute>} />
                 <Route path="/manage-inventory/kajon-export/export-manager" element={<ProtectedRoute><CoffeeExportManagerDashboard /></ProtectedRoute>} />
                 <Route path="/manage-inventory/kashari-farm" element={<ProtectedRoute><KashariFarmDashboard /></ProtectedRoute>} />
                 <Route path="/manage-inventory/bukomero-dairy" element={<ProtectedRoute><BukomeroDairyDashboard /></ProtectedRoute>} />
