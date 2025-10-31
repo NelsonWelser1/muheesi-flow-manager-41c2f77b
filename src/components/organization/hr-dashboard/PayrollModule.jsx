@@ -110,7 +110,7 @@ const PayrollModule = () => {
                   </div>
                   <div className="col-span-2">
                     <p className="text-muted-foreground">Net Payroll</p>
-                    <p className="font-medium text-green-600">{company.netPayroll}</p>
+                    <p className="font-medium text-success">{company.netPayroll}</p>
                   </div>
                 </div>
               </div>

@@ -95,7 +95,7 @@ const PerformanceModule = () => {
           <CardContent>
             <div className="text-2xl font-bold flex items-center gap-1">
               {performanceOverview.averageRating}
-              <Star className="h-5 w-5 text-yellow-500 fill-current" />
+              <Star className="h-5 w-5 text-warning fill-current" />
             </div>
           </CardContent>
         </Card>
@@ -153,7 +153,7 @@ const PerformanceModule = () => {
                   <span className="font-medium">{metric.metric}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{metric.average}/5</span>
-                    <Badge variant="outline" className="text-green-600">
+                    <Badge variant="outline" className="text-success">
                       {metric.trend}
                     </Badge>
                   </div>

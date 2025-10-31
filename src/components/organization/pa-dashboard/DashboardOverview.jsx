@@ -52,10 +52,10 @@ const DashboardOverview = ({ selectedEntity }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Excellent': return 'bg-green-500';
-      case 'Good': return 'bg-blue-500';
-      case 'Monitor': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
+      case 'Excellent': return 'bg-success';
+      case 'Good': return 'bg-primary';
+      case 'Monitor': return 'bg-warning';
+      default: return 'bg-muted';
     }
   };
 
@@ -80,7 +80,7 @@ const DashboardOverview = ({ selectedEntity }) => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{totalRevenue.toFixed(1)}M UGX</p>
-            <p className="text-xs text-green-600">+8.5% YoY Growth</p>
+            <p className="text-xs text-success">+8.5% YoY Growth</p>
           </CardContent>
         </Card>
         
@@ -93,7 +93,7 @@ const DashboardOverview = ({ selectedEntity }) => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{totalEmployees}</p>
-            <p className="text-xs text-blue-600">Across all entities</p>
+            <p className="text-xs text-primary">Across all entities</p>
           </CardContent>
         </Card>
         
@@ -118,7 +118,7 @@ const DashboardOverview = ({ selectedEntity }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-red-600">{totalUrgent}</p>
+            <p className="text-2xl font-bold text-destructive">{totalUrgent}</p>
             <p className="text-xs text-muted-foreground">Require CEO attention</p>
           </CardContent>
         </Card>
@@ -164,7 +164,7 @@ const DashboardOverview = ({ selectedEntity }) => {
                   <p className="text-sm text-muted-foreground">Active Projects</p>
                   <p className="text-xl font-bold flex items-center gap-1">
                     {company.activeProjects}
-                    <Target className="h-4 w-4 text-blue-500" />
+                    <Target className="h-4 w-4 text-primary" />
                   </p>
                 </div>
                 
@@ -172,7 +172,7 @@ const DashboardOverview = ({ selectedEntity }) => {
                   <p className="text-sm text-muted-foreground">Pending Tasks</p>
                   <p className="text-xl font-bold flex items-center gap-1">
                     {company.pendingTasks}
-                    <Clock className="h-4 w-4 text-yellow-500" />
+                    <Clock className="h-4 w-4 text-warning" />
                   </p>
                 </div>
                 
@@ -181,9 +181,9 @@ const DashboardOverview = ({ selectedEntity }) => {
                   <p className="text-xl font-bold flex items-center gap-1">
                     {company.urgentItems}
                     {company.urgentItems === 0 ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <CheckCircle className="h-4 w-4 text-success" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 text-red-500" />
+                      <AlertCircle className="h-4 w-4 text-destructive" />
                     )}
                   </p>
                 </div>
@@ -203,9 +203,9 @@ const DashboardOverview = ({ selectedEntity }) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50">
+            <div className="flex items-center justify-between p-3 border rounded-md hover:bg-muted">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-destructive rounded-full"></div>
                 <div>
                   <p className="font-medium">Review KAJON Coffee export documentation</p>
                   <p className="text-sm text-muted-foreground">Deadline: Today 3:00 PM</p>
@@ -214,9 +214,9 @@ const DashboardOverview = ({ selectedEntity }) => {
               <Badge variant="destructive">Urgent</Badge>
             </div>
             
-            <div className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50">
+            <div className="flex items-center justify-between p-3 border rounded-md hover:bg-muted">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-warning rounded-full"></div>
                 <div>
                   <p className="font-medium">Prepare weekly performance summary for CEO</p>
                   <p className="text-sm text-muted-foreground">Due: Tomorrow</p>
@@ -225,9 +225,9 @@ const DashboardOverview = ({ selectedEntity }) => {
               <Badge variant="secondary">Important</Badge>
             </div>
             
-            <div className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50">
+            <div className="flex items-center justify-between p-3 border rounded-md hover:bg-muted">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-primary rounded-full"></div>
                 <div>
                   <p className="font-medium">Schedule board meeting for next quarter review</p>
                   <p className="text-sm text-muted-foreground">This week</p>

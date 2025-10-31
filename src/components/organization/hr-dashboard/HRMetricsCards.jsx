@@ -10,42 +10,42 @@ const HRMetricsCards = () => {
       value: "156",
       change: "+12 this month",
       icon: Users,
-      color: "text-blue-600"
+      color: "text-primary"
     },
     {
       title: "Active Recruitments",
       value: "8",
       change: "5 positions open",
       icon: UserPlus,
-      color: "text-green-600"
+      color: "text-success"
     },
     {
       title: "Training Programs",
       value: "24",
       change: "3 new this week",
       icon: GraduationCap,
-      color: "text-purple-600"
+      color: "text-accent"
     },
     {
       title: "Monthly Payroll",
       value: "UGX 45M",
       change: "+5% from last month",
       icon: DollarSign,
-      color: "text-orange-600"
+      color: "text-warning"
     },
     {
       title: "Employee Satisfaction",
       value: "87%",
       change: "+3% improvement",
       icon: TrendingUp,
-      color: "text-green-600"
+      color: "text-success"
     },
     {
       title: "Pending Reviews",
       value: "12",
       change: "Due this week",
       icon: AlertTriangle,
-      color: "text-red-600"
+      color: "text-destructive"
     }
   ];
 

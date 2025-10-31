@@ -100,7 +100,7 @@ const HRReports = () => {
             {recentReports.map((report, index) => (
               <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <FileText className="h-8 w-8 text-blue-600" />
+                  <FileText className="h-8 w-8 text-primary" />
                   <div>
                     <h3 className="font-semibold">{report.name}</h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">

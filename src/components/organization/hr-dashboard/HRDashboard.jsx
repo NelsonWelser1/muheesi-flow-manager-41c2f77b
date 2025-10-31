@@ -34,7 +34,7 @@ const HRDashboard = () => {
           <h2 className="text-3xl font-bold">Human Resource Management</h2>
           <p className="text-muted-foreground">Comprehensive HR management system for all three companies</p>
         </div>
-        <Badge variant="outline" className="text-green-600 border-green-600">
+        <Badge variant="outline" className="text-success border-success">
           HR Manager Dashboard
         </Badge>
       </div>
@@ -101,7 +101,7 @@ const HRDashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-orange-500" />
+                  <AlertTriangle className="h-5 w-5 text-warning" />
                   Pending Actions
                 </CardTitle>
               </CardHeader>
@@ -124,22 +124,22 @@ const HRDashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <CheckCircle className="h-5 w-5 text-success" />
                   Completed This Week
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span>8 new employee onboardings</span>
-                  <Badge variant="secondary" className="text-green-600">Done</Badge>
+                  <Badge variant="secondary" className="text-success">Done</Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span>12 training sessions conducted</span>
-                  <Badge variant="secondary" className="text-green-600">Done</Badge>
+                  <Badge variant="secondary" className="text-success">Done</Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span>Payroll processed for 156 employees</span>
-                  <Badge variant="secondary" className="text-green-600">Done</Badge>
+                  <Badge variant="secondary" className="text-success">Done</Badge>
                 </div>
               </CardContent>
             </Card>

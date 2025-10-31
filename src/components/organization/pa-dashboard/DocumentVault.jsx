@@ -116,20 +116,20 @@ const DocumentVault = ({ selectedEntity }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Active': return 'bg-green-500';
-      case 'Expiring Soon': return 'bg-yellow-500';
-      case 'Expired': return 'bg-red-500';
-      case 'Draft': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case 'Active': return 'bg-success';
+      case 'Expiring Soon': return 'bg-warning';
+      case 'Expired': return 'bg-destructive';
+      case 'Draft': return 'bg-primary';
+      default: return 'bg-muted';
     }
   };
 
   const getFileIcon = (type) => {
     switch (type.toLowerCase()) {
-      case 'pdf': return <FileText className="h-5 w-5 text-red-500" />;
-      case 'docx': case 'doc': return <FileText className="h-5 w-5 text-blue-500" />;
-      case 'xlsx': case 'xls': return <FileText className="h-5 w-5 text-green-500" />;
-      default: return <FileText className="h-5 w-5 text-gray-500" />;
+      case 'pdf': return <FileText className="h-5 w-5 text-destructive" />;
+      case 'docx': case 'doc': return <FileText className="h-5 w-5 text-primary" />;
+      case 'xlsx': case 'xls': return <FileText className="h-5 w-5 text-success" />;
+      default: return <FileText className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
@@ -193,7 +193,7 @@ const DocumentVault = ({ selectedEntity }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-red-600">{confidentialDocs}</p>
+            <p className="text-2xl font-bold text-destructive">{confidentialDocs}</p>
             <p className="text-xs text-muted-foreground">Restricted access</p>
           </CardContent>
         </Card>
@@ -206,7 +206,7 @@ const DocumentVault = ({ selectedEntity }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-yellow-600">{expiringDocuments}</p>
+            <p className="text-2xl font-bold text-warning">{expiringDocuments}</p>
             <p className="text-xs text-muted-foreground">Need renewal</p>
           </CardContent>
         </Card>
@@ -219,7 +219,7 @@ const DocumentVault = ({ selectedEntity }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-blue-600">{Object.keys(documentsByCategory).length}</p>
+            <p className="text-2xl font-bold text-primary">{Object.keys(documentsByCategory).length}</p>
             <p className="text-xs text-muted-foreground">Document types</p>
           </CardContent>
         </Card>
@@ -281,7 +281,7 @@ const DocumentVault = ({ selectedEntity }) => {
                     <div className="flex items-start gap-3 flex-1">
                       <div className="flex items-center gap-2">
                         {getFileIcon(doc.type)}
-                        {doc.confidential && <Lock className="h-4 w-4 text-red-500" />}
+                        {doc.confidential && <Lock className="h-4 w-4 text-destructive" />}
                       </div>
                       
                       <div className="flex-1">
@@ -389,8 +389,8 @@ const DocumentVault = ({ selectedEntity }) => {
                   <div key={index} className="flex items-center justify-between p-3 border rounded-md">
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${
-                        activity.action === 'Uploaded' ? 'bg-green-500' : 
-                        activity.action === 'Modified' ? 'bg-yellow-500' : 'bg-blue-500'
+                        activity.action === 'Uploaded' ? 'bg-success' : 
+                        activity.action === 'Modified' ? 'bg-warning' : 'bg-primary'
                       }`}></div>
                       <div>
                         <p className="font-medium">
@@ -446,8 +446,8 @@ const DocumentVault = ({ selectedEntity }) => {
                       <span>Storage Used</span>
                       <span>2.8 GB / 10 GB</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: '28%' }}></div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div className="bg-primary h-2 rounded-full" style={{ width: '28%' }}></div>
                     </div>
                   </div>
                   <div className="space-y-2 text-sm">

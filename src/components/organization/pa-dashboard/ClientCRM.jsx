@@ -78,10 +78,10 @@ const ClientCRM = ({ selectedEntity, view }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Active': return 'bg-green-500';
-      case 'Pending': return 'bg-yellow-500';
-      case 'Inactive': return 'bg-gray-500';
-      default: return 'bg-gray-500';
+      case 'Active': return 'bg-success';
+      case 'Pending': return 'bg-warning';
+      case 'Inactive': return 'bg-muted';
+      default: return 'bg-muted';
     }
   };
 
@@ -322,7 +322,7 @@ const ClientCRM = ({ selectedEntity, view }) => {
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold">{clients.length}</p>
-                <p className="text-xs text-green-600">+2 this month</p>
+                <p className="text-xs text-success">+2 this month</p>
               </CardContent>
             </Card>
             
@@ -332,7 +332,7 @@ const ClientCRM = ({ selectedEntity, view }) => {
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold">{clients.filter(c => c.status === 'Active').length}</p>
-                <p className="text-xs text-blue-600">Strong relationships</p>
+                <p className="text-xs text-primary">Strong relationships</p>
               </CardContent>
             </Card>
             
@@ -342,7 +342,7 @@ const ClientCRM = ({ selectedEntity, view }) => {
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold">5.1M UGX</p>
-                <p className="text-xs text-green-600">+15% growth</p>
+                <p className="text-xs text-success">+15% growth</p>
               </CardContent>
             </Card>
           </div>
@@ -357,7 +357,7 @@ const ClientCRM = ({ selectedEntity, view }) => {
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex items-start gap-3 p-3 border rounded-md">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="font-medium">Call with East African Dairy Co.</span>

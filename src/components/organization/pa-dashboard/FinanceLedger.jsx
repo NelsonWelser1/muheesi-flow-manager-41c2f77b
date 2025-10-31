@@ -147,13 +147,13 @@ const FinanceLedger = ({ selectedEntity }) => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-green-600" />
+              <DollarSign className="h-4 w-4 text-success" />
               Total Revenue
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{formatCurrency(entityData.revenue)}</p>
-            <p className="text-xs text-green-600 flex items-center gap-1">
+            <p className="text-xs text-success flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
               +{entityData.growth}% vs last period
             </p>
@@ -163,25 +163,25 @@ const FinanceLedger = ({ selectedEntity }) => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-red-600" />
+              <TrendingDown className="h-4 w-4 text-destructive" />
               Total Expenses
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{formatCurrency(entityData.expenses)}</p>
-            <p className="text-xs text-blue-600">Operational costs</p>
+            <p className="text-xs text-primary">Operational costs</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Calculator className="h-4 w-4 text-blue-600" />
+              <Calculator className="h-4 w-4 text-primary" />
               Net Profit
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600">{formatCurrency(entityData.profit)}</p>
+            <p className="text-2xl font-bold text-success">{formatCurrency(entityData.profit)}</p>
             <p className="text-xs text-muted-foreground">
               Margin: {((entityData.profit / entityData.revenue) * 100).toFixed(1)}%
             </p>
@@ -191,13 +191,13 @@ const FinanceLedger = ({ selectedEntity }) => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-purple-600" />
+              <BarChart3 className="h-4 w-4 text-accent" />
               Cash Flow
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600">Positive</p>
-            <p className="text-xs text-green-600">Healthy liquidity</p>
+            <p className="text-2xl font-bold text-success">Positive</p>
+            <p className="text-xs text-success">Healthy liquidity</p>
           </CardContent>
         </Card>
       </div>
@@ -220,7 +220,7 @@ const FinanceLedger = ({ selectedEntity }) => {
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium">{transaction.description}</span>
                         <Badge variant="outline">{transaction.category}</Badge>
-                        <Badge className={transaction.type === 'Income' ? 'bg-green-500' : 'bg-red-500'}>
+                        <Badge className={transaction.type === 'Income' ? 'bg-success' : 'bg-destructive'}>
                           {transaction.type}
                         </Badge>
                       </div>
@@ -236,7 +236,7 @@ const FinanceLedger = ({ selectedEntity }) => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-lg font-bold ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <p className={`text-lg font-bold ${transaction.amount > 0 ? 'text-success' : 'text-destructive'}`}>
                         {formatCurrency(Math.abs(transaction.amount))}
                       </p>
                     </div>
@@ -254,7 +254,7 @@ const FinanceLedger = ({ selectedEntity }) => {
                 <CardTitle>Revenue Trends</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[200px] flex items-center justify-center bg-gray-100 rounded-md">
+                <div className="h-[200px] flex items-center justify-center bg-muted/10 rounded-md">
                   <BarChart3 className="h-8 w-8 text-muted-foreground" />
                   <span className="ml-2 text-muted-foreground">Revenue Chart</span>
                 </div>
@@ -266,7 +266,7 @@ const FinanceLedger = ({ selectedEntity }) => {
                 <CardTitle>Expense Breakdown</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[200px] flex items-center justify-center bg-gray-100 rounded-md">
+                <div className="h-[200px] flex items-center justify-center bg-muted/10 rounded-md">
                   <PieChart className="h-8 w-8 text-muted-foreground" />
                   <span className="ml-2 text-muted-foreground">Expense Distribution</span>
                 </div>
@@ -282,11 +282,11 @@ const FinanceLedger = ({ selectedEntity }) => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center py-2 border-b">
                   <span className="font-medium">Total Revenue</span>
-                  <span className="text-green-600 font-bold">{formatCurrency(entityData.revenue)}</span>
+                  <span className="text-success font-bold">{formatCurrency(entityData.revenue)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b">
                   <span className="font-medium">Total Expenses</span>
-                  <span className="text-red-600 font-bold">{formatCurrency(entityData.expenses)}</span>
+                  <span className="text-destructive font-bold">{formatCurrency(entityData.expenses)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b bg-gray-50 px-2 rounded">
                   <span className="font-bold">Net Profit</span>
