@@ -98,7 +98,7 @@ const SystemAdminDashboard = () => {
       description: "Monitor system performance, uptime, and infrastructure",
       icon: Activity,
       color: "bg-red-500",
-      action: () => console.log('System Health'),
+      action: () => navigate('/system-health'),
       category: "system"
     },
     {
@@ -106,7 +106,7 @@ const SystemAdminDashboard = () => {
       description: "Manage databases, backups, and data integrity",
       icon: Database,
       color: "bg-indigo-500",
-      action: () => console.log('Database Management'),
+      action: () => navigate('/database-management'),
       category: "system"
     },
     {
@@ -114,7 +114,7 @@ const SystemAdminDashboard = () => {
       description: "Security policies, access control, and threat monitoring",
       icon: Shield,
       color: "bg-orange-500",
-      action: () => console.log('Security Center'),
+      action: () => navigate('/security-center'),
       category: "security"
     },
     {
@@ -122,7 +122,7 @@ const SystemAdminDashboard = () => {
       description: "System-wide analytics, performance metrics, and reporting",
       icon: BarChart3,
       color: "bg-cyan-500",
-      action: () => console.log('Analytics'),
+      action: () => navigate('/analytics'),
       category: "analytics"
     },
     {
@@ -130,7 +130,7 @@ const SystemAdminDashboard = () => {
       description: "Manage system notifications and alert configurations",
       icon: Bell,
       color: "bg-yellow-500",
-      action: () => console.log('Notifications'),
+      action: () => navigate('/notifications'),
       category: "system"
     },
     {
@@ -138,7 +138,7 @@ const SystemAdminDashboard = () => {
       description: "Global system settings and configuration management",
       icon: Settings,
       color: "bg-gray-500",
-      action: () => console.log('Configuration'),
+      action: () => navigate('/system-config'),
       category: "system"
     }
   ];
@@ -344,7 +344,7 @@ const SystemAdminDashboard = () => {
                     <UserCog className="h-4 w-4 mr-2" />
                     Accounts
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => navigate('/system-health')}>
                     <Activity className="h-4 w-4 mr-2" />
                     Monitor
                   </Button>
