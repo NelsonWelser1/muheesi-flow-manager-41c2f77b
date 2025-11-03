@@ -132,12 +132,12 @@ const InventoryProduction = ({ selectedEntity }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Optimal': return 'bg-green-500';
-      case 'On Track': return 'bg-green-500';
-      case 'Low Stock': return 'bg-yellow-500';
-      case 'Below Target': return 'bg-orange-500';
-      case 'Critical': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'Optimal': return 'bg-success';
+      case 'On Track': return 'bg-success';
+      case 'Low Stock': return 'bg-warning';
+      case 'Below Target': return 'bg-warning';
+      case 'Critical': return 'bg-destructive';
+      default: return 'bg-muted';
     }
   };
 
@@ -204,7 +204,7 @@ const InventoryProduction = ({ selectedEntity }) => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{formatCurrency(totalInventoryValue)}</p>
-            <p className="text-xs text-green-600">+5.2% from last month</p>
+            <p className="text-xs text-success">+5.2% from last month</p>
           </CardContent>
         </Card>
         
@@ -216,7 +216,7 @@ const InventoryProduction = ({ selectedEntity }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-yellow-600">{lowStockItems}</p>
+            <p className="text-2xl font-bold text-warning">{lowStockItems}</p>
             <p className="text-xs text-muted-foreground">Require attention</p>
           </CardContent>
         </Card>
@@ -229,8 +229,8 @@ const InventoryProduction = ({ selectedEntity }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-blue-600">{avgEfficiency.toFixed(1)}%</p>
-            <p className="text-xs text-green-600">Above target</p>
+            <p className="text-2xl font-bold text-primary">{avgEfficiency.toFixed(1)}%</p>
+            <p className="text-xs text-success">Above target</p>
           </CardContent>
         </Card>
         
@@ -242,7 +242,7 @@ const InventoryProduction = ({ selectedEntity }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600">{filteredProduction.length}</p>
+            <p className="text-2xl font-bold text-success">{filteredProduction.length}</p>
             <p className="text-xs text-muted-foreground">Currently running</p>
           </CardContent>
         </Card>
@@ -299,10 +299,10 @@ const InventoryProduction = ({ selectedEntity }) => {
                           <span>Stock Level</span>
                           <span>{((item.currentStock / item.maxCapacity) * 100).toFixed(1)}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-muted/20 rounded-full h-2">
                           <div 
                             className={`h-2 rounded-full ${
-                              item.currentStock <= item.reorderLevel ? 'bg-yellow-500' : 'bg-green-500'
+                              item.currentStock <= item.reorderLevel ? 'bg-warning' : 'bg-success'
                             }`}
                             style={{ width: `${(item.currentStock / item.maxCapacity) * 100}%` }}
                           ></div>
@@ -346,10 +346,10 @@ const InventoryProduction = ({ selectedEntity }) => {
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">Daily Progress</p>
                           <p className="font-semibold">{prod.dailyActual} / {prod.dailyTarget}</p>
-                          <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                          <div className="w-full bg-muted/20 rounded-full h-2 mt-1">
                             <div 
                               className={`h-2 rounded-full ${
-                                prod.dailyActual >= prod.dailyTarget ? 'bg-green-500' : 'bg-orange-500'
+                                prod.dailyActual >= prod.dailyTarget ? 'bg-success' : 'bg-warning'
                               }`}
                               style={{ width: `${Math.min((prod.dailyActual / prod.dailyTarget) * 100, 100)}%` }}
                             ></div>
@@ -359,10 +359,10 @@ const InventoryProduction = ({ selectedEntity }) => {
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">Weekly Progress</p>
                           <p className="font-semibold">{prod.weeklyActual} / {prod.weeklyTarget}</p>
-                          <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                          <div className="w-full bg-muted/20 rounded-full h-2 mt-1">
                             <div 
                               className={`h-2 rounded-full ${
-                                prod.weeklyActual >= prod.weeklyTarget ? 'bg-green-500' : 'bg-orange-500'
+                                prod.weeklyActual >= prod.weeklyTarget ? 'bg-success' : 'bg-warning'
                               }`}
                               style={{ width: `${Math.min((prod.weeklyActual / prod.weeklyTarget) * 100, 100)}%` }}
                             ></div>
@@ -371,10 +371,10 @@ const InventoryProduction = ({ selectedEntity }) => {
                         
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">Efficiency</p>
-                          <p className="font-semibold text-blue-600">{prod.efficiency}%</p>
-                          <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                          <p className="font-semibold text-primary">{prod.efficiency}%</p>
+                          <div className="w-full bg-muted/20 rounded-full h-2 mt-1">
                             <div 
-                              className="h-2 rounded-full bg-blue-500"
+                              className="h-2 rounded-full bg-primary"
                               style={{ width: `${prod.efficiency}%` }}
                             ></div>
                           </div>
@@ -382,10 +382,10 @@ const InventoryProduction = ({ selectedEntity }) => {
                         
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">Quality</p>
-                          <p className="font-semibold text-green-600">{prod.quality}%</p>
-                          <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                          <p className="font-semibold text-success">{prod.quality}%</p>
+                          <div className="w-full bg-muted/20 rounded-full h-2 mt-1">
                             <div 
-                              className="h-2 rounded-full bg-green-500"
+                              className="h-2 rounded-full bg-success"
                               style={{ width: `${prod.quality}%` }}
                             ></div>
                           </div>
@@ -415,7 +415,7 @@ const InventoryProduction = ({ selectedEntity }) => {
                 <CardTitle>Inventory Turnover</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[200px] flex items-center justify-center bg-gray-100 rounded-md">
+                <div className="h-[200px] flex items-center justify-center bg-muted/10 rounded-md">
                   <BarChart3 className="h-8 w-8 text-muted-foreground" />
                   <span className="ml-2 text-muted-foreground">Inventory Analytics</span>
                 </div>
@@ -427,7 +427,7 @@ const InventoryProduction = ({ selectedEntity }) => {
                 <CardTitle>Production Efficiency Trends</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[200px] flex items-center justify-center bg-gray-100 rounded-md">
+                <div className="h-[200px] flex items-center justify-center bg-muted/10 rounded-md">
                   <TrendingUp className="h-8 w-8 text-muted-foreground" />
                   <span className="ml-2 text-muted-foreground">Production Trends</span>
                 </div>
@@ -441,17 +441,17 @@ const InventoryProduction = ({ selectedEntity }) => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-center p-4 bg-primary/10 rounded-lg">
                   <p className="text-sm text-muted-foreground">Inventory Accuracy</p>
-                  <p className="text-2xl font-bold text-blue-600">98.5%</p>
+                  <p className="text-2xl font-bold text-primary">98.5%</p>
                 </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-center p-4 bg-success/10 rounded-lg">
                   <p className="text-sm text-muted-foreground">Production Uptime</p>
-                  <p className="text-2xl font-bold text-green-600">96.2%</p>
+                  <p className="text-2xl font-bold text-success">96.2%</p>
                 </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-center p-4 bg-accent/10 rounded-lg">
                   <p className="text-sm text-muted-foreground">Quality Rate</p>
-                  <p className="text-2xl font-bold text-purple-600">95.0%</p>
+                  <p className="text-2xl font-bold text-accent">95.0%</p>
                 </div>
               </div>
             </CardContent>
@@ -476,7 +476,7 @@ const InventoryProduction = ({ selectedEntity }) => {
                         <p className="font-medium">{schedule.shift}</p>
                         <p className="text-sm text-muted-foreground">{schedule.time}</p>
                       </div>
-                      <Badge className={schedule.status === 'Active' ? 'bg-green-500' : 'bg-blue-500'}>
+                      <Badge className={schedule.status === 'Active' ? 'bg-success' : 'bg-primary'}>
                         {schedule.status}
                       </Badge>
                     </div>
@@ -496,8 +496,8 @@ const InventoryProduction = ({ selectedEntity }) => {
                       <span>Equipment Utilization</span>
                       <span>85%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: '85%' }}></div>
+                    <div className="w-full bg-muted/20 rounded-full h-2">
+                      <div className="bg-primary h-2 rounded-full" style={{ width: '85%' }}></div>
                     </div>
                   </div>
                   <div>
@@ -505,8 +505,8 @@ const InventoryProduction = ({ selectedEntity }) => {
                       <span>Workforce Capacity</span>
                       <span>92%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full" style={{ width: '92%' }}></div>
+                    <div className="w-full bg-muted/20 rounded-full h-2">
+                      <div className="bg-success h-2 rounded-full" style={{ width: '92%' }}></div>
                     </div>
                   </div>
                   <div>
@@ -514,8 +514,8 @@ const InventoryProduction = ({ selectedEntity }) => {
                       <span>Raw Material Availability</span>
                       <span>78%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '78%' }}></div>
+                    <div className="w-full bg-muted/20 rounded-full h-2">
+                      <div className="bg-warning h-2 rounded-full" style={{ width: '78%' }}></div>
                     </div>
                   </div>
                 </div>

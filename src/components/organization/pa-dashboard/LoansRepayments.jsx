@@ -109,21 +109,21 @@ const LoansRepayments = ({ selectedEntity }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Active': return 'bg-blue-500';
-      case 'Paid Off': return 'bg-green-500';
-      case 'Overdue': return 'bg-red-500';
-      case 'Due Soon': return 'bg-yellow-500';
-      case 'Scheduled': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case 'Active': return 'bg-primary';
+      case 'Paid Off': return 'bg-success';
+      case 'Overdue': return 'bg-destructive';
+      case 'Due Soon': return 'bg-warning';
+      case 'Scheduled': return 'bg-primary';
+      default: return 'bg-muted';
     }
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'High': return 'bg-red-500';
-      case 'Medium': return 'bg-yellow-500';
-      case 'Low': return 'bg-green-500';
-      default: return 'bg-gray-500';
+      case 'High': return 'bg-destructive';
+      case 'Medium': return 'bg-warning';
+      case 'Low': return 'bg-success';
+      default: return 'bg-muted';
     }
   };
 
@@ -178,7 +178,7 @@ const LoansRepayments = ({ selectedEntity }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-red-600">{formatCurrency(totalOutstanding)}</p>
+            <p className="text-2xl font-bold text-destructive">{formatCurrency(totalOutstanding)}</p>
             <p className="text-xs text-muted-foreground">Across all loans</p>
           </CardContent>
         </Card>
@@ -191,7 +191,7 @@ const LoansRepayments = ({ selectedEntity }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-blue-600">{formatCurrency(totalMonthlyPayments)}</p>
+            <p className="text-2xl font-bold text-primary">{formatCurrency(totalMonthlyPayments)}</p>
             <p className="text-xs text-muted-foreground">Total obligations</p>
           </CardContent>
         </Card>
@@ -204,7 +204,7 @@ const LoansRepayments = ({ selectedEntity }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-purple-600">{activeLoans}</p>
+            <p className="text-2xl font-bold text-accent">{activeLoans}</p>
             <p className="text-xs text-muted-foreground">Currently servicing</p>
           </CardContent>
         </Card>
@@ -217,7 +217,7 @@ const LoansRepayments = ({ selectedEntity }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-yellow-600">{formatCurrency(upcomingPaymentAmount)}</p>
+            <p className="text-2xl font-bold text-warning">{formatCurrency(upcomingPaymentAmount)}</p>
             <p className="text-xs text-muted-foreground">Payment obligations</p>
           </CardContent>
         </Card>
@@ -255,7 +255,7 @@ const LoansRepayments = ({ selectedEntity }) => {
                         </div>
                         <div>
                           <p className="text-muted-foreground">Current Balance</p>
-                          <p className="font-semibold text-red-600">{formatCurrency(loan.currentBalance)}</p>
+                          <p className="font-semibold text-destructive">{formatCurrency(loan.currentBalance)}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Monthly Payment</p>
@@ -323,8 +323,8 @@ const LoansRepayments = ({ selectedEntity }) => {
                 {filteredPayments.map((payment) => (
                   <div key={payment.id} className="flex items-center justify-between p-3 border rounded-md">
                     <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${
-                        payment.status === 'Due Soon' ? 'bg-yellow-500' : 'bg-blue-500'
+                    <div className={`w-3 h-3 rounded-full ${
+                        payment.status === 'Due Soon' ? 'bg-warning' : 'bg-primary'
                       }`}></div>
                       <div>
                         <p className="font-medium">{payment.lender}</p>
@@ -355,8 +355,8 @@ const LoansRepayments = ({ selectedEntity }) => {
             <CardHeader>
               <CardTitle>Payment Calendar Overview</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-[300px] flex items-center justify-center bg-gray-100 rounded-md">
+              <CardContent>
+                <div className="h-[300px] flex items-center justify-center bg-muted/10 rounded-md">
                 <Calendar className="h-8 w-8 text-muted-foreground" />
                 <span className="ml-2 text-muted-foreground">Payment Calendar</span>
               </div>
@@ -371,7 +371,7 @@ const LoansRepayments = ({ selectedEntity }) => {
                 <CardTitle>Debt Service Coverage</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[200px] flex items-center justify-center bg-gray-100 rounded-md">
+                <div className="h-[200px] flex items-center justify-center bg-muted/10 rounded-md">
                   <TrendingUp className="h-8 w-8 text-muted-foreground" />
                   <span className="ml-2 text-muted-foreground">Coverage Ratio Chart</span>
                 </div>
@@ -398,10 +398,10 @@ const LoansRepayments = ({ selectedEntity }) => {
                     <span className="text-sm font-medium">Average Loan Term</span>
                     <span className="font-bold">24 months</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Payment Performance</span>
-                    <span className="font-bold text-green-600">98.5%</span>
-                  </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Payment Performance</span>
+                      <span className="font-bold text-success">98.5%</span>
+                    </div>
                 </div>
               </CardContent>
             </Card>
@@ -427,11 +427,11 @@ const LoansRepayments = ({ selectedEntity }) => {
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="text-muted-foreground">Outstanding Debt</span>
-                          <p className="font-bold text-red-600">{formatCurrency(companyDebt)}</p>
+                          <p className="font-bold text-destructive">{formatCurrency(companyDebt)}</p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Monthly Payments</span>
-                          <p className="font-bold text-blue-600">{formatCurrency(companyPayments)}</p>
+                          <p className="font-bold text-primary">{formatCurrency(companyPayments)}</p>
                         </div>
                       </div>
                     </div>
@@ -457,7 +457,7 @@ const LoansRepayments = ({ selectedEntity }) => {
                 ].map((payment, index) => (
                   <div key={index} className="flex items-center justify-between p-3 border rounded-md">
                     <div className="flex items-center gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-500" />
+                      <CheckCircle className="h-5 w-5 text-success" />
                       <div>
                         <p className="font-medium">{payment.company}</p>
                         <p className="text-sm text-muted-foreground">
@@ -467,7 +467,7 @@ const LoansRepayments = ({ selectedEntity }) => {
                     </div>
                     <div className="text-right">
                       <p className="font-bold">{formatCurrency(payment.amount)}</p>
-                      <Badge className="bg-green-500">
+                      <Badge className="bg-success">
                         {payment.status}
                       </Badge>
                     </div>

@@ -288,9 +288,9 @@ const FinanceLedger = ({ selectedEntity }) => {
                   <span className="font-medium">Total Expenses</span>
                   <span className="text-destructive font-bold">{formatCurrency(entityData.expenses)}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b bg-gray-50 px-2 rounded">
+                <div className="flex justify-between items-center py-2 border-b bg-muted/10 px-2 rounded">
                   <span className="font-bold">Net Profit</span>
-                  <span className="text-green-600 font-bold text-lg">{formatCurrency(entityData.profit)}</span>
+                  <span className="text-success font-bold text-lg">{formatCurrency(entityData.profit)}</span>
                 </div>
               </div>
             </CardContent>
@@ -305,7 +305,7 @@ const FinanceLedger = ({ selectedEntity }) => {
               </CardHeader>
               <CardContent>
                 <p className="text-xl font-bold">5.2M UGX</p>
-                <p className="text-xs text-green-600">85% utilized</p>
+                <p className="text-xs text-success">85% utilized</p>
               </CardContent>
             </Card>
             
@@ -315,7 +315,7 @@ const FinanceLedger = ({ selectedEntity }) => {
               </CardHeader>
               <CardContent>
                 <p className="text-xl font-bold">15.6M UGX</p>
-                <p className="text-xs text-blue-600">Projected revenue</p>
+                <p className="text-xs text-primary">Projected revenue</p>
               </CardContent>
             </Card>
             
@@ -325,7 +325,7 @@ const FinanceLedger = ({ selectedEntity }) => {
               </CardHeader>
               <CardContent>
                 <p className="text-xl font-bold">65M UGX</p>
-                <p className="text-xs text-purple-600">22% achieved</p>
+                <p className="text-xs text-accent">22% achieved</p>
               </CardContent>
             </Card>
           </div>
@@ -343,7 +343,7 @@ const FinanceLedger = ({ selectedEntity }) => {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <FileText className="h-8 w-8 text-blue-500" />
+                      <FileText className="h-8 w-8 text-primary" />
                       <div>
                         <h4 className="font-medium">{report.name}</h4>
                         <p className="text-sm text-muted-foreground">{report.date}</p>

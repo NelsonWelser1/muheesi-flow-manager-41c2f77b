@@ -159,9 +159,9 @@ const ReportsAnalytics = ({ selectedEntity }) => {
                   const reportType = reportTypes[i - 1];
                   
                   return (
-                    <div key={i} className="flex justify-between items-center p-3 border rounded-md hover:bg-gray-50 cursor-pointer">
+                    <div key={i} className="flex justify-between items-center p-3 border rounded-md hover:bg-muted/5 cursor-pointer">
                       <div className="flex items-center">
-                        <FileText className="h-5 w-5 text-blue-500 mr-3" />
+                        <FileText className="h-5 w-5 text-primary mr-3" />
                         <div>
                           <div className="font-medium">{reportType} Report</div>
                           <div className="text-xs text-muted-foreground">Generated on Apr {i + 10}, 2025</div>

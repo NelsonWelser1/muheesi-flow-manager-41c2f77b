@@ -201,7 +201,7 @@ const PayrollExpenses = ({ selectedEntity }) => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{formatCurrency(totalPayroll)}</p>
-            <p className="text-xs text-green-600">This month</p>
+            <p className="text-xs text-success">This month</p>
           </CardContent>
         </Card>
         
@@ -214,7 +214,7 @@ const PayrollExpenses = ({ selectedEntity }) => {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{formatCurrency(totalExpenses)}</p>
-            <p className="text-xs text-blue-600">Operating costs</p>
+            <p className="text-xs text-primary">Operating costs</p>
           </CardContent>
         </Card>
         
@@ -226,7 +226,7 @@ const PayrollExpenses = ({ selectedEntity }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-yellow-600">
+            <p className="text-2xl font-bold text-warning">
               {filteredPayroll.filter(emp => emp.status === 'Pending').length}
             </p>
             <p className="text-xs text-muted-foreground">Require processing</p>
@@ -277,13 +277,13 @@ const PayrollExpenses = ({ selectedEntity }) => {
                       </div>
                       
                       <div className="flex items-center gap-6 mt-3 text-xs">
-                        <span className="text-green-600">
+                        <span className="text-success">
                           Allowances: {formatCurrency(employee.allowances)}
                         </span>
-                        <span className="text-red-600">
+                        <span className="text-destructive">
                           Deductions: {formatCurrency(employee.deductions)}
                         </span>
-                        <span className="font-bold text-blue-600">
+                        <span className="font-bold text-primary">
                           Net Salary: {formatCurrency(employee.netSalary)}
                         </span>
                       </div>
@@ -395,13 +395,13 @@ const PayrollExpenses = ({ selectedEntity }) => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center py-2 border-b">
                   <span className="font-medium">Total Payroll Costs</span>
-                  <span className="font-bold text-blue-600">{formatCurrency(totalPayroll)}</span>
+                  <span className="font-bold text-primary">{formatCurrency(totalPayroll)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b">
                   <span className="font-medium">Operating Expenses</span>
-                  <span className="font-bold text-purple-600">{formatCurrency(totalExpenses)}</span>
+                  <span className="font-bold text-accent">{formatCurrency(totalExpenses)}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b bg-gray-50 px-2 rounded">
+                <div className="flex justify-between items-center py-2 border-b bg-muted/10 px-2 rounded">
                   <span className="font-bold">Total Monthly Costs</span>
                   <span className="font-bold text-lg">{formatCurrency(totalPayroll + totalExpenses)}</span>
                 </div>
@@ -422,7 +422,7 @@ const PayrollExpenses = ({ selectedEntity }) => {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <FileText className="h-8 w-8 text-blue-500" />
+                      <FileText className="h-8 w-8 text-primary" />
                       <div>
                         <h4 className="font-medium">{report.name}</h4>
                         <p className="text-sm text-muted-foreground">{report.period}</p>

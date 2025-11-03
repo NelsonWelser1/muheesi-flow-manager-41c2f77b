@@ -91,21 +91,21 @@ const NotificationsAlerts = () => {
 
   const getNotificationColor = (type) => {
     switch (type) {
-      case 'urgent': return 'text-red-600 bg-red-50';
-      case 'important': return 'text-orange-600 bg-orange-50';
-      case 'warning': return 'text-yellow-600 bg-yellow-50';
-      case 'success': return 'text-green-600 bg-green-50';
-      case 'info': return 'text-blue-600 bg-blue-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'urgent': return 'text-destructive bg-destructive/10';
+      case 'important': return 'text-warning bg-warning/10';
+      case 'warning': return 'text-warning bg-warning/10';
+      case 'success': return 'text-success bg-success/10';
+      case 'info': return 'text-primary bg-primary/10';
+      default: return 'text-muted-foreground bg-muted/10';
     }
   };
 
   const getPriorityBadge = (type) => {
     switch (type) {
-      case 'urgent': return <Badge className="bg-red-500">Urgent</Badge>;
-      case 'important': return <Badge className="bg-orange-500">Important</Badge>;
-      case 'warning': return <Badge className="bg-yellow-500">Warning</Badge>;
-      case 'success': return <Badge className="bg-green-500">Success</Badge>;
+      case 'urgent': return <Badge className="bg-destructive">Urgent</Badge>;
+      case 'important': return <Badge className="bg-warning">Important</Badge>;
+      case 'warning': return <Badge className="bg-warning">Warning</Badge>;
+      case 'success': return <Badge className="bg-success">Success</Badge>;
       default: return <Badge variant="outline">Info</Badge>;
     }
   };
@@ -123,7 +123,7 @@ const NotificationsAlerts = () => {
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <Badge 
-              className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-red-500 text-xs"
+              className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-destructive text-xs"
             >
               {unreadCount}
             </Badge>
@@ -157,8 +157,8 @@ const NotificationsAlerts = () => {
                   {notifications.map((notification) => (
                     <div 
                       key={notification.id} 
-                      className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
-                        !notification.read ? 'bg-blue-50/30' : ''
+                      className={`p-4 border-b hover:bg-muted/5 cursor-pointer ${
+                        !notification.read ? 'bg-primary/5' : ''
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -169,7 +169,7 @@ const NotificationsAlerts = () => {
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-medium text-sm truncate">{notification.title}</h4>
                             {!notification.read && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                              <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></div>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mb-2">{notification.message}</p>
@@ -193,8 +193,8 @@ const NotificationsAlerts = () => {
                   {groupedNotifications.urgent.map((notification) => (
                     <div 
                       key={notification.id} 
-                      className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
-                        !notification.read ? 'bg-red-50/30' : ''
+                      className={`p-4 border-b hover:bg-muted/5 cursor-pointer ${
+                        !notification.read ? 'bg-destructive/5' : ''
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -205,12 +205,12 @@ const NotificationsAlerts = () => {
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-medium text-sm truncate">{notification.title}</h4>
                             {!notification.read && (
-                              <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>
+                              <div className="w-2 h-2 bg-destructive rounded-full flex-shrink-0"></div>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mb-2">{notification.message}</p>
                           <div className="flex items-center justify-between">
-                            <Badge className="bg-red-500 text-xs">Urgent</Badge>
+                            <Badge className="bg-destructive text-xs">Urgent</Badge>
                             <span className="text-xs text-muted-foreground">{notification.time}</span>
                           </div>
                         </div>
@@ -219,7 +219,7 @@ const NotificationsAlerts = () => {
                   ))}
                   {groupedNotifications.urgent.length === 0 && (
                     <div className="p-8 text-center text-muted-foreground">
-                      <CheckCircle className="h-12 w-12 mx-auto mb-3 text-green-500" />
+                      <CheckCircle className="h-12 w-12 mx-auto mb-3 text-success" />
                       <p className="text-sm">No urgent notifications</p>
                     </div>
                   )}
@@ -231,8 +231,8 @@ const NotificationsAlerts = () => {
                   {groupedNotifications.important.map((notification) => (
                     <div 
                       key={notification.id} 
-                      className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
-                        !notification.read ? 'bg-orange-50/30' : ''
+                      className={`p-4 border-b hover:bg-muted/5 cursor-pointer ${
+                        !notification.read ? 'bg-warning/5' : ''
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -243,7 +243,7 @@ const NotificationsAlerts = () => {
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-medium text-sm truncate">{notification.title}</h4>
                             {!notification.read && (
-                              <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0"></div>
+                              <div className="w-2 h-2 bg-warning rounded-full flex-shrink-0"></div>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mb-2">{notification.message}</p>
@@ -263,8 +263,8 @@ const NotificationsAlerts = () => {
                   {groupedNotifications.general.map((notification) => (
                     <div 
                       key={notification.id} 
-                      className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
-                        !notification.read ? 'bg-blue-50/30' : ''
+                      className={`p-4 border-b hover:bg-muted/5 cursor-pointer ${
+                        !notification.read ? 'bg-primary/5' : ''
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -275,7 +275,7 @@ const NotificationsAlerts = () => {
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-medium text-sm truncate">{notification.title}</h4>
                             {!notification.read && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                              <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></div>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mb-2">{notification.message}</p>
@@ -291,7 +291,7 @@ const NotificationsAlerts = () => {
               </TabsContent>
             </Tabs>
             
-            <div className="p-3 border-t bg-gray-50">
+            <div className="p-3 border-t bg-muted/10">
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="flex-1 text-xs">
                   Mark All Read

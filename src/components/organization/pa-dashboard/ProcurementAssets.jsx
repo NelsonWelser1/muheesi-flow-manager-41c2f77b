@@ -217,7 +217,7 @@ const ProcurementAssets = ({ selectedEntity }) => {
                 <p className="text-2xl font-bold">
                   {formatCurrency(filteredProcurement.reduce((sum, item) => sum + item.value, 0))}
                 </p>
-                <p className="text-xs text-green-600">Current orders</p>
+                <p className="text-xs text-success">Current orders</p>
               </CardContent>
             </Card>
             
@@ -226,7 +226,7 @@ const ProcurementAssets = ({ selectedEntity }) => {
                 <CardTitle className="text-sm">Pending Deliveries</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-orange-600">
+                <p className="text-2xl font-bold text-warning">
                   {filteredProcurement.filter(item => item.status !== 'Delivered').length}
                 </p>
                 <p className="text-xs text-muted-foreground">Awaiting delivery</p>
@@ -238,8 +238,8 @@ const ProcurementAssets = ({ selectedEntity }) => {
                 <CardTitle className="text-sm">On-Time Delivery</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-green-600">92%</p>
-                <p className="text-xs text-green-600">Supplier performance</p>
+                <p className="text-2xl font-bold text-success">92%</p>
+                <p className="text-xs text-success">Supplier performance</p>
               </CardContent>
             </Card>
           </div>
@@ -321,7 +321,7 @@ const ProcurementAssets = ({ selectedEntity }) => {
                 <p className="text-2xl font-bold">
                   {formatCurrency(filteredAssets.reduce((sum, asset) => sum + asset.value, 0))}
                 </p>
-                <p className="text-xs text-blue-600">Asset portfolio</p>
+                <p className="text-xs text-primary">Asset portfolio</p>
               </CardContent>
             </Card>
             
@@ -330,7 +330,7 @@ const ProcurementAssets = ({ selectedEntity }) => {
                 <CardTitle className="text-sm">Maintenance Due</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-yellow-600">2</p>
+                <p className="text-2xl font-bold text-warning">2</p>
                 <p className="text-xs text-muted-foreground">Next 30 days</p>
               </CardContent>
             </Card>
@@ -340,10 +340,10 @@ const ProcurementAssets = ({ selectedEntity }) => {
                 <CardTitle className="text-sm">Warranty Status</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-success">
                   {filteredAssets.filter(asset => asset.warranty === 'Active').length}
                 </p>
-                <p className="text-xs text-green-600">Active warranties</p>
+                <p className="text-xs text-success">Active warranties</p>
               </CardContent>
             </Card>
           </div>
