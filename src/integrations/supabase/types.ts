@@ -14,6 +14,158 @@ export type Database = {
   }
   public: {
     Tables: {
+      milk_reception: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          notes: string | null
+          payment_status: string | null
+          price_per_liter: number | null
+          quality_grade: string | null
+          session: string
+          supplier_name: string | null
+          temperature: number | null
+          total_amount: number | null
+          updated_at: string | null
+          volume: number
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: string
+          notes?: string | null
+          payment_status?: string | null
+          price_per_liter?: number | null
+          quality_grade?: string | null
+          session: string
+          supplier_name?: string | null
+          temperature?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+          volume: number
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          payment_status?: string | null
+          price_per_liter?: number | null
+          quality_grade?: string | null
+          session?: string
+          supplier_name?: string | null
+          temperature?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+          volume?: number
+        }
+        Relationships: []
+      }
+      milk_reception_quality_metrics: {
+        Row: {
+          bacteria_count: number | null
+          created_at: string | null
+          date: string
+          fat_content: number | null
+          id: string
+          lactose_content: number | null
+          notes: string | null
+          ph_level: number | null
+          protein_content: number | null
+          quality_score: number | null
+          reception_id: string | null
+          temperature: number | null
+          total_solids: number | null
+          updated_at: string | null
+          volume: number | null
+        }
+        Insert: {
+          bacteria_count?: number | null
+          created_at?: string | null
+          date: string
+          fat_content?: number | null
+          id?: string
+          lactose_content?: number | null
+          notes?: string | null
+          ph_level?: number | null
+          protein_content?: number | null
+          quality_score?: number | null
+          reception_id?: string | null
+          temperature?: number | null
+          total_solids?: number | null
+          updated_at?: string | null
+          volume?: number | null
+        }
+        Update: {
+          bacteria_count?: number | null
+          created_at?: string | null
+          date?: string
+          fat_content?: number | null
+          id?: string
+          lactose_content?: number | null
+          notes?: string | null
+          ph_level?: number | null
+          protein_content?: number | null
+          quality_score?: number | null
+          reception_id?: string | null
+          temperature?: number | null
+          total_solids?: number | null
+          updated_at?: string | null
+          volume?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milk_reception_quality_metrics_reception_id_fkey"
+            columns: ["reception_id"]
+            isOneToOne: false
+            referencedRelation: "milk_reception"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milk_tank_offloads: {
+        Row: {
+          created_at: string | null
+          date: string
+          destination: string | null
+          driver_name: string | null
+          id: string
+          notes: string | null
+          tank_id: string
+          temperature: number | null
+          updated_at: string | null
+          vehicle_number: string | null
+          volume: number
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          destination?: string | null
+          driver_name?: string | null
+          id?: string
+          notes?: string | null
+          tank_id: string
+          temperature?: number | null
+          updated_at?: string | null
+          vehicle_number?: string | null
+          volume: number
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          destination?: string | null
+          driver_name?: string | null
+          id?: string
+          notes?: string | null
+          tank_id?: string
+          temperature?: number | null
+          updated_at?: string | null
+          vehicle_number?: string | null
+          volume?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
