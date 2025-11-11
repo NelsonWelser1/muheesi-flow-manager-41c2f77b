@@ -203,9 +203,14 @@ const MilkReceptionTable = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredRecords.length === 0 ? <div className="text-center py-6 text-muted-foreground">
-            {searchTerm ? 'No records found matching your search.' : 'No milk reception records found.'}
-          </div> : <>
+          {error && <div className="text-center py-6 text-destructive">
+            <p className="font-semibold mb-2">Error loading milk reception records</p>
+            <p className="text-sm">{error.message || 'Please check your authentication and try again.'}</p>
+            <p className="text-xs mt-2">If this persists, try signing out and back in.</p>
+          </div>}
+          {!error && filteredRecords.length === 0 ? <div className="text-center py-6 text-muted-foreground">
+            {searchTerm ? 'No records found matching your search.' : 'No milk reception records found. Check that you have the required permissions.'}
+          </div> : !error && <>
             <div className="overflow-x-auto" id="milk-reception-table">
               <Table>
                 <TableHeader>

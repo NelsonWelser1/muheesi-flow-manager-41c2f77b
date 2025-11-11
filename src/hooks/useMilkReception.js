@@ -9,17 +9,22 @@ export const useMilkReception = () => {
   const fetchMilkReceptions = async () => {
     console.log('Fetching milk reception data');
     try {
+      // Check authentication first
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Current session:', session ? 'Active' : 'None', session?.user?.id);
+      
       const { data, error, status } = await supabase
         .from('milk_reception')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error && status !== 406) {
+      if (error) {
         console.error('Error fetching milk reception data:', error);
+        console.error('Error details:', { message: error.message, code: error.code, details: error.details });
         throw error;
       }
 
-      console.log('Fetched milk reception data:', data);
+      console.log('Fetched milk reception data:', data?.length || 0, 'records');
       return data || [];
     } catch (error) {
       console.error('Error in fetchMilkReceptions:', error);
