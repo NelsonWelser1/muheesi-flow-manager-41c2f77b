@@ -9,26 +9,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
+import { useConfirmation } from "@/components/ui/confirmation-dialog";
+import { usePermissions } from "@/hooks/usePermissions";
+import { TableLoadingSkeleton } from "@/components/ui/loading-skeleton";
+import { ErrorState, EmptyState, PermissionDenied } from "@/components/ui/error-state";
+import { bulkRoleAssignmentSchema } from "@/utils/roleValidation";
 import { 
   ArrowLeft,
   Users,
   Shield,
   Building2,
   CheckCircle,
-  XCircle
+  XCircle,
+  AlertTriangle
 } from 'lucide-react';
 
 const BulkUserOperations = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { confirm, Dialog } = useConfirmation();
+  const { permissions, isLoading: permissionsLoading } = usePermissions();
+  
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [bulkAction, setBulkAction] = useState('');
   const [bulkRole, setBulkRole] = useState('');
   const [bulkCompany, setBulkCompany] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
 
   // Fetch all users
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, error: usersError, refetch } = useQuery({
     queryKey: ['all-users'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -126,23 +137,68 @@ const BulkUserOperations = () => {
     }
   });
 
-  const handleBulkAction = () => {
-    if (selectedUsers.length === 0) {
-      toast.error('Please select at least one user');
+  const handleBulkAction = async () => {
+    setValidationErrors({});
+
+    // Validate input
+    const validationData = {
+      userIds: selectedUsers,
+      role: bulkRole,
+      company: bulkCompany || 'All Companies'
+    };
+
+    try {
+      bulkRoleAssignmentSchema.parse(validationData);
+    } catch (error) {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path[0]] = err.message;
+      });
+      setValidationErrors(errors);
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors before continuing",
+        variant: "destructive"
+      });
       return;
     }
 
-    if (bulkAction === 'assign_role') {
-      if (!bulkRole) {
-        toast.error('Please select a role');
-        return;
-      }
-      bulkAssignMutation.mutate({
-        userIds: selectedUsers,
-        role: bulkRole,
-        company: bulkCompany || null
+    // Role-company validation
+    if (bulkRole === 'sysadmin' && bulkCompany !== 'All Companies') {
+      setValidationErrors({ company: "System admins must be assigned to 'All Companies'" });
+      toast({
+        title: "Invalid Configuration",
+        description: "System admins must be assigned to 'All Companies'",
+        variant: "destructive"
       });
+      return;
     }
+
+    if (bulkRole !== 'sysadmin' && bulkCompany === 'All Companies') {
+      setValidationErrors({ company: "Only system admins can be assigned to 'All Companies'" });
+      toast({
+        title: "Invalid Configuration",
+        description: "Only system admins can be assigned to 'All Companies'",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Show confirmation dialog
+    const confirmed = await confirm({
+      title: "Confirm Bulk Role Assignment",
+      description: `You are about to assign the role "${bulkRole}" ${bulkCompany ? `at "${bulkCompany}"` : ''} to ${selectedUsers.length} user(s). This action cannot be undone.`,
+      confirmText: "Assign Roles",
+      variant: "default"
+    });
+
+    if (!confirmed) return;
+
+    bulkAssignMutation.mutate({
+      userIds: selectedUsers,
+      role: bulkRole,
+      company: bulkCompany || null
+    });
   };
 
   const getRoleBadgeColor = (role) => {
@@ -158,8 +214,42 @@ const BulkUserOperations = () => {
     }
   };
 
+  // Permission check
+  if (permissionsLoading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <TableLoadingSkeleton rows={5} columns={5} />
+      </div>
+    );
+  }
+
+  if (!permissions?.canManageUsers) {
+    return (
+      <div className="container mx-auto p-6">
+        <PermissionDenied 
+          message="You don't have permission to perform bulk user operations"
+          requiredRole="System Administrator or Manager"
+        />
+      </div>
+    );
+  }
+
+  // Error state
+  if (usersError) {
+    return (
+      <div className="container mx-auto p-6">
+        <ErrorState
+          title="Failed to load users"
+          message={usersError.message}
+          onRetry={refetch}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <Dialog />
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/users')}>
           <ArrowLeft className="h-5 w-5" />
@@ -200,53 +290,77 @@ const BulkUserOperations = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select value={bulkAction} onValueChange={setBulkAction}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select action" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="assign_role">Assign Role</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Select value={bulkAction} onValueChange={setBulkAction}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select action" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="assign_role">Assign Role</SelectItem>
+                </SelectContent>
+              </Select>
 
-            {bulkAction === 'assign_role' && (
-              <>
-                <Select value={bulkRole} onValueChange={setBulkRole}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sysadmin">System Administrator</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="user">User</SelectItem>
-                  </SelectContent>
-                </Select>
+              {bulkAction === 'assign_role' && (
+                <>
+                  <div>
+                    <Select value={bulkRole} onValueChange={setBulkRole}>
+                      <SelectTrigger className={validationErrors.role ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sysadmin">System Administrator</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="staff">Staff</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {validationErrors.role && (
+                      <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        {validationErrors.role}
+                      </p>
+                    )}
+                  </div>
 
-                <Select value={bulkCompany} onValueChange={setBulkCompany}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select company (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">No Company</SelectItem>
-                    {companies?.map((company) => (
-                      <SelectItem key={company} value={company}>
-                        {company}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </>
+                  <div>
+                    <Select value={bulkCompany} onValueChange={setBulkCompany}>
+                      <SelectTrigger className={validationErrors.company ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Select company" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All Companies">All Companies</SelectItem>
+                        {companies?.map((company) => (
+                          <SelectItem key={company} value={company}>
+                            {company}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {validationErrors.company && (
+                      <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        {validationErrors.company}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+
+              <Button
+                onClick={handleBulkAction}
+                disabled={!bulkAction || selectedUsers.length === 0 || bulkAssignMutation.isPending}
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {bulkAssignMutation.isPending ? 'Applying...' : 'Apply Action'}
+              </Button>
+            </div>
+
+            {validationErrors.userIds && (
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                {validationErrors.userIds}
+              </p>
             )}
-
-            <Button
-              onClick={handleBulkAction}
-              disabled={!bulkAction || selectedUsers.length === 0}
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Apply Action
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -259,7 +373,13 @@ const BulkUserOperations = () => {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8">Loading users...</div>
+            <TableLoadingSkeleton rows={5} columns={5} />
+          ) : !users || users.length === 0 ? (
+            <EmptyState
+              Icon={Users}
+              title="No users found"
+              message="There are no users in the system yet"
+            />
           ) : (
             <Table>
               <TableHeader>
