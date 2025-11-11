@@ -237,31 +237,34 @@ export type Database = {
       }
       role_templates: {
         Row: {
-          company: string
           created_at: string
           created_by: string | null
+          default_company: string
           description: string | null
           id: string
+          is_active: boolean
           name: string
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
         }
         Insert: {
-          company: string
           created_at?: string
           created_by?: string | null
+          default_company: string
           description?: string | null
           id?: string
+          is_active?: boolean
           name: string
           role: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Update: {
-          company?: string
           created_at?: string
           created_by?: string | null
+          default_company?: string
           description?: string | null
           id?: string
+          is_active?: boolean
           name?: string
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
