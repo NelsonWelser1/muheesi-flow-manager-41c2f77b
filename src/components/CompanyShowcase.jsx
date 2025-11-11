@@ -40,34 +40,19 @@ const companies = [{
 const CompanyShowcase = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   
-  // Check if QueryClient is available
-  const queryClient = useQueryClient();
-  console.log('CompanyShowcase QueryClient:', queryClient);
-  
-  if (!queryClient) {
-    console.error('QueryClient not available in CompanyShowcase');
-    return (
-      <div className="py-4 sm:py-8 bg-green-50">
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-          <p>Loading system...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Individual queries for each company - with fallback for when QueryClient isn't ready
+  // Individual queries for each company
   const {
-    data: grandBernaStocks,
+    data: grandBernaStocks = [],
     isLoading: isLoadingGrandBerna
   } = useCompanyStocks('Grand Berna Dairies');
   
   const {
-    data: kajonStocks,
+    data: kajonStocks = [],
     isLoading: isLoadingKajon
   } = useCompanyStocks('KAJON Coffee Limited');
   
   const {
-    data: kyalimaStocks,
+    data: kyalimaStocks = [],
     isLoading: isLoadingKyalima
   } = useCompanyStocks('Kyalima Farmers Limited');
 
