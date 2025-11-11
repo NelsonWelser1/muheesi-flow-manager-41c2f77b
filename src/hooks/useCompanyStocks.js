@@ -6,6 +6,8 @@ export const useCompanyStocks = (company) => {
   return useQuery({
     queryKey: ['companyStocks', company],
     queryFn: async () => {
+      if (!company) return [];
+      
       console.log('Fetching stocks for company:', company);
       
       try {
@@ -18,7 +20,8 @@ export const useCompanyStocks = (company) => {
         // If table doesn't exist (PGRST205), use company-specific tables
         if (error && error.code !== 'PGRST205') {
           console.error('Error fetching company stocks:', error);
-          throw error;
+          // Don't throw - return empty array to prevent UI crashes
+          return [];
         }
 
         console.log('Fetched stocks for', company, ':', data);
@@ -32,9 +35,14 @@ export const useCompanyStocks = (company) => {
         let specificData = [];
         
         if (company === 'Grand Berna Dairies') {
-          const { data: dairyData } = await supabase
+          const { data: dairyData, error: dairyError } = await supabase
             .from('dairy_inventory')
             .select('*');
+          
+          if (dairyError) {
+            console.error('Error fetching dairy inventory:', dairyError);
+            return [];
+          }
           
           if (dairyData) {
             specificData = dairyData.map(item => ({
@@ -47,9 +55,14 @@ export const useCompanyStocks = (company) => {
           }
         } 
         else if (company === 'KAJON Coffee Limited') {
-          const { data: coffeeData } = await supabase
+          const { data: coffeeData, error: coffeeError } = await supabase
             .from('coffee_inventory')
             .select('*');
+          
+          if (coffeeError) {
+            console.error('Error fetching coffee inventory:', coffeeError);
+            return [];
+          }
           
           if (coffeeData) {
             specificData = coffeeData.map(item => ({
@@ -62,9 +75,14 @@ export const useCompanyStocks = (company) => {
           }
         }
         else if (company === 'Kyalima Farmers Limited') {
-          const { data: farmData } = await supabase
+          const { data: farmData, error: farmError } = await supabase
             .from('farm_inventory')
             .select('*');
+          
+          if (farmError) {
+            console.error('Error fetching farm inventory:', farmError);
+            return [];
+          }
           
           if (farmData) {
             specificData = farmData.map(item => ({

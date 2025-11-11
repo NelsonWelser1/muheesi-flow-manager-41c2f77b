@@ -5,6 +5,7 @@ import { useUserRole, useUserProfile } from '@/integrations/supabase/hooks/useAu
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import RoleDashboard from '@/components/organization/RoleDashboard';
+import AssignAdminHelper from '@/components/admin/AssignAdminHelper';
 
 // Map enum values to full role titles
 const roleMapping = {
@@ -31,8 +32,8 @@ const roleMapping = {
 };
 
 const UserDashboard = () => {
-  const { data: role, isLoading: roleLoading } = useUserRole();
-  const { data: profile, isLoading: profileLoading } = useUserProfile();
+  const { data: role, isLoading: roleLoading, error: roleError } = useUserRole();
+  const { data: profile, isLoading: profileLoading, error: profileError } = useUserProfile();
 
   if (roleLoading || profileLoading) {
     return (
@@ -40,6 +41,11 @@ const UserDashboard = () => {
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  // Handle errors gracefully
+  if (roleError || profileError) {
+    console.error('Dashboard errors:', { roleError, profileError });
   }
 
   return (
@@ -69,17 +75,11 @@ const UserDashboard = () => {
                 )}
               </div>
             </div>
-          ) : (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>No Role Assigned</AlertTitle>
-              <AlertDescription>
-                You don't have a role assigned yet. Please contact a system administrator to assign you a role and grant access to specific features.
-              </AlertDescription>
-            </Alert>
-          )}
+          ) : null}
         </CardContent>
       </Card>
+
+      {!role && <AssignAdminHelper />}
 
       {role && (
         <Alert>
