@@ -119,10 +119,26 @@ const AssignRole = () => {
       return;
     }
 
+    if (!selectedCompany) {
+      toast.error('Please select a company');
+      return;
+    }
+
+    // Enforce "All Companies" for sysadmin only
+    if (selectedRole === 'sysadmin' && selectedCompany !== 'All Companies') {
+      toast.error('System Administrators must be assigned to "All Companies"');
+      return;
+    }
+
+    if (selectedRole !== 'sysadmin' && selectedCompany === 'All Companies') {
+      toast.error('Only System Administrators can be assigned to "All Companies"');
+      return;
+    }
+
     setIsSubmitting(true);
     await assignRoleMutation.mutateAsync({
       role: selectedRole,
-      company: selectedCompany || null
+      company: selectedCompany
     });
     setIsSubmitting(false);
   };
@@ -131,10 +147,10 @@ const AssignRole = () => {
     switch (role) {
       case 'sysadmin':
         return 'bg-destructive/10 text-destructive border-destructive';
-      case 'admin':
-        return 'bg-warning/10 text-warning border-warning';
       case 'manager':
         return 'bg-primary/10 text-primary border-primary';
+      case 'staff':
+        return 'bg-muted/10 text-muted-foreground border-muted';
       default:
         return 'bg-muted/10 text-muted-foreground border-muted';
     }
@@ -221,9 +237,8 @@ const AssignRole = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="sysadmin">System Administrator</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
@@ -232,14 +247,17 @@ const AssignRole = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="company">Company (Optional)</Label>
+                <Label htmlFor="company">Company *</Label>
                 <Select value={selectedCompany} onValueChange={setSelectedCompany}>
                   <SelectTrigger id="company">
                     <SelectValue placeholder="Select a company" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Company</SelectItem>
-                    {companies?.map((company) => (
+                    <SelectItem value="All Companies">All Companies (System Admin Only)</SelectItem>
+                    <SelectItem value="Grand Berna Dairies">Grand Berna Dairies</SelectItem>
+                    <SelectItem value="KAJON Coffee Limited">KAJON Coffee Limited</SelectItem>
+                    <SelectItem value="Kyalima Farmers Limited">Kyalima Farmers Limited</SelectItem>
+                    {companies?.filter(c => !['All Companies', 'Grand Berna Dairies', 'KAJON Coffee Limited', 'Kyalima Farmers Limited'].includes(c)).map((company) => (
                       <SelectItem key={company} value={company}>
                         {company}
                       </SelectItem>
@@ -247,7 +265,10 @@ const AssignRole = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
-                  Optionally assign user to a specific company
+                  {selectedRole === 'sysadmin' 
+                    ? 'System admins have access to all companies'
+                    : 'Assign user to a specific company for role-based access control'
+                  }
                 </p>
               </div>
 
@@ -261,28 +282,21 @@ const AssignRole = () => {
                     <Shield className="h-4 w-4 text-destructive mt-0.5" />
                     <div>
                       <p className="font-medium">System Administrator</p>
-                      <p className="text-muted-foreground text-xs">Full system access, manage all users and companies</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Shield className="h-4 w-4 text-warning mt-0.5" />
-                    <div>
-                      <p className="font-medium">Administrator</p>
-                      <p className="text-muted-foreground text-xs">Company-level admin, manage users within company</p>
+                      <p className="text-muted-foreground text-xs">Full system access - manage all users, companies, and data across the entire system</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
                     <Shield className="h-4 w-4 text-primary mt-0.5" />
                     <div>
                       <p className="font-medium">Manager</p>
-                      <p className="text-muted-foreground text-xs">Operational management, limited user oversight</p>
+                      <p className="text-muted-foreground text-xs">Full CRUD access - can create, read, update, and delete all data within assigned company</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
                     <Shield className="h-4 w-4 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="font-medium">User</p>
-                      <p className="text-muted-foreground text-xs">Standard user access, view and update own data</p>
+                      <p className="font-medium">Staff</p>
+                      <p className="text-muted-foreground text-xs">Read-only access - can view all data within assigned company but cannot modify</p>
                     </div>
                   </div>
                 </CardContent>

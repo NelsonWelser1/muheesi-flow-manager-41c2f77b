@@ -57,10 +57,10 @@ const UserDetails = () => {
     switch (role) {
       case 'sysadmin':
         return 'bg-destructive/10 text-destructive border-destructive';
-      case 'admin':
-        return 'bg-warning/10 text-warning border-warning';
       case 'manager':
         return 'bg-primary/10 text-primary border-primary';
+      case 'staff':
+        return 'bg-muted/10 text-muted-foreground border-muted';
       default:
         return 'bg-muted/10 text-muted-foreground border-muted';
     }

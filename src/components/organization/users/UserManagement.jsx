@@ -71,10 +71,10 @@ const UserManagement = () => {
     switch (role) {
       case 'sysadmin':
         return 'bg-destructive/10 text-destructive border-destructive';
-      case 'admin':
-        return 'bg-warning/10 text-warning border-warning';
       case 'manager':
         return 'bg-primary/10 text-primary border-primary';
+      case 'staff':
+        return 'bg-muted/10 text-muted-foreground border-muted';
       default:
         return 'bg-muted/10 text-muted-foreground border-muted';
     }
@@ -131,12 +131,12 @@ const UserManagement = () => {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Admins</p>
-                <p className="text-2xl font-bold">
-                  {users?.filter(u => u.user_roles?.role === 'admin' || u.user_roles?.role === 'sysadmin').length || 0}
-                </p>
-              </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Admins & Managers</p>
+              <p className="text-2xl font-bold">
+                {users?.filter(u => ['sysadmin', 'manager'].includes(u.user_roles?.role)).length || 0}
+              </p>
+            </div>
               <Shield className="h-8 w-8 text-accent" />
             </div>
           </CardContent>
@@ -186,12 +186,11 @@ const UserManagement = () => {
               <SelectTrigger>
                 <SelectValue placeholder="Filter by role" />
               </SelectTrigger>
-              <SelectContent>
+                <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="sysadmin">System Admin</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="staff">Staff</SelectItem>
               </SelectContent>
             </Select>
             <Select value={companyFilter} onValueChange={setCompanyFilter}>
@@ -279,13 +278,24 @@ const UserManagement = () => {
                       {new Date(user.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => navigate(`/users/${user.id}`)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => navigate(`/users/${user.id}`)}
+                          title="View Details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => navigate(`/users/${user.id}/assign-role`)}
+                          title="Assign Role"
+                        >
+                          <Shield className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
