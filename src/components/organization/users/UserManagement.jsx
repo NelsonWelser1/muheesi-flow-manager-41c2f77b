@@ -19,7 +19,11 @@ import {
   Shield,
   Building2,
   ArrowLeft,
-  FileText
+  FileText,
+  Bell,
+  Clock,
+  Calendar,
+  Package
 } from 'lucide-react';
 
 const UserManagement = () => {
@@ -104,10 +108,26 @@ const UserManagement = () => {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => navigate('/users/bulk-role-assignment')} variant="default">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={() => navigate('/users/notifications-dashboard')} variant="default">
+            <Bell className="h-4 w-4 mr-2" />
+            Dashboard
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/users/role-approvals')}>
+            <Clock className="h-4 w-4 mr-2" />
+            Approvals
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/users/bulk-role-assignment')}>
             <Shield className="h-4 w-4 mr-2" />
-            Bulk Role Assignment
+            Bulk Assign
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/users/scheduled-assignments')}>
+            <Calendar className="h-4 w-4 mr-2" />
+            Scheduled
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/users/role-templates')}>
+            <Package className="h-4 w-4 mr-2" />
+            Templates
           </Button>
           <Button variant="outline" onClick={() => navigate('/users/audit-log')}>
             <FileText className="h-4 w-4 mr-2" />

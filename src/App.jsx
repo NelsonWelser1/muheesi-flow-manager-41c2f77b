@@ -29,6 +29,10 @@ import AssignRole from "./components/organization/users/AssignRole";
 import BulkUserOperations from "./components/organization/users/BulkUserOperations";
 import BulkRoleAssignment from "./components/organization/users/BulkRoleAssignment";
 import AuditLog from "./components/organization/users/AuditLog";
+import RoleApprovalWorkflow from "./components/organization/users/RoleApprovalWorkflow";
+import NotificationsDashboard from "./components/organization/users/NotificationsDashboard";
+import ScheduledAssignments from "./components/organization/users/ScheduledAssignments";
+import RoleTemplates from "./components/organization/users/RoleTemplates";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Create QueryClient with proper configuration
@@ -74,6 +78,10 @@ const App = () => {
                 <Route path="/users/bulk-operations" element={<ProtectedRoute><BulkUserOperations /></ProtectedRoute>} />
                 <Route path="/users/bulk-role-assignment" element={<ProtectedRoute><BulkRoleAssignment /></ProtectedRoute>} />
                 <Route path="/users/audit-log" element={<ProtectedRoute><AuditLog /></ProtectedRoute>} />
+                <Route path="/users/role-approvals" element={<ProtectedRoute><RoleApprovalWorkflow /></ProtectedRoute>} />
+                <Route path="/users/notifications-dashboard" element={<ProtectedRoute><NotificationsDashboard /></ProtectedRoute>} />
+                <Route path="/users/scheduled-assignments" element={<ProtectedRoute><ScheduledAssignments /></ProtectedRoute>} />
+                <Route path="/users/role-templates" element={<ProtectedRoute><RoleTemplates /></ProtectedRoute>} />
                 <Route path="/users/:userId" element={<ProtectedRoute><UserDetails /></ProtectedRoute>} />
                 <Route path="/users/:userId/assign-role" element={<ProtectedRoute><AssignRole /></ProtectedRoute>} />
                 <Route path="/manage-inventory/kajon-export/export-manager" element={<ProtectedRoute><CoffeeExportManagerDashboard /></ProtectedRoute>} />
