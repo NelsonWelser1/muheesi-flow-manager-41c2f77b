@@ -50,11 +50,24 @@ const RoleTemplates = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('role_templates')
-        .select(`
-          *,
-          created_by_profile:profiles(full_name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
+      
+      // Fetch creator profiles separately
+      if (data && data.length > 0) {
+        const creatorIds = [...new Set(data.map(t => t.created_by).filter(Boolean))];
+        if (creatorIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', creatorIds);
+          
+          const profileMap = profiles?.reduce((acc, p) => ({...acc, [p.id]: p}), {}) || {};
+          data.forEach(template => {
+            template.created_by_profile = template.created_by ? profileMap[template.created_by] : null;
+          });
+        }
+      }
 
       if (error) throw error;
       return data;
