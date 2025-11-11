@@ -10,7 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
+import { useConfirmation } from "@/components/ui/confirmation-dialog";
+import { usePermissions } from "@/hooks/usePermissions";
+import { CardLoadingSkeleton } from "@/components/ui/loading-skeleton";
+import { ErrorState, EmptyState, PermissionDenied } from "@/components/ui/error-state";
+import { roleTemplateSchema } from "@/utils/roleValidation";
 import { 
   ArrowLeft,
   Package,
@@ -18,12 +23,17 @@ import {
   Edit,
   Trash2,
   Copy,
-  CheckCircle
+  CheckCircle,
+  AlertTriangle
 } from 'lucide-react';
 
 const RoleTemplates = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { confirm, Dialog } = useConfirmation();
+  const { permissions, isLoading: permissionsLoading } = usePermissions();
+  
   const [isCreating, setIsCreating] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [formData, setFormData] = useState({
@@ -33,8 +43,9 @@ const RoleTemplates = () => {
     defaultCompany: '',
     isActive: true
   });
+  const [validationErrors, setValidationErrors] = useState({});
 
-  const { data: templates, isLoading } = useQuery({
+  const { data: templates, isLoading, error: templatesError, refetch } = useQuery({
     queryKey: ['role-templates'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -82,11 +93,18 @@ const RoleTemplates = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['role-templates']);
-      toast.success('Template created successfully');
+      toast({
+        title: "Success",
+        description: "Template created successfully"
+      });
       resetForm();
     },
     onError: (error) => {
-      toast.error(`Failed to create template: ${error.message}`);
+      toast({
+        title: "Error",
+        description: `Failed to create template: ${error.message}`,
+        variant: "destructive"
+      });
     }
   });
 
@@ -101,11 +119,18 @@ const RoleTemplates = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['role-templates']);
-      toast.success('Template updated successfully');
+      toast({
+        title: "Success",
+        description: "Template updated successfully"
+      });
       resetForm();
     },
     onError: (error) => {
-      toast.error(`Failed to update template: ${error.message}`);
+      toast({
+        title: "Error",
+        description: `Failed to update template: ${error.message}`,
+        variant: "destructive"
+      });
     }
   });
 
@@ -120,10 +145,17 @@ const RoleTemplates = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['role-templates']);
-      toast.success('Template deleted successfully');
+      toast({
+        title: "Success",
+        description: "Template deleted successfully"
+      });
     },
     onError: (error) => {
-      toast.error(`Failed to delete template: ${error.message}`);
+      toast({
+        title: "Error",
+        description: `Failed to delete template: ${error.message}`,
+        variant: "destructive"
+      });
     }
   });
 
@@ -174,10 +206,17 @@ const RoleTemplates = () => {
         });
     },
     onSuccess: () => {
-      toast.success('Template applied successfully');
+      toast({
+        title: "Success",
+        description: "Template applied successfully"
+      });
     },
     onError: (error) => {
-      toast.error(`Failed to apply template: ${error.message}`);
+      toast({
+        title: "Error",
+        description: `Failed to apply template: ${error.message}`,
+        variant: "destructive"
+      });
     }
   });
 
@@ -189,15 +228,50 @@ const RoleTemplates = () => {
       defaultCompany: '',
       isActive: true
     });
+    setValidationErrors({});
     setIsCreating(false);
     setEditingTemplate(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setValidationErrors({});
 
-    if (!formData.name || !formData.role || !formData.defaultCompany) {
-      toast.error('Please fill in all required fields');
+    // Validate input
+    try {
+      roleTemplateSchema.parse(formData);
+    } catch (error) {
+      const errors = {};
+      error.errors.forEach((err) => {
+        errors[err.path[0]] = err.message;
+      });
+      setValidationErrors(errors);
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors before continuing",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Role-company validation
+    if (formData.role === 'sysadmin' && formData.defaultCompany !== 'All Companies') {
+      setValidationErrors({ defaultCompany: "System admins must be assigned to 'All Companies'" });
+      toast({
+        title: "Invalid Configuration",
+        description: "System admins must be assigned to 'All Companies'",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.role !== 'sysadmin' && formData.defaultCompany === 'All Companies') {
+      setValidationErrors({ defaultCompany: "Only system admins can be assigned to 'All Companies'" });
+      toast({
+        title: "Invalid Configuration",
+        description: "Only system admins can be assigned to 'All Companies'",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -224,19 +298,59 @@ const RoleTemplates = () => {
       defaultCompany: template.default_company || '',
       isActive: template.is_active
     });
+    setValidationErrors({});
     setIsCreating(true);
   };
 
-  if (isLoading) {
+  const handleDelete = async (templateId, templateName) => {
+    const confirmed = await confirm({
+      title: "Delete Template",
+      description: `Are you sure you want to delete the template "${templateName}"? This action cannot be undone.`,
+      confirmText: "Delete",
+      variant: "destructive"
+    });
+
+    if (confirmed) {
+      deleteMutation.mutate(templateId);
+    }
+  };
+
+  // Permission check
+  if (permissionsLoading || isLoading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <CardLoadingSkeleton count={3} />
+      </div>
+    );
+  }
+
+  if (!permissions?.canManageUsers) {
     return (
       <div className="container mx-auto p-6">
-        <div className="text-center py-12">Loading templates...</div>
+        <PermissionDenied 
+          message="You don't have permission to manage role templates"
+          requiredRole="System Administrator or Manager"
+        />
+      </div>
+    );
+  }
+
+  // Error state
+  if (templatesError) {
+    return (
+      <div className="container mx-auto p-6">
+        <ErrorState
+          title="Failed to load templates"
+          message={templatesError.message}
+          onRetry={refetch}
+        />
       </div>
     );
   }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <Dialog />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/users')}>
@@ -276,13 +390,20 @@ const RoleTemplates = () => {
                     placeholder="e.g., Standard Manager"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    className={validationErrors.name ? 'border-destructive' : ''}
                   />
+                  {validationErrors.name && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      {validationErrors.name}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label>Role *</Label>
                   <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value})}>
-                    <SelectTrigger>
+                    <SelectTrigger className={validationErrors.role ? 'border-destructive' : ''}>
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
@@ -291,12 +412,18 @@ const RoleTemplates = () => {
                       <SelectItem value="staff">Staff</SelectItem>
                     </SelectContent>
                   </Select>
+                  {validationErrors.role && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      {validationErrors.role}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2 col-span-2">
                   <Label>Default Company *</Label>
                   <Select value={formData.defaultCompany} onValueChange={(value) => setFormData({...formData, defaultCompany: value})}>
-                    <SelectTrigger>
+                    <SelectTrigger className={validationErrors.defaultCompany ? 'border-destructive' : ''}>
                       <SelectValue placeholder="Select company" />
                     </SelectTrigger>
                     <SelectContent>
@@ -306,6 +433,12 @@ const RoleTemplates = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {validationErrors.defaultCompany && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      {validationErrors.defaultCompany}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2 col-span-2">
@@ -315,7 +448,14 @@ const RoleTemplates = () => {
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                     rows={3}
+                    className={validationErrors.description ? 'border-destructive' : ''}
                   />
+                  {validationErrors.description && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      {validationErrors.description}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center space-x-2 col-span-2">
@@ -328,8 +468,14 @@ const RoleTemplates = () => {
               </div>
 
               <div className="flex gap-2">
-                <Button type="submit">
-                  {editingTemplate ? 'Update' : 'Create'} Template
+                <Button 
+                  type="submit" 
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {(createMutation.isPending || updateMutation.isPending) 
+                    ? 'Saving...' 
+                    : `${editingTemplate ? 'Update' : 'Create'} Template`
+                  }
                 </Button>
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Cancel
@@ -365,7 +511,8 @@ const RoleTemplates = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => deleteMutation.mutate(template.id)}
+                    onClick={() => handleDelete(template.id, template.name)}
+                    disabled={deleteMutation.isPending}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -405,10 +552,17 @@ const RoleTemplates = () => {
 
         {templates?.length === 0 && (
           <Card className="col-span-full">
-            <CardContent className="py-12 text-center text-muted-foreground">
-              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No role templates yet</p>
-              <p className="text-sm">Create your first template to get started</p>
+            <CardContent className="py-12">
+              <EmptyState
+                Icon={Package}
+                title="No role templates yet"
+                message="Create your first template to get started"
+                actionLabel="Create Template"
+                onAction={() => {
+                  resetForm();
+                  setIsCreating(true);
+                }}
+              />
             </CardContent>
           </Card>
         )}
