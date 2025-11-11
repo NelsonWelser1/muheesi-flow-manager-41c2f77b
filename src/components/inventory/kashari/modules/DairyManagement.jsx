@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import DairyDashboard from './dairy/DairyDashboard';
 import { useToast } from "@/components/ui/use-toast";
+import ComponentErrorBoundary from "@/components/ui/ComponentErrorBoundary";
+import { CardErrorFallback } from "@/components/ui/FallbackUI";
 
 const DairyManagement = () => {
   const { toast } = useToast();
@@ -40,8 +42,20 @@ const DairyManagement = () => {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Dairy Management</h2>
-      {/* Use the initialized state to ensure the dashboard always gets a fresh render */}
-      <DairyDashboard key={`dairy-dashboard-${initialized ? Date.now() : 'loading'}`} />
+      <ComponentErrorBoundary 
+        componentName="Dairy Dashboard"
+        fallback={(error, reset) => (
+          <CardErrorFallback 
+            error={error}
+            onReset={reset}
+            componentName="Dairy Dashboard"
+            description="The dairy management dashboard encountered an error"
+          />
+        )}
+      >
+        {/* Use the initialized state to ensure the dashboard always gets a fresh render */}
+        <DairyDashboard key={`dairy-dashboard-${initialized ? Date.now() : 'loading'}`} />
+      </ComponentErrorBoundary>
     </div>
   );
 };
