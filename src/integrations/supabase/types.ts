@@ -196,6 +196,45 @@ export type Database = {
         }
         Relationships: []
       }
+      role_change_audit_log: {
+        Row: {
+          action_type: string
+          affected_user: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_company: string
+          new_role: string
+          notes: string | null
+          old_company: string | null
+          old_role: string | null
+        }
+        Insert: {
+          action_type: string
+          affected_user: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_company: string
+          new_role: string
+          notes?: string | null
+          old_company?: string | null
+          old_role?: string | null
+        }
+        Update: {
+          action_type?: string
+          affected_user?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_company?: string
+          new_role?: string
+          notes?: string | null
+          old_company?: string | null
+          old_role?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           assigned_at: string | null

@@ -18,7 +18,8 @@ import {
   Edit,
   Shield,
   Building2,
-  ArrowLeft
+  ArrowLeft,
+  FileText
 } from 'lucide-react';
 
 const UserManagement = () => {
@@ -104,13 +105,13 @@ const UserManagement = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => navigate('/users/new')}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add User
+          <Button onClick={() => navigate('/users/bulk-role-assignment')} variant="default">
+            <Shield className="h-4 w-4 mr-2" />
+            Bulk Role Assignment
           </Button>
-          <Button variant="outline" onClick={() => navigate('/users/bulk-operations')}>
-            <Users className="h-4 w-4 mr-2" />
-            Bulk Operations
+          <Button variant="outline" onClick={() => navigate('/users/audit-log')}>
+            <FileText className="h-4 w-4 mr-2" />
+            Audit Log
           </Button>
         </div>
       </div>

@@ -74,6 +74,10 @@ const AssignRole = () => {
     mutationFn: async ({ role, company }) => {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       
+      const actionType = user.user_roles?.id ? 'updated' : 'assigned';
+      const oldRole = user.user_roles?.role || null;
+      const oldCompany = user.user_roles?.company || null;
+
       // If user already has a role, update it
       if (user.user_roles?.id) {
         const { error } = await supabase
@@ -99,11 +103,46 @@ const AssignRole = () => {
 
         if (error) throw error;
       }
+
+      // Log the change in audit log
+      const { error: auditError } = await supabase
+        .from('role_change_audit_log')
+        .insert({
+          changed_by: currentUser.id,
+          affected_user: userId,
+          old_role: oldRole,
+          new_role: role,
+          old_company: oldCompany,
+          new_company: company,
+          action_type: actionType
+        });
+
+      if (auditError) {
+        console.error('Failed to log audit entry:', auditError);
+      }
+
+      // Send email notification
+      try {
+        await supabase.functions.invoke('send-role-notification', {
+          body: {
+            userName: user.full_name,
+            userEmail: user.email,
+            role,
+            company,
+            actionType,
+            changedBy: currentUser.email
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send notification email:', emailError);
+      }
+
+      return { actionType };
     },
-    onSuccess: () => {
+    onSuccess: ({ actionType }) => {
       queryClient.invalidateQueries(['user-details', userId]);
       queryClient.invalidateQueries(['all-users']);
-      toast.success('Role assigned successfully');
+      toast.success(`Role ${actionType} successfully. Notification email sent.`);
       navigate(`/users/${userId}`);
     },
     onError: (error) => {
