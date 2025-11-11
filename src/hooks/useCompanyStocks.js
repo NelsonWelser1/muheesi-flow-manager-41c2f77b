@@ -1,6 +1,6 @@
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/supabase';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useCompanyStocks = (company) => {
   return useQuery({
