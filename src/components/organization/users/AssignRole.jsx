@@ -9,6 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { validateRoleAssignment } from '@/utils/roleValidation';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useConfirmation } from '@/components/ui/confirmation-dialog';
+import { PermissionDenied } from '@/components/ui/error-state';
+import { FormLoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { 
   ArrowLeft,
   Shield,
@@ -25,6 +30,10 @@ const AssignRole = () => {
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+  
+  const { permissions, isLoading: permissionsLoading } = usePermissions();
+  const { confirm, Dialog } = useConfirmation();
 
   // Fetch user details
   const { data: user, isLoading } = useQuery({
@@ -153,26 +162,31 @@ const AssignRole = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!selectedRole) {
-      toast.error('Please select a role');
+    // Validate input
+    const validation = validateRoleAssignment({
+      role: selectedRole,
+      company: selectedCompany,
+      userId: userId
+    });
+
+    if (!validation.success) {
+      setValidationErrors(validation.errors);
+      toast.error('Please fix the validation errors');
       return;
     }
 
-    if (!selectedCompany) {
-      toast.error('Please select a company');
-      return;
-    }
+    setValidationErrors({});
 
-    // Enforce "All Companies" for sysadmin only
-    if (selectedRole === 'sysadmin' && selectedCompany !== 'All Companies') {
-      toast.error('System Administrators must be assigned to "All Companies"');
-      return;
-    }
+    // Confirm action
+    const actionType = user.user_roles ? 'update' : 'assign';
+    const confirmed = await confirm({
+      title: `${actionType === 'update' ? 'Update' : 'Assign'} Role?`,
+      description: `Are you sure you want to ${actionType} ${user.full_name}'s role to ${selectedRole} at ${selectedCompany}? ${actionType === 'update' ? 'This will replace their current role.' : 'They will receive an email notification.'}`,
+      confirmText: actionType === 'update' ? 'Update Role' : 'Assign Role',
+      variant: 'default'
+    });
 
-    if (selectedRole !== 'sysadmin' && selectedCompany === 'All Companies') {
-      toast.error('Only System Administrators can be assigned to "All Companies"');
-      return;
-    }
+    if (!confirmed) return;
 
     setIsSubmitting(true);
     await assignRoleMutation.mutateAsync({
@@ -195,16 +209,41 @@ const AssignRole = () => {
     }
   };
 
-  if (isLoading) {
+  if (permissionsLoading || isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center py-12">Loading...</div>
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(`/users/${userId}`)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Loading...</h1>
+          </div>
+        </div>
+        <FormLoadingSkeleton />
+      </div>
+    );
+  }
+
+  if (!permissions.canAssignRoles) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/users')}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </div>
+        <PermissionDenied 
+          message="You don't have permission to assign roles."
+          requiredRole="System Administrator"
+        />
       </div>
     );
   }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <Dialog />
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/users/${userId}`)}>
           <ArrowLeft className="h-5 w-5" />
@@ -271,7 +310,7 @@ const AssignRole = () => {
               <div className="space-y-2">
                 <Label htmlFor="role">Role *</Label>
                 <Select value={selectedRole} onValueChange={setSelectedRole}>
-                  <SelectTrigger id="role">
+                  <SelectTrigger id="role" className={validationErrors.role ? 'border-destructive' : ''}>
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -280,15 +319,19 @@ const AssignRole = () => {
                     <SelectItem value="staff">Staff</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-muted-foreground">
-                  Choose the appropriate role based on required permissions
-                </p>
+                {validationErrors.role ? (
+                  <p className="text-sm text-destructive">{validationErrors.role}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Choose the appropriate role based on required permissions
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="company">Company *</Label>
                 <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                  <SelectTrigger id="company">
+                  <SelectTrigger id="company" className={validationErrors.company ? 'border-destructive' : ''}>
                     <SelectValue placeholder="Select a company" />
                   </SelectTrigger>
                   <SelectContent>
@@ -303,12 +346,16 @@ const AssignRole = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-muted-foreground">
-                  {selectedRole === 'sysadmin' 
-                    ? 'System admins have access to all companies'
-                    : 'Assign user to a specific company for role-based access control'
-                  }
-                </p>
+                {validationErrors.company ? (
+                  <p className="text-sm text-destructive">{validationErrors.company}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {selectedRole === 'sysadmin' 
+                      ? 'System admins have access to all companies'
+                      : 'Assign user to a specific company for role-based access control'
+                    }
+                  </p>
+                )}
               </div>
 
               {/* Role Descriptions */}
