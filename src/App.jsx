@@ -51,16 +51,16 @@ const App = () => {
   console.log('App component rendering with QueryClient:', queryClient);
   
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <ErrorBoundary>
         <AutoFillProvider>
           <SupabaseAuthProvider>
             <TooltipProvider>
               <Toaster />
               <LogoBackground />
               <BrowserRouter>
-              <Navigation />
-              <Routes>
+                <Navigation />
+                <Routes>
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/" element={<ProtectedRoute><LandingPage /></ProtectedRoute>} />
                 <Route path="/home" element={<Navigate to="/" replace />} />
@@ -89,13 +89,13 @@ const App = () => {
                 <Route path="/manage-inventory/kajon-export/export-manager" element={<ProtectedRoute><CoffeeExportManagerDashboard /></ProtectedRoute>} />
                 <Route path="/manage-inventory/kashari-farm" element={<ProtectedRoute><KashariFarmDashboard /></ProtectedRoute>} />
                 <Route path="/manage-inventory/bukomero-dairy" element={<ProtectedRoute><BukomeroDairyDashboard /></ProtectedRoute>} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </SupabaseAuthProvider>
-      </AutoFillProvider>
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </SupabaseAuthProvider>
+        </AutoFillProvider>
+      </ErrorBoundary>
     </QueryClientProvider>
-    </ErrorBoundary>
   );
 };
 

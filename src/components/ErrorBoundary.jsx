@@ -19,12 +19,18 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
           <Alert variant="destructive" className="max-w-lg">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Something went wrong</AlertTitle>
-            <AlertDescription>
-              {this.state.error?.message || 'An unexpected error occurred. Please refresh the page.'}
+            <AlertDescription className="space-y-3">
+              <p>{this.state.error?.message || 'An unexpected error occurred.'}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              >
+                Reload Page
+              </button>
             </AlertDescription>
           </Alert>
         </div>
