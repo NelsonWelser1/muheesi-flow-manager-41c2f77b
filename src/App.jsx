@@ -51,8 +51,8 @@ const App = () => {
   console.log('App component rendering with QueryClient:', queryClient);
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
         <AutoFillProvider>
           <SupabaseAuthProvider>
             <TooltipProvider>
@@ -94,8 +94,8 @@ const App = () => {
             </TooltipProvider>
           </SupabaseAuthProvider>
         </AutoFillProvider>
-      </ErrorBoundary>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
