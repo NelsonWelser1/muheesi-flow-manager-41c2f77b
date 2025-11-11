@@ -52,7 +52,7 @@ const RoleTemplates = () => {
         .from('role_templates')
         .select(`
           *,
-          created_by_profile:profiles!role_templates_created_by_fkey(full_name)
+          created_by_profile:profiles(full_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -532,7 +532,7 @@ const RoleTemplates = () => {
 
                 <div>
                   <p className="text-muted-foreground text-xs">
-                    Created by {template.created_by_profile.full_name}
+                    Created by {template.created_by_profile?.full_name || 'Unknown'}
                   </p>
                 </div>
               </div>
