@@ -27,6 +27,7 @@ import UserManagement from "./components/organization/users/UserManagement";
 import UserDetails from "./components/organization/users/UserDetails";
 import AssignRole from "./components/organization/users/AssignRole";
 import BulkUserOperations from "./components/organization/users/BulkUserOperations";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Create QueryClient with proper configuration
 const queryClient = new QueryClient({
@@ -43,13 +44,14 @@ const App = () => {
   console.log('App component rendering with QueryClient:', queryClient);
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <AutoFillProvider>
-        <SupabaseAuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <LogoBackground />
-            <BrowserRouter>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AutoFillProvider>
+          <SupabaseAuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <LogoBackground />
+              <BrowserRouter>
               <Navigation />
               <Routes>
                 <Route path="/auth" element={<AuthPage />} />
@@ -79,6 +81,7 @@ const App = () => {
         </SupabaseAuthProvider>
       </AutoFillProvider>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
