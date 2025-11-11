@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { useQueryClient } from '@tanstack/react-query';
 import { useCompanyStocks } from '@/hooks/useCompanyStocks';
 import KAJONCoffeeDetails from './KAJONCoffeeDetails';
 import KyalimaFarmersDetails from './KyalimaFarmersDetails';
