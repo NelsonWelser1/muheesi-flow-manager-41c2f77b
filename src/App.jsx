@@ -10,6 +10,7 @@ import LogoBackground from "./components/layout/LogoBackground";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AuthPage from "./pages/AuthPage";
 import LandingPage from "./pages/LandingPage";
+import DashboardPage from "./pages/DashboardPage";
 import ManageInventory from "./pages/ManageInventory";
 import ManageCompanies from "./pages/ManageCompanies";
 import CoffeeExportManagerDashboard from "./components/inventory/kajon/export-business/CoffeeExportManagerDashboard";
@@ -63,6 +64,7 @@ const App = () => {
                 <Routes>
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/" element={<ProtectedRoute><LandingPage /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                 <Route path="/home" element={<Navigate to="/" replace />} />
                 <Route path="/manage-inventory" element={<ProtectedRoute><ManageInventory /></ProtectedRoute>} />
                 <Route path="/manage-companies" element={<ProtectedRoute><ManageCompanies /></ProtectedRoute>} />
