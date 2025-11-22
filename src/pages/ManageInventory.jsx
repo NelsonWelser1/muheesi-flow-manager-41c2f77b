@@ -1,11 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import UpdateStock from '../components/inventory/UpdateStock';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Home, LogOut, Clock } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { useSupabaseAuth } from '@/integrations/supabase/auth';
+import { supabase } from '@/integrations/supabase/client';
 
 const companies = [{
   name: "Grand Berna Dairies",
@@ -42,11 +44,46 @@ const companies = [{
 
 const ManageInventory = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
+  const [currentUser, setCurrentUser] = useState({ name: "Loading...", role: "" });
   const navigate = useNavigate();
-  const currentUser = {
-    name: "John Doe",
-    role: "Inventory Manager"
-  };
+  const { session, logout } = useSupabaseAuth();
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!session?.user) return;
+
+      try {
+        // Fetch profile data
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        // Fetch user role
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+
+        setCurrentUser({
+          name: profile?.full_name || session.user.email || "User",
+          role: roleData?.role || "Staff"
+        });
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setCurrentUser({
+          name: session.user.email || "User",
+          role: "Staff"
+        });
+      }
+    };
+
+    fetchUserProfile();
+  }, [session]);
   
   const handleCompanyClick = company => {
     if (company.component === 'kashari-mixed-farm') {
@@ -91,7 +128,7 @@ const ManageInventory = () => {
               <Home className="h-4 w-4 mr-2" />
               Home
             </Button>
-            <Button variant="outline" onClick={() => navigate('/')}>
+            <Button variant="outline" onClick={logout}>
               <LogOut className="h-4 w-4 mr-2" />
               Log Out
             </Button>
