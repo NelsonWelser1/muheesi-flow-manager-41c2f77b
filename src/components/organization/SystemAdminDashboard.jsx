@@ -27,18 +27,20 @@ import {
   Factory
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useSystemMetrics } from '@/hooks/useSystemMetrics';
 
 const SystemAdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const { data: systemMetrics, isLoading } = useSystemMetrics();
   
-  const systemMetrics = {
-    totalUsers: 247,
-    activeCompanies: 3,
-    systemUptime: '99.8%',
-    dataStorage: '2.3 TB',
-    dailyTransactions: 1847,
-    securityAlerts: 3
+  const defaultMetrics = {
+    totalUsers: 0,
+    activeCompanies: 0,
+    systemUptime: '--',
+    dataStorage: '--',
+    dailyTransactions: 0,
+    securityAlerts: 0
   };
 
   const companyOverview = [
@@ -159,6 +161,8 @@ const SystemAdminDashboard = () => {
     }
   ];
 
+  const metrics = systemMetrics || defaultMetrics;
+
   const renderSystemMetrics = () => (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
       <Card>
@@ -166,7 +170,9 @@ const SystemAdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total Users</p>
-              <p className="text-2xl font-bold">{systemMetrics.totalUsers}</p>
+              <p className="text-2xl font-bold">
+                {isLoading ? '...' : metrics.totalUsers}
+              </p>
             </div>
             <Users className="h-8 w-8 text-primary" />
           </div>
@@ -178,7 +184,9 @@ const SystemAdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Companies</p>
-              <p className="text-2xl font-bold">{systemMetrics.activeCompanies}</p>
+              <p className="text-2xl font-bold">
+                {isLoading ? '...' : metrics.activeCompanies}
+              </p>
             </div>
             <Building2 className="h-8 w-8 text-secondary" />
           </div>
@@ -190,7 +198,9 @@ const SystemAdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Uptime</p>
-              <p className="text-2xl font-bold">{systemMetrics.systemUptime}</p>
+              <p className="text-2xl font-bold">
+                {isLoading ? '...' : metrics.systemUptime}
+              </p>
             </div>
             <Activity className="h-8 w-8 text-success" />
           </div>
@@ -202,7 +212,9 @@ const SystemAdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Storage</p>
-              <p className="text-2xl font-bold">{systemMetrics.dataStorage}</p>
+              <p className="text-2xl font-bold">
+                {isLoading ? '...' : metrics.dataStorage}
+              </p>
             </div>
             <Database className="h-8 w-8 text-accent" />
           </div>
@@ -214,7 +226,9 @@ const SystemAdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Transactions</p>
-              <p className="text-2xl font-bold">{systemMetrics.dailyTransactions}</p>
+              <p className="text-2xl font-bold">
+                {isLoading ? '...' : metrics.dailyTransactions}
+              </p>
             </div>
             <TrendingUp className="h-8 w-8 text-primary" />
           </div>
@@ -226,7 +240,9 @@ const SystemAdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Alerts</p>
-              <p className="text-2xl font-bold text-warning">{systemMetrics.securityAlerts}</p>
+              <p className="text-2xl font-bold text-warning">
+                {isLoading ? '...' : metrics.securityAlerts}
+              </p>
             </div>
             <AlertCircle className="h-8 w-8 text-warning" />
           </div>
