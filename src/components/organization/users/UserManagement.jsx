@@ -59,10 +59,52 @@ const UserManagement = () => {
     }
   });
 
-  // Get unique companies for filter (from all user roles)
-  const companies = [...new Set(
-    users?.flatMap(u => u.user_roles?.map(r => r.company)).filter(Boolean)
-  )];
+  // Fetch all unique companies across the system
+  const { data: allCompanies } = useQuery({
+    queryKey: ['all-companies'],
+    queryFn: async () => {
+      // Get companies from associations
+      const { data: associationsList, error: associationsError } = await supabase
+        .from('associations')
+        .select('association_name');
+
+      if (associationsError) throw associationsError;
+
+      // Get companies from user_roles
+      const { data: userRolesList, error: userRolesError } = await supabase
+        .from('user_roles')
+        .select('company');
+
+      if (userRolesError) throw userRolesError;
+
+      // Get companies from equipment_maintenance
+      const { data: equipmentList, error: equipmentError } = await supabase
+        .from('equipment_maintenance')
+        .select('company');
+
+      if (equipmentError) throw equipmentError;
+
+      // Combine and get unique companies
+      const uniqueCompanies = new Set();
+      
+      associationsList?.forEach(item => {
+        if (item.association_name) uniqueCompanies.add(item.association_name);
+      });
+      
+      userRolesList?.forEach(item => {
+        if (item.company) uniqueCompanies.add(item.company);
+      });
+      
+      equipmentList?.forEach(item => {
+        if (item.company) uniqueCompanies.add(item.company);
+      });
+
+      return Array.from(uniqueCompanies);
+    }
+  });
+
+  // Use all companies for display and filtering
+  const companies = allCompanies || [];
 
   // Filter users
   const filteredUsers = users?.filter(user => {
