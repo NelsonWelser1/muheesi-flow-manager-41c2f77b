@@ -84,22 +84,55 @@ const UserManagement = () => {
 
       if (equipmentError) throw equipmentError;
 
-      // Combine and get unique companies
+      // Get companies from ceo_dashboard_data
+      const { data: ceoDashboardList, error: ceoError } = await supabase
+        .from('ceo_dashboard_data')
+        .select('company');
+
+      if (ceoError) throw ceoError;
+
+      // Get companies from maintenance_records
+      const { data: maintenanceList, error: maintenanceError } = await supabase
+        .from('maintenance_records')
+        .select('company');
+
+      if (maintenanceError) throw maintenanceError;
+
+      // Combine and get unique companies (exclude generic/placeholder values)
       const uniqueCompanies = new Set();
+      const excludeList = ['all companies', 'all', 'system'];
       
       associationsList?.forEach(item => {
-        if (item.association_name) uniqueCompanies.add(item.association_name);
+        if (item.association_name && !excludeList.includes(item.association_name.toLowerCase())) {
+          uniqueCompanies.add(item.association_name);
+        }
       });
       
       userRolesList?.forEach(item => {
-        if (item.company) uniqueCompanies.add(item.company);
+        if (item.company && !excludeList.includes(item.company.toLowerCase())) {
+          uniqueCompanies.add(item.company);
+        }
       });
       
       equipmentList?.forEach(item => {
-        if (item.company) uniqueCompanies.add(item.company);
+        if (item.company && !excludeList.includes(item.company.toLowerCase())) {
+          uniqueCompanies.add(item.company);
+        }
       });
 
-      return Array.from(uniqueCompanies);
+      ceoDashboardList?.forEach(item => {
+        if (item.company && !excludeList.includes(item.company.toLowerCase())) {
+          uniqueCompanies.add(item.company);
+        }
+      });
+
+      maintenanceList?.forEach(item => {
+        if (item.company && !excludeList.includes(item.company.toLowerCase())) {
+          uniqueCompanies.add(item.company);
+        }
+      });
+
+      return Array.from(uniqueCompanies).sort();
     }
   });
 
