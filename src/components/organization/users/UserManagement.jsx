@@ -36,23 +36,25 @@ const UserManagement = () => {
   const { data: users, isLoading } = useQuery({
     queryKey: ['all-users'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles!user_roles_user_id_fkey (
-            role,
-            company,
-            assigned_at
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      
-      return data?.map(user => ({
+      if (profilesError) throw profilesError;
+
+      // Fetch all user roles
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+
+      if (rolesError) throw rolesError;
+
+      // Combine the data
+      return profiles?.map(user => ({
         ...user,
-        user_roles: user.user_roles?.[0] || null
+        user_roles: roles?.find(r => r.user_id === user.id) || null
       }));
     }
   });
