@@ -13,12 +13,44 @@ export const useSystemMetrics = () => {
 
         if (usersError) throw usersError;
 
-        // Fetch active companies (associations)
-        const { count: activeCompanies, error: companiesError } = await supabase
+        // Fetch ALL distinct companies across the system
+        // Get companies from associations
+        const { data: associationsList, error: associationsError } = await supabase
           .from('associations')
-          .select('*', { count: 'exact', head: true });
+          .select('association_name');
 
-        if (companiesError) throw companiesError;
+        if (associationsError) throw associationsError;
+
+        // Get companies from user_roles
+        const { data: userRolesList, error: userRolesError } = await supabase
+          .from('user_roles')
+          .select('company');
+
+        if (userRolesError) throw userRolesError;
+
+        // Get companies from equipment_maintenance
+        const { data: equipmentList, error: equipmentError } = await supabase
+          .from('equipment_maintenance')
+          .select('company');
+
+        if (equipmentError) throw equipmentError;
+
+        // Combine and get unique companies
+        const allCompanies = new Set();
+        
+        associationsList?.forEach(item => {
+          if (item.association_name) allCompanies.add(item.association_name);
+        });
+        
+        userRolesList?.forEach(item => {
+          if (item.company) allCompanies.add(item.company);
+        });
+        
+        equipmentList?.forEach(item => {
+          if (item.company) allCompanies.add(item.company);
+        });
+
+        const activeCompanies = allCompanies.size;
 
         // Fetch recent transactions count (last 24 hours)
         const twentyFourHoursAgo = new Date();
