@@ -23,7 +23,15 @@ const AuthPage = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate('/');
+        // Check if user is admin and redirect accordingly
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'sysadmin')
+          .maybeSingle();
+        
+        navigate(roleData ? '/dashboard' : '/');
       }
     };
     checkUser();
@@ -43,8 +51,16 @@ const AuthPage = () => {
 
         if (error) throw error;
 
+        // Check if user is admin and redirect accordingly
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .eq('role', 'sysadmin')
+          .maybeSingle();
+
         toast.success("Welcome back!");
-        navigate('/');
+        navigate(roleData ? '/dashboard' : '/');
       } else {
         // Signup
         if (!formData.fullName.trim()) {
@@ -70,8 +86,19 @@ const AuthPage = () => {
 
         toast.success("Account created! Welcome to the system.");
         
-        // Auto-login after signup (since email confirmation is disabled)
-        navigate('/');
+        // Check if user is admin and redirect accordingly
+        if (data?.user) {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.user.id)
+            .eq('role', 'sysadmin')
+            .maybeSingle();
+          
+          navigate(roleData ? '/dashboard' : '/');
+        } else {
+          navigate('/');
+        }
       }
     } catch (error) {
       console.error('Auth error:', error);
