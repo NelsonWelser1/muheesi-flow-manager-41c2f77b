@@ -1,43 +1,70 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useCompanyStocks } from '@/hooks/useCompanyStocks';
 import KAJONCoffeeDetails from './KAJONCoffeeDetails';
 import KyalimaFarmersDetails from './KyalimaFarmersDetails';
 import CompanyCard from './companies/CompanyCard';
 import GrandBernaDetails from './companies/GrandBernaDetails';
 
-const companies = [{
-  name: 'Grand Berna Dairies',
-  description: 'Dairy Products',
-  features: ['Fresh Milk', 'Processed Milk', 'Cheese', 'Yogurt', 'Meat (Beef, Goat, Pork, Poultry)', 'Eggs'],
-  email: 'grandbernadairies.sales@gmail.com',
-  phones: ['+256 776 670680', '+256 757 757517', '+256 787 121022']
-}, {
-  name: 'KAJON Coffee Limited',
-  description: 'Coffee Products',
-  features: [{
-    name: 'Coffee Types',
-    options: ['Robusta', 'Arabica']
-  }],
-  email: 'kajoncoffeelimited@gmail.com',
-  phones: ['+256 776 670680', '+256 757 757517']
-}, {
-  name: 'Kyalima Farmers Limited',
-  description: 'Agricultural Products',
-  features: [{
-    name: 'Grains',
-    options: ['Rice', 'Maize', 'Hulled white sesame', 'Soybean', 'Cocoa']
-  }, {
-    name: 'Livestock',
-    options: ['Bulls', 'Heifers', 'Mothers', 'Calves']
-  }],
-  email: 'kyalimafarmersdirectors@gmail.com',
-  phones: ['+256 776 670680', '+256 757 757517']
-}];
-
 const CompanyShowcase = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
+  
+  // Fetch companies from database
+  const { data: dbCompanies, isLoading: companiesLoading } = useQuery({
+    queryKey: ['showcase-companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .order('company_name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Create companies array from database with contact info
+  const companies = dbCompanies?.slice(0, 3).map(company => ({
+    name: company.company_name,
+    description: company.description?.split('.')[0] || company.company_type,
+    features: getCompanyFeatures(company.company_name),
+    email: getCompanyEmail(company.company_name),
+    phones: getCompanyPhones(company.company_name, company.contact_phone)
+  })) || [];
+
+  // Helper functions to get additional company details
+  function getCompanyFeatures(companyName) {
+    const features = {
+      'Grand Berna Dairies': ['Fresh Milk', 'Processed Milk', 'Cheese', 'Yogurt', 'Meat (Beef, Goat, Pork, Poultry)', 'Eggs'],
+      'KAJON Coffee Limited': [{name: 'Coffee Types', options: ['Robusta', 'Arabica']}],
+      'Kyalima Farmers Limited': [
+        {name: 'Grains', options: ['Rice', 'Maize', 'Hulled white sesame', 'Soybean', 'Cocoa']},
+        {name: 'Livestock', options: ['Bulls', 'Heifers', 'Mothers', 'Calves']}
+      ]
+    };
+    return features[companyName] || [];
+  }
+
+  function getCompanyEmail(companyName) {
+    const emails = {
+      'Grand Berna Dairies': 'grandbernadairies.sales@gmail.com',
+      'KAJON Coffee Limited': 'kajoncoffeelimited@gmail.com',
+      'Kyalima Farmers Limited': 'kyalimafarmersdirectors@gmail.com'
+    };
+    return emails[companyName] || '';
+  }
+
+  function getCompanyPhones(companyName, dbPhone) {
+    if (dbPhone) return [dbPhone];
+    const phones = {
+      'Grand Berna Dairies': ['+256 776 670680', '+256 757 757517', '+256 787 121022'],
+      'KAJON Coffee Limited': ['+256 776 670680', '+256 757 757517'],
+      'Kyalima Farmers Limited': ['+256 776 670680', '+256 757 757517']
+    };
+    return phones[companyName] || [];
+  }
   
   // Individual queries for each company
   const {
