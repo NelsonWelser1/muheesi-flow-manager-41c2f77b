@@ -13,77 +13,14 @@ export const useSystemMetrics = () => {
 
         if (usersError) throw usersError;
 
-        // Fetch ALL distinct companies across the system
-        // Get companies from associations
-        const { data: associationsList, error: associationsError } = await supabase
-          .from('associations')
-          .select('association_name');
+        // Fetch ALL distinct companies from the companies table
+        const { data: companiesList, error: companiesError } = await supabase
+          .from('companies')
+          .select('company_name');
 
-        if (associationsError) throw associationsError;
+        if (companiesError) throw companiesError;
 
-        // Get companies from user_roles
-        const { data: userRolesList, error: userRolesError } = await supabase
-          .from('user_roles')
-          .select('company');
-
-        if (userRolesError) throw userRolesError;
-
-        // Get companies from equipment_maintenance
-        const { data: equipmentList, error: equipmentError } = await supabase
-          .from('equipment_maintenance')
-          .select('company');
-
-        if (equipmentError) throw equipmentError;
-
-        // Get companies from ceo_dashboard_data
-        const { data: ceoDashboardList, error: ceoError } = await supabase
-          .from('ceo_dashboard_data')
-          .select('company');
-
-        if (ceoError) throw ceoError;
-
-        // Get companies from maintenance_records
-        const { data: maintenanceList, error: maintenanceError } = await supabase
-          .from('maintenance_records')
-          .select('company');
-
-        if (maintenanceError) throw maintenanceError;
-
-        // Combine and get unique companies (exclude generic/placeholder values)
-        const allCompanies = new Set();
-        const excludeList = ['all companies', 'all', 'system'];
-        
-        associationsList?.forEach(item => {
-          if (item.association_name && !excludeList.includes(item.association_name.toLowerCase())) {
-            allCompanies.add(item.association_name);
-          }
-        });
-        
-        userRolesList?.forEach(item => {
-          if (item.company && !excludeList.includes(item.company.toLowerCase())) {
-            allCompanies.add(item.company);
-          }
-        });
-        
-        equipmentList?.forEach(item => {
-          if (item.company && !excludeList.includes(item.company.toLowerCase())) {
-            allCompanies.add(item.company);
-          }
-        });
-
-        ceoDashboardList?.forEach(item => {
-          if (item.company && !excludeList.includes(item.company.toLowerCase())) {
-            allCompanies.add(item.company);
-          }
-        });
-
-        maintenanceList?.forEach(item => {
-          if (item.company && !excludeList.includes(item.company.toLowerCase())) {
-            allCompanies.add(item.company);
-          }
-        });
-
-        const activeCompanies = allCompanies.size;
+        const activeCompanies = companiesList?.length || 0;
 
         // Fetch recent transactions count (last 24 hours)
         const twentyFourHoursAgo = new Date();

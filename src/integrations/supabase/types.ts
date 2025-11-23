@@ -1296,6 +1296,45 @@ export type Database = {
         }
         Relationships: []
       }
+      companies: {
+        Row: {
+          company_name: string
+          company_type: string | null
+          contact_phone: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          location: string | null
+          manager_name: string | null
+          metadata: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_name: string
+          company_type?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          manager_name?: string | null
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_name?: string
+          company_type?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          manager_name?: string | null
+          metadata?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       contract_documents: {
         Row: {
           client: string | null
