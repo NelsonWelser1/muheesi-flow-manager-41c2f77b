@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import UpdateStock from '../components/inventory/UpdateStock';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,44 +9,49 @@ import { format } from 'date-fns';
 import { useSupabaseAuth } from '@/integrations/supabase/auth';
 import { supabase } from '@/integrations/supabase/client';
 
-const companies = [{
-  name: "Grand Berna Dairies",
-  description: "Raw Milk, Processed Milk, Cheese, Yogurt, Packed Meat of Beef, Pork, and Goat. Factories in Kyiboga and Mbarara with various outlets.",
-  component: "grand-berna"
-}, {
-  name: "KAJON Coffee Limited",
-  description: "Robusta and Arabica Coffee, Kakyinga Coffee Farm, Kakyinga Factory, JBER, and additional stores and projects.",
-  component: "kajon-coffee"
-}, {
-  name: "Kyalima Farmers Limited",
-  description: "Assets and Cooperations, Agri-Business.",
-  component: "kyalima-farmers"
-}, {
-  name: "Kashari Mixed Farm",
-  description: "Integrated farm in Mbarara managing dairy products, livestock, banana plantation, and scholarship programs.",
-  component: "kashari-mixed-farm",
-  contact: "+256 782 222993",
-  manager: "Asiimwe Daniel",
-  location: "Mbarara"
-}, {
-  name: "Bukomero Dairy Farm",
-  description: "Specialized dairy farm focusing on milk production, livestock management, silage making, and comprehensive financial tracking.",
-  component: "bukomero-dairy",
-  manager: "Manager Boaz",
-  contact: "+256 772 674060",
-  location: "Bukomero, Kyiboga District",
-  financials: {
-    milkSales: "UGX 3,140,000",
-    livestockSales: "UGX 67,900,000",
-    expenses: "UGX 2,000,000"
-  }
-}];
 
 const ManageInventory = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [currentUser, setCurrentUser] = useState({ name: "Loading...", role: "" });
   const navigate = useNavigate();
   const { session, logout } = useSupabaseAuth();
+
+  // Fetch companies from database
+  const { data: dbCompanies, isLoading: companiesLoading } = useQuery({
+    queryKey: ['companies-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .order('company_name');
+      
+      if (error) throw error;
+      
+      // Map database companies to component format
+      return data?.map(company => ({
+        name: company.company_name,
+        description: company.description,
+        component: getComponentName(company.company_name),
+        manager: company.manager_name,
+        contact: company.contact_phone,
+        location: company.location
+      })) || [];
+    }
+  });
+
+  // Helper function to map company name to component identifier
+  const getComponentName = (companyName) => {
+    const mapping = {
+      'Grand Berna Dairies': 'grand-berna',
+      'KAJON Coffee Limited': 'kajon-coffee',
+      'Kyalima Farmers Limited': 'kyalima-farmers',
+      'Kashari Mixed Farm': 'kashari-mixed-farm',
+      'Bukomero Dairy Farm': 'bukomero-dairy'
+    };
+    return mapping[companyName] || companyName.toLowerCase().replace(/\s+/g, '-');
+  };
+
+  const companies = dbCompanies || [];
 
   useEffect(() => {
     const fetchUserProfile = async () => {
