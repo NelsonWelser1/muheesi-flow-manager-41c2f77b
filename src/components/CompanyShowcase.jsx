@@ -26,13 +26,14 @@ const CompanyShowcase = () => {
   });
 
   // Create companies array from database with contact info
-  const companies = dbCompanies?.slice(0, 3).map(company => ({
+  // Show first 3 companies or all if less than 3
+  const companies = dbCompanies?.map(company => ({
     name: company.company_name,
-    description: company.description?.split('.')[0] || company.company_type,
+    description: company.description?.split('.')[0] || company.company_type || 'Leading business enterprise',
     features: getCompanyFeatures(company.company_name),
     email: getCompanyEmail(company.company_name),
     phones: getCompanyPhones(company.company_name, company.contact_phone)
-  })) || [];
+  })).slice(0, 3) || [];
 
   // Helper functions to get additional company details
   function getCompanyFeatures(companyName) {
@@ -93,8 +94,11 @@ const CompanyShowcase = () => {
   const getStocksForCompany = companyName => {
     const stocks = stocksByCompany[companyName] || [];
     const result = {};
+    
     stocks.forEach(item => {
-      result[item.product_name] = `${item.quantity}${item.unit}`;
+      if (item && item.product_name) {
+        result[item.product_name] = `${item.quantity}${item.unit}`;
+      }
     });
 
     // Return default data if no stocks found in the database
@@ -111,27 +115,25 @@ const CompanyShowcase = () => {
           return {
             'Robusta Coffee: FAQ': '2000kg',
             'Robusta Coffee: Screen 18': '1500kg',
-            'Robusta Coffee: Screen 15': '1200kg',
-            'Robusta Coffee: Screen 12': '1000kg',
-            'Robusta Coffee: Organic Robusta': '800kg',
-            'Arabica Coffee: Bugisu AA': '1500kg',
-            'Arabica Coffee: Bugisu A': '1300kg',
-            'Arabica Coffee: Bugisu PB': '1100kg',
-            'Arabica Coffee: Bugisu B': '900kg',
-            'Arabica Coffee: DRUGAR': '700kg',
-            'Arabica Coffee: Parchment Arabica': '600kg'
+            'Arabica Coffee: Bugisu AA': '1500kg'
           };
         case 'Kyalima Farmers Limited':
           return {
             'Rice': '5000kg',
             'Maize': '20000MT',
-            'Hulled white sesame': '2000MT',
-            'Soybean': '50000MT',
-            'Cocoa': '500MT',
             'Bulls': '50 heads',
-            'Heifers': '40 heads',
-            'Mothers': '30 heads',
-            'Calves': '20 heads'
+            'Heifers': '40 heads'
+          };
+        case 'Kashari Mixed Farm':
+          return {
+            'Daily Milk Production': '500L',
+            'Bananas': '1000kg',
+            'Livestock': '100 heads'
+          };
+        case 'Bukomero Dairy Farm':
+          return {
+            'Weekly Milk Production': '3500L',
+            'Dairy Cattle': '50 heads'
           };
         default:
           return {};
@@ -146,17 +148,28 @@ const CompanyShowcase = () => {
   return (
     <div data-select-id="company-showcase-container" className="py-4 sm:py-8 bg-green-50">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-select-id="companies-grid">
-          {companies.map(company => 
-            <CompanyCard 
-              key={company.name} 
-              company={company} 
-              stockData={getStocksForCompany(company.name)} 
-              isLoading={isLoading} 
-              onViewDetailsClick={setSelectedCompany} 
-            />
-          )}
-        </div>
+        {companiesLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : companies.length > 0 ? (
+          <div className="mt-4 sm:mt-8 space-y-4 sm:space-y-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-select-id="companies-grid">
+            {companies.map(company => 
+              <CompanyCard 
+                key={company.name} 
+                company={company} 
+                stockData={getStocksForCompany(company.name)} 
+                isLoading={isLoading} 
+                onViewDetailsClick={setSelectedCompany} 
+              />
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">No Companies Available</h3>
+            <p className="text-gray-500">Check back soon for our business portfolio.</p>
+          </div>
+        )}
       </div>
       
       {selectedCompany === 'KAJON Coffee Limited' && <KAJONCoffeeDetails onClose={() => setSelectedCompany(null)} />}
