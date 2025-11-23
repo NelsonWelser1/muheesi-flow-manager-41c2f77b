@@ -51,16 +51,18 @@ const UserManagement = () => {
 
       if (rolesError) throw rolesError;
 
-      // Combine the data
+      // Combine the data - get ALL roles for each user
       return profiles?.map(user => ({
         ...user,
-        user_roles: roles?.find(r => r.user_id === user.id) || null
+        user_roles: roles?.filter(r => r.user_id === user.id) || []
       }));
     }
   });
 
-  // Get unique companies for filter
-  const companies = [...new Set(users?.map(u => u.user_roles?.company).filter(Boolean))];
+  // Get unique companies for filter (from all user roles)
+  const companies = [...new Set(
+    users?.flatMap(u => u.user_roles?.map(r => r.company)).filter(Boolean)
+  )];
 
   // Filter users
   const filteredUsers = users?.filter(user => {
@@ -68,8 +70,10 @@ const UserManagement = () => {
       user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesRole = roleFilter === 'all' || user.user_roles?.role === roleFilter;
-    const matchesCompany = companyFilter === 'all' || user.user_roles?.company === companyFilter;
+    const matchesRole = roleFilter === 'all' || 
+      user.user_roles?.some(r => r.role === roleFilter);
+    const matchesCompany = companyFilter === 'all' || 
+      user.user_roles?.some(r => r.company === companyFilter);
 
     return matchesSearch && matchesRole && matchesCompany;
   });
@@ -157,7 +161,7 @@ const UserManagement = () => {
             <div>
               <p className="text-sm text-muted-foreground">Admins & Managers</p>
               <p className="text-2xl font-bold">
-                {users?.filter(u => ['sysadmin', 'manager'].includes(u.user_roles?.role)).length || 0}
+                {users?.filter(u => u.user_roles?.some(r => ['sysadmin', 'manager'].includes(r.role))).length || 0}
               </p>
             </div>
               <Shield className="h-8 w-8 text-accent" />
@@ -278,15 +282,33 @@ const UserManagement = () => {
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={getRoleBadgeColor(user.user_roles?.role)}>
-                        {user.user_roles?.role || 'No role'}
-                      </Badge>
+                      {user.user_roles?.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {user.user_roles.map((roleAssignment, idx) => (
+                            <Badge 
+                              key={idx} 
+                              variant="outline" 
+                              className={getRoleBadgeColor(roleAssignment.role)}
+                            >
+                              {roleAssignment.role}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted">
+                          No role
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>
-                      {user.user_roles?.company ? (
-                        <div className="flex items-center gap-1">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{user.user_roles.company}</span>
+                      {user.user_roles?.length > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          {user.user_roles.map((roleAssignment, idx) => (
+                            <div key={idx} className="flex items-center gap-1">
+                              <Building2 className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-xs">{roleAssignment.company}</span>
+                            </div>
+                          ))}
                         </div>
                       ) : (
                         <span className="text-sm text-muted-foreground">No company</span>
