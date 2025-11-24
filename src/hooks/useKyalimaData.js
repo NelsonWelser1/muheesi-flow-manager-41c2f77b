@@ -11,11 +11,11 @@ export const useKyalimaData = () => {
   const fetchFarmMetrics = async () => {
     setIsLoading(true);
     try {
-      // Fetch all cattle for Kyalima farm with type breakdown
+      // Fetch all cattle for Bukomero farm (under Kyalima Farmers Limited)
       const { data: allCattle, error: cattleError } = await supabase
         .from('cattle_inventory')
         .select('*')
-        .eq('farm_id', 'kyalima');
+        .eq('farm_id', 'bukomero');
 
       if (cattleError) throw cattleError;
 
@@ -30,7 +30,7 @@ export const useKyalimaData = () => {
       const { data: fatteningData, error: fatteningError } = await supabase
         .from('cattle_fattening')
         .select('*')
-        .eq('farm_id', 'kyalima')
+        .eq('farm_id', 'bukomero')
         .eq('status', 'active');
 
       if (fatteningError) throw fatteningError;
@@ -42,7 +42,7 @@ export const useKyalimaData = () => {
       const { data: milkData, error: milkError } = await supabase
         .from('kashari_milk_production')
         .select('volume, date')
-        .eq('location', 'Kyalima')
+        .eq('location', 'Bukomero')
         .gte('date', sevenDaysAgo.toISOString().split('T')[0])
         .order('date', { ascending: false });
 
@@ -72,7 +72,7 @@ export const useKyalimaData = () => {
       const { data: staffData, error: staffError } = await supabase
         .from('farm_staff')
         .select('id')
-        .eq('farm_id', 'kyalima')
+        .eq('farm_id', 'bukomero')
         .eq('status', 'active');
 
       if (staffError) throw staffError;
@@ -167,7 +167,7 @@ export const useKyalimaData = () => {
         event: '*', 
         schema: 'public', 
         table: 'cattle_inventory',
-        filter: 'farm_id=eq.kyalima'
+        filter: 'farm_id=eq.bukomero'
       }, () => {
         fetchFarmMetrics();
       })
@@ -179,7 +179,7 @@ export const useKyalimaData = () => {
         event: '*', 
         schema: 'public', 
         table: 'kashari_milk_production',
-        filter: 'location=eq.Kyalima'
+        filter: 'location=eq.Bukomero'
       }, () => {
         fetchFarmMetrics();
       })
@@ -191,7 +191,7 @@ export const useKyalimaData = () => {
         event: '*', 
         schema: 'public', 
         table: 'cattle_fattening',
-        filter: 'farm_id=eq.kyalima'
+        filter: 'farm_id=eq.bukomero'
       }, () => {
         fetchFarmMetrics();
       })
