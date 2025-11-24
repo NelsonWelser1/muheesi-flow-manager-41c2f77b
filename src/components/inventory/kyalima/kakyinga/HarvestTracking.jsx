@@ -8,15 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Coffee, Plus, Edit, Trash2, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/supabase';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { format } from 'date-fns';
-import KakyingaExportActions from './KakyingaExportActions';
-import { 
-  processHarvestData,
-  exportHarvestsToPDF,
-  exportHarvestsToExcel,
-  exportHarvestsToCSV
-} from '@/utils/kakyinga/kakyingaExport';
 
 const HarvestTracking = () => {
   const { toast } = useToast();
@@ -153,117 +146,102 @@ const HarvestTracking = () => {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Coffee className="h-5 w-5" />
-                Fresh Coffee Harvest Tracking
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Total Harvested: {totalHarvested.toFixed(2)} kg
-              </p>
-            </div>
-            <Dialog open={isDialogOpen} onOpenChange={(open) => {
-              setIsDialogOpen(open);
-              if (!open) resetForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Record Harvest
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>{editingHarvest ? 'Edit Harvest Record' : 'Record Fresh Coffee Harvest'}</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Harvest Date *</Label>
-                      <Input
-                        type="date"
-                        value={formData.harvest_date}
-                        onChange={(e) => setFormData({ ...formData, harvest_date: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Quantity (kg) *</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={formData.quantity_kg}
-                        onChange={(e) => setFormData({ ...formData, quantity_kg: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Harvester Name *</Label>
-                      <Input
-                        value={formData.harvester_name}
-                        onChange={(e) => setFormData({ ...formData, harvester_name: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Field Section *</Label>
-                      <Input
-                        value={formData.field_section}
-                        onChange={(e) => setFormData({ ...formData, field_section: e.target.value })}
-                        placeholder="e.g., Section A, North Field"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Quality Grade *</Label>
-                      <Select value={formData.quality_grade} onValueChange={(value) => setFormData({ ...formData, quality_grade: value })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select grade" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="premium">Premium</SelectItem>
-                          <SelectItem value="grade_a">Grade A</SelectItem>
-                          <SelectItem value="grade_b">Grade B</SelectItem>
-                          <SelectItem value="standard">Standard</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Notes</Label>
-                    <Input
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      placeholder="Additional observations or remarks"
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit">
-                      {editingHarvest ? 'Update' : 'Record'} Harvest
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          <KakyingaExportActions
-            data={harvests}
-            recordType="Harvest Records"
-            defaultFileName="kakyinga-harvests"
-            showDateFilter={true}
-            processDataFn={processHarvestData}
-            exportPdfFn={exportHarvestsToPDF}
-            exportExcelFn={exportHarvestsToExcel}
-            exportCsvFn={exportHarvestsToCSV}
-          />
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <Coffee className="h-5 w-5" />
+            Fresh Coffee Harvest Tracking
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Total Harvested: {totalHarvested.toFixed(2)} kg
+          </p>
         </div>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) resetForm();
+        }}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Record Harvest
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{editingHarvest ? 'Edit Harvest Record' : 'Record Fresh Coffee Harvest'}</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Harvest Date *</Label>
+                  <Input
+                    type="date"
+                    value={formData.harvest_date}
+                    onChange={(e) => setFormData({ ...formData, harvest_date: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Quantity (kg) *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.quantity_kg}
+                    onChange={(e) => setFormData({ ...formData, quantity_kg: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Harvester Name *</Label>
+                  <Input
+                    value={formData.harvester_name}
+                    onChange={(e) => setFormData({ ...formData, harvester_name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Field Section *</Label>
+                  <Input
+                    value={formData.field_section}
+                    onChange={(e) => setFormData({ ...formData, field_section: e.target.value })}
+                    placeholder="e.g., Section A, North Field"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Quality Grade *</Label>
+                  <Select value={formData.quality_grade} onValueChange={(value) => setFormData({ ...formData, quality_grade: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select grade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="premium">Premium</SelectItem>
+                      <SelectItem value="grade_a">Grade A</SelectItem>
+                      <SelectItem value="grade_b">Grade B</SelectItem>
+                      <SelectItem value="standard">Standard</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Input
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Additional observations or remarks"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  {editingHarvest ? 'Update' : 'Record'} Harvest
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent>
         <Table>

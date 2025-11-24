@@ -9,15 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ClipboardList, Plus, Edit, Trash2, Calendar, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/supabase';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { format } from 'date-fns';
-import KakyingaExportActions from './KakyingaExportActions';
-import { 
-  processRequisitionData,
-  exportRequisitionsToPDF,
-  exportRequisitionsToExcel,
-  exportRequisitionsToCSV
-} from '@/utils/kakyinga/kakyingaExport';
 
 const RequisitionSystem = () => {
   const { toast } = useToast();
@@ -245,146 +238,131 @@ const RequisitionSystem = () => {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5" />
-              Requisition System
-            </CardTitle>
-            <Dialog open={isDialogOpen} onOpenChange={(open) => {
-              setIsDialogOpen(open);
-              if (!open) resetForm();
-            }}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  New Requisition
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <ClipboardList className="h-5 w-5" />
+          Requisition System
+        </CardTitle>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) resetForm();
+        }}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Requisition
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingReq ? 'Edit Requisition' : 'New Requisition Request'}</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Request Date *</Label>
+                  <Input
+                    type="date"
+                    value={formData.request_date}
+                    onChange={(e) => setFormData({ ...formData, request_date: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Requested By *</Label>
+                  <Input
+                    value={formData.requested_by}
+                    onChange={(e) => setFormData({ ...formData, requested_by: e.target.value })}
+                    placeholder="Your name"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Category *</Label>
+                  <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="food">Food & Provisions</SelectItem>
+                      <SelectItem value="tools">Tools & Equipment</SelectItem>
+                      <SelectItem value="fuel">Fuel & Energy</SelectItem>
+                      <SelectItem value="repair_parts">Repair Parts</SelectItem>
+                      <SelectItem value="safety">Safety Equipment</SelectItem>
+                      <SelectItem value="cleaning">Cleaning Supplies</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Item Name *</Label>
+                  <Input
+                    value={formData.item_name}
+                    onChange={(e) => setFormData({ ...formData, item_name: e.target.value })}
+                    placeholder="Specific item needed"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Quantity *</Label>
+                  <Input
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    placeholder="e.g., 5 bags, 20 liters"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Priority *</Label>
+                  <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Estimated Cost (UGX)</Label>
+                  <Input
+                    type="number"
+                    value={formData.estimated_cost}
+                    onChange={(e) => setFormData({ ...formData, estimated_cost: e.target.value })}
+                    placeholder="Approximate cost"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Justification *</Label>
+                <Input
+                  value={formData.justification}
+                  onChange={(e) => setFormData({ ...formData, justification: e.target.value })}
+                  placeholder="Why is this item needed?"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Additional Notes</Label>
+                <Input
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Any other relevant information"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>{editingReq ? 'Edit Requisition' : 'New Requisition Request'}</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Request Date *</Label>
-                      <Input
-                        type="date"
-                        value={formData.request_date}
-                        onChange={(e) => setFormData({ ...formData, request_date: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Requested By *</Label>
-                      <Input
-                        value={formData.requested_by}
-                        onChange={(e) => setFormData({ ...formData, requested_by: e.target.value })}
-                        placeholder="Your name"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Category *</Label>
-                      <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="food">Food & Provisions</SelectItem>
-                          <SelectItem value="tools">Tools & Equipment</SelectItem>
-                          <SelectItem value="fuel">Fuel & Energy</SelectItem>
-                          <SelectItem value="repair_parts">Repair Parts</SelectItem>
-                          <SelectItem value="safety">Safety Equipment</SelectItem>
-                          <SelectItem value="cleaning">Cleaning Supplies</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Item Name *</Label>
-                      <Input
-                        value={formData.item_name}
-                        onChange={(e) => setFormData({ ...formData, item_name: e.target.value })}
-                        placeholder="Specific item needed"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Quantity *</Label>
-                      <Input
-                        value={formData.quantity}
-                        onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                        placeholder="e.g., 5 bags, 20 liters"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Priority *</Label>
-                      <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Estimated Cost (UGX)</Label>
-                      <Input
-                        type="number"
-                        value={formData.estimated_cost}
-                        onChange={(e) => setFormData({ ...formData, estimated_cost: e.target.value })}
-                        placeholder="Approximate cost"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Justification *</Label>
-                    <Input
-                      value={formData.justification}
-                      onChange={(e) => setFormData({ ...formData, justification: e.target.value })}
-                      placeholder="Why is this item needed?"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Additional Notes</Label>
-                    <Input
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      placeholder="Any other relevant information"
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit">
-                      {editingReq ? 'Update' : 'Submit'} Requisition
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          <KakyingaExportActions
-            data={requisitions}
-            recordType="Requisitions"
-            defaultFileName="kakyinga-requisitions"
-            showDateFilter={true}
-            processDataFn={processRequisitionData}
-            exportPdfFn={exportRequisitionsToPDF}
-            exportExcelFn={exportRequisitionsToExcel}
-            exportCsvFn={exportRequisitionsToCSV}
-          />
-        </div>
+                <Button type="submit">
+                  {editingReq ? 'Update' : 'Submit'} Requisition
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent>
         <Table>
