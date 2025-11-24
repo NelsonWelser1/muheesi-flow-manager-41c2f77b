@@ -2286,6 +2286,237 @@ export type Database = {
         }
         Relationships: []
       }
+      kakyinga_coffee_sales: {
+        Row: {
+          buyer_contact: string | null
+          buyer_name: string
+          created_at: string | null
+          destination: string
+          id: string
+          money_received_by: string
+          notes: string | null
+          payment_method: string
+          price_per_kg: number
+          quality_grade: string
+          quantity_kg: number
+          sale_date: string
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          buyer_contact?: string | null
+          buyer_name: string
+          created_at?: string | null
+          destination: string
+          id?: string
+          money_received_by: string
+          notes?: string | null
+          payment_method: string
+          price_per_kg: number
+          quality_grade: string
+          quantity_kg: number
+          sale_date: string
+          total_amount: number
+          updated_at?: string | null
+        }
+        Update: {
+          buyer_contact?: string | null
+          buyer_name?: string
+          created_at?: string | null
+          destination?: string
+          id?: string
+          money_received_by?: string
+          notes?: string | null
+          payment_method?: string
+          price_per_kg?: number
+          quality_grade?: string
+          quantity_kg?: number
+          sale_date?: string
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      kakyinga_dry_coffee_stock: {
+        Row: {
+          batch_number: string | null
+          created_at: string | null
+          entry_date: string
+          id: string
+          location: string
+          moisture_content: number | null
+          notes: string | null
+          quality_grade: string
+          quantity_kg: number
+          source: string
+          updated_at: string | null
+        }
+        Insert: {
+          batch_number?: string | null
+          created_at?: string | null
+          entry_date: string
+          id?: string
+          location: string
+          moisture_content?: number | null
+          notes?: string | null
+          quality_grade: string
+          quantity_kg: number
+          source: string
+          updated_at?: string | null
+        }
+        Update: {
+          batch_number?: string | null
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          location?: string
+          moisture_content?: number | null
+          notes?: string | null
+          quality_grade?: string
+          quantity_kg?: number
+          source?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      kakyinga_employees: {
+        Row: {
+          created_at: string | null
+          department: string
+          employee_id: string
+          full_name: string
+          hire_date: string
+          id: string
+          notes: string | null
+          phone: string | null
+          position: string
+          salary: number | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department: string
+          employee_id: string
+          full_name: string
+          hire_date: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          position: string
+          salary?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string
+          employee_id?: string
+          full_name?: string
+          hire_date?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          position?: string
+          salary?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      kakyinga_fresh_harvest: {
+        Row: {
+          created_at: string | null
+          field_section: string
+          harvest_date: string
+          harvester_name: string
+          id: string
+          notes: string | null
+          quality_grade: string
+          quantity_kg: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          field_section: string
+          harvest_date: string
+          harvester_name: string
+          id?: string
+          notes?: string | null
+          quality_grade: string
+          quantity_kg: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          field_section?: string
+          harvest_date?: string
+          harvester_name?: string
+          id?: string
+          notes?: string | null
+          quality_grade?: string
+          quantity_kg?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      kakyinga_requisitions: {
+        Row: {
+          approved_by: string | null
+          approved_date: string | null
+          category: string
+          created_at: string | null
+          estimated_cost: number | null
+          id: string
+          item_name: string
+          justification: string
+          notes: string | null
+          priority: string
+          quantity: string
+          request_date: string
+          requested_by: string
+          requisition_number: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          approved_by?: string | null
+          approved_date?: string | null
+          category: string
+          created_at?: string | null
+          estimated_cost?: number | null
+          id?: string
+          item_name: string
+          justification: string
+          notes?: string | null
+          priority?: string
+          quantity: string
+          request_date: string
+          requested_by: string
+          requisition_number: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          approved_by?: string | null
+          approved_date?: string | null
+          category?: string
+          created_at?: string | null
+          estimated_cost?: number | null
+          id?: string
+          item_name?: string
+          justification?: string
+          notes?: string | null
+          priority?: string
+          quantity?: string
+          request_date?: string
+          requested_by?: string
+          requisition_number?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       kashari_milk_production: {
         Row: {
           created_at: string | null

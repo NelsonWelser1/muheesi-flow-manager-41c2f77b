@@ -33,7 +33,8 @@ import {
   AlertCircle,
   ClipboardList,
   Calendar,
-  Loader2
+  Loader2,
+  Coffee
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
@@ -44,6 +45,7 @@ import CattleFattening from "./kyalima/CattleFattening";
 import LoanManager from "./kyalima/LoanManager";
 import SilageManager from "./shared/modules/SilageManager";
 import StaffMembers from "./shared/modules/StaffMembers";
+import KakyingaCoffeeFarm from "./kyalima/KakyingaCoffeeFarm";
 
 const KyalimaFarmersLimited = () => {
   const { toast } = useToast();
@@ -112,7 +114,7 @@ const KyalimaFarmersLimited = () => {
 
         <CardContent className="pt-6">
           <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid grid-cols-7 gap-0.5 bg-purple-50 p-1">
+            <TabsList className="grid grid-cols-8 gap-0.5 bg-purple-50 p-1">
               <TabsTrigger value="overview" className="flex flex-col py-1 px-1.5 gap-0.5 data-[state=active]:bg-white data-[state=active]:text-purple-800">
                 <BookOpen className="h-3.5 w-3.5 mx-auto" />
                 <span className="text-xs">Overview</span>
@@ -140,6 +142,10 @@ const KyalimaFarmersLimited = () => {
               <TabsTrigger value="staff" className="flex flex-col py-1 px-1.5 gap-0.5 data-[state=active]:bg-white data-[state=active]:text-purple-800">
                 <Users className="h-3.5 w-3.5 mx-auto" />
                 <span className="text-xs">Staff</span>
+              </TabsTrigger>
+              <TabsTrigger value="kakyinga" className="flex flex-col py-1 px-1.5 gap-0.5 data-[state=active]:bg-white data-[state=active]:text-amber-800">
+                <Coffee className="h-3.5 w-3.5 mx-auto" />
+                <span className="text-xs">Kakyinga</span>
               </TabsTrigger>
             </TabsList>
 
@@ -414,6 +420,10 @@ const KyalimaFarmersLimited = () => {
 
               <TabsContent value="staff">
                 <StaffMembers farmId="bukomero" isDataEntry={false} />
+              </TabsContent>
+
+              <TabsContent value="kakyinga">
+                <KakyingaCoffeeFarm />
               </TabsContent>
             </div>
           </Tabs>
