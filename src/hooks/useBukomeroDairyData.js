@@ -81,7 +81,7 @@ export const useBukomeroDairyData = () => {
       const { data: feedInventory, error: feedError } = await supabase
         .from('inventory_items')
         .select('*')
-        .or('category.eq.Feed,category.eq.Silage,product_name.ilike.%hay%,product_name.ilike.%silage%,product_name.ilike.%concentrate%,product_name.ilike.%forage%');
+        .or('product_name.ilike.%hay%,product_name.ilike.%silage%,product_name.ilike.%concentrate%,product_name.ilike.%forage%,product_name.ilike.%feed%');
 
       if (feedError) console.error('Feed inventory error:', feedError);
 
