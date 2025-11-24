@@ -129,7 +129,9 @@ const BukomeroDairyDashboard = () => {
                       <CardTitle className="text-sm font-medium text-green-800">Total Cattle</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-green-800">{farmMetrics?.totalCattle || 135}</div>
+                      <div className="text-3xl font-bold text-green-800">
+                        {isLoading ? 'Loading...' : (farmMetrics?.totalCattle || 0)}
+                      </div>
                       <p className="text-xs text-green-600 mt-1">Across all categories</p>
                       <div className="flex items-center mt-2">
                         <Beef className="h-4 w-4 text-green-600 mr-1" />
@@ -145,8 +147,12 @@ const BukomeroDairyDashboard = () => {
                       <CardTitle className="text-sm font-medium text-blue-800">Daily Milk Production</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-blue-800">{farmMetrics?.milkProduction || "480 liters/day"}</div>
-                      <p className="text-xs text-blue-600 mt-1">Average from 24 mother cows</p>
+                      <div className="text-3xl font-bold text-blue-800">
+                        {isLoading ? 'Loading...' : farmMetrics?.milkProduction || "0 liters/day"}
+                      </div>
+                      <p className="text-xs text-blue-600 mt-1">
+                        Average from {farmMetrics?.cattleBreakdown?.motherCows || 0} mother cows
+                      </p>
                       <div className="flex items-center mt-2">
                         <Droplet className="h-4 w-4 text-blue-500 mr-1" />
                         <div className="text-xs text-blue-600">2 milking sessions daily</div>
@@ -159,13 +165,20 @@ const BukomeroDairyDashboard = () => {
                       <CardTitle className="text-sm font-medium text-amber-800">Cattle in Fattening Program</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-amber-800">{farmMetrics?.activeFattening || 42}</div>
+                      <div className="text-3xl font-bold text-amber-800">
+                        {isLoading ? 'Loading...' : (farmMetrics?.activeFattening || 0)}
+                      </div>
                       <p className="text-xs text-amber-600 mt-1">Bulls and steers in program</p>
                       <div className="flex items-center mt-2">
                         <div className="w-full bg-amber-100 h-2 rounded-full">
-                          <div className="bg-amber-500 h-2 rounded-full w-3/4"></div>
+                          <div 
+                            className="bg-amber-500 h-2 rounded-full transition-all duration-500" 
+                            style={{ width: `${Math.min(100, (farmMetrics?.activeFattening || 0) * 2)}%` }}
+                          ></div>
                         </div>
-                        <span className="text-xs ml-2 text-amber-600">75% to target</span>
+                        <span className="text-xs ml-2 text-amber-600">
+                          {Math.min(100, (farmMetrics?.activeFattening || 0) * 2)}%
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
@@ -185,23 +198,29 @@ const BukomeroDairyDashboard = () => {
                       <dl className="grid grid-cols-2 gap-4">
                         <div>
                           <dt className="text-sm font-medium text-green-600">Revenue (Monthly)</dt>
-                          <dd className="text-lg font-semibold text-green-800">UGX 3,140,000</dd>
+                          <dd className="text-lg font-semibold text-green-800">
+                            UGX {Number(farmMetrics?.financial?.monthlyRevenue || 0).toLocaleString()}
+                          </dd>
                         </div>
                         <div>
                           <dt className="text-sm font-medium text-amber-600">Expenses (Monthly)</dt>
-                          <dd className="text-lg font-semibold text-amber-800">UGX 2,000,000</dd>
+                          <dd className="text-lg font-semibold text-amber-800">
+                            UGX {Number(farmMetrics?.financial?.monthlyExpenses || 0).toLocaleString()}
+                          </dd>
                         </div>
                         <div>
                           <dt className="text-sm font-medium text-blue-600">Livestock Sales</dt>
-                          <dd className="text-lg font-semibold text-blue-800">UGX 67,900,000</dd>
+                          <dd className="text-lg font-semibold text-blue-800">
+                            UGX {Number(farmMetrics?.financial?.livestockSales || 0).toLocaleString()}
+                          </dd>
                         </div>
                         <div>
                           <dt className="text-sm font-medium text-green-600">Feed Efficiency</dt>
                           <dd className="flex items-center">
                             <div className="w-full mr-2">
-                              <Progress value={78} className="h-2" />
+                              <Progress value={Number(farmMetrics?.financial?.feedEfficiency || 0)} className="h-2" />
                             </div>
-                            <span className="text-xs">78%</span>
+                            <span className="text-xs">{farmMetrics?.financial?.feedEfficiency || 0}%</span>
                           </dd>
                         </div>
                       </dl>
@@ -266,27 +285,39 @@ const BukomeroDairyDashboard = () => {
                       <ul className="grid grid-cols-2 gap-3">
                         <li className="flex justify-between items-center text-sm">
                           <span className="text-green-700">Mother Cows:</span> 
-                          <span className="font-medium text-green-900">24</span>
+                          <span className="font-medium text-green-900">
+                            {farmMetrics?.cattleBreakdown?.motherCows || 0}
+                          </span>
                         </li>
                         <li className="flex justify-between items-center text-sm">
                           <span className="text-green-700">Heifers:</span> 
-                          <span className="font-medium text-green-900">36</span>
+                          <span className="font-medium text-green-900">
+                            {farmMetrics?.cattleBreakdown?.heifers || 0}
+                          </span>
                         </li>
                         <li className="flex justify-between items-center text-sm">
                           <span className="text-green-700">Bulls:</span> 
-                          <span className="font-medium text-green-900">15</span>
+                          <span className="font-medium text-green-900">
+                            {farmMetrics?.cattleBreakdown?.bulls || 0}
+                          </span>
                         </li>
                         <li className="flex justify-between items-center text-sm">
                           <span className="text-green-700">Female Calves:</span> 
-                          <span className="font-medium text-green-900">32</span>
+                          <span className="font-medium text-green-900">
+                            {farmMetrics?.cattleBreakdown?.femaleCalves || 0}
+                          </span>
                         </li>
                         <li className="flex justify-between items-center text-sm">
                           <span className="text-green-700">Male Calves:</span> 
-                          <span className="font-medium text-green-900">28</span>
+                          <span className="font-medium text-green-900">
+                            {farmMetrics?.cattleBreakdown?.maleCalves || 0}
+                          </span>
                         </li>
-                        <li className="flex justify-between items-center text-sm">
-                          <span className="text-green-700">Total:</span> 
-                          <span className="font-medium text-green-900">135</span>
+                        <li className="flex justify-between items-center text-sm border-t pt-2">
+                          <span className="text-green-700 font-semibold">Total:</span> 
+                          <span className="font-bold text-green-900">
+                            {farmMetrics?.totalCattle || 0}
+                          </span>
                         </li>
                       </ul>
                     </CardContent>
@@ -302,24 +333,42 @@ const BukomeroDairyDashboard = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-4">
-                      <ul className="space-y-3">
-                        <li className="flex justify-between items-center text-sm">
-                          <span className="text-green-700">Hay Bales:</span> 
-                          <span className="font-medium text-green-900">320 units</span>
-                        </li>
-                        <li className="flex justify-between items-center text-sm">
-                          <span className="text-green-700">Maize Silage:</span> 
-                          <span className="font-medium text-green-900">45 tons</span>
-                        </li>
-                        <li className="flex justify-between items-center text-sm">
-                          <span className="text-green-700">Concentrates:</span> 
-                          <span className="font-medium text-green-900">1,200 kg</span>
-                        </li>
-                        <li className="flex justify-between items-center text-sm">
-                          <span className="text-green-700">Days of Feed Remaining:</span> 
-                          <span className="font-medium text-green-900">45 days</span>
-                        </li>
-                      </ul>
+                      {isLoading ? (
+                        <div className="text-sm text-gray-500">Loading feed inventory...</div>
+                      ) : (
+                        <ul className="space-y-3">
+                          <li className="flex justify-between items-center text-sm">
+                            <span className="text-green-700">Total Feed Items:</span> 
+                            <span className="font-medium text-green-900">
+                              {farmMetrics?.feedInventory?.totalItems || 0} items
+                            </span>
+                          </li>
+                          <li className="flex justify-between items-center text-sm">
+                            <span className="text-green-700">Hay & Forage:</span> 
+                            <span className="font-medium text-green-900">
+                              {farmMetrics?.feedInventory?.hay || 0} units
+                            </span>
+                          </li>
+                          <li className="flex justify-between items-center text-sm">
+                            <span className="text-green-700">Silage:</span> 
+                            <span className="font-medium text-green-900">
+                              {farmMetrics?.feedInventory?.silage || 0} tons
+                            </span>
+                          </li>
+                          <li className="flex justify-between items-center text-sm">
+                            <span className="text-green-700">Concentrates:</span> 
+                            <span className="font-medium text-green-900">
+                              {farmMetrics?.feedInventory?.concentrates || 0} kg
+                            </span>
+                          </li>
+                          <li className="flex justify-between items-center text-sm border-t pt-2">
+                            <span className="text-green-700 font-semibold">Est. Days Remaining:</span> 
+                            <span className="font-bold text-green-900">
+                              {farmMetrics?.feedInventory?.daysRemaining || 'N/A'}
+                            </span>
+                          </li>
+                        </ul>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
