@@ -32,11 +32,11 @@ const MilkProduction = () => {
   const fetchMilkData = async () => {
     setIsLoading(true);
     try {
-      // Fetch from the milk_production table
+      // Fetch from the kashari_milk_production table
       const {
         data,
         error
-      } = await supabase.from('milk_production').select('*').eq('farm_id', 'bukomero') // Filter to only get milk data from Bukomero farm
+      } = await supabase.from('kashari_milk_production').select('*').eq('location', 'Kyalima') // Filter to only get milk data from Kyalima farm
       .order('date', {
         ascending: false
       });

@@ -51,7 +51,7 @@ const CattleManagement = () => {
       const { data, error } = await supabase
         .from('cattle_inventory')
         .select('*')
-        .eq('farm_id', 'bukomero') // Filter to only get cattle from Bukomero farm
+        .eq('farm_id', 'kyalima') // Filter to only get cattle from Kyalima farm
         .order('tag_number', { ascending: true });
       
       if (error) {
