@@ -81,7 +81,7 @@ const CattleFattening = () => {
       const {
         data,
         error
-      } = await supabase.from('cattle_fattening').select('*').eq('farm_id', 'kyalima').order('entry_date', {
+      } = await supabase.from('cattle_fattening').select('*').eq('farm_id', 'bukomero').order('entry_date', {
         ascending: false
       });
       if (error) throw error;
