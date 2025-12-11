@@ -147,6 +147,10 @@ const UserManagement = () => {
             <Package className="h-4 w-4 mr-2" />
             Templates
           </Button>
+          <Button variant="outline" onClick={() => navigate('/users/role-permissions')}>
+            <Shield className="h-4 w-4 mr-2" />
+            Permissions
+          </Button>
           <Button variant="outline" onClick={() => navigate('/users/audit-log')}>
             <FileText className="h-4 w-4 mr-2" />
             Audit Log
