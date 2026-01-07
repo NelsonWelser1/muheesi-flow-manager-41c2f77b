@@ -8,97 +8,42 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
-import { Search, Plus, Download, RefreshCw } from "lucide-react";
+import { Search, Plus, Download, Loader2 } from "lucide-react";
 import { format } from 'date-fns';
+import { useKashariScholarships } from '@/hooks/useKashariScholarships';
 
 const ScholarshipProgram = () => {
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('recipients');
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Mock data for scholarship recipients
-  const [scholarships, setScholarships] = useState([
-    {
-      id: "SCH-001",
-      studentName: "Sarah Namugwanya",
-      school: "Kyampangara Primary School",
-      grade: "P7",
-      amount: 850000,
-      startDate: "2023-01-15",
-      endDate: "2023-12-15",
-      status: "active",
-      guardianContact: "+256 778 123 456",
-      performanceRating: "Excellent"
-    },
-    {
-      id: "SCH-002",
-      studentName: "Joshua Mugisha",
-      school: "St. Mary's Secondary School",
-      grade: "S3",
-      amount: 1250000,
-      startDate: "2023-02-01",
-      endDate: "2023-12-01",
-      status: "active",
-      guardianContact: "+256 705 789 012",
-      performanceRating: "Good"
-    },
-    {
-      id: "SCH-003",
-      studentName: "Esther Kyomugisha",
-      school: "Kanoni Girls School",
-      grade: "S6",
-      amount: 1500000,
-      startDate: "2023-01-10",
-      endDate: "2023-12-10",
-      status: "active",
-      guardianContact: "+256 772 345 678",
-      performanceRating: "Excellent"
-    },
-    {
-      id: "SCH-004",
-      studentName: "David Tumusiime",
-      school: "Kazo Central College",
-      grade: "S4",
-      amount: 1350000,
-      startDate: "2023-02-15",
-      endDate: "2023-12-15",
-      status: "on-hold",
-      guardianContact: "+256 753 901 234",
-      performanceRating: "Fair"
-    },
-    {
-      id: "SCH-005",
-      studentName: "Grace Atuhaire",
-      school: "Buremba Primary School",
-      grade: "P6",
-      amount: 750000,
-      startDate: "2023-01-20",
-      endDate: "2023-12-20",
-      status: "active",
-      guardianContact: "+256 782 567 890",
-      performanceRating: "Good"
-    }
-  ]);
+  // Use database hook
+  const { 
+    scholarships, 
+    loading, 
+    addScholarship, 
+    getScholarshipStats 
+  } = useKashariScholarships();
   
   // Form state for new application
   const [newApplication, setNewApplication] = useState({
-    studentName: '',
+    student_name: '',
     school: '',
     grade: '',
     amount: '',
     reason: '',
-    guardianName: '',
-    guardianContact: '',
-    guardianRelation: ''
+    guardian_name: '',
+    guardian_contact: '',
+    guardian_relation: ''
   });
   
   // Filter scholarships based on search term
   const filteredScholarships = scholarships.filter(scholarship => 
-    scholarship.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    scholarship.school.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    scholarship.id.toLowerCase().includes(searchTerm.toLowerCase())
+    scholarship.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    scholarship.school?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    scholarship.scholarship_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+  const stats = getScholarshipStats();
   
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -115,63 +60,43 @@ const ScholarshipProgram = () => {
     }));
   };
   
-  const handleSubmitApplication = (e) => {
+  const handleSubmitApplication = async (e) => {
     e.preventDefault();
     
-    // Validation
-    if (!newApplication.studentName || !newApplication.school || !newApplication.grade || !newApplication.amount) {
-      toast({
-        title: "Missing Fields",
-        description: "Please fill all required fields before submitting.",
-        variant: "destructive",
-      });
+    if (!newApplication.student_name || !newApplication.school || !newApplication.grade || !newApplication.amount) {
       return;
     }
     
-    // Create new scholarship record
-    const newScholarship = {
-      id: `SCH-${String(scholarships.length + 1).padStart(3, '0')}`,
-      studentName: newApplication.studentName,
+    const result = await addScholarship({
+      student_name: newApplication.student_name,
       school: newApplication.school,
       grade: newApplication.grade,
       amount: parseFloat(newApplication.amount),
-      startDate: format(new Date(), 'yyyy-MM-dd'),
-      endDate: format(new Date(new Date().setFullYear(new Date().getFullYear() + 1)), 'yyyy-MM-dd'),
-      status: "pending",
-      guardianContact: newApplication.guardianContact,
-      performanceRating: "N/A"
-    };
-    
-    // Update scholarships list
-    setScholarships(prev => [...prev, newScholarship]);
-    
-    // Reset form
-    setNewApplication({
-      studentName: '',
-      school: '',
-      grade: '',
-      amount: '',
-      reason: '',
-      guardianName: '',
-      guardianContact: '',
-      guardianRelation: ''
+      guardian_contact: newApplication.guardian_contact,
+      guardian_name: newApplication.guardian_name,
+      reason: newApplication.reason
     });
     
-    // Show success message
-    toast({
-      title: "Application Submitted",
-      description: "Scholarship application has been submitted successfully.",
-    });
-    
-    // Switch to recipients tab
-    setActiveTab('recipients');
+    if (result.success) {
+      setNewApplication({
+        student_name: '',
+        school: '',
+        grade: '',
+        amount: '',
+        reason: '',
+        guardian_name: '',
+        guardian_contact: '',
+        guardian_relation: ''
+      });
+      setActiveTab('recipients');
+    }
   };
   
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-UG', {
       style: 'currency',
       currency: 'UGX'
-    }).format(amount);
+    }).format(amount || 0);
   };
   
   // Function to get status badge color
@@ -190,6 +115,16 @@ const ScholarshipProgram = () => {
     }
   };
   
+  if (loading && scholarships.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
     <Card>
       <CardHeader>
@@ -199,7 +134,7 @@ const ScholarshipProgram = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="recipients">Recipients</TabsTrigger>
             <TabsTrigger value="apply">New Application</TabsTrigger>
@@ -245,21 +180,25 @@ const ScholarshipProgram = () => {
                   {filteredScholarships.length > 0 ? (
                     filteredScholarships.map((scholarship) => (
                       <TableRow key={scholarship.id}>
-                        <TableCell className="font-medium">{scholarship.id}</TableCell>
-                        <TableCell>{scholarship.studentName}</TableCell>
+                        <TableCell className="font-medium">{scholarship.scholarship_id}</TableCell>
+                        <TableCell>{scholarship.student_name}</TableCell>
                         <TableCell>{scholarship.school}</TableCell>
                         <TableCell>{scholarship.grade}</TableCell>
                         <TableCell>{formatCurrency(scholarship.amount)}</TableCell>
                         <TableCell>
-                          {format(new Date(scholarship.startDate), 'MMM d, yyyy')} - 
-                          {format(new Date(scholarship.endDate), 'MMM d, yyyy')}
+                          {scholarship.start_date && scholarship.end_date ? (
+                            <>
+                              {format(new Date(scholarship.start_date), 'MMM d, yyyy')} - 
+                              {format(new Date(scholarship.end_date), 'MMM d, yyyy')}
+                            </>
+                          ) : '-'}
                         </TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(scholarship.status)}`}>
-                            {scholarship.status.charAt(0).toUpperCase() + scholarship.status.slice(1)}
+                            {scholarship.status?.charAt(0).toUpperCase() + scholarship.status?.slice(1)}
                           </span>
                         </TableCell>
-                        <TableCell>{scholarship.performanceRating}</TableCell>
+                        <TableCell>{scholarship.performance_rating || 'N/A'}</TableCell>
                       </TableRow>
                     ))
                   ) : (
@@ -286,11 +225,11 @@ const ScholarshipProgram = () => {
                     <h3 className="text-base font-medium">Student Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="studentName">Student Full Name *</Label>
+                        <Label htmlFor="student_name">Student Full Name *</Label>
                         <Input
-                          id="studentName"
-                          name="studentName"
-                          value={newApplication.studentName}
+                          id="student_name"
+                          name="student_name"
+                          value={newApplication.student_name}
                           onChange={handleInputChange}
                           placeholder="Enter student's full name"
                         />
@@ -365,32 +304,32 @@ const ScholarshipProgram = () => {
                     <h3 className="text-base font-medium">Guardian Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="guardianName">Guardian Full Name</Label>
+                        <Label htmlFor="guardian_name">Guardian Full Name</Label>
                         <Input
-                          id="guardianName"
-                          name="guardianName"
-                          value={newApplication.guardianName}
+                          id="guardian_name"
+                          name="guardian_name"
+                          value={newApplication.guardian_name}
                           onChange={handleInputChange}
                           placeholder="Enter guardian's full name"
                         />
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="guardianContact">Guardian Contact *</Label>
+                        <Label htmlFor="guardian_contact">Guardian Contact *</Label>
                         <Input
-                          id="guardianContact"
-                          name="guardianContact"
-                          value={newApplication.guardianContact}
+                          id="guardian_contact"
+                          name="guardian_contact"
+                          value={newApplication.guardian_contact}
                           onChange={handleInputChange}
                           placeholder="Enter guardian's phone number"
                         />
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="guardianRelation">Relationship to Student</Label>
+                        <Label htmlFor="guardian_relation">Relationship to Student</Label>
                         <Select
-                          value={newApplication.guardianRelation}
-                          onValueChange={(value) => handleSelectChange('guardianRelation', value)}
+                          value={newApplication.guardian_relation}
+                          onValueChange={(value) => handleSelectChange('guardian_relation', value)}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select relationship" />
@@ -431,9 +370,9 @@ const ScholarshipProgram = () => {
                     <CardContent className="p-6">
                       <div className="flex flex-col">
                         <p className="text-sm text-muted-foreground">Total Scholarships</p>
-                        <p className="text-3xl font-bold">{scholarships.length}</p>
+                        <p className="text-3xl font-bold">{stats.total}</p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Active: {scholarships.filter(s => s.status === 'active').length}
+                          {stats.active} active, {stats.pending} pending
                         </p>
                       </div>
                     </CardContent>
@@ -442,12 +381,10 @@ const ScholarshipProgram = () => {
                   <Card>
                     <CardContent className="p-6">
                       <div className="flex flex-col">
-                        <p className="text-sm text-muted-foreground">Total Investment</p>
-                        <p className="text-3xl font-bold">
-                          {formatCurrency(scholarships.reduce((sum, s) => sum + s.amount, 0))}
-                        </p>
+                        <p className="text-sm text-muted-foreground">Total Amount Allocated</p>
+                        <p className="text-3xl font-bold">{formatCurrency(stats.totalAmount)}</p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          This Year (2023)
+                          Across all scholarships
                         </p>
                       </div>
                     </CardContent>
@@ -456,10 +393,10 @@ const ScholarshipProgram = () => {
                   <Card>
                     <CardContent className="p-6">
                       <div className="flex flex-col">
-                        <p className="text-sm text-muted-foreground">Performance Rating</p>
-                        <p className="text-3xl font-bold">Good</p>
+                        <p className="text-sm text-muted-foreground">On Hold</p>
+                        <p className="text-3xl font-bold">{stats.onHold}</p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Aggregate performance
+                          Requiring attention
                         </p>
                       </div>
                     </CardContent>
@@ -467,49 +404,25 @@ const ScholarshipProgram = () => {
                 </div>
                 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-base font-medium">Recent Reports</h3>
-                    <Button variant="outline" size="sm">
-                      <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-                    </Button>
+                  <h3 className="text-base font-medium">Performance Overview</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex flex-col">
+                          <p className="text-sm text-muted-foreground">Completed Scholarships</p>
+                          <p className="text-2xl font-bold">{stats.completed}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex flex-col">
+                          <p className="text-sm text-muted-foreground">Active Scholarships</p>
+                          <p className="text-2xl font-bold">{stats.active}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                  
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Report Name</TableHead>
-                        <TableHead>Generated On</TableHead>
-                        <TableHead>Coverage Period</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell className="font-medium">Scholarship Performance Report</TableCell>
-                        <TableCell>{format(new Date(), 'MMM d, yyyy')}</TableCell>
-                        <TableCell>Jan - Jun 2023</TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm">View</Button>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">Financial Summary</TableCell>
-                        <TableCell>{format(new Date(), 'MMM d, yyyy')}</TableCell>
-                        <TableCell>2023 Academic Year</TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm">View</Button>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">Student Progress Report</TableCell>
-                        <TableCell>{format(new Date(), 'MMM d, yyyy')}</TableCell>
-                        <TableCell>Term 2, 2023</TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm">View</Button>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
                 </div>
               </CardContent>
             </Card>
