@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,12 +10,15 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/components/ui/use-toast";
-import { CalendarIcon, Plus, Search, Filter, Download, Phone, Mail, MapPin, Edit, Clock, User, Users } from "lucide-react";
+import { CalendarIcon, Plus, Search, Download, Phone, Mail, Edit, Clock, User, Users, Loader2 } from "lucide-react";
 import { format, subDays, differenceInYears } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useKashariEmployees } from '@/hooks/useKashariEmployees';
+import { useKashariAttendance } from '@/hooks/useKashariAttendance';
+import { useKashariLeave } from '@/hooks/useKashariLeave';
 
 const EmployeeManagement = () => {
   const { toast } = useToast();
@@ -23,232 +26,39 @@ const EmployeeManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   
-  // Mock employee data
-  const [employees, setEmployees] = useState([
-    {
-      id: 'EMP001',
-      name: 'John Mugisha',
-      position: 'Farm Manager',
-      department: 'Management',
-      joinDate: '2020-03-15',
-      contact: '+256 772 123 456',
-      email: 'john.m@kasharifarm.com',
-      address: 'Kazo Town, Uganda',
-      salary: 1500000,
-      status: 'active',
-      photo: null
-    },
-    {
-      id: 'EMP002',
-      name: 'Sarah Kamugisha',
-      position: 'Dairy Unit Supervisor',
-      department: 'Dairy',
-      joinDate: '2020-05-20',
-      contact: '+256 782 234 567',
-      email: 'sarah.k@kasharifarm.com',
-      address: 'Rushere, Uganda',
-      salary: 1200000,
-      status: 'active',
-      photo: null
-    },
-    {
-      id: 'EMP003',
-      name: 'David Asiimwe',
-      position: 'Plantation Manager',
-      department: 'Crops',
-      joinDate: '2021-01-10',
-      contact: '+256 755 345 678',
-      email: 'david.a@kasharifarm.com',
-      address: 'Kanoni, Uganda',
-      salary: 1200000,
-      status: 'active',
-      photo: null
-    },
-    {
-      id: 'EMP004',
-      name: 'Grace Atuhaire',
-      position: 'Accountant',
-      department: 'Finance',
-      joinDate: '2021-06-05',
-      contact: '+256 701 456 789',
-      email: 'grace.a@kasharifarm.com',
-      address: 'Kazo, Uganda',
-      salary: 1300000,
-      status: 'active',
-      photo: null
-    },
-    {
-      id: 'EMP005',
-      name: 'Peter Tumusiime',
-      position: 'Veterinary Officer',
-      department: 'Health',
-      joinDate: '2021-09-15',
-      contact: '+256 778 567 890',
-      email: 'peter.t@kasharifarm.com',
-      address: 'Mbarara, Uganda',
-      salary: 1350000,
-      status: 'active',
-      photo: null
-    },
-    {
-      id: 'EMP006',
-      name: 'Mary Namugwanya',
-      position: 'HR Officer',
-      department: 'Administration',
-      joinDate: '2022-02-20',
-      contact: '+256 752 678 901',
-      email: 'mary.n@kasharifarm.com',
-      address: 'Kiruhura, Uganda',
-      salary: 1100000,
-      status: 'active',
-      photo: null
-    }
-  ]);
-  
-  // Mock attendance data
-  const [attendance, setAttendance] = useState([
-    {
-      id: 'ATT001',
-      employeeId: 'EMP001',
-      employeeName: 'John Mugisha',
-      date: subDays(new Date(), 1),
-      checkIn: '08:05',
-      checkOut: '17:30',
-      status: 'present',
-      notes: 'Regular working day'
-    },
-    {
-      id: 'ATT002',
-      employeeId: 'EMP002',
-      employeeName: 'Sarah Kamugisha',
-      date: subDays(new Date(), 1),
-      checkIn: '07:55',
-      checkOut: '17:45',
-      status: 'present',
-      notes: 'Regular working day'
-    },
-    {
-      id: 'ATT003',
-      employeeId: 'EMP003',
-      employeeName: 'David Asiimwe',
-      date: subDays(new Date(), 1),
-      checkIn: '08:10',
-      checkOut: '17:20',
-      status: 'present',
-      notes: 'Regular working day'
-    },
-    {
-      id: 'ATT004',
-      employeeId: 'EMP004',
-      employeeName: 'Grace Atuhaire',
-      date: subDays(new Date(), 1),
-      checkIn: null,
-      checkOut: null,
-      status: 'absent',
-      notes: 'Sick leave'
-    },
-    {
-      id: 'ATT005',
-      employeeId: 'EMP005',
-      employeeName: 'Peter Tumusiime',
-      date: subDays(new Date(), 1),
-      checkIn: '08:30',
-      checkOut: '17:15',
-      status: 'present',
-      notes: 'Regular working day'
-    },
-    {
-      id: 'ATT006',
-      employeeId: 'EMP006',
-      employeeName: 'Mary Namugwanya',
-      date: subDays(new Date(), 1),
-      checkIn: '08:00',
-      checkOut: '17:00',
-      status: 'present',
-      notes: 'Regular working day'
-    }
-  ]);
-  
-  // Mock leave data
-  const [leaveRecords, setLeaveRecords] = useState([
-    {
-      id: 'LV001',
-      employeeId: 'EMP004',
-      employeeName: 'Grace Atuhaire',
-      type: 'Sick Leave',
-      startDate: '2023-07-15',
-      endDate: '2023-07-18',
-      duration: 4,
-      status: 'approved',
-      reason: 'Medical treatment',
-      approvedBy: 'John Mugisha'
-    },
-    {
-      id: 'LV002',
-      employeeId: 'EMP002',
-      employeeName: 'Sarah Kamugisha',
-      type: 'Annual Leave',
-      startDate: '2023-08-01',
-      endDate: '2023-08-07',
-      duration: 7,
-      status: 'approved',
-      reason: 'Family visit',
-      approvedBy: 'John Mugisha'
-    },
-    {
-      id: 'LV003',
-      employeeId: 'EMP006',
-      employeeName: 'Mary Namugwanya',
-      type: 'Maternity Leave',
-      startDate: '2023-09-01',
-      endDate: '2023-12-01',
-      duration: 92,
-      status: 'pending',
-      reason: 'Maternity leave application',
-      approvedBy: null
-    },
-    {
-      id: 'LV004',
-      employeeId: 'EMP003',
-      employeeName: 'David Asiimwe',
-      type: 'Annual Leave',
-      startDate: '2023-07-20',
-      endDate: '2023-07-25',
-      duration: 6,
-      status: 'approved',
-      reason: 'Personal time off',
-      approvedBy: 'John Mugisha'
-    }
-  ]);
+  // Use database hooks
+  const { employees, loading: employeesLoading, addEmployee } = useKashariEmployees();
+  const { attendance, loading: attendanceLoading, addAttendance, getStats: getAttendanceStats } = useKashariAttendance();
+  const { leaveRecords, loading: leaveLoading, addLeaveRecord, updateLeaveRecord } = useKashariLeave();
   
   // Form states
   const [employeeForm, setEmployeeForm] = useState({
-    name: '',
+    full_name: '',
     position: '',
     department: '',
-    joinDate: new Date(),
-    contact: '',
+    join_date: new Date(),
+    contact_phone: '',
     email: '',
     address: '',
     salary: '',
     status: 'active',
-    photo: null
+    photo_url: null
   });
   
   const [attendanceForm, setAttendanceForm] = useState({
     date: new Date(),
-    employeeId: '',
-    checkIn: '',
-    checkOut: '',
+    employee_id: '',
+    check_in: '',
+    check_out: '',
     status: 'present',
     notes: ''
   });
   
   const [leaveForm, setLeaveForm] = useState({
-    employeeId: '',
-    type: '',
-    startDate: new Date(),
-    endDate: new Date(),
+    employee_id: '',
+    leave_type: '',
+    start_date: new Date(),
+    end_date: new Date(),
     reason: '',
     status: 'pending'
   });
@@ -256,18 +66,14 @@ const EmployeeManagement = () => {
   // Calculate statistics
   const totalEmployees = employees.length;
   const activeEmployees = employees.filter(emp => emp.status === 'active').length;
-  const presentToday = attendance
-    .filter(att => 
-      format(att.date, 'yyyy-MM-dd') === format(subDays(new Date(), 1), 'yyyy-MM-dd') && 
-      att.status === 'present'
-    ).length;
+  const attendanceStats = getAttendanceStats();
   
   // Filter records based on search term
   const filteredEmployees = employees.filter(emp => 
-    emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.id.toLowerCase().includes(searchTerm.toLowerCase())
+    emp.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.employee_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   // Department options
@@ -298,85 +104,37 @@ const EmployeeManagement = () => {
   // Handle form input change
   const handleEmployeeInputChange = (e) => {
     const { name, value } = e.target;
-    setEmployeeForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setEmployeeForm(prev => ({ ...prev, [name]: value }));
   };
   
   const handleAttendanceInputChange = (e) => {
     const { name, value } = e.target;
-    setAttendanceForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setAttendanceForm(prev => ({ ...prev, [name]: value }));
   };
   
   const handleLeaveInputChange = (e) => {
     const { name, value } = e.target;
-    setLeaveForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setLeaveForm(prev => ({ ...prev, [name]: value }));
   };
   
   // Handle select change
   const handleEmployeeSelectChange = (name, value) => {
-    setEmployeeForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setEmployeeForm(prev => ({ ...prev, [name]: value }));
   };
   
   const handleAttendanceSelectChange = (name, value) => {
-    setAttendanceForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setAttendanceForm(prev => ({ ...prev, [name]: value }));
   };
   
   const handleLeaveSelectChange = (name, value) => {
-    setLeaveForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  // Handle date change
-  const handleEmployeeDateChange = (date) => {
-    setEmployeeForm(prev => ({
-      ...prev,
-      joinDate: date
-    }));
-  };
-  
-  const handleAttendanceDateChange = (date) => {
-    setAttendanceForm(prev => ({
-      ...prev,
-      date: date
-    }));
-  };
-  
-  const handleLeaveStartDateChange = (date) => {
-    setLeaveForm(prev => ({
-      ...prev,
-      startDate: date
-    }));
-  };
-  
-  const handleLeaveEndDateChange = (date) => {
-    setLeaveForm(prev => ({
-      ...prev,
-      endDate: date
-    }));
+    setLeaveForm(prev => ({ ...prev, [name]: value }));
   };
   
   // Submit employee form
-  const handleEmployeeSubmit = (e) => {
+  const handleEmployeeSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
-    if (!employeeForm.name || !employeeForm.position || !employeeForm.department || !employeeForm.contact) {
+    if (!employeeForm.full_name || !employeeForm.position || !employeeForm.department || !employeeForm.contact_phone) {
       toast({
         title: "Missing Fields",
         description: "Please fill all required fields.",
@@ -385,54 +143,41 @@ const EmployeeManagement = () => {
       return;
     }
     
-    // Create new employee record
-    const newEmployee = {
-      id: `EMP${String(employees.length + 1).padStart(3, '0')}`,
-      name: employeeForm.name,
+    const result = await addEmployee({
+      full_name: employeeForm.full_name,
       position: employeeForm.position,
       department: employeeForm.department,
-      joinDate: format(employeeForm.joinDate, 'yyyy-MM-dd'),
-      contact: employeeForm.contact,
+      join_date: format(employeeForm.join_date, 'yyyy-MM-dd'),
+      contact_phone: employeeForm.contact_phone,
       email: employeeForm.email,
       address: employeeForm.address,
       salary: employeeForm.salary ? Number(employeeForm.salary) : 0,
       status: employeeForm.status,
-      photo: employeeForm.photo
-    };
-    
-    // Add to records
-    setEmployees(prev => [...prev, newEmployee]);
-    
-    // Reset form
-    setEmployeeForm({
-      name: '',
-      position: '',
-      department: '',
-      joinDate: new Date(),
-      contact: '',
-      email: '',
-      address: '',
-      salary: '',
-      status: 'active',
-      photo: null
+      photo_url: employeeForm.photo_url
     });
     
-    // Show success message
-    toast({
-      title: "Success",
-      description: "Employee record has been added.",
-    });
-    
-    // Switch to employees tab
-    setActiveTab('employees');
+    if (result.success) {
+      setEmployeeForm({
+        full_name: '',
+        position: '',
+        department: '',
+        join_date: new Date(),
+        contact_phone: '',
+        email: '',
+        address: '',
+        salary: '',
+        status: 'active',
+        photo_url: null
+      });
+      setActiveTab('employees');
+    }
   };
   
   // Submit attendance form
-  const handleAttendanceSubmit = (e) => {
+  const handleAttendanceSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
-    if (!attendanceForm.employeeId || !attendanceForm.date) {
+    if (!attendanceForm.employee_id || !attendanceForm.date) {
       toast({
         title: "Missing Fields",
         description: "Please fill all required fields.",
@@ -441,59 +186,33 @@ const EmployeeManagement = () => {
       return;
     }
     
-    // Get employee name
-    const employee = employees.find(emp => emp.id === attendanceForm.employeeId);
-    
-    if (!employee) {
-      toast({
-        title: "Error",
-        description: "Selected employee not found.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Create new attendance record
-    const newAttendance = {
-      id: `ATT${String(attendance.length + 1).padStart(3, '0')}`,
-      employeeId: attendanceForm.employeeId,
-      employeeName: employee.name,
-      date: attendanceForm.date,
-      checkIn: attendanceForm.status === 'present' ? attendanceForm.checkIn : null,
-      checkOut: attendanceForm.status === 'present' ? attendanceForm.checkOut : null,
+    const result = await addAttendance({
+      employee_id: attendanceForm.employee_id,
+      date: format(attendanceForm.date, 'yyyy-MM-dd'),
+      check_in: attendanceForm.status === 'present' || attendanceForm.status === 'late' ? attendanceForm.check_in : null,
+      check_out: attendanceForm.status === 'present' || attendanceForm.status === 'late' ? attendanceForm.check_out : null,
       status: attendanceForm.status,
       notes: attendanceForm.notes
-    };
-    
-    // Add to records
-    setAttendance(prev => [...prev, newAttendance]);
-    
-    // Reset form
-    setAttendanceForm({
-      date: new Date(),
-      employeeId: '',
-      checkIn: '',
-      checkOut: '',
-      status: 'present',
-      notes: ''
     });
     
-    // Show success message
-    toast({
-      title: "Success",
-      description: "Attendance record has been added.",
-    });
-    
-    // Switch to attendance tab
-    setActiveTab('attendance');
+    if (result.success) {
+      setAttendanceForm({
+        date: new Date(),
+        employee_id: '',
+        check_in: '',
+        check_out: '',
+        status: 'present',
+        notes: ''
+      });
+      setActiveTab('attendance');
+    }
   };
   
   // Submit leave form
-  const handleLeaveSubmit = (e) => {
+  const handleLeaveSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
-    if (!leaveForm.employeeId || !leaveForm.type || !leaveForm.startDate || !leaveForm.endDate) {
+    if (!leaveForm.employee_id || !leaveForm.leave_type || !leaveForm.start_date || !leaveForm.end_date) {
       toast({
         title: "Missing Fields",
         description: "Please fill all required fields.",
@@ -502,23 +221,9 @@ const EmployeeManagement = () => {
       return;
     }
     
-    // Get employee name
-    const employee = employees.find(emp => emp.id === leaveForm.employeeId);
+    const startDate = new Date(leaveForm.start_date);
+    const endDate = new Date(leaveForm.end_date);
     
-    if (!employee) {
-      toast({
-        title: "Error",
-        description: "Selected employee not found.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Calculate duration
-    const startDate = new Date(leaveForm.startDate);
-    const endDate = new Date(leaveForm.endDate);
-    
-    // Check if start date is before end date
     if (startDate > endDate) {
       toast({
         title: "Invalid Dates",
@@ -528,69 +233,58 @@ const EmployeeManagement = () => {
       return;
     }
     
-    // Calculate duration in days (inclusive of start and end dates)
     const durationInMs = endDate.getTime() - startDate.getTime();
     const durationInDays = Math.floor(durationInMs / (1000 * 60 * 60 * 24)) + 1;
     
-    // Create new leave record
-    const newLeave = {
-      id: `LV${String(leaveRecords.length + 1).padStart(3, '0')}`,
-      employeeId: leaveForm.employeeId,
-      employeeName: employee.name,
-      type: leaveForm.type,
-      startDate: format(startDate, 'yyyy-MM-dd'),
-      endDate: format(endDate, 'yyyy-MM-dd'),
-      duration: durationInDays,
-      status: leaveForm.status,
+    const result = await addLeaveRecord({
+      employee_id: leaveForm.employee_id,
+      leave_type: leaveForm.leave_type,
+      start_date: format(startDate, 'yyyy-MM-dd'),
+      end_date: format(endDate, 'yyyy-MM-dd'),
+      duration_days: durationInDays,
       reason: leaveForm.reason,
-      approvedBy: null
-    };
-    
-    // Add to records
-    setLeaveRecords(prev => [...prev, newLeave]);
-    
-    // Reset form
-    setLeaveForm({
-      employeeId: '',
-      type: '',
-      startDate: new Date(),
-      endDate: new Date(),
-      reason: '',
       status: 'pending'
     });
     
-    // Show success message
-    toast({
-      title: "Success",
-      description: "Leave request has been submitted.",
+    if (result.success) {
+      setLeaveForm({
+        employee_id: '',
+        leave_type: '',
+        start_date: new Date(),
+        end_date: new Date(),
+        reason: '',
+        status: 'pending'
+      });
+      setActiveTab('leave');
+    }
+  };
+  
+  // Handle leave approval/rejection
+  const handleLeaveAction = async (leaveId, action) => {
+    await updateLeaveRecord(leaveId, { 
+      status: action,
+      approved_by: action === 'approved' ? 'Admin' : null
     });
-    
-    // Switch to leave tab
-    setActiveTab('leave');
   };
   
   // Format date
   const formatDate = (date) => {
+    if (!date) return '-';
     return format(new Date(date), 'MMM d, yyyy');
   };
   
   // Get status color
   const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case 'active':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'inactive':
-        return 'bg-red-100 text-red-800 border-red-200';
       case 'present':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'absent':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'late':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'approved':
         return 'bg-green-100 text-green-800 border-green-200';
+      case 'inactive':
+      case 'absent':
       case 'rejected':
         return 'bg-red-100 text-red-800 border-red-200';
+      case 'late':
       case 'pending':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default:
@@ -600,17 +294,30 @@ const EmployeeManagement = () => {
   
   // Get initials for avatar
   const getInitials = (name) => {
-    return name
-      .split(' ')
-      .map(part => part.charAt(0))
-      .join('')
-      .toUpperCase();
+    if (!name) return '??';
+    return name.split(' ').map(part => part.charAt(0)).join('').toUpperCase();
   };
   
   // Get years of service
   const getYearsOfService = (joinDate) => {
+    if (!joinDate) return 0;
     return differenceInYears(new Date(), new Date(joinDate));
   };
+  
+  // Filter attendance by selected date
+  const filteredAttendance = attendance.filter(att => 
+    format(new Date(att.date), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
+  );
+  
+  if (employeesLoading && employees.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card>
@@ -621,7 +328,7 @@ const EmployeeManagement = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="employees">Employees</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
@@ -668,8 +375,10 @@ const EmployeeManagement = () => {
                   <div className="flex items-center justify-between space-x-4">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground mb-1">Attendance Rate</p>
-                      <p className="text-2xl font-bold">{Math.round((presentToday / activeEmployees) * 100)}%</p>
-                      <p className="text-sm text-muted-foreground">Present yesterday</p>
+                      <p className="text-2xl font-bold">
+                        {activeEmployees > 0 ? Math.round((attendanceStats.presentToday / activeEmployees) * 100) : 0}%
+                      </p>
+                      <p className="text-sm text-muted-foreground">Present today</p>
                     </div>
                     <div className="bg-amber-100 p-3 rounded-full">
                       <Clock className="h-6 w-6 text-amber-600" />
@@ -719,12 +428,12 @@ const EmployeeManagement = () => {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar>
-                            <AvatarImage src={employee.photo} />
-                            <AvatarFallback>{getInitials(employee.name)}</AvatarFallback>
+                            <AvatarImage src={employee.photo_url} />
+                            <AvatarFallback>{getInitials(employee.full_name)}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">{employee.name}</p>
-                            <p className="text-xs text-muted-foreground">{employee.id}</p>
+                            <p className="font-medium">{employee.full_name}</p>
+                            <p className="text-xs text-muted-foreground">{employee.employee_id}</p>
                           </div>
                         </div>
                       </TableCell>
@@ -733,15 +442,17 @@ const EmployeeManagement = () => {
                       <TableCell>
                         <div className="flex flex-col text-sm">
                           <div className="flex items-center gap-1">
-                            <Phone className="h-3 w-3" /> {employee.contact}
+                            <Phone className="h-3 w-3" /> {employee.contact_phone}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" /> {employee.email}
-                          </div>
+                          {employee.email && (
+                            <div className="flex items-center gap-1">
+                              <Mail className="h-3 w-3" /> {employee.email}
+                            </div>
+                          )}
                         </div>
                       </TableCell>
-                      <TableCell>{formatDate(employee.joinDate)}</TableCell>
-                      <TableCell>{getYearsOfService(employee.joinDate)} years</TableCell>
+                      <TableCell>{formatDate(employee.join_date)}</TableCell>
+                      <TableCell>{getYearsOfService(employee.join_date)} years</TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(employee.status)} variant="outline">
                           {employee.status}
@@ -785,9 +496,7 @@ const EmployeeManagement = () => {
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="flex items-center gap-1">
                       <CalendarIcon className="h-4 w-4" />
-                      <span>
-                        {format(selectedDate, "MMM d, yyyy")}
-                      </span>
+                      <span>{format(selectedDate, "MMM d, yyyy")}</span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="end">
@@ -817,28 +526,28 @@ const EmployeeManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {attendance
-                    .filter(att => format(att.date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd'))
-                    .map((record) => (
-                      <TableRow key={record.id}>
-                        <TableCell>{formatDate(record.date)}</TableCell>
-                        <TableCell className="font-medium">{record.employeeName}</TableCell>
-                        <TableCell>{record.checkIn || '-'}</TableCell>
-                        <TableCell>{record.checkOut || '-'}</TableCell>
-                        <TableCell>
-                          {record.checkIn && record.checkOut 
-                            ? calculateHours(record.checkIn, record.checkOut) 
-                            : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(record.status)} variant="outline">
-                            {record.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{record.notes}</TableCell>
-                      </TableRow>
-                    ))}
-                  {attendance.filter(att => format(att.date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')).length === 0 && (
+                  {filteredAttendance.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell>{formatDate(record.date)}</TableCell>
+                      <TableCell className="font-medium">
+                        {record.kashari_employees?.full_name || 'Unknown'}
+                      </TableCell>
+                      <TableCell>{record.check_in || '-'}</TableCell>
+                      <TableCell>{record.check_out || '-'}</TableCell>
+                      <TableCell>
+                        {record.check_in && record.check_out 
+                          ? calculateHours(record.check_in, record.check_out) 
+                          : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(record.status)} variant="outline">
+                          {record.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{record.notes || '-'}</TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredAttendance.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
                         No attendance records found for this date
@@ -887,13 +596,15 @@ const EmployeeManagement = () => {
                 <TableBody>
                   {leaveRecords.map((record) => (
                     <TableRow key={record.id}>
-                      <TableCell className="font-medium">{record.employeeName}</TableCell>
-                      <TableCell>{record.type}</TableCell>
-                      <TableCell>{record.duration} days</TableCell>
-                      <TableCell>
-                        {formatDate(record.startDate)} - {formatDate(record.endDate)}
+                      <TableCell className="font-medium">
+                        {record.kashari_employees?.full_name || 'Unknown'}
                       </TableCell>
-                      <TableCell>{record.reason}</TableCell>
+                      <TableCell>{record.leave_type}</TableCell>
+                      <TableCell>{record.duration_days} days</TableCell>
+                      <TableCell>
+                        {formatDate(record.start_date)} - {formatDate(record.end_date)}
+                      </TableCell>
+                      <TableCell>{record.reason || '-'}</TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(record.status)} variant="outline">
                           {record.status}
@@ -902,10 +613,20 @@ const EmployeeManagement = () => {
                       <TableCell>
                         {record.status === 'pending' && (
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="sm" className="text-green-500 hover:text-green-700">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-green-500 hover:text-green-700"
+                              onClick={() => handleLeaveAction(record.id, 'approved')}
+                            >
                               Approve
                             </Button>
-                            <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => handleLeaveAction(record.id, 'rejected')}
+                            >
                               Reject
                             </Button>
                           </div>
@@ -935,11 +656,11 @@ const EmployeeManagement = () => {
                 <form onSubmit={handleEmployeeSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Full Name *</Label>
+                      <Label htmlFor="full_name">Full Name *</Label>
                       <Input
-                        id="name"
-                        name="name"
-                        value={employeeForm.name}
+                        id="full_name"
+                        name="full_name"
+                        value={employeeForm.full_name}
                         onChange={handleEmployeeInputChange}
                         placeholder="Enter full name"
                       />
@@ -984,25 +705,25 @@ const EmployeeManagement = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="joinDate">Join Date *</Label>
+                      <Label htmlFor="join_date">Join Date *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
                             variant={"outline"}
                             className={cn(
                               "w-full justify-start text-left font-normal",
-                              !employeeForm.joinDate && "text-muted-foreground"
+                              !employeeForm.join_date && "text-muted-foreground"
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {employeeForm.joinDate ? format(employeeForm.joinDate, "PPP") : <span>Select date</span>}
+                            {employeeForm.join_date ? format(employeeForm.join_date, "PPP") : <span>Select date</span>}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={employeeForm.joinDate}
-                            onSelect={handleEmployeeDateChange}
+                            selected={employeeForm.join_date}
+                            onSelect={(date) => setEmployeeForm(prev => ({ ...prev, join_date: date }))}
                             initialFocus
                             className="p-3 pointer-events-auto"
                           />
@@ -1011,11 +732,11 @@ const EmployeeManagement = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="contact">Contact Number *</Label>
+                      <Label htmlFor="contact_phone">Contact Number *</Label>
                       <Input
-                        id="contact"
-                        name="contact"
-                        value={employeeForm.contact}
+                        id="contact_phone"
+                        name="contact_phone"
+                        value={employeeForm.contact_phone}
                         onChange={handleEmployeeInputChange}
                         placeholder="Enter contact number"
                       />
@@ -1115,7 +836,7 @@ const EmployeeManagement = () => {
                           <Calendar
                             mode="single"
                             selected={attendanceForm.date}
-                            onSelect={handleAttendanceDateChange}
+                            onSelect={(date) => setAttendanceForm(prev => ({ ...prev, date }))}
                             initialFocus
                             className="p-3 pointer-events-auto"
                           />
@@ -1124,10 +845,10 @@ const EmployeeManagement = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="employeeId">Employee *</Label>
+                      <Label htmlFor="employee_id">Employee *</Label>
                       <Select
-                        value={attendanceForm.employeeId}
-                        onValueChange={(value) => handleAttendanceSelectChange('employeeId', value)}
+                        value={attendanceForm.employee_id}
+                        onValueChange={(value) => handleAttendanceSelectChange('employee_id', value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select employee" />
@@ -1136,7 +857,7 @@ const EmployeeManagement = () => {
                           {employees
                             .filter(emp => emp.status === 'active')
                             .map(emp => (
-                              <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
+                              <SelectItem key={emp.id} value={emp.id}>{emp.full_name}</SelectItem>
                             ))}
                         </SelectContent>
                       </Select>
@@ -1160,31 +881,31 @@ const EmployeeManagement = () => {
                       </Select>
                     </div>
                     
-                    {attendanceForm.status === 'present' || attendanceForm.status === 'late' ? (
+                    {(attendanceForm.status === 'present' || attendanceForm.status === 'late') && (
                       <>
                         <div className="space-y-2">
-                          <Label htmlFor="checkIn">Check-In Time</Label>
+                          <Label htmlFor="check_in">Check-In Time</Label>
                           <Input
-                            id="checkIn"
-                            name="checkIn"
+                            id="check_in"
+                            name="check_in"
                             type="time"
-                            value={attendanceForm.checkIn}
+                            value={attendanceForm.check_in}
                             onChange={handleAttendanceInputChange}
                           />
                         </div>
                         
                         <div className="space-y-2">
-                          <Label htmlFor="checkOut">Check-Out Time</Label>
+                          <Label htmlFor="check_out">Check-Out Time</Label>
                           <Input
-                            id="checkOut"
-                            name="checkOut"
+                            id="check_out"
+                            name="check_out"
                             type="time"
-                            value={attendanceForm.checkOut}
+                            value={attendanceForm.check_out}
                             onChange={handleAttendanceInputChange}
                           />
                         </div>
                       </>
-                    ) : null}
+                    )}
                   </div>
                   
                   <div className="space-y-2">
@@ -1222,10 +943,10 @@ const EmployeeManagement = () => {
                 <form onSubmit={handleLeaveSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="employeeId">Employee *</Label>
+                      <Label htmlFor="employee_id">Employee *</Label>
                       <Select
-                        value={leaveForm.employeeId}
-                        onValueChange={(value) => handleLeaveSelectChange('employeeId', value)}
+                        value={leaveForm.employee_id}
+                        onValueChange={(value) => handleLeaveSelectChange('employee_id', value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select employee" />
@@ -1234,17 +955,17 @@ const EmployeeManagement = () => {
                           {employees
                             .filter(emp => emp.status === 'active')
                             .map(emp => (
-                              <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
+                              <SelectItem key={emp.id} value={emp.id}>{emp.full_name}</SelectItem>
                             ))}
                         </SelectContent>
                       </Select>
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="type">Leave Type *</Label>
+                      <Label htmlFor="leave_type">Leave Type *</Label>
                       <Select
-                        value={leaveForm.type}
-                        onValueChange={(value) => handleLeaveSelectChange('type', value)}
+                        value={leaveForm.leave_type}
+                        onValueChange={(value) => handleLeaveSelectChange('leave_type', value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select leave type" />
@@ -1258,25 +979,25 @@ const EmployeeManagement = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="startDate">Start Date *</Label>
+                      <Label htmlFor="start_date">Start Date *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
                             variant={"outline"}
                             className={cn(
                               "w-full justify-start text-left font-normal",
-                              !leaveForm.startDate && "text-muted-foreground"
+                              !leaveForm.start_date && "text-muted-foreground"
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {leaveForm.startDate ? format(leaveForm.startDate, "PPP") : <span>Select date</span>}
+                            {leaveForm.start_date ? format(leaveForm.start_date, "PPP") : <span>Select date</span>}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={leaveForm.startDate}
-                            onSelect={handleLeaveStartDateChange}
+                            selected={leaveForm.start_date}
+                            onSelect={(date) => setLeaveForm(prev => ({ ...prev, start_date: date }))}
                             initialFocus
                             className="p-3 pointer-events-auto"
                           />
@@ -1285,25 +1006,25 @@ const EmployeeManagement = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="endDate">End Date *</Label>
+                      <Label htmlFor="end_date">End Date *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
                             variant={"outline"}
                             className={cn(
                               "w-full justify-start text-left font-normal",
-                              !leaveForm.endDate && "text-muted-foreground"
+                              !leaveForm.end_date && "text-muted-foreground"
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {leaveForm.endDate ? format(leaveForm.endDate, "PPP") : <span>Select date</span>}
+                            {leaveForm.end_date ? format(leaveForm.end_date, "PPP") : <span>Select date</span>}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={leaveForm.endDate}
-                            onSelect={handleLeaveEndDateChange}
+                            selected={leaveForm.end_date}
+                            onSelect={(date) => setLeaveForm(prev => ({ ...prev, end_date: date }))}
                             initialFocus
                             className="p-3 pointer-events-auto"
                           />
