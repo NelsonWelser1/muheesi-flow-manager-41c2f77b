@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { format, addYears } from 'date-fns';
 
@@ -35,12 +35,12 @@ export const useKashariScholarships = () => {
 
   const addScholarship = async (scholarshipData) => {
     try {
-      // Generate scholarship_id
+      // Generate student_id
       const { count } = await supabase
         .from('kashari_scholarships')
         .select('*', { count: 'exact', head: true });
       
-      const newScholarshipId = `SCH-${String((count || 0) + 1).padStart(3, '0')}`;
+      const newStudentId = `SCH-${String((count || 0) + 1).padStart(3, '0')}`;
       const startDate = format(new Date(), 'yyyy-MM-dd');
       const endDate = format(addYears(new Date(), 1), 'yyyy-MM-dd');
 
@@ -48,11 +48,11 @@ export const useKashariScholarships = () => {
         .from('kashari_scholarships')
         .insert([{ 
           ...scholarshipData,
-          scholarship_id: newScholarshipId,
+          student_id: newStudentId,
           start_date: startDate,
           end_date: endDate,
           status: 'pending',
-          performance_rating: 'N/A'
+          scholarship_type: 'Partial'
         }])
         .select()
         .single();
