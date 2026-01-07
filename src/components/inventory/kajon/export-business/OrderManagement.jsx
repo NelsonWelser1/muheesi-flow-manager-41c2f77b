@@ -1,27 +1,64 @@
 import React, { useState } from 'react';
 import OrdersList from './modules/order-management/OrdersList';
 import OrderForm from './modules/order-management/OrderForm';
+import { useCoffeeOrders } from '@/hooks/useCoffeeOrders';
+import { Loader2 } from 'lucide-react';
 
 const OrderManagement = () => {
   const [view, setView] = useState('list');
-  
-  // Mock data for demonstration
-  const orders = [
-    { id: '#002', date: '11 Feb, 2024', customer: 'Wade Warren', status: 'pending', total: '$20.00', delivery: 'N/A', items: '2 items', fulfillment: 'Unfulfilled' },
-    { id: '#004', date: '13 Feb, 2024', customer: 'Esther Howard', status: 'success', total: '$22.00', delivery: 'N/A', items: '3 items', fulfillment: 'Fulfilled' },
-    { id: '#007', date: '15 Feb, 2024', customer: 'Jenny Wilson', status: 'pending', total: '$25.00', delivery: 'N/A', items: '1 items', fulfillment: 'Unfulfilled' },
-  ];
+  const { orders, loading, addOrder, updateOrder, deleteOrder, fetchOrders } = useCoffeeOrders();
+
+  const handleCreateOrder = async (orderData) => {
+    const result = await addOrder(orderData);
+    if (result.success) {
+      setView('list');
+    }
+    return result;
+  };
+
+  const handleUpdateOrder = async (id, updates) => {
+    return await updateOrder(id, updates);
+  };
+
+  const handleDeleteOrder = async (id) => {
+    return await deleteOrder(id);
+  };
+
+  // Transform orders for OrdersList component
+  const formattedOrders = orders.map(order => ({
+    id: order.order_number || order.id,
+    date: order.order_date ? new Date(order.order_date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A',
+    customer: order.customer_name,
+    status: order.status || 'pending',
+    total: order.total_amount ? `$${order.total_amount.toLocaleString()}` : 'N/A',
+    delivery: order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : 'N/A',
+    items: `${order.quantity || 0} ${order.unit || 'kg'}`,
+    fulfillment: order.fulfillment || 'Unfulfilled',
+    rawData: order
+  }));
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64 bg-card rounded-lg">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 p-6 bg-white rounded-lg">
+    <div className="space-y-6 p-6 bg-card rounded-lg">
       {view === 'list' ? (
         <OrdersList 
-          orders={orders} 
-          onCreateOrder={() => setView('form')} 
+          orders={formattedOrders} 
+          onCreateOrder={() => setView('form')}
+          onUpdateOrder={handleUpdateOrder}
+          onDeleteOrder={handleDeleteOrder}
+          onRefresh={fetchOrders}
         />
       ) : (
         <OrderForm 
-          onBack={() => setView('list')} 
+          onBack={() => setView('list')}
+          onSubmit={handleCreateOrder}
         />
       )}
     </div>

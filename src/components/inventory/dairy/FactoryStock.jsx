@@ -1,28 +1,23 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, TrendingUp, AlertCircle, Factory } from 'lucide-react';
+import { Package, TrendingUp, AlertCircle, Factory, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import ProductionLineManagement from './production/ProductionLineManagement';
+import { useFactoryInventory } from '@/hooks/useFactoryInventory';
 
-const mockData = {
-  inventory: [
-    { name: 'Cheese', value: 120 },
-    { name: 'Yogurt', value: 80 },
-    { name: 'Processed Milk', value: 200 },
-  ],
-  productionLines: [
-    { id: 1, name: 'Line A', product: 'Cheese', quantity: 50, manager: 'John Doe' },
-    { id: 2, name: 'Line B', product: 'Yogurt', quantity: 30, manager: 'Jane Smith' },
-  ],
-  alerts: [
-    { id: 1, message: 'Low stock alert: Cheese', severity: 'warning' },
-    { id: 2, message: 'Line A maintenance due', severity: 'info' },
-  ]
-};
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const FactoryStock = () => {
+  const { inventory, productionLines, alerts, stats, loading } = useFactoryInventory();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <ProductionLineManagement />
@@ -34,7 +29,7 @@ const FactoryStock = () => {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">400 units</div>
+            <div className="text-2xl font-bold">{stats.totalProducts} units</div>
           </CardContent>
         </Card>
 
@@ -44,7 +39,7 @@ const FactoryStock = () => {
             <Factory className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">80 units</div>
+            <div className="text-2xl font-bold">{stats.productionOutput} units</div>
           </CardContent>
         </Card>
 
@@ -54,7 +49,7 @@ const FactoryStock = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">75%</div>
+            <div className="text-2xl font-bold">{stats.utilization}%</div>
           </CardContent>
         </Card>
 
@@ -64,7 +59,7 @@ const FactoryStock = () => {
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">20 units</div>
+            <div className="text-2xl font-bold">{stats.expiringSoon} units</div>
           </CardContent>
         </Card>
       </div>
@@ -77,12 +72,12 @@ const FactoryStock = () => {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={mockData.inventory}>
+                <BarChart data={inventory}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="value" fill="#8884d8" />
+                  <Bar dataKey="value" fill="hsl(var(--primary))" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -98,15 +93,15 @@ const FactoryStock = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={mockData.inventory}
+                    data={inventory}
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    fill="#8884d8"
+                    fill="hsl(var(--primary))"
                     dataKey="value"
                     label
                   >
-                    {mockData.inventory.map((entry, index) => (
+                    {inventory.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -125,7 +120,7 @@ const FactoryStock = () => {
         <CardContent>
           <div className="relative overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="text-xs uppercase bg-gray-50">
+              <thead className="text-xs uppercase bg-muted">
                 <tr>
                   <th className="px-6 py-3">Line</th>
                   <th className="px-6 py-3">Product</th>
@@ -134,8 +129,8 @@ const FactoryStock = () => {
                 </tr>
               </thead>
               <tbody>
-                {mockData.productionLines.map((line) => (
-                  <tr key={line.id} className="bg-white border-b">
+                {productionLines.map((line) => (
+                  <tr key={line.id} className="bg-card border-b">
                     <td className="px-6 py-4">{line.name}</td>
                     <td className="px-6 py-4">{line.product}</td>
                     <td className="px-6 py-4">{line.quantity}</td>
@@ -154,11 +149,13 @@ const FactoryStock = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockData.alerts.map((alert) => (
+            {alerts.map((alert) => (
               <div
                 key={alert.id}
                 className={`p-4 rounded-lg ${
-                  alert.severity === 'warning' ? 'bg-yellow-100' : 'bg-blue-100'
+                  alert.severity === 'critical' ? 'bg-destructive/10 text-destructive' :
+                  alert.severity === 'warning' ? 'bg-yellow-100 text-yellow-800' : 
+                  'bg-blue-100 text-blue-800'
                 }`}
               >
                 {alert.message}

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Beef, Wrench, AlertCircle, TrendingUp, ClipboardCheck, PackageCheck, ScrollText, Scale } from 'lucide-react';
+import { Beef, Wrench, AlertCircle, TrendingUp, ClipboardCheck, PackageCheck, Scale, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MetricCard from './slaughterhouse/MetricCard';
 import ProductionChart from './slaughterhouse/ProductionChart';
 import ProcessingUnitsTable from './slaughterhouse/ProcessingUnitsTable';
@@ -10,25 +9,11 @@ import AnimalProcurementForm from './slaughterhouse/forms/AnimalProcurementForm'
 import ProcessingProductionForm from './slaughterhouse/forms/ProcessingProductionForm';
 import PackagingStorageForm from './slaughterhouse/forms/PackagingStorageForm';
 import ComplianceForm from './slaughterhouse/forms/ComplianceForm';
-
-const mockData = {
-  dailyProduction: [
-    { type: 'Beef', quantity: 250 },
-    { type: 'Pork', quantity: 180 },
-    { type: 'Goat', quantity: 120 },
-  ],
-  processingUnits: [
-    { id: 1, name: 'Unit A', activity: 'Beef Processing', personnel: 'Team 1', status: 'active' },
-    { id: 2, name: 'Unit B', activity: 'Pork Processing', personnel: 'Team 2', status: 'maintenance' },
-  ],
-  operationLogs: [
-    { id: 1, time: '09:00 AM', type: 'Beef', quantity: 50, personnel: 'John Doe' },
-    { id: 2, time: '10:30 AM', type: 'Pork', quantity: 30, personnel: 'Jane Smith' },
-  ]
-};
+import { useSlaughterhouseData } from '@/hooks/useSlaughterhouseData';
 
 const SlaughterhouseStock = () => {
   const [activeForm, setActiveForm] = useState(null);
+  const { dailyProduction, processingUnits, operationLogs, stats, loading } = useSlaughterhouseData();
 
   const renderActiveForm = () => {
     switch (activeForm) {
@@ -49,6 +34,14 @@ const SlaughterhouseStock = () => {
     return (
       <div className="space-y-4">
         {renderActiveForm()}
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -94,15 +87,15 @@ const SlaughterhouseStock = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard title="Processed Today" value="80 animals" icon={Beef} />
-        <MetricCard title="Meat Output" value="550 kg" icon={TrendingUp} />
-        <MetricCard title="Active Units" value="2/3" icon={Wrench} />
-        <MetricCard title="Alerts" value="2" icon={AlertCircle} />
+        <MetricCard title="Processed Today" value={stats.processedToday} icon={Beef} />
+        <MetricCard title="Meat Output" value={stats.meatOutput} icon={TrendingUp} />
+        <MetricCard title="Active Units" value={stats.activeUnits} icon={Wrench} />
+        <MetricCard title="Alerts" value={stats.alertCount} icon={AlertCircle} />
       </div>
 
-      <ProductionChart data={mockData.dailyProduction} />
-      <ProcessingUnitsTable units={mockData.processingUnits} />
-      <OperationLogsTable logs={mockData.operationLogs} />
+      <ProductionChart data={dailyProduction} />
+      <ProcessingUnitsTable units={processingUnits} />
+      <OperationLogsTable logs={operationLogs} />
     </div>
   );
 };
