@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
 export const useKashariEmployees = () => {
@@ -45,7 +45,8 @@ export const useKashariEmployees = () => {
         .from('kashari_employees')
         .insert([{ 
           ...employeeData,
-          employee_id: newEmployeeId
+          employee_id: newEmployeeId,
+          company: 'Kashari Farm'
         }])
         .select()
         .single();

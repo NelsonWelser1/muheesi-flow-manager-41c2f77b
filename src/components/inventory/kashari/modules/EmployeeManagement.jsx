@@ -28,16 +28,16 @@ const EmployeeManagement = () => {
   
   // Use database hooks
   const { employees, loading: employeesLoading, addEmployee } = useKashariEmployees();
-  const { attendance, loading: attendanceLoading, addAttendance, getStats: getAttendanceStats } = useKashariAttendance();
-  const { leaveRecords, loading: leaveLoading, addLeaveRecord, updateLeaveRecord } = useKashariLeave();
+  const { attendance, loading: attendanceLoading, recordAttendance, getAttendanceStats } = useKashariAttendance();
+  const { leaveRecords, loading: leaveLoading, submitLeaveRequest, approveLeave, rejectLeave } = useKashariLeave();
   
   // Form states
   const [employeeForm, setEmployeeForm] = useState({
-    full_name: '',
+    name: '',
     position: '',
     department: '',
     join_date: new Date(),
-    contact_phone: '',
+    contact: '',
     email: '',
     address: '',
     salary: '',
@@ -70,7 +70,7 @@ const EmployeeManagement = () => {
   
   // Filter records based on search term
   const filteredEmployees = employees.filter(emp => 
-    emp.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.employee_id?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -134,7 +134,7 @@ const EmployeeManagement = () => {
   const handleEmployeeSubmit = async (e) => {
     e.preventDefault();
     
-    if (!employeeForm.full_name || !employeeForm.position || !employeeForm.department || !employeeForm.contact_phone) {
+    if (!employeeForm.name || !employeeForm.position || !employeeForm.department || !employeeForm.contact) {
       toast({
         title: "Missing Fields",
         description: "Please fill all required fields.",
@@ -144,11 +144,11 @@ const EmployeeManagement = () => {
     }
     
     const result = await addEmployee({
-      full_name: employeeForm.full_name,
+      name: employeeForm.name,
       position: employeeForm.position,
       department: employeeForm.department,
       join_date: format(employeeForm.join_date, 'yyyy-MM-dd'),
-      contact_phone: employeeForm.contact_phone,
+      contact: employeeForm.contact,
       email: employeeForm.email,
       address: employeeForm.address,
       salary: employeeForm.salary ? Number(employeeForm.salary) : 0,
@@ -158,11 +158,11 @@ const EmployeeManagement = () => {
     
     if (result.success) {
       setEmployeeForm({
-        full_name: '',
+        name: '',
         position: '',
         department: '',
         join_date: new Date(),
-        contact_phone: '',
+        contact: '',
         email: '',
         address: '',
         salary: '',
@@ -186,7 +186,7 @@ const EmployeeManagement = () => {
       return;
     }
     
-    const result = await addAttendance({
+    const result = await recordAttendance({
       employee_id: attendanceForm.employee_id,
       date: format(attendanceForm.date, 'yyyy-MM-dd'),
       check_in: attendanceForm.status === 'present' || attendanceForm.status === 'late' ? attendanceForm.check_in : null,
@@ -233,17 +233,12 @@ const EmployeeManagement = () => {
       return;
     }
     
-    const durationInMs = endDate.getTime() - startDate.getTime();
-    const durationInDays = Math.floor(durationInMs / (1000 * 60 * 60 * 24)) + 1;
-    
-    const result = await addLeaveRecord({
+    const result = await submitLeaveRequest({
       employee_id: leaveForm.employee_id,
       leave_type: leaveForm.leave_type,
       start_date: format(startDate, 'yyyy-MM-dd'),
       end_date: format(endDate, 'yyyy-MM-dd'),
-      duration_days: durationInDays,
-      reason: leaveForm.reason,
-      status: 'pending'
+      reason: leaveForm.reason
     });
     
     if (result.success) {
@@ -261,10 +256,11 @@ const EmployeeManagement = () => {
   
   // Handle leave approval/rejection
   const handleLeaveAction = async (leaveId, action) => {
-    await updateLeaveRecord(leaveId, { 
-      status: action,
-      approved_by: action === 'approved' ? 'Admin' : null
-    });
+    if (action === 'approved') {
+      await approveLeave(leaveId, 'Admin');
+    } else {
+      await rejectLeave(leaveId);
+    }
   };
   
   // Format date
@@ -376,7 +372,7 @@ const EmployeeManagement = () => {
                     <div>
                       <p className="text-sm font-medium text-muted-foreground mb-1">Attendance Rate</p>
                       <p className="text-2xl font-bold">
-                        {activeEmployees > 0 ? Math.round((attendanceStats.presentToday / activeEmployees) * 100) : 0}%
+                        {activeEmployees > 0 ? Math.round((attendanceStats.present / activeEmployees) * 100) : 0}%
                       </p>
                       <p className="text-sm text-muted-foreground">Present today</p>
                     </div>
@@ -429,10 +425,10 @@ const EmployeeManagement = () => {
                         <div className="flex items-center gap-3">
                           <Avatar>
                             <AvatarImage src={employee.photo_url} />
-                            <AvatarFallback>{getInitials(employee.full_name)}</AvatarFallback>
+                            <AvatarFallback>{getInitials(employee.name)}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">{employee.full_name}</p>
+                            <p className="font-medium">{employee.name}</p>
                             <p className="text-xs text-muted-foreground">{employee.employee_id}</p>
                           </div>
                         </div>
@@ -442,7 +438,7 @@ const EmployeeManagement = () => {
                       <TableCell>
                         <div className="flex flex-col text-sm">
                           <div className="flex items-center gap-1">
-                            <Phone className="h-3 w-3" /> {employee.contact_phone}
+                            <Phone className="h-3 w-3" /> {employee.contact}
                           </div>
                           {employee.email && (
                             <div className="flex items-center gap-1">
@@ -530,7 +526,7 @@ const EmployeeManagement = () => {
                     <TableRow key={record.id}>
                       <TableCell>{formatDate(record.date)}</TableCell>
                       <TableCell className="font-medium">
-                        {record.kashari_employees?.full_name || 'Unknown'}
+                        {record.kashari_employees?.name || 'Unknown'}
                       </TableCell>
                       <TableCell>{record.check_in || '-'}</TableCell>
                       <TableCell>{record.check_out || '-'}</TableCell>
@@ -597,10 +593,10 @@ const EmployeeManagement = () => {
                   {leaveRecords.map((record) => (
                     <TableRow key={record.id}>
                       <TableCell className="font-medium">
-                        {record.kashari_employees?.full_name || 'Unknown'}
+                        {record.kashari_employees?.name || 'Unknown'}
                       </TableCell>
                       <TableCell>{record.leave_type}</TableCell>
-                      <TableCell>{record.duration_days} days</TableCell>
+                      <TableCell>{record.duration || '-'} days</TableCell>
                       <TableCell>
                         {formatDate(record.start_date)} - {formatDate(record.end_date)}
                       </TableCell>
@@ -656,11 +652,11 @@ const EmployeeManagement = () => {
                 <form onSubmit={handleEmployeeSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="full_name">Full Name *</Label>
+                      <Label htmlFor="name">Full Name *</Label>
                       <Input
-                        id="full_name"
-                        name="full_name"
-                        value={employeeForm.full_name}
+                        id="name"
+                        name="name"
+                        value={employeeForm.name}
                         onChange={handleEmployeeInputChange}
                         placeholder="Enter full name"
                       />
@@ -732,11 +728,11 @@ const EmployeeManagement = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="contact_phone">Contact Number *</Label>
+                      <Label htmlFor="contact">Contact Number *</Label>
                       <Input
-                        id="contact_phone"
-                        name="contact_phone"
-                        value={employeeForm.contact_phone}
+                        id="contact"
+                        name="contact"
+                        value={employeeForm.contact}
                         onChange={handleEmployeeInputChange}
                         placeholder="Enter contact number"
                       />
