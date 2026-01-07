@@ -867,6 +867,66 @@ export type Database = {
         }
         Relationships: []
       }
+      coffee_customers: {
+        Row: {
+          contact_person: string | null
+          country: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          last_order_date: string | null
+          location: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          preferred_coffee_types: string[] | null
+          preferred_grades: string[] | null
+          status: string | null
+          total_orders: number | null
+          type: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          contact_person?: string | null
+          country?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_order_date?: string | null
+          location?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          preferred_coffee_types?: string[] | null
+          preferred_grades?: string[] | null
+          status?: string | null
+          total_orders?: number | null
+          type?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          contact_person?: string | null
+          country?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_order_date?: string | null
+          location?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          preferred_coffee_types?: string[] | null
+          preferred_grades?: string[] | null
+          status?: string | null
+          total_orders?: number | null
+          type?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       coffee_export_contracts: {
         Row: {
           additional_shipping_terms: string | null
@@ -1016,6 +1076,83 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      coffee_orders: {
+        Row: {
+          coffee_type: string | null
+          created_at: string | null
+          currency: string | null
+          customer_id: string | null
+          customer_name: string
+          delivery_date: string | null
+          fulfillment: string | null
+          grade: string | null
+          id: string
+          notes: string | null
+          order_date: string | null
+          order_number: string
+          payment_status: string | null
+          quantity: number | null
+          shipping_address: string | null
+          status: string | null
+          total_amount: number | null
+          unit: string | null
+          unit_price: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          coffee_type?: string | null
+          created_at?: string | null
+          currency?: string | null
+          customer_id?: string | null
+          customer_name: string
+          delivery_date?: string | null
+          fulfillment?: string | null
+          grade?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string | null
+          order_number: string
+          payment_status?: string | null
+          quantity?: number | null
+          shipping_address?: string | null
+          status?: string | null
+          total_amount?: number | null
+          unit?: string | null
+          unit_price?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          coffee_type?: string | null
+          created_at?: string | null
+          currency?: string | null
+          customer_id?: string | null
+          customer_name?: string
+          delivery_date?: string | null
+          fulfillment?: string | null
+          grade?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string | null
+          order_number?: string
+          payment_status?: string | null
+          quantity?: number | null
+          shipping_address?: string | null
+          status?: string | null
+          total_amount?: number | null
+          unit?: string | null
+          unit_price?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coffee_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "coffee_customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       coffee_sales: {
         Row: {
@@ -1581,6 +1718,60 @@ export type Database = {
           last_check?: string | null
           status?: string
           temperature?: number
+        }
+        Relationships: []
+      }
+      dairy_customers: {
+        Row: {
+          contact_person: string | null
+          created_at: string | null
+          credit_limit: number | null
+          email: string | null
+          id: string
+          last_order_date: string | null
+          location: string | null
+          name: string
+          notes: string | null
+          outstanding_balance: number | null
+          phone: string | null
+          status: string | null
+          total_orders: number | null
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contact_person?: string | null
+          created_at?: string | null
+          credit_limit?: number | null
+          email?: string | null
+          id?: string
+          last_order_date?: string | null
+          location?: string | null
+          name: string
+          notes?: string | null
+          outstanding_balance?: number | null
+          phone?: string | null
+          status?: string | null
+          total_orders?: number | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contact_person?: string | null
+          created_at?: string | null
+          credit_limit?: number | null
+          email?: string | null
+          id?: string
+          last_order_date?: string | null
+          location?: string | null
+          name?: string
+          notes?: string | null
+          outstanding_balance?: number | null
+          phone?: string | null
+          status?: string | null
+          total_orders?: number | null
+          type?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -2517,6 +2708,148 @@ export type Database = {
         }
         Relationships: []
       }
+      kashari_attendance: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          created_at: string | null
+          date: string
+          employee_id: string | null
+          id: string
+          notes: string | null
+          status: string | null
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string | null
+          date: string
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          status?: string | null
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string | null
+          date?: string
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kashari_attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "kashari_employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kashari_employees: {
+        Row: {
+          address: string | null
+          company: string | null
+          contact: string | null
+          created_at: string | null
+          department: string | null
+          email: string | null
+          employee_id: string
+          id: string
+          join_date: string | null
+          name: string
+          photo_url: string | null
+          position: string | null
+          salary: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          company?: string | null
+          contact?: string | null
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
+          employee_id: string
+          id?: string
+          join_date?: string | null
+          name: string
+          photo_url?: string | null
+          position?: string | null
+          salary?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          company?: string | null
+          contact?: string | null
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
+          employee_id?: string
+          id?: string
+          join_date?: string | null
+          name?: string
+          photo_url?: string | null
+          position?: string | null
+          salary?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      kashari_leave_records: {
+        Row: {
+          approved_by: string | null
+          created_at: string | null
+          duration: number | null
+          employee_id: string | null
+          end_date: string
+          id: string
+          reason: string | null
+          start_date: string
+          status: string | null
+          type: string
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string | null
+          duration?: number | null
+          employee_id?: string | null
+          end_date: string
+          id?: string
+          reason?: string | null
+          start_date: string
+          status?: string | null
+          type: string
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string | null
+          duration?: number | null
+          employee_id?: string | null
+          end_date?: string
+          id?: string
+          reason?: string | null
+          start_date?: string
+          status?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kashari_leave_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "kashari_employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kashari_milk_production: {
         Row: {
           created_at: string | null
@@ -2556,6 +2889,60 @@ export type Database = {
           session?: string
           updated_at?: string | null
           volume?: number
+        }
+        Relationships: []
+      }
+      kashari_scholarships: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          end_date: string | null
+          grade_level: string | null
+          guardian_contact: string | null
+          guardian_name: string | null
+          id: string
+          notes: string | null
+          scholarship_type: string | null
+          school: string | null
+          start_date: string | null
+          status: string | null
+          student_id: string | null
+          student_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          end_date?: string | null
+          grade_level?: string | null
+          guardian_contact?: string | null
+          guardian_name?: string | null
+          id?: string
+          notes?: string | null
+          scholarship_type?: string | null
+          school?: string | null
+          start_date?: string | null
+          status?: string | null
+          student_id?: string | null
+          student_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          end_date?: string | null
+          grade_level?: string | null
+          guardian_contact?: string | null
+          guardian_name?: string | null
+          id?: string
+          notes?: string | null
+          scholarship_type?: string | null
+          school?: string | null
+          start_date?: string | null
+          status?: string | null
+          student_id?: string | null
+          student_name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
