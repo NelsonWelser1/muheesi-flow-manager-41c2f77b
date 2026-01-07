@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ViewStockDashboard from './ViewStockDashboard';
@@ -6,119 +6,90 @@ import StockCards from './stock-visualization/StockCards';
 import StockTable from './stock-visualization/StockTable';
 import StockMap from './stock-visualization/StockMap';
 import StockInsights from './stock-visualization/StockInsights';
+import useCoffeeStockData from '@/hooks/useCoffeeStockData';
+import { Loader2 } from 'lucide-react';
 
 const ViewCurrentStock = ({ isKazo }) => {
   const [viewMode, setViewMode] = useState('dashboard');
+  const { stockData, isLoading, error } = useCoffeeStockData();
   
-  // Mock data for stock visualization
-  const mockStockData = [
-    {
-      id: 1,
-      name: 'Arabica Coffee: Bugisu AA',
-      type: 'Arabica',
-      grade: 'AA',
-      location: isKazo ? 'Kanoni-Mbogo' : 'Kampala Store',
-      current_stock: 1200,
-      max_capacity: 2000,
-      health: 'good',
-      trend: 'up',
-      updated_at: '2023-08-15T10:30:00Z'
-    },
-    {
-      id: 2,
-      name: 'Robusta Coffee: FAQ',
-      type: 'Robusta',
-      grade: 'FAQ',
-      location: isKazo ? 'Engari-Kaichumu' : 'JBER',
-      current_stock: 450,
-      max_capacity: 1500,
-      health: 'warning',
-      trend: 'down',
-      updated_at: '2023-08-10T14:45:00Z'
-    },
-    {
-      id: 3,
-      name: 'Arabica Coffee: Bugisu B',
-      type: 'Arabica',
-      grade: 'B',
-      location: isKazo ? 'Migina' : 'Mbarara Warehouse',
-      current_stock: 80,
-      max_capacity: 500,
-      health: 'critical',
-      trend: 'down',
-      updated_at: '2023-08-01T09:15:00Z'
-    },
-    {
-      id: 4,
-      name: 'Robusta Coffee: Screen 18',
-      type: 'Robusta',
-      grade: 'Screen 18',
-      location: isKazo ? 'Buremba' : 'Kakyinga Factory',
-      current_stock: 750,
-      max_capacity: 1000,
-      health: 'good',
-      trend: 'stable',
-      updated_at: '2023-08-12T16:20:00Z'
-    },
-    {
-      id: 5,
-      name: 'Arabica Coffee: DRUGAR',
-      type: 'Arabica',
-      grade: 'DRUGAR',
-      location: isKazo ? 'Kyampangara' : 'Kazo - Kanoni Warehouse',
-      current_stock: 320,
-      max_capacity: 800,
-      health: 'warning',
-      trend: 'up',
-      updated_at: '2023-08-14T11:10:00Z'
-    },
-    {
-      id: 6,
-      name: 'Robusta Coffee: Organic',
-      type: 'Robusta',
-      grade: 'Organic',
-      location: isKazo ? 'Kazo Town council' : 'Kampala Store',
-      current_stock: 900,
-      max_capacity: 1200,
-      health: 'good',
-      trend: 'up',
-      updated_at: '2023-08-11T13:40:00Z'
-    }
-  ];
+  // Transform database data to match the expected format for StockCards/StockTable
+  const transformedStockData = useMemo(() => {
+    if (!stockData || stockData.length === 0) return [];
+    
+    return stockData.map((item, index) => {
+      // Calculate health based on quantity thresholds
+      let health = 'good';
+      if (item.quantity < 100) health = 'critical';
+      else if (item.quantity < 500) health = 'warning';
+      
+      // Determine trend based on status
+      let trend = 'stable';
+      if (item.status === 'in_stock') trend = 'up';
+      else if (item.status === 'low_stock') trend = 'down';
+      
+      return {
+        id: item.id || index + 1,
+        name: `${item.coffee_type}: ${item.quality_grade}`,
+        type: item.coffee_type,
+        grade: item.quality_grade,
+        location: item.location,
+        current_stock: item.quantity,
+        max_capacity: Math.max(item.quantity * 2, 1000), // Estimate max capacity
+        health,
+        trend,
+        updated_at: item.updated_at || item.created_at
+      };
+    });
+  }, [stockData]);
   
-  // Mock data for locations
-  const locationData = [
-    {
-      name: isKazo ? 'Kanoni-Mbogo' : 'Kampala Store',
-      stockLevel: 2100,
-      maxCapacity: 3000,
-      stockTypes: ['Arabica', 'Robusta']
-    },
-    {
-      name: isKazo ? 'Engari-Kaichumu' : 'JBER',
-      stockLevel: 1200,
-      maxCapacity: 2500,
-      stockTypes: ['Arabica', 'Robusta']
-    },
-    {
-      name: isKazo ? 'Migina' : 'Mbarara Warehouse',
-      stockLevel: 950,
-      maxCapacity: 1800,
-      stockTypes: ['Arabica', 'Robusta']
-    },
-    {
-      name: isKazo ? 'Buremba' : 'Kakyinga Factory',
-      stockLevel: 750,
-      maxCapacity: 1000,
-      stockTypes: ['Robusta']
-    }
-  ];
+  // Generate location data from stock data
+  const locationData = useMemo(() => {
+    if (!stockData || stockData.length === 0) return [];
+    
+    const locationMap = {};
+    
+    stockData.forEach(item => {
+      if (!locationMap[item.location]) {
+        locationMap[item.location] = {
+          name: item.location,
+          stockLevel: 0,
+          maxCapacity: 0,
+          stockTypes: new Set()
+        };
+      }
+      locationMap[item.location].stockLevel += item.quantity;
+      locationMap[item.location].maxCapacity += Math.max(item.quantity * 2, 1000);
+      locationMap[item.location].stockTypes.add(item.coffee_type);
+    });
+    
+    return Object.values(locationMap).map(loc => ({
+      ...loc,
+      stockTypes: Array.from(loc.stockTypes)
+    }));
+  }, [stockData]);
   
   // Handle viewing item details
   const handleViewDetails = (item) => {
     console.log('Viewing details for item:', item);
-    // Implementation for displaying the details modal/view
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-muted-foreground">Loading stock data...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-destructive">
+        Error loading stock data: {error.message}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -138,7 +109,11 @@ const ViewCurrentStock = ({ isKazo }) => {
         <TabsContent value="cards" className="animate-fade-in">
           <Card>
             <CardContent className="pt-6">
-              <StockCards data={mockStockData} onViewDetails={handleViewDetails} />
+              {transformedStockData.length > 0 ? (
+                <StockCards data={transformedStockData} onViewDetails={handleViewDetails} />
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No stock data available</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -146,7 +121,11 @@ const ViewCurrentStock = ({ isKazo }) => {
         <TabsContent value="table" className="animate-fade-in">
           <Card>
             <CardContent className="pt-6">
-              <StockTable data={mockStockData} onViewDetails={handleViewDetails} />
+              {transformedStockData.length > 0 ? (
+                <StockTable data={transformedStockData} onViewDetails={handleViewDetails} />
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No stock data available</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -154,13 +133,17 @@ const ViewCurrentStock = ({ isKazo }) => {
         <TabsContent value="map" className="animate-fade-in">
           <Card>
             <CardContent className="pt-6">
-              <StockMap locationData={locationData} />
+              {locationData.length > 0 ? (
+                <StockMap locationData={locationData} />
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No location data available</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
         
         <TabsContent value="insights" className="animate-fade-in">
-          <StockInsights stockData={mockStockData} />
+          <StockInsights stockData={transformedStockData} />
         </TabsContent>
       </Tabs>
     </div>
