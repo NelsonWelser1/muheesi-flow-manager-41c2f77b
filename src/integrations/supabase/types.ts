@@ -2294,6 +2294,68 @@ export type Database = {
         }
         Relationships: []
       }
+      grading_records: {
+        Row: {
+          batch_id: string
+          below_screen_12: number | null
+          created_at: string | null
+          cupping_score: number | null
+          defect_count: number | null
+          defect_percentage: number | null
+          final_grade: string | null
+          grader: string | null
+          hulling_operation_id: string | null
+          id: string
+          notes: string | null
+          screen_12: number | null
+          screen_15: number | null
+          screen_18: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          batch_id: string
+          below_screen_12?: number | null
+          created_at?: string | null
+          cupping_score?: number | null
+          defect_count?: number | null
+          defect_percentage?: number | null
+          final_grade?: string | null
+          grader?: string | null
+          hulling_operation_id?: string | null
+          id?: string
+          notes?: string | null
+          screen_12?: number | null
+          screen_15?: number | null
+          screen_18?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          batch_id?: string
+          below_screen_12?: number | null
+          created_at?: string | null
+          cupping_score?: number | null
+          defect_count?: number | null
+          defect_percentage?: number | null
+          final_grade?: string | null
+          grader?: string | null
+          hulling_operation_id?: string | null
+          id?: string
+          notes?: string | null
+          screen_12?: number | null
+          screen_15?: number | null
+          screen_18?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grading_records_hulling_operation_id_fkey"
+            columns: ["hulling_operation_id"]
+            isOneToOne: false
+            referencedRelation: "hulling_operations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       "Grand Berna Dairies": {
         Row: {
           created_at: string
@@ -2411,6 +2473,54 @@ export type Database = {
           title?: string | null
           type?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      hulling_operations: {
+        Row: {
+          batch_id: string
+          created_at: string | null
+          end_time: string | null
+          id: string
+          input_weight: number
+          machine_id: string | null
+          notes: string | null
+          operator: string | null
+          output_weight: number | null
+          start_time: string | null
+          status: string | null
+          updated_at: string | null
+          yield_percentage: number | null
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          input_weight: number
+          machine_id?: string | null
+          notes?: string | null
+          operator?: string | null
+          output_weight?: number | null
+          start_time?: string | null
+          status?: string | null
+          updated_at?: string | null
+          yield_percentage?: number | null
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          input_weight?: number
+          machine_id?: string | null
+          notes?: string | null
+          operator?: string | null
+          output_weight?: number | null
+          start_time?: string | null
+          status?: string | null
+          updated_at?: string | null
+          yield_percentage?: number | null
         }
         Relationships: []
       }
@@ -5736,6 +5846,54 @@ export type Database = {
           storage_location?: string | null
           type?: string
           unit?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      sourcing_records: {
+        Row: {
+          coffee_type: string
+          created_at: string | null
+          currency: string | null
+          id: string
+          location: string
+          manager: string | null
+          moisture_content: number | null
+          notes: string | null
+          procurement_cost: number | null
+          quality_rating: string | null
+          screen_grade: string | null
+          source: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          coffee_type: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          location: string
+          manager?: string | null
+          moisture_content?: number | null
+          notes?: string | null
+          procurement_cost?: number | null
+          quality_rating?: string | null
+          screen_grade?: string | null
+          source?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          coffee_type?: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          location?: string
+          manager?: string | null
+          moisture_content?: number | null
+          notes?: string | null
+          procurement_cost?: number | null
+          quality_rating?: string | null
+          screen_grade?: string | null
+          source?: string | null
           updated_at?: string | null
         }
         Relationships: []

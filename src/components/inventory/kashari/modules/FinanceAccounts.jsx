@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,14 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { BarChart, PieChart, DollarSign, Download, CalendarIcon, Plus, Search, Filter, RefreshCw } from "lucide-react";
+import { BarChart, PieChart, DollarSign, Download, CalendarIcon, Plus, Search, Filter, RefreshCw, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { format, subDays } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { BarChart as ReBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RePieChart, Pie, Cell } from 'recharts';
+import { useKashariFinance } from '@/hooks/useKashariFinance';
 
 const FinanceAccounts = () => {
   const { toast } = useToast();
+  const { transactions: dbTransactions, isLoading, createTransaction, getFinancialSummary } = useKashariFinance();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [transactionType, setTransactionType] = useState('');
@@ -32,8 +34,13 @@ const FinanceAccounts = () => {
     notes: ''
   });
   
-  // Mock transaction data
-  const [transactions, setTransactions] = useState([
+  // Use database transactions or fallback to sample data if empty
+  const transactions = dbTransactions.length > 0 ? dbTransactions.map(t => ({
+    ...t,
+    date: new Date(t.created_at),
+    paymentMethod: t.payment_method,
+    status: t.status || 'completed'
+  })) : [
     {
       id: 'TRX-001',
       date: subDays(new Date(), 2),
@@ -66,41 +73,8 @@ const FinanceAccounts = () => {
       paymentMethod: 'mobile_money',
       reference: 'SUP-2023-031',
       status: 'completed'
-    },
-    {
-      id: 'TRX-004',
-      date: subDays(new Date(), 7),
-      amount: 1200000,
-      type: 'expense',
-      category: 'Salaries',
-      description: 'Monthly staff payments',
-      paymentMethod: 'bank_transfer',
-      reference: 'PAY-2023-008',
-      status: 'completed'
-    },
-    {
-      id: 'TRX-005',
-      date: subDays(new Date(), 10),
-      amount: 3500000,
-      type: 'income',
-      category: 'Coffee Sales',
-      description: 'Coffee beans export',
-      paymentMethod: 'bank_transfer',
-      reference: 'EXP-2023-012',
-      status: 'completed'
-    },
-    {
-      id: 'TRX-006',
-      date: subDays(new Date(), 12),
-      amount: 500000,
-      type: 'expense',
-      category: 'Utilities',
-      description: 'Electricity and water bill',
-      paymentMethod: 'mobile_money',
-      reference: 'UTIL-2023-025',
-      status: 'completed'
     }
-  ]);
+  ];
   
   // Filter transactions based on search term and transaction type
   const filteredTransactions = transactions.filter(transaction => {
