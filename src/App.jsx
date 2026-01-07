@@ -38,7 +38,7 @@ import RoleManagementTest from "./components/organization/users/RoleManagementTe
 import RolePermissionsManager from "./components/organization/users/RolePermissionsManager";
 import ErrorBoundary from "./components/ErrorBoundary";
 
-// Create QueryClient with proper configuration
+// Create QueryClient ONCE in module scope with HMR protection
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -49,12 +49,15 @@ const queryClient = new QueryClient({
   },
 });
 
+// HMR protection to prevent context issues during hot reload
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}
+
 const App = () => {
-  console.log('App component rendering with QueryClient:', queryClient);
-  
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <ErrorBoundary>
         <AutoFillProvider>
           <SupabaseAuthProvider>
             <TooltipProvider>
@@ -98,8 +101,8 @@ const App = () => {
             </TooltipProvider>
           </SupabaseAuthProvider>
         </AutoFillProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </QueryClientProvider>
   );
 };
 
