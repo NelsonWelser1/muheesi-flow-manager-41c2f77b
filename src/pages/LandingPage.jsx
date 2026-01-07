@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { LogIn, UserPlus, Shield, Users, Building2 } from 'lucide-react';
+import { LogIn, UserPlus, Shield, Users, Building2, Loader2 } from 'lucide-react';
 import CompanyShowcase from '../components/CompanyShowcase';
 import HeroSection from '../components/landing/HeroSection';
 import QuickAccessDashboard from '../components/landing/QuickAccessDashboard';
 import SystemStats from '../components/landing/SystemStats';
+import ComponentErrorBoundary from '../components/ui/ComponentErrorBoundary';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -29,7 +30,15 @@ const LandingPage = () => {
             </p>
           </div>
         </div>
-        <CompanyShowcase />
+        <ComponentErrorBoundary componentName="Company Showcase">
+          <Suspense fallback={
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          }>
+            <CompanyShowcase />
+          </Suspense>
+        </ComponentErrorBoundary>
       </div>
     </div>
   );

@@ -1,8 +1,15 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useCompanyStocks = (company) => {
+  // Defensive check for query client availability during HMR
+  try {
+    useQueryClient();
+  } catch (error) {
+    console.warn('useCompanyStocks: Query context not ready yet');
+    return { data: [], isLoading: false, error: null, isError: false };
+  }
+
   return useQuery({
     queryKey: ['companyStocks', company],
     queryFn: async () => {
