@@ -74,12 +74,21 @@ export const RoleManager = () => {
   const [deletingRole, setDeletingRole] = useState(null);
 
   const { data: groupedRoles, roles, isLoading, error } = useRolesByTier();
-  const { isSysadmin } = usePermissions();
+  const { permissions, isLoading: permissionsLoading } = usePermissions();
   const createRole = useCreateRole();
   const updateRole = useUpdateRole();
   const deleteRole = useDeleteRole();
 
-  if (!isSysadmin) {
+  if (permissionsLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
+
+  if (!permissions.isSysAdmin) {
     return (
       <Alert variant="destructive">
         <Shield className="h-4 w-4" />
