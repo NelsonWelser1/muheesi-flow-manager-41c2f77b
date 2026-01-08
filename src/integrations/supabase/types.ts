@@ -5639,6 +5639,45 @@ export type Database = {
         }
         Relationships: []
       }
+      roles: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_name: string
+          id: string
+          is_active: boolean | null
+          is_system_role: boolean | null
+          role_key: string
+          tier: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean | null
+          is_system_role?: boolean | null
+          role_key: string
+          tier?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean | null
+          is_system_role?: boolean | null
+          role_key?: string
+          tier?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       sales_contracts: {
         Row: {
           client_address: string | null
@@ -6797,6 +6836,19 @@ export type Database = {
           access_level: string
           can_access: boolean
           company: string
+        }[]
+      }
+      get_roles_with_user_count: {
+        Args: never
+        Returns: {
+          description: string
+          display_name: string
+          id: string
+          is_active: boolean
+          is_system_role: boolean
+          role_key: string
+          tier: string
+          user_count: number
         }[]
       }
       get_user_accessible_features: {

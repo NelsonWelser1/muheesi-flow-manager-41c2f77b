@@ -23,6 +23,7 @@ import {
   Lock,
   Globe,
   Coffee,
+  Crown,
   Truck,
   Factory
 } from 'lucide-react';
@@ -77,6 +78,14 @@ const SystemAdminDashboard = () => {
       icon: Users,
       color: "bg-primary",
       action: () => navigate('/manage-accounts'),
+      category: "users"
+    },
+    {
+      title: "Role Management",
+      description: "Create, edit, and manage roles and their access levels",
+      icon: Crown,
+      color: "bg-amber-500",
+      action: () => navigate('/users/role-management'),
       category: "users"
     },
     {

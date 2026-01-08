@@ -37,6 +37,7 @@ import RoleTemplates from "./components/organization/users/RoleTemplates";
 import RoleManagementTest from "./components/organization/users/RoleManagementTest";
 import RolePermissionsManager from "./components/organization/users/RolePermissionsManager";
 import FeatureAccessManager from "./components/organization/users/FeatureAccessManager";
+import RoleManagement from "./pages/RoleManagement";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Create QueryClient ONCE in module scope with HMR protection
@@ -93,6 +94,7 @@ const App = () => {
                 <Route path="/users/test" element={<ProtectedRoute><RoleManagementTest /></ProtectedRoute>} />
                 <Route path="/users/role-permissions" element={<ProtectedRoute><div className="container mx-auto p-6"><RolePermissionsManager /></div></ProtectedRoute>} />
                 <Route path="/users/feature-access" element={<ProtectedRoute><div className="container mx-auto p-6"><FeatureAccessManager /></div></ProtectedRoute>} />
+                <Route path="/users/role-management" element={<ProtectedRoute><RoleManagement /></ProtectedRoute>} />
                 <Route path="/users/:userId" element={<ProtectedRoute><UserDetails /></ProtectedRoute>} />
                 <Route path="/users/:userId/assign-role" element={<ProtectedRoute><AssignRole /></ProtectedRoute>} />
                 <Route path="/manage-inventory/kajon-export/export-manager" element={<ProtectedRoute><CoffeeExportManagerDashboard /></ProtectedRoute>} />
