@@ -2294,6 +2294,78 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_access_log: {
+        Row: {
+          accessed_at: string | null
+          action: string
+          company: string | null
+          feature_key: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          accessed_at?: string | null
+          action: string
+          company?: string | null
+          feature_key: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          accessed_at?: string | null
+          action?: string
+          company?: string | null
+          feature_key?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      feature_definitions: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          feature_key: string
+          feature_name: string
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          parent_feature_key: string | null
+          route_path: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          feature_key: string
+          feature_name: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          parent_feature_key?: string | null
+          route_path?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          feature_key?: string
+          feature_name?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          parent_feature_key?: string | null
+          route_path?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       grading_records: {
         Row: {
           batch_id: string
@@ -5455,6 +5527,47 @@ export type Database = {
         }
         Relationships: []
       }
+      role_feature_access: {
+        Row: {
+          access_level: string | null
+          company: string | null
+          created_at: string | null
+          feature_key: string
+          id: string
+          is_enabled: boolean | null
+          role: string
+          updated_at: string | null
+        }
+        Insert: {
+          access_level?: string | null
+          company?: string | null
+          created_at?: string | null
+          feature_key: string
+          id?: string
+          is_enabled?: boolean | null
+          role: string
+          updated_at?: string | null
+        }
+        Update: {
+          access_level?: string | null
+          company?: string | null
+          created_at?: string | null
+          feature_key?: string
+          id?: string
+          is_enabled?: boolean | null
+          role?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_feature_access_feature_key_fkey"
+            columns: ["feature_key"]
+            isOneToOne: false
+            referencedRelation: "feature_definitions"
+            referencedColumns: ["feature_key"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           created_at: string | null
@@ -6674,6 +6787,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_feature: {
+        Args: {
+          _feature_key: string
+          _required_level?: string
+          _user_id: string
+        }
+        Returns: {
+          access_level: string
+          can_access: boolean
+          company: string
+        }[]
+      }
+      get_user_accessible_features: {
+        Args: { _user_id: string }
+        Returns: {
+          access_level: string
+          category: string
+          feature_key: string
+          feature_name: string
+          icon: string
+          route_path: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
