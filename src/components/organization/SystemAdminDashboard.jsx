@@ -73,8 +73,8 @@ const SystemAdminDashboard = () => {
   const systemActions = [
     {
       title: "User Management",
-      description: "Manage all user accounts, roles, and permissions across companies",
-      icon: UserCog,
+      description: "View all users, manage accounts, roles, and permissions across companies",
+      icon: Users,
       color: "bg-primary",
       action: () => navigate('/manage-accounts'),
       category: "users"
@@ -134,14 +134,6 @@ const SystemAdminDashboard = () => {
       color: "bg-secondary",
       action: () => navigate('/companies'),
       category: "companies"
-    },
-    {
-      title: "User Directory",
-      description: "View all users, manage roles and permissions across the system",
-      icon: Users,
-      color: "bg-accent",
-      action: () => navigate('/users'),
-      category: "users"
     },
     {
       title: "Notifications Center",
