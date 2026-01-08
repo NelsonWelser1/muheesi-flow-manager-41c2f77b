@@ -151,6 +151,10 @@ const UserManagement = () => {
             <Shield className="h-4 w-4 mr-2" />
             Permissions
           </Button>
+          <Button variant="outline" onClick={() => navigate('/users/feature-access')}>
+            <Shield className="h-4 w-4 mr-2" />
+            Feature Access
+          </Button>
           <Button variant="outline" onClick={() => navigate('/users/audit-log')}>
             <FileText className="h-4 w-4 mr-2" />
             Audit Log
